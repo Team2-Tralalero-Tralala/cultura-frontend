@@ -1,9 +1,15 @@
-function App() {
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ProfileForm from "./pages/ProfileForm";
+
+export default function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/profile/edit" />} />
+        <Route path="/profile/edit" element={<ProfileForm />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
-export default App;
+

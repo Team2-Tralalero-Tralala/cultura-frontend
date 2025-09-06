@@ -45,8 +45,15 @@ export default function CardPackage({
 
   return (
     // การ์ดหลัก
+    // <article> = HTML5 semantic tag ใช้ครอบเนื้อหาที่เป็น "หน่วยอิสระ"
+    // เช่น การ์ดสินค้า, บทความ, ข่าว → อ่านแยกได้เอง
+    // ต่างจาก <div> ที่ไม่มีความหมายทาง semantic
+    // Semantic = “มีความหมาย”
     <article
       onClick={onClick}
+    // border-... = utility class ของ Tailwind ที่กำหนด สีเส้นขอบ (border-color)
+    // slate = ชุดสี (color palette) ที่ Tailwind มีมาให้ (คล้าย ๆ สีเทา แต่โทนนุ่ม ๆ คล้ายหินชนวน)
+    // 200 = ระดับความเข้มของสี (scale จาก 50 → 900)
       className={`w-[274px] h-[375px] rounded-2xl border border-slate-200 bg-white 
                   shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow
                   ${onClick ? "cursor-pointer" : ""} ${className}`}
@@ -56,6 +63,9 @@ export default function CardPackage({
 
       {/* ส่วนเนื้อหาของการ์ด */}
       <div className="p-3 flex-1 flex flex-col">
+
+        {/* {leading-... = utility class ของ Tailwind ที่ใช้กำหนด line-height (ระยะห่างระหว่างบรรทัดของข้อความ)
+            snug = ค่า preset ของ line-height ที่ Tailwind กำหนดไว้} */}
         {/* ชื่อแพ็กเกจ */}
         <h3 className="text-base font-semibold leading-snug">{title}</h3>
 
@@ -71,9 +81,16 @@ export default function CardPackage({
         <p className="mt-2 text-slate-600 text-xs">
           จำนวนคนจอง {booked}/{capacity} จองแล้ว
         </p>
-
-        {/* แท็กข้อความ (เอาแค่ 4 อัน) */}
+          { /* .slice(start, end) = ตัด array เฉพาะบางช่วง
+                0, 4 = เอาตั้งแต่ index 0 ถึง index 3 → รวมทั้งหมด 4 ตัวแรก
+                เช่นถ้า tags = ["A", "B", "C", "D", "E", "F"]
+                หลัง slice จะได้ ["A", "B", "C", "D"]*/ }
+        {/* แท็กข้อความ (จำกัด 4 อัน ถ้าอยากเพิ่มก็เพิ่ม เพื่อความสวยงาม) */}
         <div className="mt-2 flex flex-wrap gap-2">
+          {/* key={${t}-${i}}
+              React ต้องการ prop key ที่ไม่ซ้ำกัน เวลา render list
+              เพื่อให้ React รู้ว่า element ไหนถูกเพิ่ม/ลบ/แก้ไข → จะ render ได้ถูกและเร็ว
+              ในที่นี้ใช้การผสมค่า t + i เช่น "A-0", "B-1", "C-2"*/ }
           {tags.slice(0, 4).map((t, i) => (
             <span
               key={`${t}-${i}`}

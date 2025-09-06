@@ -1,4 +1,7 @@
 import React, { type JSX } from "react"; //แก้ตรงนี้ แล้วตรงที่แดง JSX หาย
+// JSX (JavaScript XML) คือ syntax (รูปแบบการเขียนโค้ด) 
+// ที่ทำให้เราเขียนโค้ด React ได้เหมือน HTML 
+// แต่จริง ๆ แล้ว JSX ไม่ใช่ HTML
 
 // กำหนด Props ที่การ์ดจะรับเข้ามา
 type CardPackageProps = {
@@ -32,6 +35,13 @@ export default function CardPackage({
     currency: "THB",
     minimumFractionDigits: 2,
   }).format(priceTHB);
+
+// ใช้ type alias แยกสำหรับ props → type CardPackageProps = { ... }
+
+// แล้ว นำมาเป็น type annotation ของพารามิเตอร์แบบ destructuring
+// → ({ ... }: CardPackageProps)
+
+// Return type กำหนดชัดเจนเป็น JSX.Element
 
   return (
     // การ์ดหลัก

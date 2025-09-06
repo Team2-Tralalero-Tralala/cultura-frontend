@@ -1,4 +1,4 @@
-import Card_package from "./Components/Card-package";
+import Card_package from "./Components/CardPackage";
 
 function App() {
   return (

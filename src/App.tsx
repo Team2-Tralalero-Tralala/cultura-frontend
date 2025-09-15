@@ -1,7 +1,16 @@
+import React from "react";
+import Pagination from "./Components/pagination-frontend/pagination";
+
 function App() {
+  const [page, setPage] = React.useState(1);
+
   return (
     <>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+      <Pagination
+        totalPages={100}
+        currentPage={page}
+        onPageChange={setPage}
+      />
     </>
   );
 }

@@ -61,7 +61,7 @@ export default function ProfileForm() {
                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-200 ring-1 ring-black/5">
                   <img
                     src={avatar ?? "https://placekitten.com/600/600"}
-                    alt="avatar"
+                    alt=""
                     className="w-full h-full object-cover"
                   />
                 </div>

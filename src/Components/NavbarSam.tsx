@@ -1,0 +1,57 @@
+{/* navbar ของ Super admin, admin, member ตอน login แล้ว */ }
+import imgUser from '/public/profile.png'
+
+const NavbarSam = () => {
+  return (
+    <header className='bg-white'>
+      <nav className='flex items-center justify-between px-12 h-16'>
+
+        <div className='relative group ml-auto'>
+        
+          {/* ปุ่มโปรไฟล์ */}
+          <button
+            className="flex items-center justify-between gap-3 p-2"
+          >
+            <img src={imgUser} className="w-9 h-9 rounded-full" />
+            <span className="font-medium text-base">John Doe</span>
+          </button>
+
+          {/* Dropdown */}
+          <ul className='absolute bg-white rounded-lg w-64 hidden group-hover:block shadow-md p-4 right-0 top-full mt-0 z-10 text-sm'>
+            
+            {/* แสดงข้อมูล profile*/}
+            <div className="flex items-center gap-3 mb-3">
+              <img src={imgUser} className="w-10 h-10 rounded-full" />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-medium">John Doe</span>
+                  <span className="border-blue-400 border-1.8 text-xs bg-blue-100 text-blue-500 font-bold px-2 py-0.5 rounded-md">
+                    Super Admin
+                  </span>
+                </div>
+                <span className="text-gray-500 text-sm">johndoe@example.com</span>
+              </div>
+            </div>
+
+            <hr className='border-gray-200 my-2' />
+
+            {/* เมนูใน dropdown */}
+            <li className='block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium'>
+              แก้ไขโปรไฟล์
+            </li>
+            <li className='block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium'>
+              เปลี่ยนรหัสผ่าน
+            </li>
+            <hr className='border-gray-200 my-2' />
+            <li className='block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium'>
+              ออกจากระบบ
+            </li>
+          </ul>
+        </div>
+
+      </nav>
+    </header >
+  )
+}
+
+export default NavbarSam

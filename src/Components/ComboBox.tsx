@@ -102,6 +102,7 @@ export function Combobox({
                 <CommandItem
                   key={item.value}
                   value={item.value}
+                  keywords={[item.label]} // เพิ่ม keywords สำหรับการค้นหา
                   onSelect={(currentValue) => {
                     // เมื่อเลือกตัวเลือก จะเปลี่ยนค่าและปิด dropdown
                     setValue(currentValue === _value ? "" : currentValue)

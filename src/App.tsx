@@ -1,5 +1,5 @@
 import React from "react";
-import Pagination from "./Components/pagination-frontend/pagination";
+import Pagination from "./Components/Pagination/paginationForPackage";
 
 function App() {
   const [page, setPage] = React.useState(1);

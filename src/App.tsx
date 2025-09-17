@@ -1,9 +1,31 @@
-function App() {
+import SidebarSuper from "./Components/SidebarSuper";
+import SidebarAdmin from "./Components/SidebarAdmin"; 
+import SidebarMember  from "./Components/SidebarMember";
+
+function SidebarForSuperAdmin() {
   return (
     <>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+
+      <SidebarSuper />
     </>
   );
 }
 
-export default App;
+function SidebarForAdmin() {
+  return (
+    <>
+      <SidebarAdmin />
+    </>
+  );
+}
+
+function SidebarForMember() {
+  return (
+    <>
+      <SidebarMember />
+    </>
+  );
+}
+
+
+export default SidebarForAdmin;

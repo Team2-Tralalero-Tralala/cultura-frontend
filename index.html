@@ -5,9 +5,168 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
+     <!--โหลดฟอนต์ Sarabun จาก Google Fonts-->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+     <!--โหลด CSS ของ flatpickr-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <style>
+    /*กำหนดสไตล์พื้นฐาน*/
+    body {
+      font-family: 'Sarabun', sans-serif;/*ใช้ฟอนต์ Sarabun*/
+      padding: 40px;/*เพิ่ม padding รอบๆ*/
+      background-color: #f6f6f6;/*เพิ่มสีพื้นหลัง*/
+    }
+    /*การ์ดเลือกวันที่แพ็กเกจ*/
+    .card {
+      background: white;/*สีพื้นหลังของการ์ด*/
+      padding: 20px 20px 24px 20px;/*เพิ่ม padding รอบๆ*/
+      border: 1.5px solid #696969;/*ขอบการ์ด*/
+      border-radius: 17px;/*มุมโค้ง*/
+      width: 292px;/*กำหนดความกว้าง*/
+      height: 235px;/*กำหนดความสูง*/
+    }
+    /*หัวข้อ*/
+    h2 {
+      font-size: 20px;/*ขนาดตัวอักษร*/
+      font-weight: bold;/*ตัวหนา*/
+      margin-bottom: 16px;/*ระยะห่างด้านล่าง*/
+    }
+
+    /*ปุ่มเลือกแพ็กเกจในบรรทัดเดียว*/
+    .toggle-buttons {
+      display: flex;/*จัดปุ่มในบรรทัดเดียว*/
+      border: 1.5px solid #00bf6a;/*ขอบปุ่ม*/
+      border-radius: 12px;/*มุมโค้ง*/
+      overflow: hidden;/*ซ่อนส่วนที่เกิน*/
+      margin-bottom: 20px; /*เพิ่มระยะห่างกับช่องวันที่*/
+    }
+    /*สไตล์ปุ่ม*/
+    .toggle-buttons button {
+      flex: 1;/*ให้ปุ่มมีขนาดเท่ากัน*/
+      padding: 10px 0;/*เพิ่ม padding ด้านบนและล่าง*/
+      border: none;/*ลบขอบปุ่ม*/
+      cursor: pointer;/*เปลี่ยนเคอร์เซอร์เมื่อชี้*/
+      background-color: white;/*สีพื้นหลังปุ่ม*/
+      color: #000000;/*สีตัวอักษร*/
+      font-weight: 600;/*ตัวหนา*/
+      font-size: 16px;/*ขนาดตัวอักษร*/
+      transition: background-color 0.1s, color 0.1s;/*เพิ่มเอฟเฟกต์เปลี่ยนสี*/
+      font-family: 'Sarabun', sans-serif;/*ใช้ฟอนต์ Sarabun*/
+      width: 255px;/*กำหนดความกว้าง*/
+      height: 42px;/*กำหนดความสูง*/
+    }
+    /*สไตล์ปุ่มเมื่อถูกเลือก*/
+    .toggle-buttons button.active {
+      background-color: #00bf6a;/*สีพื้นหลังปุ่มเมื่อถูกเลือก*/
+      color: white;/*สีตัวอักษรปุ่มเมื่อถูกเลือก*/
+    }
+
+    /* ฟอร์มเลือกวันที่อยู่บรรทัดใหม่ */
+    .form-group {
+      display: flex;/*จัดฟอร์มในบรรทัดเดียว*/
+      flex-direction: column;/*จัดฟอร์มในแนวตั้ง*/
+      gap: 12px;/*ระยะห่างระหว่างฟอร์ม*/
+    }
+    /*ป้ายกำกับและช่องกรอกข้อมูล*/
+    label {
+      font-weight: 600;/*ตัวหนา*/
+      margin-bottom: 4px;/*ระยะห่างด้านล่าง*/
+    }
+    /*สไตล์ช่องinput*/
+    input[type="text"] {
+      padding: 10px 12px;/*เพิ่ม padding รอบๆ*/
+      border: 1.2px solid #696969;/*ขอบช่องinput*/
+      border-radius: 15px;/*มุมโค้ง*/
+      font-size: 14px;/*ขนาดตัวอักษร*/
+      width: 100%;/*ให้ช่องinputเต็มความกว้าง*/
+      box-sizing: border-box;/*รวมขอบและ padding ในความกว้าง*/
+      font-family: 'Sarabun', sans-serif;/*ใช้ฟอนต์ Sarabun*/
+      margin-bottom: 3px;/*ระยะห่างด้านล่าง*/
+      text-align: center;/*จัดตำแหน่งข้อความกลาง*/
+    }
+    /* ซ่อน element ที่ไม่ต้องการแสดง */
+    .hidden {
+      display: none;/*ซ่อน element*/
+    }
+  </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!--การ์ดเลือกวันที่แพ็กเกจ-->
+  <div class="card">
+    <h2>ตัวเลือกแพ็กเกจ</h2>
+    <!--ปุ่มเลือกกิจกรรม-->
+    <div class="toggle-buttons">
+      <button id="singleDayBtn" class="active" type="button">กิจกรรมวันเดียว</button><!--ปุ่มกิจกรรมวันเดียวเป็นค่าเริ่มต้น-->
+      <button id="multiDayBtn" type="button">กิจกรรมหลายวัน</button><!--ปุ่มกิจกรรมหลายวัน-->
+    </div>
+
+    <!-- ฟอร์มเลือกวันที่ -->
+    <div class="form-group" style="margin-bottom: -10px;">
+
+      <!-- สำหรับกิจกรรมวันเดียว -->
+      <div id="singleDayInput">
+        <label for="activityDate">วันที่เข้าร่วมกิจกรรม</label><!---ข้อความวันที่เข้าร่วมกิจกรรม-->
+        <input type="text" id="activityDate" placeholder="" /><!--ช่องกรอกวันที่-->
+      </div>
+
+      <!-- สำหรับกิจกรรมหลายวัน -->
+      <div id="multiDayInput" class="hidden">
+        <label for="startDate">วันที่เข้าร่วมกิจกรรม</label><!---ข้อความวันที่เข้าร่วมกิจกรรม-->
+        <input type="text" id="startDate" placeholder="" /><!--ช่องกรอกวันที่เริ่มต้น-->
+        <input type="text" id="endDate" placeholder="" /><!--ช่องกรอกวันที่สิ้นสุด-->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- โหลด JS ของ flatpickr -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script><!--โหลดไลบรารี flatpickr-->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script><!--โหลดภาษาไทยสำหรับ flatpickr-->
+  <script type="module" src="/src/main.tsx"></script>
+
+  <script>
+    // ตั้งค่า flatpickr สำหรับแต่ละ input
+    flatpickr("#activityDate", {
+      dateFormat: "d/m/Y",//รูปแบบวันที่เป็น วัน/เดือน/ปี
+      locale: "th",//ตั้งค่าภาษาเป็นไทย
+
+    });
+    // ตั้งค่า flatpickr สำหรับวันที่เริ่มต้น
+    flatpickr("#startDate", {
+      dateFormat: "d/m/Y",//รูปแบบวันที่เป็น วัน/เดือน/ปี
+      locale: "th"//ตั้งค่าภาษาเป็นไทย
+    });
+    // ตั้งค่า flatpickr สำหรับวันที่สิ้นสุด
+    flatpickr("#endDate", {
+      dateFormat: "d/m/Y",//รูปแบบวันที่เป็น วัน/เดือน/ปี
+      locale: "th"//ตั้งค่าภาษาเป็นไทย
+    });
+
+    // ควบคุมการสลับปุ่มและแสดงผลฟอร์มวันที่
+    //ปุ่มเลือกแพ็กเกจ
+    const singleDayBtn = document.getElementById('singleDayBtn');//ปุ่มกิจกรรมวันเดียว
+    const multiDayBtn = document.getElementById('multiDayBtn');//ปุ่มกิจกรรมหลายวัน
+    //ฟอร์มกิจกรรมวันเดียว
+    const singleDayInput = document.getElementById('singleDayInput');//ฟอร์มกิจกรรมวันเดียว
+    const multiDayInput = document.getElementById('multiDayInput');//ฟอร์มกิจกรรมหลายวัน
+    //เพิ่ม event listener ให้ปุ่มแต่ละปุ่ม
+    singleDayBtn.addEventListener('click', () => {
+      singleDayBtn.classList.add('active');//เพิ่มคลาส active ให้ปุ่มกิจกรรมวันเดียว
+      multiDayBtn.classList.remove('active');//ลบคลาส active ออกจากปุ่มกิจกรรมหลายวัน
+      //แสดงฟอร์มกิจกรรมวันเดียวและซ่อนฟอร์มกิจกรรมหลายวัน
+      singleDayInput.classList.remove('hidden');//แสดงฟอร์มกิจกรรมวันเดียว
+      multiDayInput.classList.add('hidden');//ซ่อนฟอร์มกิจกรรมหลายวัน
+    });
+    //เพิ่ม event listener ให้ปุ่มกิจกรรมหลายวัน
+    multiDayBtn.addEventListener('click', () => {
+      multiDayBtn.classList.add('active');//เพิ่มคลาส active ให้ปุ่มกิจกรรมหลายวัน
+      singleDayBtn.classList.remove('active');//ลบคลาส active ออกจากปุ่มกิจกรรมวันเดียว
+      //แสดงฟอร์มกิจกรรมหลายวันและซ่อนฟอร์มกิจกรรมวันเดียว
+      multiDayInput.classList.remove('hidden');//แสดงฟอร์มกิจกรรมหลายวัน
+      singleDayInput.classList.add('hidden');//ซ่อนฟอร์มกิจกรรมวันเดียว
+    });
+  </script>
+
+</body>
 </html>

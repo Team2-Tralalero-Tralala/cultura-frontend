@@ -36,3 +36,20 @@ function ArrowPager({ totalPages, page, onChange }: { totalPages: number; page: 
     </nav>
   );
 }
+
+// ตัวเลือกจำนวนแถวต่อหน้า
+function PageSizeSelect({ value, onChange }: { value: number; onChange: (n: number) => void; }) {
+  return (
+    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+      <span>จำนวนแถวต่อหน้า :</span>
+      <div className="relative">
+        <select className="appearance-none pr-7 pl-3 h-[32px] rounded-md border border-gray-300 text-sm" value={value} onChange={(e) => onChange(Number(e.target.value))}>
+          {[10, 30, 50].map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
+        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">▾</span>
+      </div>
+    </label>
+  );
+}

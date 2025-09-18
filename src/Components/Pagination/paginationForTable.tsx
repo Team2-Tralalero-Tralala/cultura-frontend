@@ -26,33 +26,111 @@ function getRange(totalCount: number, pageSize: number, pageIndex: number) {
 }
 
 // ปุ่มลูกศร < >
-function ArrowPager({ totalPages, page, onChange }: { totalPages: number; page: number; onChange: (p: number) => void; }) {
+function ArrowPager({
+  totalPages,
+  page,
+  onChange,
+}: {
+  totalPages: number;
+  page: number;
+  onChange: (p: number) => void;
+}) {
   const canPrev = page > 1;
   const canNext = page < totalPages;
+
   return (
-    <nav className="inline-flex items-center gap-[5px]" aria-label="Pagination">
-      <button type="button" onClick={() => onChange(page - 1)} disabled={!canPrev} className="h-[30px] w-[35px] rounded-md border text-sm font-medium flex items-center justify-center disabled:opacity-40">‹</button>
-      <button type="button" onClick={() => onChange(page + 1)} disabled={!canNext} className="h-[30px] w-[35px] rounded-md border text-sm font-medium flex items-center justify-center disabled:opacity-40">›</button>
+    <nav className="inline-flex items-center gap-6" aria-label="Pagination">
+      {/* ปุ่มก่อนหน้า */}
+      <button
+        type="button"
+        onClick={() => onChange(page - 1)}
+        disabled={!canPrev}
+        className="disabled:opacity-30"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="black"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
+      {/* ปุ่มถัดไป */}
+      <button
+        type="button"
+        onClick={() => onChange(page + 1)}
+        disabled={!canNext}
+        className="disabled:opacity-30"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="black"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
     </nav>
   );
 }
 
 // ตัวเลือกจำนวนแถวต่อหน้า
-function PageSizeSelect({ value, onChange }: { value: number; onChange: (n: number) => void; }) {
+function PageSizeSelect({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const options = [10, 30, 50];
+
   return (
     <label className="inline-flex items-center gap-2 text-sm text-gray-700">
       <span>จำนวนแถวต่อหน้า :</span>
-      <div className="relative">
-        <select className="appearance-none pr-7 pl-3 h-[32px] rounded-md border border-gray-300 text-sm" value={value} onChange={(e) => onChange(Number(e.target.value))}>
-          {[10, 30, 50].map((n) => (
-            <option key={n} value={n}>{n}</option>
-          ))}
-        </select>
-        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">▾</span>
+      <div className="relative inline-block">
+        {/* ปุ่มกดเปิด dropdown */}
+        <div
+          className="flex items-center gap-2 cursor-pointer select-none"
+          onClick={() => setOpen(!open)}
+        >
+          <span className="text-gray-500">{value}</span>
+          <span className="ml-1">{open ? "▲" : "▼"}</span>
+        </div>
+
+        {/* รายการตัวเลือก */}
+        {open && (
+          <div className="absolute mt-1 bg-white rounded-md shadow-md z-10">
+            {options.map((n) => (
+              <div
+                key={n}
+                onClick={() => {
+                  onChange(n);
+                  setOpen(false);
+                }}
+                className={`w-[94px] h-[43px] flex items-center justify-center rounded-md cursor-pointer ${
+                  n === value ? "bg-[#9EFFA2]" : "hover:bg-[#9EFFA2]"
+                }`}
+              >
+                {n}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </label>
   );
 }
+
+
+
 
 // Function สําหรับเรียกใช้งาน Pagination for Table component
 export default function DataPager({ totalCount, pageSize, pageIndex, onPageIndexChange, onPageSizeChange, className }: {

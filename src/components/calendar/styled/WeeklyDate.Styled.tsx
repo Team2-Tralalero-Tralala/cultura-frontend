@@ -1,5 +1,14 @@
+/* 
+ * คำอธิบาย: Styled-components สำหรับ Weekly DatePicker
+ * ใช้จัด layout หลัก (Wrapper, Title, Info) 
+ * และปรับแต่งสไตล์ react-datepicker ในโหมดเลือกช่วงสัปดาห์
+ */
 import styled from "styled-components";
 
+/* 
+ * Component: WeeklyWrapper
+ * คอนเทนเนอร์หลัก จัด layout แบบ column ตรงกลาง
+ */
 export const WeeklyWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -7,15 +16,31 @@ export const WeeklyWrapper = styled.div`
   gap: 1rem;
 `;
 
+/* 
+ * Component: WeeklyTitle
+ * สไตล์หัวข้อ (Title) ขนาดใหญ่ น้ำหนักกลาง
+ */
 export const WeeklyTitle = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
 `;
 
+/* 
+ * Component: WeeklyInfo
+ * ข้อความคำอธิบาย ใช้สีเทา
+ */
 export const WeeklyInfo = styled.p`
   color: #4b5563;
 `;
 
+/* 
+ * Component: WeeklyDatePickerContainer
+ * ครอบคลุมสไตล์ของ react-datepicker เช่น:
+ * - ขนาด cell ของวัน
+ * - header, navigation
+ * - day names, weeks
+ * - การ hover และการเลือกช่วง (range start, range end, in-range)
+ */
 export const WeeklyDatePickerContainer = styled.div`
     && .react-datepicker {
       --cell: 2.4rem;     
@@ -111,25 +136,43 @@ export const WeeklyDatePickerContainer = styled.div`
 
 
 
-    /* วันที่อยู่ในช่วง (หลังเลือกเสร็จ) */
-    && .react-datepicker__day--in-range {
-      background: #d1fae5 !important;  /* เขียวอ่อน */
-      color: #065f46 !important;
-    }
+/* วันที่อยู่ในช่วง (กลางๆ) */
+&& .react-datepicker__day--in-range {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+}
 
-    /* วันที่เริ่มต้นของช่วง */
-    && .react-datepicker__day--range-start {
-      background: #34d399 !important;  /* เขียวเข้ม */
-      color: #fff !important;
-      border-radius: 50% !important;
-    }
+/* วันที่เริ่มต้น */
+&& .react-datepicker__day--range-start {
+  background: #34d399 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  position: relative;
+  z-index: 2;
+}
 
-    /* วันที่สิ้นสุดของช่วง */
-    && .react-datepicker__day--range-end {
-      background: #34d399 !important;  /* เขียวเข้ม */
-      color: #fff !important;
-      border-radius: 50% !important;
-    }
+/* วันที่สิ้นสุด */
+&& .react-datepicker__day--range-end {
+  background: #34d399 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- ทำให้ in-range ติดกับ start/end เป็น pill ---- */
+&& .react-datepicker__day--in-range:first-child {
+  border-top-left-radius: 999px !important;
+  border-bottom-left-radius: 999px !important;
+}
+
+&& .react-datepicker__day--in-range:last-child {
+  border-top-right-radius: 999px !important;
+  border-bottom-right-radius: 999px !important;
+}
+
+
+    
     && .react-datepicker__day--in-range:hover,
     && .react-datepicker__day--range-start:hover,
     && .react-datepicker__day--range-end:hover {

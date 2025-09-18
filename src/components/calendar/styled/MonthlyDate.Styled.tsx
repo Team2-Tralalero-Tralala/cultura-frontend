@@ -1,5 +1,14 @@
+/* 
+ * คำอธิบาย: Styled-components สำหรับ Monthly DatePicker
+ * ใช้จัด layout และปรับสไตล์ react-datepicker เฉพาะโหมดเลือก "เดือน"
+ */
 import styled from "styled-components";
 
+
+/* 
+ * Component: MonthlyWrapper
+ * คอนเทนเนอร์หลัก จัด layout แบบ column ตรงกลาง
+ */
 export const MonthlyWrapper = styled.div`
         display: flex;
         flex-direction: column;
@@ -7,6 +16,14 @@ export const MonthlyWrapper = styled.div`
         gap: 1rem;
 `;
 
+/* 
+ * Component: MonthlyDatePickerContainer
+ * กำหนดสไตล์ของ react-datepicker ในโหมดเลือกเดือน เช่น
+ * - ขนาด cell
+ * - header
+ * - layout ของเดือน (grid 3 คอลัมน์)
+ * - สไตล์ hover, selected, focus
+ */
 export const MonthlyDatePickerContainer = styled.div`
     --radius: 12px;
     --green-hover:   #bfeed4;  

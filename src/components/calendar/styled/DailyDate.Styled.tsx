@@ -1,5 +1,14 @@
+/* 
+ * คำอธิบาย: Styled-components สำหรับ Daily DatePicker
+ * ครอบคลุมโครงสร้างหลัก (Wrapper, Title, Info) 
+ * และสไตล์ของ react-datepicker (container, header, day, week)
+ */
 import styled from "styled-components";
 
+/* 
+ * Component: DailyWrapper
+ * ใช้เป็นคอนเทนเนอร์หลัก จัด layout แบบ column ตรงกลาง
+ */
 export const DailyWrapper = styled.div`
     display: flex;
     flex-direction: column;
@@ -7,15 +16,28 @@ export const DailyWrapper = styled.div`
     gap: 1rem;
 `;
 
+/* 
+ * Component: DailyTitle
+ * สไตล์หัวข้อ (Title) ขนาดใหญ่ น้ำหนักกลาง
+ */
 export const DailyTitle = styled.h2`
     font-size: 1.25rem;
     font-weight: 600;
 `;
 
+/* 
+ * Component: DailyInfo
+ * ข้อความเพิ่มเติม/คำอธิบาย ใช้สีเทา
+ */
 export const DailyInfo = styled.p`
     color: #4b5563;
 `;
 
+/* 
+ * Component: DailyDatePickerContainer
+ * กำหนดสไตล์เฉพาะให้ react-datepicker เช่น ขนาดช่องวัน, header, 
+ * day name, การเลือกวัน และการ hover
+ */
 export const DailyDatePickerContainer = styled.div`
     && .react-datepicker {
         --cell: 2.4rem;              

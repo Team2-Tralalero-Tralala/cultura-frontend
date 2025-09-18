@@ -53,6 +53,7 @@ function cx(...classes: Array<string | undefined | false>) {
   return classes.filter(Boolean).join(" ");
 }
 
+// Function สําหรับเรียกใช้งาน Pagination component
 export default function Pagination({
   totalPages,
   currentPage,

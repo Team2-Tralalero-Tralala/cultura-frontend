@@ -1,7 +1,7 @@
 import React from "react";
 
 // Props ของ Pagination for Table component
-export type DataPagerProps = {
+type DataPagerProps = {
   totalCount: number;/** จำนวนรายการทั้งหมด */
   pageSize: number;/** ขนาดต่อหน้า (เช่น 10/30/50) */
   pageIndex: number;/** เลขหน้าปัจจุบัน (เริ่ม 1) */
@@ -51,5 +51,29 @@ function PageSizeSelect({ value, onChange }: { value: number; onChange: (n: numb
         <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">▾</span>
       </div>
     </label>
+  );
+}
+
+// Function สําหรับเรียกใช้งาน Pagination for Table component
+export default function DataPager({ totalCount, pageSize, pageIndex, onPageIndexChange, onPageSizeChange, className }: {
+  totalCount: number;
+  pageSize: number;
+  pageIndex: number;
+  onPageIndexChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  className?: string;
+}) {
+  const { totalPages, safePage, from, to } = getRange(totalCount, pageSize, pageIndex);
+  return (
+    <div className={`w-full text-sm ${className ?? ""}`}>
+      <div className="text-gray-700">ทั้งหมด {totalCount.toLocaleString()} แถว</div>
+      <div className="flex items-center mt-[34px]">
+        <PageSizeSelect value={pageSize} onChange={(n) => { onPageSizeChange(n); onPageIndexChange(1); }} />
+        <div className="flex items-center gap-3 ml-[420px]">
+          <div className="text-gray-700">{from}-{to} จาก {totalCount.toLocaleString()}</div>
+          <ArrowPager totalPages={totalPages} page={safePage} onChange={onPageIndexChange} />
+        </div>
+      </div>
+    </div>
   );
 }

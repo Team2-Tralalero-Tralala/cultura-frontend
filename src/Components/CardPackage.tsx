@@ -17,6 +17,9 @@ type CardPackageProps = {
   className?: string;     // ส่งคลาสเพิ่มเติมได้
 };
 
+
+
+// คําอธิบาย : Function สําหรับแสดงข้อมูลการ์ดของแพ็กเกจ
 export default function CardPackage({
   image,
   title,

@@ -29,6 +29,9 @@ export const DailyDatePickerContainer = styled.div`
         background: #fff;
     }
 
+    && .react-datepicker__navigation {
+        top: 16px !important; /* ปรับให้ตรงกับ header */
+    }
 
 
     && .react-datepicker__header {
@@ -38,7 +41,7 @@ export const DailyDatePickerContainer = styled.div`
     }
 
     && .react-datepicker__current-month {
-        font-weight: 700;
+        font-weight: 400;
     }
 
     && .react-datepicker__day-names {
@@ -56,7 +59,7 @@ export const DailyDatePickerContainer = styled.div`
         align-items: center;
         justify-content: center;
         color: #667085;
-        font-weight: 600;
+        font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.02em;
     }

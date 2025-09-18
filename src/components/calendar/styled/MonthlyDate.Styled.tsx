@@ -13,16 +13,21 @@ export const MonthlyDatePickerContainer = styled.div`
     --green-anchor:  #34d399;  
 
     && .react-datepicker {
-      --cell: 2.4rem;     
-      border: none;
-      border-radius: 20px;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-      overflow: hidden;
-      padding: 12px 12px 16px;
-      width: 305px;
-      max-width: 100%;
-      background: #fff;
+        --cell: 2.4rem;     
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+        padding: 12px 12px 16px;
+        width: 305px;
+        max-width: 100%;
+        background: #fff;
     }
+
+    && .react-datepicker__navigation {
+        top: 16px !important; /* ปรับให้ตรงกับ header */
+    }
+
 
     && .react-datepicker__header {
         background: #fff;
@@ -32,7 +37,7 @@ export const MonthlyDatePickerContainer = styled.div`
 
     && .react-datepicker__current-month,
     && .react-datepicker-year-header {
-        font-weight: 700;
+        font-weight: 400;
     }
 
     && .react-datepicker__month-container {

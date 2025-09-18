@@ -4,7 +4,7 @@
  * ขนาดปุ่ม 138x39 px 
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type SortValue = "latest" | "recommended" | "price_asc" | "price_desc";
 

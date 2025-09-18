@@ -1,0 +1,8 @@
+services:
+  frontend:
+    build: .
+    image: cultura-frontend-prod
+    container_name: cultura-frontend
+    ports:
+      - "8080:3000"   # map host:container
+    restart: unless-stopped

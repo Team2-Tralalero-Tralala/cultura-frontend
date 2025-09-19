@@ -1,34 +1,34 @@
-// ==================================================
-// AccountManagementTable.tsx
-// Super Admin: ตาราง "จัดการบัญชี" (UI เท่านั้น / ยังไม่ผูก DB)
-// เงื่อนไข:
+
+// ================================================
+// ShopTable.tsx
+// Admin: ตาราง "จัดการร้านค้า" (UI เท่านั้น / ยังไม่ผูก DB)
+// เงื่อนไขสำคัญ:
 // - แสดง 10 แถวเสมอ (placeholder) ถ้าข้อมูลจริงน้อยกว่า
-// - ถ้าแถว "ไม่มีข้อมูล": ช่องว่างทั้งหมด, ไม่แสดง checkbox, ไม่แสดงไอคอนจัดการ
+// - ถ้าแถว "ไม่มีข้อมูล": ช่องทั้งหมดว่าง, ไม่แสดง checkbox, ไม่แสดงไอคอนจัดการ
 // - สีหัว: #4A816F | สลับแถว: #A5DFD9 / #FFFFFF (เริ่มด้วย #A5DFD9)
 // - เส้นคั่นแนวนอน: #BBE7E3 | คั่น tbody↔tfoot: #3FBAAE (เส้นหนา)
 // - ท้ายตารางพื้นหลังขาว, มุมโค้ง 8px
-// ==================================================
+// ================================================
 
 import React, { useEffect, useState } from "react";
 
-// 1) โครงข้อมูลต่อแถว (ดูจากหัวตาราง: ชื่อบัญชี / ประเภท / ชุมชน / อีเมล)
-export type AccountRow = {
-  accountName: string;    // ชื่อบัญชี (เช่น ชื่อผู้ใช้ / ชื่อ-สกุลที่แสดง)
-  roleType: string;       // ประเภท (เช่น ผู้ดูแลระบบ / สมาชิก)
-  communityName: string;  // ชุมชน (เช่น บ้านแพ้ว)
-  email: string;          // อีเมล
+// 1) โครงข้อมูลต่อแถว (ตอนต่อ DB จริง ให้ map เข้ามารูปแบบนี้)
+export type ShopRow = {
+  shopName: string;      // ชื่อร้านค้า
+  description: string;   // คำอธิบาย
+  tagName: string;      // ประเภท
 };
 
-// 2) รองรับส่งข้อมูลจากภายนอก (ถ้ามี) หรือให้ component fetch เอง
+// 2) พร็อพรองรับการส่งข้อมูลจากภายนอกได้ด้วย (ถ้าอยากควบคุมจากหน้า parent)
 type Props = {
-  rowsFromApi?: AccountRow[];
+  rowsFromApi?: ShopRow[];
 };
 
-export default function AccountManagementTable({ rowsFromApi }: Props) {
-  // 3) state เก็บข้อมูลจาก DB/API
-  const [data, setData] = useState<AccountRow[]>([]);
+export default function ShopTable({ rowsFromApi }: Props) {
+  // 3) state เก็บข้อมูลที่ดึงมา (ตอนนี้ mock: ว่าง)
+  const [data, setData] = useState<ShopRow[]>([]);
 
-  // 4) โหลดข้อมูล: ถ้ามี rowsFromApi ให้ใช้เลย / ถ้าไม่มีให้เตรียม fetch เอง
+  // 4) เมื่อมีการส่ง rowsFromApi เข้ามา ให้ใช้เลย / ถ้าไม่มีให้ mock ว่างไว้ก่อน
   useEffect(() => {
     if (rowsFromApi) {
       setData(rowsFromApi);
@@ -36,13 +36,13 @@ export default function AccountManagementTable({ rowsFromApi }: Props) {
     }
 
     // ▼======================= เชื่อม Database/API ตรงนี้ =======================▼
-    // ตัวอย่าง fetch จาก backend (REST):
-    // fetch("/api/accounts")
+    // ตัวอย่างการ fetch ข้อมูลจาก backend (REST API)
+    // fetch("/api/communities")
     //   .then(r => r.json())
-    //   .then((rows: AccountRow[]) => setData(rows))
+    //   .then((res: CommunityRow[]) => setData(res))
     //   .catch(() => setData([]));
     //
-    // ถ้าใช้ GraphQL/Prisma ผ่าน backend → query แล้ว map เป็น AccountRow[]
+    // ถ้าใช้ GraphQL หรือ Prisma ผ่าน backend → ดึงข้อมูลแล้ว map เป็น CommunityRow[]
     // จากนั้น setData(mappedRows);
     // ▲=======================================================================▲
 
@@ -50,23 +50,25 @@ export default function AccountManagementTable({ rowsFromApi }: Props) {
   }, [rowsFromApi]);
 
   // 5) ค่าคงที่ UI
-  const ROW_H = "h-12";               // ความสูงต่อแถว 48px
-  const PLACEHOLDER_ROWS = 10;        // ต้องการโชว์ 10 แถวเสมอ
-  const slots = Array.from({ length: PLACEHOLDER_ROWS }, (_, i) => i);
-  const filledCount = Math.min(data.length, PLACEHOLDER_ROWS);
+  const ROW_H = "h-12"; // สูง 48px
+  const PLACEHOLDER_ROWS = 10; // ต้องการโชว์ 10 แถวเสมอ
+  const headerLabels = ["ชื่อร้านค้า", "คำอธิบาย", "ประเภท", "จัดการ"];
 
-  // 6) ชื่อหัวคอลัมน์เฉพาะตารางนี้
-  const headerLabels = ["ชื่อบัญชี", "ประเภท", "ชุมชน", "อีเมล", "จัดการ"];
+  // 6) เตรียม index 0..9 สำหรับ render 10 แถว
+  const slots = Array.from({ length: PLACEHOLDER_ROWS }, (_, i) => i);
+
+  // 7) จำนวนข้อมูลจริงที่มี (ไม่เกิน 10)
+  const filledCount = Math.min(data.length, PLACEHOLDER_ROWS);
 
   return (
     <div className="w-full p-4">
-      {/* กรอบนอก: มุมโค้ง + เส้นกรอบ */}
+      {/* กรอบนอก: มุมโค้ง + เส้นกรอบรอบนอก (ไม่ใช่เส้นคั่นในตาราง) */}
       <div className="overflow-hidden rounded-lg border border-[#BBE7E3]">
         <table className="w-full table-fixed border-collapse">
           {/* ================= THEAD ================= */}
           <thead>
             <tr className="bg-[#4A816F] text-white">
-              {/* checkbox รวม (หัวตารางเท่านั้น) */}
+              {/* หัว checkbox (หัวตารางเท่านั้น) */}
               <th className={`text-left px-2 ${ROW_H} align-middle w-9`}>
                 <input type="checkbox" aria-label="select all rows" className="h-[18px] w-[18px]" />
               </th>
@@ -89,13 +91,13 @@ export default function AccountManagementTable({ rowsFromApi }: Props) {
               // สลับสีแถว เริ่มด้วย A5DFD9
               const rowBg = i % 2 === 0 ? "bg-[#A5DFD9]" : "bg-white";
 
-              // มีข้อมูลจริงใน index นี้ไหม
+              // มีข้อมูลจริงใน index นี้หรือไม่
               const hasData = i < filledCount;
               const row = hasData ? data[i] : undefined;
 
               return (
                 <tr key={i} className={rowBg}>
-                  {/* คอลัมน์ checkbox: แสดงเฉพาะเมื่อมีข้อมูล */}
+                  {/* คอลัมน์ checkbox: แสดงเฉพาะเมื่อมีข้อมูล row */}
                   <td className={`px-2 ${ROW_H} align-middle w-9 border-t border-[#BBE7E3]`}>
                     {hasData ? (
                       <input
@@ -106,28 +108,25 @@ export default function AccountManagementTable({ rowsFromApi }: Props) {
                     ) : null}
                   </td>
 
-                  {/* คอลัมน์ข้อมูล — ถ้าไม่มีข้อมูลให้ปล่อยว่างจริง ๆ */}
+                  {/* คอลัมน์ข้อมูล: ถ้าไม่มีข้อมูล → ปล่อยว่างจริงๆ */}
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.accountName : null}
+                    {hasData ? row!.shopName : null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.roleType : null}
+                    {hasData ? row!.description: null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.communityName : null}
+                    {hasData ? row!.tagName : null}
                   </td>
-                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.email : null}
-                  </td>
+                  
 
                   {/* คอลัมน์จัดการ: แสดงไอคอนเฉพาะเมื่อมีข้อมูล */}
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
                     {hasData ? (
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-start gap-3">
                         {/* ▼================ ใส่ไอคอนจริงตรงนี้ ================= ▼ */}
-                        {/* <UsersIcon onClick={() => handleManageMembers(row)} /> */}
-                        {/* <EditIcon  onClick={() => handleEdit(row)} /> */}
-                        {/* <TrashIcon onClick={() => handleDelete(row)} /> */}
+                        {/* <EditIcon onClick={() => handleEdit(row)} /> */}
+                        {/* <DeleteIcon onClick={() => handleDelete(row)} /> */}
                         {/* ▲===================================================▲ */}
                       </div>
                     ) : null}

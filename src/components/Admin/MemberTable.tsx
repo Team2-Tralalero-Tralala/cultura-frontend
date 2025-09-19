@@ -1,6 +1,6 @@
 // ==================================================
-// LogManagementTable.tsx
-// Super Admin: ตาราง "ประวัติการใช้งาน" (UI เท่านั้น / ยังไม่ผูก DB)
+// MemberTable.tsx
+// Admin: ตาราง "จัดการสมาชิก" (UI เท่านั้น / ยังไม่ผูก DB)
 // เงื่อนไข:
 // - แสดง 10 แถวเสมอ (placeholder) ถ้าข้อมูลจริงน้อยกว่า
 // - ถ้าแถว "ไม่มีข้อมูล": ช่องว่างทั้งหมด, ไม่แสดง checkbox, ไม่แสดงไอคอนจัดการ
@@ -12,20 +12,20 @@
 import React, { useEffect, useState } from "react";
 
 // 1) โครงข้อมูลต่อแถว (ดูจากหัวตาราง: ชื่อบัญชี / ประเภท / ชุมชน / อีเมล)
-export type LogRow = {
-  username: string;       // ชื่อผู้ใช้
-  role: string;           // บทบาท (เช่น ผู้ดูแลระบบ / สมาชิก)
-  loginAt: string;        // เวลาที่เข้าสู่ระบบ
-  logoutAt: string;       // เวลาที่ออกจากระบบ
-};
-// 2) รองรับส่งข้อมูลจากภายนอก (ถ้ามี) หรือให้ component fetch เอง
-type Props = {
-  rowsFromApi?: LogRow[];
+export type AccountRow = {
+  accountName: string;    // ชื่อบัญชี (เช่น ชื่อผู้ใช้ / ชื่อ-สกุลที่แสดง)
+  role: string;       // ประเภท (เช่น ผู้ใหญ่บ้าน / ไกด์)
+  email: string;          // อีเมล
 };
 
-export default function LogManagementTable({ rowsFromApi }: Props) {
+// 2) รองรับส่งข้อมูลจากภายนอก (ถ้ามี) หรือให้ component fetch เอง
+type Props = {
+  rowsFromApi?: AccountRow[];
+};
+
+export default function MemberTable({ rowsFromApi }: Props) {
   // 3) state เก็บข้อมูลจาก DB/API
-  const [data, setData] = useState<LogRow[]>([]);
+  const [data, setData] = useState<AccountRow[]>([]);
 
   // 4) โหลดข้อมูล: ถ้ามี rowsFromApi ให้ใช้เลย / ถ้าไม่มีให้เตรียม fetch เอง
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function LogManagementTable({ rowsFromApi }: Props) {
   const filledCount = Math.min(data.length, PLACEHOLDER_ROWS);
 
   // 6) ชื่อหัวคอลัมน์เฉพาะตารางนี้
-  const headerLabels = ["ชื่อบัญชี", "บทบาท", "เวลาที่เข้าสู่ระบบ", "เวลาที่ออกจากระบบ"];
+  const headerLabels = ["ชื่อบัญชี", "บทบาท", "ช่องทางติดต่อ", "จัดการ"];
 
   return (
     <div className="w-full p-4">
@@ -107,19 +107,27 @@ export default function LogManagementTable({ rowsFromApi }: Props) {
 
                   {/* คอลัมน์ข้อมูล — ถ้าไม่มีข้อมูลให้ปล่อยว่างจริง ๆ */}
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.username : null}
+                    {hasData ? row!.accountName : null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
                     {hasData ? row!.role : null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.loginAt : null}
-                  </td>
-                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.logoutAt : null}
+                    {hasData ? row!.email : null}
                   </td>
 
-                  
+                  {/* คอลัมน์จัดการ: แสดงไอคอนเฉพาะเมื่อมีข้อมูล */}
+                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
+                    {hasData ? (
+                      <div className="flex items-center gap-3">
+                        {/* ▼================ ใส่ไอคอนจริงตรงนี้ ================= ▼ */}
+                        {/* <UsersIcon onClick={() => handleManageMembers(row)} /> */}
+                        {/* <EditIcon  onClick={() => handleEdit(row)} /> */}
+                        {/* <TrashIcon onClick={() => handleDelete(row)} /> */}
+                        {/* ▲===================================================▲ */}
+                      </div>
+                    ) : null}
+                  </td>
                 </tr>
               );
             })}

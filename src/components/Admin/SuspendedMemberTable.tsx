@@ -1,6 +1,6 @@
 // ==================================================
-// TagManagementTable.tsx
-// Super Admin: ตาราง "จัดการประเภทแพ็กเกจ" (UI เท่านั้น / ยังไม่ผูก DB)
+// SuspendedMemberTable.tsx
+// Admin: ตาราง "ระงับการใช้งาน" (UI เท่านั้น / ยังไม่ผูก DB)
 // เงื่อนไข:
 // - แสดง 10 แถวเสมอ (placeholder) ถ้าข้อมูลจริงน้อยกว่า
 // - ถ้าแถว "ไม่มีข้อมูล": ช่องว่างทั้งหมด, ไม่แสดง checkbox, ไม่แสดงไอคอนจัดการ
@@ -11,19 +11,21 @@
 
 import React, { useEffect, useState } from "react";
 
-// 1) โครงข้อมูลต่อแถว (ดูจากหัวตาราง: ชื่อประเภท, จัดการ)
-export type TagRow = {
-  tagName: string; // ชื่อประเภท
+// 1) โครงข้อมูลต่อแถว (ดูจากหัวตาราง: ชื่อบัญชี / ประเภท / ชุมชน / อีเมล)
+export type AccountRow = {
+  accountName: string;    // ชื่อบัญชี (เช่น ชื่อผู้ใช้ / ชื่อ-สกุลที่แสดง)
+  role: string;       // ประเภท (เช่น ผู้ใหญ่บ้าน / ไกด์)
+  email: string;          // อีเมล
 };
 
 // 2) รองรับส่งข้อมูลจากภายนอก (ถ้ามี) หรือให้ component fetch เอง
 type Props = {
-  rowsFromApi?: TagRow[];
+  rowsFromApi?: AccountRow[];
 };
 
-export default function TagManagementTable({ rowsFromApi }: Props) {
+export default function SuspendedMemberTable({ rowsFromApi }: Props) {
   // 3) state เก็บข้อมูลจาก DB/API
-  const [data, setData] = useState<TagRow[]>([]);
+  const [data, setData] = useState<AccountRow[]>([]);
 
   // 4) โหลดข้อมูล: ถ้ามี rowsFromApi ให้ใช้เลย / ถ้าไม่มีให้เตรียม fetch เอง
   useEffect(() => {
@@ -34,12 +36,12 @@ export default function TagManagementTable({ rowsFromApi }: Props) {
 
     // ▼======================= เชื่อม Database/API ตรงนี้ =======================▼
     // ตัวอย่าง fetch จาก backend (REST):
-    // fetch("/api/tags")
+    // fetch("/api/accounts")
     //   .then(r => r.json())
-    //   .then((rows: TagRow[]) => setData(rows))
+    //   .then((rows: AccountRow[]) => setData(rows))
     //   .catch(() => setData([]));
     //
-    // ถ้าใช้ GraphQL/Prisma ผ่าน backend → query แล้ว map เป็น TagRow[]
+    // ถ้าใช้ GraphQL/Prisma ผ่าน backend → query แล้ว map เป็น AccountRow[]
     // จากนั้น setData(mappedRows);
     // ▲=======================================================================▲
 
@@ -52,21 +54,14 @@ export default function TagManagementTable({ rowsFromApi }: Props) {
   const slots = Array.from({ length: PLACEHOLDER_ROWS }, (_, i) => i);
   const filledCount = Math.min(data.length, PLACEHOLDER_ROWS);
 
-  // 6) หัวคอลัมน์เฉพาะตารางนี้
-  const headerLabels = ["ชื่อประเภท", "จัดการ"];
+  // 6) ชื่อหัวคอลัมน์เฉพาะตารางนี้
+  const headerLabels = ["ชื่อบัญชี", "บทบาท", "ช่องทางติดต่อ", "จัดการ"];
 
   return (
     <div className="w-full p-4">
       {/* กรอบนอก: มุมโค้ง + เส้นกรอบ */}
       <div className="overflow-hidden rounded-lg border border-[#BBE7E3]">
         <table className="w-full table-fixed border-collapse">
-          {/* [CHANGED] ล็อกความกว้างคอลัมน์และขยับ "จัดการ" เข้าซ้ายด้วยการลดความกว้าง */}
-          <colgroup>
-            <col className="w-9" />        {/* checkbox */}
-            <col />                         {/* ชื่อประเภท - กินพื้นที่ที่เหลือ */}
-            <col className="w-28" />        {/* [CHANGED] จัดการ: จากกว้าง 36 → 28 ให้ไม่ชิดขวาเกิน */}
-          </colgroup>
-
           {/* ================= THEAD ================= */}
           <thead>
             <tr className="bg-[#4A816F] text-white">
@@ -79,13 +74,7 @@ export default function TagManagementTable({ rowsFromApi }: Props) {
               {headerLabels.map((label) => (
                 <th
                   key={label}
-                  className={[
-                    "px-3 text-sm font-medium",
-                    ROW_H,
-                    "align-middle",
-                    // [CHANGED] หัวคอลัมน์ "จัดการ" ให้ชิดซ้าย (จากเดิม center) เพื่อให้ภาพรวมดูลดความชิดขอบขวา
-                    label === "จัดการ" ? "text-left" : "text-left",
-                  ].join(" ")}
+                  className={`text-left px-3 text-sm font-medium ${ROW_H} align-middle`}
                 >
                   {label}
                 </th>
@@ -118,24 +107,21 @@ export default function TagManagementTable({ rowsFromApi }: Props) {
 
                   {/* คอลัมน์ข้อมูล — ถ้าไม่มีข้อมูลให้ปล่อยว่างจริง ๆ */}
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.tagName : null}
+                    {hasData ? row!.accountName : null}
+                  </td>
+                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
+                    {hasData ? row!.role : null}
+                  </td>
+                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
+                    {hasData ? row!.email : null}
                   </td>
 
-                  {/* คอลัมน์จัดการ */}
-                  <td
-                    className={[
-                      "px-3 text-sm text-gray-700",
-                      ROW_H,
-                      "align-middle",
-                      "border-t border-[#BBE7E3]",
-                      // [CHANGED] จัดแนวซ้าย + ขยับเข้าอีกนิดด้วย padding ซ้าย 2px
-                      "text-left pl-1",
-                    ].join(" ")}
-                  >
+                  {/* คอลัมน์จัดการ: แสดงไอคอนเฉพาะเมื่อมีข้อมูล */}
+                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
                     {hasData ? (
-                      // [CHANGED] ใช้ flex + justify-start เพื่อชิดซ้าย ไม่ลอยกลาง/ขวา
-                      <div className="flex justify-start items-center gap-3">
+                      <div className="flex items-center gap-3">
                         {/* ▼================ ใส่ไอคอนจริงตรงนี้ ================= ▼ */}
+                        {/* <UsersIcon onClick={() => handleManageMembers(row)} /> */}
                         {/* <EditIcon  onClick={() => handleEdit(row)} /> */}
                         {/* <TrashIcon onClick={() => handleDelete(row)} /> */}
                         {/* ▲===================================================▲ */}
@@ -150,7 +136,6 @@ export default function TagManagementTable({ rowsFromApi }: Props) {
           {/* ================= TFOOT ================= */}
           <tfoot>
             <tr>
-              {/* colSpan = จำนวนหัวคอลัมน์ (2) + 1 ช่อง checkbox = 3 */}
               <td colSpan={headerLabels.length + 1} className="bg-white border-t-4 border-[#3FBAAE]">
                 <div className="px-3 py-3 text-sm text-gray-700">
                   {/* จำนวนจริงจาก data.length; ถ้าไม่มีข้อมูล → 0 แถว */}

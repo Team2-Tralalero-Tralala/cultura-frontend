@@ -1,7 +1,7 @@
 
 // ================================================
-// PackageManagementTable.tsx
-// Super Admin: ตาราง "จัดการแพ็กเกจ" (UI เท่านั้น / ยังไม่ผูก DB)
+// AccommodationTable.tsx
+// Admin: ตาราง "จัดการที่พัก" (UI เท่านั้น / ยังไม่ผูก DB)
 // เงื่อนไขสำคัญ:
 // - แสดง 10 แถวเสมอ (placeholder) ถ้าข้อมูลจริงน้อยกว่า
 // - ถ้าแถว "ไม่มีข้อมูล": ช่องทั้งหมดว่าง, ไม่แสดง checkbox, ไม่แสดงไอคอนจัดการ
@@ -13,22 +13,20 @@
 import React, { useEffect, useState } from "react";
 
 // 1) โครงข้อมูลต่อแถว (ตอนต่อ DB จริง ให้ map เข้ามารูปแบบนี้)
-export type PackageRow = {
-  packageName: string;     // ชื่อแพ็กเกจ
-  communityName: string;   // ชื่อชุมชน
-  manager: string;         // คนดูแล
-  packageStatus: string;   // สถานะแพ็กเกจ (เผยแพร่ / ไม่เผยแพร่)
-  approvalStatus: string;  // สถานะการอนุมัติ (อนุมัติ / รออนุมัติ)
+export type AccommodationRow = {
+  accommodationName: string; // ชื่อที่พัก
+  description: string;       // คำอธิบาย
+  tagName: string;          // ประเภท
 };
 
 // 2) พร็อพรองรับการส่งข้อมูลจากภายนอกได้ด้วย (ถ้าอยากควบคุมจากหน้า parent)
 type Props = {
-  rowsFromApi?: PackageRow[];
+  rowsFromApi?: AccommodationRow[];
 };
 
-export default function PackageManagementTable({ rowsFromApi }: Props) {
+export default function AccommodationTable({ rowsFromApi }: Props) {
   // 3) state เก็บข้อมูลที่ดึงมา (ตอนนี้ mock: ว่าง)
-  const [data, setData] = useState<PackageRow[]>([]);
+  const [data, setData] = useState<AccommodationRow[]>([]);
 
   // 4) เมื่อมีการส่ง rowsFromApi เข้ามา ให้ใช้เลย / ถ้าไม่มีให้ mock ว่างไว้ก่อน
   useEffect(() => {
@@ -54,7 +52,7 @@ export default function PackageManagementTable({ rowsFromApi }: Props) {
   // 5) ค่าคงที่ UI
   const ROW_H = "h-12"; // สูง 48px
   const PLACEHOLDER_ROWS = 10; // ต้องการโชว์ 10 แถวเสมอ
-  const headerLabels = [ "ชื่อแพ็กเกจ", "ชื่อชุมชน", "คนดูแล", "สถานะแพ็กเกจ", "สถานะการอนุมัติ", "จัดการ"];
+  const headerLabels = ["ชื่อที่พัก", "คำอธิบาย", "ประเภท", "จัดการ"];
 
   // 6) เตรียม index 0..9 สำหรับ render 10 แถว
   const slots = Array.from({ length: PLACEHOLDER_ROWS }, (_, i) => i);
@@ -112,20 +110,15 @@ export default function PackageManagementTable({ rowsFromApi }: Props) {
 
                   {/* คอลัมน์ข้อมูล: ถ้าไม่มีข้อมูล → ปล่อยว่างจริงๆ */}
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.packageName : null}
+                    {hasData ? row!.accommodationName : null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.communityName : null}
+                    {hasData ? row!.description: null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.manager : null}
+                    {hasData ? row!.tagName : null}
                   </td>
-                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.packageStatus : null}
-                  </td>
-                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.approvalStatus : null}
-                  </td>
+                  
 
                   {/* คอลัมน์จัดการ: แสดงไอคอนเฉพาะเมื่อมีข้อมูล */}
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>

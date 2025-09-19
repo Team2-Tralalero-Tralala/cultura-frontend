@@ -1,15 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import ProfileForm from "./pages/ProfileForm";
+import PriceDemo from "./pages/PriceDemo";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/profile/edit" />} />
-        <Route path="/profile/edit" element={<ProfileForm />} />
+        <Route path="/" element={<PriceDemo />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
-

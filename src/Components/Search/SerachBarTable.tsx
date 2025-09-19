@@ -1,4 +1,6 @@
-// SearchBarTable สำหรับค้นหาในตาราง 
+/*
+ * คำอธิบาย : Component SearchBarTable สำหรับค้นหาข้อมูลในตาราง
+*/ 
 import React from "react";
 import { FiSearch } from "react-icons/fi"; 
 

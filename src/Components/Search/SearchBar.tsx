@@ -1,4 +1,6 @@
-// SearchBar แบบ Header
+/*
+ * คำอธิบาย : Component SearchBar แบบ Header สำหรับค้นหาแพ็กเกจกิจกรรม
+*/ 
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 

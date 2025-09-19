@@ -26,7 +26,7 @@ type Props = {
   rowsFromApi?: PackageRow[];
 };
 
-export default function PackageApprovalTableForAd({ rowsFromApi }: Props) {
+export default function PackageTableForAd({ rowsFromApi }: Props) {
   // 3) state เก็บข้อมูลที่ดึงมา (ตอนนี้ mock: ว่าง)
   const [data, setData] = useState<PackageRow[]>([]);
 

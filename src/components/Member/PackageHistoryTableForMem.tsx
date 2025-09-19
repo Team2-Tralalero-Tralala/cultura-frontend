@@ -1,7 +1,8 @@
 
+
 // ================================================
-// PackageApproval.tsx
-// Admin: ตาราง "อนุมัตขอคำ"แพ็กเกจ (UI เท่านั้น / ยังไม่ผูก DB)
+// PackageHistoryTableForMem.tsx
+// Member: ตาราง "ประวัติแพ็กเกจ" (UI เท่านั้น / ยังไม่ผูก DB)
 // เงื่อนไขสำคัญ:
 // - แสดง 10 แถวเสมอ (placeholder) ถ้าข้อมูลจริงน้อยกว่า
 // - ถ้าแถว "ไม่มีข้อมูล": ช่องทั้งหมดว่าง, ไม่แสดง checkbox, ไม่แสดงไอคอนจัดการ
@@ -13,21 +14,22 @@
 import React, { useEffect, useState } from "react";
 
 // 1) โครงข้อมูลต่อแถว (ตอนต่อ DB จริง ให้ map เข้ามารูปแบบนี้)
-export type PackageApprovalRow = {
+export type PackageRow = {
   packageName: string;     // ชื่อแพ็กเกจ
   communityName: string;   // ชื่อชุมชน
   manager: string;         // คนดูแล
-  approvalStatus: string;  // สถานะการอนุมัติ (รออนุมัติ / อนุมัติ / ปฏิเสธ)
+  packageStatus: string;   // สถานะแพ็กเกจ (เผยแพร่ / ไม่เผยแพร่)
+  dueDate: string;       // วันหมดอายุ
 };
 
 // 2) พร็อพรองรับการส่งข้อมูลจากภายนอกได้ด้วย (ถ้าอยากควบคุมจากหน้า parent)
 type Props = {
-  rowsFromApi?: PackageApprovalRow[];
+  rowsFromApi?: PackageRow[];
 };
 
-export default function PackageApprovalTableForAd({ rowsFromApi }: Props) {
+export default function PackageHistoryTableForMem({ rowsFromApi }: Props) {
   // 3) state เก็บข้อมูลที่ดึงมา (ตอนนี้ mock: ว่าง)
-  const [data, setData] = useState<PackageApprovalRow[]>([]);
+  const [data, setData] = useState<PackageRow[]>([]);
 
   // 4) เมื่อมีการส่ง rowsFromApi เข้ามา ให้ใช้เลย / ถ้าไม่มีให้ mock ว่างไว้ก่อน
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function PackageApprovalTableForAd({ rowsFromApi }: Props) {
   // 5) ค่าคงที่ UI
   const ROW_H = "h-12"; // สูง 48px
   const PLACEHOLDER_ROWS = 10; // ต้องการโชว์ 10 แถวเสมอ
-  const headerLabels = [ "ชื่อแพ็กเกจ", "ชื่อชุมชน", "คนดูแล", "สถานะการอนุมัติ", "จัดการ"];
+  const headerLabels = [ "ชื่อแพ็กเกจ", "ชื่อชุมชน", "คนดูแล", "สถานะแพ็กเกจ", "เวลาสิ้นสุด", "จัดการ"];
 
   // 6) เตรียม index 0..9 สำหรับ render 10 แถว
   const slots = Array.from({ length: PLACEHOLDER_ROWS }, (_, i) => i);
@@ -120,7 +122,10 @@ export default function PackageApprovalTableForAd({ rowsFromApi }: Props) {
                     {hasData ? row!.manager : null}
                   </td>
                   <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
-                    {hasData ? row!.approvalStatus : null}
+                    {hasData ? row!.packageStatus : null}
+                  </td>
+                  <td className={`px-3 text-sm text-gray-700 ${ROW_H} align-middle border-t border-[#BBE7E3]`}>
+                    {hasData ? row!.dueDate : null}
                   </td>
 
                   {/* คอลัมน์จัดการ: แสดงไอคอนเฉพาะเมื่อมีข้อมูล */}

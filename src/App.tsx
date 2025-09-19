@@ -21,6 +21,14 @@ import RefundRequestTableForAd from "./components/Admin/RefundRequestTableForAd"
 import BookingHistoryTableForAd from "./components/Admin/BookingHistoryTableForAd";
 import LogTableForAd from "./components/Admin/LogTableForAd";
 
+// Member
+import PackageTableForMem from "./components/Member/PackageTableForMem";
+import PackageHistoryTableForMem from "./components/Member/PackageHistoryTableForMem";
+import DraftTableForMem from "./components/Member/DraftTableForMem";
+import BookingTableForMem from "./components/Member/BookingTableForMem";
+import BookingHistoryTableForMem from "./components/Member/BookingHistoryTableForMem";
+import RefundRequestTableForMem from "./components/Member/RefundRequestTableForMem";
+
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 font-[var(--font-sarabun)]">
@@ -101,7 +109,28 @@ export default function App() {
             <br />
             <p>ประวัติการใช้งาน</p>
             <LogTableForAd />
-
+            <h1>=====================================================================================================================</h1>
+            <h1>Member</h1>
+            <br />
+            <p>จัดการแพ็กเกจ</p>
+            <PackageTableForMem />
+            <br />
+            <p>ประวัติแพ็กเกจ</p>
+            <PackageHistoryTableForMem />
+            <br />
+            <p>ฉบับร่าง</p>
+            <DraftTableForMem />
+            <br />
+            <p>จัดการการจอง</p>
+            <BookingTableForMem />
+            <br />
+            <p>ประวัติการจอง</p>
+            <BookingHistoryTableForMem />
+            <br />
+            <p>จัดการคำขอคืนเงิน</p>
+            <RefundRequestTableForMem />
+            <br />
+            
           </div>
         </main>
       </div>

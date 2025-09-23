@@ -1,5 +1,5 @@
 import NavbarTourist from "./Components/NavbarTourist"
-//import  NavbarSam  from "./components/NavbarSam"
+import  NavbarSam  from "./Components/NavbarSam"
 
 function nav_tourist() {
   return (
@@ -10,18 +10,14 @@ function nav_tourist() {
   )
 }
 
-
-/*function nav_sam() {
+function nav_sam() {
   return (
     <>
-      <NavbarSAM />
+      <NavbarSam />
     </>
   
   )
-}*/
-
-
-
+}
 
 export default  nav_tourist;
-//export default  nav_sam;
+

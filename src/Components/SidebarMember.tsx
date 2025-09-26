@@ -1,11 +1,28 @@
+/*
+ * คำอธิบาย : Component Sidebar สำหรับสมาชิก (Member)
+ * สมาชิกสามารถจัดการแพ็กเกจ, การจอง, รายงาน และออกจากระบบ
+ */
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 
 const SidebarMember = () => {
   const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
+  const [activeSubMenuItem, setActiveSubMenuItem] = useState<string | null>(null);
 
   const toggleSubMenu = (menu: string) => {
-    setActiveSubMenu(prev => (prev === menu ? null : menu));
+    // ถ้ากด main menu เดิมให้ปิด submenu และ reset submenu item
+    if (activeSubMenu === menu) {
+      setActiveSubMenu(null);
+      setActiveSubMenuItem(null);
+    } else {
+      setActiveSubMenu(menu);
+      setActiveSubMenuItem(null); // reset submenu item
+    }
+  };
+
+  const onClickSubMenuItem = (item: string, parentMenu: string) => {
+    setActiveSubMenuItem(item);
+    setActiveSubMenu(null); // ยกเลิก hover main menu เมื่อคลิก submenu
   };
 
   return (
@@ -23,8 +40,9 @@ const SidebarMember = () => {
           <div>
             <button
               onClick={() => toggleSubMenu('package')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${activeSubMenu === 'package' ? 'bg-[#0D845A]' : ''
-                }`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                activeSubMenu === 'package' ? 'bg-[#0D845A]' : ''
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -32,12 +50,45 @@ const SidebarMember = () => {
               </span>
               <Icon icon={activeSubMenu === 'package' ? 'mdi:chevron-up' : 'mdi:chevron-down'} className="text-sm" />
             </button>
-            {activeSubMenu === 'package' && (
-              //sub menu ฉบับร่าง, ประวัติแพ็กเกจ, ข้อเสนอแนะ
-              <div className="ml-8 mt-1 flex flex-col gap-1">
-                <a href="#" className="p-2 rounded hover:bg-[#0D845A] text-sm">ฉบับร่าง</a>
-                <a href="#" className="p-2 rounded hover:bg-[#0D845A] text-sm">ประวัติแพ็กเกจ</a>
-                <a href="#" className="p-2 rounded hover:bg-[#0D845A] text-sm">ข้อเสนอแนะ</a>
+
+            {(activeSubMenu === 'package' || activeSubMenuItem?.startsWith('package-')) && (
+              <div className="relative ml-4 mt-1 flex flex-col gap-1 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-white/40">
+                <a
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    onClickSubMenuItem('package-draft', 'package');
+                  }}
+                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-sm ${
+                    activeSubMenuItem === 'package-draft' ? 'bg-[#0D845A]' : ''
+                  }`}
+                >
+                  ฉบับร่าง
+                </a>
+                <a
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    onClickSubMenuItem('package-history', 'package');
+                  }}
+                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-sm ${
+                    activeSubMenuItem === 'package-history' ? 'bg-[#0D845A]' : ''
+                  }`}
+                >
+                  ประวัติแพ็กเกจ
+                </a>
+                <a
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    onClickSubMenuItem('package-feedback', 'package');
+                  }}
+                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-sm ${
+                    activeSubMenuItem === 'package-feedback' ? 'bg-[#0D845A]' : ''
+                  }`}
+                >
+                  ข้อเสนอแนะ
+                </a>
               </div>
             )}
           </div>
@@ -46,8 +97,9 @@ const SidebarMember = () => {
           <div>
             <button
               onClick={() => toggleSubMenu('booking')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${activeSubMenu === 'booking' ? 'bg-[#0D845A]' : ''
-                }`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                activeSubMenu === 'booking' ? 'bg-[#0D845A]' : ''
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -55,11 +107,33 @@ const SidebarMember = () => {
               </span>
               <Icon icon={activeSubMenu === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} className="text-sm" />
             </button>
-            {activeSubMenu === 'booking' && (
-              //sub menu คำขอคืนเงิน, ประวัติการจอง
-              <div className="ml-8 mt-1 flex flex-col gap-1">
-                <a href="#" className="p-2 rounded hover:bg-[#0D845A] text-base">คำขอคืนเงิน</a>
-                <a href="#" className="p-2 rounded hover:bg-[#0D845A] text-base">ประวัติการจอง</a>
+
+            {(activeSubMenu === 'booking' || activeSubMenuItem?.startsWith('booking-')) && (
+              <div className="relative ml-4 mt-1 flex flex-col gap-1 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-white/40">
+                <a
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    onClickSubMenuItem('booking-refund', 'booking');
+                  }}
+                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-base ${
+                    activeSubMenuItem === 'booking-refund' ? 'bg-[#0D845A]' : ''
+                  }`}
+                >
+                  คำขอคืนเงิน
+                </a>
+                <a
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    onClickSubMenuItem('booking-history', 'booking');
+                  }}
+                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-base ${
+                    activeSubMenuItem === 'booking-history' ? 'bg-[#0D845A]' : ''
+                  }`}
+                >
+                  ประวัติการจอง
+                </a>
               </div>
             )}
           </div>

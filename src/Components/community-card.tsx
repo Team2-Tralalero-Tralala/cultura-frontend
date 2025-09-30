@@ -16,7 +16,7 @@ function App() {
 function CommunityCard(props: { name: string; imageUrl: string }) {
   return (
     <div className="flex flex-row justify-center mt-10">
-      <div className="mx-2 w-40 h-50 bg-white rounded-xl border border-gray-200 overflow-hidden text-center p-4">
+      <div className="mx-2 w-40 h-50 bg-white rounded-xl overflow-hidden text-center p-4">
         <img
           className="mx-auto h-24 w-24 rounded-full bg-gray-300"
           src={props.imageUrl}

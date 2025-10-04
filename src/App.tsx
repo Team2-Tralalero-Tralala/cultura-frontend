@@ -8,16 +8,13 @@ function App() {
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-3xl font-bold">Hello world!</h1>
-
       <div className="flex items-center gap-3">
-        <span className="text-sm text-slate-600">เรียงตาม:</span>
         <Sort value={sort} onChange={setSort} />
       </div>
 
-      <p className="text-sm text-slate-600">
+      {/* <p className="text-sm text-slate-600">
         ค่าที่เลือกตอนนี้: <b>{sort}</b>
-      </p>
+      </p> */}
     </div>
   );
 }

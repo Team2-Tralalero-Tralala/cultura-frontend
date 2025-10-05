@@ -1,4 +1,4 @@
 const BookingRefundMember = () => {
-    return <div>คำขอคืนเงิน</div>;
+    return <div>คำขอคืนเงิน member</div>;
 }
 export default BookingRefundMember;

@@ -1,4 +1,4 @@
 const ManageMember = () => {   
-    return <h1>หน้าจัดการสมาชิก</h1>;
+    return <h1>หน้าจัดการสมาชิก admin</h1>;
 }
 export default ManageMember;

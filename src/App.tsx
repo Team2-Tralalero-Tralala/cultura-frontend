@@ -26,7 +26,7 @@ import PackageRequestAdmin from "./Pages/Admin/PackageRequestAdmin.tsx";
 import PackageHistoryAdmin from "./Pages/Admin/PackageHistoryAdmin.tsx";
 import PackageFeedbackAdmin from "./Pages/Admin/PackageFeedbackAdmin.tsx";
 import PackageDraftAdmin from "./Pages/Admin/PackageDraftAdmin.tsx";
-import ManageBooking from "./Pages/Admin/ManageBookingAdmin.tsx";
+import ManageBookingAdmin from "./Pages/Admin/ManageBookingAdmin.tsx";
 import BookingRefund from "./Pages/Admin/BookingRefundAdmin.tsx";
 import BookingHistory from "./Pages/Admin/BookingHistoryAdmin.tsx";
 import DashboardAdmin from "./Pages/Admin/DashboardAdmin.tsx";
@@ -84,7 +84,7 @@ function SidebarForAdmin() {
           <Route path="/package/draft" element={<PackageDraftAdmin />} />
           <Route path="/package/histories" element={<PackageHistoryAdmin />} />
           <Route path="/package/feedbacks" element={<PackageFeedbackAdmin />} />
-          <Route path="/bookings" element={<ManageBooking />} />
+          <Route path="/booking" element={<ManageBookingAdmin />} />
           <Route path="/booking/refunds" element={<BookingRefund />} />
           <Route path="/booking/histories" element={<BookingHistory />} />
           <Route path="/dashboard" element={<DashboardAdmin />} />

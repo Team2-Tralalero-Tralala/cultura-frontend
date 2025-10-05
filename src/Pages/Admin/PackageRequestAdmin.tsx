@@ -1,5 +1,5 @@
 const ApprovePackageAdmin = () => {
-  return <div>คำขออนุมัติ</div>;
+  return <div>คำขออนุมัติ admin</div>;
 };
 
 export default ApprovePackageAdmin;

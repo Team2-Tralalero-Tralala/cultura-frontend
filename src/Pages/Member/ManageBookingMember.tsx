@@ -1,4 +1,4 @@
 const ManageBookingMember = () => {
-    return <div>จัดการการจอง</div>;
+    return <div>จัดการการจอง member</div>;
 }
 export default ManageBookingMember;

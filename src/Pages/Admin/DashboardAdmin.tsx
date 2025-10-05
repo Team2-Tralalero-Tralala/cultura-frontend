@@ -1,4 +1,4 @@
 const DashboardAdmin = () => {
-    return <div>หน้ารายงาน</div>;
+    return <div>หน้ารายงาน admin</div>;
 }
 export default DashboardAdmin;

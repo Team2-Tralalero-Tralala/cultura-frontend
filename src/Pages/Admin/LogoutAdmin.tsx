@@ -1,4 +1,4 @@
 const Logout = () => {
-    return <h1>ออกจากระบบ</h1>;
+    return <h1>ออกจากระบบ admin</h1>;
 };
 export default Logout;

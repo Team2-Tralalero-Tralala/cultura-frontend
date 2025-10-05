@@ -1,4 +1,4 @@
 const BookingHistoryMember = () => {
-    return <div>ประวัติการจอง</div>;
+    return <div>ประวัติการจอง member</div>;
 }
 export default BookingHistoryMember;

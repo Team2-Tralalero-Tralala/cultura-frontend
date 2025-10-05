@@ -1,25 +1,25 @@
-import React, { type JSX } from "react"; //แก้ตรงนี้ แล้วตรงที่แดง JSX หาย
-// JSX (JavaScript XML) คือ syntax (รูปแบบการเขียนโค้ด) 
-// ที่ทำให้เราเขียนโค้ด React ได้เหมือน HTML 
-// แต่จริง ๆ แล้ว JSX ไม่ใช่ HTML
+/* 
+ * คำอธิบาย : Component สำหรับแสดงข้อมูลของแพ็กเกจท่องเที่ยว 
+ * เช่น ชื่อแพ็กเกจ, ที่ตั้ง, จำนวนคนจอง, ราคา และแท็กที่เกี่ยวข้อง
+ * Input  : Props { image, title, location, statusText, booked, capacity, tags, priceTHB, onClick }
+ * Output : การ์ดแสดงข้อมูลที่สามารถคลิกได้
+ */
 
-// กำหนด Props ที่การ์ดจะรับเข้ามา
+import React, { type JSX } from "react";
+
 type CardPackageProps = {
-  image: string;          // รูปภาพแพ็กเกจ
-  title: string;          // ชื่อแพ็กเกจ
-  location: string;       // ที่อยู่/ตำแหน่ง
-  statusText?: string;    // ข้อความสถานะ (เช่น เปิดจอง)
-  booked?: number;        // จำนวนคนที่จองแล้ว
-  capacity?: number;      // ความจุทั้งหมด
-  tags?: string[];        // แท็กข้อความ
-  priceTHB?: number;      // ราคา (บาท)
-  onClick?: () => void;   // event เมื่อคลิกทั้งการ์ด
-  className?: string;     // ส่งคลาสเพิ่มเติมได้
+  image: string;
+  title: string;
+  location: string;
+  statusText?: string;
+  booked?: number;
+  capacity?: number;
+  tags?: string[];
+  priceTHB?: number;
+  onClick?: () => void;
+  className?: string;
 };
 
-
-
-// คําอธิบาย : Function สําหรับแสดงข้อมูลการ์ดของแพ็กเกจ
 export default function CardPackage({
   image,
   title,
@@ -32,80 +32,57 @@ export default function CardPackage({
   onClick,
   className = "",
 }: CardPackageProps): JSX.Element {
-  // ฟอร์แมตราคาเป็นสกุลเงินไทย
   const price = new Intl.NumberFormat("th-TH", {
-    style: "currency",
     currency: "THB",
     minimumFractionDigits: 2,
   }).format(priceTHB);
 
-// ใช้ type alias แยกสำหรับ props → type CardPackageProps = { ... }
-
-// แล้ว นำมาเป็น type annotation ของพารามิเตอร์แบบ destructuring
-// → ({ ... }: CardPackageProps)
-
-// Return type กำหนดชัดเจนเป็น JSX.Element
-
   return (
-    // การ์ดหลัก
-    // <article> = HTML5 semantic tag ใช้ครอบเนื้อหาที่เป็น "หน่วยอิสระ"
-    // เช่น การ์ดสินค้า, บทความ, ข่าว → อ่านแยกได้เอง
-    // ต่างจาก <div> ที่ไม่มีความหมายทาง semantic
-    // Semantic = “มีความหมาย”
     <article
       onClick={onClick}
-    // border-... = utility class ของ Tailwind ที่กำหนด สีเส้นขอบ (border-color)
-    // slate = ชุดสี (color palette) ที่ Tailwind มีมาให้ (คล้าย ๆ สีเทา แต่โทนนุ่ม ๆ คล้ายหินชนวน)
-    // 200 = ระดับความเข้มของสี (scale จาก 50 → 900)
-      className={`w-[274px] h-[375px] rounded-2xl border border-slate-200 bg-white 
+      className={`relative w-[280px] h-[375px] rounded-2xl border border-slate-200 bg-white 
                   shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow
                   ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
-      {/* ส่วนรูปภาพด้านบน */}
+      {/* รูปภาพ */}
       <img src={image} alt={title} className="w-full h-[140px] object-cover" />
 
-      {/* ส่วนเนื้อหาของการ์ด */}
-      <div className="p-3 flex-1 flex flex-col">
+      {/* เนื้อหาด้านบน */}
+      <div className="p-3 pb-10 flex-1 flex flex-col">
+        <h3 className="text-base font-semibold leading-snug line-clamp-2 h-[42px] break-words ">
+          {title}
+        </h3>
 
-        {/* {leading-... = utility class ของ Tailwind ที่ใช้กำหนด line-height (ระยะห่างระหว่างบรรทัดของข้อความ)
-            snug = ค่า preset ของ line-height ที่ Tailwind กำหนดไว้} */}
-        {/* ชื่อแพ็กเกจ */}
-        <h3 className="text-base font-semibold leading-snug">{title}</h3>
+        {/* ที่ตั้ง */}
+        <p className="text-slate-500 text-xs mt-1 whitespace-nowrap truncate">{location}</p>
 
-        {/* ที่อยู่/ตำแหน่ง */}
-        <p className="text-slate-500 text-xs mt-1">{location}</p>
-
-        {/* ป้ายสถานะ */}
-        <span className="mt-2 inline-flex items-center rounded-md bg-emerald-600 px-2 py-1 text-white text-xs font-medium">
+        {/* สถานะการจอง */}
+        <span className="mt-2 inline-flex items-center rounded-md bg-emerald-600 px-2 py-1 text-white text-[10px] whitespace-nowrap">
           {statusText}
         </span>
 
-        {/* จำนวนคนที่จองแล้ว */}
+        {/* จำนวนคนจอง */}
         <p className="mt-2 text-slate-600 text-xs">
-          จำนวนคนจอง {booked}/{capacity} จองแล้ว
+          จำนวนคน {booked}/{capacity} จองแล้ว
         </p>
-          { /* .slice(start, end) = ตัด array เฉพาะบางช่วง
-                0, 4 = เอาตั้งแต่ index 0 ถึง index 3 → รวมทั้งหมด 4 ตัวแรก
-                เช่นถ้า tags = ["A", "B", "C", "D", "E", "F"]
-                หลัง slice จะได้ ["A", "B", "C", "D"]*/ }
-        {/* แท็กข้อความ (จำกัด 4 อัน ถ้าอยากเพิ่มก็เพิ่ม เพื่อความสวยงาม) */}
+
+        {/* แท็ก */}
         <div className="mt-2 flex flex-wrap gap-2">
-          {/* key={${t}-${i}}
-              React ต้องการ prop key ที่ไม่ซ้ำกัน เวลา render list
-              เพื่อให้ React รู้ว่า element ไหนถูกเพิ่ม/ลบ/แก้ไข → จะ render ได้ถูกและเร็ว
-              ในที่นี้ใช้การผสมค่า t + i เช่น "A-0", "B-1", "C-2"*/ }
-          {tags.slice(0, 4).map((t, i) => (
+          {tags.slice(0, 5).map((t, i) => (
             <span
               key={`${t}-${i}`}
-              className="rounded-xl border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+              className="rounded-xl border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 max-w-[90px] truncate"
+              title={t}
             >
-              {t}
+              {i === 4 && tags.length > 5 ? "..." : t}
             </span>
           ))}
         </div>
+      </div>
 
-        {/* ราคา (อยู่ล่างสุดเสมอ เพราะใช้ mt-auto ดันลง) */}
-        <div className="mt-auto font-semibold text-sm">ราคา {price}</div>
+      {/* ราคา */}
+      <div className="absolute bottom-3 left-3 font-semibold text-sm text-slate-900">
+        ราคา THB {price}
       </div>
     </article>
   );

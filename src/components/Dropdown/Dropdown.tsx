@@ -38,7 +38,7 @@ export default function Dropdown({ options, value, onChange, className = "" }: D
       {/* ปุ่มหลักแสดงค่าปัจจุบัน */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((open) => !open)}
         aria-haspopup="listbox"
         aria-expanded={open}
         className="w-[138px] h-[39px] flex items-center justify-between

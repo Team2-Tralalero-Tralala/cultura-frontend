@@ -1,6 +1,7 @@
 import * as React from 'react';
 import MuiTablePagination from '@mui/material/TablePagination';
 
+
 export default function TablePagination() {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -39,13 +40,14 @@ return (
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[10, 30, 50]}
           labelRowsPerPage=""
+          labelDisplayedRows={() => null}
           sx={{
             p: 0,
             '& .MuiTablePagination-toolbar': {
               p: 0,
             },
             '& .MuiTablePagination-actions': {
-              display: 'none', // ซ่อนปุ่ม next/prev ของส่วนนี้
+              display: 'none',
             },
           }}
         />

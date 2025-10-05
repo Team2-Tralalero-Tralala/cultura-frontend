@@ -4,30 +4,18 @@
  */
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
+import { Link, useLocation } from 'react-router-dom';
 
 const SidebarMember = () => {
   const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
-  const [activeSubMenuItem, setActiveSubMenuItem] = useState<string | null>(null);
+  const location = useLocation();
 
   const toggleSubMenu = (menu: string) => {
-    // ถ้ากด main menu เดิมให้ปิด submenu และ reset submenu item
-    if (activeSubMenu === menu) {
-      setActiveSubMenu(null);
-      setActiveSubMenuItem(null);
-    } else {
-      setActiveSubMenu(menu);
-      setActiveSubMenuItem(null); // reset submenu item
-    }
-  };
-
-  const onClickSubMenuItem = (item: string, parentMenu: string) => {
-    setActiveSubMenuItem(item);
-    setActiveSubMenu(null); // ยกเลิก hover main menu เมื่อคลิก submenu
+    setActiveSubMenu(activeSubMenu === menu ? null : menu);
   };
 
   return (
     <div className="h-screen w-60 bg-[#055035] text-white flex flex-col justify-between py-6 px-4">
-      {/* ส่วนบน: โลโก้ + เมนู */}
       <div>
         {/* โลโก้ */}
         <div className="flex items-center justify-center mb-6">
@@ -36,122 +24,122 @@ const SidebarMember = () => {
 
         {/* เมนู */}
         <nav className="flex flex-col gap-2 text-sm">
-          {/* จัดการแพ็กเกจ + sub menu */}
+          {/* ชุมชนของฉัน */}
           <div>
-            <button
-              onClick={() => toggleSubMenu('package')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                activeSubMenu === 'package' ? 'bg-[#0D845A]' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
-                จัดการแพ็กเกจ
-              </span>
-              <Icon icon={activeSubMenu === 'package' ? 'mdi:chevron-up' : 'mdi:chevron-down'} className="text-sm" />
-            </button>
-
-            {(activeSubMenu === 'package' || activeSubMenuItem?.startsWith('package-')) && (
-              <div className="relative ml-4 mt-1 flex flex-col gap-1 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-white/40">
-                <a
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    onClickSubMenuItem('package-draft', 'package');
-                  }}
-                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-sm ${
-                    activeSubMenuItem === 'package-draft' ? 'bg-[#0D845A]' : ''
+            <Link to="/communities">
+              <button
+                onClick={() => toggleSubMenu('community')}
+                className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${activeSubMenu === 'community' || location.pathname.startsWith('/community') ? 'bg-[#0D845A]' : ''
                   }`}
+              >
+                <span className="flex items-center gap-3">
+                  <Icon icon="material-symbols:group-outline" className="text-xl" />
+                  ชุมชนของฉัน
+                </span>
+                
+              </button>
+            </Link>
+          </div>
+          {/* จัดการแพ็กเกจ */}
+          <div>
+            <Link to="/packages">
+              <button
+                onClick={() => toggleSubMenu('package')}
+                className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${activeSubMenu === 'package' || location.pathname.startsWith('/package') ? 'bg-[#0D845A]' : ''
+                  }`}
+              >
+                <span className="flex items-center gap-3">
+                  <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
+                  จัดการแพ็กเกจ
+                </span>
+                <Icon icon={activeSubMenu === 'package' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              </button>
+            </Link>
+
+            {(activeSubMenu === 'package' || location.pathname.startsWith('/package')) && (
+              <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
+                <Link
+                  to="/package/draft"
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/package/draft' ? 'bg-[#0D845A]' : ''
+                    }`}
                 >
                   ฉบับร่าง
-                </a>
-                <a
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    onClickSubMenuItem('package-history', 'package');
-                  }}
-                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-sm ${
-                    activeSubMenuItem === 'package-history' ? 'bg-[#0D845A]' : ''
-                  }`}
+                </Link>
+                <Link
+                  to="/package/done"
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/package/history' ? 'bg-[#0D845A]' : ''
+                    }`}
                 >
                   ประวัติแพ็กเกจ
-                </a>
-                <a
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    onClickSubMenuItem('package-feedback', 'package');
-                  }}
-                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-sm ${
-                    activeSubMenuItem === 'package-feedback' ? 'bg-[#0D845A]' : ''
-                  }`}
+                </Link>
+                <Link
+                  to="/package/reviews"
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/package/reviews' ? 'bg-[#0D845A]' : ''
+                    }`}
                 >
                   ข้อเสนอแนะ
-                </a>
+                </Link>
               </div>
             )}
           </div>
 
-          {/* จัดการการจอง + sub menu */}
+          {/* จัดการการจอง */}
           <div>
-            <button
-              onClick={() => toggleSubMenu('booking')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                activeSubMenu === 'booking' ? 'bg-[#0D845A]' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
-                จัดการการจอง
-              </span>
-              <Icon icon={activeSubMenu === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} className="text-sm" />
-            </button>
-
-            {(activeSubMenu === 'booking' || activeSubMenuItem?.startsWith('booking-')) && (
-              <div className="relative ml-4 mt-1 flex flex-col gap-1 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-white/40">
-                <a
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    onClickSubMenuItem('booking-refund', 'booking');
-                  }}
-                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-base ${
-                    activeSubMenuItem === 'booking-refund' ? 'bg-[#0D845A]' : ''
+            <Link to="/bookings">
+              <button
+                onClick={() => toggleSubMenu('booking')}
+                className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${activeSubMenu === 'booking' || location.pathname.startsWith('/booking') ? 'bg-[#0D845A]' : ''
                   }`}
+              >
+                <span className="flex items-center gap-3">
+                  <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
+                  จัดการการจอง
+                </span>
+                <Icon icon={activeSubMenu === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              </button>
+            </Link>
+            {(activeSubMenu === 'booking' || location.pathname.startsWith('/booking')) && (
+              <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
+                <Link
+                  to="/booking/refunds"
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/booking/refund' ? 'bg-[#0D845A]' : ''
+                    }`}
                 >
                   คำขอคืนเงิน
-                </a>
-                <a
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    onClickSubMenuItem('booking-history', 'booking');
-                  }}
-                  className={`relative pl-8 p-2 rounded hover:bg-[#0D845A] text-base ${
-                    activeSubMenuItem === 'booking-history' ? 'bg-[#0D845A]' : ''
-                  }`}
+                </Link>
+                <Link
+                  to="/booking/histories"
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/booking/histories' ? 'bg-[#0D845A]' : ''
+                    }`}
                 >
                   ประวัติการจอง
-                </a>
+                </Link>
               </div>
             )}
           </div>
 
           {/* รายงาน */}
-          <a href="#" className="flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition">
+          <Link
+            to="/dashboard"
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/dashboard' ? 'bg-[#0D845A]' : ''
+              }`}
+          >
             <Icon icon="mdi:view-dashboard-outline" className="text-xl" />
             รายงาน
-          </a>
+          </Link>
         </nav>
       </div>
 
       {/* ออกจากระบบ */}
       <div className="flex flex-col gap-2 text-sm">
-        <a href="#" className="flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition">
+        <Link
+          to="/logout"
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${location.pathname === '/logout' ? 'bg-[#0D845A]' : ''
+            }`}
+        >
           <Icon icon="solar:logout-2-outline" className="text-xl" />
           ออกจากระบบ
-        </a>
+        </Link>
       </div>
     </div>
   );

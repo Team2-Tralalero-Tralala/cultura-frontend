@@ -1,70 +1,91 @@
 /*
  * Component: Dropdown
- * คำอธิบาย: Dropdown สำหรับเลือกค่าจากรายการตัวเลือกหนึ่ง โดยแสดง label ของตัวเลือกที่ถูกเลือก
- * Props:
- *   - options: Array ของตัวเลือกแต่ละตัว { label, value }
- *   - value: ค่าที่ถูกเลือกปัจจุบัน
- *   - onChange: ฟังก์ชัน callback เมื่อผู้ใช้เลือกตัวเลือกใหม่
+ * คำอธิบาย: Dropdown สำหรับเลือกค่าจากรายการตัวเลือก โดยแสดง label ของค่าที่ถูกเลือก
  */
 
+import { useEffect, useRef, useState } from "react";
 
-import { useState } from "react";
-
-// กำหนด type ของตัวเลือกใน dropdown
 type DropdownOption = {
-  label: string; // ข้อความที่จะแสดงให้ผู้ใช้เห็น
-  value: string; // ค่าจริงที่จะส่งออกเมื่อถูกเลือก
+  label: string; // ข้อความที่แสดง
+  value: string; // ค่าที่ส่งออกเมื่อเลือก
 };
 
-// กำหนด props ของ Dropdown component
 type DropdownProps = {
-  options: DropdownOption[];       // ตัวเลือกทั้งหมดของ dropdown
-  value: string;                   // ค่าที่ถูกเลือกอยู่ตอนนี้
-  onChange: (value: string) => void; // ฟังก์ชันเรียกเมื่อมีการเปลี่ยนค่า
+  options: DropdownOption[];        // รายการตัวเลือกทั้งหมด
+  value: string;                    // ค่าที่เลือกปัจจุบัน
+  onChange: (value: string) => void; // callback เมื่อผู้ใช้เลือกใหม่
+  className?: string;               // คลาสเพิ่มเติมถ้ามี
 };
 
-export const Dropdown = ({ options, value, onChange }: DropdownProps) => {
-  const [open, setOpen] = useState(false); // state เก็บว่า dropdown เปิดอยู่หรือไม่
+export default function Dropdown({ options, value, onChange, className = "" }: DropdownProps) {
+  const [open, setOpen] = useState(false);        // เปิด/ปิด dropdown
+  const ref = useRef<HTMLDivElement>(null);       // อ้างอิง DOM หลัก
+  const selected = options.find((opt) => opt.value === value); // หาค่าที่เลือกอยู่
 
-  // หาตัวเลือกที่ตรงกับค่าปัจจุบัน
-  const selected = options.find((o) => o.value === value);
+  // ปิด dropdown เมื่อคลิกนอก component
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="relative inline-block w-24">
-      {/* ปุ่มหลักของ dropdown */}
+    <div ref={ref} className={`relative inline-block ${className}`}>
+      {/* ปุ่มหลักแสดงค่าปัจจุบัน */}
       <button
-        onClick={() => setOpen(!open)} // toggle เปิด/ปิด dropdown
-        className="w-full flex justify-between items-center border rounded-lg px-3 py-2 bg-white text-gray-700"
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="w-[138px] h-[39px] flex items-center justify-between
+                   rounded-md border border-slate-300 bg-white px-3 text-sm
+                   font-medium shadow-sm hover:bg-slate-50"
       >
-        {/* แสดง label ของตัวเลือกที่ถูกเลือก*/}
-        <span>{selected ? selected.label : ""}</span>
-
-        {/* ลูกศรด้านขวา หมุนเมื่อ dropdown เปิด */}
-        <span
-          className={`ml-2 text-xs transform transition-transform ${open ? "rotate-180" : "" }`}> 
-          ▼ 
-        </span> 
+        {selected ? selected.label : "เลือก"}
+        <svg
+          viewBox="0 0 20 20"
+          className={`ml-2 h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path
+            d="M5.5 7.5l4.5 4.5 4.5-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
 
-      {/* เมนู dropdown แสดงเมื่อ open = true */}
+      {/* รายการ dropdown */}
       {open && (
-        <div className="absolute mt-2 w-24 bg-white border rounded-lg shadow-lg z-10 overflow-hidden">
+        <ul
+          role="listbox"
+          className="absolute z-50 mt-1 w-[138px] rounded-md border border-slate-200
+                     bg-white py-1 text-sm shadow-lg"
+        >
           {options.map((opt) => (
-            <div
-              key={opt.value} // key เพื่อให้ React track element ได้ถูกต้อง
+            <li
+              key={String(opt.value)}
+              role="option"
+              aria-selected={value === opt.value}
               onClick={() => {
-                onChange(opt.value); // เรียก callback เมื่อเลือกตัวเลือก
-                setOpen(false);       // ปิด dropdown หลังจากเลือก
+                onChange(opt.value);
+                setOpen(false);
               }}
-              className={`block w-full text-center px-4 py-2 hover:bg-green-100 ${
-                value === opt.value ? "font-medium" : "" // ตัวเลือกที่ถูกเลือกทำตัวหนา
+              className={`cursor-pointer px-3 py-2 hover:bg-slate-100 ${
+                value === opt.value ? "bg-slate-50 font-semibold" : ""
               }`}
             >
-              {opt.label} {/* แสดงข้อความของตัวเลือก */}
-            </div>
+              {opt.label}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
-};
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dropdown } from "./components/Dropdown/Dropdown";
+import Dropdown from "./components/Dropdown/Dropdown";
 
 function App() {
   // สร้าง state สำหรับเก็บค่าที่เลือกจาก Dropdown
@@ -19,9 +19,11 @@ function App() {
       
       {/* ใช้ Dropdown component */}
       <div className="p-6">
-      <Dropdown options={options} value={selected} onChange={setSelected} />
-      {/* แสดงค่าที่เลือกออกมาด้านล่าง */}
-      <p className="ml-30">คุณเลือก: {selected}</p>
+        <Dropdown 
+          options={options} 
+          value={selected} 
+          onChange={setSelected} 
+        />
       </div>
     </>
   );

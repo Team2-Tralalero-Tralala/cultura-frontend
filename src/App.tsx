@@ -1,13 +1,13 @@
 import React from "react";
 import TablePagination from './Components/Pagination/TablePagination';
-import { PaginationRounded } from './Components/Pagination/PaginationRounded';
+import PaginationRoundedForCardPackage  from './Components/Pagination/PaginationRoundedForCardPackage';
 
 function App() {
   const totalData = 50;
   return (
     <div >
       <TablePagination totalData={totalData}/>
-      <PaginationRounded />
+      <PaginationRoundedForCardPackage totalData={totalData}/>
     </div>
   );
 }

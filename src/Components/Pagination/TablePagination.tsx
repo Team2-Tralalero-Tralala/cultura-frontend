@@ -3,7 +3,7 @@ import MuiTablePagination from '@mui/material/TablePagination';
 
 /* 
  * Component: TablePagination (Client)
- * คำอธิบาย: ใช้ควบคุมการแบ่งหน้า และจำนวนแถวต่อหน้า (Pagination Controller)
+ * คำอธิบาย: ใช้ควบคุมการแบ่งหน้า และจำนวนแถวต่อหน้าสำหรับตารางข้อมูล
  * Input:
  *   - totalData (number): จำนวนข้อมูลทั้งหมดในตาราง
  * Output:

@@ -2,8 +2,8 @@ import React from 'react';
 import Pagination from '@mui/material/Pagination';
 
 /*
- * Component: PaginationRoundedForCardPackage
- * คำอธิบาย: ใช้ควบคุมการแบ่งหน้าสำหรับการแสดงผล Card Packages
+ * Component: PaginationRoundedForCardCommunity
+ * คำอธิบาย: ใช้ควบคุมการแบ่งหน้าสำหรับการแสดงผล Card Community
  * Input:
  *   - totalData (number): จำนวนข้อมูลทั้งหมดในตาราง
  * Output:
@@ -16,9 +16,9 @@ type PaginationRoundedProps = {
   onQueryChange?: (query: { page: number; limit: number }) => void; // callback สำหรับส่งให้ parent เมื่อมีการเปลี่ยนหน้า/จำนวนต่อหน้า
 };
 
-export default function PaginationRoundedForCardPackage({ totalData, onQueryChange }: PaginationRoundedProps) {
+export default function PaginationRoundedForCardCommunity({ totalData, onQueryChange }: PaginationRoundedProps) {
   const [page, setPage] = React.useState(1); // เก็บหน้าปัจจุบัน
-  const limit = 9; // จำนวน cardpackage ต่อหน้าคงที่ 9
+  const limit = 30; // จำนวน card community ต่อหน้าคงที่ 30
   const totalPages = Math.ceil(totalData / limit); // คำนวณจำนวนหน้าทั้งหมด
 
   /*

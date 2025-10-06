@@ -3,9 +3,10 @@ import TablePagination from './Components/Pagination/TablePagination';
 import { PaginationRounded } from './Components/Pagination/PaginationRounded';
 
 function App() {
+  const totalData = 50;
   return (
-    <div style={{ padding: 20 }}>
-      <TablePagination />
+    <div >
+      <TablePagination totalData={totalData}/>
       <PaginationRounded />
     </div>
   );

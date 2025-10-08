@@ -121,4 +121,4 @@ function SidebarForMember() {
 }
 
 
-export default SidebarForMember;
+export default SidebarForAdmin;

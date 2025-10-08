@@ -3,9 +3,13 @@ import flatpickr from "flatpickr";
 import { Thai } from "flatpickr/dist/l10n/th";
 import "flatpickr/dist/flatpickr.min.css";
 
-/**
- * Component: PackageDatePicker
- * แปลงจาก HTML เดิมเป็น React + TypeScript + Tailwind
+/* 
+ * คำอธิบาย : Component สำหรับเลือกวันที่เข้าร่วมกิจกรรม
+ * จะมีปุ่มให้เลือก 2 แบบ คือ กิจกรรมวันเดียว กับ กิจกรรมหลายวัน
+ * เมื่อเลือกกิจกรรมวันเดียว จะมีช่องให้เลือกวันที่เดียว
+ * เมื่อเลือกกิจกรรมหลายวัน จะมีช่องให้เลือกวันที่เริ่มต้น และ วันที่สิ้นสุด
+ * Input  : ไม่มี
+ * Output : หน้า UI สำหรับเลือกวันที่เข้าร่วมกิจกรรม
  */
 export default function selectDate() {
   const [isMultiDay, setIsMultiDay] = useState(false);

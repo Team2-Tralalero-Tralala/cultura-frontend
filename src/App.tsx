@@ -1,4 +1,4 @@
-import SelectDate from "./component/selectDate";
+import SelectDate from "./Components/selectDate";
 
 function App() {
   return (

@@ -104,7 +104,7 @@ const SidebarAdmin = () => {
   const isActive = (key: MenuKey) => activeMenuKey === key;
 
   return (
-    <div className="h-screen w-60 bg-[#055035] text-white flex flex-col justify-between py-6 px-4">
+    <div className="h-screen w-60 bg-[#055035] text-white font-sarabun flex flex-col justify-between py-6 px-4">
       <div>
         {/* โลโก้ */}
         <div className="flex items-center justify-center mb-6">

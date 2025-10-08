@@ -2,6 +2,8 @@ import { Route, Routes, Navigate } from "react-router";
 import SidebarSuperAdmin from "./Components/SidebarSuperAdmin.tsx";
 import SidebarAdmin from "./Components/SidebarAdmin";
 import SidebarMember from "./Components/SidebarMember";
+import NavbarTourist from "./Components/NavbarTourist"
+import  NavbarSam  from "./Components/NavbarSam"
 
 //super admin
 import CommunityManagement from "./Pages/SuperAdmin/ManageCommunity.tsx";
@@ -72,7 +74,7 @@ function SidebarForAdmin() {
   return (
     <div className="flex h-screen">
       <SidebarAdmin />
-      <div className="flex-1 p-8 overflow-auto">
+      <div className="flex-1 overflow-auto bg-gray-100">
         <Routes>
           <Route path="/communities" element={<ManageCommunity />} />
           <Route path="/community/stores" element={<ManageCommunityStore />} />
@@ -122,3 +124,22 @@ function SidebarForMember() {
 
 
 export default SidebarForAdmin;
+
+
+function nav_tourist() {
+  return (
+    <>
+      <NavbarTourist />
+      
+    </>
+  )
+}
+
+function nav_sam() {
+  return (
+    <>
+      <NavbarSam />
+    </>
+  
+  )
+}

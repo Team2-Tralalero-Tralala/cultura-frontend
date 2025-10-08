@@ -1,4 +1,10 @@
+import NavbarSam from "../../Components/NavbarSam";
+
 const PackageDraftAdmin = () => {
-    return <div>ฉบับร่างแพ็กเกจ admin</div>;
+    return (
+      <>
+        <NavbarSam />
+      </>
+    );
 }
 export default PackageDraftAdmin;

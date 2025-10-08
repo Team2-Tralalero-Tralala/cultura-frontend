@@ -1,13 +1,89 @@
-import Footer from "./components/Footer";
+/*
+* คำอธิบาย : ตัวอย่างการใช้งาน DataTable สำหรับแสดงรายการผู้ใช้
+* กำหนดคอลัมน์ ปุ่มจัดการต่อแถว (edit/block/unblock/delete)
+* และปุ่มดำเนินการแบบกลุ่ม (bulk delete / bulk unblock) พร้อมข้อมูลจำลอง
+*/
+
+import DataTable, { type Column, type DataTableProps } from "./Components/Tables/Index";
+import { TrashIcon, BanIcon } from "./Components/Tables/Icon"; 
+import { useMemo } from "react";
 
 function App() {
+  type Row = { id: number; name: string; role: string; community: string; email: string; suspended?: boolean; };
+
+  const columns: Column<Row>[] = [
+    { key: "name", header: "ชื่อ" },
+    { key: "role", header: "ประเภท" },
+    { key: "community", header: "ชุมชน" },
+    { key: "email", header: "อีเมล" },
+    
+  ];
+
+  const actions: NonNullable<DataTableProps<Row>["actions"]> = {
+    header: "จัดการ",
+    align: "right",
+    width: "200px",
+    variant: "icons",
+    className: "pr-10",
+    items: (r) => ["edit", r.suspended ? "unblock" : "block", "delete"],
+    // callbacks: {
+    //   edit:    (r) => console.log("edit", r.id),
+    //   block:   (r) => console.log("block", r.id),
+    //   unblock: (r) => console.log("unblock", r.id),
+    //   delete:  (r) => console.log("delete", r.id),
+    // },
+  };
+
+
+  const bulkActions: NonNullable<DataTableProps<Row>["bulkActions"]> = [
+    {
+      id: "bulk-delete",
+      label: "ลบทั้งหมด",
+      icon: TrashIcon,
+      intent: "neutral",
+      onClick: async (rows) => {
+        const ids = rows.map(r => r.id);
+        console.log("bulk delete ids:", ids);
+        // ตัวอย่างเชื่อม backend:
+        // await fetch("/api/users/bulk-delete", { method:"POST", headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids }) });
+      
+      },   
+    },
+    {
+    id: "bulk-unblock",
+    label: "ยกเลิกการระงับทั้งหมด",
+    icon: BanIcon,
+    intent: "neutral", 
+    onClick: async (rows) => {
+      const ids = rows.map(r => r.id);
+      console.log("bulk unblock ids:", ids);
+    },
+  },
+    
+  ];
+
+  const rows = useMemo<Row[]>(
+    () => Array.from({ length: 111 }, (_, i) => ({
+      id: i + 1,
+      name: `ผู้ใช้ ${i + 1}`,
+      role: i % 3 === 0 ? "ผู้ดูแลระบบ" : "สมาชิก",
+      community: ["บ้านแว้ว", "คลองสระบัว", "สามช่อง"][i % 3],
+      email: `user${i + 1}@ex.com`,
+      suspended: i % 7 === 0,
+    })), []
+  );
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 p-6">
-        <h1 className="text-3xl font-bold underline">Hello world!</h1>
-      </main>
-      <Footer />
-    </div>
+    <DataTable<Row>
+      data={rows}
+      columns={columns}
+      getRowKey={(r) => r.id}
+      actions={actions}
+      bulkActions={bulkActions}      
+      pageSizeOptions={[10, 30, 50]}
+      defaultPageSize={10}
+      theme="brand"
+    />
   );
 }
 

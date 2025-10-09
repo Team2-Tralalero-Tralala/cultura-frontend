@@ -25,34 +25,19 @@ const SidebarSuperAdmin = () => {
 
   // ตั้งค่าเมนูที่ active จาก path
   useEffect(() => {
-    if (pathname === '/communities') {
-      setActiveMenuKey('communities');
-    } else if (pathname === '/user/blocked') {
-      setActiveMenuKey('user-blocked');
-      setOpenDropdown('users');
-    } else if (pathname.startsWith('/users')) {
-      setActiveMenuKey('users');
-      setOpenDropdown('users');
-    } else if (pathname === '/package-requests') {
-      setActiveMenuKey('package-requests');
-      setOpenDropdown('packages');
-    } else if (pathname.startsWith('/packages')) {
-      setActiveMenuKey('packages');
-      setOpenDropdown('packages');
-    } else if (pathname === '/tags') {
-      setActiveMenuKey('tags');
-    } else if (pathname === '/dashboard') {
-      setActiveMenuKey('dashboard');
-    } else if (pathname === '/logs') {
-      setActiveMenuKey('logs');
-    } else if (pathname === '/setting') {
-      setActiveMenuKey('setting');
-    } else if (pathname === '/logout') {
-      setActiveMenuKey('logout');
-    } else {
-      setActiveMenuKey(null);
-    }
-  }, [pathname]);
+  if (pathname === '/super/communities') setActiveMenuKey('communities');
+  else if (pathname === '/super/user/blocked') { setActiveMenuKey('user-blocked'); setOpenDropdown('users'); }
+  else if (pathname.startsWith('/super/users')) { setActiveMenuKey('users'); setOpenDropdown('users'); }
+  else if (pathname === '/super/package-requests') { setActiveMenuKey('package-requests'); setOpenDropdown('packages'); }
+  else if (pathname.startsWith('/super/packages')) { setActiveMenuKey('packages'); setOpenDropdown('packages'); }
+  else if (pathname === '/super/tags') setActiveMenuKey('tags');
+  else if (pathname === '/super/dashboard') setActiveMenuKey('dashboard');
+  else if (pathname === '/super/logs') setActiveMenuKey('logs');
+  else if (pathname === '/super/setting') setActiveMenuKey('setting');
+  else if (pathname === '/super/logout') setActiveMenuKey('logout');
+  else setActiveMenuKey(null);
+}, [pathname]);
+
 
   // สำหรับเปลี่ยนเมนูที่ active และเปิด dropdown ถ้าเกี่ยวข้อง
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
@@ -77,7 +62,7 @@ const SidebarSuperAdmin = () => {
 
           {/* จัดการชุมชน */}
           <Link
-            to="/communities"
+            to="/super/communities"
             onClick={() => handleClick('communities')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('communities') ? 'bg-[#0D845A]' : ''}`}
           >
@@ -101,7 +86,7 @@ const SidebarSuperAdmin = () => {
             {openDropdown === 'users' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
-                  to="/user/blocked"
+                  to="/super/user/blocked"
                   onClick={() => handleClick('user-blocked', 'users')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('user-blocked') ? 'bg-[#0D845A]' : ''}`}
                 >
@@ -127,7 +112,7 @@ const SidebarSuperAdmin = () => {
             {openDropdown === 'packages' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
-                  to="/package-requests"
+                  to="/super/package-requests"
                   onClick={() => handleClick('package-requests', 'packages')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('package-requests') ? 'bg-[#0D845A]' : ''}`}
                 >
@@ -139,7 +124,7 @@ const SidebarSuperAdmin = () => {
 
           {/* จัดการประเภท */}
           <Link
-            to="/tags"
+            to="/super/tags"
             onClick={() => handleClick('tags')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('tags') ? 'bg-[#0D845A]' : ''}`}
           >
@@ -149,7 +134,7 @@ const SidebarSuperAdmin = () => {
 
           {/* รายงาน */}
           <Link
-            to="/dashboard"
+            to="/super/dashboard"
             onClick={() => handleClick('dashboard')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('dashboard') ? 'bg-[#0D845A]' : ''}`}
           >
@@ -159,7 +144,7 @@ const SidebarSuperAdmin = () => {
 
           {/* ประวัติการเข้าใช้งาน */}
           <Link
-            to="/logs"
+            to="/super/logs"
             onClick={() => handleClick('logs')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('logs') ? 'bg-[#0D845A]' : ''}`}
           >
@@ -172,7 +157,7 @@ const SidebarSuperAdmin = () => {
       <div className="flex flex-col gap-2 text-sm">
         {/* ตั้งค่า */}
         <Link
-          to="/setting"
+          to="/super/setting"
           onClick={() => handleClick('setting')}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('setting') ? 'bg-[#0D845A]' : ''}`}
         >
@@ -182,7 +167,7 @@ const SidebarSuperAdmin = () => {
 
         {/* ออกจากระบบ */}
         <Link
-          to="/logout"
+          to="/super/logout"
           onClick={() => handleClick('logout')}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('logout') ? 'bg-[#0D845A]' : ''}`}
         >

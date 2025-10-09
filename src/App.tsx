@@ -10,6 +10,26 @@ import { Link, useLocation } from 'react-router-dom';
 import DataTable, { type Column, type DataTableProps } from "./Components/Tables/Index";
 import { TrashIcon, BanIcon } from "./Components/Tables/Icon"; 
 import { useMemo } from "react";
+import NavbarTourist from "./Components/NavbarTourist"
+import  NavbarSam  from "./Components/NavbarSam"
+
+function nav_tourist() {
+  return (
+    <>
+      <NavbarTourist />
+      
+    </>
+  )
+}
+
+function nav_sam() {
+  return (
+    <>
+      <NavbarSam />
+    </>
+  
+  )
+}
 
 function App() {
   type Row = { id: number; name: string; role: string; community: string; email: string; suspended?: boolean; };
@@ -376,3 +396,5 @@ const SidebarAdmin = () => {
 };
 
 export default SidebarAdmin;
+
+

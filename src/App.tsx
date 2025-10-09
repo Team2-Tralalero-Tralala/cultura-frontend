@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import SuperAdminLayout from "./Layouts/SuperAdminLayout"; // <<<<<< ตรงนี้สำคัญ
+import SuperAdminLayout from "./Layouts/SuperAdminLayout";
+import { devAutoLogin } from "./Libs/dev-login";
 
 import DashboardSuperAdmin from "./Pages/SuperAdmin/DashboardSuperAdmin";
 import ManageCommunity from "./Pages/SuperAdmin/ManageCommunity";
@@ -12,7 +13,11 @@ import ManageTag from "./Pages/SuperAdmin/ManageTag";
 import LogSuperAdmin from "./Pages/SuperAdmin/LogSuperAdmin";
 import Setting from "./Pages/SuperAdmin/Setting";
 import LogoutSuperAdmin from "./Pages/SuperAdmin/LogoutSuperAdmin";
+import EditPackage from "./Pages/SuperAdmin/EditPackage";
 
+if (import.meta.env.DEV) {
+  devAutoLogin(); // ทำครั้งเดียวตอน dev
+}
 export default function App() {
   return (
       <Routes>
@@ -24,12 +29,13 @@ export default function App() {
           <Route path="users" element={<ManageUser />} />
           <Route path="user/blocked" element={<BlockUser />} />
           <Route path="packages" element={<ManagePackageSuperAdmin />} />
+          <Route path="package/:id" element={<EditPackage />} />
           <Route path="package-requests" element={<ApprovePackage />} />
           <Route path="tags" element={<ManageTag />} />
           <Route path="logs" element={<LogSuperAdmin />} />
           <Route path="setting" element={<Setting />} />
           <Route path="logout" element={<LogoutSuperAdmin />} />
-          <Route path="*" element={<Navigate to="dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/super/dashboard" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/super/dashboard" replace />} />

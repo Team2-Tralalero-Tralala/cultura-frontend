@@ -1,12 +1,13 @@
 // src/Pages/SuperAdmin/ManagePackageSuperAdmin.tsx
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../Components/Tables/Index";
 import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
 import { TrashIcon } from "../../Components/Tables/Icon";
-import { fetchPackagesByRole} from "../../Services/package-services";
+import { fetchPackagesByRole } from "../../Services/package-services";
 import type { PackageRow } from "../../Types/Package";
 import { api } from "../../Libs/axios";
+import SearchBarTable from "../../Components/Search/SerachBarTable";
 
 const columns: Column<PackageRow>[] = [
   { key: "title", header: "ชื่อแพ็กเกจ", className: "min-w-[240px]" },
@@ -109,13 +110,47 @@ export default function ManagePackageSuperAdmin() {
   }, [load]);
 
   const pendingCount = React.useMemo(() => rows.filter((r) => !r.approved).length, [rows]);
+  const [query, setQuery] = useState("");
+  // ช่วย normalize ให้ค้นหาแบบไม่ติดช่องว่าง/ตัวพิมพ์เล็กใหญ่
+  const norm = (s: string) =>
+    (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+
+  // แปลงสถานะเป็นข้อความไทยเพื่อให้ค้นหาได้
+  const toPublishedText = (r: PackageRow) => (r.published ? "เผยแพร่" : "ไม่เผยแพร่");
+  const toApprovedText = (r: PackageRow) => (r.approved ? "อนุมัติ" : "รออนุมัติ");
+
+  // แถวที่ผ่านการค้นหา
+  const filteredRows = React.useMemo(() => {
+    const q = norm(query);
+    if (!q) return rows;
+    return rows.filter((r) => {
+      const haystacks = [
+        r.title,
+        r.community,
+        r.owner,
+        toPublishedText(r),
+        toApprovedText(r),
+      ].map(norm);
+      return haystacks.some((h) => h.includes(q));
+    });
+  }, [rows, query]);
+
+  // (ทางเลือก) พอเปลี่ยนคำค้น ให้เด้งกลับหน้าแรกของตาราง
+  React.useEffect(() => {
+    setPage(1);
+  }, [query]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
-
         <div className="flex items-center gap-3">
+          <div className="mt-6 w-full max-w-md">
+            <SearchBarTable
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
           <button
             onClick={goToApprovalRequests}
             className="ml-auto inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
@@ -135,7 +170,7 @@ export default function ManagePackageSuperAdmin() {
       {error && <div className="text-sm text-red-600">{error}</div>}
 
       <DataTable<PackageRow>
-        data={rows}
+        data={filteredRows}
         columns={columns}
         getRowKey={(r) => r.id}
         actions={actions}

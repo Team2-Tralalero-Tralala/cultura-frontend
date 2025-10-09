@@ -45,8 +45,8 @@ export default function FilterDropdown({ options, selected, onChange }: FilterPr
             <button
               key={opt.value} // key ต้องไม่ซ้ำ
               onClick={() => handleSelect(opt.value)} // เมื่อเลือกจะเรียก handleSelect
-              className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                opt.value === selected ? "bg-gray-200 font-medium" : "" // ไฮไลท์ option ที่เลือกอยู่
+              className={`block w-full text-left px-4 py-2 hover:bg-gray-100 hover:rounded-md ${
+                opt.value === selected ? "bg-gray-200 rounded-md font-medium" : "" // ไฮไลท์ option ที่เลือกอยู่
               }`}
             >
               {opt.label}

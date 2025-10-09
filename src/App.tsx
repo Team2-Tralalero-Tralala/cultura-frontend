@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Filters from "./Components/filters";
+import Filters from "./Components/Filters";
 
 function App() {
   // state เก็บค่าตัวกรองปัจจุบัน

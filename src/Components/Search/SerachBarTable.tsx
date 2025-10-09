@@ -14,7 +14,7 @@ type SearchBarProps = {
 export default function SearchBarTable({ value, onChange }: SearchBarProps) {
   return (
     <div
-      className="flex items-center border border-gray-300 rounded-lg px-2 bg-white w-60 h-12">
+      className="flex items-center border border-gray-300 rounded-lg px-2 bg-white w-60 h-12 mb-3">
       {/* ไอคอนค้นหา */}
       <FiSearch className="text-gray-500 w-5 h-5" />
       {/* ช่องพิมพ์ข้อความ */}

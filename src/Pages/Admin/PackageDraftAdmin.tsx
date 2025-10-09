@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import NavbarSam from "../../Components/NavbarSam";
 import DataTable, { type Column } from "../../Components/Tables/Index";
+import SearchBarTable from "../../Components/Search/SerachBarTable";
 
 interface Package extends Record<string, unknown> {
   id: number;
@@ -42,6 +43,10 @@ const PackageDraftAdmin = () => {
     <div className="font-sarabun">
       <NavbarSam />
       <div className="p-6">
+        <SearchBarTable
+          value=""
+          onChange={() => {}}
+        />
         <DataTable<Package>
           data={packages}
           columns={columns}

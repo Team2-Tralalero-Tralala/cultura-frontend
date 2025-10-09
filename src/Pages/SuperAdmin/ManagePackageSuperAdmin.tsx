@@ -14,6 +14,8 @@ import type {
 
 // ไอคอนปุ่ม
 import { TrashIcon } from "../../Components/Tables/Icon";
+import { useNavigate } from "react-router-dom";
+import { CheckCircle2 } from "lucide-react";
 
 // ---------- ชนิดข้อมูลของแถว ----------
 type PackageRow = {
@@ -124,24 +126,48 @@ const bulkActions: BulkAction<PackageRow>[] = [
 // ---------- หน้าเพจ ----------
 export default function ManagePackageSuperAdmin() {
   const rows = useMockRows();
+  const navigate = useNavigate();
+  const pendingCount = rows.filter((r) => !r.approved).length;
+  const goToApprovalRequests = () => navigate("/super/package-requests");
+
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">จัดการแพ็กเกจ</h1>
+  <div className="flex flex-col gap-2">
+    <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
 
-      <DataTable<PackageRow>
-        data={rows}
-        columns={columns}
-        getRowKey={(r) => r.id}
-        actions={actions}
-        bulkActions={bulkActions}
-        selectable
-        striped
-        pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={10}
-        theme="brand"
-        className="bg-white rounded-lg"
-      />
-    </div>
+    <button
+      onClick={goToApprovalRequests}
+      className="ml-auto relative inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
+                bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
+    >
+      <span>คำขออนุมัติ</span>
+      {/* badge จำนวนที่รออนุมัติ ถ้าจะใช้ค่อย uncomment พร้อมตัวแปร pendingCount */}
+      {/* {pendingCount > 0 && (
+        <span className="ml-2 inline-flex min-w-[1.25rem] justify-center rounded-full
+                        bg-white/90 px-1 text-xs font-semibold text-dark-green">
+          {pendingCount}
+        </span>
+      )} */}
+    </button>
+  </div>
+
+  {/* ตาราง (แถวล่าง) */}
+  <DataTable<PackageRow>
+    data={rows}
+    columns={columns}
+    getRowKey={(r) => r.id}
+    actions={actions}
+    bulkActions={bulkActions}
+    selectable
+    striped
+    pageSizeOptions={[10, 20, 50]}
+    defaultPageSize={10}
+    theme="brand"
+    className="bg-white rounded-lg"
+  />
+</div>
+
+    
   );
 }

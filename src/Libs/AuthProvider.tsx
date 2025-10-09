@@ -83,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const register = useCallback(async (data: RegisterData) => {
     try {
       const res = await axios.post(`${apiUrl}/auth/signup`, data);
+      //ยังไม่ได้ทำ
       return res.status === 201 || res.status === 200;
     } catch {
       return false;

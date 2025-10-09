@@ -20,7 +20,10 @@ type Props = {
  *   - ถ้า user.role อยู่ใน allow → แสดง <Outlet />
  *   - ถ้า user.role ไม่อยู่ใน allow → redirect ไปหน้า redirectTo
  */
-export default function ProtectedRoute({ allow, redirectTo = "/" }: Props) {
+export default function ProtectedRoute({
+  allow,
+  redirectTo = "/guest/home",
+}: Props) {
   const { user } = useAuth();
   const loc = useLocation();
 

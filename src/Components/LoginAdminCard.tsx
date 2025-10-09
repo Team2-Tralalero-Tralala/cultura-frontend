@@ -42,6 +42,7 @@ export function LoginAdminCard() {
    * คำอธิบาย : ตรวจสอบค่าของ field เดียว (username หรือ password)
    * โดยใช้ Zod และ update state formErrors
    */
+
   const validateField = (field: "username" | "password", value: string) => {
     const result = loginSchema.safeParse({
       username: field === "username" ? value : username,
@@ -54,14 +55,16 @@ export function LoginAdminCard() {
         : result.error.issues.find((i) => i.path[0] === field)?.message,
     }));
   };
-  // Handler เมื่อผู้ใช้กรอก username
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  // Handler เมื่อกรอก username
+  const handleUsernameChange = (e: React.ChangeEvent<FormElement>) => {
     const value = e.target.value;
     setUsername(value);
     validateField("username", value);
   };
-  // Handler เมื่อผู้ใช้กรอกรหัสผ่าน
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handler เมื่อกรอกรหัสผ่าน
+  const handlePasswordChange = (e: React.ChangeEvent<FormElement>) => {
     const value = e.target.value;
     setPassword(value);
     validateField("password", value);
@@ -103,8 +106,8 @@ export function LoginAdminCard() {
       }
       await login(username, password);
     } catch (error: any) {
-      const blockedMsg = error?.response?.data?.message;
-      const isBlocked = blockedMsg.includes("is blocked");
+      const blockedMsg = error?.response?.data?.message ?? "";
+      const isBlocked = blockedMsg.includes("ผู้ใช้ถูกบล็อก");
 
       // กรณี User is blocked
       if (isBlocked) {
@@ -118,17 +121,10 @@ export function LoginAdminCard() {
         return;
       }
 
-      // กรณี User not found หรือ Invalid password
+      // ส่ง error ภาษาไทยมาแสดง
       const backendMsg = error?.response?.data?.message;
-      if (backendMsg === "User not found") {
-        setError("ไม่พบบัญชี");
-        setIsLoading(false);
-        return;
-      } else if (backendMsg === "Invalid password") {
-        setError("รหัสผ่านไม่ถูกต้อง");
-        setIsLoading(false);
-        return;
-      }
+      setError(backendMsg);
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }

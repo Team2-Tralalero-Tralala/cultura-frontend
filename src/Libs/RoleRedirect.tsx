@@ -23,13 +23,13 @@ export default function RoleRedirect() {
 
   switch (user.role) {
     case "superadmin":
-      return <Navigate to="/superadmin/home" replace />;
+      return <Navigate to="/super/home" replace />;
     case "admin":
       return <Navigate to="/admin/home" replace />;
     case "member":
       return <Navigate to="/member/home" replace />;
     case "tourist":
-      return <Navigate to="/home" replace />;
+      return <Navigate to="/tourist/home" replace />;
     default:
       return <Navigate to="/" replace />;
   }

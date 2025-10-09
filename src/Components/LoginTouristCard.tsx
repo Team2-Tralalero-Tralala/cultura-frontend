@@ -55,18 +55,20 @@ export function LoginTouristCard() {
     }));
   };
 
+  type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
   // Handler เมื่อกรอก username
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUsernameChange = (e: React.ChangeEvent<FormElement>) => {
     const value = e.target.value;
     setUsername(value);
     validateField("username", value);
   };
   // Handler เมื่อกรอกรหัสผ่าน
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = (e: React.ChangeEvent<FormElement>) => {
     const value = e.target.value;
     setPassword(value);
     validateField("password", value);
   };
+
   /*
    * ฟังก์ชัน : handleLogin
    * คำอธิบาย : จัดการ event เมื่อผู้ใช้กด submit
@@ -102,7 +104,7 @@ export function LoginTouristCard() {
       if (loggedInUser.role !== "tourist") {
         setError("ไม่พบบัญชี");
       } else {
-        navigate("/tourist");
+        navigate("/tourist/home");
       }
     } catch (error: any) {
       const blockedMsg = error?.response?.data?.message;
@@ -120,17 +122,10 @@ export function LoginTouristCard() {
         return;
       }
 
-      // กรณี User not found หรือ Invalid password
+      // ส่ง error ภาษาไทยมาแสดง
       const backendMsg = error?.response?.data?.message;
-      if (backendMsg === "User not found") {
-        setError("ไม่พบบัญชี");
-        setIsLoading(false);
-        return;
-      } else if (backendMsg === "Invalid password") {
-        setError("รหัสผ่านไม่ถูกต้อง");
-        setIsLoading(false);
-        return;
-      }
+      setError(backendMsg);
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }

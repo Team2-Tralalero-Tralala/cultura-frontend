@@ -1,87 +1,39 @@
 /*
- * คำอธิบาย : Component สำหรับ Layout ของหน้า Authentication (เช่น Login, Register)
- * โดยจัดโครงร่างพื้นฐาน เช่น พื้นหลัง, โลโก้, ปุ่มสมัครสมาชิก และการ์ดเข้าสู่ระบบ
+ * คำอธิบาย : Page Component สำหรับหน้าเข้าสู่ระบบของ "ผู้ดูแลระบบ (Admin)"
+ * ใช้ AuthLayout ในการกำหนด Layout ของหน้า (โลโก้, สีพื้นหลัง, ปุ่มไปยังหน้า register)
+ * และใช้ LoginAdminCard เป็นฟอร์มเข้าสู่ระบบ
  */
-
-type AuthLayoutProps = {
-  children: React.ReactNode;
-  rightLabel: string;
-  rightButton: React.ReactNode;
-  color: string;
-  logo: string;
-};
-
+import Button from "@/Components/Button";
+import AuthLayout from "../Layouts/AuthLayout";
+import { Link } from "react-router";
+import { LoginAdminCard } from "@/Components/LoginAdminCard";
 /*
- * ฟังก์ชัน : AuthLayout
- * คำอธิบาย : ฟังก์ชัน Component สำหรับสร้าง Layout หน้า Authentication
- * Input :
- *   - children (ReactNode) : เนื้อหาที่จะเรนเดอร์ภายใน Layout (เช่นฟอร์ม Login)
- *   - rightLabel (string) : ข้อความที่จะแสดงด้านบนขวา (เช่น "ยังไม่มีบัญชี?")
- *   - rightButton (ReactNode) : ปุ่มหรือ element ที่จะแสดงถัดจากข้อความด้านบนขวา
- *   - color (string) : สีหลักของ Layout ("tourist" หรือ "admin")
- *   - logo (string) : path หรือ URL ของโลโก้ที่จะใช้แสดง
- * Output :
- *   - React component ที่ใช้เป็น Layout ของหน้าที่เกี่ยวกับ Authentication
+ * ฟังก์ชัน : LoginAdmin
+ * คำอธิบาย : แสดงหน้าเข้าสู่ระบบสำหรับ Admin
+ * โดยประกอบด้วย:
+ *   - Layout พื้นฐานจาก AuthLayout
+ *   - ปุ่ม "ลงทะเบียน" สำหรับไปยังหน้าสมัครสมาชิก
+ *   - ฟอร์มเข้าสู่ระบบ (LoginAdminCard)
+ * Input : -
+ * Output : React Component ที่ render หน้า Login ของ Admin
  */
-
-export default function AuthLayout({
-  children,
-  rightLabel,
-  rightButton,
-  color,
-  logo,
-}: AuthLayoutProps) {
-  /*
-   * ฟังก์ชัน : getBgColor
-   * คำอธิบาย : คืนค่า className สีพื้นหลังตาม role
-   * Input : color (string) - "tourist" หรือ "admin"
-   * Output : className ของ TailwindCSS
-   */
-  function getBgColor() {
-    switch (color) {
-      case "tourist":
-        return "bg-tourist-auth";
-      case "admin":
-      default:
-        return "bg-dark-green";
-    }
-  }
-  function getRingColor() {
-    switch (color) {
-      case "tourist":
-        return "ring-tourist-auth";
-      case "admin":
-      default:
-        return "ring-dark-green";
-    }
-  }
+export default function LoginAdmin() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-white overflow-hidden">
-      {/* มุมบนซ้าย */}
-      <div
-        className={`
-    absolute top-0 left-0 w-64 h-64 
-    ${getBgColor()} 
-    rounded-br-full 
-    ring-1 ring-offset-8 ${getRingColor()} 
-  `}
-      ></div>
-
-      <div className="absolute top-10 left-10 flex items-center">
-        <img src={logo} alt="Cultura Logo" className="w-40 top-8 right-8" />
+    <AuthLayout
+      rightLabel="ยังไม่มีบัญชี"
+      rightButton={
+        <Link to="guest/partner/register">
+          <Button type="confirm-admin" htmlType="button">
+            ลงทะเบียน
+          </Button>
+        </Link>
+      }
+      color={"admin"}
+      logo={"/logo-white.png"}
+    >
+      <div className="min-h-screen grid place-items-center px-4">
+        <LoginAdminCard />
       </div>
-      {/* มุมล่างขวา */}
-      <div
-        className={`absolute bottom-0 right-0 w-64 h-64 ${getBgColor()} rounded-tl-full ring-1 ring-offset-8 ${getRingColor()} `}
-      ></div>
-      {/* ปุ่มสมัครสมาชิก */}
-      <div className="absolute top-10 right-10 flex items-center gap-10">
-        <div className="text-gray-800 text-base">{rightLabel}</div>
-        {rightButton}
-      </div>
-
-      {/* การ์ดเข้าสู่ระบบ */}
-      <div className="relative">{children}</div>
-    </div>
+    </AuthLayout>
   );
 }

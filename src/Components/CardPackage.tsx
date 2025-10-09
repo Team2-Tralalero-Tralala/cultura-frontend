@@ -152,7 +152,9 @@ export default function CardPackage({
   const price = new Intl.NumberFormat("th-TH", {
     style: "currency",
     currency: "THB",
-    maximumFractionDigits: 0,
+    currencyDisplay: "code",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(priceTHB);
 
   // คำอธิบาย: เตรียมวันที่และข้อความสถานะ
@@ -220,7 +222,7 @@ export default function CardPackage({
 
       {/* ราคา (มุมซ้ายล่าง) */}
       <div className="absolute bottom-3 left-3 font-semibold text-sm text-slate-900">
-        {price}
+        ราคา {price}
       </div>
     </article>
   );

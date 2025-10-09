@@ -11,7 +11,7 @@ type SearchBarProps = {
 };
 
 // สร้าง Component SearchBar
-export default function SearchBar({ value, onChange }: SearchBarProps) {
+export default function SearchBarTable({ value, onChange }: SearchBarProps) {
   return (
     <div
       className="flex items-center border border-gray-300 rounded-lg px-2 bg-white w-60 h-12">

@@ -2,10 +2,15 @@ import React, { useState } from "react";
 import SearchBar from "./Components/Search/SearchBar";
 import SearchBarTable from "./Components/Search/SerachBarTable";
 
+/*
+ * คำอธิบาย : Component หลักของระบบ สำหรับแสดงหน้า Search ตัวอย่าง
+ * ประกอบด้วย SearchBar (Header) และ SearchBarTable (Table)
+ */
+
 function App() {
   const [query, setQuery] = useState("");
 
-  const searchBarHeader = (value: string) => {
+  const searchBar = (value: string) => {
     console.log("ค้นหาแพ็กเกจกิจกรรม:", value);
   };
 
@@ -13,7 +18,7 @@ function App() {
     <div className="flex flex-col items-center p-4">
       {/* SearchBarHeader */}
       <SearchBar
-        onSearch={searchBarHeader}
+        onSearch={searchBar}
         placeholder="ค้นหาแพ็กเกจกิจกรรม:"
       />
       {/* SearchBarTable */}

@@ -1,11 +1,11 @@
 import { Outlet } from "react-router-dom";
-import SidebarSuperAdmin from "../Components/SidebarSuperAdmin";
+import SidebarMember from "../Components/SidebarMember";
 import NavbarSam from "../Components/NavbarSam";
 
-export default function SuperAdminLayout() {
+export default function AdminLayout() {
     return (
         <div className="flex h-screen">
-            <SidebarSuperAdmin />
+            <SidebarMember />
             <div className="flex-1 min-w-0 flex flex-col">
                 <NavbarSam />
                 <main className="flex-1 overflow-auto p-6">

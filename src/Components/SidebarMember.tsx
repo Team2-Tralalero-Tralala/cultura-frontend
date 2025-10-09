@@ -27,34 +27,34 @@ const SidebarMember = () => {
 
   // useEffect ตรวจจับ path ที่เปลี่ยน เพื่ออัปเดตเมนูที่ active และ dropdown
   useEffect(() => {
-    if (pathname.startsWith('/community')) {
+    if (pathname.startsWith('/member/community')) {
       setActiveMenuKey('community');
       setOpenDropdown(null);
-    } else if (pathname === '/package/draft') {
+    } else if (pathname === '/member/package/draft') {
       setActiveMenuKey('package-draft');
       setOpenDropdown('package');
-    } else if (pathname === '/package/done') {
+    } else if (pathname === '/member/package/done') {
       setActiveMenuKey('package-history');
       setOpenDropdown('package');
-    } else if (pathname === '/package/reviews') {
+    } else if (pathname === '/member/package/reviews') {
       setActiveMenuKey('package-feedback');
       setOpenDropdown('package');
     } else if (pathname.startsWith('/package')) {
       setActiveMenuKey('package');
       setOpenDropdown('package');
-    } else if (pathname === '/booking/refunds') {
+    } else if (pathname === '/member/booking/refunds') {
       setActiveMenuKey('booking-refunds');
       setOpenDropdown('booking');
-    } else if (pathname === '/booking/histories') {
+    } else if (pathname === '/member/booking/histories') {
       setActiveMenuKey('booking-histories');
       setOpenDropdown('booking');
     } else if (pathname.startsWith('/booking')) {
       setActiveMenuKey('booking');
       setOpenDropdown('booking');
-    } else if (pathname === '/dashboard') {
+    } else if (pathname === '/member/dashboard') {
       setActiveMenuKey('dashboard');
       setOpenDropdown(null);
-    } else if (pathname === '/logout') {
+    } else if (pathname === '/member/logout') {
       setActiveMenuKey('logout');
       setOpenDropdown(null);
     } else {
@@ -90,7 +90,7 @@ const SidebarMember = () => {
         <nav className="flex flex-col gap-2 text-sm">
           {/* ชุมชนของฉัน */}
           <Link
-            to="/communities"
+            to="/member/communities"
             onClick={() => handleClick('community')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
               isActive('community') ? 'bg-[#0D845A]' : ''
@@ -119,7 +119,7 @@ const SidebarMember = () => {
             {openDropdown === 'package' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
-                  to="/package/draft"
+                  to="/member/package/draft"
                   onClick={() => handleClick('package-draft', 'package')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
                     isActive('package-draft') ? 'bg-[#0D845A]' : ''
@@ -128,7 +128,7 @@ const SidebarMember = () => {
                   ฉบับร่าง
                 </Link>
                 <Link
-                  to="/package/done"
+                  to="/member/package/done"
                   onClick={() => handleClick('package-history', 'package')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
                     isActive('package-history') ? 'bg-[#0D845A]' : ''
@@ -137,7 +137,7 @@ const SidebarMember = () => {
                   ประวัติแพ็กเกจ
                 </Link>
                 <Link
-                  to="/package/reviews"
+                  to="/member/package/reviews"
                   onClick={() => handleClick('package-feedback', 'package')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
                     isActive('package-feedback') ? 'bg-[#0D845A]' : ''
@@ -168,7 +168,7 @@ const SidebarMember = () => {
             {openDropdown === 'booking' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
-                  to="/booking/refunds"
+                  to="/member/booking/refunds"
                   onClick={() => handleClick('booking-refunds', 'booking')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
                     isActive('booking-refunds') ? 'bg-[#0D845A]' : ''
@@ -177,7 +177,7 @@ const SidebarMember = () => {
                   คำขอคืนเงิน
                 </Link>
                 <Link
-                  to="/booking/histories"
+                  to="/member/booking/histories"
                   onClick={() => handleClick('booking-histories', 'booking')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
                     isActive('booking-histories') ? 'bg-[#0D845A]' : ''
@@ -191,7 +191,7 @@ const SidebarMember = () => {
 
           {/* รายงาน */}
           <Link
-            to="/dashboard"
+            to="/member/dashboard"
             onClick={() => handleClick('dashboard')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
               isActive('dashboard') ? 'bg-[#0D845A]' : ''
@@ -206,7 +206,7 @@ const SidebarMember = () => {
       {/* ออกจากระบบ */}
       <div className="flex flex-col gap-2 text-sm">
         <Link
-          to="/logout"
+          to="/member/logout"
           onClick={() => handleClick('logout')}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
             isActive('logout') ? 'bg-[#0D845A]' : ''

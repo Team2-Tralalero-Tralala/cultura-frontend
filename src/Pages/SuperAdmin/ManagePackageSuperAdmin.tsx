@@ -144,28 +144,35 @@ export default function ManagePackageSuperAdmin() {
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
+
         <div className="flex items-center gap-3">
-          <div className="mt-6 w-full max-w-md">
+          {/* ช่องค้นหา: เอา mt-6 ออก และให้ยืดพื้นที่ฝั่งซ้าย */}
+          <div className="flex-1 max-w-md">
             <SearchBarTable
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <button
-            onClick={goToApprovalRequests}
-            className="ml-auto inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
-                       bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
-          >
-            <span>คำขออนุมัติ</span>
-            {pendingCount > 0 && (
-              <span className="ml-2 inline-flex min-w-[1.25rem] justify-center rounded-full
-                               bg-white/90 px-1 text-xs font-semibold text-dark-green">
-                {pendingCount}
-              </span>
-            )}
-          </button>
+
+          {/* กลุ่มปุ่มฝั่งขวา */}
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={goToApprovalRequests}
+              className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
+                        bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
+            >
+              <span>คำขออนุมัติ</span>
+              {pendingCount > 0 && (
+                <span className="ml-2 inline-flex min-w-[1.25rem] justify-center rounded-full
+                                bg-white/90 px-1 text-xs font-semibold text-dark-green">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
 
       {error && <div className="text-sm text-red-600">{error}</div>}
 

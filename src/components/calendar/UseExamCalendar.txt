@@ -1,0 +1,21 @@
+import { DailyDateInput } from "./components/calendar/input_calendar/DailyDateInput";
+import { CalendarTrigger } from "./components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+import { BEDateInput } from "./components/calendar/input_calendar/BoxDateInput";
+
+//สำหรับ เลือกวันที่เข้าร่วมของนักท่องเที่ยว
+<CalendarTrigger /> 
+
+//เป็นปฏิทินแบบกรอกวันที่เองได้
+      <BEDateInput
+        label="ปรับตามที่ต้องการ"
+        width={600}          
+        height={40}          
+        placeholder="ปรับตามที่ต้องการ"
+      />
+
+//เป็นแบบเลือก type วัน ช่วงเวลา เดือน
+      <DailyDateInput
+        width={300}
+        height={44}
+        placeholder="วัน/เดือน/ปี"
+      />

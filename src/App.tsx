@@ -159,26 +159,58 @@
 
 // export default App;
 
-import NavbarTourist from "./Components/NavbarTourist"
-import  NavbarSam  from "./Components/NavbarSam"
+// import NavbarTourist from "./Components/NavbarTourist"
+// import  NavbarSam  from "./Components/NavbarSam"
 
-function nav_tourist() {
-  return (
-    <>
-      <NavbarTourist />
+// function nav_tourist() {
+//   return (
+//     <>
+//       <NavbarTourist />
       
-    </>
-  )
-}
+//     </>
+//   )
+// import React, { useState } from "react";
+// import SearchBar from "./Components/Search/SearchBar";
+// import SearchBarTable from "./Components/Search/SerachBarTable";
 
-function nav_sam() {
-  return (
-    <>
-      <NavbarSam />
-    </>
+// /*
+//  * คำอธิบาย : Component หลักของระบบ สำหรับแสดงหน้า Search ตัวอย่าง
+//  * ประกอบด้วย SearchBar (Header) และ SearchBarTable (Table)
+//  */
+
+// function App() {
+//   const [query, setQuery] = useState("");
+
+//   const searchBar = (value: string) => {
+//     console.log("ค้นหาแพ็กเกจกิจกรรม:", value);
+//   };
+
+//   return (
+//     <div className="flex flex-col items-center p-4">
+//       {/* SearchBarHeader */}
+//       <SearchBar
+//         onSearch={searchBar}
+//         placeholder="ค้นหาแพ็กเกจกิจกรรม:"
+//       />
+//       {/* SearchBarTable */}
+//       <div className="mt-6 w-full max-w-md">
+//         <SearchBarTable
+//           value={query}
+//           onChange={(e) => setQuery(e.target.value)}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+
+// function nav_sam() {
+//   return (
+//     <>
+//       <NavbarSam />
+//     </>
   
-  )
-}
+//   )
+// }
 
-export default  nav_tourist;
+// export default  nav_tourist;
 

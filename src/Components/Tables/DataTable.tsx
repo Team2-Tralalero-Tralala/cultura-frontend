@@ -269,7 +269,7 @@ export function DataTable<T extends Record<string, unknown>>({
                         type="checkbox"
                         checked={sel.has(k)}
                         onChange={() => toggleOne(k)}
-                        className="h-4 w-4 rounded border-slate-300 accent-[#989898]"
+                        className="h-4 w-4 rounded border-slate-300 accent-[#696969]"
                       />
                     </td>
                   )}

@@ -15,9 +15,9 @@ import CreatePackageAdmin from "./Pages/Admin/CreatePackageAdmin";
 import EditPackageAdmin from "./Pages/Admin/EditPackageAdmin";
 import ManagePackageAdmin from "./Pages/Admin/ManagePackageAdmin";
 if (import.meta.env.DEV) {
-  // memberLogin();
+  memberLogin();
   // superLogin();
-  adminLogin();
+  // adminLogin();
   // touristLogin();
 }
 export default function App() {

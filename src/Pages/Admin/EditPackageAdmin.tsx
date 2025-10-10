@@ -1,30 +1,46 @@
+// src/Pages/Admin/EditPackageAdmin.tsx
+/**
+ * คำอธิบาย: หน้าจอแก้ไขแพ็กเกจ (บทบาท Admin)
+ * หน้าที่หลัก:
+ *  - โหลดข้อมูลแพ็กเกจตาม packageId มาใส่ฟอร์ม
+ *  - ส่งข้อมูลที่แก้ไขแล้วกลับไปอัปเดตผ่าน API
+ * หมายเหตุ:
+ *  - ใช้ TextField เป็นอินพุตมาตรฐานเพื่อความสม่ำเสมอของ UI
+ *  - ตั้งชื่อตัวแปรให้สื่อความหมาย (เช่น setFormField, formState, isSaving ฯลฯ)
+ */
+
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import TextField from "../../Components/TextField";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /* ================= Helpers ================= */
-function nz(s: any, fallback = "") {
-    const v = (s ?? "").toString().trim();
-    return v.length ? v : fallback;
+/** แปลง Date/ISO string → "yyyy-mm-dd" สำหรับ <input type="date"> */
+function toDateInput(input?: string | Date | null) {
+    if (!input) return "";
+    const dateObject = new Date(input);
+    if (isNaN(dateObject.getTime())) return "";
+    const year = dateObject.getFullYear();
+    const month = String(dateObject.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObject.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
-function toDateInput(v?: string | Date | null) {
-    if (!v) return "";
-    const d = new Date(v);
-    if (isNaN(d.getTime())) return "";
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+
+/** คืนค่าสตริงที่ trim แล้ว; ถ้าว่างให้คืน fallback */
+function normalizeOrDefault(value: any, fallback = "") {
+    const trimmed = (value ?? "").toString().trim();
+    return trimmed.length ? trimmed : fallback;
 }
 
 /* ================= Types ================= */
-type Form = {
+type EditPackageForm = {
     name: string;
     description: string;
+
     houseNumber: string;
-    villageNo: string;
+    villageNumber: string;
     province: string;
     district: string;
     subDistrict: string;
@@ -34,8 +50,8 @@ type Form = {
     longitude: string;
     placeQuery: string;
 
-    overseerMemberId: string; // users.id
-    tagId: string;            // เผื่อใช้ในอนาคต
+    overseerMemberId: string;
+    tagId: string;
     facility: string;
 
     startDate: string;
@@ -52,12 +68,12 @@ type Form = {
     addHomestay: boolean;
 };
 
-const initialForm: Form = {
+const initialFormState: EditPackageForm = {
     name: "",
     description: "",
 
     houseNumber: "",
-    villageNo: "",
+    villageNumber: "",
     province: "",
     district: "",
     subDistrict: "",
@@ -101,6 +117,7 @@ type LoadedPackage = {
     overseerMemberId: number;
     location: {
         houseNumber: string;
+        villageNumber?: string;
         subDistrict: string;
         district: string;
         province: string;
@@ -113,191 +130,189 @@ type LoadedPackage = {
 
 const EditPackageAdmin: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const pkgId = Number(id);
+    const packageId = Number(id);
     const navigate = useNavigate();
 
-    const [form, setForm] = React.useState<Form>(initialForm);
+    const [formState, setFormState] = React.useState<EditPackageForm>(initialFormState);
     const [communityId, setCommunityId] = React.useState<number | null>(null);
-    const [loading, setLoading] = React.useState(true);
-    const [saving, setSaving] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [ok, setOk] = React.useState<string | null>(null);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
-    const setF = <K extends keyof Form>(k: K, v: Form[K]) =>
-        setForm((s) => ({ ...s, [k]: v }));
+    /** อัปเดตฟิลด์ของฟอร์มแบบ key-safe */
+    const setFormField = <K extends keyof EditPackageForm>(key: K, value: EditPackageForm[K]) =>
+        setFormState((prev) => ({ ...prev, [key]: value }));
 
-    // ====== Load existing package ======
+    /**
+     * ดึงรายละเอียดแพ็กเกจ (role = admin) แล้วแม็ปลง formState
+     */
+    async function fetchPackageForAdmin(targetPackageId: number) {
+        setIsLoading(true);
+        setErrorMessage(null);
+        try {
+            const response = await axios.get(`${apiUrl}/admin/package/${targetPackageId}`, {
+                withCredentials: true,
+            });
+            const data: LoadedPackage = response.data?.data;
+            if (!data) return;
+
+            setCommunityId(Number(data.communityId));
+            setFormState({
+                name: normalizeOrDefault(data.name),
+                description: normalizeOrDefault(data.description),
+
+                houseNumber: normalizeOrDefault(data.location?.houseNumber),
+                villageNumber: normalizeOrDefault(data.location?.villageNumber),
+                province: normalizeOrDefault(data.location?.province),
+                district: normalizeOrDefault(data.location?.district),
+                subDistrict: normalizeOrDefault(data.location?.subDistrict),
+                postalCode: normalizeOrDefault(data.location?.postalCode),
+                addressDetail: normalizeOrDefault(data.location?.detail),
+                latitude: String(data.location?.latitude ?? ""),
+                longitude: String(data.location?.longitude ?? ""),
+                placeQuery: "",
+
+                overseerMemberId: String(data.overseerMemberId ?? ""),
+                tagId: "",
+                facility: normalizeOrDefault(data.facility ?? data.warning ?? ""),
+
+                startDate: toDateInput(data.startDate),
+                startTime: "",
+                endDate: toDateInput(data.dueDate),
+                endTime: "",
+                openDate: "",
+                openTime: "",
+                closeDate: "",
+                closeTime: "",
+
+                capacity: String(data.capacity ?? ""),
+                price: String(data.price ?? ""),
+                addHomestay: false,
+            });
+        } catch (error: any) {
+            setErrorMessage(error?.response?.data?.message ?? error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     React.useEffect(() => {
-        let ignore = false;
-        (async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const res = await axios.get(`${apiUrl}/admin/package/${pkgId}`, {
-                    withCredentials: true,
-                });
-                const p: LoadedPackage = res.data?.data;
+        if (!Number.isFinite(packageId)) return;
+        fetchPackageForAdmin(packageId);
+    }, [packageId]);
 
-                if (!p || ignore) return;
-
-                setCommunityId(Number(p.communityId));
-
-                setForm({
-                    name: nz(p.name),
-                    description: nz(p.description),
-
-                    houseNumber: nz(p.location?.houseNumber),
-                    villageNo: "", // ไม่ได้ใช้จริงใน BE ตอนนี้ (ถ้ามีฟิลด์ใน location ให้ผูกเพิ่ม)
-                    province: nz(p.location?.province),
-                    district: nz(p.location?.district),
-                    subDistrict: nz(p.location?.subDistrict),
-                    postalCode: nz(p.location?.postalCode),
-                    addressDetail: nz(p.location?.detail),
-                    latitude: String(p.location?.latitude ?? ""),
-                    longitude: String(p.location?.longitude ?? ""),
-                    placeQuery: "",
-
-                    overseerMemberId: String(p.overseerMemberId ?? ""),
-                    tagId: "",
-                    facility: nz(p.facility ?? p.warning ?? ""),
-
-                    startDate: toDateInput(p.startDate),
-                    startTime: "",
-                    endDate: toDateInput(p.dueDate),
-                    endTime: "",
-                    openDate: "",
-                    openTime: "",
-                    closeDate: "",
-                    closeTime: "",
-
-                    capacity: String(p.capacity ?? ""),
-                    price: String(p.price ?? ""),
-                    addHomestay: false,
-                });
-            } catch (e: any) {
-                setError(e?.response?.data?.message ?? e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
-            } finally {
-                if (!ignore) setLoading(false);
-            }
-        })();
-        return () => {
-            ignore = true;
-        };
-    }, [pkgId]);
-
+    /** ตรวจเงื่อนไขก่อนส่งฟอร์ม */
     const canSubmit = React.useMemo(() => {
         const requiredFields = [
-            form.name,
-            form.description,
-            form.houseNumber,
-            form.province,
-            form.district,
-            form.subDistrict,
-            form.postalCode,
-            form.latitude,
-            form.longitude,
-            form.overseerMemberId,
-            form.capacity,
-            form.price,
-            form.startDate,
-            form.endDate,
+            formState.name,
+            formState.description,
+            formState.houseNumber,
+            formState.villageNumber,
+            formState.province,
+            formState.district,
+            formState.subDistrict,
+            formState.postalCode,
+            formState.latitude,
+            formState.longitude,
+            formState.overseerMemberId,
+            formState.capacity,
+            formState.price,
+            formState.startDate,
+            formState.endDate,
         ];
         return requiredFields.every((v) => String(v ?? "").trim() !== "");
-    }, [form]);
+    }, [formState]);
 
-    async function onSubmit(e: React.FormEvent) {
+    /** ส่งฟอร์มแก้ไขไปยัง API */
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!window.confirm("ยืนยันการบันทึกการแก้ไขแพ็กเกจใช่หรือไม่?")) return;
         if (!canSubmit || !communityId) return;
 
-        setSaving(true);
-        setError(null);
-        setOk(null);
+        setIsSaving(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
 
         try {
             const payload = {
-                // ต้องส่ง communityId ให้ BE ใช้ connect เสมอ
-                communityId: communityId,
-                overseerMemberId: Number(form.overseerMemberId),
+                communityId,
+                overseerMemberId: Number(formState.overseerMemberId),
 
-                name: nz(form.name),
-                description: nz(form.description),
-                capacity: Math.max(1, Number(form.capacity || 0)),
-                price: Math.max(0, Number(form.price || 0)),
-                warning: nz(form.facility),
-                statusPackage: "DRAFT" as const,   // ถ้ายังไม่เผยแพร่
-                statusApprove: "PENDING" as const, // ถ้ายังไม่อนุมัติ
-                startDate: nz(form.startDate),
-                dueDate: nz(form.endDate),
-                facility: nz(form.facility),
+                name: normalizeOrDefault(formState.name),
+                description: normalizeOrDefault(formState.description),
+                capacity: Math.max(1, Number(formState.capacity || 0)),
+                price: Math.max(0, Number(formState.price || 0)),
+                warning: normalizeOrDefault(formState.facility),
+                statusPackage: "DRAFT" as const,
+                statusApprove: "PENDING" as const,
+                startDate: normalizeOrDefault(formState.startDate),
+                dueDate: normalizeOrDefault(formState.endDate),
+                facility: normalizeOrDefault(formState.facility),
 
                 location: {
-                    houseNumber: nz(form.houseNumber),
-                    subDistrict: nz(form.subDistrict),
-                    district: nz(form.district),
-                    province: nz(form.province),
-                    postalCode: nz(form.postalCode),
-                    detail: nz(form.addressDetail),
-                    latitude: Number(form.latitude),
-                    longitude: Number(form.longitude),
+                    houseNumber: normalizeOrDefault(formState.houseNumber),
+                    subDistrict: normalizeOrDefault(formState.subDistrict),
+                    district: normalizeOrDefault(formState.district),
+                    province: normalizeOrDefault(formState.province),
+                    postalCode: normalizeOrDefault(formState.postalCode),
+                    detail: normalizeOrDefault(formState.addressDetail),
+                    latitude: Number(formState.latitude),
+                    longitude: Number(formState.longitude),
                 },
             };
 
-            await axios.put(`${apiUrl}/admin/package/${pkgId}`, payload, {
+            await axios.put(`${apiUrl}/admin/package/${packageId}`, payload, {
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
             });
 
-            setOk("บันทึกการแก้ไขสำเร็จ");
+            setSuccessMessage("บันทึกการแก้ไขสำเร็จ");
             alert("บันทึกการแก้ไขสำเร็จ!");
             navigate("/admin/packages");
-        } catch (err: any) {
-            console.error("Edit package (admin) error payload:", err?.response?.data);
-            setError(
-                err?.response?.data?.message ||
-                err?.response?.data?.error ||
-                err?.message ||
+        } catch (error: any) {
+            console.error("Edit package (admin) error payload:", error?.response?.data);
+            setErrorMessage(
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
                 "บันทึกการแก้ไขไม่สำเร็จ"
             );
             window.scrollTo({ top: 0, behavior: "smooth" });
         } finally {
-            setSaving(false);
+            setIsSaving(false);
         }
     }
 
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="w-full max-w-[1280px] mx-auto px-4 lg:px-6">
+            <div className="w-full max-w-none px-0 lg:px-0">
                 <div className="bg-white rounded-lg p-6 shadow-sm">กำลังโหลด…</div>
             </div>
         );
     }
 
     return (
-        <div className="w-full max-w-[1280px] mx-auto px-4 lg:px-6">
-            {/* header */}
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-            {ok && <div className="text-emerald-700 text-sm">{ok}</div>}
+        <div className="w-full max-w-none px-0 lg:px-0">
+            {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
+            {successMessage && <div className="text-emerald-700 text-sm">{successMessage}</div>}
 
             <form
-                onSubmit={onSubmit}
-                className="bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
+                onSubmit={handleSubmit}
+                className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
             >
-                {/* ชื่อแพ็กเกจ / คำอธิบายแพ็กเกจ */}
                 <label className="block text-xl mb-1">แก้ไขแพ็กเกจ</label>
+
+                {/* ชื่อ/คำอธิบาย */}
                 <section className="space-y-4">
-                    <div>
-                        <label className="block text-sm mb-1">
-                            ชื่อแพ็กเกจ <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                            className="w-full rounded-form border px-3 py-2"
-                            placeholder="ชื่อแพ็กเกจ"
-                            value={form.name}
-                            onChange={(e) => setF("name", e.target.value)}
-                            required
-                        />
-                    </div>
+                    <TextField
+                        id="name"
+                        label="ชื่อแพ็กเกจ"
+                        required
+                        placeholder="ชื่อแพ็กเกจ"
+                        value={formState.name}
+                        onChange={(e) => setFormField("name", e.target.value)}
+                    />
 
                     <div>
                         <label className="block text-sm mb-1">
@@ -306,8 +321,8 @@ const EditPackageAdmin: React.FC = () => {
                         <textarea
                             className="w-full rounded-form border px-3 py-2 min-h-[120px]"
                             placeholder="คำอธิบายแพ็กเกจ"
-                            value={form.description}
-                            onChange={(e) => setF("description", e.target.value)}
+                            value={formState.description}
+                            onChange={(e) => setFormField("description", e.target.value)}
                             required
                         />
                     </div>
@@ -316,288 +331,216 @@ const EditPackageAdmin: React.FC = () => {
                 {/* ที่อยู่ */}
                 <section className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-5">
-                        <div>
-                            <label className="block text-sm mb-1">
-                                บ้านเลขที่ <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="กรอกบ้านเลขที่ของชุมชน"
-                                value={form.houseNumber}
-                                onChange={(e) => setF("houseNumber", e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm mb-1">
-                                หมู่ที่ <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="กรอกหมู่ของชุมชน"
-                                value={form.villageNo}
-                                onChange={(e) => setF("villageNo", e.target.value)}
-                            />
-                        </div>
+                        <TextField
+                            id="houseNumber"
+                            label="บ้านเลขที่"
+                            required
+                            placeholder="กรอกบ้านเลขที่ของชุมชน"
+                            value={formState.houseNumber}
+                            onChange={(e) => setFormField("houseNumber", e.target.value)}
+                        />
+                        <TextField
+                            id="villageNumber"
+                            label="หมู่ที่"
+                            placeholder="กรอกหมู่ของชุมชน"
+                            value={formState.villageNumber}
+                            onChange={(e) => setFormField("villageNumber", e.target.value)}
+                        />
 
-                        <div>
-                            <label className="block text-sm mb-1">
-                                จังหวัด <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="เลือกจังหวัด"
-                                value={form.province}
-                                onChange={(e) => setF("province", e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm mb-1">
-                                อำเภอ / เขต <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="เลือกอำเภอ / เขต"
-                                value={form.district}
-                                onChange={(e) => setF("district", e.target.value)}
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm mb-1">
-                                ตำบล / แขวง <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="เลือกตำบล / แขวง"
-                                value={form.subDistrict}
-                                onChange={(e) => setF("subDistrict", e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm mb-1">
-                                รหัสไปรษณีย์ <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="เลือกไปรษณีย์"
-                                value={form.postalCode}
-                                onChange={(e) => setF("postalCode", e.target.value)}
-                                required
-                            />
-                        </div>
+                        <TextField
+                            id="province"
+                            label="จังหวัด"
+                            required
+                            placeholder="เลือกจังหวัด"
+                            value={formState.province}
+                            onChange={(e) => setFormField("province", e.target.value)}
+                        />
+                        <TextField
+                            id="district"
+                            label="อำเภอ / เขต"
+                            required
+                            placeholder="เลือกอำเภอ / เขต"
+                            value={formState.district}
+                            onChange={(e) => setFormField("district", e.target.value)}
+                        />
+                        <TextField
+                            id="subDistrict"
+                            label="ตำบล / แขวง"
+                            required
+                            placeholder="เลือกตำบล / แขวง"
+                            value={formState.subDistrict}
+                            onChange={(e) => setFormField("subDistrict", e.target.value)}
+                        />
+                        <TextField
+                            id="postalCode"
+                            label="รหัสไปรษณีย์"
+                            required
+                            placeholder="เลือกไปรษณีย์"
+                            value={formState.postalCode}
+                            onChange={(e) => setFormField("postalCode", e.target.value)}
+                        />
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm mb-1">คำอธิบายที่อยู่</label>
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
+                            <label className="block text-sm mb-1">
+                                คำอธิบายที่อยู่ <span className="text-red-600">*</span>
+                            </label>
+                            <textarea
+                                className="w-full rounded-form border px-3 py-2 min-h-[140px] resize-y"
                                 placeholder="คำอธิบายที่อยู่"
-                                value={form.addressDetail}
-                                onChange={(e) => setF("addressDetail", e.target.value)}
+                                value={formState.addressDetail}
+                                onChange={(e) => setFormField("addressDetail", e.target.value)}
+                                rows={6}
+                                required
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-sm mb-1">
-                                ละติจูด <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                step="any"
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="กรอกละติจูด"
-                                value={form.latitude}
-                                onChange={(e) => setF("latitude", e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm mb-1">
-                                ลองจิจูด <span className="text-red-600">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                step="any"
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="กรอกลองจิจูด"
-                                value={form.longitude}
-                                onChange={(e) => setF("longitude", e.target.value)}
-                                required
-                            />
-                        </div>
+                        <TextField
+                            id="latitude"
+                            label="ละติจูด"
+                            required
+                            type="number"
+                            placeholder="กรอกละติจูด"
+                            value={formState.latitude}
+                            onChange={(e) => setFormField("latitude", e.target.value)}
+                        />
+                        <TextField
+                            id="longitude"
+                            label="ลองจิจูด"
+                            required
+                            type="number"
+                            placeholder="กรอกลองจิจูด"
+                            value={formState.longitude}
+                            onChange={(e) => setFormField("longitude", e.target.value)}
+                        />
                     </div>
 
-                    {/* ค้นหาสถานที่ + แผนที่ (ยังไม่ได้เชื่อม service ค้นหา) */}
+                    {/* ค้นหาสถานที่ + แผนที่ */}
                     <div className="space-y-2">
-                        <label className="block text-sm mb-1">ค้นหาสถานที่</label>
-                        <div className="flex items-center gap-2">
-                            <input
-                                className="w-full rounded-form border px-3 py-2"
-                                placeholder="ป้อนชื่อสถานที่หรือสถานที่ใกล้เคียงเพื่อปักหมุด"
-                                value={form.placeQuery}
-                                onChange={(e) => setF("placeQuery", e.target.value)}
-                            />
-                            <button type="button" className="rounded-form px-3 py-2 border">
-                                ค้นหา
-                            </button>
-                        </div>
+                        <TextField
+                            id="placeQuery"
+                            label="ค้นหาสถานที่"
+                            placeholder="ป้อนชื่อสถานที่หรือสถานที่ใกล้เคียงเพื่อปักหมุด"
+                            value={formState.placeQuery}
+                            onChange={(e) => setFormField("placeQuery", e.target.value)}
+                        />
                         <div className="rounded-lg border h-[300px] bg-gray-100" />
                     </div>
                 </section>
 
-                {/* ผู้ดูแล + เปิดรับจำนวน */}
+                {/* ผู้ดูแล + ความจุ */}
                 <section className="grid md:grid-cols-2 gap-5">
-                    <div>
-                        <label className="block text-sm mb-1">
-                            ผู้ดูแล <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            className="w-full rounded-form border px-3 py-2"
-                            placeholder="กรอก id ผู้ดูแล"
-                            value={form.overseerMemberId}
-                            onChange={(e) => setF("overseerMemberId", e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">
-                            เปิดรับจำนวน <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            min={1}
-                            className="w-full rounded-form border px-3 py-2"
-                            placeholder="จำนวนคนที่เปิดรับ"
-                            value={form.capacity}
-                            onChange={(e) => setF("capacity", e.target.value)}
-                            required
-                        />
-                    </div>
+                    <TextField
+                        id="overseerMemberId"
+                        label="ผู้ดูแล"
+                        required
+                        type="number"
+                        placeholder="กรอก id ผู้ดูแล"
+                        value={formState.overseerMemberId}
+                        onChange={(e) => setFormField("overseerMemberId", e.target.value)}
+                    />
+                    <TextField
+                        id="capacity"
+                        label="เปิดรับจำนวน"
+                        required
+                        type="number"
+                        placeholder="จำนวนคนที่เปิดรับ"
+                        value={formState.capacity}
+                        onChange={(e) => setFormField("capacity", e.target.value)}
+                    />
                 </section>
 
                 {/* สิ่งอำนวยความสะดวก */}
                 <section>
-                    <label className="block text-sm mb-1">สิ่งอำนวยความสะดวก</label>
-                    <input
-                        className="w-full rounded-form border px-3 py-2"
+                    <TextField
+                        id="facility"
+                        label="สิ่งอำนวยความสะดวก"
                         placeholder="สิ่งอำนวยความสะดวก"
-                        value={form.facility}
-                        onChange={(e) => setF("facility", e.target.value)}
+                        value={formState.facility}
+                        onChange={(e) => setFormField("facility", e.target.value)}
                     />
                 </section>
 
                 {/* วันเวลา */}
                 <section className="grid md:grid-cols-4 gap-5">
-                    <div>
-                        <label className="block text-sm mb-1">
-                            วัน/เดือน/ปี (ค.ศ.) ที่เริ่ม <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                            type="date"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.startDate}
-                            onChange={(e) => setF("startDate", e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">เวลาที่เริ่ม</label>
-                        <input
-                            type="time"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.startTime}
-                            onChange={(e) => setF("startTime", e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">
-                            วัน/เดือน/ปี (ค.ศ.) ที่สิ้นสุด <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                            type="date"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.endDate}
-                            onChange={(e) => setF("endDate", e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">เวลาที่สิ้นสุด</label>
-                        <input
-                            type="time"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.endTime}
-                            onChange={(e) => setF("endTime", e.target.value)}
-                        />
-                    </div>
+                    <TextField
+                        id="startDate"
+                        label="วัน/เดือน/ปี (ค.ศ.) ที่เริ่ม"
+                        required
+                        type="date"
+                        value={formState.startDate}
+                        onChange={(e) => setFormField("startDate", e.target.value)}
+                    />
+                    <TextField
+                        id="startTime"
+                        label="เวลาที่เริ่ม"
+                        type="time"
+                        value={formState.startTime}
+                        onChange={(e) => setFormField("startTime", e.target.value)}
+                    />
+                    <TextField
+                        id="endDate"
+                        label="วัน/เดือน/ปี (ค.ศ.) ที่สิ้นสุด"
+                        required
+                        type="date"
+                        value={formState.endDate}
+                        onChange={(e) => setFormField("endDate", e.target.value)}
+                    />
+                    <TextField
+                        id="endTime"
+                        label="เวลาที่สิ้นสุด"
+                        type="time"
+                        value={formState.endTime}
+                        onChange={(e) => setFormField("endTime", e.target.value)}
+                    />
 
-                    <div>
-                        <label className="block text-sm mb-1">วัน/เดือน/ปี (ค.ศ.) ที่เปิดจอง</label>
-                        <input
-                            type="date"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.openDate}
-                            onChange={(e) => setF("openDate", e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">เวลาที่เปิดจอง</label>
-                        <input
-                            type="time"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.openTime}
-                            onChange={(e) => setF("openTime", e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">วัน/เดือน/ปี (ค.ศ.) ที่ปิดจอง</label>
-                        <input
-                            type="date"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.closeDate}
-                            onChange={(e) => setF("closeDate", e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">เวลาที่ปิดจอง</label>
-                        <input
-                            type="time"
-                            className="w-full rounded-form border px-3 py-2"
-                            value={form.closeTime}
-                            onChange={(e) => setF("closeTime", e.target.value)}
-                        />
-                    </div>
+                    <TextField
+                        id="openDate"
+                        label="วัน/เดือน/ปี (ค.ศ.) ที่เปิดจอง"
+                        type="date"
+                        value={formState.openDate}
+                        onChange={(e) => setFormField("openDate", e.target.value)}
+                    />
+                    <TextField
+                        id="openTime"
+                        label="เวลาที่เปิดจอง"
+                        type="time"
+                        value={formState.openTime}
+                        onChange={(e) => setFormField("openTime", e.target.value)}
+                    />
+                    <TextField
+                        id="closeDate"
+                        label="วัน/เดือน/ปี (ค.ศ.) ที่ปิดจอง"
+                        type="date"
+                        value={formState.closeDate}
+                        onChange={(e) => setFormField("closeDate", e.target.value)}
+                    />
+                    <TextField
+                        id="closeTime"
+                        label="เวลาที่ปิดจอง"
+                        type="time"
+                        value={formState.closeTime}
+                        onChange={(e) => setFormField("closeTime", e.target.value)}
+                    />
                 </section>
 
                 {/* แท็ก / ราคา */}
                 <section className="grid md:grid-cols-2 gap-5">
-                    <div>
-                        <label className="block text-sm mb-1">แท็ก</label>
-                        <input
-                            className="w-full rounded-form border px-3 py-2"
-                            placeholder="ค้นหาแท็ก เช่น ธรรมชาติ อาหาร ฯลฯ"
-                            value={form.tagId}
-                            onChange={(e) => setF("tagId", e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1">
-                            ราคา <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            min={0}
-                            className="w-full rounded-form border px-3 py-2"
-                            placeholder="กรอกราคา"
-                            value={form.price}
-                            onChange={(e) => setF("price", e.target.value)}
-                            required
-                        />
-                    </div>
+                    <TextField
+                        id="tagId"
+                        label="แท็ก"
+                        placeholder="ค้นหาแท็ก เช่น ธรรมชาติ อาหาร ฯลฯ"
+                        value={formState.tagId}
+                        onChange={(e) => setFormField("tagId", e.target.value)}
+                    />
+                    <TextField
+                        id="price"
+                        label="ราคา"
+                        required
+                        type="number"
+                        placeholder="กรอกราคา"
+                        value={formState.price}
+                        onChange={(e) => setFormField("price", e.target.value)}
+                    />
                 </section>
 
                 {/* ปุ่มล่างขวา */}
@@ -606,16 +549,16 @@ const EditPackageAdmin: React.FC = () => {
                         type="button"
                         onClick={() => navigate(-1)}
                         className="rounded-form px-4 py-2 border"
-                        disabled={saving}
+                        disabled={isSaving}
                     >
                         ยกเลิก
                     </button>
                     <button
                         type="submit"
                         className="rounded-form px-4 py-2 text-white bg-[#055035] hover:bg-[#04402a]"
-                        disabled={saving || !canSubmit}
+                        disabled={isSaving || !canSubmit}
                     >
-                        {saving ? "กำลังบันทึก..." : "บันทึก"}
+                        {isSaving ? "กำลังบันทึก..." : "บันทึก"}
                     </button>
                 </div>
             </form>

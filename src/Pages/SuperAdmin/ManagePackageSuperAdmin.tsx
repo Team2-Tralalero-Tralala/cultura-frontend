@@ -1,4 +1,9 @@
-// src/Pages/SuperAdmin/ManagePackageSuperAdmin.tsx
+/**
+ *
+ *
+ *
+ */
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../Components/Tables/Index";
@@ -34,31 +39,31 @@ const bulkActions: BulkAction<PackageRow>[] = [
 export default function ManagePackageSuperAdmin() {
   const navigate = useNavigate();
 
-  // 1) ประกาศ state ให้ครบก่อนใช้
-  const [rows, setRows] = React.useState<PackageRow[]>([]);
-  const [page, setPage] = React.useState<number>(1);
-  const [limit, setLimit] = React.useState<number>(10);
-  const [total, setTotal] = React.useState<number>(0);
-  const [loading, setLoading] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
+  // state สำหรับตาราง
+  const [tableRows, setTableRows] = React.useState<PackageRow[]>([]);
+  const [currentPage, setCurrentPage] = React.useState<number>(1);
+  const [pageSize, setPageSize] = React.useState<number>(10);
+  const [totalItems, setTotalItems] = React.useState<number>(0);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  // 2) จากนั้นค่อยประกาศฟังก์ชันโหลด (อ้างอิง page/limit ได้แล้ว)
+  // โหลดข้อมูล (role = superadmin)
   const reloadPackages = React.useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const { rows, total } = await fetchPackagesByRole("superadmin", page, limit);
-      setRows(rows);
-      setTotal(total);
-    } catch (e: any) {
-      setError(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setIsLoading(true);
+      setErrorMessage(null);
+      const { rows, total } = await fetchPackagesByRole("superadmin", currentPage, pageSize);
+      setTableRows(rows);
+      setTotalItems(total);
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, [page, limit]);
+  }, [currentPage, pageSize]);
 
-  // 3) แล้วค่อยประกาศ actions (อ้างอิง reloadPackages)
-  const actions: DataTableActionsConfig<PackageRow> = React.useMemo(
+  // การกระทำต่อแถว
+  const rowActions: DataTableActionsConfig<PackageRow> = React.useMemo(
     () => ({
       header: "จัดการ",
       align: "right",
@@ -66,15 +71,15 @@ export default function ManagePackageSuperAdmin() {
       variant: "icons",
       items: () => ["edit", "delete"],
       callbacks: {
-        edit: (r) => navigate(`/super/package/${r.id}`),
-        delete: async (r) => {
-          if (!window.confirm(`ยืนยันลบแพ็กเกจ "${r.title}" ?`)) return;
+        edit: (row) => navigate(`/super/package/${row.id}`),
+        delete: async (row) => {
+          if (!window.confirm(`ยืนยันลบแพ็กเกจ "${row.title}" ?`)) return;
           try {
-            await api.patch(`/super/package/${r.id}`);
+            await api.patch(`/super/package/${row.id}`);
             await reloadPackages();
-          } catch (e: any) {
-            console.error(e);
-            alert(`ลบไม่สำเร็จ: ${e?.message ?? "unknown error"}`);
+          } catch (error: any) {
+            console.error(error);
+            alert(`ลบไม่สำเร็จ: ${error?.message ?? "unknown error"}`);
           }
         },
       },
@@ -82,63 +87,39 @@ export default function ManagePackageSuperAdmin() {
     [navigate, reloadPackages]
   );
 
-  // 4) ค่อยเรียกใช้ใน effect
   React.useEffect(() => {
     reloadPackages();
   }, [reloadPackages]);
 
   const goToApprovalRequests = () => navigate("/super/package-requests");
 
-  const load = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      // หน้านี้คือ SuperAdmin → ใช้ role = "superadmin"
-      const { rows, total, page: p, limit: l } = await fetchPackagesByRole("superadmin", page, limit);
-      setRows(rows);
-      setTotal(total);
-      // (p,l) ไม่จำเป็นต้อง set ถ้าใช้ state ของเราเอง
-    } catch (e: any) {
-      setError(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, limit]);
-
-  React.useEffect(() => {
-    load();
-  }, [load]);
-
-  const pendingCount = React.useMemo(() => rows.filter((r) => !r.approved).length, [rows]);
-  const [query, setQuery] = useState("");
-  // ช่วย normalize ให้ค้นหาแบบไม่ติดช่องว่าง/ตัวพิมพ์เล็กใหญ่
-  const norm = (s: string) =>
+  // คำค้นหา
+  const [searchQuery, setSearchQuery] = useState("");
+  const normalizeText = (s: string) =>
     (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
   // แปลงสถานะเป็นข้อความไทยเพื่อให้ค้นหาได้
   const toPublishedText = (r: PackageRow) => (r.published ? "เผยแพร่" : "ไม่เผยแพร่");
   const toApprovedText = (r: PackageRow) => (r.approved ? "อนุมัติ" : "รออนุมัติ");
 
-  // แถวที่ผ่านการค้นหา
+  // กรองแถวด้วยคำค้น
   const filteredRows = React.useMemo(() => {
-    const q = norm(query);
-    if (!q) return rows;
-    return rows.filter((r) => {
-      const haystacks = [
-        r.title,
-        r.community,
-        r.owner,
-        toPublishedText(r),
-        toApprovedText(r),
-      ].map(norm);
+    const q = normalizeText(searchQuery);
+    if (!q) return tableRows;
+    return tableRows.filter((r) => {
+      const haystacks = [r.title, r.community, r.owner, toPublishedText(r), toApprovedText(r)].map(
+        normalizeText
+      );
       return haystacks.some((h) => h.includes(q));
     });
-  }, [rows, query]);
+  }, [tableRows, searchQuery]);
 
-  // (ทางเลือก) พอเปลี่ยนคำค้น ให้เด้งกลับหน้าแรกของตาราง
+  // เปลี่ยนคำค้น → กลับหน้า 1
   React.useEffect(() => {
-    setPage(1);
-  }, [query]);
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const pendingCount = React.useMemo(() => tableRows.filter((r) => !r.approved).length, [tableRows]);
 
   return (
     <div className="space-y-4">
@@ -146,15 +127,10 @@ export default function ManagePackageSuperAdmin() {
         <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
 
         <div className="flex items-center gap-3">
-          {/* ช่องค้นหา: เอา mt-6 ออก และให้ยืดพื้นที่ฝั่งซ้าย */}
           <div className="flex-1 max-w-md">
-            <SearchBarTable
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
-          {/* กลุ่มปุ่มฝั่งขวา */}
           <div className="ml-auto flex items-center gap-3">
             <button
               onClick={goToApprovalRequests}
@@ -173,20 +149,19 @@ export default function ManagePackageSuperAdmin() {
         </div>
       </div>
 
-
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<PackageRow>
         data={filteredRows}
         columns={columns}
         getRowKey={(r) => r.id}
-        actions={actions}
+        actions={rowActions}
         bulkActions={bulkActions}
         selectable
         striped
         pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={limit}
-        onPageChange={(p) => setPage(p)}                 // ถ้า DataTable รองรับ
+        defaultPageSize={pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
         theme="brand"
         className="bg-white rounded-lg"
       />

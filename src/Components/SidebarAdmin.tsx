@@ -6,13 +6,13 @@ type MenuKey =
   | 'community'
   | 'community-stores'
   | 'community-homestays'
-  | 'member'
-  | 'member-blocked'
-  | 'package'
-  | 'package-requests'
-  | 'package-draft'
-  | 'package-histories'
-  | 'package-feedbacks'
+  | 'members'
+  | 'member-status'
+  | 'packages'
+  | 'packages-requests'
+  | 'packages-draft'
+  | 'packages-histories'
+  | 'packages-feedbacks'
   | 'booking'
   | 'booking-refunds'
   | 'booking-histories'
@@ -21,6 +21,26 @@ type MenuKey =
   | 'logout'
   | null;
 
+// ใช้สำหรับ map เมนูลูกกับเมนูแม่ (เพื่อช่วยเปิด dropdown)
+const parentMap: Record<Exclude<MenuKey, null>, MenuKey | null> = {
+  'community': null,
+  'community-stores': 'community',
+  'community-homestays': 'community',
+  'members': null,
+  'member-status': 'members',
+  'packages': null,
+  'packages-requests': 'packages',
+  'packages-draft': 'packages',
+  'packages-histories': 'packages',
+  'packages-feedbacks': 'packages',
+  'booking': null,
+  'booking-refunds': 'booking',
+  'booking-histories': 'booking',
+  'dashboard': null,
+  'logs': null,
+  'logout': null,
+};
+
 const SidebarAdmin = () => {
   const location = useLocation();
   const { pathname } = location;
@@ -28,69 +48,68 @@ const SidebarAdmin = () => {
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
+  const basePath = '/admin';
+  const currentPath = pathname.startsWith(basePath)
+    ? pathname.slice(basePath.length) || '/'
+    : pathname;
+
   useEffect(() => {
-    // community submenu
-    if (pathname.startsWith('/community/stores')) {
+    if (currentPath.startsWith('/community/stores')) {
       setActiveMenuKey('community-stores');
       setOpenDropdown('community');
-    } else if (pathname.startsWith('/community/homestays')) {
+    } else if (currentPath.startsWith('/community/homestays')) {
       setActiveMenuKey('community-homestays');
       setOpenDropdown('community');
-    } else if (pathname.startsWith('/community')) {
+    } else if (currentPath.startsWith('/community')) {
       setActiveMenuKey('community');
       setOpenDropdown('community');
-    }
-    // member submenu
-    else if (pathname === '/member/status') {
-      setActiveMenuKey('member-blocked');
-      setOpenDropdown('member');
-    } else if (pathname.startsWith('/member')) {
-      setActiveMenuKey('member');
-      setOpenDropdown('member');
-    }
-    // package submenu
-    else if (pathname === '/package/requests') {
-      setActiveMenuKey('package-requests');
-      setOpenDropdown('package');
-    } else if (pathname === '/package/draft') {
-      setActiveMenuKey('package-draft');
-      setOpenDropdown('package');
-    } else if (pathname === '/package/histories') {
-      setActiveMenuKey('package-histories');
-      setOpenDropdown('package');
-    } else if (pathname === '/package/feedbacks') {
-      setActiveMenuKey('package-feedbacks');
-      setOpenDropdown('package');
-    } else if (pathname.startsWith('/package')) {
-      setActiveMenuKey('package');
-      setOpenDropdown('package');
-    }
-    // booking submenu
-    else if (pathname === '/booking/refunds') {
+    } else if (currentPath === '/member/status') {
+      setActiveMenuKey('member-status');
+      setOpenDropdown('members');
+    } else if (currentPath.startsWith('/members')) {
+      setActiveMenuKey('members');
+      setOpenDropdown('members');
+    } else if (currentPath === '/package/requests') {
+      setActiveMenuKey('packages-requests');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/package/draft') {
+      setActiveMenuKey('packages-draft');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/package/histories') {
+      setActiveMenuKey('packages-histories');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/package/feedbacks') {
+      setActiveMenuKey('packages-feedbacks');
+      setOpenDropdown('packages');
+    } else if (currentPath.startsWith('/packages')) {
+      setActiveMenuKey('packages');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/booking/refunds') {
       setActiveMenuKey('booking-refunds');
       setOpenDropdown('booking');
-    } else if (pathname === '/booking/histories') {
+    } else if (currentPath === '/booking/histories') {
       setActiveMenuKey('booking-histories');
       setOpenDropdown('booking');
-    } else if (pathname.startsWith('/booking')) {
+    } else if (currentPath.startsWith('/booking')) {
       setActiveMenuKey('booking');
       setOpenDropdown('booking');
-    }
-    // main menu only
-    else if (pathname === '/dashboard') {
+    } else if (currentPath === '/dashboard') {
       setActiveMenuKey('dashboard');
       setOpenDropdown(null);
-    } else if (pathname === '/logs') {
+    } else if (currentPath === '/logs') {
       setActiveMenuKey('logs');
       setOpenDropdown(null);
-    } else if (pathname === '/logout') {
+    } else if (currentPath === '/logout') {
       setActiveMenuKey('logout');
       setOpenDropdown(null);
     } else {
       setActiveMenuKey(null);
       setOpenDropdown(null);
     }
-  }, [pathname]);
+  }, [currentPath]);
+
+  // ✅ Highlight เฉพาะเมนูที่ถูก active
+  const isActive = (key: MenuKey) => activeMenuKey === key;
 
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
     setActiveMenuKey(key);
@@ -101,7 +120,24 @@ const SidebarAdmin = () => {
     }
   };
 
-  const isActive = (key: MenuKey) => activeMenuKey === key;
+  const menuLink = (
+    label: string,
+    to: string,
+    icon: string,
+    key: MenuKey,
+    parentKey?: MenuKey
+  ) => (
+    <Link
+      to={`${basePath}${to}`}
+      onClick={() => handleClick(key, parentKey)}
+      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+        isActive(key) ? 'bg-[#0D845A]' : ''
+      }`}
+    >
+      <Icon icon={icon} className="text-xl" />
+      {label}
+    </Link>
+  );
 
   return (
     <div className="h-screen w-60 bg-[#055035] text-white flex flex-col justify-between py-6 px-4">
@@ -111,13 +147,15 @@ const SidebarAdmin = () => {
           <img src="/Cultura.png" alt="Cultura logo" className="h-10" />
         </div>
 
+        {/* เมนูหลัก */}
         <nav className="flex flex-col gap-2 text-base-semibold">
-
-          {/* จัดการชุมชน */}
+          {/* === ชุมชน === */}
           <div>
             <button
               onClick={() => handleClick('community')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive('community') ? 'bg-[#0D845A]' : ''}`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                isActive('community') ? 'bg-[#0D845A]' : ''
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="ri:community-line" className="text-xl" />
@@ -127,101 +165,64 @@ const SidebarAdmin = () => {
             </button>
             {openDropdown === 'community' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                <Link
-                  to="/community/stores"
-                  onClick={() => handleClick('community-stores', 'community')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('community-stores') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  จัดการร้านค้า
-                </Link>
-                <Link
-                  to="/community/homestays"
-                  onClick={() => handleClick('community-homestays', 'community')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('community-homestays') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  จัดการที่พัก
-                </Link>
+                {menuLink('จัดการร้านค้า', '/community/stores', 'mdi:store-outline', 'community-stores', 'community')}
+                {menuLink('จัดการที่พัก', '/community/homestays', 'mdi:home-city-outline', 'community-homestays', 'community')}
               </div>
             )}
           </div>
 
-          {/* จัดการสมาชิก */}
+          {/* === สมาชิก === */}
           <div>
             <button
-              onClick={() => handleClick('member')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive('member') ? 'bg-[#0D845A]' : ''}`}
+              onClick={() => handleClick('members')}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                isActive('members') ? 'bg-[#0D845A]' : ''
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
                 จัดการสมาชิก
               </span>
-              <Icon icon={openDropdown === 'member' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              <Icon icon={openDropdown === 'members' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
             </button>
-            {openDropdown === 'member' && (
+            {openDropdown === 'members' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                <Link
-                  to="/member/status"
-                  onClick={() => handleClick('member-blocked', 'member')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('member-blocked') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  การระงับบัญชี
-                </Link>
+                {menuLink('การระงับบัญชี', '/member/status', 'mdi:account-cancel-outline', 'member-status', 'members')}
               </div>
             )}
           </div>
 
-          {/* จัดการแพ็กเกจ */}
+          {/* === แพ็กเกจ === */}
           <div>
             <button
-              onClick={() => handleClick('package')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive('package') ? 'bg-[#0D845A]' : ''}`}
+              onClick={() => handleClick('packages')}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                isActive('packages') ? 'bg-[#0D845A]' : ''
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
                 จัดการแพ็กเกจ
               </span>
-              <Icon icon={openDropdown === 'package' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
             </button>
-            {openDropdown === 'package' && (
+            {openDropdown === 'packages' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                <Link
-                  to="/package/requests"
-                  onClick={() => handleClick('package-requests', 'package')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('package-requests') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  คำขออนุมัติ
-                </Link>
-                <Link
-                  to="/package/draft"
-                  onClick={() => handleClick('package-draft', 'package')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('package-draft') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  ฉบับร่าง
-                </Link>
-                <Link
-                  to="/package/histories"
-                  onClick={() => handleClick('package-histories', 'package')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('package-histories') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  ประวัติแพ็กเกจ
-                </Link>
-                <Link
-                  to="/package/feedbacks"
-                  onClick={() => handleClick('package-feedbacks', 'package')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('package-feedbacks') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  ข้อเสนอแนะ
-                </Link>
+                {menuLink('คำขออนุมัติ', '/package/requests', 'mdi:file-document-outline', 'packages-requests', 'packages')}
+                {menuLink('ฉบับร่าง', '/package/draft', 'mdi:file-edit-outline', 'packages-draft', 'packages')}
+                {menuLink('ประวัติแพ็กเกจ', '/package/histories', 'mdi:history', 'packages-histories', 'packages')}
+                {menuLink('ข้อเสนอแนะ', '/package/feedbacks', 'mdi:comment-text-outline', 'packages-feedbacks', 'packages')}
               </div>
             )}
           </div>
 
-          {/* จัดการการจอง */}
+          {/* === การจอง === */}
           <div>
-            <Link to="/booking">
             <button
               onClick={() => handleClick('booking')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive('booking') ? 'bg-[#0D845A]' : ''}`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                isActive('booking') ? 'bg-[#0D845A]' : ''
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -229,59 +230,23 @@ const SidebarAdmin = () => {
               </span>
               <Icon icon={openDropdown === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
             </button>
-            </Link>
             {openDropdown === 'booking' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                <Link
-                  to="/booking/refunds"
-                  onClick={() => handleClick('booking-refunds', 'booking')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('booking-refunds') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  คำขอคืนเงิน
-                </Link>
-                <Link
-                  to="/booking/histories"
-                  onClick={() => handleClick('booking-histories', 'booking')}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('booking-histories') ? 'bg-[#0D845A]' : ''}`}
-                >
-                  ประวัติการจอง
-                </Link>
+                {menuLink('คำขอคืนเงิน', '/booking/refunds', 'mdi:cash-refund', 'booking-refunds', 'booking')}
+                {menuLink('ประวัติการจอง', '/booking/histories', 'mdi:history', 'booking-histories', 'booking')}
               </div>
             )}
           </div>
 
-          {/* รายงาน */}
-          <Link
-            to="/dashboard"
-            onClick={() => handleClick('dashboard')}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('dashboard') ? 'bg-[#0D845A]' : ''}`}
-          >
-            <Icon icon="mdi:view-dashboard-outline" className="text-xl" />
-            รายงาน
-          </Link>
-
-          {/* ประวัติการเข้าใช้งาน */}
-          <Link
-            to="/logs"
-            onClick={() => handleClick('logs')}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('logs') ? 'bg-[#0D845A]' : ''}`}
-          >
-            <Icon icon="ix:log" className="text-xl" />
-            ประวัติการเข้าใช้งาน
-          </Link>
+          {/* === รายงาน & Logs === */}
+          {menuLink('รายงาน', '/dashboard', 'mdi:view-dashboard-outline', 'dashboard')}
+          {menuLink('ประวัติการเข้าใช้งาน', '/logs', 'ix:log', 'logs')}
         </nav>
       </div>
 
-      {/* ออกจากระบบ */}
+      {/* === ออกจากระบบ === */}
       <div className="flex flex-col gap-2 text-sm">
-        <Link
-          to="/logout"
-          onClick={() => handleClick('logout')}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('logout') ? 'bg-[#0D845A]' : ''}`}
-        >
-          <Icon icon="solar:logout-2-outline" className="text-xl" />
-          ออกจากระบบ
-        </Link>
+        {menuLink('ออกจากระบบ', '/logout', 'solar:logout-2-outline', 'logout')}
       </div>
     </div>
   );

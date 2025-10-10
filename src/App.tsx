@@ -46,8 +46,8 @@ import BookingRefundAdmin from "./Pages/Admin/BookingRefundAdmin";
 import BookingHistoryAdmin from "./Pages/Admin/BookingHistoryAdmin";
 import ManagePackageAdmin from "./Pages/Admin/ManagePackageAdmin";
 if (import.meta.env.DEV) {
-  // memberLogin();
-  superLogin();
+  memberLogin();
+  // superLogin();
   // adminLogin();
   // touristLogin();
 }

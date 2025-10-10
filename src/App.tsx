@@ -1,8 +1,20 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import CreateAccountPage from "./Components/Account/CreateAccountPage";
+
 function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-    </>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-10">
+        <Routes>
+          <Route path="/" element={<CreateAccountPage />} />
+          <Route path="/create-account" element={<CreateAccountPage />} />
+        </Routes>
+      </div>
+
+      <ToastContainer position="top-right" autoClose={2500} />
+    </BrowserRouter>
   );
 }
 

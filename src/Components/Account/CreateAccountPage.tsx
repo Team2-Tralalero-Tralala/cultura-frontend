@@ -3,7 +3,6 @@ import TextField from "../TextField";
 import Button from "../Button";
 import SubmitButton from "../SubmitButton";
 import { Icon } from "@iconify/react";
-import api from "../../api/axios";
 import { toast } from "react-toastify";
 
 /*
@@ -40,14 +39,14 @@ const CreateAccountPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ ตรวจ password ซ้ำ
+    //  ตรวจรหัสผ่านซ้ำ
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Password and Confirm Password do not match ❌");
+      toast.error("Password and Confirm Password do not match ");
       return;
     }
 
     try {
-      // ✅ Mapping role → roleId ตามฐานข้อมูล Cultura
+      //  Mapping role → roleId
       let roleId = 2; // Admin (default)
       if (formData.role === "Member") roleId = 3;
       if (formData.role === "Tourist") roleId = 4;
@@ -62,14 +61,25 @@ const CreateAccountPage = () => {
         password: formData.password,
       };
 
-      // ✅ ยิง API
-      const res = await api.post("/accounts", body);
+      //  ยิง API ด้วย fetch (แทน axios)
+      const response = await fetch("http://localhost:3000/api/accounts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-      toast.success(res.data?.message || "Account created successfully 🎉");
+      const data = await response.json();
 
-      console.log("✅ API Response:", res.data);
+      if (!response.ok) throw new Error(data.message || "Request failed");
 
-      // ✅ ล้างฟอร์มหลังสำเร็จ
+      //  แจ้งผลลัพธ์
+      toast.success(data.message || "Account created successfully");
+      console.log("API Response:", data);
+
+      //  ล้างฟอร์มหลังสำเร็จ
       setFormData({
         fname: "",
         lname: "",
@@ -81,17 +91,17 @@ const CreateAccountPage = () => {
         role: "Admin",
       });
     } catch (error: any) {
-      console.error("❌ Error creating account:", error);
+      console.error("Error creating account:", error);
       const errMsg =
-        error.response?.data?.message || "Failed to create account";
+        error.message || error.response?.data?.message || "Failed to create account";
 
-      // ✅ ตรวจข้อความ error จาก backend ตาม standard
+      //  ตรวจข้อความ error จาก backend
       if (errMsg.includes("duplicate")) {
-        toast.error("Username / Email / Phone already exists ❌");
+        toast.error("Username / Email / Phone already exists");
       } else if (errMsg.includes("role_not_found")) {
-        toast.error("Invalid role selected ⚠️");
+        toast.error("Invalid role selected");
       } else if (errMsg.includes("unauthorized")) {
-        toast.error("You are not authorized to perform this action ❗");
+        toast.error("You are not authorized to perform this action");
       } else {
         toast.error(errMsg);
       }
@@ -229,6 +239,7 @@ const CreateAccountPage = () => {
         </div>
       </div>
 
+      {/* ====== ปุ่มบันทึก / ยกเลิก ====== */}
       <div className="flex justify-end gap-4 pt-4">
         <div className="w-32">
           <Button type="cancel">ยกเลิก</Button>

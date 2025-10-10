@@ -1,11 +1,12 @@
 import { Route, Routes, Navigate } from "react-router";
-// import ProtectedRoute from "./Libs/ProtectedRoute";
+import ProtectedRoute from "./Libs/ProtectRoute";
 import RoleRedirect from "./Libs/RoleRedirect";
 
 import LoginAdmin from "./Pages/LoginAdmin.tsx";
 // import Register from "./Pages/Register.tsx";
 // import ForgotPassword from "./Pages/ForgotPassword.tsx";
 import LoginTourist from "./Pages/LoginTourist.tsx";
+import CreateAccountPage from "./Components/Account/CreateAccountPage.tsx";
 
 function App() {
   return (
@@ -21,12 +22,14 @@ function App() {
         <Route index element={<RoleRedirect />} />
 
         {/* private routes */}
-        {/* <Route
-          element={<ProtectedRoute allow={["member", "admin", "superadmin"]} />}
-        >
-          <Route path="/admin/home" element={<Admin />} />
-        </Route> */}
-        {/* fallback */}
+        {/* private routes */}
+        <Route element={<ProtectedRoute allow={["superadmin"]} />}>
+          <Route
+            path="/super/account/admin/create"
+            element={<CreateAccountPage />}
+          />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

@@ -3,7 +3,7 @@
  * ใช้ร่วมกับ react-router-dom เพื่อกำหนดสิทธิ์การเข้าถึงของผู้ใช้ตาม role
  * ถ้าไม่มีสิทธิ์จะถูก redirect ไปยังหน้าที่กำหนด
  */
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router";
 import type { Role } from "./AuthProvider";
 import { useAuth } from "./useAuth";
 

@@ -278,7 +278,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   {columns.map((c) => (
                     <td
                       key={String(c.key)}
-                      className={`px-4 text-base font-light text-slate-800 ${c.className ?? ""} ${rowCellBase}`}
+                      className={`px-4 text-base text-[16px] font-light text-[#696969] font-medium ${c.className ?? ""} ${rowCellBase}`}
                       style={c.width ? { width: c.width } : undefined}
                     >
                       {c.render ? c.render(row) : String((row as any)[c.key] ?? "")}

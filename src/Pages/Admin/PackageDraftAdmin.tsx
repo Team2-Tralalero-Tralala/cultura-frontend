@@ -3,69 +3,63 @@ import NavbarSam from "../../Components/NavbarSam";
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SerachBarTable";
 import { Plus, Edit, Trash } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
-interface Package {
-  id: number; // ใช้ index เป็น id
+// คำอธิบาย: โครงสร้างข้อมูลแพ็กเกจ
+interface Package extends Record<string, unknown> {
   name: string;
-  status: string;
   community: string;
   overseer: string;
-  [key: string]: unknown; // Add index signature to satisfy Record<string, unknown>
+  status: string;
 }
 
+// คำอธิบาย: หน้าจอจัดการแพ็กเกจฉบับร่าง สำหรับผู้ดูแลระบบ
 const PackageDraftAdmin = () => {
   const [packages, setPackages] = useState<Package[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // ดึงข้อมูลแพ็กเกจฉบับร่างเมื่อคอมโพเนนต์ถูกโหลด
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const res = await fetch("/api/admin/packages/draft", {
-          credentials: "include",
+        const res = await fetch("http://localhost:3000/api/admin/packages/draft", {
+          credentials: "include"
         });
         const result = await res.json();
-
-        console.log("📦 API Result:", result);
 
         if (!result.data) {
           setPackages([]);
           return;
         }
-
-        // ใช้ index เป็น id แทน
-        const formatted: Package[] = result.data.map((pkg: any, index: number) => ({
-          id: index, // ใช้ index เป็น key
+        // แปลงข้อมูลให้ตรงกับโครงสร้าง Package
+        const formatted: Package[] = result.data.map((pkg: any) => ({
           name: pkg.name ?? "-",
-          status: pkg.statusPackage ?? "DRAFT",
           community: pkg.community?.name ?? "-",
           overseer: pkg.overseerPackage?.username ?? "-",
+          status: pkg.statusPackage === "DRAFT" ? "ฉบับร่าง" : pkg.statusPackage ?? "-",
         }));
-
-        console.log("Formatted Packages:", formatted);
 
         setPackages(formatted);
       } catch (err) {
-        console.error("❌ Fetch error:", err);
+        console.error("Fetch error:", err);
         setPackages([]);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchPackages();
   }, []);
-
+  // ฟังก์ชันจัดการการแก้ไขแพ็กเกจ
   const handleEdit = (pkg: Package) => {
     alert(`📝 แก้ไขแพ็กเกจ: ${pkg.name}`);
   };
-
+  // ฟังก์ชันจัดการการลบแพ็กเกจ
   const handleDelete = (pkg: Package) => {
     if (confirm(`คุณต้องการลบแพ็กเกจ: ${pkg.name} ใช่ไหม?`)) {
-      setPackages((prev) => prev.filter((_, index) => index !== pkg.id));
+      setPackages((prev) => prev.filter((p) => p.name !== pkg.name));
     }
   };
 
+  // กำหนดคอลัมน์สำหรับ DataTable
   const columns: Column<Package>[] = [
     { key: "name", header: "ชื่อแพ็กเกจ" },
     { key: "community", header: "ชื่อชุมชน" },
@@ -77,13 +71,15 @@ const PackageDraftAdmin = () => {
       render: (pkg) => (
         <div className="flex space-x-2">
           <Edit
-            size={16}
-            className="text-blue-600 hover:text-blue-800 cursor-pointer"
+            size={20}
+            strokeWidth={2.5}
+            className="text-gray-500 hover:text-gray-700 cursor-pointer "
             onClick={() => handleEdit(pkg)}
           />
           <Trash
-            size={16}
-            className="text-red-600 hover:text-red-800 cursor-pointer"
+            size={20}
+            strokeWidth={2.5}
+            className="text-gray-500 hover:text-gray-700 cursor-pointer"
             onClick={() => handleDelete(pkg)}
           />
         </div>
@@ -91,19 +87,22 @@ const PackageDraftAdmin = () => {
     },
   ];
 
+  // กรองแพ็กเกจตามคำค้นหา
   const filteredPackages = packages.filter(
     (pkg) =>
       pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pkg.community.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pkg.overseer.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+  
   return (
     <div className="font-sarabun">
       <NavbarSam />
+      {/* ส่วนหัว */}
       <div className="pt-2 px-4 pb-4">
-        <div className="text-[14px] text-black mb-1">
-          จัดการแพ็กเกจ <span className="mx-1 font-sarabun">›</span>{" "}
+      <div className="text-[14px] text-black mb-1 flex items-center">
+          <span>จัดการแพ็กเกจ</span>
+          <ChevronRight size={20} className="mx-1 text-black" />
           <span className="font-medium" style={{ color: "#494949" }}>
             ฉบับร่าง
           </span>
@@ -120,7 +119,7 @@ const PackageDraftAdmin = () => {
               setSearchTerm(e.target.value)
             }
           />
-
+          {/* ปุ่มเพิ่มแพ็กเกจ */}
           <button
             className="flex items-center border text-white px-4 py-2 rounded-md transition h-10"
             style={{ backgroundColor: "#055035" }}
@@ -129,19 +128,15 @@ const PackageDraftAdmin = () => {
             <div className="text-[14px] font-bold">เพิ่มแพ็กเกจ</div>
           </button>
         </div>
-
-        {loading ? (
-          <div className="text-gray-500 text-center py-4">⏳ กำลังโหลดข้อมูล...</div>
-        ) : (
-          <DataTable<Package>
-            data={filteredPackages}
-            columns={columns}
-            getRowKey={(r) => r.id} // ใช้ index เป็น key
-            pageSizeOptions={[10, 30, 50]}
-            defaultPageSize={10}
-            theme="brand"
-          />
-        )}
+        {/* ตารางแสดงข้อมูลแพ็กเกจ */}
+        <DataTable<Package>
+          data={filteredPackages}
+          columns={columns}
+          getRowKey={(pkg) => pkg.name}
+          pageSizeOptions={[10, 30, 50]}
+          defaultPageSize={10}
+          theme="brand"
+        />
       </div>
     </div>
   );

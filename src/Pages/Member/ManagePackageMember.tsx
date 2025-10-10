@@ -1,20 +1,73 @@
 // src/Pages/Member/ManagePackageMember.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 import DataTable from "../../Components/Tables/Index";
-import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
+import type {
+    Column,
+    DataTableActionsConfig,
+    BulkAction,
+} from "../../Components/Tables/Types";
 import { TrashIcon } from "../../Components/Tables/Icon";
-import { fetchPackagesByRole } from "../../Services/package-services";
 import type { PackageRow } from "../../Types/Package";
-import { api } from "../../Libs/axios";
 import SearchBarTable from "../../Components/Search/SerachBarTable";
+
+const apiUrl = import.meta.env.VITE_API_URL;
+
+export async function fetchPackagesByRole(
+    role: "member" | "admin" | "superadmin",
+    page: number,
+    limit: number
+) {
+    const res = await axios.get(`${apiUrl}/${role}/packages`, {
+        params: { page, limit },
+        withCredentials: true,
+    });
+
+    // ⬇️ payload จริงอยู่ใน res.data.data.data (ซ้อนสองชั้น)
+    const obj = res.data?.data?.data ?? {}; // object keyed-by-id
+    const list = Array.isArray(obj) ? obj : Object.values(obj); // แปลงเป็น array
+
+    const total =
+        Number(res.data?.data?.pagination?.totalCount ?? list.length) || 0;
+
+    const rows = list.map((p: any) => {
+        const fullName = `${p.overseerPackage?.fname ?? ""} ${p.overseerPackage?.lname ?? ""}`.trim();
+        const ownerName =
+            p.overseerPackage?.name?.trim?.() ||
+            (fullName || undefined) ||
+            p.overseerPackage?.username ||
+            (p.overseerMemberId ? `ID ${p.overseerMemberId}` : "-");
+
+        return {
+            id: Number(p.id),
+            title: p.name ?? p.title ?? "(ไม่มีชื่อ)",
+            community: p.community?.name ?? (p.communityId ? `ID ${p.communityId}` : "-"),
+            owner: ownerName ?? "-",
+            published: p.statusPackage === "PUBLISH" || !!p.published,
+            approved: p.statusApprove === "APPROVE" || !!p.approved,
+        };
+    });
+
+    return { rows, total };
+}
+// ---------------------------------------------------------------------
 
 const columns: Column<PackageRow>[] = [
     { key: "title", header: "ชื่อแพ็กเกจ", className: "min-w-[240px]" },
     { key: "community", header: "ชื่อชุมชน" },
     { key: "owner", header: "ผู้ดูแล" },
-    { key: "published", header: "สถานะแพ็กเกจ", render: (r) => (r.published ? "เผยแพร่" : "ไม่เผยแพร่") },
-    { key: "approved", header: "สถานะการอนุมัติ", render: (r) => (r.approved ? "อนุมัติ" : "รออนุมัติ") },
+    {
+        key: "published",
+        header: "สถานะแพ็กเกจ",
+        render: (r) => (r.published ? "เผยแพร่" : "ไม่เผยแพร่"),
+    },
+    {
+        key: "approved",
+        header: "สถานะการอนุมัติ",
+        render: (r) => (r.approved ? "อนุมัติ" : "รออนุมัติ"),
+    },
 ];
 
 const bulkActions: BulkAction<PackageRow>[] = [
@@ -28,6 +81,7 @@ const bulkActions: BulkAction<PackageRow>[] = [
             const ids = rows.map((r) => r.id);
             console.log("bulk delete:", ids);
             // TODO: เรียก API bulk ถ้ามี
+            // await axios.post(`${apiUrl}/member/packages/bulk-delete`, { ids }, { withCredentials: true });
         },
     },
 ];
@@ -69,11 +123,17 @@ export default function ManagePackageMember() {
             callbacks: {
                 // ไปหน้าแก้ไขของ member
                 edit: (r) => navigate(`/member/package/${r.id}`),
-                // ลบของตัวเอง (PATCH /member/package/:id)
+                // ลบของตัวเอง (ปรับเป็น axios + VITE_API_URL)
                 delete: async (r) => {
                     if (!window.confirm(`ยืนยันลบแพ็กเกจ "${r.title}" ?`)) return;
                     try {
-                        await api.patch(`/member/package/${r.id}`);
+                        // ปรับ path และ method ให้ตรง backend:
+                        // ตัวอย่าง: PATCH /member/package/:id  (soft-delete)
+                        await axios.patch(
+                            `${apiUrl}/member/package/${r.id}`,
+                            {},
+                            { withCredentials: true }
+                        );
                         await reloadPackages();
                     } catch (e: any) {
                         console.error(e);
@@ -123,33 +183,29 @@ export default function ManagePackageMember() {
                 {/* แถวเดียวกัน */}
                 <div className="flex items-center gap-3">
                     <div className="flex-1 max-w-md">
-                    <SearchBarTable
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                    />
+                        <SearchBarTable value={query} onChange={(e) => setQuery(e.target.value)} />
                     </div>
 
                     <div className="ml-auto flex items-center gap-3">
-                    <button
-                        onClick={goToApprovalRequests}
-                        className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
+                        <button
+                            onClick={goToApprovalRequests}
+                            className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
                                 bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
-                    >
-                        <span>คำขออนุมัติ</span>
-                    </button>
+                        >
+                            <span>คำขออนุมัติ</span>
+                        </button>
 
-                    <button
-                        onClick={goToCreatePackage}
-                        className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
+                        <button
+                            onClick={goToCreatePackage}
+                            className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
                                 bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
-                    >
-                        <span className="text-xl leading-none">＋</span>
-                        <span>สร้างแพ็กเกจ</span>
-                    </button>
+                        >
+                            <span className="text-xl leading-none">＋</span>
+                            <span>สร้างแพ็กเกจ</span>
+                        </button>
                     </div>
                 </div>
             </div>
-
 
             {error && <div className="text-sm text-red-600">{error}</div>}
 

@@ -1,63 +1,40 @@
-import { api } from "../Libs/axios";
-import type { PackageRow } from "../Types/Package";
+import axios from "axios";
+const apiUrl = import.meta.env.VITE_API_URL;
 
-// แทน type เดิม
-type ApiEnvelope<T> = {
-    status: number;
-    error: boolean;
-    message: string;
-    data: T;
-};
+export type Role = "member" | "admin" | "superadmin";
 
-type PayloadList = {
-    data: Array<{
-        id: number;
-        name: string;
-        community?: { name: string } | null;
-        statusPackage: string | null;
-        statusApprove: string | null;
-    }>;
-    pagination: {
-        currentPage: number;
-        totalPages: number;
-        totalCount: number;
-        limit: number;
-    };
-};
+const roleToPrefix = (role: Role) => (role === "superadmin" ? "super" : role);
 
-const PATH_BY_ROLE = {
-    superadmin: "/super/packages",
-    admin: "/admin/packages",
-    member: "/member/packages",
-} as const;
-
-export async function fetchPackagesByRole(
-    role: keyof typeof PATH_BY_ROLE,
-    page = 1,
-    limit = 10
-) {
-    // ⬇️ รับซองใหญ่
-    const res = await api.get<ApiEnvelope<PayloadList>>(PATH_BY_ROLE[role], {
+export async function fetchPackagesByRole(role: Role, page: number, limit: number) {
+    const prefix = roleToPrefix(role);             // <-- แปลงตรงนี้
+    const res = await axios.get(`${apiUrl}/${prefix}/packages`, {
         params: { page, limit },
+        withCredentials: true,
     });
 
-    // ⬇️ ดึง payload ข้างใน
-    const payload = res.data.data;
-    const list = Array.isArray(payload?.data) ? payload.data : [];
+    const obj = res.data?.data?.data ?? {};
+    const list: any[] = Array.isArray(obj) ? obj : Object.values(obj);
 
-    const rows: PackageRow[] = list.map((p) => ({
-        id: p.id,
-        title: p.name,
-        community: p.community?.name ?? "-",
-        owner: "-", // เติมภายหลังถ้ามีใน API
-        published: p.statusPackage === "PUBLISH",
-        approved: p.statusApprove === "APPROVE",
-    }));
+    const total = Number(res.data?.data?.pagination?.totalCount ?? list.length) || 0;
 
-    return {
-        rows,
-        total: payload.pagination?.totalCount ?? rows.length,
-        page: payload.pagination?.currentPage ?? page,
-        limit: payload.pagination?.limit ?? limit,
-    };
+    const rows = list.map((p: any) => {
+        const ov = p.overseerPackage ?? p.owner ?? p.overseer ?? null;
+        const fullName = `${ov?.fname ?? ""} ${ov?.lname ?? ""}`.trim();
+        const ownerName =
+            ov?.name?.trim?.() ||
+            (fullName || undefined) ||
+            ov?.username ||
+            (p.overseerMemberId ? `ID ${p.overseerMemberId}` : "-");
+
+        return {
+            id: Number(p.id),
+            title: p.name ?? p.title ?? "(ไม่มีชื่อ)",
+            community: p.community?.name ?? (p.communityId ? `ID ${p.communityId}` : "-"),
+            owner: ownerName ?? "-",
+            published: p.statusPackage === "PUBLISH" || !!p.published,
+            approved: p.statusApprove === "APPROVE" || !!p.approved,
+        };
+    });
+
+    return { rows, total, page, limit };
 }

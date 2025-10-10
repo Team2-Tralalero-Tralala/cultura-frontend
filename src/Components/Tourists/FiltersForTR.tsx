@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { ChevronDown, Filter } from "lucide-react"; // ใช้ icon จาก library lucide-react
+/*
+ * Filter ใช้สำหรับ Role: Tourists
+*/
+
+import { useState } from "react";
 
 // type ของแต่ละ option ใน dropdown
 type FilterOption = {
@@ -28,25 +31,22 @@ export default function FilterDropdown({ options, selected, onChange }: FilterPr
       {/* ปุ่มหลัก กดเพื่อเปิด/ปิด dropdown */}
       <button
         onClick={() => setOpen(!open)} // toggle เปิด/ปิด
-        className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white shadow-sm hover:bg-gray-50"
+        className="flex items-center gap-2 px-3 py-2 border w-full border-black rounded-lg bg-white text-black hover:bg-gray-50"
       >
-        {/* ไอคอนกรอง */}
-        <Filter className="w-4 h-4" />
         {/* แสดงชื่อ option ที่เลือกอยู่ */}
         <span>{options.find(opt => opt.value === selected)?.label}</span>
         {/* ไอคอนลูกศร ขึ้น/ลง */}
-        <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        <svg className="text-black items-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m12 15l-5-5h10z"/></svg>
       </button>
 
       {/* เมนู dropdown */}
       {open && (
-        <div className="absolute mt-2 w-40 bg-white border rounded-lg shadow-lg z-10">
+        <div className="absolute w-35 mt-2 items-center text-center border border-black rounded-lg bg-white text-black hover:bg-gray-50">
           {options.map((opt) => (
             <button
               key={opt.value} // key ต้องไม่ซ้ำ
               onClick={() => handleSelect(opt.value)} // เมื่อเลือกจะเรียก handleSelect
-              className={`block w-full text-left px-4 py-2 hover:bg-gray-100 hover:rounded-md ${
-                opt.value === selected ? "bg-gray-200 rounded-md font-medium" : "" // ไฮไลท์ option ที่เลือกอยู่
+              className={`block w-full text-left px-5 py-2 hover:bg-green-200 hover:rounded-md
               }`}
             >
               {opt.label}

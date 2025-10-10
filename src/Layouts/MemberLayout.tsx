@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import SidebarMember from "../Components/SidebarMember";
 import NavbarSam from "../Components/NavbarSam";
 
-export default function AdminLayout() {
+export default function MemberLayout() {
     return (
         <div className="flex h-screen">
             <SidebarMember />

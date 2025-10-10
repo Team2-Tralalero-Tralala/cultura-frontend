@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import SidebarAdmin from "../Components/SidebarMember";
+import SidebarAdmin from "../Components/SidebarAdmin";
 import NavbarSam from "../Components/NavbarSam";
 
 export default function AdminLayout() {

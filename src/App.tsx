@@ -1,20 +1,30 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import AdminLayout from "./Layouts/AdminLayout";
+/**
+ * App หลักของระบบ
+ * - ตั้งค่า Route สำหรับหน้า Booking Histories ของ Admin เท่านั้น
+ * - ระบบ auto-login แบบ Dev Mode (เฉพาะตอน import.meta.env.DEV)
+ */
 
-import BookingHistoryAdmin from "./Pages/Admin/BookingHistoryAdmin";
+import { Routes, Route } from "react-router-dom";
+
+// Layouts / Pages
+import AdminLayout from "./Layouts/AdminLayout";
+import BookingHistories from "./Pages/Admin/BookingHistoryAdmin";
+
+// Dev helper
+import { adminLogin } from "./Libs/dev-login";
+
+if (import.meta.env.DEV) {
+  adminLogin();
+}
 
 export default function App() {
   return (
     <Routes>
-      {/* 🧩 เส้นทางหลักของ Admin */}
-      <Route path="/admin/*" element={<AdminLayout />}>
-
-        <Route path="booking/histories" element={<BookingHistoryAdmin />} />
+      {/* ================= Admin ================= */}
+      <Route path="/admin" element={<AdminLayout />}>
+        {/* ใช้รูปแบบ /admin/booking/histories */}
+        <Route path="booking/histories" element={<BookingHistories />} />
       </Route>
-
-      {/* 🏠 เข้ามา root จะพาไปหน้า booking histories */}
-      <Route path="/" element={<Navigate to="/admin/booking/histories" replace />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

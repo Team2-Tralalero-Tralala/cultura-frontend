@@ -1,85 +1,48 @@
-// import { Route, Routes, Navigate } from "react-router";
-// import ProtectedRoute from "./Libs/ProtectRoute";
-// import RoleRedirect from "./Libs/RoleRedirect";
-
-// import LoginAdmin from "./Pages/LoginAdmin.tsx";
-// // import Register from "./Pages/Register.tsx";
-// // import ForgotPassword from "./Pages/ForgotPassword.tsx";
-// import LoginTourist from "./Pages/LoginTourist.tsx";
-// import CreateAccountPage from "./Components/Account/CreateAccountPage.tsx";
-
-// function App() {
-//   return (
-//     <>
-//       <Routes>
-//         {/* public */}
-//         <Route path="guest/login" element={<LoginTourist />} />
-//         <Route path="guest/partner/login" element={<LoginAdmin />} />
-//         {/* <Route path="/register" element={<Register />} /> */}
-//         {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
-
-//         {/* root -> เด้งตาม role */}
-//         <Route index element={<RoleRedirect />} />
-
-//         {/* private routes */}
-//         {/* ชั่วคราว: เปิดให้เข้าตรงได้เลย */}
-//         <Route
-//           path="/super/account/admin/create"
-//           element={<CreateAccountPage />}
-//         />
-
-//         {/* fallback */}
-//         <Route path="*" element={<Navigate to="/" replace />} />
-//       </Routes>
-//     </>
-//   );
-// }
-
-// export default App;
 import { Route, Routes, Navigate } from "react-router";
-
 import RoleRedirect from "./Libs/RoleRedirect";
 
-import LoginAdmin from "./Pages/LoginAdmin.tsx";
-// import Register from "./Pages/Register.tsx";
-// import ForgotPassword from "./Pages/ForgotPassword.tsx";
-import LoginTourist from "./Pages/LoginTourist.tsx";
-import CreateAccountPage from "./Components/Account/CreateAccountPage.tsx";
+import LoginAdmin from "./Pages/LoginAdmin";
+import LoginTourist from "./Pages/LoginTourist";
+import CreateAccountPage from "./Components/Account/CreateAccountPage";
+import EditAccountPage from "./Components/Account/EditAccountPage";
 
-//  import toastify
+import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
+
+// Toastify สำหรับแจ้งเตือน
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import EditAccountPage from "./Components/Account/EditAccountPage.tsx";
 
 function App() {
   return (
     <>
       <Routes>
-        {/* public */}
-        <Route path="guest/login" element={<LoginTourist />} />
-        <Route path="guest/partner/login" element={<LoginAdmin />} />
-        {/* <Route path="/register" element={<Register />} /> */}
-        {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
+        {/* Public routes */}
+        <Route path="/guest/login" element={<LoginTourist />} />
+        <Route path="/guest/partner/login" element={<LoginAdmin />} />
 
-        {/* root -> เด้งตาม role */}
+        {/* Root: redirect ตาม role */}
         <Route index element={<RoleRedirect />} />
 
-        {/* private routes */}
-        {/* ชั่วคราว: เปิดให้เข้าตรงได้เลย */}
-        <Route
-          path="/super/account/admin/create"
-          element={<CreateAccountPage />}
-        />
-        <Route
-          path="/super/account/admin/:adminId/edit"
-          element={<EditAccountPage />}
-        />
+        {/* SuperAdmin layout */}
+        <Route path="/super/*" element={<SuperAdminLayout />}>
+          {/* เส้นทางภายใน SuperAdmin */}
+          <Route path="*" element={<SuperAdminRoutes />} />
+          <Route
+            path="account/admin/create"
+            element={<CreateAccountPage />}
+          />
+          <Route
+            path="account/admin/:adminId/edit"
+            element={<EditAccountPage />}
+          />
+        </Route>
 
-        {/* fallback */}
+        {/*  Fallback 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/*  เพิ่ม ToastContainer เพื่อให้ทุกหน้าใช้ toast ได้ */}
+      {/*  Toast container */}
       <ToastContainer
         position="top-right"
         autoClose={2500}

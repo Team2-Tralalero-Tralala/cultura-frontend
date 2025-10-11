@@ -21,8 +21,7 @@ export default function App() {
   return (
     <Routes>
       {/* ================= Admin ================= */}
-      <Route path="/admin" element={<AdminLayout />}>
-        {/* ใช้รูปแบบ /admin/booking/histories */}
+        <Route path="/admin" element={<AdminLayout />}>
         <Route path="booking/histories" element={<BookingHistories />} />
       </Route>
     </Routes>

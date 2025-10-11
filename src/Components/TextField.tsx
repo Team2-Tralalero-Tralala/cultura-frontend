@@ -17,6 +17,7 @@
  */
 import React, { useState } from "react";
 import type { TextFieldProps } from "../Types/TextField";
+import type { BaseFieldProps } from "@/Types/BaseField";
 import { Icon } from "@iconify/react";
 
 /*
@@ -61,6 +62,9 @@ function EyeIcon({ hidden }: { hidden: boolean }) {
  * Output : React component <TextField> สำหรับใช้งานเป็น input ในฟอร์ม
  */
 const TextField: React.FC<TextFieldProps> = ({
+ * Output : React component <BaseFieldProps> สำหรับใช้งานเป็น input ในฟอร์ม
+ */
+const TextField: React.FC<BaseFieldProps> = ({
   id,
   label,
   required,

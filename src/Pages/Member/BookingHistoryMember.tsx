@@ -1,6 +1,6 @@
-// src/Pages/Admin/BookingHistoryAdmin.tsx
+// src/Pages/member/BookingHistoryMember.tsx
 /**
- * คำอธิบาย: หน้า "ประวัติการจอง (Admin)"
+ * คำอธิบาย: หน้า "ประวัติการจอง (Member)"
  * หน้าที่:
  *   - ดึงข้อมูลประวัติการจองตามบทบาทจาก API: fetchBookingHistoriesByRole (ดึงแบบไล่หน้า)
  *   - แสดงตารางข้อมูลพร้อมค้นหา
@@ -108,11 +108,11 @@ const columns: Column<BookingRow>[] = [
 
 /** -------------------- Page Component -------------------- */
 /**
- * คำอธิบาย: คอมโพเนนต์หน้า Admin – ประวัติการจอง
+ * คำอธิบาย: คอมโพเนนต์หน้า Member – ประวัติการจอง
  * Input : none
  * Output: React Element
  */
-export default function BookingHistoryAdmin(): React.ReactElement {
+export default function BookingHistoryMember(): React.ReactElement {
   const navigate = useNavigate();
 
   // boolean: นำหน้าด้วย is*
@@ -218,7 +218,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
       <div className="flex flex-col gap-1">
         <div
           className="text-sm text-gray-500 cursor-pointer hover:underline"
-          onClick={() => navigate("/admin/booking/histories")}
+          onClick={() => navigate("/member/booking/done")}
         >
           จัดการการจอง › ประวัติการจอง
         </div>
@@ -233,7 +233,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
         <button
           type="button"
           className="ml-auto px-5 py-2 rounded-lg bg-[#055035] text-white hover:opacity-90"
-          onClick={() => navigate("/admin/booking/refunds")}
+          onClick={() => navigate("/member/booking/refunds")}
         >
           คำขอคืนเงิน
         </button>

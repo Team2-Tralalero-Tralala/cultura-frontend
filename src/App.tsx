@@ -1,9 +1,23 @@
-function App() {
+import NavbarTourist from "./Components/NavbarTourist"
+import  NavbarSam  from "./Components/NavbarSam"
+
+function nav_tourist() {
   return (
     <>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+      <NavbarTourist />
+      
     </>
-  );
+  )
 }
 
-export default App;
+function nav_sam() {
+  return (
+    <>
+      <NavbarSam />
+    </>
+  
+  )
+}
+
+export default  nav_tourist;
+

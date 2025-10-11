@@ -1,3 +1,4 @@
+// src/Pages/Admin/BookingHistoryAdmin.tsx
 /**
  * หน้า "ประวัติการจอง" ของแอดมิน (ยังไม่ดึง API)
  */
@@ -39,8 +40,8 @@ export default function BookingHistoryAdmin() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">ประวัติการจอง (แอดมิน)</h1>
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1 max-w-md">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 max-w-md">
             <SearchBarTable
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -49,24 +50,24 @@ export default function BookingHistoryAdmin() {
         </div>
       </div>
 
-      <DataTable<BookingRow>
+        <DataTable<BookingRow>
         data={tableRows}
-        columns={columns}
-        getRowKey={(r) => r.id}
+          columns={columns}
+          getRowKey={(r) => r.id}
         selectable={false}
-        striped
-        pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={10}
+          striped
+          pageSizeOptions={[10, 20, 50]}
+          defaultPageSize={10}
      
-        theme="brand"
-        className="bg-white rounded-lg"
+          theme="brand"
+          className="bg-white rounded-lg"
       
-      />
+        />
 
       {tableRows.length === 0 && (
         <div className="text-gray-500 text-sm text-center py-6">
           ยังไม่มีข้อมูลการจองในระบบ
-        </div>
+      </div>
       )}
     </div>
   );

@@ -6,6 +6,7 @@
  * - ปุ่มแก้ไข/ลบ ต่อแถว
  */
 
+import { Link } from "react-router-dom";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "../../Components/Tables/Index";
@@ -27,7 +28,20 @@ import type { CommunityRow } from "../../Types/Community";
 
 // ====== คอลัมน์ตาราง ======
 const columns: Column<CommunityRow>[] = [
-  { key: "name", header: "ชื่อชุมชน", className: "min-w-[240px]" },
+  {
+    key: "name",
+    header: "ชื่อชุมชน",
+    className: "min-w-[240px]",
+    render: (r) => (
+      <Link
+        to={`/super/communities/${r.id}`}
+        className="text-dark-green hover:underline font-medium inline-block max-w-full truncate"
+        onClick={(e) => e.stopPropagation()} // กันไม่ให้ onRowClick อื่น ๆ แทรก
+      >
+        {r.name}
+      </Link>
+    ),
+  },
   { key: "province", header: "จังหวัด" },
   {
     key: "status",
@@ -36,14 +50,13 @@ const columns: Column<CommunityRow>[] = [
   },
   { key: "admin", header: "ผู้ดูแล" },
 ];
-
 // ====== Bulk actions (ลบทั้งหมด) ======
 const bulkActions: BulkAction<CommunityRow>[] = [
   {
     id: "bulk-delete",
     label: "ลบทั้งหมด",
     icon: TrashIcon,
-    intent: "danger",
+    intent: "neutral",
     confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
     onClick: async (rows) => {
       const ids = rows.map((r) => r.id);
@@ -179,7 +192,7 @@ export default function ManageCommunitySuperAdmin() {
         bulkActions={bulkActions}
         selectable
         striped
-        pageSizeOptions={[10, 20, 50]}
+        pageSizeOptions={[10, 30, 50]}
         defaultPageSize={pageSize}
         onPageChange={(p) => setCurrentPage(p)}
         theme="brand"

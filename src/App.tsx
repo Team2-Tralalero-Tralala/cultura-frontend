@@ -1,63 +1,42 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
-// Layout เฉพาะ SuperAdmin
+// Layouts
 import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
 
-// DEV Login สำหรับทดสอบ
-import { superLogin } from "./Libs/dev-login";
-
-// ✅ หน้าจัดการชุมชน
-import ManageCommunitySuperAdmin from "./Pages/SuperAdmin/ManageCommunitySuperAdmin";
-
-// 🔹 Auto login (เฉพาะตอน dev)
-if (import.meta.env.DEV) {
-  superLogin(); // login อัตโนมัติเป็น superadmin
-import { Route, Routes, Navigate } from "react-router";
-// import ProtectedRoute from "./Libs/ProtectedRoute";
+// Public pages
+import LoginAdmin from "./Pages/LoginAdmin";
+import LoginTourist from "./Pages/LoginTourist";
 import RoleRedirect from "./Libs/RoleRedirect";
 
-import LoginAdmin from "./Pages/LoginAdmin.tsx";
-// import Register from "./Pages/Register.tsx";
-// import ForgotPassword from "./Pages/ForgotPassword.tsx";
-import LoginTourist from "./Pages/LoginTourist.tsx";
+// Guards
+import ProtectedRoute from "./Libs/ProtectRoute";
 
-function App() {
-  return (
-    <>
-      <Routes>
-        {/* public */}
-        <Route path="guest/login" element={<LoginTourist />} />
-        <Route path="guest/partner/login" element={<LoginAdmin />} />
-        {/* <Route path="/register" element={<Register />} /> */}
-        {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
-
-        {/* root -> เด้งตาม role */}
-        <Route index element={<RoleRedirect />} />
-
-        {/* private routes */}
-        {/* <Route
-          element={<ProtectedRoute allow={["member", "admin", "superadmin"]} />}
-        >
-          <Route path="/admin/home" element={<Admin />} />
-        </Route> */}
-        {/* fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
-  );
-}
+// Superadmin pages
+import ManageCommunitySuperAdmin from "./Pages/SuperAdmin/ManageCommunitySuperAdmin";
+import CommunityDetailSuperAdmin from "./Pages/SuperAdmin/CommunityDetailSuperAdmin";
 
 export default function App() {
   return (
     <Routes>
-      {/* ================= Superadmin ================= */}
-      <Route path="/super" element={<SuperAdminLayout />}>
-        {/* ✅ จัดการชุมชน */}
-        <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+      {/* Public */}
+      <Route path="/guest/login" element={<LoginTourist />} />
+      <Route path="/guest/partner/login" element={<LoginAdmin />} />
+
+      {/* Root → redirect by role */}
+      <Route index element={<RoleRedirect />} />
+
+      {/* Superadmin (protected) */}
+      <Route element={<ProtectedRoute allow={["superadmin"]} redirectTo="/guest/partner/login" />}>
+        <Route path="/super" element={<SuperAdminLayout />}>
+          <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+            <Route path="communities/:id" element={<CommunityDetailSuperAdmin />} /> 
+          
+        </Route>
       </Route>
 
-      {/* ================= Default ================= */}
-      <Route path="*" element={<Navigate to="/super/communities" replace />} />
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+

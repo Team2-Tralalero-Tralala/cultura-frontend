@@ -17,8 +17,10 @@ import { AuthContext } from "./AuthProvider";
  *   - register : ฟังก์ชันสมัครสมาชิก
  *   - logout : ฟังก์ชันออกจากระบบ
  */
+
+
 export const useAuth = () => {
   const { user, login, register, logout } = useContext(AuthContext);
-
   return { user, login, register, logout };
 };
+

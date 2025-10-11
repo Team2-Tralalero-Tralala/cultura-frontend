@@ -1,3 +1,4 @@
+import { api } from "@/Libs/axios";
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -11,6 +12,7 @@ export type CommunityRow = {
   admin: string;
   status: string; // OPEN | CLOSED
 };
+
 
 export async function fetchCommunitiesByRole(role: Role, page: number, limit: number) {
   const prefix = roleToPrefix(role);
@@ -42,4 +44,13 @@ export async function fetchCommunitiesByRole(role: Role, page: number, limit: nu
 
   const total = Number(payload?.pagination?.totalCount ?? rows.length) || 0;
   return { rows, total, page, limit };
+}
+
+export async function fetchCommunityDetail(communityId: number) {
+  const res = await api.get(`/super/community/${communityId}`, {
+    withCredentials: true,
+  });
+
+  // ตรงนี้จะได้ข้อมูลจาก backend ตาม structure ที่ส่งมาเลย
+  return res.data?.data;
 }

@@ -128,6 +128,9 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   * {
@@ -135,5 +138,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    @apply font-sarabun;
   }
 }

@@ -17,19 +17,20 @@ import { useAuth } from "./useAuth";
  *   - default    → /
  *   - ถ้าไม่มี user → /login
  */
+
 export default function RoleRedirect() {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/guest/partner/login" replace />;
 
   switch (user.role) {
     case "superadmin":
-      return <Navigate to="/super/home" replace />;
+      return <Navigate to="/super/communities" replace />;
     case "admin":
       return <Navigate to="/admin/home" replace />;
     case "member":
       return <Navigate to="/member/home" replace />;
     case "tourist":
-      return <Navigate to="/tourist/home" replace />;
+      return <Navigate to="/guest/home" replace />;
     default:
       return <Navigate to="/" replace />;
   }

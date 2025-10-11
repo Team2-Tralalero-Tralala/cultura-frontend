@@ -1,47 +1,34 @@
-/*
- * คำอธิบาย : Component ฟอร์มเข้าสู่ระบบสำหรับผู้ใช้ที่เป็น "วิสาหกิจชุมชน (Admin)"
- * ใช้ Zod schema ในการตรวจสอบความถูกต้องของข้อมูล,
- * มีการ validate แบบ real-time ขณะกรอก และเรียกใช้งาน AuthContext ในการ login
- */
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "./TextField";
 import Button from "./Button";
-import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../Libs/AuthProvider";
-// import ModalBlocked from "./ModalBlocked";
-import CircularProgress from "@mui/material/CircularProgress";
-import React, { useContext, useState } from "react";
-import { z } from "zod";
 import ModalBlocked from "./ModalBlocked";
+import { useAuth } from "@/Libs/useAuth";
 
 const loginSchema = z.object({
   username: z.string().min(1, "กรุณาป้อนอีเมล"),
   password: z.string().min(1, "กรุณาป้อนรหัสผ่าน"),
 });
-/*
- * ฟังก์ชัน : LoginAdminCard
- * คำอธิบาย : ฟอร์มเข้าสู่ระบบสำหรับ Admin โดยตรวจสอบ input ผ่าน Zod และ AuthContext
- * Input : -
- * Output : React Component ที่แสดงฟอร์ม login และจัดการ redirect/error
- */
+
+const redirectByRole: Record<string, string> = {
+  superadmin: "/super/communities",
+  admin: "/admin/home",
+  member: "/member/home",
+  tourist: "/guest/home",
+};
+
 export function LoginAdminCard() {
-  const [showBlocked, setShowBlocked] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [formErrors, setFormErrors] = useState<{ username?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [formErrors, setFormErrors] = useState<{
-    username?: string;
-    password?: string;
-  }>({});
-
-  /*
-   * ฟังก์ชัน : validateField
-   * คำอธิบาย : ตรวจสอบค่าของ field เดียว (username หรือ password)
-   * โดยใช้ Zod และ update state formErrors
-   */
+  const [showBlocked, setShowBlocked] = useState(false);
 
   const validateField = (field: "username" | "password", value: string) => {
     const result = loginSchema.safeParse({
@@ -56,84 +43,54 @@ export function LoginAdminCard() {
     }));
   };
 
-  type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-  // Handler เมื่อกรอก username
-  const handleUsernameChange = (e: React.ChangeEvent<FormElement>) => {
-    const value = e.target.value;
-    setUsername(value);
-    validateField("username", value);
-  };
-  // Handler เมื่อกรอกรหัสผ่าน
-  const handlePasswordChange = (e: React.ChangeEvent<FormElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-    validateField("password", value);
-  };
-  /*
-   * ฟังก์ชัน : handleLogin
-   * คำอธิบาย : จัดการ event เมื่อผู้ใช้ submit ฟอร์ม
-   * ขั้นตอน:
-   *   1) Validate input ด้วย Zod
-   *   2) เรียก AuthContext.login
-   *   3) ตรวจสอบ role และ error message จาก backend
-   * Output : redirect หรือแสดง error/modal
-   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setFormErrors({});
     setIsLoading(true);
 
-    // Validate with Zod
-    const result = loginSchema.safeParse({ username, password });
-    if (!result.success) {
-      const errors: { username?: string; password?: string } = {};
-      result.error.issues.forEach((err) => {
-        if (err.path[0] === "username") errors.username = err.message;
-        if (err.path[0] === "password") errors.password = err.message;
-      });
-      setFormErrors(errors);
+    const parsed = loginSchema.safeParse({ username, password });
+    if (!parsed.success) {
+      const errs: typeof formErrors = {};
+      parsed.error.issues.forEach((i) => (errs[i.path[0] as "username" | "password"] = i.message));
+      setFormErrors(errs);
       setIsLoading(false);
       return;
     }
+
     try {
-      const loggedInUser = await login(username, password); // ให้ login return user
+      const user = await login(username, password);
 
-      if (loggedInUser.role === "tourist") {
+      if (user.role === "tourist") {
         setError("ไม่พบบัญชี");
-      } else {
-        navigate("/tourist");
-      }
-      await login(username, password);
-    } catch (error: any) {
-      const blockedMsg = error?.response?.data?.message ?? "";
-      const isBlocked = blockedMsg.includes("ผู้ใช้ถูกบล็อก");
-
-      // กรณี User is blocked
-      if (isBlocked) {
-        if (blockedMsg && blockedMsg.includes("tourist")) {
-          setError("ไม่พบบัญชี");
-        } else {
-          setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
-          setShowBlocked(true);
-        }
-        setIsLoading(false);
         return;
       }
 
-      // ส่ง error ภาษาไทยมาแสดง
-      const backendMsg = error?.response?.data?.message;
-      setError(backendMsg);
-      setIsLoading(false);
+      const to = redirectByRole[user.role] ?? "/";
+      navigate(to, { replace: true });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? "";
+      const isBlocked = /blocked|ระงับ/i.test(msg);
+
+      if (isBlocked) {
+        if (/tourist/i.test(msg)) setError("ไม่พบบัญชี");
+        else {
+          setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
+          setShowBlocked(true);
+        }
+      } else {
+        setError(msg || "เข้าสู่ระบบไม่สำเร็จ");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className=" flex shadow-auth-card p-10 rounded-auth-card">
-      <form className="w-sm space-y-1" onSubmit={handleLogin}>
-        <div className="text-26 text-center">เข้าสู่ระบบวิสาหกิจชุมชน</div>
+    <div className="flex shadow-auth-card p-10 rounded-auth-card">
+      <form className="w-full max-w-sm space-y-3" onSubmit={handleLogin}>
+        <div className="text-[26px] text-center">เข้าสู่ระบบวิสาหกิจชุมชน</div>
+
         <TextField
           id="username"
           label="อีเมล"
@@ -141,7 +98,11 @@ export function LoginAdminCard() {
           placeholder="ป้อนชื่ออีเมล"
           type="text"
           value={username}
-          onChange={handleUsernameChange}
+          onChange={(e) => {
+            const v = (e.target as HTMLInputElement).value;
+            setUsername(v);
+            validateField("username", v);
+          }}
           error={!!formErrors.username}
           helperText={formErrors.username}
         />
@@ -153,28 +114,27 @@ export function LoginAdminCard() {
           placeholder="ป้อนรหัสผ่าน"
           type="password"
           value={password}
-          onChange={handlePasswordChange}
+          onChange={(e) => {
+            const v = (e.target as HTMLInputElement).value;
+            setPassword(v);
+            validateField("password", v);
+          }}
           error={!!formErrors.password}
           helperText={formErrors.password}
         />
 
-        <div className="flex items-center justify-between mb-3 mt-3 min-h-[24px]">
-          {/* Error message: always reserve space, align right */}
-          <p className="text-sm text-red-600 min-h-[24px]">
-            {error ? error : "\u00A0"}
-          </p>
-          <Link to="/forgot-password" className="text-right whitespace-nowrap">
+        <div className="flex items-center justify-between min-h-[24px]">
+          <p className="text-sm text-red-600 min-h-[24px]">{error || "\u00A0"}</p>
+          <Link to="/forgot-password" className="text-sm whitespace-nowrap hover:underline">
             ลืมรหัสผ่าน
           </Link>
         </div>
-        <Button type="confirm-admin" htmlType="submit">
-          {isLoading ? (
-            <CircularProgress color="inherit" size="28px" />
-          ) : (
-            "เข้าสู่ระบบ"
-          )}
+
+        <Button type="confirm-admin" htmlType="submit" className="w-full">
+          {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}
         </Button>
       </form>
+
       <ModalBlocked open={showBlocked} onClose={() => setShowBlocked(false)} />
     </div>
   );

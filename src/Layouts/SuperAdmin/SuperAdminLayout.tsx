@@ -1,16 +1,23 @@
-import React from 'react';
-import SidebarSuperAdmin from '../../Components/SidebarSuperAdmin';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from "react-router-dom";
+import NavbarSam from "@/Components/NavbarSam";
+import SidebarSuperAdmin from "@/Components/SidebarSuperAdmin";
 
-const SuperAdminLayout: React.FC = () => {
+export default function SuperAdminLayout() {
   return (
     <div className="flex h-screen">
+      {/* Sidebar */}
       <SidebarSuperAdmin />
-      <div className="flex-1 p-8 overflow-auto">
-        <Outlet />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col bg-gray-50">
+        {/* 🔹 ใส่ Navbar ตรงนี้ */}
+        <NavbarSam />
+
+        {/* 🔹 แสดงเนื้อหาหน้าปัจจุบัน */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
-};
-
-export default SuperAdminLayout;
+}

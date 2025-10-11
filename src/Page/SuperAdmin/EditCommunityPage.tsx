@@ -1,14 +1,26 @@
+/*
+ * คำอธิบาย : หน้าสำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Edit Community)
+ * ใช้สำหรับโหลดข้อมูลชุมชนจาก API, แสดงฟอร์มผ่าน Accordion, และอัปเดตข้อมูลกลับไปยังระบบ
+ * โดยมีการตรวจสอบค่า null/undefined และแปลงข้อมูลให้ตรงกับโครงสร้างของ backend
+ *
+ * Input : พารามิเตอร์ id จาก URL (communityId)
+ * Output : ฟอร์มแก้ไขข้อมูลชุมชนและปุ่มบันทึก
+ */
+
 import Button from "@/Components/Button";
 import { useEffect, useState } from "react";
 import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
-import { type ThailandLocation } from "@/Components/LocationSelector";
 import EditCommunityAccordion from "@/Components/Community/EditCommunityAccordion";
 import { useParams } from "react-router";
 import Stack from "@mui/material/Stack";
 
-// 🧹 ล้าง object โดยตัดค่าที่ว่าง/null ออก
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับล้าง object โดยตัดค่าที่เป็น null, undefined, หรือ string ว่าง
+ * ใช้เพื่อเตรียมข้อมูลก่อนส่งไปยัง API ให้สะอาดและไม่เกิด validation error
+ * Input : obj (object ที่ต้องการล้าง)
+ * Output : object ที่ล้างค่าที่ไม่จำเป็นออกแล้ว
+ */
 function cleanObject(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(cleanObject).filter((v) => v !== null && v !== undefined);
@@ -28,11 +40,15 @@ function cleanObject(obj: any): any {
   }
   return obj;
 }
-
+/*
+ * คำอธิบาย : Component หลักสำหรับหน้าแก้ไขวิสาหกิจชุมชน
+ * โหลดข้อมูลจาก API → แสดงข้อมูลในฟอร์ม → อนุญาตให้แก้ไขและบันทึกกลับ
+ */
 export function EditCommunityPage() {
   const params = useParams();
   const [loading, setLoading] = useState(true);
 
+  // 🔧 default structure ต้องใช้ key `subDistrict` (D ใหญ่)
   const [formData, setFormData] = useState({
     id: "",
     adminId: "",
@@ -53,9 +69,9 @@ export function EditCommunityPage() {
     location: {
       province: "",
       district: "",
-      subdistrict: "",
+      subDistrict: "", // ✅ D ใหญ่
       postalCode: "",
-    } as ThailandLocation,
+    },
     locationDetail: "",
     latitude: "",
     longitude: "",
@@ -77,13 +93,16 @@ export function EditCommunityPage() {
 
   const [checked, setChecked] = useState(true);
 
-  // ✅ โหลดข้อมูลจาก API ครั้งแรก
+  /*
+   * คำอธิบาย : Component หลักสำหรับหน้าแก้ไขวิสาหกิจชุมชน
+   * โหลดข้อมูลจาก API → แสดงข้อมูลในฟอร์ม → อนุญาตให้แก้ไขและบันทึกกลับ
+   */
   useEffect(() => {
     async function fetchCommunity() {
       try {
         setLoading(true);
         const res = await getCommunityById(Number(params.id));
-        const data = res.data?.data;
+        const data = res.data.data;
 
         setFormData({
           id: data.id,
@@ -107,7 +126,7 @@ export function EditCommunityPage() {
           location: {
             province: data.location?.province || "",
             district: data.location?.district || "",
-            subdistrict: data.location?.subDistrict || "",
+            subDistrict: data.location?.subDistrict || "", // ✅ ใช้ D ใหญ่เสมอ
             postalCode: data.location?.postalCode?.toString() || "",
           },
           locationDetail: data.location?.detail || "",
@@ -140,7 +159,11 @@ export function EditCommunityPage() {
     if (params.id) fetchCommunity();
   }, [params.id]);
 
-  // ✅ สลับสถานะ OPEN / CLOSED
+  /*
+   * คำอธิบาย : ฟังก์ชันเปลี่ยนสถานะของชุมชน (OPEN / CLOSED)
+   * Input : event (React.ChangeEvent<HTMLInputElement>)
+   * Output : อัปเดตค่าใน state formData.status และสวิตช์ UI
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
     setChecked(newChecked);
@@ -150,7 +173,11 @@ export function EditCommunityPage() {
     }));
   };
 
-  // ✅ ฟังก์ชันบันทึก
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลวิสาหกิจชุมชน
+   * Input : formData จาก state
+   * Output : ส่งข้อมูลที่ถูกล้างและแปลงค่าแล้วกลับไปยัง API
+   */
   async function handleUpdate() {
     try {
       const {
@@ -167,18 +194,19 @@ export function EditCommunityPage() {
         ...rest
       } = formData;
 
+      // 🔧 ตรวจสอบและแปลงค่าอย่างปลอดภัย
       const finalPayload = {
         ...rest,
-        adminId: Number(adminId),
-        rating: Number(rating),
+        adminId: Number(adminId) || null,
+        rating: Number(rating) || 0,
         location: {
-          houseNumber: houseNumber || null,
-          villageNumber: Number(villageNumber) || null,
-          subDistrict: location.subdistrict || null,
-          district: location.district || null,
-          province: location.province || null,
-          postalCode: String(location.postalCode) || null,
-          detail: locationDetail || null,
+          houseNumber: houseNumber,
+          villageNumber: villageNumber,
+          subDistrict: location.subDistrict || "", // ✅ ตรง backend
+          district: location.district || "",
+          province: location.province || "",
+          postalCode: String(location.postalCode || ""),
+          detail: locationDetail || "",
           latitude: latitude ? Number(latitude) : null,
           longitude: longitude ? Number(longitude) : null,
         },
@@ -192,6 +220,7 @@ export function EditCommunityPage() {
       alert("บันทึกการแก้ไขเรียบร้อยแล้ว");
     } catch (err: any) {
       console.error("❌ อัปเดตไม่สำเร็จ:", err.response?.data || err.message);
+      alert("❌ บันทึกไม่สำเร็จ: โปรดตรวจสอบข้อมูลอีกครั้ง");
     }
   }
 
@@ -199,15 +228,12 @@ export function EditCommunityPage() {
 
   return (
     <div className="w-auto space-y-4">
-      {/* ✅ สวิตช์เปิด/ปิดสถานะ */}
-      <FormControlLabel
-        label={checked ? "สถานะชุมชน: เปิด (OPEN)" : "สถานะชุมชน: ปิด (CLOSED)"}
-        control={<Switch checked={checked} onChange={handleChange} />}
-      />
-      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-        สถานะชุมชน
-        <Switch checked={checked} onChange={handleChange} />
-      </Stack>
+      <div className="flex justify-end">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          สถานะชุมชน
+          <Switch checked={checked} onChange={handleChange} />
+        </Stack>
+      </div>
 
       {/* ✅ Accordion รวมฟอร์ม */}
       <EditCommunityAccordion value={formData} onChange={setFormData} />

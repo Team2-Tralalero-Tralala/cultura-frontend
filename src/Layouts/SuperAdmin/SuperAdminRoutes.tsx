@@ -1,12 +1,20 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { CreateCommuninityPage } from "@/Page/SuperAdmin/CreateCommuninityPage";
+import { EditCommunityPage } from "@/Page/SuperAdmin/EditCommunityPage";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-{/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/ }
+{
+  /* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/
+}
 //import CommunityManagement from '../../Pages/SuperAdmin/ManageCommunity';
 
 const SuperAdminRoutes: React.FC = () => {
   return (
     <Routes>
+      <Route path="community">
+        <Route path="create" element={<CreateCommuninityPage />} />
+        <Route path="edit/:id" element={<EditCommunityPage />} />
+      </Route>
       {/* 
       <Route path="communities/all" element={<CommunityManagement />} />
       <Route path="accounts/all" element={<ManageAccount />} />

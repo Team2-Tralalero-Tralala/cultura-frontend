@@ -18,10 +18,6 @@ function App() {
 
       <Route path="/super/*" element={<SuperAdminLayout />}>
         {/* เส้นทางภายใน /super/ ทั้งหมด */}
-        <Route path="community">
-          <Route path="create" element={<CreateCommuninityPage />} />
-          <Route path="edit/:id" element={<EditCommunityPage />} />
-        </Route>
         <Route path="*" element={<SuperAdminRoutes />} />
       </Route>
       <Route path="/admin/*" element={<AdminLayout />}>

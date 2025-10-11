@@ -1,4 +1,15 @@
-import React, { useEffect, useState } from "react";
+/*
+ * คำอธิบาย : Component สำหรับเลือกที่ตั้งทางภูมิศาสตร์ของประเทศไทย
+ * โดยผู้ใช้สามารถเลือกจังหวัด → อำเภอ → ตำบล → ระบบจะเติมรหัสไปรษณีย์ให้อัตโนมัติ
+ * ใช้ข้อมูลจากไฟล์ geography.json บน GitHub Repository ของ thailand-geography-data
+ *
+ * Input : value (ThailandLocation) - ค่าที่อยู่ปัจจุบันของผู้ใช้
+ *          onChange (function) - callback ที่ส่งค่ากลับเมื่อผู้ใช้เปลี่ยนข้อมูล
+ *          labelPrefix (string) - ข้อความนำหน้าป้ายชื่อ เช่น “ที่อยู่: ”
+ *          disabled (boolean) - ปิดการแก้ไขฟิลด์ทั้งหมด
+ * Output : แสดง input แบบ Autocomplete 3 ช่อง (จังหวัด, อำเภอ, ตำบล) และ TextField สำหรับรหัสไปรษณีย์
+ */
+import React, { useEffect, useState, useMemo } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "./TextField";
 import axios from "axios";
@@ -36,12 +47,16 @@ export interface ThailandLocation {
 }
 
 interface ThailandLocationSelectProps {
-  value?: ThailandLocation;
-  onChange?: (value: ThailandLocation) => void;
+  value: ThailandLocation;
+  onChange: (value: ThailandLocation) => void;
   labelPrefix?: string;
   disabled?: boolean;
 }
-
+/*
+ * คำอธิบาย : Component สำหรับเลือกจังหวัด อำเภอ ตำบล และรหัสไปรษณีย์
+ * Input : ThailandLocationSelectProps
+ * Output : ส่งข้อมูลตำแหน่งกลับผ่าน onChange()
+ */
 export default function ThailandLocationSelect({
   value,
   onChange,
@@ -49,134 +64,164 @@ export default function ThailandLocationSelect({
   disabled = false,
 }: ThailandLocationSelectProps) {
   const [geoData, setGeoData] = useState<Record<string, Province>>({});
-  const [province, setProvince] = useState<string | null>(null);
-  const [district, setDistrict] = useState<string | null>(null);
-  const [subdistrict, setSubdistrict] = useState<string | null>(null);
-  const [postalCode, setPostalCode] = useState<string>("");
 
-  // โหลด geography.json
+  /*
+   * คำอธิบาย : โหลดข้อมูล geography.json เพียงครั้งเดียวเมื่อ component mount
+   * Input : -
+   * Output : เก็บข้อมูลจังหวัด อำเภอ และตำบลทั้งหมดไว้ใน state geoData
+   */
   useEffect(() => {
     async function loadData() {
-      const res = await axios.get(
-        "https://raw.githubusercontent.com/thailand-geography-data/thailand-geography-json/main/src/geography.json"
-      );
-      const data: GeographyItem[] = res.data;
-
-      const provinces: Record<string, Province> = {};
-      data.forEach((item) => {
-        if (!provinces[item.provinceCode]) {
-          provinces[item.provinceCode] = {
-            nameTh: item.provinceNameTh,
-            districts: {},
-          };
-        }
-        const prov = provinces[item.provinceCode];
-        if (!prov.districts[item.districtCode]) {
-          prov.districts[item.districtCode] = {
-            nameTh: item.districtNameTh,
-            subdistricts: {},
-          };
-        }
-        prov.districts[item.districtCode].subdistricts[item.subdistrictCode] = {
-          nameTh: item.subdistrictNameTh,
-          postalCode: item.postalCode,
-        };
-      });
-      setGeoData(provinces);
+      try {
+        const res = await axios.get(
+          "https://raw.githubusercontent.com/thailand-geography-data/thailand-geography-json/main/src/geography.json"
+        );
+        const data: GeographyItem[] = res.data;
+        const provinces: Record<string, Province> = {};
+        data.forEach((item) => {
+          if (!provinces[item.provinceCode]) {
+            provinces[item.provinceCode] = {
+              nameTh: item.provinceNameTh,
+              districts: {},
+            };
+          }
+          const prov = provinces[item.provinceCode];
+          if (!prov.districts[item.districtCode]) {
+            prov.districts[item.districtCode] = {
+              nameTh: item.districtNameTh,
+              subdistricts: {},
+            };
+          }
+          prov.districts[item.districtCode].subdistricts[item.subdistrictCode] =
+            {
+              nameTh: item.subdistrictNameTh,
+              postalCode: item.postalCode,
+            };
+        });
+        setGeoData(provinces);
+      } catch (err) {
+        console.error("❌ Error loading geography data", err);
+      }
     }
     loadData();
   }, []);
 
-  // ตั้งค่าจาก props (เมื่อมีค่าเริ่มต้น)
-  useEffect(() => {
-    if (value && Object.keys(geoData).length > 0) {
-      const provinceCode = Object.keys(geoData).find(
-        (code) => geoData[code].nameTh === value.province
+  /*
+   * คำอธิบาย : คำนวณรายการจังหวัดทั้งหมดจาก geoData
+   * Output : Array ของ { code, label }
+   */
+  const provinceOptions = useMemo(
+    () =>
+      Object.entries(geoData).map(([code, prov]) => ({
+        code,
+        label: prov.nameTh,
+      })),
+    [geoData]
+  );
+  /*
+   * คำอธิบาย : คำนวณรายการอำเภอจากจังหวัดที่เลือก
+   * Output : Array ของ { code, label }
+   */
+  const districtOptions = useMemo(() => {
+    const provinceCode = Object.keys(geoData).find(
+      (code) => geoData[code].nameTh === value.province
+    );
+    if (!provinceCode) return [];
+    return Object.entries(geoData[provinceCode].districts).map(
+      ([code, dist]) => ({
+        code,
+        label: dist.nameTh,
+      })
+    );
+  }, [geoData, value.province]);
+  /*
+   * คำอธิบาย : คำนวณรายการตำบลจากอำเภอที่เลือก
+   * Output : Array ของ { code, label }
+   */
+  const subdistrictOptions = useMemo(() => {
+    const provinceCode = Object.keys(geoData).find(
+      (code) => geoData[code].nameTh === value.province
+    );
+    if (!provinceCode) return [];
+    const districtCode = Object.keys(geoData[provinceCode].districts).find(
+      (code) => geoData[provinceCode].districts[code].nameTh === value.district
+    );
+    if (!districtCode) return [];
+    return Object.entries(
+      geoData[provinceCode].districts[districtCode].subdistricts
+    ).map(([code, subd]) => ({ code, label: subd.nameTh }));
+  }, [geoData, value.province, value.district]);
+
+  /*
+   * คำอธิบาย : เมื่อผู้ใช้เลือกจังหวัดใหม่
+   * Input : newValue (จังหวัดที่เลือก)
+   * Output : รีเซ็ต district, subdistrict, postalCode และส่งข้อมูลใหม่กลับ
+   */
+  const handleProvinceChange = (_: any, newValue: any) => {
+    if (!newValue) return;
+    onChange({
+      province: newValue.label,
+      district: null,
+      subdistrict: null,
+      postalCode: "",
+    });
+  };
+  /*
+   * คำอธิบาย : เมื่อผู้ใช้เลือกอำเภอใหม่
+   * Input : newValue (อำเภอที่เลือก)
+   * Output : รีเซ็ต subdistrict และ postalCode แล้วส่งข้อมูลกลับ
+   */
+  const handleDistrictChange = (_: any, newValue: any) => {
+    if (!newValue) return;
+    onChange({
+      ...value,
+      district: newValue.label,
+      subdistrict: null,
+      postalCode: "",
+    });
+  };
+  /*
+   * คำอธิบาย : เมื่อผู้ใช้เลือกตำบลใหม่ → ดึงรหัสไปรษณีย์อัตโนมัติ
+   * Input : newValue (ตำบลที่เลือก)
+   * Output : อัปเดต subdistrict และ postalCode
+   */
+  const handleSubdistrictChange = (_: any, newValue: any) => {
+    if (!newValue) return;
+    // คำนวณรหัสไปรษณีย์ใหม่
+    const provinceCode = Object.keys(geoData).find(
+      (code) => geoData[code].nameTh === value.province
+    );
+    const districtCode =
+      provinceCode &&
+      Object.keys(geoData[provinceCode].districts).find(
+        (code) =>
+          geoData[provinceCode].districts[code].nameTh === value.district
       );
-      const districtCode =
-        provinceCode &&
-        Object.keys(geoData[provinceCode].districts).find(
-          (code) =>
-            geoData[provinceCode].districts[code].nameTh === value.district
-        );
-      const subdistrictCode =
-        provinceCode &&
-        districtCode &&
+    const postal =
+      provinceCode &&
+      districtCode &&
+      geoData[provinceCode].districts[districtCode].subdistricts[
         Object.keys(
           geoData[provinceCode].districts[districtCode].subdistricts
         ).find(
           (code) =>
             geoData[provinceCode].districts[districtCode].subdistricts[code]
-              .nameTh === value.subdistrict
-        );
+              .nameTh === newValue.label
+        ) || ""
+      ]?.postalCode;
 
-      setProvince(provinceCode || null);
-      setDistrict(districtCode || null);
-      setSubdistrict(subdistrictCode || null);
-      setPostalCode(value.postalCode || "");
-    }
-  }, [value, geoData]);
+    onChange({
+      ...value,
+      subdistrict: newValue.label,
+      postalCode: postal || "",
+    });
+  };
 
-  // อัปเดตรหัสไปรษณีย์อัตโนมัติ
-  useEffect(() => {
-    if (province && district && subdistrict) {
-      const subd =
-        geoData[province]?.districts[district]?.subdistricts[subdistrict];
-      setPostalCode(subd?.postalCode || "");
-    } else {
-      setPostalCode("");
-    }
-  }, [province, district, subdistrict, geoData]);
-
-  // แจ้งค่าที่เปลี่ยนไปออกไป (เป็นชื่อภาษาไทย)
-  useEffect(() => {
-    if (onChange && Object.keys(geoData).length > 0) {
-      const provinceName =
-        province && geoData[province]?.nameTh ? geoData[province].nameTh : null;
-      const districtName =
-        province && district && geoData[province]?.districts[district]
-          ? geoData[province].districts[district].nameTh
-          : null;
-      const subdistrictName =
-        province &&
-        district &&
-        subdistrict &&
-        geoData[province]?.districts[district]?.subdistricts[subdistrict]
-          ? geoData[province].districts[district].subdistricts[subdistrict]
-              .nameTh
-          : null;
-
-      onChange({
-        province: provinceName,
-        district: districtName,
-        subdistrict: subdistrictName,
-        postalCode,
-      });
-    }
-  }, [province, district, subdistrict, postalCode, geoData]);
-
-  // ---------- ตัวเลือก ----------
-  const provinceOptions = Object.entries(geoData).map(([code, prov]) => ({
-    code,
-    label: prov.nameTh,
-  }));
-
-  const districtOptions =
-    province && geoData[province]
-      ? Object.entries(geoData[province].districts).map(([code, dist]) => ({
-          code,
-          label: dist.nameTh,
-        }))
-      : [];
-
-  const subdistrictOptions =
-    province && district
-      ? Object.entries(geoData[province].districts[district].subdistricts).map(
-          ([code, subd]) => ({ code, label: subd.nameTh })
-        )
-      : [];
-
-  // ---------- custom input ----------
+  /*
+   * คำอธิบาย : renderCustomInput ใช้ปรับแต่ง UI ของช่องกรอกข้อมูล Autocomplete
+   * Input : id, label, params (จาก MUI Autocomplete)
+   * Output : Element ของ input พร้อม label และ adornment
+   */
   const renderCustomInput = (id: string, label: string, params: any) => {
     const { InputProps, inputProps } = params;
     return (
@@ -217,13 +262,10 @@ export default function ThailandLocationSelect({
         disablePortal
         disableClearable
         options={provinceOptions}
-        value={provinceOptions.find((opt) => opt.code === province)}
-        onChange={(_, newValue) => {
-          setProvince(newValue?.code || null);
-          setDistrict(null);
-          setSubdistrict(null);
-          setPostalCode("");
-        }}
+        value={
+          provinceOptions.find((opt) => opt.label === value.province) || null
+        }
+        onChange={handleProvinceChange}
         renderInput={(params) =>
           renderCustomInput("province", "จังหวัด", params)
         }
@@ -236,14 +278,12 @@ export default function ThailandLocationSelect({
         disablePortal
         disableClearable
         options={districtOptions}
-        value={districtOptions.find((opt) => opt.code === district)}
-        onChange={(_, newValue) => {
-          setDistrict(newValue?.code || null);
-          setSubdistrict(null);
-          setPostalCode("");
-        }}
+        value={
+          districtOptions.find((opt) => opt.label === value.district) || null
+        }
+        onChange={handleDistrictChange}
         renderInput={(params) => renderCustomInput("district", "อำเภอ", params)}
-        disabled={!province || disabled}
+        disabled={!value.province || disabled}
       />
 
       {/* ตำบล */}
@@ -252,12 +292,15 @@ export default function ThailandLocationSelect({
         disablePortal
         disableClearable
         options={subdistrictOptions}
-        value={subdistrictOptions.find((opt) => opt.code === subdistrict)}
-        onChange={(_, newValue) => setSubdistrict(newValue?.code || null)}
+        value={
+          subdistrictOptions.find((opt) => opt.label === value.subdistrict) ||
+          null
+        }
+        onChange={handleSubdistrictChange}
         renderInput={(params) =>
           renderCustomInput("subDistrict", "ตำบล", params)
         }
-        disabled={!district || disabled}
+        disabled={!value.district || disabled}
       />
 
       {/* รหัสไปรษณีย์ */}
@@ -265,7 +308,7 @@ export default function ThailandLocationSelect({
         <TextField
           id="postalCode"
           type="text"
-          value={postalCode}
+          value={value.postalCode || ""}
           label="รหัสไปรษณีย์"
           placeholder="รหัสไปรษณีย์"
           required

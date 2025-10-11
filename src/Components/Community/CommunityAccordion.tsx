@@ -1,15 +1,26 @@
+/*
+ * คำอธิบาย : Component สำหรับแสดงแบบฟอร์มข้อมูลวิสาหกิจชุมชนในรูปแบบ Accordion
+ * โดยแบ่งออกเป็น 3 ส่วนหลัก ได้แก่
+ * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, การจดทะเบียน, บัญชีธนาคาร)
+ * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, หมู่, จังหวัด, พิกัด)
+ * 3. ข้อมูลติดต่อและผู้ดูแล (เบอร์โทร, อีเมล, ผู้ดูแลหลัก)
+ * ใช้ร่วมกับ Component ย่อย เช่น TextField, TextArea, ThailandLocationSelect
+ */
 import * as React from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TextField from "../TextField";
 import { useEffect, useState } from "react";
-import TextArea from "../TextArea";
 import * as z from "zod";
+import TextField from "../TextField";
+import TextArea from "../TextArea";
 import { type ThailandLocation } from "../LocationSelector";
 import ThailandLocationSelect from "../LocationSelector";
-
+/*
+ * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
+ * ใช้ Zod สำหรับ validate field แต่ละรายการ
+ */
 const communitySchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
   type: z.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
@@ -53,6 +64,11 @@ const communitySchema = z.object({
 
   adminId: z.number().min(1, "กรุณาเลือกผู้ดูแล"),
 });
+/*
+ * คำอธิบาย : Component หลักที่จัดการการแสดงผลแบบฟอร์มและจัดเก็บข้อมูลใน LocalStorage
+ * Input : value (object ของข้อมูลฟอร์ม), onChange (callback เมื่อข้อมูลเปลี่ยน)
+ * Output : UI Accordion ที่ผู้ใช้สามารถกรอกข้อมูลและตรวจสอบความถูกต้องได้
+ */
 export default function CommunityAccordion({
   value,
   onChange,
@@ -69,23 +85,40 @@ export default function CommunityAccordion({
     subdistrict: "",
     postalCode: "",
   });
-
+  /*
+   * คำอธิบาย : โหลดข้อมูลจาก LocalStorage เมื่อหน้าเพจถูกเปิดครั้งแรก
+   * Input : -
+   * Output : เรียก onChange เพื่อเซ็ตค่าฟอร์มที่เก็บไว้ใน LocalStorage
+   */
   useEffect(() => {
     const savedData = localStorage.getItem("communityForm");
     if (savedData) {
       onChange(JSON.parse(savedData));
     }
   }, []);
-
-  // 💾 เมื่อใดก็ตามที่ formData เปลี่ยน ให้บันทึกลง localStorage
+  /*
+   * คำอธิบาย : บันทึกค่าฟอร์มปัจจุบันลง LocalStorage ทุกครั้งที่ formData เปลี่ยน
+   * Input : formData (state ปัจจุบัน)
+   * Output : เก็บข้อมูลใน localStorage ภายใต้ key "communityForm"
+   */
   useEffect(() => {
     localStorage.setItem("communityForm", JSON.stringify(formData));
   }, [formData]);
-
+  /*
+   * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
+   * Input : panel (string)
+   * Output : อัปเดต state expanded
+   */
   const handleChange =
     (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? panel : false);
     };
+
+  /*
+   * คำอธิบาย : ฟังก์ชันเมื่อเปลี่ยนตำแหน่งที่อยู่ใน ThailandLocationSelect
+   * Input : location (ThailandLocation)
+   * Output : อัปเดตข้อมูล location ในฟอร์มหลัก
+   */
   const handleLocationChange = (location: ThailandLocation) => {
     onChange({
       ...value,
@@ -97,7 +130,11 @@ export default function CommunityAccordion({
   const [formErrors, setFormErrors] = useState<
     Record<string, string | undefined>
   >({});
-
+  /*
+   * คำอธิบาย : ตรวจสอบความถูกต้องของ field เดี่ยวโดยใช้ Zod
+   * Input : field (ชื่อฟิลด์), value (ค่าที่กรอก)
+   * Output : เซ็ตข้อความ error ลงใน formErrors ถ้ามีการ validate ไม่ผ่าน
+   */
   const validateField = (field: keyof typeof formData, value: string) => {
     const result = communitySchema.safeParse({
       ...formData,
@@ -111,7 +148,11 @@ export default function CommunityAccordion({
         : result.error.issues.find((i) => i.path[0] === field)?.message,
     }));
   };
-
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลในฟอร์ม
+   * Input : e (React.ChangeEvent)
+   * Output : อัปเดตค่าใน formData และตรวจสอบความถูกต้องของ field นั้น
+   */
   const handleFormChange = (e: React.ChangeEvent<FormElement>) => {
     const { id, value } = e.target;
     onChange({ ...formData, [id]: value });
@@ -521,6 +562,7 @@ export default function CommunityAccordion({
                 helperText={formErrors.coordinatorPhone}
               />
             </div>
+            {/* ทดลองก่อน ยังไม่มี แอดมินมา */}
             <div>
               <TextField
                 id="adminId"
@@ -530,8 +572,6 @@ export default function CommunityAccordion({
                 type="number"
                 value={formData.adminId}
                 onChange={handleFormChange}
-                // error={!!formErrors.password}
-                // helperText={formErrors.password}
               />
             </div>
 

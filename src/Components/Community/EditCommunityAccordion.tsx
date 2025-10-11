@@ -1,3 +1,15 @@
+/*
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Edit Community)
+ * ใช้ในการแสดงแบบฟอร์มที่สามารถแก้ไขข้อมูลวิสาหกิจชุมชนที่มีอยู่
+ * โดยแบ่งข้อมูลออกเป็น 3 ส่วนหลัก ได้แก่
+ * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, การจดทะเบียน, บัญชีธนาคาร)
+ * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, หมู่, จังหวัด, อำเภอ, พิกัด)
+ * 3. ข้อมูลติดต่อและผู้ดูแล (เบอร์โทร, อีเมล, ผู้ดูแลหลัก)
+ *
+ * Component นี้เชื่อมต่อกับ API ผ่านฟังก์ชัน getCommunityById()
+ * และบันทึกสถานะฟอร์มลงใน LocalStorage เพื่อป้องกันการสูญหายของข้อมูลระหว่างแก้ไข
+ */
+
 import * as React from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -13,6 +25,10 @@ import { type ThailandLocation } from "../LocationSelector";
 import ThailandLocationSelect from "../LocationSelector";
 import { getCommunityById } from "@/Libs/CommunityService";
 
+/*
+ * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
+ * ใช้ Zod เพื่อ validate field แต่ละรายการ
+ */
 const communitySchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
   type: z.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
@@ -56,7 +72,13 @@ const communitySchema = z.object({
 
   adminId: z.number().min(1, "กรุณาเลือกผู้ดูแล"),
 });
+/*
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
+ * Input : value (object ของข้อมูลฟอร์ม), onChange (callback เมื่อข้อมูลเปลี่ยน)
+ * Output : UI Accordion ที่ผู้ใช้สามารถแก้ไขข้อมูลและตรวจสอบความถูกต้องได้
+ */
 export default function EditCommunityAccordion({
+  value,
   onChange,
 }: {
   value: any;
@@ -78,13 +100,18 @@ export default function EditCommunityAccordion({
     Record<string, string | undefined>
   >({});
 
-  // ✅ โหลดข้อมูลจาก API
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลวิสาหกิจชุมชนจาก API โดยใช้ communityId
+   * Input : communityId จาก URL params
+   * Output : อัปเดตค่าของ formData และ location จากข้อมูล API
+   */
   useEffect(() => {
     const fetchData = async () => {
       if (!communityId) return;
       try {
         const res = await getCommunityById(Number(communityId));
-        const data = res.data || res; // รองรับ response สองแบบ
+        const data = res.data.data || res;
+
         if (data.registerDate) {
           data.registerDate = new Date(data.registerDate)
             .toISOString()
@@ -92,10 +119,10 @@ export default function EditCommunityAccordion({
         }
         setFormData(data);
         setLocation({
-          province: data.location.province ?? "",
-          district: data.location.district ?? "",
-          subdistrict: data.location.subDistrict ?? "",
-          postalCode: data.location.postalCode ?? "",
+          province: data.location?.province || null,
+          district: data.location?.district || null,
+          subdistrict: data.location?.subDistrict || null,
+          postalCode: data.location?.postalCode || "",
         });
       } catch (error) {
         console.error("❌ โหลดข้อมูลล้มเหลว:", error);
@@ -105,22 +132,38 @@ export default function EditCommunityAccordion({
     fetchData();
   }, [communityId]);
 
-  // 💾 โหลด/บันทึกลง localStorage
+  /*
+   * คำอธิบาย : โหลดข้อมูลที่เก็บไว้ใน LocalStorage เมื่อ Component ถูก mount
+   * Input : -
+   * Output : เซ็ตค่า formData จากข้อมูลที่เก็บไว้ใน LocalStorage
+   */
   useEffect(() => {
     const saved = localStorage.getItem("communityForm");
     if (saved) onChange(JSON.parse(saved));
   }, []);
-
+  /*
+   * คำอธิบาย : บันทึกข้อมูลฟอร์มลงใน LocalStorage ทุกครั้งที่ formData เปลี่ยน
+   * Input : formData
+   * Output : เก็บข้อมูลลงใน key "communityForm"
+   */
   useEffect(() => {
     if (formData)
       localStorage.setItem("communityForm", JSON.stringify(formData));
   }, [formData]);
 
-  // ✅ Handlers
+  /*
+   * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
+   * Input : panel (ชื่อของ panel ที่ต้องการเปิด)
+   * Output : อัปเดต state expanded
+   */
   const handleChange =
     (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
       setExpanded(isExpanded ? panel : false);
-
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
+   * Input : e (React.ChangeEvent)
+   * Output : อัปเดตค่าใน formData และเรียกตรวจสอบ validateField()
+   */
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -131,19 +174,11 @@ export default function EditCommunityAccordion({
     validateField(id as keyof typeof formData, value);
   };
 
-  const handleLocationChange = (loc: ThailandLocation) => {
-    setLocation(loc);
-    const updated = {
-      ...formData,
-      province: loc.province,
-      district: loc.district,
-      subDistrict: loc.subdistrict,
-      postalCode: loc.postalCode,
-    };
-    setFormData(updated);
-    onChange(updated);
-  };
-
+  /*
+   * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลแต่ละฟิลด์โดยใช้ Zod Schema
+   * Input : field (ชื่อของฟิลด์), value (ค่าที่ผู้ใช้กรอก)
+   * Output : เซ็ตข้อความ error ลงใน formErrors หากตรวจสอบไม่ผ่าน
+   */
   const validateField = (field: keyof typeof formData, value: string) => {
     const result = communitySchema.safeParse({ ...formData, [field]: value });
     setFormErrors((prev) => ({
@@ -154,7 +189,7 @@ export default function EditCommunityAccordion({
     }));
   };
 
-  if (!formData) {
+  if (!formData || !formData.location) {
     return (
       <div className="p-5 text-center text-gray-500">กำลังโหลดข้อมูล...</div>
     );
@@ -368,7 +403,6 @@ export default function EditCommunityAccordion({
               <TextField
                 id="villageNumber"
                 label="หมู่ที่"
-                required
                 placeholder="กรอกหมู่ของวิสาหกิจชุมชน"
                 type="number"
                 value={
@@ -381,15 +415,18 @@ export default function EditCommunityAccordion({
             </div>
             <div className="col-span-2">
               <ThailandLocationSelect
-                value={{
-                  province: formData.province ?? formData.location.province,
-                  district: formData.district ?? formData.location.district,
-                  subdistrict:
-                    formData.subDistrict ?? formData.location.subDistrict,
-                  postalCode:
-                    formData.postalCode ?? formData.location.postalCode,
+                value={location} // ค่า location จาก API
+                onChange={(newLocation) => {
+                  setLocation(newLocation);
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    location: newLocation,
+                  }));
+                  onChange({
+                    ...value,
+                    location: newLocation,
+                  });
                 }}
-                onChange={handleLocationChange}
                 labelPrefix=""
               />
             </div>

@@ -37,7 +37,7 @@
 
 // export default App;
 import { Route, Routes, Navigate } from "react-router";
-import ProtectedRoute from "./Libs/ProtectRoute";
+
 import RoleRedirect from "./Libs/RoleRedirect";
 
 import LoginAdmin from "./Pages/LoginAdmin.tsx";
@@ -46,9 +46,10 @@ import LoginAdmin from "./Pages/LoginAdmin.tsx";
 import LoginTourist from "./Pages/LoginTourist.tsx";
 import CreateAccountPage from "./Components/Account/CreateAccountPage.tsx";
 
-// ✅ import toastify
+//  import toastify
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import EditAccountPage from "./Components/Account/EditAccountPage.tsx";
 
 function App() {
   return (
@@ -69,12 +70,16 @@ function App() {
           path="/super/account/admin/create"
           element={<CreateAccountPage />}
         />
+        <Route
+          path="/super/account/admin/:adminId/edit"
+          element={<EditAccountPage />}
+        />
 
         {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* ✅ เพิ่ม ToastContainer เพื่อให้ทุกหน้าใช้ toast ได้ */}
+      {/*  เพิ่ม ToastContainer เพื่อให้ทุกหน้าใช้ toast ได้ */}
       <ToastContainer
         position="top-right"
         autoClose={2500}

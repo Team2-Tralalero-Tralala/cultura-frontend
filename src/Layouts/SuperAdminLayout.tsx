@@ -4,7 +4,7 @@ import NavbarSam from "../Components/NavbarSam";
 
 export default function SuperAdminLayout() {
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen font-sarabun">
             <SidebarSuperAdmin />
             <div className="flex-1 min-w-0 flex flex-col">
                 <NavbarSam />

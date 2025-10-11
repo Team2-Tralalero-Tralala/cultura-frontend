@@ -1,27 +1,48 @@
 // src/Pages/Admin/CreatePackageAdmin.tsx
 /**
- * Coding Standard (Frontend)
- * - ใช้ชื่อที่สื่อความหมาย (ห้ามย่อ): setFormField, villageNumber, isSaving, errorMessage
- * - เรียงลำดับ: Imports → Constants/Helpers → Types → Component
- * - ใส่คอมเมนต์สั้น ๆ ใน helper/payload/ขั้นตอนสำคัญ
- * - หลีกเลี่ยงค่า “มายากล”: ใช้ฟังก์ชันช่วยอธิบายความหมายแทน
+ * คำอธิบาย (Component Header)
+ * - หน้าสร้างแพ็กเกจ (บทบาท Admin)
+ * หน้าที่หลัก
+ *   1) รับค่าจากฟอร์มเพื่อสร้างแพ็กเกจใหม่
+ *   2) ตรวจสอบความครบถ้วนขั้นต่ำของฟิลด์ก่อนส่ง
+ *   3) เรียก API เพื่อบันทึกข้อมูลแล้วนำผู้ใช้กลับไปยังรายการแพ็กเกจ
+ * หมายเหตุ
+ *   - ใช้ TextField เป็น input มาตรฐานเพื่อความสม่ำเสมอของ UI
+ *   - ตั้งชื่อตัวแปร/ฟังก์ชันให้สื่อความหมายตามมาตรฐานทีม
  */
 
+// ================= Imports =================
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import TextField from "../../Components/TextField";
 
+// ================= Constants / Config =================
+/** Base URL สำหรับเรียก API (อ่านจาก .env) */
 const apiUrl = import.meta.env.VITE_API_URL;
 
-/* ================= Helpers ================= */
-/** แปลงค่าว่างให้เป็นค่าที่ปลอดภัย/อธิบายได้สำหรับฝั่ง Backend */
+// ================= Helpers =================
+/**
+ * แปลงสตริงให้สะอาดและอธิบายได้ (หลีกเลี่ยงค่าว่าง)
+ * @param value ค่าที่มาจากอินพุต
+ * @param fallback ค่าเริ่มต้นเมื่อผู้ใช้ไม่กรอกหรือเว้นว่าง
+ * @returns สตริงที่ผ่านการ trim แล้ว หรือ fallback
+ */
 function normalizeOrDefault(value: string, fallback = "-") {
     const trimmed = (value ?? "").toString().trim();
     return trimmed.length ? trimmed : fallback;
 }
 
-/* ================= Types ================= */
+/**
+ * แปลงค่าที่น่าจะเป็นตัวเลขให้เป็น number | null
+ * - ใช้เมื่อฟิลด์ฝั่ง Server อนุญาตให้เป็น null ได้
+ */
+function toIntOrNull(v: any): number | null {
+    const n = Number(String(v ?? "").trim());
+    return Number.isFinite(n) ? n : null;
+}
+
+// ================= Types =================
 /** แบบฟอร์มสร้างแพ็กเกจ (แอดมิน) */
 type PackageForm = {
     name: string;
@@ -40,7 +61,7 @@ type PackageForm = {
 
     /** รหัสสมาชิกผู้ดูแล (users.id) */
     overseerMemberId: string;
-    /** สำรองใช้ในอนาคต */
+    /** สำรองไว้สำหรับการค้นหา/tag ภายหลัง */
     tagId: string;
     facility: string;
 
@@ -58,6 +79,7 @@ type PackageForm = {
     addHomestay: boolean;
 };
 
+/** ค่าเริ่มต้นของฟอร์ม (ต้องครบทุกฟิลด์ใน PackageForm) */
 const initialFormState: PackageForm = {
     name: "",
     description: "",
@@ -91,19 +113,26 @@ const initialFormState: PackageForm = {
     addHomestay: false,
 };
 
+// ================= Component =================
 const CreatePackageAdmin: React.FC = () => {
     const navigate = useNavigate();
 
+    // -------- Local States --------
     const [formState, setFormState] = useState<PackageForm>(initialFormState);
     const [isSaving, setIsSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    /** อัปเดตฟิลด์ฟอร์มแบบ key-safe */
-    const setFormField = <K extends keyof PackageForm>(key: K, value: PackageForm[K]) =>
-        setFormState((prev) => ({ ...prev, [key]: value }));
+    /** อัปเดตฟิลด์ฟอร์มแบบ key-safe (หลีกเลี่ยง any) */
+    const setFormField = <K extends keyof PackageForm>(
+        key: K,
+        value: PackageForm[K]
+    ) => setFormState((prev) => ({ ...prev, [key]: value }));
 
-    /** ฟอร์มพร้อมส่งหรือยัง */
+    /**
+     * ตรวจว่าฟอร์ม “พร้อมส่ง” หรือยัง (Required Minimum)
+     * - ไม่เช็คเงื่อนไขธุรกิจเชิงลึก ปล่อยให้ฝั่ง Server เป็น authority
+     */
     const canSubmitForm = useMemo(() => {
         const requiredFields = [
             formState.name,
@@ -125,10 +154,15 @@ const CreatePackageAdmin: React.FC = () => {
         return requiredFields.every((v) => String(v ?? "").trim() !== "");
     }, [formState]);
 
-    /** ส่งคำขอสร้างแพ็กเกจ */
+    /**
+     * ส่งคำขอสร้างแพ็กเกจ
+     * Input  : ค่าใน formState (ผ่านการ normalize/parse แล้ว)
+     * Output : เปลี่ยนหน้าไปยัง /admin/packages เมื่อสำเร็จ
+     */
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
+        // ยืนยันก่อนส่ง
         if (!window.confirm("ยืนยันการสร้างแพ็กเกจใช่หรือไม่?")) return;
         if (!canSubmitForm) return;
 
@@ -137,8 +171,9 @@ const CreatePackageAdmin: React.FC = () => {
         setSuccessMessage(null);
 
         try {
+            // ------- สร้าง payload ให้ชัดเจน (หลีกเลี่ยง magic value) -------
             const payload = {
-                // communityId ไม่ต้องส่ง – ฝั่ง Backend จะ resolve ตามผู้ใช้
+                // communityId ไม่ต้องส่ง – Backend จะ resolve ตามผู้ใช้
                 overseerMemberId: Number(formState.overseerMemberId),
                 name: normalizeOrDefault(formState.name),
                 description: normalizeOrDefault(formState.description),
@@ -150,8 +185,11 @@ const CreatePackageAdmin: React.FC = () => {
                 startDate: normalizeOrDefault(formState.startDate),
                 dueDate: normalizeOrDefault(formState.endDate),
                 facility: normalizeOrDefault(formState.facility),
+
+                // ส่วนที่อยู่
                 location: {
                     houseNumber: normalizeOrDefault(formState.houseNumber),
+                    villageNumber: toIntOrNull(formState.villageNumber),
                     subDistrict: normalizeOrDefault(formState.subDistrict),
                     district: normalizeOrDefault(formState.district),
                     province: normalizeOrDefault(formState.province),
@@ -162,14 +200,17 @@ const CreatePackageAdmin: React.FC = () => {
                 },
             };
 
+            // ------- เรียก API -------
             await axios.post(`${apiUrl}/admin/package`, payload, {
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
             });
 
+            // ------- UX แจ้งผลและนำทาง -------
             alert("สร้างแพ็กเกจสำเร็จ!");
             navigate("/admin/packages");
         } catch (error: any) {
+            // เก็บรายละเอียด error เฉพาะที่จำเป็น และเลื่อนหน้าไปด้านบนเพื่อให้ผู้ใช้เห็นข้อความ
             console.error("Create package (admin) error payload:", error?.response?.data);
             setErrorMessage(
                 error?.response?.data?.message ||
@@ -183,6 +224,7 @@ const CreatePackageAdmin: React.FC = () => {
         }
     }
 
+    // -------- Render --------
     return (
         <div className="w-full max-w-none px-0 lg:px-0">
             {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
@@ -194,7 +236,7 @@ const CreatePackageAdmin: React.FC = () => {
             >
                 <label className="block text-xl mb-1">สร้างแพ็กเกจ</label>
 
-                {/* ชื่อ/คำอธิบาย */}
+                {/* -------- ชื่อ/คำอธิบาย -------- */}
                 <section className="space-y-4">
                     <TextField
                         id="name"
@@ -206,7 +248,7 @@ const CreatePackageAdmin: React.FC = () => {
                     />
 
                     <div>
-                        <label className="block text-sm mb-1">
+                        <label className="block text-base font-semibold mb-1">
                             คำอธิบายแพ็กเกจ <span className="text-red-600">*</span>
                         </label>
                         <textarea
@@ -219,7 +261,7 @@ const CreatePackageAdmin: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ที่อยู่ */}
+                {/* -------- ที่อยู่ -------- */}
                 <section className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-5">
                         <TextField
@@ -271,9 +313,9 @@ const CreatePackageAdmin: React.FC = () => {
                             onChange={(e) => setFormField("postalCode", e.target.value)}
                         />
 
-                        {/* ↓↓↓ ปรับส่วนนี้ให้เหมือนหน้าแก้ไข ↓↓↓ */}
+                        {/* คำอธิบายที่อยู่ (multiline) */}
                         <div className="md:col-span-2">
-                            <label className="block text-sm mb-1">
+                            <label className="block text-base font-semibold mb-1">
                                 คำอธิบายที่อยู่ <span className="text-red-600">*</span>
                             </label>
                             <textarea
@@ -304,9 +346,9 @@ const CreatePackageAdmin: React.FC = () => {
                             value={formState.longitude}
                             onChange={(e) => setFormField("longitude", e.target.value)}
                         />
-                        {/* ↑↑↑ ปรับส่วนนี้ให้เหมือนหน้าแก้ไข ↑↑↑ */}
                     </div>
 
+                    {/* ค้นหาสถานที่ + แผนที่ (Placeholder) */}
                     <div className="space-y-2">
                         <TextField
                             id="placeQuery"
@@ -319,7 +361,7 @@ const CreatePackageAdmin: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ผู้ดูแล + ความจุ */}
+                {/* -------- ผู้ดูแล + ความจุ -------- */}
                 <section className="grid md:grid-cols-2 gap-5">
                     <TextField
                         id="overseerMemberId"
@@ -341,7 +383,7 @@ const CreatePackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* สิ่งอำนวยความสะดวก */}
+                {/* -------- สิ่งอำนวยความสะดวก -------- */}
                 <section>
                     <TextField
                         id="facility"
@@ -352,7 +394,7 @@ const CreatePackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* วันเวลา */}
+                {/* -------- วันเวลา (ฝั่งสร้างยังใช้เฉพาะ startDate/endDate) -------- */}
                 <section className="grid md:grid-cols-4 gap-5">
                     <TextField
                         id="startDate"
@@ -415,7 +457,7 @@ const CreatePackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* แท็ก / ราคา */}
+                {/* -------- แท็ก / ราคา -------- */}
                 <section className="grid md:grid-cols-2 gap-5">
                     <TextField
                         id="tagId"
@@ -435,6 +477,7 @@ const CreatePackageAdmin: React.FC = () => {
                     />
                 </section>
 
+                {/* -------- ปุ่มล่างขวา -------- */}
                 <div className="flex items-center justify-end gap-2">
                     <button
                         type="button"

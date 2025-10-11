@@ -1,26 +1,58 @@
 // src/Pages/Admin/EditPackageAdmin.tsx
 /**
- * คำอธิบาย: หน้าจอแก้ไขแพ็กเกจ (บทบาท Admin)
- * หน้าที่หลัก:
- *  - โหลดข้อมูลแพ็กเกจตาม packageId มาใส่ฟอร์ม
- *  - ส่งข้อมูลที่แก้ไขแล้วกลับไปอัปเดตผ่าน API
- * หมายเหตุ:
- *  - ใช้ TextField เป็นอินพุตมาตรฐานเพื่อความสม่ำเสมอของ UI
- *  - ตั้งชื่อตัวแปรให้สื่อความหมาย (เช่น setFormField, formState, isSaving ฯลฯ)
+ * คำอธิบาย (Component Header)
+ * - หน้าจอแก้ไขแพ็กเกจ (บทบาท Admin)
+ * หน้าที่หลัก
+ *   1) โหลดรายละเอียดแพ็กเกจตาม packageId มาใส่ฟอร์ม
+ *   2) ให้ผู้ใช้แก้ไขข้อมูล แล้วส่งกลับไปอัปเดตผ่าน API
+ * หมายเหตุ
+ *   - ใช้ TextField เป็น input มาตรฐาน
+ *   - ใช้ชื่อที่สื่อความหมาย, เลี่ยง magic value, แยก helper ให้ชัดเจน
  */
 
+// ================= Imports =================
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import TextField from "../../Components/TextField";
 
+// ================= Constants / Config =================
+/** Base URL สำหรับเรียก API (อ่านจาก .env) */
 const apiUrl = import.meta.env.VITE_API_URL;
 
-/* ================= Helpers ================= */
-/** แปลง Date/ISO string → "yyyy-mm-dd" สำหรับ <input type="date"> */
+// ================= Helpers =================
+/**
+ * แปลง Date/ISO/MySQL DATETIME → "HH:mm" สำหรับ <input type="time">
+ * - รองรับสตริงทั้งรูปแบบ "YYYY-MM-DD HH:mm:ss" และ ISO "YYYY-MM-DDTHH:mm:ss.sssZ"
+ */
+function toTimeInput(input?: string | Date | null) {
+    if (!input) return "";
+
+    if (typeof input === "string") {
+        const m = input.match(
+            /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
+        );
+        if (m && m[4] !== undefined && m[5] !== undefined) {
+            const hh = m[4].padStart(2, "0");
+            const mm = m[5].padStart(2, "0");
+            return `${hh}:${mm}`;
+        }
+    }
+
+    // fallback: ให้ Date จัดการ (local time)
+    const d = new Date(input as any);
+    if (isNaN(d.getTime())) return "";
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
+}
+
+/**
+ * แปลง Date/ISO → "yyyy-mm-dd" สำหรับ <input type="date">
+ */
 function toDateInput(input?: string | Date | null) {
     if (!input) return "";
-    const dateObject = new Date(input);
+    const dateObject = new Date(input as any);
     if (isNaN(dateObject.getTime())) return "";
     const year = dateObject.getFullYear();
     const month = String(dateObject.getMonth() + 1).padStart(2, "0");
@@ -28,13 +60,24 @@ function toDateInput(input?: string | Date | null) {
     return `${year}-${month}-${day}`;
 }
 
-/** คืนค่าสตริงที่ trim แล้ว; ถ้าว่างให้คืน fallback */
+/**
+ * แปลงค่าที่น่าจะเป็นตัวเลขให้เป็น number | null
+ * - ใช้กับฟิลด์ที่ฝั่ง Server อนุญาตให้ว่าง/เป็น null ได้
+ */
+function toIntOrNull(v: any): number | null {
+    const n = Number(String(v ?? "").trim());
+    return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * คืนค่าสตริงที่ trim แล้ว; ถ้าว่างคืน fallback
+ */
 function normalizeOrDefault(value: any, fallback = "") {
     const trimmed = (value ?? "").toString().trim();
     return trimmed.length ? trimmed : fallback;
 }
 
-/* ================= Types ================= */
+// ================= Types =================
 type EditPackageForm = {
     name: string;
     description: string;
@@ -117,7 +160,7 @@ type LoadedPackage = {
     overseerMemberId: number;
     location: {
         houseNumber: string;
-        villageNumber?: string;
+        villageNumber?: string | null;
         subDistrict: string;
         district: string;
         province: string;
@@ -128,11 +171,13 @@ type LoadedPackage = {
     };
 };
 
+// ================= Component =================
 const EditPackageAdmin: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const packageId = Number(id);
     const navigate = useNavigate();
 
+    // -------- Local States --------
     const [formState, setFormState] = React.useState<EditPackageForm>(initialFormState);
     const [communityId, setCommunityId] = React.useState<number | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -141,11 +186,14 @@ const EditPackageAdmin: React.FC = () => {
     const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
     /** อัปเดตฟิลด์ของฟอร์มแบบ key-safe */
-    const setFormField = <K extends keyof EditPackageForm>(key: K, value: EditPackageForm[K]) =>
-        setFormState((prev) => ({ ...prev, [key]: value }));
+    const setFormField = <K extends keyof EditPackageForm>(
+        key: K,
+        value: EditPackageForm[K]
+    ) => setFormState((prev) => ({ ...prev, [key]: value }));
 
     /**
      * ดึงรายละเอียดแพ็กเกจ (role = admin) แล้วแม็ปลง formState
+     * - แยก mapping ให้เห็นชัด (หลีกเลี่ยง side-effect อื่น)
      */
     async function fetchPackageForAdmin(targetPackageId: number) {
         setIsLoading(true);
@@ -178,9 +226,9 @@ const EditPackageAdmin: React.FC = () => {
                 facility: normalizeOrDefault(data.facility ?? data.warning ?? ""),
 
                 startDate: toDateInput(data.startDate),
-                startTime: "",
+                startTime: toTimeInput(data.startDate),
                 endDate: toDateInput(data.dueDate),
-                endTime: "",
+                endTime: toTimeInput(data.dueDate),
                 openDate: "",
                 openTime: "",
                 closeDate: "",
@@ -202,7 +250,10 @@ const EditPackageAdmin: React.FC = () => {
         fetchPackageForAdmin(packageId);
     }, [packageId]);
 
-    /** ตรวจเงื่อนไขก่อนส่งฟอร์ม */
+    /**
+     * ตรวจเงื่อนไขขั้นต่ำก่อนส่งฟอร์ม (Required Minimum)
+     * - ปล่อย validation เชิงลึกให้ Backend
+     */
     const canSubmit = React.useMemo(() => {
         const requiredFields = [
             formState.name,
@@ -224,7 +275,11 @@ const EditPackageAdmin: React.FC = () => {
         return requiredFields.every((v) => String(v ?? "").trim() !== "");
     }, [formState]);
 
-    /** ส่งฟอร์มแก้ไขไปยัง API */
+    /**
+     * ส่งฟอร์มแก้ไขไปยัง API
+     * Input  : formState (ผ่าน normalize/parse แล้ว)
+     * Output : แจ้งผลและนำทางกลับไปหน้ารายการ
+     */
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!window.confirm("ยืนยันการบันทึกการแก้ไขแพ็กเกจใช่หรือไม่?")) return;
@@ -235,6 +290,7 @@ const EditPackageAdmin: React.FC = () => {
         setSuccessMessage(null);
 
         try {
+            // --------- สร้าง payload อย่างชัดเจน (เลี่ยง magic) ---------
             const payload = {
                 communityId,
                 overseerMemberId: Number(formState.overseerMemberId),
@@ -248,10 +304,14 @@ const EditPackageAdmin: React.FC = () => {
                 statusApprove: "PENDING" as const,
                 startDate: normalizeOrDefault(formState.startDate),
                 dueDate: normalizeOrDefault(formState.endDate),
+                // ส่งค่าเวลา ต่อเมื่อผู้ใช้กรอก (ไม่เปลี่ยนพฤติกรรมเดิม)
+                ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
+                ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
                 facility: normalizeOrDefault(formState.facility),
 
                 location: {
                     houseNumber: normalizeOrDefault(formState.houseNumber),
+                    villageNumber: toIntOrNull(formState.villageNumber),
                     subDistrict: normalizeOrDefault(formState.subDistrict),
                     district: normalizeOrDefault(formState.district),
                     province: normalizeOrDefault(formState.province),
@@ -284,6 +344,7 @@ const EditPackageAdmin: React.FC = () => {
         }
     }
 
+    // -------- Render --------
     if (isLoading) {
         return (
             <div className="w-full max-w-none px-0 lg:px-0">
@@ -303,7 +364,7 @@ const EditPackageAdmin: React.FC = () => {
             >
                 <label className="block text-xl mb-1">แก้ไขแพ็กเกจ</label>
 
-                {/* ชื่อ/คำอธิบาย */}
+                {/* -------- ชื่อ/คำอธิบาย -------- */}
                 <section className="space-y-4">
                     <TextField
                         id="name"
@@ -315,7 +376,7 @@ const EditPackageAdmin: React.FC = () => {
                     />
 
                     <div>
-                        <label className="block text-sm mb-1">
+                        <label className="block text-base font-semibold mb-1">
                             คำอธิบายแพ็กเกจ <span className="text-red-600">*</span>
                         </label>
                         <textarea
@@ -328,7 +389,7 @@ const EditPackageAdmin: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ที่อยู่ */}
+                {/* -------- ที่อยู่ -------- */}
                 <section className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-5">
                         <TextField
@@ -342,6 +403,7 @@ const EditPackageAdmin: React.FC = () => {
                         <TextField
                             id="villageNumber"
                             label="หมู่ที่"
+                            required
                             placeholder="กรอกหมู่ของชุมชน"
                             value={formState.villageNumber}
                             onChange={(e) => setFormField("villageNumber", e.target.value)}
@@ -380,8 +442,9 @@ const EditPackageAdmin: React.FC = () => {
                             onChange={(e) => setFormField("postalCode", e.target.value)}
                         />
 
+                        {/* คำอธิบายที่อยู่ (multiline) */}
                         <div className="md:col-span-2">
-                            <label className="block text-sm mb-1">
+                            <label className="block text-base font-semibold mb-1">
                                 คำอธิบายที่อยู่ <span className="text-red-600">*</span>
                             </label>
                             <textarea
@@ -414,7 +477,7 @@ const EditPackageAdmin: React.FC = () => {
                         />
                     </div>
 
-                    {/* ค้นหาสถานที่ + แผนที่ */}
+                    {/* ค้นหาสถานที่ + แผนที่ (placeholder) */}
                     <div className="space-y-2">
                         <TextField
                             id="placeQuery"
@@ -427,7 +490,7 @@ const EditPackageAdmin: React.FC = () => {
                     </div>
                 </section>
 
-                {/* ผู้ดูแล + ความจุ */}
+                {/* -------- ผู้ดูแล + ความจุ -------- */}
                 <section className="grid md:grid-cols-2 gap-5">
                     <TextField
                         id="overseerMemberId"
@@ -449,7 +512,7 @@ const EditPackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* สิ่งอำนวยความสะดวก */}
+                {/* -------- สิ่งอำนวยความสะดวก -------- */}
                 <section>
                     <TextField
                         id="facility"
@@ -460,7 +523,7 @@ const EditPackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* วันเวลา */}
+                {/* -------- วันเวลา -------- */}
                 <section className="grid md:grid-cols-4 gap-5">
                     <TextField
                         id="startDate"
@@ -523,7 +586,7 @@ const EditPackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* แท็ก / ราคา */}
+                {/* -------- แท็ก / ราคา -------- */}
                 <section className="grid md:grid-cols-2 gap-5">
                     <TextField
                         id="tagId"
@@ -543,7 +606,7 @@ const EditPackageAdmin: React.FC = () => {
                     />
                 </section>
 
-                {/* ปุ่มล่างขวา */}
+                {/* -------- ปุ่มล่างขวา -------- */}
                 <div className="flex items-center justify-end gap-2">
                     <button
                         type="button"

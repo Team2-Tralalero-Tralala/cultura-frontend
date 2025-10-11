@@ -1,4 +1,16 @@
 // src/Pages/Member/EditPackageMember.tsx
+/**
+ * คำอธิบาย (Component Header)
+ * - หน้าแก้ไขแพ็กเกจ (บทบาท Member)
+ * หน้าที่หลัก
+ *   1) โหลดรายละเอียดแพ็กเกจ (endpoint role = member)
+ *   2) ให้ผู้ใช้แก้ไข แล้วส่งกลับผ่าน API
+ * หมายเหตุ
+ *   - ดึงวัน/เวลาโชว์ด้วย toDateInput() + toTimeInput() เหมือน Admin
+ *   - แนบ startTime/endTime เฉพาะเมื่อผู้ใช้กรอก
+ *   - UI/label/textarea ให้เหมือน Admin
+ */
+
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -6,22 +18,43 @@ import TextField from "../../Components/TextField";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-/* Helpers */
-function nz(s: any, fallback = "") {
-  const v = (s ?? "").toString().trim();
-  return v.length ? v : fallback;
+// Helpers ให้ตรงกับ Admin
+function toTimeInput(input?: string | Date | null) {
+  if (!input) return "";
+  if (typeof input === "string") {
+    const m = input.match(
+      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
+    );
+    if (m && m[4] !== undefined && m[5] !== undefined) {
+      const hh = m[4].padStart(2, "0");
+      const mm = m[5].padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+  }
+  const d = new Date(input as any);
+  if (isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
 }
-function toDateInput(v?: string | Date | null) {
-  if (!v) return "";
-  const d = new Date(v);
+function toDateInput(input?: string | Date | null) {
+  if (!input) return "";
+  const d = new Date(input as any);
   if (isNaN(d.getTime())) return "";
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
+function toIntOrNull(v: any): number | null {
+  const n = Number(String(v ?? "").trim());
+  return Number.isFinite(n) ? n : null;
+}
+function normalizeOrDefault(value: any, fallback = "") {
+  const trimmed = (value ?? "").toString().trim();
+  return trimmed.length ? trimmed : fallback;
+}
 
-/* Types */
 type Form = {
   name: string;
   description: string;
@@ -125,7 +158,6 @@ const EditPackageMember: React.FC = () => {
   const setF = <K extends keyof Form>(k: K, v: Form[K]) =>
     setForm((s) => ({ ...s, [k]: v }));
 
-  // 🔹 โหลดรายละเอียด package ของ member (ใช้ endpoint role = member)
   React.useEffect(() => {
     let ignore = false;
     (async () => {
@@ -140,28 +172,28 @@ const EditPackageMember: React.FC = () => {
 
         setCommunityId(Number(p.communityId));
         setForm({
-          name: nz(p.name),
-          description: nz(p.description),
+          name: normalizeOrDefault(p.name),
+          description: normalizeOrDefault(p.description),
 
-          houseNumber: nz(p.location?.houseNumber),
-          villageNumber: nz(p.location?.villageNumber),
-          province: nz(p.location?.province),
-          district: nz(p.location?.district),
-          subDistrict: nz(p.location?.subDistrict),
-          postalCode: nz(p.location?.postalCode),
-          addressDetail: nz(p.location?.detail),
+          houseNumber: normalizeOrDefault(p.location?.houseNumber),
+          villageNumber: normalizeOrDefault(p.location?.villageNumber),
+          province: normalizeOrDefault(p.location?.province),
+          district: normalizeOrDefault(p.location?.district),
+          subDistrict: normalizeOrDefault(p.location?.subDistrict),
+          postalCode: normalizeOrDefault(p.location?.postalCode),
+          addressDetail: normalizeOrDefault(p.location?.detail),
           latitude: String(p.location?.latitude ?? ""),
           longitude: String(p.location?.longitude ?? ""),
           placeQuery: "",
 
           overseerMemberId: String(p.overseerMemberId ?? ""),
           tagId: "",
-          facility: nz(p.facility ?? p.warning ?? ""),
+          facility: normalizeOrDefault(p.facility ?? p.warning ?? ""),
 
           startDate: toDateInput(p.startDate),
-          startTime: "",
+          startTime: toTimeInput(p.startDate), // ดึงเวลาโชว์
           endDate: toDateInput(p.dueDate),
-          endTime: "",
+          endTime: toTimeInput(p.dueDate),     // ดึงเวลาโชว์
           openDate: "",
           openTime: "",
           closeDate: "",
@@ -183,7 +215,7 @@ const EditPackageMember: React.FC = () => {
   }, [pkgId]);
 
   const canSubmit = React.useMemo(() => {
-    const requiredFields = [
+    const required = [
       form.name,
       form.description,
       form.houseNumber,
@@ -200,7 +232,7 @@ const EditPackageMember: React.FC = () => {
       form.startDate,
       form.endDate,
     ];
-    return requiredFields.every((v) => String(v ?? "").trim() !== "");
+    return required.every((v) => String(v ?? "").trim() !== "");
   }, [form]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -216,32 +248,31 @@ const EditPackageMember: React.FC = () => {
       const payload = {
         communityId,
         overseerMemberId: Number(form.overseerMemberId),
-
-        name: nz(form.name),
-        description: nz(form.description),
+        name: normalizeOrDefault(form.name),
+        description: normalizeOrDefault(form.description),
         capacity: Math.max(1, Number(form.capacity || 0)),
         price: Math.max(0, Number(form.price || 0)),
-        warning: nz(form.facility),
+        warning: normalizeOrDefault(form.facility),
         statusPackage: "DRAFT" as const,
         statusApprove: "PENDING" as const,
-        startDate: nz(form.startDate), // DTO ฝั่งคุณจะ cast เป็น Date
-        dueDate: nz(form.endDate),
-        facility: nz(form.facility),
-
+        startDate: normalizeOrDefault(form.startDate),
+        dueDate: normalizeOrDefault(form.endDate),
+        ...(form.startTime.trim() && { startTime: form.startTime.trim() }),
+        ...(form.endTime.trim() && { endTime: form.endTime.trim() }),
+        facility: normalizeOrDefault(form.facility),
         location: {
-          houseNumber: nz(form.houseNumber),
-          villageNumber: nz(form.villageNumber),
-          subDistrict: nz(form.subDistrict),
-          district: nz(form.district),
-          province: nz(form.province),
-          postalCode: nz(form.postalCode),
-          detail: nz(form.addressDetail),
+          houseNumber: normalizeOrDefault(form.houseNumber),
+          villageNumber: toIntOrNull(form.villageNumber),
+          subDistrict: normalizeOrDefault(form.subDistrict),
+          district: normalizeOrDefault(form.district),
+          province: normalizeOrDefault(form.province),
+          postalCode: normalizeOrDefault(form.postalCode),
+          detail: normalizeOrDefault(form.addressDetail),
           latitude: Number(form.latitude),
           longitude: Number(form.longitude),
         },
       };
 
-      // 🔹 PUT ไปที่เส้นทางของ member
       await axios.put(`${apiUrl}/member/package/${pkgId}`, payload, {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -276,24 +307,14 @@ const EditPackageMember: React.FC = () => {
       {error && <div className="text-red-600 text-sm">{error}</div>}
       {ok && <div className="text-emerald-700 text-sm">{ok}</div>}
 
-      <form
-        onSubmit={onSubmit}
-        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
-      >
+      <form onSubmit={onSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <label className="block text-xl mb-1">แก้ไขแพ็กเกจ</label>
 
         {/* ชื่อ/คำอธิบาย */}
         <section className="space-y-4">
-          <TextField
-            id="name"
-            label="ชื่อแพ็กเกจ"
-            required
-            placeholder="ชื่อแพ็กเกจ"
-            value={form.name}
-            onChange={(e) => setF("name", e.target.value)}
-          />
+          <TextField id="name" label="ชื่อแพ็กเกจ" required placeholder="ชื่อแพ็กเกจ" value={form.name} onChange={(e) => setF("name", e.target.value)} />
           <div>
-            <label className="block text-sm mb-1">
+            <label className="block text-base font-semibold mb-1">
               คำอธิบายแพ็กเกจ <span className="text-red-600">*</span>
             </label>
             <textarea
@@ -310,12 +331,26 @@ const EditPackageMember: React.FC = () => {
         <section className="space-y-4">
           <div className="grid md:grid-cols-2 gap-5">
             <TextField id="houseNumber" label="บ้านเลขที่" required placeholder="กรอกบ้านเลขที่ของชุมชน" value={form.houseNumber} onChange={(e) => setF("houseNumber", e.target.value)} />
-            <TextField id="villageNumber" label="หมู่ที่" placeholder="กรอกหมู่ของชุมชน" value={form.villageNumber} onChange={(e) => setF("villageNumber", e.target.value)} />
+            <TextField id="villageNumber" label="หมู่ที่" required placeholder="กรอกหมู่ของชุมชน" value={form.villageNumber} onChange={(e) => setF("villageNumber", e.target.value)} />
             <TextField id="province" label="จังหวัด" required placeholder="เลือกจังหวัด" value={form.province} onChange={(e) => setF("province", e.target.value)} />
             <TextField id="district" label="อำเภอ / เขต" required placeholder="เลือกอำเภอ / เขต" value={form.district} onChange={(e) => setF("district", e.target.value)} />
             <TextField id="subDistrict" label="ตำบล / แขวง" required placeholder="เลือกตำบล / แขวง" value={form.subDistrict} onChange={(e) => setF("subDistrict", e.target.value)} />
             <TextField id="postalCode" label="รหัสไปรษณีย์" required placeholder="เลือกไปรษณีย์" value={form.postalCode} onChange={(e) => setF("postalCode", e.target.value)} />
-            <TextField id="addressDetail" label="คำอธิบายที่อยู่" placeholder="คำอธิบายที่อยู่" value={form.addressDetail} onChange={(e) => setF("addressDetail", e.target.value)} />
+
+            <div className="md:col-span-2">
+              <label className="block text-base font-semibold mb-1">
+                คำอธิบายที่อยู่ <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                className="w-full rounded-form border px-3 py-2 min-h-[140px] resize-y"
+                placeholder="คำอธิบายที่อยู่"
+                value={form.addressDetail}
+                onChange={(e) => setF("addressDetail", e.target.value)}
+                rows={6}
+                required
+              />
+            </div>
+
             <TextField id="latitude" label="ละติจูด" required type="number" placeholder="กรอกละติจูด" value={form.latitude} onChange={(e) => setF("latitude", e.target.value)} />
             <TextField id="longitude" label="ลองจิจูด" required type="number" placeholder="กรอกลองจิจูด" value={form.longitude} onChange={(e) => setF("longitude", e.target.value)} />
           </div>

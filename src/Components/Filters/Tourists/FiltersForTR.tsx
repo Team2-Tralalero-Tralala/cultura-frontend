@@ -31,7 +31,7 @@ export default function FilterDropdown({ options, selected, onChange }: FilterPr
       {/* ปุ่มหลัก กดเพื่อเปิด/ปิด dropdown */}
       <button
         onClick={() => setOpen(!open)} // toggle เปิด/ปิด
-        className="flex items-center gap-2 px-3 py-2 border w-full border-black rounded-lg bg-white text-black hover:bg-gray-50"
+        className="flex items-center justify-between w-35 h-12 gap-2 px-3 py-2 border border-black rounded-lg bg-white text-black hover:bg-gray-50"
       >
         {/* แสดงชื่อ option ที่เลือกอยู่ */}
         <span>{options.find(opt => opt.value === selected)?.label}</span>

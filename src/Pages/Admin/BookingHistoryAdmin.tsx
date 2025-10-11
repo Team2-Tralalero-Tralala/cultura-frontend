@@ -296,16 +296,22 @@ export default function BookingHistoryAdmin(): React.ReactElement {
   /** -------------------- Render -------------------- */
   return (
     <div className="space-y-4">
-      {/* breadcrumb + หัวเรื่อง */}
       <div className="flex flex-col gap-1">
-        <div
-          className="text-sm text-gray-500 cursor-pointer hover:underline"
-          onClick={() => navigate("/admin/booking/histories")}
-        >
-          จัดการการจอง › ประวัติการจอง
+        {/* แถว breadcrumb */}
+        <div className="flex items-center text-[14px] text-black">
+          <span className="cursor-pointer hover:underline" onClick={() => navigate("/member/booking")}>
+            จัดการการจอง
+          </span>
+          <span className="mx-1">{">"}</span>
+          <span>ประวัติการจอง</span>
         </div>
-        <h1 className="text-2xl font-semibold">ประวัติการจอง</h1>
+
+        {/* หัวข้อหลัก */}
+        <h1 className="text-[20px] font-semibold text-black">
+          ประวัติการจอง
+        </h1>
       </div>
+
 
       {/* แถบเครื่องมือ: ช่องค้นหา + ฟิลเตอร์สถานะ + ปุ่มคำขอคืนเงิน */}
       <div className="flex items-center gap-3">

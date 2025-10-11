@@ -13,6 +13,7 @@
     "@iconify/react": "^6.0.2",
     "@tailwindcss/vite": "^4.1.12",
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.12.2",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

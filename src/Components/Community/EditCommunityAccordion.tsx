@@ -4,11 +4,14 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import TextField from "../TextField";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import TextArea from "../TextArea";
 import * as z from "zod";
+import Button from "../Button";
+import { Link, useParams } from "react-router";
 import { type ThailandLocation } from "../LocationSelector";
 import ThailandLocationSelect from "../LocationSelector";
+import { getCommunityById } from "@/Libs/CommunityService";
 
 const communitySchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
@@ -53,57 +56,96 @@ const communitySchema = z.object({
 
   adminId: z.number().min(1, "กรุณาเลือกผู้ดูแล"),
 });
-export default function CommunityAccordion({
-  value,
+export default function EditCommunityAccordion({
   onChange,
 }: {
   value: any;
   onChange: (data: any) => void;
 }) {
-  const [expanded, setExpanded] = React.useState<string | false>(false);
-  const formData = value;
+  const params = useParams();
+  const communityId = params.id;
 
-  const [location, setLocation] = useState<ThailandLocation>({
+  // ✅ Hooks ทั้งหมดประกาศก่อนทุก return
+  const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [formData, setFormData] = React.useState<any>("");
+  const [location, setLocation] = React.useState<ThailandLocation>({
     province: "",
     district: "",
     subdistrict: "",
     postalCode: "",
   });
-
-  useEffect(() => {
-    const savedData = localStorage.getItem("communityForm");
-    if (savedData) {
-      onChange(JSON.parse(savedData));
-    }
-  }, []);
-
-  // 💾 เมื่อใดก็ตามที่ formData เปลี่ยน ให้บันทึกลง localStorage
-  useEffect(() => {
-    localStorage.setItem("communityForm", JSON.stringify(formData));
-  }, [formData]);
-
-  const handleChange =
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-      setExpanded(isExpanded ? panel : false);
-    };
-  const handleLocationChange = (location: ThailandLocation) => {
-    onChange({
-      ...value,
-      location,
-    });
-  };
-  type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-
-  const [formErrors, setFormErrors] = useState<
+  const [formErrors, setFormErrors] = React.useState<
     Record<string, string | undefined>
   >({});
 
-  const validateField = (field: keyof typeof formData, value: string) => {
-    const result = communitySchema.safeParse({
-      ...formData,
-      [field]: value,
-    });
+  // ✅ โหลดข้อมูลจาก API
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!communityId) return;
+      try {
+        const res = await getCommunityById(Number(communityId));
+        const data = res.data || res; // รองรับ response สองแบบ
+        if (data.registerDate) {
+          data.registerDate = new Date(data.registerDate)
+            .toISOString()
+            .split("T")[0];
+        }
+        setFormData(data);
+        setLocation({
+          province: data.location.province ?? "",
+          district: data.location.district ?? "",
+          subdistrict: data.location.subDistrict ?? "",
+          postalCode: data.location.postalCode ?? "",
+        });
+      } catch (error) {
+        console.error("❌ โหลดข้อมูลล้มเหลว:", error);
+      }
+    };
 
+    fetchData();
+  }, [communityId]);
+
+  // 💾 โหลด/บันทึกลง localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("communityForm");
+    if (saved) onChange(JSON.parse(saved));
+  }, []);
+
+  useEffect(() => {
+    if (formData)
+      localStorage.setItem("communityForm", JSON.stringify(formData));
+  }, [formData]);
+
+  // ✅ Handlers
+  const handleChange =
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
+      setExpanded(isExpanded ? panel : false);
+
+  const handleFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    const updated = { ...formData, [id]: value };
+    setFormData(updated);
+    onChange(updated);
+    validateField(id as keyof typeof formData, value);
+  };
+
+  const handleLocationChange = (loc: ThailandLocation) => {
+    setLocation(loc);
+    const updated = {
+      ...formData,
+      province: loc.province,
+      district: loc.district,
+      subDistrict: loc.subdistrict,
+      postalCode: loc.postalCode,
+    };
+    setFormData(updated);
+    onChange(updated);
+  };
+
+  const validateField = (field: keyof typeof formData, value: string) => {
+    const result = communitySchema.safeParse({ ...formData, [field]: value });
     setFormErrors((prev) => ({
       ...prev,
       [field]: result.success
@@ -112,11 +154,11 @@ export default function CommunityAccordion({
     }));
   };
 
-  const handleFormChange = (e: React.ChangeEvent<FormElement>) => {
-    const { id, value } = e.target;
-    onChange({ ...formData, [id]: value });
-    validateField(id as keyof typeof formData, value);
-  };
+  if (!formData) {
+    return (
+      <div className="p-5 text-center text-gray-500">กำลังโหลดข้อมูล...</div>
+    );
+  }
 
   return (
     <div>
@@ -278,6 +320,20 @@ export default function CommunityAccordion({
                 helperText={formErrors.mainActivityDescription}
               />
             </div>
+            <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
+              <div>
+                <div className="text-base font-bold mb-1.5">ร้านค้า</div>
+                <Link to="/super/community/:communityId/store/create">
+                  <Button type="confirm-admin">เพิ่มร้านค้า</Button>
+                </Link>
+              </div>
+              <div>
+                <div className="text-base font-bold mb-1.5">ที่พัก</div>
+                <Link to="/super/community/:communityId/homestay/create">
+                  <Button type="confirm-admin">เพิ่มที่พัก</Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </AccordionDetails>
       </Accordion>
@@ -302,7 +358,7 @@ export default function CommunityAccordion({
                 required
                 placeholder="กรอกบ้านเลขที่วิสาหกิจชุมชน"
                 type="text"
-                value={formData.houseNumber}
+                value={formData.houseNumber ?? formData.location.houseNumber}
                 onChange={handleFormChange}
                 error={!!formErrors.houseNumber}
                 helperText={formErrors.houseNumber}
@@ -315,7 +371,9 @@ export default function CommunityAccordion({
                 required
                 placeholder="กรอกหมู่ของวิสาหกิจชุมชน"
                 type="number"
-                value={formData.villageNumber}
+                value={
+                  formData.villageNumber ?? formData.location.villageNumber
+                }
                 onChange={handleFormChange}
                 error={!!formErrors.villageNumber}
                 helperText={formErrors.villageNumber}
@@ -323,7 +381,14 @@ export default function CommunityAccordion({
             </div>
             <div className="col-span-2">
               <ThailandLocationSelect
-                value={location}
+                value={{
+                  province: formData.province ?? formData.location.province,
+                  district: formData.district ?? formData.location.district,
+                  subdistrict:
+                    formData.subDistrict ?? formData.location.subDistrict,
+                  postalCode:
+                    formData.postalCode ?? formData.location.postalCode,
+                }}
                 onChange={handleLocationChange}
                 labelPrefix=""
               />
@@ -334,7 +399,7 @@ export default function CommunityAccordion({
                 label="คำอธิบายที่อยู่"
                 required
                 placeholder="คำอธิบายที่อยู่"
-                value={formData.detail}
+                value={formData.detail ?? formData.location.detail}
                 onChange={handleFormChange}
                 error={!!formErrors.detail}
                 helperText={formErrors.detail}
@@ -349,7 +414,7 @@ export default function CommunityAccordion({
                 label="ละติจูด"
                 required
                 placeholder="กรอกละติจูดของที่ตั้งวิสาหกิจชุมชน"
-                value={formData.latitude}
+                value={formData.location.latitude}
                 onChange={handleFormChange}
                 error={!!formErrors.latitude}
                 helperText={formErrors.latitude}
@@ -361,7 +426,7 @@ export default function CommunityAccordion({
                 label="ลองจิจูด"
                 required
                 placeholder="กรอกลองจิจูดของที่ตั้งวิสาหกิจชุมชน"
-                value={formData.longitude}
+                value={formData.location.longitude}
                 onChange={handleFormChange}
                 error={!!formErrors.longitude}
                 helperText={formErrors.longitude}

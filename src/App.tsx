@@ -1,8 +1,21 @@
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import SidebarAdmin from "./Components/SidebarAdmin.tsx";
+import BookingDetailAdmin from "./Pages/BookingDetailAdmin.tsx";
+import { memberLogin } from "./Libs/dev-login";
+
+if (import.meta.env.DEV) {
+  memberLogin();
+}
+
 function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-    </>
+    <div className="flex h-screen">
+      <SidebarAdmin />
+      <Routes>
+        <Route path="/admin/booking/:bookingId" element={<BookingDetailAdmin />}/>
+      </Routes>
+    </div>
   );
 }
 

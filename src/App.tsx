@@ -1,23 +1,25 @@
-import NavbarTourist from "./Components/NavbarTourist"
-import  NavbarSam  from "./Components/NavbarSam"
+import { Route, Routes, Navigate } from "react-router-dom";
+import SuperAdminLayout from './Layouts/SuperAdmin/SuperAdminLayout';
+import TagsPage from "./Pages/ManageTags";
 
-function nav_tourist() {
+//import AdminLayout from './Layouts/Admin/AdminLayout';
+//import AdminRoutes from './Layouts/Admin/AdminRoutes';
+
+//import MemberLayout from './Layouts/Member/MemberLayout';
+//import MemberRoutes from './Layouts/Member/MemberRoutes';
+
+
+function App() {
   return (
-    <>
-      <NavbarTourist />
-      
-    </>
-  )
+    <Routes>
+      <Route path="/super/*" element={<SuperAdminLayout />}>
+        <Route index element={<Navigate to="tags" replace />} />
+        <Route path="tags" element={<TagsPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
-function nav_sam() {
-  return (
-    <>
-      <NavbarSam />
-    </>
-  
-  )
-}
-
-export default  nav_tourist;
+export default  App;
 

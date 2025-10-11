@@ -31,7 +31,7 @@ export default function PackageFilter() {
       {/* ปุ่มตัวกรอง */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between px-6 py-2 bg-white border border-black rounded-lg hover:bg-gray-50"
+        className="flex w-40 h-12 items-center justify-between px-7 py-2 bg-white border border-black rounded-lg hover:bg-gray-50"
       >
         <div className="flex items-center gap-5 text-black text-base">
           {/* ไอคอนกรอง */}
@@ -42,7 +42,7 @@ export default function PackageFilter() {
 
       {/* กล่อง dropdown */}
       {open && (
-        <div className="absolute z-10 mt-2 bg-white border border-black rounded-lg p-4 space-y-4">
+        <div className="absolute w-40 z-10 mt-2 bg-white border border-black rounded-lg p-4 space-y-4">
           {/* สถานะแพ็กเกจ */}
           <div>
             <p className="text-black mb-2">สถานะ</p>

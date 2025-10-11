@@ -1,5 +1,5 @@
 /*
- * คำอธิบาย : Page Component สำหรับหน้า "ประวัติการจอง (Admin)"
+ * คำอธิบาย : Page Component สำหรับหน้า "ประวัติการจอง (Member)"
  * หน้าที่ :
  *   - ดึงข้อมูลประวัติการจองตามบทบาทจาก API แบบไล่หน้า (pagination)
  *   - แปลงสถานะ EN -> TH เพื่อแสดงผลตาม UI มาตรฐาน
@@ -146,8 +146,8 @@ const columns: Column<BookingRow>[] = [
 /** -------------------- Page Component -------------------- */
 
 /*
- * ฟังก์ชัน : BookingHistoryAdmin
- * คำอธิบาย : แสดงหน้าประวัติการจองสำหรับ Admin
+ * ฟังก์ชัน : BookingHistoryMember
+ * คำอธิบาย : แสดงหน้าประวัติการจองสำหรับ Member
  * โดยประกอบด้วย:
  *   - โหลดข้อมูลทั้งหมดแบบไล่หน้า (loop ทีละหน้า จนหมด)
  *   - ฟิลเตอร์สถานะ + ค้นหาในฝั่ง client
@@ -155,7 +155,7 @@ const columns: Column<BookingRow>[] = [
  * Input  : -
  * Output : React.ReactElement – หน้า "ประวัติการจอง"
  */
-export default function BookingHistoryAdmin(): React.ReactElement {
+export default function BookingHistoryMember(): React.ReactElement {
   const navigate = useNavigate(); // hook ของ React Router สำหรับเปลี่ยนหน้าไปยังเส้นทางอื่น
 
   // state: สำหรับควบคุมสถานะ "กำลังโหลด" ข้อมูล
@@ -297,15 +297,24 @@ export default function BookingHistoryAdmin(): React.ReactElement {
   return (
     <div className="space-y-4">
       {/* breadcrumb + หัวเรื่อง */}
+      {/* breadcrumb + หัวเรื่อง */}
       <div className="flex flex-col gap-1">
-        <div
-          className="text-sm text-gray-500 cursor-pointer hover:underline"
-          onClick={() => navigate("/member/booking/done")}
-        >
-          จัดการการจอง › ประวัติการจอง
+        {/* แถว breadcrumb */}
+        <div className="flex items-center text-[14px] text-black">
+          <span className="cursor-pointer hover:underline" onClick={() => navigate("/member/booking")}>
+            จัดการการจอง
+          </span>
+          <span className="mx-1">{">"}</span>
+          <span>ประวัติการจอง</span>
         </div>
-        <h1 className="text-2xl font-semibold">ประวัติการจอง</h1>
+
+        {/* หัวข้อหลัก */}
+        <h1 className="text-[20px] font-semibold text-black">
+          ประวัติการจอง
+        </h1>
       </div>
+
+
 
       {/* แถบเครื่องมือ: ช่องค้นหา + ฟิลเตอร์สถานะ + ปุ่มคำขอคืนเงิน */}
       <div className="flex items-center gap-3">

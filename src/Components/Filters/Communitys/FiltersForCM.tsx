@@ -32,10 +32,10 @@ export default function FilterDropdown({ options, selected, onChange }: FilterPr
       {/* ปุ่มหลัก กดเพื่อเปิด/ปิด dropdown */}
       <button
         onClick={() => setOpen(!open)} // toggle เปิด/ปิด
-        className="flex items-center gap-5 px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50"
+        className="flex items-center justify-between w-40 h-12 px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50"
       >
         {/* ไอคอนกรอง */}
-        <Filter className="w-4 h-4" />
+        <Filter className="w-4 h-4 " />
         {/* แสดงชื่อ option ที่เลือกอยู่ */}
         <span>{options.find(opt => opt.value === selected)?.label}</span>
         {/* ไอคอนลูกศร ขึ้น/ลง */}
@@ -44,7 +44,7 @@ export default function FilterDropdown({ options, selected, onChange }: FilterPr
 
       {/* เมนู dropdown */}
       {open && (
-        <div className="absolute w-38 mt-2 items-center text-center border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50">
+        <div className="absolute w-40 mt-2 items-center text-center border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50">
           {options.map((opt) => (
             <button
               key={opt.value} // key ต้องไม่ซ้ำ

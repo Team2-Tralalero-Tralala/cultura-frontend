@@ -1,8 +1,8 @@
 import { useState } from "react";
-import FiltersForCM from "../Components/Communitys/FiltersForCM";
-import FiltersStatusForCM from "../Components/Communitys/FiltersStatusForCM";
-import FiltersForTR from "../Components/Tourists/FiltersForTR";
-import FiltersStatusForTR from "../Components/Tourists/FiltersStatusForTR";
+import FiltersForCM from "../Components/Filters/Communitys/FiltersForCM";
+import FiltersStatusForCM from "../Components/Filters/Communitys/FiltersStatusForCM";
+import FiltersForTR from "../Components/Filters/Tourists/FiltersForTR";
+import FiltersStatusForTR from "../Components/Filters/Tourists/FiltersStatusForTR";
 
 function HomePage() {
   const [filter, setFilter] = useState("");

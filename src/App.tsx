@@ -7,6 +7,14 @@
 import DataTable, { type Column, type DataTableProps } from "./Components/Tables/Index";
 import { TrashIcon, BanIcon } from "./Components/Tables/Icon"; 
 import { useMemo } from "react";
+import { BrowserRouter, Routes, Route } from "react-router";
+import HomePage from "./Page/HomePage";
+import React, { useState } from "react";
+import SearchBar from "./Components/Search/SearchBar";
+import SearchBarTable from "./Components/Search/SerachBarTable";
+
+//ใช้ main.tsx ใช้ route /filters
+//ใช้ ./Page/HomePage.tsx แก้ไขข้อมูลใน filters
 
 function App() {
   type Row = { id: number; name: string; role: string; community: string; email: string; suspended?: boolean; };
@@ -115,6 +123,11 @@ function App() {
         />
       </div>
     </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/filters" element={<HomePage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

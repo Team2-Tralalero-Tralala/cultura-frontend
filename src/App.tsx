@@ -1,7 +1,4 @@
 import { Route, Routes, Navigate } from "react-router";
-import { CreateCommuninityPage } from "./Page/SuperAdmin/CreateCommuninityPage";
-import { EditCommunityPage } from "./Page/SuperAdmin/EditCommunityPage";
-
 import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
 

@@ -170,9 +170,7 @@ export function EditCommunity() {
       }
     }
     fetchData();
-  }, [communityId]); // ✅ เพิ่ม dependency
-
-  console.log(location);
+  }, [communityId]);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -281,7 +279,6 @@ export function EditCommunity() {
         longitude: Number(formData.longitude),
       },
     };
-    console.log(payload);
     await updateCommunity(Number(communityId), payload);
   };
 

@@ -230,7 +230,6 @@ export default function CreateCommuninityPage() {
         longitude: Number(formData.longitude),
       },
     };
-    console.log(payload);
 
     await createCommunity(payload);
   };

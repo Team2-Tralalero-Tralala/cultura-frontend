@@ -5,44 +5,10 @@
  *
  * Base URL: ${VITE_API_URL}/super/community
  */
+import type { CommunityFormData } from "@/Types/CommunityForm";
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export type CommunityFormData = {
-  adminId: number;
-  name: string;
-  alias?: string;
-  type: string;
-  registerNumber: string;
-  registerDate: string;
-  bankName: string;
-  accountName: string;
-  accountNumber: string;
-  description: string;
-  mainActivityName: string;
-  mainActivityDescription: string;
-  houseNumber: string;
-  villageNumber: number;
-  province: string;
-  district: string;
-  subDistrict: string;
-  postalCode: string;
-  locationDetail: string;
-  latitude: string;
-  longitude: string;
-  phone: string;
-  email: string;
-  urlWebsite: string;
-  urlFacebook: string;
-  urlLine: string;
-  urlTiktok: string;
-  urlOther: string;
-  mainAdmin: string;
-  mainAdminPhone: string;
-  coordinatorName?: string;
-  coordinatorPhone?: string;
-  member: string[];
-};
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับสร้างข้อมูลวิสาหกิจชุมชนใหม่
  * Input : data (CommunityFormData) - ข้อมูลฟอร์มจากหน้า Create Community
@@ -59,7 +25,9 @@ export async function createCommunity(data: CommunityFormData) {
  * Output : Response ที่ประกอบด้วยข้อมูลของวิสาหกิจชุมชน
  */
 export async function getCommunityById(id: number) {
-  return await axios.get(`${apiUrl}/super/community/${id}`);
+  return await axios.get(`${apiUrl}/super/community/${id}`, {
+    withCredentials: true,
+  });
 }
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลวิสาหกิจชุมชน
@@ -67,8 +35,13 @@ export async function getCommunityById(id: number) {
  *         data (any) - ข้อมูลที่ต้องการอัปเดต
  * Output : Response จาก API หลังอัปเดตข้อมูลสำเร็จ
  */
-export async function updateCommunity(id: number, data: any) {
-  return await axios.put(`${apiUrl}/super/community/${id}`, data);
+export async function updateCommunity(id: number, data: CommunityFormData) {
+  return (
+    await axios.put(`${apiUrl}/super/community/${id}`, data),
+    {
+      withCredentials: true,
+    }
+  );
 }
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับลบ (Soft Delete) วิสาหกิจชุมชน
@@ -77,5 +50,7 @@ export async function updateCommunity(id: number, data: any) {
  * Output : Response จาก API หลังการลบสำเร็จ
  */
 export async function deleteCommunity(id: number) {
-  return await axios.patch(`${apiUrl}/super/community/${id}`);
+  return await axios.patch(`${apiUrl}/super/community/${id}`, {
+    withCredentials: true,
+  });
 }

@@ -14,6 +14,7 @@ import ProtectedRoute from "./Libs/ProtectRoute";
 // Superadmin pages
 import ManageCommunitySuperAdmin from "./Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "./Pages/SuperAdmin/CommunityDetailSuperAdmin";
+import AuthentionLogSuperAdmin from "./Pages/SuperAdmin/AuthentionLogSuperAdmin";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="communities" element={<ManageCommunitySuperAdmin />} />
             <Route path="communities/:id" element={<CommunityDetailSuperAdmin />} /> 
           
+            <Route path="logs" element={<AuthentionLogSuperAdmin />} />
         </Route>
       </Route>
 

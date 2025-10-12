@@ -1,5 +1,5 @@
-import { CreateCommuninityPage } from "@/Page/SuperAdmin/CreateCommuninityPage";
-import { EditCommunityPage } from "@/Page/SuperAdmin/EditCommunityPage";
+import CreateCommuninityPage from "@/Page/SuperAdmin/CreateCommuninityPage";
+import { EditCommunity } from "@/Page/SuperAdmin/EditCommunityPage";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -13,7 +13,7 @@ const SuperAdminRoutes: React.FC = () => {
     <Routes>
       <Route path="community">
         <Route path="create" element={<CreateCommuninityPage />} />
-        <Route path="edit/:id" element={<EditCommunityPage />} />
+        <Route path="edit/:communityId" element={<EditCommunity />} />
       </Route>
       {/* 
       <Route path="communities/all" element={<CommunityManagement />} />

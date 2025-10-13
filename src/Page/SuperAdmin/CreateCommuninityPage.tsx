@@ -21,6 +21,8 @@ import ThailandLocationSelector, {
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
 import { createCommunity } from "@/Libs/CommunityService";
+import { AdminSelector } from "@/Components/AdminSelector";
+import MemberSelector from "@/Components/MemberSelector";
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
  * ใช้ Zod สำหรับ validate field แต่ละรายการ
@@ -636,24 +638,12 @@ export default function CreateCommuninityPage() {
             </div>
             {/* ทดลองก่อน ยังไม่มี แอดมินมา */}
             <div>
-              <TextField
-                id="adminId"
-                label="ผู้ดูแล"
-                placeholder="เลือกผู้ดูแล"
-                required
-                type="number"
-                value={formData.adminId}
-                onChange={handleFormChange}
-              />
+              <AdminSelector />
             </div>
 
-            {/* <div>
-              <CheckboxAutocomplete
-                onSelect={(names) =>
-                  setFormData({ ...formData, member: names })
-                }
-              />
-            </div> */}
+            <div>
+              <MemberSelector />
+            </div>
           </div>
         </AccordionDetails>
       </Accordion>

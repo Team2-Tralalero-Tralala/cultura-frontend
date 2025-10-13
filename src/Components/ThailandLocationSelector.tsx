@@ -209,7 +209,7 @@ export default function ThailandLocationSelector({
   const renderCustomInput = (id: string, label: string, params: any) => {
     const { InputProps, inputProps } = params;
     return (
-      <div {...InputProps} ref={InputProps.ref} className="w-full">
+      <div ref={InputProps.ref} className="w-full">
         <label
           htmlFor={id}
           className="block text-base font-semibold text-gray-800 mb-1.5"

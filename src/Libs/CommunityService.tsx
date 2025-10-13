@@ -54,3 +54,15 @@ export async function deleteCommunity(id: number) {
     withCredentials: true,
   });
 }
+
+export async function getUnassignedAdmins() {
+  return await axios.get(`${apiUrl}/super/admins/unassigned`, {
+    withCredentials: true,
+  });
+}
+
+export async function getUnassignedMembers() {
+  return await axios.get(`${apiUrl}/super/members/unassigned`, {
+    withCredentials: true,
+  });
+}

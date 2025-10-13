@@ -23,6 +23,7 @@ import Button from "@/Components/Button";
 import { createCommunity } from "@/Libs/CommunityService";
 import { AdminSelector } from "@/Components/AdminSelector";
 import MemberSelector from "@/Components/MemberSelector";
+import MapPicker from "@/Components/MapPicker";
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
  * ใช้ Zod สำหรับ validate field แต่ละรายการ
@@ -235,7 +236,9 @@ export default function CreateCommuninityPage() {
 
     await createCommunity(payload);
   };
-
+  const startingPosition: [number, number] = [14.897192, 102.015709]; // BUU
+  const startingZoom = 13;
+  const [position, setPosition] = useState<[number, number]>(startingPosition);
   return (
     <div>
       <Accordion
@@ -482,6 +485,13 @@ export default function CreateCommuninityPage() {
                 helperText={formErrors.longitude}
               />
             </div>
+            <div className="col-span-2">
+              <MapPicker
+                startingPosition={startingPosition}
+                startingZoom={startingZoom}
+                onChange={setPosition}
+              />
+            </div>
           </div>
         </AccordionDetails>
       </Accordion>
@@ -495,7 +505,7 @@ export default function CreateCommuninityPage() {
           aria-controls="panel4bh-content"
           id="panel4bh-header"
         >
-          <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแแล</div>
+          <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</div>
         </AccordionSummary>
         <AccordionDetails>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">

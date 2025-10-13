@@ -567,7 +567,7 @@ export function EditCommunity() {
           aria-controls="panel4bh-content"
           id="panel4bh-header"
         >
-          <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแแล</div>
+          <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</div>
         </AccordionSummary>
         <AccordionDetails>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">

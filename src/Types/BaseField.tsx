@@ -21,6 +21,7 @@ export type BaseFieldProps = {
   required?: boolean;
   placeholder?: string;
   type?: string;
+  name?: string;
   value?: any;
   onChange?: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

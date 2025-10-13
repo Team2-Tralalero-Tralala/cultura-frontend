@@ -110,7 +110,7 @@ export default function MemberSelector({
                   ref={InputElementRef}
                   id="custom-autocomplete"
                   type="text"
-                  placeholder="เลือกภาพยนตร์"
+                  placeholder="เลือกสมาชิก"
                   className="block w-full rounded-form border-1
                   border-gray-400 focus:ring-gray-400 focus:border-gray-500
                   bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500
@@ -124,17 +124,34 @@ export default function MemberSelector({
       />
 
       <div className="mt-4">
-        <div className="font-semibold mb-1">สมาชิกที่เลือก:</div>
+        <div className="text-base font-semibold mb-1">
+          จำนวนสมาชิก {selectedMembers.length} คน
+        </div>
         {selectedMembers.length === 0 ? (
           <div className="text-gray-500">ยังไม่ได้เลือก</div>
         ) : (
-          <ul className="list-disc pl-6 text-gray-800">
+          <div className="flex flex-wrap gap-2">
             {selectedMembers.map((item) => (
-              <li key={item.id} className="border">
-                {item.fname} {item.lname}
-              </li>
+              <div
+                key={item.id}
+                className="flex items-center border border-gray-400 rounded px-3 py-1 text-gray-800"
+              >
+                <span>
+                  {item.fname} {item.lname}
+                </span>
+                <button
+                  onClick={() =>
+                    setSelectedMembers((prev) =>
+                      prev.filter((m) => m.id !== item.id)
+                    )
+                  }
+                  className="ml-2 text-gray-500 hover:text-red-500"
+                >
+                  ✕
+                </button>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

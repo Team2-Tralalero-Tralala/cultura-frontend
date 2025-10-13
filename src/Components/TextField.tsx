@@ -67,6 +67,7 @@ const TextField: React.FC<BaseFieldProps> = ({
   placeholder,
   type = "text",
   value,
+  name,
   onChange,
   error = false,
   helperText = "",
@@ -103,6 +104,7 @@ const TextField: React.FC<BaseFieldProps> = ({
         {!isTel && (
           <input
             id={id}
+            name={name}
             type={currentType}
             placeholder={placeholder}
             onChange={onChange}

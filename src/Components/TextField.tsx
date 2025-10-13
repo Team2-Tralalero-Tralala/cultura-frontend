@@ -16,7 +16,7 @@
     />
  */
 import React, { useState } from "react";
-import type { BaseFieldProps } from "../Types/BaseField";
+import type { BaseFieldProps } from "@/Types/BaseField";
 import { Icon } from "@iconify/react";
 
 /*

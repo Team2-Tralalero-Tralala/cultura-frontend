@@ -19,7 +19,7 @@ import { useAuth } from "./useAuth";
  */
 export default function RoleRedirect() {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="guest/login" replace />;
 
   switch (user.role) {
     case "superadmin":

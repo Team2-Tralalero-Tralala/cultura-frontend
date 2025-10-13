@@ -11,14 +11,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 const SuperAdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="community">
-        <Route path="create" element={<CreateCommuninityPage />} />
-        <Route path="edit/:communityId" element={<EditCommunity />} />
-      </Route>
-      {/* 
-      <Route path="communities/all" element={<CommunityManagement />} />
-      <Route path="accounts/all" element={<ManageAccount />} />
-*/}
+      <Route path="community/create" element={<CreateCommuninityPage />} />
+      <Route path="community/edit/:communityId" element={<EditCommunity />} />
     </Routes>
   );
 };

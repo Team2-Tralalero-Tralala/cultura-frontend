@@ -1,29 +1,35 @@
 /*
- * คำอธิบาย : Component สำหรับแสดงแบบฟอร์มข้อมูลวิสาหกิจชุมชนในรูปแบบ Accordion
- * โดยแบ่งออกเป็น 3 ส่วนหลัก ได้แก่
- * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, การจดทะเบียน, บัญชีธนาคาร)
- * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, หมู่, จังหวัด, พิกัด)
- * 3. ข้อมูลติดต่อและผู้ดูแล (เบอร์โทร, อีเมล, ผู้ดูแลหลัก)
- * ใช้ร่วมกับ Component ย่อย เช่น TextField, TextArea, ThailandLocationSelect
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Community)
+ * โดยแสดงแบบฟอร์มแบบ Accordion แบ่งเป็น 3 ส่วนหลัก ได้แก่
+ * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, กิจกรรมหลัก, บัญชีธนาคาร)
+ * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, จังหวัด, พิกัด)
+ * 3. ข้อมูลติดต่อและผู้ดูแล (โทรศัพท์, อีเมล, ผู้ดูแลหลัก)
+ * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
+ * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
 import * as React from "react";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
+import { Link, useParams } from "react-router";
+import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useState } from "react";
-import * as z from "zod";
+import type { CommunityFormData } from "@/Types/CommunityForm";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import z from "zod";
 import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/ThailandLocationSelector";
-import type { CommunityFormData } from "@/Types/CommunityForm";
+import TextArea from "@/Components/TextArea";
 import Button from "@/Components/Button";
-import { createCommunity } from "@/Libs/CommunityService";
-import { AdminSelector } from "@/Components/AdminSelector";
-import MemberSelector from "@/Components/MemberSelector";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import MapPicker from "@/Components/MapPicker";
+import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
+import MemberSelector, {
+  type Member,
+} from "@/Components/Selector/MemberSelector";
+import { Modal } from "@/Components/Modal/Modal";
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
  * ใช้ Zod สำหรับ validate field แต่ละรายการ
@@ -41,6 +47,7 @@ const communitySchema = z.object({
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
+  // ✅ เปลี่ยนจาก z.date() → z.string() เพราะ input date ส่ง string
   registerDate: z
     .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
@@ -71,8 +78,6 @@ const communitySchema = z.object({
     .min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
 
   houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
-
-  // villageNumber: z.number("กรุณากรอกเป็นตัวเลขเท่านั้น").optional(),
 
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
 
@@ -117,40 +122,99 @@ const communitySchema = z.object({
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 
-export default function CreateCommuninityPage() {
-  const [expanded, setExpanded] = React.useState<string | false>(false);
+export function EditCommunity() {
+  const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
-    status: "CLOSED",
-    rating: 0,
+    member: [],
   });
-  const [location, setLocation] = useState<ThailandLocation>({
+
+  const [location, setLocation] = React.useState<ThailandLocation>({
     province: "",
     district: "",
     subdistrict: "",
     postalCode: "",
   });
-  const [formErrors, setFormErrors] = useState<
+  const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [formErrors, setFormErrors] = React.useState<
     Record<string, string | undefined>
   >({});
+  const [checked, setChecked] = React.useState(true);
+  const [admin, setAdmin] = React.useState<Admin>();
+  const [members, setMembers] = React.useState<Member[]>();
+  const [position, setPosition] = React.useState<[number, number]>([
+    13.736717, 100.523186,
+  ]);
+  const [openConfirm, setOpenConfirm] = React.useState(false);
 
   /*
-   * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
-   * Input : panel (string)
+   * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
+   * Input : ไม่มี (ใช้ communityId จาก useParams)
+   * Output : เซ็ตค่า state formData และ location เมื่อโหลดข้อมูลสำเร็จ
+   */
+  React.useEffect(() => {
+    async function fetchData() {
+      if (!communityId) return;
+      try {
+        const response = await getCommunityById(Number(communityId));
+        const data = response.data.data;
+
+        if (data.registerDate) {
+          data.registerDate = new Date(data.registerDate)
+            .toISOString()
+            .split("T")[0];
+        }
+        const lat = Number(data.location?.latitude ?? 13.736717);
+        const lng = Number(data.location?.longitude ?? 100.523186);
+        setFormData({
+          ...data,
+          adminId: data.admin.id,
+          member: data.member.map((m: any) => m.id) ?? [],
+          houseNumber: data.location?.houseNumber,
+          villageNumber: data.location?.villageNumber,
+          detail: data.location?.detail,
+          latitude: String(data.location?.latitude),
+          longitude: String(data.location?.longitude),
+        });
+        setLocation({
+          province: data.location.province,
+          district: data.location.district,
+          subdistrict: data.location.subDistrict,
+          postalCode: data.location.postalCode,
+        });
+        setAdmin({
+          id: data.admin.id,
+          fname: data.admin.fname,
+          lname: data.admin.lname,
+        });
+        setMembers(
+          data.member?.map((m: any) => ({
+            id: m.id,
+            fname: m.fname,
+            lname: m.lname,
+          })) ?? []
+        );
+        setPosition([lat, lng]);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchData();
+  }, [communityId]);
+
+  /*
+   * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
+   * Input : panel (ชื่อของ panel ที่ต้องการเปิด)
    * Output : อัปเดต state expanded
    */
   const handleChange =
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
       setExpanded(isExpanded ? panel : false);
-    };
-
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
    * Input :
-   *    - field (ชื่อของฟิลด์ที่ต้องการตรวจสอบ)
+   *    - field (ชื่อฟิลด์ที่ต้องการตรวจสอบ)
    *    - value (ค่าที่ผู้ใช้กรอก)
-   * Output :
-   *    - หากตรวจสอบไม่ผ่าน จะเซ็ตข้อความ error ลงใน formErrors
-   *    - คืนค่า boolean แสดงผลการตรวจสอบ (true = ผ่าน, false = ไม่ผ่าน)
+   * Output : คืนค่า boolean แสดงผลการตรวจสอบ และอัปเดตข้อความ error ใน state
    */
   const validateField = (field?: keyof typeof formData, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -181,31 +245,58 @@ export default function CreateCommuninityPage() {
     setFormErrors({});
     return true;
   };
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้เปลี่ยนสถานะชุมชน (เปิด/ปิด)
+   * Input : event (React.ChangeEvent<HTMLInputElement>)
+   * Output : อัปเดตค่า checked และ status ("OPEN" / "CLOSED") ใน formData
+   */
+  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newChecked = event.target.checked;
+    setChecked(newChecked);
+    setFormData((prev) => ({
+      ...prev,
+      status: newChecked ? "OPEN" : "CLOSED",
+    }));
+  };
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
-   * Output : อัปเดตค่าใน formData และตรวจสอบความถูกต้องของ field นั้น ๆ
+   * Output : อัปเดตค่าใน formData และเรียก validateField() เพื่อตรวจสอบข้อมูล
    */
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
-
     const updated = { ...formData, [id]: value };
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
   };
+
+  const handleValueChange = <K extends keyof typeof formData>(
+    field: K,
+    value: (typeof formData)[K]
+  ) => {
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      return updated;
+    });
+
+    // เรียก validateField ถ้ามีฟังก์ชันตรวจ
+    if (typeof validateField === "function") {
+      validateField(field, value);
+    }
+  };
+
   /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "สร้างชุมชน"
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
    * Input : ไม่มี (ใช้ค่าจาก state formData และ location)
-   * Output :
-   *    - ตรวจสอบความถูกต้องของข้อมูลด้วย validateField()
-   *    - จัดรูปแบบข้อมูล payload ให้ตรงตามโครงสร้างของ backend
-   *    - ส่งคำขอสร้างชุมชนใหม่ไปยัง API ผ่าน createCommunity()
+   * Output : ส่งข้อมูลอัปเดตไปยัง API updateCommunity และแสดงผลลัพธ์ใน console
    */
   const handleSubmit = async () => {
     validateField();
+    if (!communityId) return;
+
     const {
       id,
       locationId,
@@ -214,16 +305,16 @@ export default function CreateCommuninityPage() {
       longitude,
       latitude,
       villageNumber,
-      adminId,
       ...cleanForm
     } = formData;
 
     const payload = {
-      adminId: Number(formData.adminId),
       ...cleanForm,
       location: {
         houseNumber: formData.houseNumber,
-        villageNumber: Number(formData.villageNumber),
+        villageNumber:
+          formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
+
         province: location.province,
         district: location.district,
         subDistrict: location.subdistrict,
@@ -233,14 +324,17 @@ export default function CreateCommuninityPage() {
         longitude: Number(formData.longitude),
       },
     };
-
-    await createCommunity(payload);
+    await updateCommunity(Number(communityId), payload);
   };
-  const startingPosition: [number, number] = [14.897192, 102.015709]; // BUU
-  const startingZoom = 13;
-  const [position, setPosition] = useState<[number, number]>(startingPosition);
+
   return (
     <div>
+      <div className="flex justify-end">
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          สถานะชุมชน
+          <Switch checked={checked} onChange={handleCheck} />
+        </Stack>
+      </div>
       <Accordion
         className="mt-3"
         expanded={expanded === "panel2"}
@@ -399,6 +493,20 @@ export default function CreateCommuninityPage() {
                 helperText={formErrors.mainActivityDescription}
               />
             </div>
+            <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
+              <div>
+                <div className="text-base font-bold mb-1.5">ร้านค้า</div>
+                <Link to="/super/community/:communityId/store/create">
+                  <Button type="confirm-admin">เพิ่มร้านค้า</Button>
+                </Link>
+              </div>
+              <div>
+                <div className="text-base font-bold mb-1.5">ที่พัก</div>
+                <Link to="/super/community/:communityId/homestay/create">
+                  <Button type="confirm-admin">เพิ่มที่พัก</Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </AccordionDetails>
       </Accordion>
@@ -443,7 +551,12 @@ export default function CreateCommuninityPage() {
             </div>
             <div className="col-span-2">
               <ThailandLocationSelector
-                value={location}
+                value={{
+                  province: location.province,
+                  district: location.district,
+                  subdistrict: location.subdistrict,
+                  postalCode: location.postalCode,
+                }}
                 onChange={(loc) => setLocation(loc)}
               />
             </div>
@@ -451,6 +564,7 @@ export default function CreateCommuninityPage() {
               <TextArea
                 id="detail"
                 label="คำอธิบายที่อยู่"
+                required
                 placeholder="คำอธิบายที่อยู่"
                 value={formData.detail}
                 onChange={handleFormChange}
@@ -461,35 +575,16 @@ export default function CreateCommuninityPage() {
             <div className="text-xl font-bold">ที่ตั้งชุมชน</div>
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
-            <div>
-              <TextField
-                id="latitude"
-                label="ละติจูด"
-                required
-                placeholder="กรอกละติจูดของที่ตั้งวิสาหกิจชุมชน"
-                value={formData.latitude}
-                onChange={handleFormChange}
-                error={!!formErrors.latitude}
-                helperText={formErrors.latitude}
-              />
-            </div>
-            <div>
-              <TextField
-                id="longitude"
-                label="ลองจิจูด"
-                required
-                placeholder="กรอกลองจิจูดของที่ตั้งวิสาหกิจชุมชน"
-                value={formData.longitude}
-                onChange={handleFormChange}
-                error={!!formErrors.longitude}
-                helperText={formErrors.longitude}
-              />
-            </div>
             <div className="col-span-2">
               <MapPicker
-                startingPosition={startingPosition}
-                startingZoom={startingZoom}
-                onChange={setPosition}
+                startingPosition={position}
+                startingZoom={13}
+                onChange={([lat, lng]) => {
+                  // เมื่อเลือกหมุดใหม่ ให้เซ็ตค่าทั้ง state position และ formData
+                  setPosition([lat, lng]);
+                  handleValueChange("latitude", lat);
+                  handleValueChange("longitude", lng);
+                }}
               />
             </div>
           </div>
@@ -646,13 +741,22 @@ export default function CreateCommuninityPage() {
                 helperText={formErrors.coordinatorPhone}
               />
             </div>
-            {/* ทดลองก่อน ยังไม่มี แอดมินมา */}
             <div>
-              <AdminSelector />
+              <AdminSelector
+                value={formData.adminId}
+                admin={admin}
+                onChange={(adminId) =>
+                  handleValueChange("adminId", Number(adminId))
+                }
+              />
             </div>
 
             <div>
-              <MemberSelector />
+              <MemberSelector
+                value={formData.member}
+                member={members}
+                onChange={(ids) => handleValueChange("member", ids)}
+              />
             </div>
           </div>
         </AccordionDetails>
@@ -662,11 +766,21 @@ export default function CreateCommuninityPage() {
           <Button type="cancel">ยกเลิก</Button>
         </div>
         <div className="ml-2.5 w-36">
-          <Button type="confirm-admin" onClick={handleSubmit}>
-            สร้างชุมชน
+          <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+            บันทึก
           </Button>
         </div>
       </div>
+      <Modal
+        open={openConfirm}
+        title="ยืนยันการแก้ไขชุมชน"
+        text="คุณต้องการยืนยันการแก้ไขชุมชนหรือไม่"
+        onConfirm={async () => {
+          setOpenConfirm(false);
+          await handleSubmit();
+        }}
+        onCancel={() => setOpenConfirm(false)}
+      />
     </div>
   );
 }

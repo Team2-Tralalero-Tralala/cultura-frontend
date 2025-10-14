@@ -1,5 +1,5 @@
-import CreateCommuninityPage from "@/Page/SuperAdmin/CreateCommuninityPage";
-import { EditCommunity } from "@/Page/SuperAdmin/EditCommunityPage";
+import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
+import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 

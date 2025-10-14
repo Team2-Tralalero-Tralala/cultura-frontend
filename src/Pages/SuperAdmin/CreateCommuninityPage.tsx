@@ -11,8 +11,8 @@ import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import Alert from "@mui/material/Alert";
 import { useState } from "react";
+import Alert from "@mui/material/Alert";
 import * as z from "zod";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
@@ -241,59 +241,39 @@ export default function CreateCommuninityPage() {
    *   - แสดง Alert สำเร็จหรือข้อผิดพลาดตามผลลัพธ์
    */
   const handleSubmit = async () => {
-    try {
-      const isValid = validateField();
-      if (!isValid) {
-        setAlert({ type: "error", message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
-        return;
-      }
-      const {
-        id,
-        locationId,
-        detail,
-        houseNumber,
-        longitude,
-        latitude,
-        villageNumber,
-        ...cleanForm
-      } = formData;
+    validateField();
+    const {
+      id,
+      locationId,
+      detail,
+      houseNumber,
+      longitude,
+      latitude,
+      villageNumber,
+      ...cleanForm
+    } = formData;
 
-      const payload = {
-        adminId: Number(formData.adminId),
-        member: formData.member ?? [],
-        ...cleanForm,
-        location: {
-          houseNumber: formData.houseNumber,
-          villageNumber: Number(formData.villageNumber),
-          province: location.province,
-          district: location.district,
-          subDistrict: location.subdistrict,
-          postalCode: String(location.postalCode),
-          detail: formData.detail,
-          latitude: Number(position[0]),
-          longitude: Number(position[1]),
-        },
-      };
-      await createCommunity(payload);
-      setAlert({ type: "success", message: "สร้างชุมชนสำเร็จ!" });
-    } catch (error) {
-      setAlert({ type: "error", message: "เกิดข้อผิดพลาดในการสร้างชุมชน" });
-      console.error(error);
-    }
+    const payload = {
+      adminId: Number(formData.adminId),
+      member: formData.member ?? [],
+      ...cleanForm,
+      location: {
+        houseNumber: formData.houseNumber,
+        villageNumber: Number(formData.villageNumber),
+        province: location.province,
+        district: location.district,
+        subDistrict: location.subdistrict,
+        postalCode: String(location.postalCode),
+        detail: formData.detail,
+        latitude: Number(position[0]),
+        longitude: Number(position[1]),
+      },
+    };
+    await createCommunity(payload);
   };
 
   return (
     <div>
-      {alert && (
-        <Alert
-          variant="outlined"
-          severity={alert.type}
-          onClose={() => setAlert(null)}
-          className="mb-2"
-        >
-          {alert.message}
-        </Alert>
-      )}
       <Accordion
         className="mt-3"
         expanded={expanded === "panel2"}

@@ -28,16 +28,21 @@ function CustomPopper(props: any) {
   );
 }
 
-interface Member {
+export interface Member {
   id: number;
   fname: string;
   lname: string;
 }
+interface MemberSelectorProps {
+  value?: number[];
+  member?: Member[];
+  onChange: (value: number[]) => void;
+}
 export default function MemberSelector({
-  onSelect = () => {},
-}: {
-  onSelect: (values: number[]) => void;
-}) {
+  value = [],
+  member = [],
+  onChange,
+}: MemberSelectorProps) {
   const [members, setMembers] = React.useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<Member[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -47,20 +52,46 @@ export default function MemberSelector({
       try {
         setLoading(true);
         const response = await getUnassignedMembers();
-        const data = response.data.data;
-        setMembers(data);
+        const unassigned = response.data?.data || [];
+
+        // ป้องกัน null/undefined จาก prop member
+        const safeMember = Array.isArray(member) ? member : [];
+
+        // รวมข้อมูลโดยกรอง undefined ออก
+        const merged = [
+          ...unassigned,
+          ...safeMember.filter(
+            (old) => old && !unassigned.some((m: Member) => m.id === old.id)
+          ),
+        ].filter((m) => m && m.id); // กรอง object ที่ไม่มี id ออก
+
+        setMembers(merged);
       } catch (error) {
         console.error(error);
       } finally {
         setLoading(false);
       }
     }
+
     loadMembers();
-  }, []);
+  }, [member]);
+
+  React.useEffect(() => {
+    if (!members || members.length === 0) return;
+    if (!value || value.length === 0) {
+      setSelectedMembers([]);
+      return;
+    }
+
+    const preselected = members.filter((m) => value.includes(m.id));
+    setSelectedMembers(preselected);
+  }, [members, value]);
+
   const handleChange = (_: any, newValue: Member[]) => {
     setSelectedMembers(newValue);
-    onSelect(newValue.map((v) => v.id)); // ส่งเฉพาะ id กลับไป
+    onChange(newValue.map((v) => v.id)); // ✅ แก้ตรงนี้
   };
+
   return (
     <div>
       <Autocomplete
@@ -140,11 +171,13 @@ export default function MemberSelector({
                   {item.fname} {item.lname}
                 </span>
                 <button
-                  onClick={() =>
-                    setSelectedMembers((prev) =>
-                      prev.filter((m) => m.id !== item.id)
-                    )
-                  }
+                  onClick={() => {
+                    const updated = selectedMembers.filter(
+                      (m) => m.id !== item.id
+                    );
+                    setSelectedMembers(updated);
+                    onChange(updated.map((v) => v.id)); // ✅ sync กลับ parent
+                  }}
                   className="ml-2 text-gray-500 hover:text-red-500"
                 >
                   ✕

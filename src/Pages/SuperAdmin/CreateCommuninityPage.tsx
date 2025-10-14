@@ -1,29 +1,31 @@
 /*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Community)
- * โดยแสดงแบบฟอร์มแบบ Accordion แบ่งเป็น 3 ส่วนหลัก ได้แก่
- * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, กิจกรรมหลัก, บัญชีธนาคาร)
- * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, จังหวัด, พิกัด)
- * 3. ข้อมูลติดต่อและผู้ดูแล (โทรศัพท์, อีเมล, ผู้ดูแลหลัก)
- * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
- * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
+ * คำอธิบาย : Component สำหรับแสดงแบบฟอร์มข้อมูลวิสาหกิจชุมชนในรูปแบบ Accordion
+ * โดยแบ่งออกเป็น 3 ส่วนหลัก ได้แก่
+ * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, การจดทะเบียน, บัญชีธนาคาร)
+ * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, หมู่, จังหวัด, พิกัด)
+ * 3. ข้อมูลติดต่อและผู้ดูแล (เบอร์โทร, อีเมล, ผู้ดูแลหลัก)
+ * ใช้ร่วมกับ Component ย่อย เช่น TextField, TextArea, ThailandLocationSelect
  */
 import * as React from "react";
-import { Link, useParams } from "react-router";
-import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import type { CommunityFormData } from "@/Types/CommunityForm";
-import AccordionDetails from "@mui/material/AccordionDetails";
 import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
-import z from "zod";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useState } from "react";
+import * as z from "zod";
 import TextField from "@/Components/TextField";
+import TextArea from "@/Components/TextArea";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
+import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
-import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
+import { createCommunity } from "@/Libs/CommunityService";
+import { AdminSelector } from "@/Components/Selector/AdminSelector";
+import MemberSelector from "@/Components/Selector/MemberSelector";
+import MapPicker from "@/Components/MapPicker";
+import { Modal } from "@/Components/Modal/Modal";
+import Alert from "@mui/material/Alert";
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
  * ใช้ Zod สำหรับ validate field แต่ละรายการ
@@ -41,7 +43,6 @@ const communitySchema = z.object({
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
-  // ✅ เปลี่ยนจาก z.date() → z.string() เพราะ input date ส่ง string
   registerDate: z
     .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
@@ -72,6 +73,8 @@ const communitySchema = z.object({
     .min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
 
   houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
+
+  // villageNumber: z.number("กรุณากรอกเป็นตัวเลขเท่านั้น").optional(),
 
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
 
@@ -116,77 +119,46 @@ const communitySchema = z.object({
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 
-export function EditCommunity() {
-  const { communityId } = useParams();
-  const [formData, setFormData] = React.useState<Partial<CommunityFormData>>(
-    {}
-  );
-
-  const [location, setLocation] = React.useState<ThailandLocation>({
+export default function CreateCommuninityPage() {
+  const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
+    status: "CLOSED",
+    rating: 0,
+    member: [],
+  });
+  const [location, setLocation] = useState<ThailandLocation>({
     province: "",
     district: "",
     subdistrict: "",
     postalCode: "",
   });
-  const [expanded, setExpanded] = React.useState<string | false>(false);
-  const [formErrors, setFormErrors] = React.useState<
+
+  const [formErrors, setFormErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [checked, setChecked] = React.useState(true);
+  const startingPosition: [number, number] = [13.736717, 100.523186]; // BUU
+  const startingZoom = 13;
+  const [position, setPosition] = useState<[number, number]>(startingPosition);
+  const [openConfirm, setOpenConfirm] = useState(false);
 
   /*
-   * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
-   * Input : ไม่มี (ใช้ communityId จาก useParams)
-   * Output : เซ็ตค่า state formData และ location เมื่อโหลดข้อมูลสำเร็จ
-   */
-  React.useEffect(() => {
-    async function fetchData() {
-      if (!communityId) return;
-      try {
-        const response = await getCommunityById(Number(communityId));
-        const data = response.data.data;
-
-        if (data.registerDate) {
-          data.registerDate = new Date(data.registerDate)
-            .toISOString()
-            .split("T")[0];
-        }
-        setFormData({
-          ...data,
-          houseNumber: data.location?.houseNumber,
-          villageNumber: data.location?.villageNumber,
-          detail: data.location?.detail,
-          latitude: String(data.location?.latitude),
-          longitude: String(data.location?.longitude),
-        });
-        setLocation({
-          province: data.location.province,
-          district: data.location.district,
-          subdistrict: data.location.subDistrict,
-          postalCode: data.location.postalCode,
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    fetchData();
-  }, [communityId]);
-
-  /*
-   * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
-   * Input : panel (ชื่อของ panel ที่ต้องการเปิด)
+   * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
+   * Input : panel (string)
    * Output : อัปเดต state expanded
    */
   const handleChange =
-    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
+    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? panel : false);
+    };
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
    * Input :
-   *    - field (ชื่อฟิลด์ที่ต้องการตรวจสอบ)
+   *    - field (ชื่อของฟิลด์ที่ต้องการตรวจสอบ)
    *    - value (ค่าที่ผู้ใช้กรอก)
-   * Output : คืนค่า boolean แสดงผลการตรวจสอบ และอัปเดตข้อความ error ใน state
+   * Output :
+   *    - หากตรวจสอบไม่ผ่าน จะเซ็ตข้อความ error ลงใน formErrors
+   *    - คืนค่า boolean แสดงผลการตรวจสอบ (true = ผ่าน, false = ไม่ผ่าน)
    */
   const validateField = (field?: keyof typeof formData, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -217,79 +189,100 @@ export function EditCommunity() {
     setFormErrors({});
     return true;
   };
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้เปลี่ยนสถานะชุมชน (เปิด/ปิด)
-   * Input : event (React.ChangeEvent<HTMLInputElement>)
-   * Output : อัปเดตค่า checked และ status ("OPEN" / "CLOSED") ใน formData
-   */
-  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newChecked = event.target.checked;
-    setChecked(newChecked);
-    setFormData((prev) => ({
-      ...prev,
-      status: newChecked ? "OPEN" : "CLOSED",
-    }));
-  };
+
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
-   * Output : อัปเดตค่าใน formData และเรียก validateField() เพื่อตรวจสอบข้อมูล
+   * Output : อัปเดตค่าใน formData และตรวจสอบความถูกต้องของ field นั้น ๆ
    */
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
+
     const updated = { ...formData, [id]: value };
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
   };
+
+  const handleValueChange = (field: keyof typeof formData, value: any) => {
+    const updated = { ...formData, [field]: value };
+    setFormData(updated);
+    validateField(field, value);
+  };
+  const memberList = React.useMemo(
+    () => formData.member ?? [],
+    [formData.member]
+  );
   /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "สร้างชุมชน"
    * Input : ไม่มี (ใช้ค่าจาก state formData และ location)
-   * Output : ส่งข้อมูลอัปเดตไปยัง API updateCommunity และแสดงผลลัพธ์ใน console
+   * Output :
+   *    - ตรวจสอบความถูกต้องของข้อมูลด้วย validateField()
+   *    - จัดรูปแบบข้อมูล payload ให้ตรงตามโครงสร้างของ backend
+   *    - ส่งคำขอสร้างชุมชนใหม่ไปยัง API ผ่าน createCommunity()
    */
+
+  // เปิด modal
+  const [alert, setAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
   const handleSubmit = async () => {
-    validateField();
-    if (!communityId) return;
+    try {
+      const isValid = validateField();
+      if (!isValid) {
+        setAlert({ type: "error", message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+        return;
+      }
+      const {
+        id,
+        locationId,
+        detail,
+        houseNumber,
+        longitude,
+        latitude,
+        villageNumber,
+        ...cleanForm
+      } = formData;
 
-    const {
-      id,
-      locationId,
-      detail,
-      houseNumber,
-      longitude,
-      latitude,
-      villageNumber,
-      ...cleanForm
-    } = formData;
-
-    const payload = {
-      ...cleanForm,
-      location: {
-        houseNumber: formData.houseNumber,
-        villageNumber:
-          formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
-
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: String(location.postalCode),
-        detail: formData.detail,
-        latitude: Number(formData.latitude),
-        longitude: Number(formData.longitude),
-      },
-    };
-    await updateCommunity(Number(communityId), payload);
+      const payload = {
+        adminId: Number(formData.adminId),
+        member: formData.member ?? [],
+        ...cleanForm,
+        location: {
+          houseNumber: formData.houseNumber,
+          villageNumber: Number(formData.villageNumber),
+          province: location.province,
+          district: location.district,
+          subDistrict: location.subdistrict,
+          postalCode: String(location.postalCode),
+          detail: formData.detail,
+          latitude: Number(position[0]),
+          longitude: Number(position[1]),
+        },
+      };
+      await createCommunity(payload);
+      setAlert({ type: "success", message: "สร้างชุมชนสำเร็จ!" });
+    } catch (error) {
+      setAlert({ type: "error", message: "เกิดข้อผิดพลาดในการสร้างชุมชน" });
+      console.error(error);
+    }
   };
 
   return (
     <div>
-      <div className="flex justify-end">
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          สถานะชุมชน
-          <Switch checked={checked} onChange={handleCheck} />
-        </Stack>
-      </div>
+      {alert && (
+        <Alert
+          variant="outlined"
+          severity={alert.type}
+          onClose={() => setAlert(null)}
+          className="mb-2"
+        >
+          {alert.message}
+        </Alert>
+      )}
       <Accordion
         className="mt-3"
         expanded={expanded === "panel2"}
@@ -448,20 +441,6 @@ export function EditCommunity() {
                 helperText={formErrors.mainActivityDescription}
               />
             </div>
-            <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
-              <div>
-                <div className="text-base font-bold mb-1.5">ร้านค้า</div>
-                <Link to="/super/community/:communityId/store/create">
-                  <Button type="confirm-admin">เพิ่มร้านค้า</Button>
-                </Link>
-              </div>
-              <div>
-                <div className="text-base font-bold mb-1.5">ที่พัก</div>
-                <Link to="/super/community/:communityId/homestay/create">
-                  <Button type="confirm-admin">เพิ่มที่พัก</Button>
-                </Link>
-              </div>
-            </div>
           </div>
         </AccordionDetails>
       </Accordion>
@@ -506,12 +485,7 @@ export function EditCommunity() {
             </div>
             <div className="col-span-2">
               <ThailandLocationSelector
-                value={{
-                  province: location.province,
-                  district: location.district,
-                  subdistrict: location.subdistrict,
-                  postalCode: location.postalCode,
-                }}
+                value={location}
                 onChange={(loc) => setLocation(loc)}
               />
             </div>
@@ -519,7 +493,6 @@ export function EditCommunity() {
               <TextArea
                 id="detail"
                 label="คำอธิบายที่อยู่"
-                required
                 placeholder="คำอธิบายที่อยู่"
                 value={formData.detail}
                 onChange={handleFormChange}
@@ -530,28 +503,19 @@ export function EditCommunity() {
             <div className="text-xl font-bold">ที่ตั้งชุมชน</div>
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
-            <div>
-              <TextField
-                id="latitude"
-                label="ละติจูด"
-                required
-                placeholder="กรอกละติจูดของที่ตั้งวิสาหกิจชุมชน"
-                value={formData.latitude}
-                onChange={handleFormChange}
-                error={!!formErrors.latitude}
-                helperText={formErrors.latitude}
-              />
-            </div>
-            <div>
-              <TextField
-                id="longitude"
-                label="ลองจิจูด"
-                required
-                placeholder="กรอกลองจิจูดของที่ตั้งวิสาหกิจชุมชน"
-                value={formData.longitude}
-                onChange={handleFormChange}
-                error={!!formErrors.longitude}
-                helperText={formErrors.longitude}
+            <div className="col-span-2">
+              <MapPicker
+                startingPosition={[
+                  Number(formData.latitude) || startingPosition[0],
+                  Number(formData.longitude) || startingPosition[1],
+                ]}
+                startingZoom={startingZoom}
+                onChange={([lat, lng]) => {
+                  // อัปเดตพิกัดใน formData และ position พร้อม validate
+                  setPosition([lat, lng]);
+                  handleValueChange("latitude", lat.toString());
+                  handleValueChange("longitude", lng.toString());
+                }}
               />
             </div>
           </div>
@@ -708,27 +672,21 @@ export function EditCommunity() {
                 helperText={formErrors.coordinatorPhone}
               />
             </div>
+            {/* ทดลองก่อน ยังไม่มี แอดมินมา */}
             <div>
-              <TextField
-                id="adminId"
-                label="ผู้ดูแล"
-                placeholder="เลือกผู้ดูแล"
-                required
-                type="number"
+              <AdminSelector
                 value={formData.adminId}
-                onChange={handleFormChange}
-                // error={!!formErrors.password}
-                // helperText={formErrors.password}
+                onChange={(adminId) => handleValueChange("adminId", adminId)}
               />
             </div>
 
-            {/* <div>
-              <CheckboxAutocomplete
-                onSelect={(names) =>
-                  setFormData({ ...formData, member: names })
-                }
+            <div>
+              <MemberSelector
+                value={formData.member}
+                member={memberList}
+                onChange={(ids) => handleValueChange("member", ids)}
               />
-            </div> */}
+            </div>
           </div>
         </AccordionDetails>
       </Accordion>
@@ -737,11 +695,21 @@ export function EditCommunity() {
           <Button type="cancel">ยกเลิก</Button>
         </div>
         <div className="ml-2.5 w-36">
-          <Button type="confirm-admin" onClick={handleSubmit}>
-            บันทึก
+          <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+            สร้างชุมชน
           </Button>
         </div>
       </div>
+      <Modal
+        open={openConfirm}
+        title="ยืนยันการสร้างชุมชน"
+        text="คุณต้องการยืนยันการสร้างชุมชนหรือไม่"
+        onConfirm={async () => {
+          setOpenConfirm(false);
+          await handleSubmit();
+        }}
+        onCancel={() => setOpenConfirm(false)}
+      />
     </div>
   );
 }

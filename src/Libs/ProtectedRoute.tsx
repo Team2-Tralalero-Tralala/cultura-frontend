@@ -23,7 +23,7 @@ type Props = {
  */
 export default function ProtectedRoute({
   allow,
-  redirectTo = "/guest/login",
+  redirectTo = "/guest/home",
   children,
 }: React.PropsWithChildren<Props>) {
   const { user } = useAuth();

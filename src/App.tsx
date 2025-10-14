@@ -11,15 +11,15 @@ import MemberRoutes from "./Layouts/Member/MemberRoutes";
 import ProtectedRoute from "./Libs/ProtectedRoute";
 import LoginTourist from "./Pages/LoginTourist";
 import LoginAdmin from "./Pages/LoginAdmin";
-import RoleRedirect from "./Libs/RoleRedirect";
 
 function App() {
   return (
     <Routes>
-      <Route path="guest/login" element={<LoginTourist />} />
-      <Route path="guest/partner/login" element={<LoginAdmin />} />
-      <Route index element={<RoleRedirect />} />
-      {/* ถ้าไม่ตรง route ไหนเลย → redirect กลับหน้าแรก */}
+      <Route path="/guest/*">
+        <Route path="login" element={<LoginTourist />} />
+        <Route path="partner/login" element={<LoginAdmin />} />
+      </Route>
+
       <Route
         path="/super/*"
         element={
@@ -54,7 +54,6 @@ function App() {
       </Route>
 
       {/* fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

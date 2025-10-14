@@ -2,18 +2,25 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ Super Admin, Admin และ Member
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขโปรไฟล์, เปลี่ยนรหัสผ่าน และออกจากระบบ
  */
-
-import { useState } from "react";
-import imgUser from "/public/profile.png";
+import { AuthContext } from "@/Libs/AuthProvider";
+import { useContext, useState } from "react";
+import imgUser from "/profile.png";
 
 const NavbarSam = () => {
   // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
+  const { logout } = useContext(AuthContext);
   // ฟังก์ชันสลับสถานะการเปิด-ปิด dropdown
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
-
+  const logOut = async () => {
+    try {
+      await logout(); // เรียก context logout (ล้าง token / session)
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
   return (
     <header className="bg-white">
       <nav className="flex items-center justify-between px-12 h-16">
@@ -56,7 +63,10 @@ const NavbarSam = () => {
                 เปลี่ยนรหัสผ่าน
               </li>
               <hr className="border-gray-200 my-2" />
-              <li className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
+              <li
+                className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium"
+                onClick={logOut}
+              >
                 ออกจากระบบ
               </li>
             </ul>

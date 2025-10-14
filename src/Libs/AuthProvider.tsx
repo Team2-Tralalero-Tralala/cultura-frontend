@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { Navigate, useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
 
@@ -32,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -56,21 +58,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchUser();
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
-    const res = await axios.post(
-      "http://localhost:3000/api/auth/login",
-      { username, password },
-      { withCredentials: true }
-    );
-    const { user: u } = res.data.data;
-    const authUser: AuthUser = {
-      id: u.id,
-      username: u.username,
-      role: u.role.toLowerCase(),
-    };
-    setUser(authUser);
-    return authUser;
-  }, []);
+  const login = useCallback(
+    async (username: string, password: string) => {
+      try {
+        const res = await axios.post(
+          "http://localhost:3000/api/auth/login",
+          { username, password },
+          { withCredentials: true }
+        );
+
+        const { user: u } = res.data.data;
+
+        const authUser: AuthUser = {
+          id: u.id,
+          username: u.username,
+          role: u.role.toLowerCase(),
+        };
+
+        setUser(authUser);
+
+        switch (authUser.role) {
+          case "superadmin":
+            navigate("/super/home", { replace: true });
+            break;
+          case "admin":
+            navigate("/admin/home", { replace: true });
+            break;
+          case "member":
+            navigate("/member/home", { replace: true });
+            break;
+          case "tourist":
+            navigate("/tourist/home", { replace: true });
+            break;
+          default:
+            navigate("/", { replace: true });
+            break;
+        }
+
+        return authUser;
+      } catch (error) {
+        console.error("Login failed:", error);
+        throw error;
+      }
+    },
+    [navigate]
+  );
 
   const register = useCallback(async (data: any) => {
     const res = await axios.post("http://localhost:3000/api/auth/signup", data);
@@ -78,13 +110,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const logout = useCallback(async () => {
+    try {
+      if (!user?.role) return;
+      const currentRole = user.role.toLowerCase();
+      switch (currentRole) {
+        case "tourist":
+          navigate("/guest/home", { replace: true });
+          break;
+        default:
+          navigate("/guest/partner/login", { replace: true });
+          break;
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+    await new Promise((r) => setTimeout(r, 50));
+
     await axios.post(
       "http://localhost:3000/api/auth/logout",
       {},
       { withCredentials: true }
     );
+
     setUser(null);
-  }, []);
+
+    // redirect ตาม role
+  }, [navigate, user]);
 
   if (loading) return null;
 

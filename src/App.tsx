@@ -1,90 +1,46 @@
-/*
-* คำอธิบาย : ตัวอย่างการใช้งาน DataTable สำหรับแสดงรายการผู้ใช้
-* กำหนดคอลัมน์ ปุ่มจัดการต่อแถว (edit/block/unblock/delete)
-* และปุ่มดำเนินการแบบกลุ่ม (bulk delete / bulk unblock) พร้อมข้อมูลจำลอง
-*/
+import { Routes, Route, Navigate } from "react-router-dom";
+import SuperAdminLayout from "./Layouts/SuperAdminLayout";
+import AdminLayout from "./Layouts/AdminLayout";
+import MemberLayout from "./Layouts/MemberLayout";
+import { superLogin, adminLogin, memberLogin, touristLogin } from "./Libs/dev-login";
 
-import DataTable, { type Column, type DataTableProps } from "./Components/Tables/Index";
-import { TrashIcon, BanIcon } from "./Components/Tables/Icon"; 
-import { useMemo } from "react";
+import ManagePackageSuperAdmin from "./Pages/SuperAdmin/ManagePackageSuperAdmin";
+import EditPackageSuperAdmin from "./Pages/SuperAdmin/EditPackageSuperAdmin";
 
-function App() {
-  type Row = { id: number; name: string; role: string; community: string; email: string; suspended?: boolean; };
+import ManagePackageMember from "./Pages/Member/ManagePackageMember";
+import CreatePackageMember from "./Pages/Member/CreatePackageMember";
+import EditPackageMember from "./Pages/Member/EditPackageMember";
 
-  const columns: Column<Row>[] = [
-    { key: "name", header: "ชื่อ" },
-    { key: "role", header: "ประเภท" },
-    { key: "community", header: "ชุมชน" },
-    { key: "email", header: "อีเมล" },
-    
-  ];
-
-  const actions: NonNullable<DataTableProps<Row>["actions"]> = {
-    header: "จัดการ",
-    align: "right",
-    width: "200px",
-    variant: "icons",
-    className: "pr-10",
-    items: (r) => ["edit", r.suspended ? "unblock" : "block", "delete"],
-    // callbacks: {
-    //   edit:    (r) => console.log("edit", r.id),
-    //   block:   (r) => console.log("block", r.id),
-    //   unblock: (r) => console.log("unblock", r.id),
-    //   delete:  (r) => console.log("delete", r.id),
-    // },
-  };
-
-
-  const bulkActions: NonNullable<DataTableProps<Row>["bulkActions"]> = [
-    {
-      id: "bulk-delete",
-      label: "ลบทั้งหมด",
-      icon: TrashIcon,
-      intent: "neutral",
-      onClick: async (rows) => {
-        const ids = rows.map(r => r.id);
-        console.log("bulk delete ids:", ids);
-        // ตัวอย่างเชื่อม backend:
-        // await fetch("/api/users/bulk-delete", { method:"POST", headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids }) });
-      
-      },   
-    },
-    {
-    id: "bulk-unblock",
-    label: "ยกเลิกการระงับทั้งหมด",
-    icon: BanIcon,
-    intent: "neutral", 
-    onClick: async (rows) => {
-      const ids = rows.map(r => r.id);
-      console.log("bulk unblock ids:", ids);
-    },
-  },
-    
-  ];
-
-  const rows = useMemo<Row[]>(
-    () => Array.from({ length: 111 }, (_, i) => ({
-      id: i + 1,
-      name: `ผู้ใช้ ${i + 1}`,
-      role: i % 3 === 0 ? "ผู้ดูแลระบบ" : "สมาชิก",
-      community: ["บ้านแว้ว", "คลองสระบัว", "สามช่อง"][i % 3],
-      email: `user${i + 1}@ex.com`,
-      suspended: i % 7 === 0,
-    })), []
-  );
-
+import CreatePackageAdmin from "./Pages/Admin/CreatePackageAdmin";
+import EditPackageAdmin from "./Pages/Admin/EditPackageAdmin";
+import ManagePackageAdmin from "./Pages/Admin/ManagePackageAdmin";
+if (import.meta.env.DEV) {
+  memberLogin();
+  // superLogin();
+  // adminLogin();
+  // touristLogin();
+}
+export default function App() {
   return (
-    <DataTable<Row>
-      data={rows}
-      columns={columns}
-      getRowKey={(r) => r.id}
-      actions={actions}
-      bulkActions={bulkActions}      
-      pageSizeOptions={[10, 30, 50]}
-      defaultPageSize={10}
-      theme="brand"
-    />
+    <Routes>
+      {/* ================= Superadmin ================= */}
+      <Route path="/super" element={<SuperAdminLayout />}>
+        <Route path="ping" element={<div style={{ color: 'black' }}>PING OK</div>} />
+        <Route path="packages" element={<ManagePackageSuperAdmin />} />
+        <Route path="package/:id" element={<EditPackageSuperAdmin />} />
+      </Route>
+      {/* ================= Member ================= */}
+      <Route path="/member" element={<MemberLayout />}>
+        <Route path="packages" element={<ManagePackageMember />} />
+        <Route path="package" element={<CreatePackageMember />} />
+        <Route path="package/:id" element={<EditPackageMember />} />
+      </Route>
+      {/* ================= Admin ================= */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="packages" element={<ManagePackageAdmin />} />
+        <Route path="package" element={<CreatePackageAdmin />} />
+        <Route path="package/:id" element={<EditPackageAdmin />} />
+      </Route>
+    </Routes>
   );
 }
-
-export default App;

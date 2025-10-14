@@ -16,23 +16,26 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import z from "zod";
-import TextField from "@/Components/TextField";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
-import Button from "@/Components/Button";
-import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
+import Button from "@/Components/Button";
 import MemberSelector, {
   type Member,
 } from "@/Components/Selector/MemberSelector";
+import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
+
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
- * ใช้ Zod สำหรับ validate field แต่ละรายการ
+ * ใช้ Zod สำหรับ validate field แต่ละรายการก่อนส่งไป backend
+ * Input : object ของข้อมูลฟอร์มทั้งหมด
+ * Output : หากไม่ผ่าน validation จะคืนข้อความ error ของแต่ละ field
  */
 const communitySchema = z.object({
   name: z
@@ -121,7 +124,12 @@ const communitySchema = z.object({
 
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
-
+/*
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
+ * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
+ * Input : communityId (ดึงจาก useParams)
+ * Output : ส่งคำขออัปเดตข้อมูลวิสาหกิจชุมชนผ่าน API updateCommunity()
+ */
 export function EditCommunity() {
   const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
@@ -149,7 +157,9 @@ export function EditCommunity() {
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
    * Input : ไม่มี (ใช้ communityId จาก useParams)
-   * Output : เซ็ตค่า state formData และ location เมื่อโหลดข้อมูลสำเร็จ
+   * Output :
+   *   - เซ็ตค่า state formData, location, admin, members
+   *   - เซ็ตค่าพิกัดตำแหน่ง (position) สำหรับแผนที่
    */
   React.useEffect(() => {
     async function fetchData() {
@@ -203,8 +213,8 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
-   * Input : panel (ชื่อของ panel ที่ต้องการเปิด)
-   * Output : อัปเดต state expanded
+   * Input : panel (string) — รหัสของ panel ที่ต้องการเปิด/ปิด
+   * Output : อัปเดต state expanded เพื่อควบคุมการเปิด/ปิด Accordion
    */
   const handleChange =
     (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
@@ -212,9 +222,11 @@ export function EditCommunity() {
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
    * Input :
-   *    - field (ชื่อฟิลด์ที่ต้องการตรวจสอบ)
-   *    - value (ค่าที่ผู้ใช้กรอก)
-   * Output : คืนค่า boolean แสดงผลการตรวจสอบ และอัปเดตข้อความ error ใน state
+   *   - field (string) : ชื่อฟิลด์ที่ต้องการตรวจสอบ
+   *   - value (any) : ค่าของฟิลด์นั้น
+   * Output :
+   *   - คืนค่า boolean (true = ผ่าน, false = ไม่ผ่าน)
+   *   - อัปเดต state formErrors ให้แสดงข้อความ error ของฟิลด์ที่ไม่ผ่าน
    */
   const validateField = (field?: keyof typeof formData, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -272,7 +284,13 @@ export function EditCommunity() {
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
   };
-
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ (ใช้กับ Selector/MapPicker)
+   * Input :
+   *   - field (keyof typeof formData) : ชื่อฟิลด์ที่ต้องอัปเดต
+   *   - value (any) : ค่าที่ต้องการเซ็ตลงใน formData
+   * Output : อัปเดตค่าใน formData และเรียก validateField เพื่อเช็กความถูกต้อง
+   */
   const handleValueChange = <K extends keyof typeof formData>(
     field: K,
     value: (typeof formData)[K]

@@ -1,6 +1,18 @@
 /*
- * Modal ยืนยันการสร้างวิสาหกิจชุมชน (ไม่มี animation)
+ * คำอธิบาย : Component
+ * โดยใช้ SweetAlert2 ในการแสดงกล่องข้อความยืนยัน
+ * Input :
+ *   - open (boolean) : ควบคุมการเปิด/ปิด Modal
+ *   - onConfirm (function) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยืนยัน
+ *   - onCancel (function, optional) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยกเลิก
+ *   - title (string, optional) : ข้อความหัวข้อของ Modal
+ *   - text (string, optional) : ข้อความอธิบายเพิ่มเติม
+ *   - confirmText (string, optional) : ข้อความปุ่มยืนยัน
+ *   - cancelText (string, optional) : ข้อความปุ่มยกเลิก
+ * Output :
+ *   - แสดง SweetAlert popup เพื่อให้ผู้ใช้ยืนยันหรือยกเลิก
  */
+
 import React, { useEffect } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -50,7 +62,6 @@ export const Modal: React.FC<ModalProps> = ({
       allowOutsideClick: false,
       allowEscapeKey: true,
       reverseButtons: true,
-      // 🔹 ปิด animation ทั้งหมด (ไม่หมุน, ไม่เด้ง)
 
       customClass: {
         popup: "rounded-2xl",

@@ -1,15 +1,32 @@
+/*
+ * คำอธิบาย : Component สำหรับเลือกสมาชิก (Member) ของวิสาหกิจชุมชน
+ * ใช้ร่วมกับ MUI Autocomplete แบบ multiple selection เพื่อเลือกสมาชิกหลายคนได้ในครั้งเดียว
+ * โดยจะดึงข้อมูลสมาชิกที่ยังไม่ถูกมอบหมายจาก API และรวมกับสมาชิกที่มีอยู่แล้วในชุมชน
+ * Input :
+ *   - value (number[]) : id ของสมาชิกที่ถูกเลือกในปัจจุบัน
+ *   - member (Member[]) : รายการสมาชิกที่อยู่ในชุมชนเดิม (ใช้เมื่อแก้ไขข้อมูล)
+ *   - onChange (function) : ฟังก์ชัน callback สำหรับส่ง id ของสมาชิกที่เลือกกลับไปยัง parent component
+ * Output :
+ *   - แสดง Autocomplete dropdown สำหรับเลือกสมาชิก
+ *   - ส่ง id ของสมาชิกทั้งหมดที่เลือกกลับไปยัง parent component ผ่าน onChange()
+ */
+
 import * as React from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import Checkbox from "@mui/material/Checkbox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Popper from "@mui/material/Popper";
-import { useState } from "react";
 import { getUnassignedMembers } from "@/Libs/CommunityService";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
-
+/*
+ * คำอธิบาย : ฟังก์ชัน CustomPopper สำหรับกำหนดตำแหน่งและลักษณะของ Popper
+ * ซึ่งเป็นกล่อง dropdown ของ Autocomplete
+ * Input : props - ข้อมูลจาก Autocomplete ที่เกี่ยวข้องกับตำแหน่ง anchor element
+ * Output : คืนค่า Popper element ที่มีความกว้างเท่ากับ input และไม่ถูกตัดขอบ
+ */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -38,6 +55,17 @@ interface MemberSelectorProps {
   member?: Member[];
   onChange: (value: number[]) => void;
 }
+/*
+ * คำอธิบาย : Component หลักสำหรับเลือกสมาชิก (Member) ของชุมชน
+ * โดยใช้ Autocomplete ที่สามารถเลือกหลายรายการได้ (multiple select)
+ * Input :
+ *   - value : id ของสมาชิกที่ถูกเลือก
+ *   - member : รายการสมาชิกเดิมในชุมชน (ใช้ในหน้าแก้ไข)
+ *   - onChange : callback สำหรับอัปเดตค่าที่เลือกกลับไปยัง parent component
+ * Output :
+ *   - UI Autocomplete ที่เลือกสมาชิกได้หลายคน
+ *   - แสดงรายชื่อสมาชิกที่เลือกไว้ พร้อมปุ่มลบแต่ละคน
+ */
 export default function MemberSelector({
   value = [],
   member = [],
@@ -46,7 +74,12 @@ export default function MemberSelector({
   const [members, setMembers] = React.useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<Member[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
-
+  /*
+   * คำอธิบาย : ฟังก์ชันภายในสำหรับโหลดรายชื่อสมาชิกจาก API
+   * โดยจะรวมข้อมูลสมาชิกที่มีอยู่ในชุมชน (prop member) เข้ากับสมาชิกที่ยังไม่ถูกใช้
+   * Input : none (ดึงข้อมูลจาก API และ props member)
+   * Output : อัปเดต state 'members' ด้วยข้อมูลสมาชิกทั้งหมดที่เลือกได้
+   */
   React.useEffect(() => {
     async function loadMembers() {
       try {
@@ -75,7 +108,11 @@ export default function MemberSelector({
 
     loadMembers();
   }, [member]);
-
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตั้งค่า selectedMembers ให้ตรงกับค่า value ปัจจุบัน
+   * Input : none (อ้างอิง state 'members' และ prop 'value')
+   * Output : อัปเดต state 'selectedMembers' ให้ตรงกับ id ที่เลือกอยู่ใน value
+   */
   React.useEffect(() => {
     if (!members || members.length === 0) return;
     if (!value || value.length === 0) {
@@ -86,10 +123,17 @@ export default function MemberSelector({
     const preselected = members.filter((m) => value.includes(m.id));
     setSelectedMembers(preselected);
   }, [members, value]);
-
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อมีการเลือกสมาชิกใน Autocomplete
+   * Input :
+   *   - newValue : รายการสมาชิกที่ถูกเลือกใหม่
+   * Output :
+   *   - อัปเดต state 'selectedMembers'
+   *   - ส่ง id ของสมาชิกที่เลือกทั้งหมดกลับไปยัง parent component ผ่าน onChange()
+   */
   const handleChange = (_: any, newValue: Member[]) => {
     setSelectedMembers(newValue);
-    onChange(newValue.map((v) => v.id)); // ✅ แก้ตรงนี้
+    onChange(newValue.map((v) => v.id));
   };
 
   return (

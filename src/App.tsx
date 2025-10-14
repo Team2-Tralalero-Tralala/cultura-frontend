@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate } from "react-router";
+import { Route, Routes } from "react-router";
 import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
 

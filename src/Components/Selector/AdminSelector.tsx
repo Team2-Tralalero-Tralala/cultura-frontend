@@ -1,6 +1,19 @@
+/*
+ * คำอธิบาย : Component สำหรับเลือกผู้ดูแล (Admin) ของวิสาหกิจชุมชน
+ * ใช้ร่วมกับ MUI Autocomplete เพื่อแสดงรายชื่อผู้ดูแลที่ยังไม่ถูกมอบหมายให้กับชุมชนอื่น
+ * และสามารถรวมผู้ดูแลปัจจุบันของชุมชนเข้าในรายการได้โดยไม่ซ้ำ
+ * Input :
+ *   - value (number | undefined) : id ของผู้ดูแลที่ถูกเลือกในปัจจุบัน
+ *   - admin (Admin | null) : ข้อมูลผู้ดูแลปัจจุบันจากชุมชน (ใช้เมื่อแก้ไข)
+ *   - onChange (function) : ฟังก์ชัน callback ที่ส่งค่า id ของผู้ดูแลเมื่อมีการเลือกใหม่
+ * Output :
+ *   - ส่งค่า id ของผู้ดูแล (number) กลับไปยัง parent component ผ่าน onChange
+ *   - แสดง Autocomplete dropdown ของผู้ดูแลทั้งหมดที่สามารถเลือกได้
+ */
+
 import { getUnassignedAdmins } from "@/Libs/CommunityService";
 import Autocomplete from "@mui/material/Autocomplete";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 export interface Admin {
   id: number;
@@ -13,11 +26,25 @@ interface AdminSelectorProps {
   admin?: Admin | null; // ✅ admin ปัจจุบันจาก community.admin
   onChange: (value: number | null) => void;
 }
-
+/*
+ * คำอธิบาย : ฟังก์ชันหลักของ Component สำหรับโหลดและแสดงรายชื่อผู้ดูแล (Admin)
+ * Input :
+ *   - value : id ของผู้ดูแลที่ถูกเลือกในปัจจุบัน
+ *   - admin : ข้อมูลผู้ดูแลปัจจุบันจากชุมชน (ถ้ามี)
+ *   - onChange : ฟังก์ชัน callback สำหรับส่งค่า id ของผู้ดูแลกลับเมื่อเลือกใหม่
+ * Output :
+ *   - แสดง Autocomplete สำหรับเลือกผู้ดูแล
+ *   - เรียกใช้ onChange() เพื่ออัปเดตค่าใน parent component
+ */
 export function AdminSelector({ value, admin, onChange }: AdminSelectorProps) {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
+  /*
+   * คำอธิบาย : ฟังก์ชันภายในสำหรับดึงรายชื่อผู้ดูแลที่ยังไม่ถูกมอบหมาย
+   * รวมกับผู้ดูแลปัจจุบันของชุมชน (ถ้ามี) เพื่อแสดงใน Autocomplete
+   * Input : none (ใช้ข้อมูลจาก state admin)
+   * Output : อัปเดต state 'admins' ด้วยข้อมูลผู้ดูแลทั้งหมด
+   */
   useEffect(() => {
     async function loadAdmins() {
       try {
@@ -44,6 +71,16 @@ export function AdminSelector({ value, admin, onChange }: AdminSelectorProps) {
   // ✅ ค้นหา admin ปัจจุบันจาก options
   const selectedAdmin = admins.find((a) => a.id === value) || admin || null;
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับสร้าง Input ที่ใช้ใน Autocomplete ของ MUI
+   * เพื่อกำหนด label, placeholder และสไตล์ของ input field
+   * Input :
+   *   - id (string) : id ของ input
+   *   - label (string) : ข้อความ label ที่จะแสดงบน input
+   *   - params (any) : พารามิเตอร์ที่ MUI ส่งมาให้สำหรับ render input
+   * Output :
+   *   - JSX element ของ custom input field ที่มี label และสไตล์ตามกำหนด
+   */
   const renderCustomInput = (id: string, label: string, params: any) => {
     const { InputProps, inputProps } = params;
     return (
@@ -82,7 +119,7 @@ export function AdminSelector({ value, admin, onChange }: AdminSelectorProps) {
       getOptionLabel={(option) =>
         option ? `${option.fname} ${option.lname}` : ""
       }
-      value={selectedAdmin}
+      value={selectedAdmin!}
       onChange={(_, newValue) => onChange(newValue ? newValue.id : null)}
       renderInput={(params) =>
         renderCustomInput("admin-selector", "เลือกผู้ดูแล", params)

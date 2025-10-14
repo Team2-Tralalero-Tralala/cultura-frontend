@@ -11,6 +11,7 @@ import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Alert from "@mui/material/Alert";
 import { useState } from "react";
 import * as z from "zod";
 import TextField from "@/Components/TextField";
@@ -25,10 +26,12 @@ import { AdminSelector } from "@/Components/Selector/AdminSelector";
 import MemberSelector from "@/Components/Selector/MemberSelector";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
-import Alert from "@mui/material/Alert";
+
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
- * ใช้ Zod สำหรับ validate field แต่ละรายการ
+ * ใช้ Zod สำหรับ validate field แต่ละรายการก่อนส่งข้อมูลไป backend
+ * Input : ข้อมูลในฟอร์มที่ผู้ใช้กรอก
+ * Output : หากไม่ผ่าน validation จะส่งข้อความ error กลับให้แสดงในฟอร์ม
  */
 const communitySchema = z.object({
   name: z
@@ -74,8 +77,6 @@ const communitySchema = z.object({
 
   houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
 
-  // villageNumber: z.number("กรุณากรอกเป็นตัวเลขเท่านั้น").optional(),
-
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
 
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
@@ -119,6 +120,11 @@ const communitySchema = z.object({
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 
+/*
+ * คำอธิบาย : Component หลักสำหรับหน้า "สร้างวิสาหกิจชุมชนใหม่"
+ * ใช้จัดการ state ของข้อมูลฟอร์ม การตรวจสอบความถูกต้อง การส่งข้อมูลไป API
+ * รวมถึง modal ยืนยันและการแจ้งเตือนผลลัพธ์
+ */
 export default function CreateCommuninityPage() {
   const [expanded, setExpanded] = React.useState<string | false>(false);
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
@@ -140,6 +146,10 @@ export default function CreateCommuninityPage() {
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [alert, setAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
@@ -204,7 +214,14 @@ export default function CreateCommuninityPage() {
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
   };
-
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าใน formData ตามชื่อฟิลด์ที่ระบุ
+   * Input :
+   *   - field (string) : ชื่อฟิลด์ใน formData
+   *   - value (any) : ค่าที่ต้องการอัปเดต
+   * Output :
+   *   - อัปเดตค่าใน formData และตรวจสอบความถูกต้องของฟิลด์นั้น
+   */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
     setFormData(updated);
@@ -214,21 +231,15 @@ export default function CreateCommuninityPage() {
     () => formData.member ?? [],
     [formData.member]
   );
+
   /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "สร้างชุมชน"
-   * Input : ไม่มี (ใช้ค่าจาก state formData และ location)
+   * คำอธิบาย : ฟังก์ชันหลักสำหรับส่งข้อมูลฟอร์มไปยัง API เพื่อสร้างวิสาหกิจชุมชนใหม่
+   * Input : ไม่มี (ใช้ข้อมูลจาก state formData และ location)
    * Output :
-   *    - ตรวจสอบความถูกต้องของข้อมูลด้วย validateField()
-   *    - จัดรูปแบบข้อมูล payload ให้ตรงตามโครงสร้างของ backend
-   *    - ส่งคำขอสร้างชุมชนใหม่ไปยัง API ผ่าน createCommunity()
+   *   - ตรวจสอบความถูกต้องของข้อมูลทั้งหมด
+   *   - ส่งข้อมูลไปยัง API ผ่าน createCommunity()
+   *   - แสดง Alert สำเร็จหรือข้อผิดพลาดตามผลลัพธ์
    */
-
-  // เปิด modal
-  const [alert, setAlert] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-
   const handleSubmit = async () => {
     try {
       const isValid = validateField();

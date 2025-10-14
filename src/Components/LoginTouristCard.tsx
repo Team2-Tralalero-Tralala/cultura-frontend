@@ -8,7 +8,7 @@ import TextField from "./TextField";
 import Button from "./Button";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../Libs/AuthProvider";
-import ModalBlocked from "./ModalBlocked";
+import ModalBlocked from "./Modal/ModalBlocked";
 import CircularProgress from "@mui/material/CircularProgress";
 import React, { useContext, useState } from "react";
 import { z } from "zod";

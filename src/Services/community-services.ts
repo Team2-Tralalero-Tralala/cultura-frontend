@@ -47,7 +47,7 @@ export async function fetchCommunitiesByRole(role: Role, page: number, limit: nu
 }
 
 export async function fetchCommunityDetail(communityId: number) {
-  const res = await api.get(`/super/community/${communityId}`, {
+  const res = await api.get(`/super/community/detail/${communityId}`, {
     withCredentials: true,
   });
 

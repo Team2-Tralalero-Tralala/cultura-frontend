@@ -29,7 +29,7 @@ export default function App() {
       <Route element={<ProtectedRoute allow={["superadmin"]} redirectTo="/guest/partner/login" />}>
         <Route path="/super" element={<SuperAdminLayout />}>
           <Route path="communities" element={<ManageCommunitySuperAdmin />} />
-            <Route path="communities/:id" element={<CommunityDetailSuperAdmin />} /> 
+           <Route path="community/detail/:id" element={<CommunityDetailSuperAdmin />} />
           
         </Route>
       </Route>

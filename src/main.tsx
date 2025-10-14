@@ -15,7 +15,7 @@ createRoot(document.getElementById("root")!).render(
     <div className="font-sarabun">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<App />} />
+          <Route path="/filters" element={<HomePage />} />
           {/* <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} /> }
         </Routes>

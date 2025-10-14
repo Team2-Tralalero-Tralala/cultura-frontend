@@ -10,13 +10,6 @@ import { Routes, Route } from "react-router-dom";
 import AdminLayout from "./Layouts/AdminLayout";
 import BookingHistories from "./Pages/Admin/BookingHistoryAdmin";
 
-// Dev helper
-import { adminLogin } from "./Libs/dev-login";
-
-if (import.meta.env.DEV) {
-  adminLogin();
-}
-
 export default function App() {
   return (
     <Routes>

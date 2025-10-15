@@ -1,8 +1,8 @@
 // 📄 src/Layouts/SuperAdmin/SuperAdminRoutes.tsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import CreateAccountPage from "../../Components/Account/CreateAccountPage";
-import EditAccountPage from "../../Components/Account/EditAccountPage"; 
+import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
+import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage"; 
 
 /*
  * Module: SuperAdminRoutes

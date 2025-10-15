@@ -9,11 +9,11 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <div className="font-sarabun">
-      <AuthProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
           <App />
-        </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </div>
   </StrictMode>
 );

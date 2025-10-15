@@ -65,7 +65,7 @@ export const Tag = React.forwardRef<HTMLDivElement, TagProps>(
             return (
                 <div
                     ref={ref}
-                    className={`${sizeClass} border border-gray-600 rounded-lg flex items-center justify-center font-medium ${className ?? ""}`}
+                    className={`${sizeClass} border border-gray-200 rounded-lg flex items-center justify-center text-sm ${className ?? ""}`}
                     aria-label={ariaLabel}
                     title={title}
                 >

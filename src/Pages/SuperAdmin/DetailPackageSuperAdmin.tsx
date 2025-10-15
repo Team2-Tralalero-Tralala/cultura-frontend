@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Button from "../../Components/Button";
 import { Backward, EditIcon } from "../../Icon/MaterialSymbolsLight";
+import { Tag } from "../../Components/Tag";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -120,6 +121,9 @@ export default function DetailPackageSuperAdmin() {
   const coverImage = pkg.files?.find((f) => f.type === "COVER");
 
   return (
+    // ตอนนี้ขาด Navigation page ที่มันบอกว่าหน้านี้อยู่ที่ไหน เช่น จัดการแพ็กเกจ / รายละเอียดแพ็กเกจ
+    // อาจจะเพิ่มทีหลัง
+    // Main container
     <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
       {/* Header */}
 
@@ -132,7 +136,7 @@ export default function DetailPackageSuperAdmin() {
           >
             <Backward></Backward>
           </div>
-          <h1 className="text-xl font-bold mb-15">รายละเอียดแพ็กเกจ</h1>
+          <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
         </div>
         <div className="w-60">
           {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
@@ -174,12 +178,23 @@ export default function DetailPackageSuperAdmin() {
           </p>
         </div>
       </div>
+
+      {/* แท็ก */}
       {pkg.tags?.length > 0 && (
-        <p className="mb-6">
-          <strong>แท็ก :</strong> {pkg.tags.join(" ")}
+        <p className="mb-6 flex gap-2 flex-row">
+          <strong>แท็ก :</strong>{" "}
+          {pkg.tags.map((t, i) => (
+            <Tag
+              key={i}
+              label={t}
+              sizeClass="w-20 h-8"
+              className="text-black bg-white"
+            />
+          ))}
+          
         </p>
       )}
-      
+
       {/* ภาพหลัก (ไม่รู้ว่ามี Componant ของรูปภาพ) */}
       {coverImage && (
         <div className="mb-6">
@@ -254,7 +269,6 @@ export default function DetailPackageSuperAdmin() {
               <p className="mb-4">
                 <strong>คำอธิบายที่อยู่ :</strong> {pkg.location.detail}
               </p>
-      
             </div>
           </div>
         </div>

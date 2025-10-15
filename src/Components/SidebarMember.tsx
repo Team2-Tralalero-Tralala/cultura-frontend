@@ -10,7 +10,7 @@ type MenuKey =
   | 'reviews'
   | 'booking'
   | 'booking-refunds'
-  | 'booking-done'
+  | 'booking-histories'
   | 'dashboard'
   | 'logout'
   | null;
@@ -53,8 +53,8 @@ const SidebarMember: React.FC = () => {
     } else if (subPath === '/booking/refunds') {
       setActiveMenuKey('booking-refunds');
       setOpenDropdown('booking');
-    } else if (subPath === '/booking/done') {
-      setActiveMenuKey('booking-done');
+    } else if (subPath === '/booking-histories/done') {
+      setActiveMenuKey('booking-histories');
       setOpenDropdown('booking');
     } else if (subPath.startsWith('/booking/panding')) {
       setActiveMenuKey('booking');
@@ -177,10 +177,10 @@ const SidebarMember: React.FC = () => {
                   คำขอคืนเงิน
                 </Link>
                 <Link
-                  to={`${basePath}/booking/done`}
-                  onClick={() => handleClick('booking-done', 'booking')}
+                  to={`${basePath}/booking-histories/done`}
+                  onClick={() => handleClick('booking-histories', 'booking')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive('booking-done') ? 'bg-[#0D845A]' : ''
+                    isActive('booking-histories') ? 'bg-[#0D845A]' : ''
                   }`}
                 >
                   ประวัติการจอง

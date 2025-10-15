@@ -121,7 +121,7 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
 };
 
 /*
- * ฟังก์ชัน : BookingHistoryAdmin
+ * ฟังก์ชัน : BookingHistoryMember
  * คำอธิบาย : คอมโพเนนต์หลักของหน้า "ประวัติการจอง"
  * ทำหน้าที่:
  *  - ดึงข้อมูลทุกหน้าแล้วรวม (ผ่าน loadAllPages)
@@ -130,7 +130,7 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
  * Input  : -
  * Output : องค์ประกอบ UI ของทั้งหน้า
  */
-export default function BookingHistoryAdmin(): React.ReactElement {
+export default function BookingHistoryMember(): React.ReactElement {
   const navigate = useNavigate();
 
   // จัดเก็บข้อมูลแถวทั้งหมด, คำค้นหา, และค่ากรองสถานะที่ผู้ใช้เลือก
@@ -213,8 +213,8 @@ export default function BookingHistoryAdmin(): React.ReactElement {
             />
           </div>
           <div>
-            {/*ปุ่มนำทางไปยังหน้า "คำขอคืนเงิน"onClick: ใช้ useNavigate เปลี่ยนเส้นทางไป /admin/booking/refunds*/}
-            <Button type="confirm-admin" onClick={() => navigate("/admin/booking/refunds")}>
+            {/*ปุ่มนำทางไปยังหน้า "คำขอคืนเงิน"onClick: ใช้ useNavigate เปลี่ยนเส้นทางไป /member/booking/refunds*/}
+            <Button type="confirm-admin" onClick={() => navigate("/member/booking/refunds")}>
               คำขอคืนเงิน
             </Button>
           </div>

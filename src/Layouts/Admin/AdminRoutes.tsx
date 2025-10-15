@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import BookingHistoryAdmin from '@/Pages/Admin/BookingHistoryAdmin';
+import BookingHistoryAdmin from '@/Pages/Member/BookingHistoryMember';
 {/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/}
 
 //import ManageCommunityAdmin from '../../Pages/Admin/ManageCommunityAdmin';

@@ -1,3 +1,6 @@
+import CreatePackagePage from "@/Pages/Member/CreatePackagePage";
+import ManagePackagePage from "@/Pages/Member/ManagePackagePage";
+import EditPackagePage from "@/Pages/Member/EditPackagePage";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -12,6 +15,9 @@ const MemberRoutes: React.FC = () => {
       {/* 
       <Route path="community" element={<CommunityMember />} />
   */}
+      <Route path="package/create" element={<CreatePackagePage />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
+      <Route path="package/edit/:id" element={<EditPackagePage />} />
     </Routes>
   );
 };

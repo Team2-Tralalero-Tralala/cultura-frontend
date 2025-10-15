@@ -25,6 +25,8 @@ interface AdminSelectorProps {
   value?: number; // id ของ admin ที่เลือก
   admin?: Admin | null; // ✅ admin ปัจจุบันจาก community.admin
   onChange: (value: number | null) => void;
+  error?: boolean;
+  helperText?: string;
 }
 /*
  * คำอธิบาย : ฟังก์ชันหลักของ Component สำหรับโหลดและแสดงรายชื่อผู้ดูแล (Admin)
@@ -36,7 +38,13 @@ interface AdminSelectorProps {
  *   - แสดง Autocomplete สำหรับเลือกผู้ดูแล
  *   - เรียกใช้ onChange() เพื่ออัปเดตค่าใน parent component
  */
-export function AdminSelector({ value, admin, onChange }: AdminSelectorProps) {
+export function AdminSelector({
+  value,
+  admin,
+  onChange,
+  error = false,
+  helperText = "",
+}: AdminSelectorProps) {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   /*
@@ -85,19 +93,37 @@ export function AdminSelector({ value, admin, onChange }: AdminSelectorProps) {
     const { InputProps, inputProps } = params;
     return (
       <div ref={InputProps.ref} className="w-full">
-        <label
-          htmlFor={id}
-          className="block text-base font-semibold text-gray-800 mb-1.5"
-        >
-          {label} <span className="text-red-600">*</span>
-        </label>
+        {/* Label + Error message ในบรรทัดเดียวกัน */}
+        <div className="flex items-center justify-between mb-1.5">
+          <label
+            htmlFor={id}
+            className="block text-base font-semibold text-gray-800"
+          >
+            {label} <span className="text-red-600">*</span>
+          </label>
+          {error && (
+            <span
+              id={`${id}-helper-text`}
+              className="text-xs text-red-600 ml-2 whitespace-nowrap"
+            >
+              {helperText}
+            </span>
+          )}
+        </div>
+
+        {/* Input field */}
         <div className="relative">
           <input
             {...inputProps}
             id={id}
             type="text"
             placeholder={label}
-            className="block w-full rounded-form border border-gray-400 focus:ring-1 focus:ring-gray-400 focus:border-gray-500 bg-white px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none"
+            className={`block w-full rounded-form border px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
+        ${
+          error
+            ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
+            : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
+        }`}
           />
           {InputProps.endAdornment && (
             <div className="absolute inset-y-0 right-2 flex items-center">

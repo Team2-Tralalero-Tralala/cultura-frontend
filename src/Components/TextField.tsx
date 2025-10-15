@@ -68,6 +68,7 @@ const TextField: React.FC<BaseFieldProps> = ({
   type = "text",
   value,
   name,
+  readOnly,
   onChange,
   error = false,
   helperText = "",
@@ -109,6 +110,7 @@ const TextField: React.FC<BaseFieldProps> = ({
             placeholder={placeholder}
             onChange={onChange}
             value={value}
+            readOnly={readOnly}
             className={`block w-full rounded-form border-1 
             ${
               error

@@ -20,7 +20,7 @@ export async function getCommunities(page = 1, limit = 10) {
  * ดึงรายละเอียดชุมชนตาม ID
  * Mapping: GET /super/community/detail/:communityId
  */
-export async function getCommunityById(id: number) {
+export async function getCommunityDetailById(id: number) {
   return api.get(`/super/community/detail/${id}`);
 }
 

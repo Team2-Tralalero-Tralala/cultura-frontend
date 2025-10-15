@@ -9,7 +9,7 @@
 import { Icon } from "@iconify/react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getCommunityById } from "@/Libs/CommunityService";
+import { getCommunityDetailById } from "@/Libs/CommunityService";
 
 // =========================
 // Helpers: แสดงค่า / วันที่
@@ -317,7 +317,7 @@ export default function CommunityDetailSuperAdmin() {
     if (!id) return;
     (async () => {
       try {
-        const res = await getCommunityById(Number(id));
+        const res = await getCommunityDetailById(Number(id));
         setCommunity(res?.data?.data);
       } catch (err: any) {
         setError(err?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");

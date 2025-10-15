@@ -54,7 +54,17 @@ function App() {
         theme="light"
       />
     </>
-  );
+  )
 }
 
-export default App;
+function nav_sam() {
+  return (
+    <>
+      <NavbarSam />
+    </>
+  
+  )
+}
+
+export default  nav_tourist;
+

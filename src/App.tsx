@@ -13,6 +13,12 @@ import LoginTourist from "./Pages/LoginTourist";
 import LoginAdmin from "./Pages/LoginAdmin";
 
 function App() {
+  const [query, setQuery] = useState("");
+
+  const searchBar = (value: string) => {
+    console.log("ค้นหาแพ็กเกจกิจกรรม:", value);
+  };
+
   return (
     <Routes>
       <Route path="/guest/*">

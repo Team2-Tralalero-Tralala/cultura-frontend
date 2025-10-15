@@ -18,10 +18,12 @@ import type {
 } from "@/Components/Tables/Types";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SerachBarTable";
-import FilterDropdown from "@/Components/Filters";
-import { api } from "@/Libs/axios";
+// import FilterDropdown from "@/Components/Filters";
 
-import { fetchCommunitiesByRole } from "@/Services/community-services";
+// ✅ ใช้ service ใหม่ (คืน PaginationResponse<CommunityRow>)
+import { getCommunities, deleteCommunity } from "@/Services/CommunityService";
+
+// ✅ ใช้ type จาก src/Types/Community.ts
 import type { CommunityRow } from "@/Types/Community";
 
 // ====== util ======
@@ -36,7 +38,7 @@ const columns: Column<CommunityRow>[] = [
     className: "min-w-[240px]",
     render: (r) => (
       <Link
-        to={`/super/community/detail/${r.id}`}
+        to={`/super/community/detail/${r.id}`} // ✅ path ของ backend คุณ
         className="text-dark-green hover:underline font-medium inline-block max-w-full truncate"
         onClick={(e) => e.stopPropagation()}
       >
@@ -89,13 +91,14 @@ export default function ManageCommunitySuperAdmin() {
     { label: "ปิด", value: "closed" },
   ];
 
-  // ====== โหลดข้อมูล ======
+  // ====== โหลดข้อมูล (ใช้ getCommunities -> คืน PaginationResponse<CommunityRow>) ======
   const reload = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const { rows, total } = await fetchCommunitiesByRole("superadmin", currentPage, pageSize);
-      setRows(rows);
+
+      const { items, total } = await getCommunities(currentPage, pageSize);
+      setRows(items);
       setTotalItems(total);
     } catch (e: any) {
       setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -147,8 +150,8 @@ export default function ManageCommunitySuperAdmin() {
       delete: async (row) => {
         if (!window.confirm(`ยืนยันลบชุมชน "${row.name}" ?`)) return;
         try {
-          // NOTE: สมมติใช้ PATCH ลบแบบ soft-delete เหมือนแพ็กเกจ (เปลี่ยนตาม backend จริง)
-          await api.patch(`/super/community/${row.id}`);
+          // ✅ ใช้ service ของเรา (soft-delete ผ่าน PATCH)
+          await deleteCommunity(row.id);
           await reload();
         } catch (error: any) {
           console.error(error);
@@ -169,12 +172,12 @@ export default function ManageCommunitySuperAdmin() {
             <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
-          {/* 🔽 ตัวกรองสถานะ อยู่ "ข้างๆ" searchbar */}
+          {/* 🔽 ตัวกรองสถานะ อยู่ "ข้างๆ" searchbar
           <FilterDropdown
             options={statusOptions}
             selected={statusFilter}
             onChange={(v) => setStatusFilter(v as typeof statusFilter)}
-          />
+          /> */}
 
           <div className="ml-auto">
             <button

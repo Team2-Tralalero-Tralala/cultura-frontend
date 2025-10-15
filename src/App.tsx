@@ -1,42 +1,61 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-
-// Layouts
+import { Route, Routes } from "react-router";
 import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
 
-// Public pages
-import LoginAdmin from "./Pages/LoginAdmin";
+import AdminLayout from "./Layouts/Admin/AdminLayout";
+import AdminRoutes from "./Layouts/Admin/AdminRoutes";
+
+import MemberLayout from "./Layouts/Member/MemberLayout";
+import MemberRoutes from "./Layouts/Member/MemberRoutes";
+
+import ProtectedRoute from "./Libs/ProtectedRoute";
 import LoginTourist from "./Pages/LoginTourist";
-import RoleRedirect from "./Libs/RoleRedirect";
+import LoginAdmin from "./Pages/LoginAdmin";
 
-// Guards
-import ProtectedRoute from "./Libs/ProtectRoute";
-
-// Superadmin pages
-import ManageCommunitySuperAdmin from "./Pages/SuperAdmin/ManageCommunitySuperAdmin";
-import CommunityDetailSuperAdmin from "./Pages/SuperAdmin/CommunityDetailSuperAdmin";
-
-export default function App() {
+function App() {
   return (
     <Routes>
-      {/* Public */}
-      <Route path="/guest/login" element={<LoginTourist />} />
-      <Route path="/guest/partner/login" element={<LoginAdmin />} />
-
-      {/* Root → redirect by role */}
-      <Route index element={<RoleRedirect />} />
-
-      {/* Superadmin (protected) */}
-      <Route element={<ProtectedRoute allow={["superadmin"]} redirectTo="/guest/partner/login" />}>
-        <Route path="/super" element={<SuperAdminLayout />}>
-          <Route path="communities" element={<ManageCommunitySuperAdmin />} />
-           <Route path="community/detail/:id" element={<CommunityDetailSuperAdmin />} />
-          
-        </Route>
+      <Route path="/guest/*">
+        <Route path="login" element={<LoginTourist />} />
+        <Route path="partner/login" element={<LoginAdmin />} />
       </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="/super/*"
+        element={
+          <ProtectedRoute allow={["superadmin"]}>
+            <SuperAdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="*" element={<SuperAdminRoutes />} />
+      </Route>
+
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute allow={["admin"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* เส้นทางภายใน /super/ ทั้งหมด */}
+        <Route path="*" element={<AdminRoutes />} />
+      </Route>
+      <Route
+        path="/member/*"
+        element={
+          <ProtectedRoute allow={["member"]}>
+            <MemberLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="*" element={<MemberRoutes />} />
+      </Route>
+
+      {/* fallback */}
     </Routes>
   );
 }
 
+export default App;

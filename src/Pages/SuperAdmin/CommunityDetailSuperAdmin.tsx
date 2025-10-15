@@ -9,7 +9,7 @@
 import { Icon } from "@iconify/react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchCommunityDetail } from "@/Services/community-services";
+import { fetchCommunityDetail } from "@/Services/CommunityService";
 
 // ==== utils ====
 const show = (v?: string | null) => (v && String(v).trim() ? v : "-");

@@ -11,7 +11,7 @@ import { AuthContext } from "../Libs/AuthProvider";
 import CircularProgress from "@mui/material/CircularProgress";
 import React, { useContext, useState } from "react";
 import { z } from "zod";
-import ModalBlocked from "./ModalBlocked";
+import ModalBlocked from "./Modal/ModalBlocked";
 
 const loginSchema = z.object({
   username: z.string().min(1, "กรุณาป้อนอีเมล"),

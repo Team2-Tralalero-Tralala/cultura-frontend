@@ -11,10 +11,10 @@ const SuperAdminLayout: React.FC = () => {
 
       {/* 🔹 ส่วนขวา: Navbar + Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* ✅ Navbar ด้านบน */}
+        {/*  Navbar ด้านบน */}
         <NavbarSam />
 
-        {/* ✅ เนื้อหาหลักของหน้า */}
+        {/*  เนื้อหาหลักของหน้า */}
         <main className="flex-1 overflow-y-auto px-8 py-6">
           <Outlet />
         </main>

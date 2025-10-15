@@ -1,11 +1,13 @@
-// src/Pages/Member/CreatePackageMember.tsx
+// src/Pages/SuperAdmin/EditPackagePage.tsx
 /**
- * - หน้าสร้างแพ็กเกจ (บทบาท Member)
- * - เพิ่มระบบ validate ด้วย Zod ให้แสดงกรอบแดง/ข้อความช่วยใต้ช่องเหมือนหน้า Create Community
+ * - หน้าแก้ไขแพ็กเกจ (บทบาท Superadmin)
+ * - ดึงรายละเอียดแพ็กเกจด้วย /super/package/:id แล้วเติมฟอร์ม
+ * - ใช้ Zod validate แบบเดียวกับหน้า Create
+ * - ส่งอัปเดตด้วย PUT /super/package/:id
  */
 
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
 import TextField from "../../Components/TextField";
@@ -46,6 +48,19 @@ function toTimeInput(input?: string | Date | null) {
     const hh = String(d.getHours()).padStart(2, "0");
     const mm = String(d.getMinutes()).padStart(2, "0");
     return `${hh}:${mm}`;
+}
+function toDateOnly(input?: string | Date | null) {
+    if (!input) return "";
+    if (typeof input === "string") {
+        const m = input.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+    }
+    const d = new Date(input as any);
+    if (isNaN(d.getTime())) return "";
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
 }
 
 type PackageForm = {
@@ -114,7 +129,7 @@ const initialFormState: PackageForm = {
     addHomestay: false,
 };
 
-// ================== ZOD SCHEMA (สไตล์เดียวกับหน้า Create Community) ==================
+// ================== ZOD SCHEMA ==================
 const packageSchema = z.object({
     name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
     description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
@@ -124,7 +139,7 @@ const packageSchema = z.object({
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกอำเภอ / เขต"),
     subDistrict: z.string().min(1, "กรุณาเลือกตำบล / แขวง"),
-    postalCode: z.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+    postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
 
     latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
     longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
@@ -147,11 +162,13 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-export const CreatePackagePage: React.FC = () => {
+export const EditPackagePage: React.FC = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
 
     const [formState, setFormState] = useState<PackageForm>(initialFormState);
     const [isSaving, setIsSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -184,7 +201,6 @@ export const CreatePackagePage: React.FC = () => {
         } else {
             setFormErrors({});
         }
-        // เงื่อนไขช่วงเปิด/ปิดการจอง และสิ้นสุดกิจกรรม
         if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
             setFormErrors((prev) => ({
                 ...prev,
@@ -199,7 +215,6 @@ export const CreatePackagePage: React.FC = () => {
             }));
             ok = false;
         }
-        // ถ้าเลือกที่พัก บังคับกรอกชุดวันเวลา (validate เฉพาะจุดแสดงใต้ TextField)
         if (selectedHomestay) {
             if (!hsCheckInDate) {
                 (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
@@ -342,7 +357,6 @@ export const CreatePackagePage: React.FC = () => {
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [videoFiles, setVideoFiles] = useState<File[]>([]);
 
-    // click-outside สำหรับกล่องค้นหาที่พัก
     React.useEffect(() => {
         const onDown = (e: MouseEvent) => {
             if (homestayBoxRef.current && !homestayBoxRef.current.contains(e.target as Node)) {
@@ -391,7 +405,6 @@ export const CreatePackagePage: React.FC = () => {
         setHomestayQuery("");
         setHomestayOptions([]);
         setOpenHomestayBox(false);
-        // เก็บ id ลงฟอร์มไว้ส่ง (no-op กัน TS บ่น ไม่แก้โครงสร้าง)
         setFormField("tagId" as any, formState.tagId);
     };
 
@@ -438,22 +451,116 @@ export const CreatePackagePage: React.FC = () => {
         setHsCheckOutTime("");
     };
 
+    // ========= Load package detail =========
+    useEffect(() => {
+        let mounted = true;
+        async function load() {
+            try {
+                setLoading(true);
+                const res = await axios.get(`${apiUrl}/super/package/${id}`, {
+                    withCredentials: true,
+                });
+                const p = res?.data?.data;
+
+                if (!mounted || !p) return;
+
+                // map basic
+                const location = p.location ?? {};
+                const tags = (p.tagPackages ?? []).map((tp: any) => tp.tag).filter(Boolean);
+
+                // homestay (ใช้รายการแรกหากมี)
+                const hs = Array.isArray(p.homestayHistories) && p.homestayHistories.length > 0
+                    ? p.homestayHistories[0]
+                    : null;
+
+                setFormState({
+                    name: p.name ?? "",
+                    description: p.description ?? "",
+                    houseNumber: location.houseNumber ?? "",
+                    villageNumber: location.villageNumber != null ? String(location.villageNumber) : "",
+                    province: location.province ?? "",
+                    district: location.district ?? "",
+                    subDistrict: location.subDistrict ?? "",
+                    postalCode: location.postalCode ?? "",
+                    addressDetail: location.detail ?? "",
+                    latitude: location.latitude != null ? String(location.latitude) : "",
+                    longitude: location.longitude != null ? String(location.longitude) : "",
+                    placeQuery: "",
+
+                    overseerMemberId: p.overseerMemberId != null ? String(p.overseerMemberId) : "",
+                    tagId: "",
+                    facility: p.warning ?? "",
+
+                    startDate: toDateOnly(p.startDate),
+                    startTime: toTimeInput(p.startDate),
+                    endDate: toDateOnly(p.dueDate),
+                    endTime: toTimeInput(p.dueDate),
+                    openDate: toDateOnly(p.openBookingAt),
+                    openTime: toTimeInput(p.openBookingAt),
+                    closeDate: toDateOnly(p.closeBookingAt),
+                    closeTime: toTimeInput(p.closeBookingAt),
+
+                    capacity: p.capacity != null ? String(p.capacity) : "",
+                    price: p.price != null ? String(p.price) : "",
+                    addHomestay: !!hs,
+                });
+
+                // ตั้งชื่อผู้ดูแลเริ่มต้นในช่องค้นหา (อ่านได้อย่างเดียว)
+                if (p.overseerPackage) {
+                    setMemberQuery(`${p.overseerPackage.fname ?? ""} ${p.overseerPackage.lname ?? ""}`.trim());
+                }
+
+                // ตั้งแท็กเริ่มต้น
+                setSelectedTags(
+                    (tags as any[]).map((t) => ({ id: Number(t.id), name: t.name ?? "" }))
+                );
+
+                // ตั้งค่า homestay และเวลา (ถ้ามี)
+                if (hs?.homestay) {
+                    setSelectedHomestay({
+                        id: Number(hs.homestay.id),
+                        name: hs.homestay.name ?? "",
+                        facility: hs.homestay.facility ?? "",
+                        images: hs.homestay.homestayImage ?? [],
+                    });
+                }
+                if (hs?.checkInTime) {
+                    setHsCheckInDate(toDateOnly(hs.checkInTime));
+                    setHsCheckInTime(toTimeInput(hs.checkInTime));
+                }
+                if (hs?.checkOutTime) {
+                    setHsCheckOutDate(toDateOnly(hs.checkOutTime));
+                    setHsCheckOutTime(toTimeInput(hs.checkOutTime));
+                }
+            } catch (e: any) {
+                console.error("Load package detail error:", e?.response?.data || e);
+                setErrorMessage(
+                    e?.response?.data?.message || e?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ"
+                );
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [id]);
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        if (!id) return;
 
-        // ให้เบราว์เซอร์ตรวจ required/ชนิด input ก่อน
         const formEl = e.currentTarget;
         if (!formEl.reportValidity()) return;
 
-        // ตรวจด้วย Zod + เงื่อนไขเสริม ก่อนแสดง confirm
         if (!validateAll()) {
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
 
-        if (!window.confirm("ยืนยันการสร้างแพ็กเกจใช่หรือไม่?")) return;
+        if (!window.confirm("ยืนยันการบันทึกการแก้ไขแพ็กเกจใช่หรือไม่?")) return;
 
-        // (คง custom validation เดิมต่อจากนี้)
         if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
             setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -477,8 +584,7 @@ export const CreatePackagePage: React.FC = () => {
                 capacity: Math.max(1, Number(formState.capacity || 0)),
                 price: Math.max(0, Number(formState.price || 0)),
                 warning: normalizeOrDefault(formState.facility),
-                statusPackage: "DRAFT" as const,
-                statusApprove: "PENDING" as const,
+                // สถานะคงเดิมตามระบบของคุณ หรือให้แก้ในหน้าอื่น
                 startDate: normalizeOrDefault(formState.startDate),
                 dueDate: normalizeOrDefault(formState.endDate),
                 ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
@@ -487,6 +593,7 @@ export const CreatePackagePage: React.FC = () => {
                 closeBookingAt: normalizeOrDefault(formState.closeDate),
                 ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
                 ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
+
                 ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
                 ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
                 ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
@@ -509,20 +616,20 @@ export const CreatePackagePage: React.FC = () => {
                 },
             };
 
-            await axios.post(`${apiUrl}/member/package`, payload, {
+            await axios.put(`${apiUrl}/super/package/${id}`, payload, {
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
             });
 
-            alert("สร้างแพ็กเกจสำเร็จ!");
-            navigate("/member/packages/all");
+            alert("บันทึกแพ็กเกจสำเร็จ!");
+            navigate("/super/packages/all");
         } catch (error: any) {
-            console.error("Create package (member) error:", error?.response?.data);
+            console.error("Edit package (superadmin) error:", error?.response?.data);
             setErrorMessage(
                 error?.response?.data?.message ||
                 error?.response?.data?.error ||
                 error?.message ||
-                "สร้างแพ็กเกจไม่สำเร็จ"
+                "บันทึกแพ็กเกจไม่สำเร็จ"
             );
             window.scrollTo({ top: 0, behavior: "smooth" });
         } finally {
@@ -550,12 +657,12 @@ export const CreatePackagePage: React.FC = () => {
             >
                 <button
                     type="button"
-                    onClick={() => navigate("/member/packages/all")}
+                    onClick={() => navigate("/super/packages/all")}
                     className="inline-flex items-center gap-2 text-xl mb-1 group"
                     aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
-                    >
-                    <Icon icon="mingcute:arrow-left-line" width={22}/>
-                    <span>สร้างแพ็กเกจ</span>
+                >
+                    <Icon icon="mingcute:arrow-left-line" width={22} />
+                    <span>{loading ? "กำลังโหลด..." : "แก้ไขแพ็กเกจ"}</span>
                 </button>
 
                 {/* ชื่อ/คำอธิบาย */}
@@ -634,7 +741,7 @@ export const CreatePackagePage: React.FC = () => {
                                     validateField("postalCode", loc.postalCode ?? "");
                                 }}
                             />
-                            {/* แสดง error ใต้ selector (ใช้ field แยก) */}
+                            {/* แสดง error ใต้ selector */}
                             <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
                                 <div>
                                     {!!formErrors.province && (
@@ -671,7 +778,6 @@ export const CreatePackagePage: React.FC = () => {
                                 error={!!formErrors?.addressDetail}
                                 helperText={formErrors?.addressDetail}
                             />
-
                         </div>
 
                         {/* Map Picker */}
@@ -767,16 +873,15 @@ export const CreatePackagePage: React.FC = () => {
                 <section>
                     <div className="md:col-span-2">
                         <TextArea
-                            id="addressDetail"
+                            id="facility"
                             label="สิ่งอำนวยความสะดวก"
                             required
                             placeholder="สิ่งอำนวยความสะดวก"
                             value={formState.facility}
-                            onChange={(e) => setFormField("addressDetail", e.target.value)}
+                            onChange={(e) => setFormField("facility", e.target.value)}
                             error={!!formErrors?.facility}
                             helperText={formErrors?.facility}
                         />
-
                         {!!formErrors.facility && (
                             <div className="text-red-600 text-sm mt-1">{formErrors.facility}</div>
                         )}
@@ -887,8 +992,7 @@ export const CreatePackagePage: React.FC = () => {
                                     onChange={(e) => setTagQuery(e.target.value)}
                                     onFocus={() =>
                                         setOpenTagBox(
-                                            tagQuery.trim().length >= MIN_TAG_QUERY_CHARS &&
-                                            tagOptions.length > 0
+                                            tagQuery.trim().length >= MIN_TAG_QUERY_CHARS && tagOptions.length > 0
                                         )
                                     }
                                     onKeyDown={(e) => {
@@ -917,6 +1021,7 @@ export const CreatePackagePage: React.FC = () => {
                             )}
                         </div>
 
+                        {/* แสดงแท็กที่เลือกแล้ว (โหลดมาจาก server + เพิ่มใหม่) */}
                         {selectedTags.length > 0 && (
                             <div className="flex flex-wrap gap-2 pt-1">
                                 {selectedTags.map((t) => (
@@ -954,7 +1059,7 @@ export const CreatePackagePage: React.FC = () => {
                     />
                 </section>
 
-                {/* สื่อแพ็กเกจ */}
+                {/* สื่อแพ็กเกจ (ยังไม่ bind ไฟล์เดิม — ใช้สำหรับอัปโหลดเพิ่ม/แทน) */}
                 <section className="space-y-6">
                     <div className="space-y-2">
                         <label className="block text-base font-semibold">
@@ -1145,9 +1250,7 @@ export const CreatePackagePage: React.FC = () => {
 
                                         {selectedHomestay.facility && (
                                             <div>
-                                                <div className="font-semibold mb-1">
-                                                    สิ่งอำนวยความสะดวกที่พัก
-                                                </div>
+                                                <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
                                                 <ul className="list-disc pl-5 space-y-1">
                                                     {selectedHomestay.facility
                                                         .split(/[,•\n]/)
@@ -1170,20 +1273,20 @@ export const CreatePackagePage: React.FC = () => {
                 </section>
 
                 <div className="flex justify-end mt-2.5 gap-2">
-  <div className="w-36">
-    <Button type="cancel" onClick={() => navigate(-1)}>
-      ยกเลิก
-    </Button>
-  </div>
-  <div className="w-36">
-    <Button type="confirm-admin" htmlType="submit">
-      {isSaving ? "กำลังบันทึก..." : "สร้าง"}
-    </Button>
-  </div>
-</div>
+                    <div className="w-36">
+                        <Button type="cancel" onClick={() => navigate(-1)}>
+                            ยกเลิก
+                        </Button>
+                    </div>
+                    <div className="w-36">
+                        <Button type="confirm-admin" htmlType="submit">
+                            {isSaving ? "กำลังบันทึก..." : "บันทึก"}
+                        </Button>
+                    </div>
+                </div>
             </form>
         </div>
     );
 };
 
-export default CreatePackagePage;
+export default EditPackagePage;

@@ -137,7 +137,7 @@ export default function ManagePackageSuperAdmin() {
             variant: "icons",
             items: () => ["edit", "delete"],
             callbacks: {
-                edit: (row) => navigate(`/super/package/${row.id}`),
+                edit: (row) => navigate(`/super/package/edit/${row.id}`),
                 delete: async (row) => {
                     if (!window.confirm(`ยืนยันลบแพ็กเกจ "${row.title}" ?`)) return;
                     try {

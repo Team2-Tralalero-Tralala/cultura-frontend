@@ -147,7 +147,7 @@ export default function ManagePackagePage() {
             variant: "icons",
             items: () => ["edit", "delete"],
             callbacks: {
-                edit: (row) => navigate(`/member/package/${row.id}`),
+                edit: (row) => navigate(`/member/package/edit/${row.id}`),
                 delete: async (row) => {
                     if (!window.confirm(`ยืนยันลบแพ็กเกจ "${row.title}" ?`)) return;
                     try {

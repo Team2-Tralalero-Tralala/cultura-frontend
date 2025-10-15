@@ -26,7 +26,7 @@ if (import.meta.env.DEV) {
 }
 export default function App() {
   return (
-    <Routes>
+    <><Routes>
       {/* ================= Superadmin ================= */}
       <Route path="/super" element={<SuperAdminLayout />}>
         <Route path="ping" element={<div style={{ color: 'black' }}>PING OK</div>} />
@@ -46,6 +46,7 @@ export default function App() {
         <Route path="package" element={<CreatePackageAdmin />} />
         <Route path="package/:id" element={<EditPackageAdmin />} />
       </Route>
-    </Routes>
+    </Routes><>
+      </></>
   );
 }

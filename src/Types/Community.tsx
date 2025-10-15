@@ -1,4 +1,4 @@
-// แถวข้อมูลแต่ละรายการในตาราง
+// แถวข้อมูลแต่ละรายการในตาราง (พร้อมแสดงผล)
 export type CommunityRow = {
   id: number;
   name: string;
@@ -7,7 +7,7 @@ export type CommunityRow = {
   status: string; // OPEN | CLOSED
 };
 
-// รูปแบบข้อมูลที่ได้จาก API (ตรงกับ Prisma Service)
+// โครงสร้างข้อมูลจาก API (ตรงกับ Prisma Service ฝั่ง backend)
 export type CommunityDtoFromApi = {
   id: number;
   name: string;
@@ -16,7 +16,7 @@ export type CommunityDtoFromApi = {
   status: string;
 };
 
-// โครงสร้าง Pagination Response เหมือนเดิม
+// โครงสร้าง Pagination Response (ข้อมูล + pagination)
 export type PaginationResponse<T> = {
   items: T[];
   total: number;

@@ -39,10 +39,12 @@ import "./index.css"; // ต้องมี @tailwind base/components/utilities
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AuthProvider>
       <BrowserRouter>
+
+    <AuthProvider>
         <App />
-      </BrowserRouter>
     </AuthProvider>
+      </BrowserRouter>
+
   </React.StrictMode>
 );

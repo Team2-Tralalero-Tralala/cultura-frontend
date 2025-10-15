@@ -10,10 +10,10 @@ export default function SuperAdminLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-50">
-        {/* 🔹 ใส่ Navbar ตรงนี้ */}
+        {/*ใส่ Navbar ตรงนี้ */}
         <NavbarSam />
 
-        {/* 🔹 แสดงเนื้อหาหน้าปัจจุบัน */}
+        {/*แสดงเนื้อหาหน้าปัจจุบัน */}
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>

@@ -1,6 +1,5 @@
-// src/Pages/SuperAdmin/ManageCommunitySuperAdmin.tsx
 /**
- * จัดการชุมชน (Super Admin หน้าตาราง)
+ * จัดการชุมชน (Super Admin)
  * - แสดงตารางชุมชน: ชื่อชุมชน / จังหวัด / สถานะ / ผู้ดูแล
  * - ค้นหา + ตัวกรองสถานะ
  * - เลือกหลายแถว, ลบทั้งหมด
@@ -10,6 +9,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+// 1) จัดกลุ่ม import: UI Components -> Types -> Libs
 import DataTable from "@/Components/Tables/Index";
 import type {
   Column,
@@ -17,32 +17,49 @@ import type {
   BulkAction,
 } from "@/Components/Tables/Types";
 import { TrashIcon } from "@/Components/Tables/Icon";
-import SearchBarTable from "@/Components/Search/SerachBarTable";
-// import FilterDropdown from "@/Components/Filters";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 
-// ✅ ใช้ service ใหม่ (คืน PaginationResponse<CommunityRow>)
-import { getCommunities, deleteCommunity } from "@/Services/CommunityService";
-
-// ✅ ใช้ type จาก src/Types/Community.ts
 import type { CommunityRow } from "@/Types/Community";
+import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
 
-// ====== util ======
+// ================= Utility =================
+// (แนะนำ) ถ้ามีใช้ซ้ำหลายหน้า ควรย้ายไป utils/string.ts แล้ว import มาใช้
 const normalizeText = (s: string) =>
-  (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+  (s ?? "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim();
 
-// ====== คอลัมน์ตาราง ======
+// ================= Types =================
+// ✅ สร้าง type สำหรับข้อมูลที่มาจาก API แทน any
+type ApiCommunity = {
+  id: number;
+  name?: string | null;
+  status?: "OPEN" | "CLOSED" | string | null;
+  location?: { province?: string | null } | null;
+  admin?: { fname?: string | null; lname?: string | null } | null;
+};
+
+// ✅ แยกชนิดตัวกรอง สะอาดและปลอดภัยกว่า cast
+type StatusFilter = "all" | "open" | "closed";
+
+// ================= คอลัมน์ตาราง =================
 const columns: Column<CommunityRow>[] = [
   {
     key: "name",
     header: "ชื่อชุมชน",
     className: "min-w-[240px]",
-    render: (r) => (
+    // ✅ ใช้ชื่อแปร row เพื่ออ่านง่ายตอนรีวิว
+    render: (row) => (
       <Link
-        to={`/super/community/detail/${r.id}`} // ✅ path ของ backend คุณ
+        to={`/super/community/detail/${row.id}`}
         className="text-dark-green hover:underline font-medium inline-block max-w-full truncate"
         onClick={(e) => e.stopPropagation()}
       >
-        {r.name}
+        {row.name}
       </Link>
     ),
   },
@@ -50,12 +67,13 @@ const columns: Column<CommunityRow>[] = [
   {
     key: "status",
     header: "สถานะ",
-    render: (r) => (String(r.status).toUpperCase() === "OPEN" ? "เปิด" : "ปิด"),
+    render: (row) =>
+      String(row.status).toUpperCase() === "OPEN" ? "เปิด" : "ปิด",
   },
   { key: "admin", header: "ผู้ดูแล" },
 ];
 
-// ====== Bulk actions (ลบทั้งหมด) ======
+// ================= Bulk Actions =================
 const bulkActions: BulkAction<CommunityRow>[] = [
   {
     id: "bulk-delete",
@@ -64,17 +82,18 @@ const bulkActions: BulkAction<CommunityRow>[] = [
     intent: "neutral",
     confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
     onClick: async (rows) => {
-      const ids = rows.map((r) => r.id);
+      const ids = rows.map((row) => row.id);
       console.log("bulk delete:", ids);
-      // TODO: เรียก API ลบแบบกลุ่ม ถ้ามี endpoint เช่น /super/communities/bulk
+      // TODO: endpoint ลบแบบกลุ่มถ้ามี
     },
   },
 ];
 
+// ================= Component =================
 export default function ManageCommunitySuperAdmin() {
   const navigate = useNavigate();
 
-  // ====== state ตาราง ======
+  // ====== State ======
   const [rows, setRows] = useState<CommunityRow[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -84,23 +103,50 @@ export default function ManageCommunitySuperAdmin() {
 
   // ====== ค้นหา + ตัวกรอง ======
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
-  const statusOptions = [
-    { label: "ทั้งหมด", value: "all" },
-    { label: "เปิด", value: "open" },
-    { label: "ปิด", value: "closed" },
-  ];
+  // ✅ ใช้ชนิด StatusFilter ชัดเจน
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  // ====== โหลดข้อมูล (ใช้ getCommunities -> คืน PaginationResponse<CommunityRow>) ======
+  // ✅ ทำ options เป็น const เพื่อให้ type inference ชัด และไม่ re-create ทุก render
+  const statusOptions = useMemo(
+    () =>
+      [
+        { label: "ทั้งหมด", value: "all" },
+        { label: "เปิด", value: "open" },
+        { label: "ปิด", value: "closed" },
+      ] as const,
+    []
+  );
+
+  // ====== โหลดข้อมูลจาก API ======
   const reload = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const { items, total } = await getCommunities(currentPage, pageSize);
-      setRows(items);
-      setTotalItems(total);
+      const res = await getCommunities(currentPage, pageSize);
+      const payload = res.data?.data;
+
+      // ดึง array ออกมา
+      const list: ApiCommunity[] = Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+      const pg = payload?.pagination ?? {};
+
+      // map ให้ตรงกับ type CommunityRow
+      const mapped: CommunityRow[] = list.map((c) => ({
+        id: c.id,
+        name: c.name ?? "-",
+        province: c.location?.province ?? "-",
+        status: c.status ?? "CLOSED",
+        admin: c.admin
+          ? `${c.admin.fname ?? ""} ${c.admin.lname ?? ""}`.trim()
+          : "-",
+      }));
+
+      setRows(mapped);
+      setTotalItems(pg?.totalCount ?? mapped.length);
     } catch (e: any) {
+      console.error(e);
       setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
@@ -111,24 +157,24 @@ export default function ManageCommunitySuperAdmin() {
     reload();
   }, [reload]);
 
-  // เปลี่ยนคำค้น/ตัวกรอง → กลับหน้า 1
+  // ====== ถ้ามีการเปลี่ยน search หรือ filter → กลับหน้า 1 ======
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
 
-  // ====== รวมตัวกรอง: คำค้น + สถานะ ======
+  // ====== กรองข้อมูลก่อนแสดง ======
   const filteredRows = useMemo(() => {
     const q = normalizeText(searchQuery);
 
-    return rows.filter((r) => {
-      // 1) ค้นหาจากหลายฟิลด์
-      const haystacks = [r.name, r.province, r.admin, r.status].map((v) =>
-        normalizeText(String(v ?? ""))
+    return rows.filter((row) => {
+      // ค้นหาจากหลายฟิลด์
+      const haystacks = [row.name, row.province, row.admin, row.status].map(
+        (v) => normalizeText(String(v ?? ""))
       );
       const passSearch = !q || haystacks.some((h) => h.includes(q));
 
-      // 2) กรองสถานะ
-      const s = (r.status ?? "").toString().toUpperCase(); // "OPEN" | "CLOSED"
+      // กรองสถานะ
+      const s = (row.status ?? "").toString().toUpperCase();
       const passStatus =
         statusFilter === "all" ||
         (statusFilter === "open" && s === "OPEN") ||
@@ -138,7 +184,7 @@ export default function ManageCommunitySuperAdmin() {
     });
   }, [rows, searchQuery, statusFilter]);
 
-  // ====== การกระทำต่อแถว (แก้ไข/ลบ) ======
+  // ====== Actions ต่อแถว ======
   const rowActions: DataTableActionsConfig<CommunityRow> = {
     header: "จัดการ",
     align: "right",
@@ -146,44 +192,52 @@ export default function ManageCommunitySuperAdmin() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/super/community/detail/${row.id}`), // ✅ path ที่ถูก
+      edit: (row) => navigate(`/super/community/detail/${row.id}`),
       delete: async (row) => {
         if (!window.confirm(`ยืนยันลบชุมชน "${row.name}" ?`)) return;
         try {
-          // ✅ ใช้ service ของเรา (soft-delete ผ่าน PATCH)
           await deleteCommunity(row.id);
           await reload();
         } catch (error: any) {
           console.error(error);
-          alert(`ลบไม่สำเร็จ: ${error?.message ?? "unknown error"}`);
+          alert(
+            `ลบไม่สำเร็จ: ${
+              error?.response?.data?.message ?? error?.message ?? "unknown error"
+            }`
+          );
         }
       },
     },
   };
 
+  // ================= Render =================
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl">จัดการชุมชน</h1>
+        <h1 className="text-2xl font-semibold">จัดการชุมชน</h1>
 
         {/* Toolbar: Search + Filter + Add */}
         <div className="flex items-center gap-3">
           <div className="max-w-md">
-            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
-          {/* 🔽 ตัวกรองสถานะ อยู่ "ข้างๆ" searchbar
+          {/* Filter (อยู่ขวาของ search) */}
           <FilterDropdown
-            options={statusOptions}
+            options={statusOptions as unknown as { label: string; value: string }[]}
             selected={statusFilter}
-            onChange={(v) => setStatusFilter(v as typeof statusFilter)}
-          /> */}
+            onChange={(v) => setStatusFilter(v as StatusFilter)}
+          />
 
           <div className="ml-auto">
             <button
               onClick={() => navigate("/super/community/create")}
-              className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white
-                         bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
+              // (แนะนำ) ถ้ามี theme ให้ใช้คลาสแบรนด์แทน hex
+              className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
+              aria-label="เพิ่มชุมชนใหม่"
             >
               <span>+ เพิ่มชุมชน</span>
             </button>
@@ -191,12 +245,16 @@ export default function ManageCommunitySuperAdmin() {
         </div>
       </div>
 
-      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
+      {/* Error */}
+      {errorMessage && (
+        <div className="text-sm text-red-600">{errorMessage}</div>
+      )}
 
+      {/* Table */}
       <DataTable<CommunityRow>
         data={filteredRows}
         columns={columns}
-        getRowKey={(r) => r.id}
+        getRowKey={(row) => row.id}
         actions={rowActions}
         bulkActions={bulkActions}
         selectable
@@ -206,7 +264,6 @@ export default function ManageCommunitySuperAdmin() {
         onPageChange={(p) => setCurrentPage(p)}
         theme="brand"
         className="bg-white rounded-lg"
-        // loading={isLoading}
       />
     </div>
   );

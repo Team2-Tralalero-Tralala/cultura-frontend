@@ -26,7 +26,12 @@ export async function adminLogin() {
         });
         const token = res.data?.data?.token;
         if (token) {
+            // ลบภายหลังถ้าไม่ใช้ cookie นะจ๊ะ
             localStorage.setItem("accessToken", token);
+            document.cookie = `accessToken=${token}; path=/; SameSite=Lax`;
+
+
+            //localStorage.setItem("accessToken", token);
             setAuthToken(token);
             console.info("[DEV] auto login success");
         } else {

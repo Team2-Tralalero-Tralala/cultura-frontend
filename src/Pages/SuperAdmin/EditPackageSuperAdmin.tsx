@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/Pages/SuperAdmin/EditPackage.tsx
 /**
  * คำอธิบาย (Component Header)

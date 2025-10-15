@@ -28,6 +28,7 @@ import MemberSelector, {
 } from "@/Components/Selector/MemberSelector";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -146,7 +147,9 @@ export default function CreateCommuninityPage() {
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
   const [openConfirm, setOpenConfirm] = useState(false);
-
+  const [coverFiles, setCoverFiles] = useState<File[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
    * Input : panel (string)
@@ -430,6 +433,54 @@ export default function CreateCommuninityPage() {
                 error={!!formErrors.mainActivityDescription}
                 helperText={formErrors.mainActivityDescription}
               />
+            </div>
+            <div className="flex col-span-2">
+              <div className="mr-5">
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดรูปภาพเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="image/*"
+                  multiple={false}
+                  value={galleryFiles}
+                  onChange={setGalleryFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
+              </div>
+            </div>
+            <div className="col-span-2">
+              <div className="mr-5">
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดวิดีโอเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="video/*"
+                  multiple={false}
+                  value={videoFiles}
+                  onChange={setVideoFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
+              </div>
             </div>
           </div>
         </AccordionDetails>

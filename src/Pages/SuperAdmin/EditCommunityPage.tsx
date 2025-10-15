@@ -34,6 +34,7 @@ import MemberSelector, {
 import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
 import { Icon } from "@iconify/react";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -154,6 +155,8 @@ export function EditCommunity() {
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
   const [isSubmitting, setIsSubmitting] = React.useState(false); // สำหรับตอนกดบันทึก
+  const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
@@ -671,6 +674,52 @@ export function EditCommunity() {
                     เพิ่มที่พัก
                   </Button>
                 </Link>
+              </div>
+            </div>
+            <div className="flex col-span-2">
+              <div className="mr-5">
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดรูปภาพเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="image/*"
+                  multiple={false}
+                  value={galleryFiles}
+                  onChange={setGalleryFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
+              </div>
+              <div>
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดวิดีโอเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="video/*"
+                  multiple={false}
+                  value={videoFiles}
+                  onChange={setVideoFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
               </div>
             </div>
           </div>

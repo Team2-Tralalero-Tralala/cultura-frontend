@@ -18,12 +18,14 @@ import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/Components/ThailandLocationSelector";
+} from "@/Components/Selector/ThailandLocationSelector";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
 import { createCommunity } from "@/Libs/CommunityService";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
-import MemberSelector from "@/Components/Selector/MemberSelector";
+import MemberSelector, {
+  type Member,
+} from "@/Components/Selector/MemberSelector";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 
@@ -83,9 +85,7 @@ const communitySchema = z.object({
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
 
-  postalCode: z
-    .string("กรุณาเลือกรหัสไปรษณีย์")
-    .min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+  postalCode: z.string("กรุณาเลือกข้อมูล").min(1, "กรุณาเลือกข้อมูล"),
 
   latitude: z
     .string("กรุณากรอกละติจูด")
@@ -146,10 +146,6 @@ export default function CreateCommuninityPage() {
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [alert, setAlert] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
 
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
@@ -157,9 +153,8 @@ export default function CreateCommuninityPage() {
    * Output : อัปเดต state expanded
    */
   const handleChange =
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
       setExpanded(isExpanded ? panel : false);
-    };
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
@@ -170,7 +165,7 @@ export default function CreateCommuninityPage() {
    *    - หากตรวจสอบไม่ผ่าน จะเซ็ตข้อความ error ลงใน formErrors
    *    - คืนค่า boolean แสดงผลการตรวจสอบ (true = ผ่าน, false = ไม่ผ่าน)
    */
-  const validateField = (field?: keyof typeof formData, value?: any) => {
+  const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
     if (field) {
       const result = communitySchema.safeParse({ ...formData, [field]: value });
@@ -227,8 +222,8 @@ export default function CreateCommuninityPage() {
     setFormData(updated);
     validateField(field, value);
   };
-  const memberList = React.useMemo(
-    () => formData.member ?? [],
+  const memberList = React.useMemo<Member[]>(
+    () => (formData.member ?? []).map((id) => ({ id, fname: "", lname: "" })),
     [formData.member]
   );
 
@@ -274,18 +269,11 @@ export default function CreateCommuninityPage() {
 
   return (
     <div>
-      {alert && (
-        <Alert
-          variant="outlined"
-          severity={alert.type}
-          onClose={() => setAlert(null)}
-          className="mb-2"
-        >
-          {alert.message}
-        </Alert>
-      )}
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-bold">เพิ่มวิสาหกิจชุมชน</h1>
+      </div>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0  !bg-white mt-3"
         expanded={expanded === "panel2"}
         onChange={handleChange("panel2")}
       >
@@ -293,6 +281,7 @@ export default function CreateCommuninityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
+          className="!rounded-t-lg "
         >
           <div className="text-xl font-bold">ข้อมูลชุมชน</div>
         </AccordionSummary>
@@ -446,7 +435,7 @@ export default function CreateCommuninityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0 mt-3"
         expanded={expanded === "panel3"}
         onChange={handleChange("panel3")}
       >
@@ -454,6 +443,7 @@ export default function CreateCommuninityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
+          className="!rounded-t-lg "
         >
           <div className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</div>
         </AccordionSummary>
@@ -487,7 +477,31 @@ export default function CreateCommuninityPage() {
             <div className="col-span-2">
               <ThailandLocationSelector
                 value={location}
-                onChange={(loc) => setLocation(loc)}
+                onChange={(loc) => {
+                  setLocation(loc); // เก็บไว้แสดงผลใน selector
+                  setFormData((prev) => ({
+                    ...prev,
+                    province: loc.province,
+                    district: loc.district,
+                    subDistrict: loc.subdistrict,
+                    postalCode: loc.postalCode,
+                  }));
+                  // ตรวจสอบความถูกต้องของ field ที่เกี่ยวข้อง
+                  validateField("province", loc.province);
+                  validateField("district", loc.district);
+                  validateField("subDistrict", loc.subdistrict);
+                  validateField("postalCode", loc.postalCode);
+                }}
+                error={{
+                  province: !!formErrors.province,
+                  district: !!formErrors.district,
+                  subdistrict: !!formErrors.subDistrict,
+                }}
+                helperText={{
+                  province: formErrors.province,
+                  district: formErrors.district,
+                  subdistrict: formErrors.subDistrict,
+                }}
               />
             </div>
             <div className="col-span-2">
@@ -523,7 +537,7 @@ export default function CreateCommuninityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0 mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
       >
@@ -531,6 +545,7 @@ export default function CreateCommuninityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
+          className="!rounded-t-lg "
         >
           <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</div>
         </AccordionSummary>
@@ -678,6 +693,8 @@ export default function CreateCommuninityPage() {
               <AdminSelector
                 value={formData.adminId}
                 onChange={(adminId) => handleValueChange("adminId", adminId)}
+                error={!!formErrors.adminId}
+                helperText={formErrors.adminId}
               />
             </div>
 

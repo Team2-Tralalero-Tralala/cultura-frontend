@@ -19,7 +19,6 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
-// ✅ 1. นำเข้า Backdrop จาก mui
 import Backdrop from "@mui/material/Backdrop";
 import ThailandLocationSelector, {
   type ThailandLocation,

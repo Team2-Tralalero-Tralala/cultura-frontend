@@ -54,47 +54,47 @@ const SidebarAdmin = () => {
     : pathname;
 
   useEffect(() => {
-    if (currentPath.startsWith("/community/stores")) {
-      setActiveMenuKey("community-stores");
-      setOpenDropdown("community");
-    } else if (currentPath.startsWith("/community/homestays")) {
-      setActiveMenuKey("community-homestays");
-      setOpenDropdown("community");
-    } else if (currentPath.startsWith("/community")) {
-      setActiveMenuKey("community");
-      setOpenDropdown("community");
-    } else if (currentPath === "/member/status") {
-      setActiveMenuKey("member-status");
-      setOpenDropdown("members");
-    } else if (currentPath.startsWith("/members")) {
-      setActiveMenuKey("members");
-      setOpenDropdown("members");
-    } else if (currentPath === "/package/requests") {
-      setActiveMenuKey("packages-requests");
-      setOpenDropdown("packages");
-    } else if (currentPath === "/package/draft") {
-      setActiveMenuKey("packages-draft");
-      setOpenDropdown("packages");
-    } else if (currentPath === "/package/histories") {
-      setActiveMenuKey("packages-histories");
-      setOpenDropdown("packages");
-    } else if (currentPath === "/package/feedbacks") {
-      setActiveMenuKey("packages-feedbacks");
-      setOpenDropdown("packages");
-    } else if (currentPath.startsWith("/packages")) {
-      setActiveMenuKey("packages");
-      setOpenDropdown("packages");
-    } else if (currentPath === "/booking/refunds") {
-      setActiveMenuKey("booking-refunds");
-      setOpenDropdown("booking");
-    } else if (currentPath === "/booking/histories") {
-      setActiveMenuKey("booking-histories");
-      setOpenDropdown("booking");
-    } else if (currentPath.startsWith("/booking")) {
-      setActiveMenuKey("booking");
-      setOpenDropdown("booking");
-    } else if (currentPath === "/dashboard") {
-      setActiveMenuKey("dashboard");
+    if (currentPath.startsWith('/community/stores')) {
+      setActiveMenuKey('community-stores');
+      setOpenDropdown('community');
+    } else if (currentPath.startsWith('/community/homestays')) {
+      setActiveMenuKey('community-homestays');
+      setOpenDropdown('community');
+    } else if (currentPath.startsWith('/community')) {
+      setActiveMenuKey('community');
+      setOpenDropdown('community');
+    } else if (currentPath === '/member/status') {
+      setActiveMenuKey('member-status');
+      setOpenDropdown('members');
+    } else if (currentPath.startsWith('/members')) {
+      setActiveMenuKey('members');
+      setOpenDropdown('members');
+    } else if (currentPath === '/package/requests') {
+      setActiveMenuKey('packages-requests');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/package/draft') {
+      setActiveMenuKey('packages-draft');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/package/histories') {
+      setActiveMenuKey('packages-histories');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/package/feedbacks') {
+      setActiveMenuKey('packages-feedbacks');
+      setOpenDropdown('packages');
+    } else if (currentPath.startsWith('/packages')) {
+      setActiveMenuKey('packages');
+      setOpenDropdown('packages');
+    } else if (currentPath === '/booking/refunds') {
+      setActiveMenuKey('booking-refunds');
+      setOpenDropdown('booking');
+    } else if (currentPath === '/booking-histories/done') {
+      setActiveMenuKey('booking-histories');
+      setOpenDropdown('booking');
+    } else if (currentPath.startsWith('/booking')) {
+      setActiveMenuKey('booking');
+      setOpenDropdown('booking');
+    } else if (currentPath === '/dashboard') {
+      setActiveMenuKey('dashboard');
       setOpenDropdown(null);
     } else if (currentPath === "/logs") {
       setActiveMenuKey("logs");
@@ -304,20 +304,8 @@ const SidebarAdmin = () => {
             </button>
             {openDropdown === "booking" && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                {menuLink(
-                  "คำขอคืนเงิน",
-                  "/booking/refunds",
-                  "mdi:cash-refund",
-                  "booking-refunds",
-                  "booking"
-                )}
-                {menuLink(
-                  "ประวัติการจอง",
-                  "/booking/histories",
-                  "mdi:history",
-                  "booking-histories",
-                  "booking"
-                )}
+                {menuLink('คำขอคืนเงิน', '/booking/refunds', 'mdi:cash-refund', 'booking-refunds', 'booking')}
+                {menuLink('ประวัติการจอง', '/booking-histories/done', 'mdi:history', 'booking-histories', 'booking')}
               </div>
             )}
           </div>

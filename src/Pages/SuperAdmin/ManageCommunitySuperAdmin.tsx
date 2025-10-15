@@ -190,6 +190,7 @@ export default function ManageCommunitySuperAdmin() {
     align: "right",
     width: "120px",
     variant: "icons",
+    className: "pr-6", //เอาไว้ขยับ "จัดการ" ให้สวยๆ
     items: () => ["edit", "delete"],
     callbacks: {
       edit: (row) => navigate(`/super/community/detail/${row.id}`),

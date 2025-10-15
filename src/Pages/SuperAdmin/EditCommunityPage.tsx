@@ -30,7 +30,6 @@ import MemberSelector, {
 } from "@/Components/Selector/MemberSelector";
 import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
-import Alert from "@mui/material/Alert";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -154,10 +153,6 @@ export function EditCommunity() {
     13.736717, 100.523186,
   ]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
-  const [alert, setAlert] = React.useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL

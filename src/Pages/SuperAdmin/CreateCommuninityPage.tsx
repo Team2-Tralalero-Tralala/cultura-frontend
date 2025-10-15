@@ -274,6 +274,16 @@ export default function CreateCommuninityPage() {
 
   return (
     <div>
+      {alert && (
+        <Alert
+          variant="outlined"
+          severity={alert.type}
+          onClose={() => setAlert(null)}
+          className="mb-2"
+        >
+          {alert.message}
+        </Alert>
+      )}
       <Accordion
         className="mt-3"
         expanded={expanded === "panel2"}

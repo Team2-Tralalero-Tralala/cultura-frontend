@@ -216,7 +216,7 @@ const EditAccountPage: React.FC = () => {
   };
 
   return (
-    <div className="p-10 h-full bg-transparent">
+    <div className="pl-0 pr-6 pt-6 pb-6 h-full bg-transparent relative">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow max-w-6xl mx-auto text-[15px] space-y-10 border border-gray-200"

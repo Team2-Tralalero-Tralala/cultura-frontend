@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router";
 import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
 
-import AdminLayout from "./Layouts/Admin/AdminLayout";
+import AdminLayout from "./Layouts/Admin/Adminlayout";
 import AdminRoutes from "./Layouts/Admin/AdminRoutes";
 
 
@@ -40,7 +40,6 @@ function App() {
           </ProtectedRoute>
         }
       >
-
 
         {/* เส้นทางภายใน /super/ ทั้งหมด */}
         <Route path="*" element={<AdminRoutes />} />

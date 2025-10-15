@@ -1,20 +1,26 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import SidebarAdmin from "./Components/SidebarAdmin.tsx";
-import BookingDetailAdmin from "./Pages/BookingDetailAdmin.tsx";
-import { memberLogin } from "./Libs/dev-login";
+import SidebarAdmin from "./Components/SidebarAdmin";
+import BookingDetailAdmin from "./Pages/BookingDetailAdmin";
+import NavbarSam from "./Components/NavbarSam";
 
-if (import.meta.env.DEV) {
-  memberLogin();
-}
 
 function App() {
   return (
     <div className="flex h-screen">
       <SidebarAdmin />
-      <Routes>
-        <Route path="/admin/booking/:bookingId" element={<BookingDetailAdmin />}/>
-      </Routes>
+      <div className="flex-1 flex flex-col bg-[#f4f5f7]">
+        <NavbarSam />
+        {/* <BookingDetailAdmin /> */}
+        <div className="flex-1 p-4 overflow-auto">
+          <Routes>
+            <Route
+              path="/admin/booking/:bookingId"
+              element={<BookingDetailAdmin />}
+            />
+          </Routes>
+        </div>
+      </div>
     </div>
   );
 }

@@ -12,6 +12,8 @@ const MemberRoutes: React.FC = () => {
       {/* 
       <Route path="community" element={<CommunityMember />} />
   */}
+      <Route path="package/create" element={<CreatePackagePage />} />
+      <Route path="/packages/all" element={<ManagePackagePage />} />
     </Routes>
   );
 };

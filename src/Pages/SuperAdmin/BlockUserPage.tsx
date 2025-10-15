@@ -1,24 +1,34 @@
 /**
- * ระงับการใช้งาน (Super Admin)
- * - แสดงตารางผู้ใช้ที่ถูกระงับ: ชื่อบัญชี / บทบาท / ช่องทางติดต่อ
+ * คำอธิบาย : ระงับการใช้งาน (Super Admin)
+ * หน้านี้ใช้สำหรับแสดงรายชื่อผู้ใช้ที่ถูกระงับการใช้งาน พร้อมฟังก์ชัน:
+ * - แสดงตารางข้อมูล: ชื่อบัญชี / บทบาท / ช่องทางติดต่อ
  * - ค้นหา, เลือกหลายแถว, ยกเลิกการระงับหลายรายการ
  * - ปุ่มยกเลิกการระงับ ต่อแถว
+ *
  */
 
-import { Link, useNavigate } from "react-router-dom";
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+// 🧱 Components
 import DataTable from "../../Components/Tables/Index";
+import SearchBarTable from "../../Components/Search/SerachBarTable";
+
+// 🧩 Types & Config
 import type {
   Column,
   DataTableActionsConfig,
   BulkAction,
 } from "../../Components/Tables/Types";
-import { TrashIcon } from "../../Components/Tables/Icon";
-import SearchBarTable from "../../Components/Search/SerachBarTable";
-import { api } from "../../Libs/axios";
 import type { UserRow } from "../../Types/User";
-import { fetchBlockedUsersByRole } from "../../Libs/AccountServices";
 
+// 🧰 Services & Icons
+import { TrashIcon } from "../../Components/Tables/Icon";
+import { api, fetchBlockedUsersByRole } from "../../Libs/AccountServices";
+
+/** ===========================================
+ * 🧾 การตั้งค่าคอลัมน์ของตาราง (Table Columns)
+ * =========================================== */
 const columns: Column<UserRow>[] = [
   {
     key: "username",
@@ -38,7 +48,9 @@ const columns: Column<UserRow>[] = [
   { key: "email", header: "ช่องทางติดต่อ", className: "min-w-[200px]" },
 ];
 
-// ====== Bulk actions ======
+/** ===========================================
+ * ⚙️ Bulk Actions (ยกเลิกการระงับหลายรายการ)
+ * =========================================== */
 const bulkActions = (reload: () => Promise<void>): BulkAction<UserRow>[] => [
   {
     id: "bulk-unblock",
@@ -61,7 +73,13 @@ const bulkActions = (reload: () => Promise<void>): BulkAction<UserRow>[] => [
   },
 ];
 
+/** ===========================================
+ * 🧠 Page: UserStatusPage
+ * =========================================== */
 export default function UserStatusPage() {
+  /** -------------------------------------------
+   * 🎯 ตัวแปร State และ Hook ที่ใช้ภายในหน้า
+   * ------------------------------------------- */
   const navigate = useNavigate();
 
   const [rows, setRows] = React.useState<UserRow[]>([]);
@@ -72,16 +90,19 @@ export default function UserStatusPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  /** -------------------------------------------
+   * 🔄 ฟังก์ชัน reload(): โหลดข้อมูลผู้ใช้ที่ถูกระงับ
+   * ------------------------------------------- */
   const reload = React.useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
+
       const { rows, total } = await fetchBlockedUsersByRole(
         "superadmin",
         currentPage,
         pageSize
       );
-      console.log(rows, total);
       setRows(rows);
       setTotalItems(total);
     } catch (e: any) {
@@ -91,21 +112,29 @@ export default function UserStatusPage() {
     }
   }, [currentPage, pageSize]);
 
+  /** -------------------------------------------
+   * 🚀 useEffect - เรียกข้อมูลเมื่อหน้าโหลดหรือเปลี่ยนหน้า
+   * ------------------------------------------- */
   React.useEffect(() => {
     reload();
   }, [reload]);
 
+  /** -------------------------------------------
+   * 🧰 กำหนด Action ต่อแถว (Row Actions)
+   * ------------------------------------------- */
   const rowActions: DataTableActionsConfig<UserRow> = React.useMemo(
     () => ({
       header: "จัดการ",
       align: "right",
       width: "160px",
       variant: "buttons",
+      className: "pr-12", // เว้นขอบขวา 1rem ด้วย Tailwind
       items: () => ["unblock"],
       labels: { unblock: "ยกเลิกการระงับ" },
       callbacks: {
         unblock: async (row) => {
-          if (!window.confirm(`ยืนยันยกเลิกการระงับ "${row.username}" ?`)) return;
+          if (!window.confirm(`ยืนยันยกเลิกการระงับ "${row.username}" ?`))
+            return;
           try {
             await api.put(`/super/users/unblock/${row.id}`);
             alert(`ยกเลิกการระงับ "${row.username}" สำเร็จ`);
@@ -120,8 +149,9 @@ export default function UserStatusPage() {
     [navigate, reload]
   );
 
-
-
+  /** -------------------------------------------
+   * 🔍 ฟังก์ชันค้นหา (Search)
+   * ------------------------------------------- */
   const normalize = (s: string) =>
     (s ?? "").toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
@@ -134,12 +164,20 @@ export default function UserStatusPage() {
     });
   }, [rows, searchQuery]);
 
+  /** ===========================================
+   * 🎨 ส่วนแสดงผล (UI Layout)
+   * =========================================== */
   return (
     <div className="space-y-4">
+      {/* 🔹 ส่วนหัวของหน้า */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl">ระงับการใช้งาน</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">
+          ระงับการใช้งาน
+        </h1>
 
+        {/* 🔍 แถบค้นหาและปุ่มสร้างผู้ใช้ใหม่ */}
         <div className="flex items-center gap-3">
+          {/* ช่องค้นหา */}
           <div className="flex-1 max-w-md">
             <SearchBarTable
               value={searchQuery}
@@ -147,6 +185,7 @@ export default function UserStatusPage() {
             />
           </div>
 
+          {/* ปุ่มสร้างสมาชิก */}
           <div className="ml-auto">
             <button
               onClick={() => navigate("/super/users/create")}
@@ -159,8 +198,10 @@ export default function UserStatusPage() {
         </div>
       </div>
 
+      {/* 🔴 แสดงข้อความ Error (ถ้ามี) */}
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
+      {/* 🧮 ตารางข้อมูลผู้ใช้ที่ถูกระงับ */}
       <DataTable<UserRow>
         data={filteredRows}
         columns={columns}

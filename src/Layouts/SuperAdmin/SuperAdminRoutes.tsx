@@ -1,5 +1,7 @@
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
+import UserStatusPage from "@/Pages/SuperAdmin/BlockUserPage";
+import UserDetailPage from "@/Pages/SuperAdmin/UserDetailPage";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -13,6 +15,8 @@ const SuperAdminRoutes: React.FC = () => {
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />
       <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="users/blocked" element={<UserStatusPage />} />
+      <Route path="users/:id" element={<UserDetailPage />} />
     </Routes>
   );
 };

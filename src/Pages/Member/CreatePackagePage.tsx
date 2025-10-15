@@ -2,9 +2,10 @@
 /**
  * - หน้าสร้างแพ็กเกจ (บทบาท Member)
  * - เพิ่มระบบ validate ด้วย Zod ให้แสดงกรอบแดง/ข้อความช่วยใต้ช่องเหมือนหน้า Create Community
+ * - เพิ่ม Modal ยืนยัน (SweetAlert2) ไว้ในไฟล์นี้เลย และเรียกก่อนยิง POST
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
@@ -18,7 +19,91 @@ import ThailandLocationSelector, {
 import TextArea from "@/Components/TextArea";
 import Button from "@/Components/Button";
 
+// === เพิ่ม import สำหรับ SweetAlert2 (ใช้ใน Modal) ===
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const apiUrl = import.meta.env.VITE_API_URL;
+
+/* =========================
+ * Inline Modal Components
+ * ========================= */
+
+// Modal ยืนยันการทำรายการ (ใช้สไตล์เดียวกับภาพตัวอย่าง)
+type ConfirmModalProps = {
+    open: boolean;
+    title?: string;
+    text?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+};
+
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+    open,
+    onConfirm,
+    onCancel,
+    title = "ยืนยันการสร้างแพ็กเกจ",
+    text = "คุณต้องการยืนยันการสร้างแพ็กเกจหรือไม่",
+    confirmText = "ยืนยัน",
+    cancelText = "ยกเลิก",
+}) => {
+    const MySwal = withReactContent(Swal);
+
+    useEffect(() => {
+        if (!open) return;
+
+        void MySwal.fire({
+            iconHtml: (
+                <Icon
+                    icon="circum:circle-alert"
+                    style={{ fontSize: 150, color: "#004D2C" }}
+                />
+            ),
+            iconColor: "#004D2C",
+            title,
+            text,
+            width: 560,
+            padding: "1.75rem",
+            showCancelButton: true,
+            showConfirmButton: true,
+            confirmButtonText: confirmText,
+            cancelButtonText: cancelText,
+            buttonsStyling: false,
+            allowOutsideClick: false,
+            allowEscapeKey: true,
+            reverseButtons: true,
+            customClass: {
+                popup: "rounded-2xl",
+                title: "text-2xl font-bold leading-tight",
+                htmlContainer: "text-base",
+                actions: "mt-6 flex justify-center gap-4",
+                confirmButton:
+                    "px-6 py-2.5 rounded-lg bg-[#004D2C] text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
+                cancelButton:
+                    "px-6 py-2.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400",
+                icon: "!border-0 !bg-transparent !shadow-none !w-auto !h-auto p-0",
+            },
+            didOpen: () => {
+                const fontStack = 'var(--font-sarabun), "Sarabun", sans-serif';
+                const popup = Swal.getPopup();
+                const titleEl = Swal.getTitle();
+                const html = Swal.getHtmlContainer();
+                const btns = Swal.getActions();
+                if (popup) popup.style.fontFamily = fontStack;
+                if (titleEl) titleEl.style.fontFamily = fontStack;
+                if (html) html.style.fontFamily = fontStack;
+                if (btns) btns.style.fontFamily = fontStack;
+            },
+        }).then((result) => {
+            if (result.isConfirmed) onConfirm();
+            else onCancel?.();
+        });
+    }, [open, MySwal, title, text, confirmText, cancelText, onConfirm, onCancel]);
+
+    return null; // ไม่เรนเดอร์อะไรใน DOM
+};
 
 // ===== Helpers =====
 function normalizeOrDefault(value: string, fallback = "-") {
@@ -33,7 +118,7 @@ function toTimeInput(input?: string | Date | null) {
     if (!input) return "";
     if (typeof input === "string") {
         const m = input.match(
-            /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
+            /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/,
         );
         if (m && m[4] !== undefined && m[5] !== undefined) {
             const hh = m[4].padStart(2, "0");
@@ -124,10 +209,10 @@ const packageSchema = z.object({
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกอำเภอ / เขต"),
     subDistrict: z.string().min(1, "กรุณาเลือกตำบล / แขวง"),
-    postalCode: z.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+    postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
 
-    latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
-    longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
+    // latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
+    // longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
 
     overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
     capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
@@ -157,6 +242,10 @@ export const CreatePackagePage: React.FC = () => {
 
     // errors (เพิ่มเพื่อ validate)
     const [formErrors, setFormErrors] = useState<PackageErrors>({});
+
+    // === state สำหรับ Modal ยืนยัน ===
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [pendingPayload, setPendingPayload] = useState<any | null>(null);
 
     // validate ช่องเดียว
     const validateField = (field: keyof PackageForm, value: any) => {
@@ -259,7 +348,7 @@ export const CreatePackagePage: React.FC = () => {
                         id: Number(m.id),
                         fname: m.fname ?? "",
                         lname: m.lname ?? "",
-                    }))
+                    })),
                 );
             } catch (e) {
                 console.error("search members error:", e);
@@ -321,8 +410,7 @@ export const CreatePackagePage: React.FC = () => {
         setTagOptions([]);
         setOpenTagBox(false);
     };
-    const removeTag = (id: number) =>
-        setSelectedTags((prev) => prev.filter((t) => t.id !== id));
+    const removeTag = (id: number) => setSelectedTags((prev) => prev.filter((t) => t.id !== id));
 
     // ===== Homestay picker =====
     type HomestayOption = {
@@ -438,76 +526,12 @@ export const CreatePackagePage: React.FC = () => {
         setHsCheckOutTime("");
     };
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-
-        // ให้เบราว์เซอร์ตรวจ required/ชนิด input ก่อน
-        const formEl = e.currentTarget;
-        if (!formEl.reportValidity()) return;
-
-        // ตรวจด้วย Zod + เงื่อนไขเสริม ก่อนแสดง confirm
-        if (!validateAll()) {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-
-        if (!window.confirm("ยืนยันการสร้างแพ็กเกจใช่หรือไม่?")) return;
-
-        // (คง custom validation เดิมต่อจากนี้)
-        if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-            setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-        if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-            setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-
-        setIsSaving(true);
-        setErrorMessage(null);
-        setSuccessMessage(null);
-
+    // ====== แยกฟังก์ชันยิง API ======
+    const doCreate = async (payload: any) => {
         try {
-            const payload = {
-                overseerMemberId: Number(formState.overseerMemberId),
-                name: normalizeOrDefault(formState.name),
-                description: normalizeOrDefault(formState.description),
-                capacity: Math.max(1, Number(formState.capacity || 0)),
-                price: Math.max(0, Number(formState.price || 0)),
-                warning: normalizeOrDefault(formState.facility),
-                statusPackage: "DRAFT" as const,
-                statusApprove: "PENDING" as const,
-                startDate: normalizeOrDefault(formState.startDate),
-                dueDate: normalizeOrDefault(formState.endDate),
-                ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
-                ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-                openBookingAt: normalizeOrDefault(formState.openDate),
-                closeBookingAt: normalizeOrDefault(formState.closeDate),
-                ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
-                ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-                ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
-                ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
-                ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
-                ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
-
-                facility: normalizeOrDefault(formState.facility),
-                tagIds: selectedTags.map((t) => t.id),
-                ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
-
-                location: {
-                    houseNumber: normalizeOrDefault(formState.houseNumber),
-                    villageNumber: toIntOrNull(formState.villageNumber),
-                    subDistrict: normalizeOrDefault(formState.subDistrict),
-                    district: normalizeOrDefault(formState.district),
-                    province: normalizeOrDefault(formState.province),
-                    postalCode: normalizeOrDefault(formState.postalCode),
-                    detail: normalizeOrDefault(formState.addressDetail),
-                    latitude: Number(formState.latitude),
-                    longitude: Number(formState.longitude),
-                },
-            };
+            setIsSaving(true);
+            setErrorMessage(null);
+            setSuccessMessage(null);
 
             await axios.post(`${apiUrl}/member/package`, payload, {
                 withCredentials: true,
@@ -522,12 +546,82 @@ export const CreatePackagePage: React.FC = () => {
                 error?.response?.data?.message ||
                 error?.response?.data?.error ||
                 error?.message ||
-                "สร้างแพ็กเกจไม่สำเร็จ"
+                "สร้างแพ็กเกจไม่สำเร็จ",
             );
             window.scrollTo({ top: 0, behavior: "smooth" });
         } finally {
             setIsSaving(false);
+            setPendingPayload(null);
         }
+    };
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        // ให้เบราว์เซอร์ตรวจ required/ชนิด input ก่อน
+        const formEl = e.currentTarget;
+        if (!formEl.reportValidity()) return;
+
+        // ตรวจด้วย Zod + เงื่อนไขเสริม ก่อนเปิด modal confirm
+        if (!validateAll()) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
+        // (คง custom validation เดิมต่อจากนี้)
+        if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
+            setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+        if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
+            setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
+        // เตรียม payload แล้วเปิด Modal ยืนยัน (แทน window.confirm)
+        const payload = {
+            overseerMemberId: Number(formState.overseerMemberId),
+            name: normalizeOrDefault(formState.name),
+            description: normalizeOrDefault(formState.description),
+            capacity: Math.max(1, Number(formState.capacity || 0)),
+            price: Math.max(0, Number(formState.price || 0)),
+            warning: normalizeOrDefault(formState.facility),
+            statusPackage: "DRAFT" as const,
+            statusApprove: "PENDING" as const,
+            startDate: normalizeOrDefault(formState.startDate),
+            dueDate: normalizeOrDefault(formState.endDate),
+            ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
+            ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
+            openBookingAt: normalizeOrDefault(formState.openDate),
+            closeBookingAt: normalizeOrDefault(formState.closeDate),
+            ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
+            ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
+            ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
+            ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
+            ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
+            ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
+
+            facility: normalizeOrDefault(formState.facility),
+            tagIds: selectedTags.map((t) => t.id),
+            ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
+
+            location: {
+                houseNumber: normalizeOrDefault(formState.houseNumber),
+                villageNumber: toIntOrNull(formState.villageNumber),
+                subDistrict: normalizeOrDefault(formState.subDistrict),
+                district: normalizeOrDefault(formState.district),
+                province: normalizeOrDefault(formState.province),
+                postalCode: normalizeOrDefault(formState.postalCode),
+                detail: normalizeOrDefault(formState.addressDetail),
+                latitude: Number(formState.latitude),
+                longitude: Number(formState.longitude),
+            },
+        };
+
+        setPendingPayload(payload);
+        setConfirmOpen(true);
     }
 
     const startPos = React.useMemo(
@@ -536,7 +630,7 @@ export const CreatePackagePage: React.FC = () => {
                 Number(formState.latitude) || 13.7563,
                 Number(formState.longitude) || 100.5018,
             ] as [number, number],
-        [formState.latitude, formState.longitude]
+        [formState.latitude, formState.longitude],
     );
 
     return (
@@ -553,8 +647,8 @@ export const CreatePackagePage: React.FC = () => {
                     onClick={() => navigate("/member/packages/all")}
                     className="inline-flex items-center gap-2 text-xl mb-1 group"
                     aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
-                    >
-                    <Icon icon="mingcute:arrow-left-line" width={22}/>
+                >
+                    <Icon icon="mingcute:arrow-left-line" width={22} />
                     <span>สร้างแพ็กเกจ</span>
                 </button>
 
@@ -671,7 +765,6 @@ export const CreatePackagePage: React.FC = () => {
                                 error={!!formErrors?.addressDetail}
                                 helperText={formErrors?.addressDetail}
                             />
-
                         </div>
 
                         {/* Map Picker */}
@@ -772,7 +865,7 @@ export const CreatePackagePage: React.FC = () => {
                             required
                             placeholder="สิ่งอำนวยความสะดวก"
                             value={formState.facility}
-                            onChange={(e) => setFormField("addressDetail", e.target.value)}
+                            onChange={(e) => setFormField("facility", e.target.value)}
                             error={!!formErrors?.facility}
                             helperText={formErrors?.facility}
                         />
@@ -887,8 +980,7 @@ export const CreatePackagePage: React.FC = () => {
                                     onChange={(e) => setTagQuery(e.target.value)}
                                     onFocus={() =>
                                         setOpenTagBox(
-                                            tagQuery.trim().length >= MIN_TAG_QUERY_CHARS &&
-                                            tagOptions.length > 0
+                                            tagQuery.trim().length >= MIN_TAG_QUERY_CHARS && tagOptions.length > 0,
                                         )
                                     }
                                     onKeyDown={(e) => {
@@ -1042,7 +1134,7 @@ export const CreatePackagePage: React.FC = () => {
                                 onFocus={() =>
                                     setOpenHomestayBox(
                                         homestayQuery.trim().length >= MIN_HOMESTAY_QUERY_CHARS &&
-                                        homestayOptions.length > 0
+                                        homestayOptions.length > 0,
                                     )
                                 }
                                 onKeyDown={(e) => {
@@ -1145,9 +1237,7 @@ export const CreatePackagePage: React.FC = () => {
 
                                         {selectedHomestay.facility && (
                                             <div>
-                                                <div className="font-semibold mb-1">
-                                                    สิ่งอำนวยความสะดวกที่พัก
-                                                </div>
+                                                <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
                                                 <ul className="list-disc pl-5 space-y-1">
                                                     {selectedHomestay.facility
                                                         .split(/[,•\n]/)
@@ -1170,18 +1260,35 @@ export const CreatePackagePage: React.FC = () => {
                 </section>
 
                 <div className="flex justify-end mt-2.5 gap-2">
-  <div className="w-36">
-    <Button type="cancel" onClick={() => navigate(-1)}>
-      ยกเลิก
-    </Button>
-  </div>
-  <div className="w-36">
-    <Button type="confirm-admin" htmlType="submit">
-      {isSaving ? "กำลังบันทึก..." : "สร้าง"}
-    </Button>
-  </div>
-</div>
+                    <div className="w-36">
+                        <Button type="cancel" onClick={() => navigate(-1)}>
+                            ยกเลิก
+                        </Button>
+                    </div>
+                    <div className="w-36">
+                        <Button type="confirm-admin" htmlType="submit">
+                            {isSaving ? "กำลังบันทึก..." : "สร้าง"}
+                        </Button>
+                    </div>
+                </div>
             </form>
+
+            {/* === เรียก Modal ยืนยันการสร้าง === */}
+            <ConfirmModal
+                open={confirmOpen}
+                title="ยืนยันการสร้างแพ็กเกจ"
+                text="คุณต้องการยืนยันการสร้างแพ็กเกจหรือไม่"
+                confirmText="ยืนยัน"
+                cancelText="ยกเลิก"
+                onConfirm={() => {
+                    setConfirmOpen(false);
+                    if (pendingPayload) void doCreate(pendingPayload);
+                }}
+                onCancel={() => {
+                    setConfirmOpen(false);
+                    setPendingPayload(null);
+                }}
+            />
         </div>
     );
 };

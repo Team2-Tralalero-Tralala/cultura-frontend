@@ -7,31 +7,20 @@ import { Icon } from "@iconify/react";
 import { toast } from "react-toastify";
 import api from "../../Libs/api";
 
-/*
- * Component : EditAccountPage
- * ใช้สำหรับหน้าแก้ไขบัญชี Admin / Member / Tourist
- */
-
 type RoleType = "Admin" | "Member" | "Tourist";
 
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // 🔹 ดึง ID จาก URL (รองรับทุก role)
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
-  // 🔹 หาว่าเป็น role ไหนจาก path
   const getRoleFromPath = (): RoleType => {
     if (location.pathname.includes("member")) return "Member";
     if (location.pathname.includes("tourist")) return "Tourist";
     return "Admin";
   };
 
-  const [role] = useState<RoleType>(getRoleFromPath());
-
-  // ฟอร์มหลัก
   const [formData, setFormData] = useState({
     fname: "",
     lname: "",
@@ -40,9 +29,9 @@ const EditAccountPage: React.FC = () => {
     phone: "",
     password: "",
     confirmPassword: "",
+    role: getRoleFromPath() as RoleType,
   });
 
-  // ฟิลด์เฉพาะ Tourist / Member
   const [extraData, setExtraData] = useState({
     communityId: "",
     gender: "",
@@ -53,57 +42,112 @@ const EditAccountPage: React.FC = () => {
     postalCode: "",
   });
 
-  // โหลดข้อมูลผู้ใช้มาใส่ในฟอร์ม
+  // ✅ map role name → roleId ตามฐานข้อมูล
+  const mapRoleToId = (role: RoleType): number => {
+    switch (role) {
+      case "Admin":
+        return 2; // roleId ของ Admin
+      case "Member":
+        return 3; // roleId ของ Member
+      case "Tourist":
+        return 4; // roleId ของ Tourist
+      default:
+        return 2;
+    }
+  };
+
+  const resetExtraDataByRole = (newRole: RoleType) => {
+    if (newRole === "Admin") {
+      setExtraData({
+        communityId: "",
+        gender: "",
+        birthDate: "",
+        province: "",
+        district: "",
+        subdistrict: "",
+        postalCode: "",
+      });
+    } else if (newRole === "Member") {
+      setExtraData({
+        communityId: "",
+        gender: "",
+        birthDate: "",
+        province: "",
+        district: "",
+        subdistrict: "",
+        postalCode: "",
+      });
+    } else if (newRole === "Tourist") {
+      setExtraData({
+        communityId: "",
+        gender: "",
+        birthDate: "",
+        province: "",
+        district: "",
+        subdistrict: "",
+        postalCode: "",
+      });
+    }
+  };
+
+  const fetchUser = async (role: RoleType) => {
+    try {
+      let endpoint = "";
+      if (role === "Admin") endpoint = `/super/account/admin/${userId}`;
+      else if (role === "Member") endpoint = `/super/account/member/${userId}`;
+      else endpoint = `/super/account/tourist/${userId}`;
+
+      const res = await api.get(endpoint);
+      const user = res.data?.data;
+      if (!user) throw new Error("ไม่พบข้อมูลผู้ใช้");
+
+      setFormData((prev) => ({
+        ...prev,
+        fname: user.fname || "",
+        lname: user.lname || "",
+        username: user.username || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        password: "",
+        confirmPassword: "",
+        role:
+          user.role?.name === "superadmin"
+            ? "Admin"
+            : user.role?.name === "member"
+            ? "Member"
+            : "Tourist",
+      }));
+
+      setExtraData({
+        communityId: user.memberOfCommunity?.toString() || "",
+        gender:
+          user.gender === "MALE"
+            ? "ชาย"
+            : user.gender === "FEMALE"
+            ? "หญิง"
+            : "ไม่ระบุ",
+        birthDate: user.birthDate
+          ? new Date(user.birthDate).toISOString().split("T")[0]
+          : "",
+        province: user.province || "",
+        district: user.district || "",
+        subdistrict: user.subDistrict || "",
+        postalCode: user.postalCode || "",
+      });
+    } catch (err: any) {
+      console.error("❌ Error fetching user:", err);
+      toast.error("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+    }
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        let endpoint = "";
-        if (role === "Admin") endpoint = `/super/account/admin/${userId}`;
-        else if (role === "Member") endpoint = `/super/account/member/${userId}`;
-        else endpoint = `/super/account/tourist/${userId}`;
+    if (userId && Number(userId) > 0) fetchUser(formData.role);
+  }, [userId]);
 
-        console.log("📡 Fetch user from:", endpoint);
-        const res = await api.get(endpoint);
+  useEffect(() => {
+    resetExtraDataByRole(formData.role);
+  }, [formData.role]);
 
-        const user = res.data?.data;
-        if (!user) throw new Error("ไม่พบข้อมูลผู้ใช้");
-
-        setFormData({
-          fname: user.fname || "",
-          lname: user.lname || "",
-          username: user.username || "",
-          email: user.email || "",
-          phone: user.phone || "",
-          password: "",
-          confirmPassword: "",
-        });
-
-        setExtraData({
-          communityId: user.memberOfCommunity?.toString() || "",
-          gender:
-            user.gender === "MALE"
-              ? "ชาย"
-              : user.gender === "FEMALE"
-              ? "หญิง"
-              : "ไม่ระบุ",
-          birthDate: user.birthDate
-            ? new Date(user.birthDate).toISOString().split("T")[0]
-            : "",
-          province: user.province || "",
-          district: user.district || "",
-          subdistrict: user.subDistrict || "",
-          postalCode: user.postalCode || "",
-        });
-      } catch (err: any) {
-        console.error("❌ Error fetching user:", err);
-        toast.error("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
-      }
-    };
-
-    if (userId && Number(userId) > 0) fetchUser();
-  }, [userId, role]);
-
-  // handle change input
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -111,7 +155,7 @@ const EditAccountPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // handle submit
+  //  PATCH ให้เปลี่ยน roleId และล้างฟิลด์ที่ไม่เกี่ยว
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -121,20 +165,27 @@ const EditAccountPage: React.FC = () => {
     }
 
     try {
-      // ✅ สร้าง body ที่จะส่ง
       const body: any = {
         fname: formData.fname.trim(),
         lname: formData.lname.trim(),
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
+        roleId: mapRoleToId(formData.role), // ✅ ส่ง roleId ด้วย
       };
 
       if (formData.password) body.password = formData.password;
 
-      if (role === "Member") {
-        body.memberOfCommunity = Number(extraData.communityId);
-      } else if (role === "Tourist") {
+      if (formData.role === "Member") {
+        body.memberOfCommunity = Number(extraData.communityId) || null;
+        // ล้างฟิลด์อื่นๆ ที่ไม่เกี่ยว
+        body.gender = null;
+        body.birthDate = null;
+        body.province = null;
+        body.district = null;
+        body.subDistrict = null;
+        body.postalCode = null;
+      } else if (formData.role === "Tourist") {
         body.gender =
           extraData.gender === "ชาย"
             ? "MALE"
@@ -144,32 +195,55 @@ const EditAccountPage: React.FC = () => {
         body.birthDate = extraData.birthDate
           ? new Date(extraData.birthDate).toISOString().split("T")[0]
           : null;
-        body.province = extraData.province;
-        body.district = extraData.district;
-        body.subDistrict = extraData.subdistrict;
-        body.postalCode = extraData.postalCode;
+        body.province = extraData.province || null;
+        body.district = extraData.district || null;
+        body.subDistrict = extraData.subdistrict || null;
+        body.postalCode = extraData.postalCode || null;
+        body.memberOfCommunity = null;
+      } else if (formData.role === "Admin") {
+        // ล้างฟิลด์ทั้งหมดที่ไม่เกี่ยว
+        body.gender = null;
+        body.birthDate = null;
+        body.province = null;
+        body.district = null;
+        body.subDistrict = null;
+        body.postalCode = null;
+        body.memberOfCommunity = null;
       }
 
-      // 🔹 endpoint แยกตาม role เหมือนตอนโหลดข้อมูล
-      let endpoint = "";
-      if (role === "Admin") endpoint = `/super/account/admin/${userId}`;
-      else if (role === "Member") endpoint = `/super/account/member/${userId}`;
-      else endpoint = `/super/account/tourist/${userId}`;
+      // ✅ เพิ่มบรรทัดนี้ก่อน endpoint
+      body.roleId =
+        formData.role === "Admin"
+          ? 2
+          : formData.role === "Member"
+          ? 3
+          : formData.role === "Tourist"
+          ? 4
+          : 2;
 
-      console.log("📡 Updating user to:", endpoint, body);
+      //  เพิ่ม log ตรวจสอบ
+      console.log("📡 Updating user to:", body);
+
+      //  กำหนด endpoint ให้ตรงกับ roleId จริง ๆ
+      let endpoint = "";
+      if (body.roleId === 2) endpoint = `/super/account/admin/${userId}`;
+      else if (body.roleId === 3) endpoint = `/super/account/member/${userId}`;
+      else if (body.roleId === 4) endpoint = `/super/account/tourist/${userId}`;
+
+      console.log("📡 PATCH:", endpoint, body);
       const res = await api.patch(endpoint, body);
 
       toast.success(res.data.message || "บันทึกการแก้ไขสำเร็จ ✅");
-      if (role === "Admin") navigate("/super/account/admin");
-      else if (role === "Member") navigate("/super/account/member");
-      else navigate("/super/account/tourist");
+
+      //  กลับไปหน้าเดิม (หรือ list ของ role ใหม่)
+     //  setTimeout(() => navigate(-1), 1000);
     } catch (err: any) {
       console.error("❌ Error updating account:", err);
-      const msg =
+      toast.error(
         err.response?.data?.message ||
-        err.message ||
-        "ไม่สามารถบันทึกการแก้ไขได้";
-      toast.error(msg);
+          err.message ||
+          "ไม่สามารถบันทึกการแก้ไขได้"
+      );
     }
   };
 
@@ -180,11 +254,7 @@ const EditAccountPage: React.FC = () => {
         className="bg-white p-10 rounded-xl shadow max-w-6xl mx-auto text-[15px] space-y-10 border border-gray-200"
       >
         <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          {role === "Admin"
-            ? "แก้ไขบัญชีผู้ดูแลระบบ (Admin)"
-            : role === "Member"
-            ? "แก้ไขบัญชีสมาชิก (Member)"
-            : "แก้ไขบัญชีผู้ใช้ทั่วไป (Tourist)"}
+          แก้ไขบัญชี
         </h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
@@ -251,8 +321,36 @@ const EditAccountPage: React.FC = () => {
               />
             </div>
 
-            {/* ฟิลด์เฉพาะ Member / Tourist */}
-            {role === "Member" && (
+            {/* Role Selector */}
+            <div>
+              <label className="font-semibold text-gray-800 block mb-2">
+                Role <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-4">
+                {(["Admin", "Member", "Tourist"] as RoleType[]).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => {
+                      if (formData.role !== r) {
+                        resetExtraDataByRole(r);
+                        setFormData((prev) => ({ ...prev, role: r }));
+                      }
+                    }}
+                    className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
+                      formData.role === r
+                        ? "bg-green-800 text-white border-green-800"
+                        : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Member */}
+            {formData.role === "Member" && (
               <div>
                 <label className="font-semibold text-gray-800">
                   ชุมชนที่สังกัด
@@ -271,7 +369,8 @@ const EditAccountPage: React.FC = () => {
               </div>
             )}
 
-            {role === "Tourist" && (
+            {/* Tourist */}
+            {formData.role === "Tourist" && (
               <div className="grid grid-cols-2 gap-4">
                 <TextField
                   id="birthDate"

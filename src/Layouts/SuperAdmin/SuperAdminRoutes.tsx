@@ -16,37 +16,37 @@ const SuperAdminRoutes: React.FC = () => {
     <Routes>
       {/* 🔹 หน้าเพิ่มบัญชีผู้ดูแลระบบ (Admin) */}
       <Route
-        path="/account/admin/create"
+        path="/admin/create"
         element={<CreateAccountPage defaultRole="Admin" />}
       />
 
       {/* 🔹 หน้าเพิ่มบัญชีสมาชิก (Member) */}
       <Route
-        path="/account/member/create"
+        path="/member/create"
         element={<CreateAccountPage defaultRole="Member" />}
       />
 
       {/* 🔹 หน้าเพิ่มบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route
-        path="/account/tourist/create"
+        path="/tourist/create"
         element={<CreateAccountPage defaultRole="Tourist" />}
       />
 
       {/* 🔸 หน้าแก้ไขบัญชีผู้ดูแลระบบ (Admin) */}
       <Route
-        path="/account/admin/:adminId/edit"
+        path="/admin/:adminId/edit"
         element={<EditAccountPage />}
       />
 
       {/* 🔸 หน้าแก้ไขบัญชีสมาชิก (Member) */}
       <Route
-        path="/account/member/:memberId/edit"
+        path="/member/:memberId/edit"
         element={<EditAccountPage />}
       />
 
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route
-        path="/account/tourist/:touristId/edit"
+        path="/tourist/:touristId/edit"
         element={<EditAccountPage />}
       />
     </Routes>

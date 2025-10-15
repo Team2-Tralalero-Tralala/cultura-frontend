@@ -23,6 +23,7 @@ export type BaseFieldProps = {
   type?: string;
   name?: string;
   value?: any;
+  readOnly?: boolean;
   onChange?: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;

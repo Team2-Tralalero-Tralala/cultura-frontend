@@ -16,7 +16,7 @@
 import Autocomplete from "@mui/material/Autocomplete";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import TextField from "./TextField";
+import TextField from "@/Components/TextField";
 
 interface GeographyItem {
   provinceNameTh: string;
@@ -44,7 +44,7 @@ export interface ThailandLocation {
   province?: string;
   district?: string;
   subdistrict?: string;
-  postalCode: string;
+  postalCode?: string;
 }
 
 interface ThailandLocationSelectProps {
@@ -52,6 +52,16 @@ interface ThailandLocationSelectProps {
   onChange: (value: ThailandLocation) => void;
   labelPrefix?: string;
   disabled?: boolean;
+  error?: {
+    province?: boolean;
+    district?: boolean;
+    subdistrict?: boolean;
+  };
+  helperText?: {
+    province?: string;
+    district?: string;
+    subdistrict?: string;
+  };
 }
 
 /*
@@ -102,6 +112,16 @@ async function loadLocationData() {
 export default function ThailandLocationSelector({
   value,
   onChange,
+  error = {
+    province: false,
+    district: false,
+    subdistrict: false,
+  },
+  helperText = {
+    province: "",
+    district: "",
+    subdistrict: "",
+  },
 }: ThailandLocationSelectProps) {
   const [geoData, setGeoData] = useState<Record<string, Province>>({});
   const [ready, setReady] = useState(false);
@@ -206,23 +226,47 @@ export default function ThailandLocationSelector({
    *    - params (object): พารามิเตอร์จาก Material UI Autocomplete
    * Output : JSX ของ input พร้อม label และ adornment
    */
-  const renderCustomInput = (id: string, label: string, params: any) => {
+  const renderCustomInput = (
+    id: string,
+    label: string,
+    params: any,
+    error?: boolean,
+    helperText?: string
+  ) => {
     const { InputProps, inputProps } = params;
     return (
       <div ref={InputProps.ref} className="w-full">
-        <label
-          htmlFor={id}
-          className="block text-base font-semibold text-gray-800 mb-1.5"
-        >
-          {label} <span className="text-red-600">*</span>
-        </label>
+        {/* Label + Error message ในบรรทัดเดียวกัน */}
+        <div className="flex items-center justify-between mb-1.5">
+          <label
+            htmlFor={id}
+            className="block text-base font-semibold text-gray-800"
+          >
+            {label} <span className="text-red-600">*</span>
+          </label>
+          {error && (
+            <span
+              id={`${id}-helper-text`}
+              className="text-xs text-red-600 ml-2 whitespace-nowrap"
+            >
+              {helperText}
+            </span>
+          )}
+        </div>
+
+        {/* Input field */}
         <div className="relative">
           <input
             {...inputProps}
             id={id}
             type="text"
             placeholder={label}
-            className="block w-full rounded-form border border-gray-400 focus:ring-1 focus:ring-gray-400 focus:border-gray-500 bg-white px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none"
+            className={`block w-full rounded-form border px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
+        ${
+          error
+            ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
+            : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
+        }`}
           />
           {InputProps.endAdornment && (
             <div className="absolute inset-y-0 right-2 flex items-center">
@@ -233,7 +277,6 @@ export default function ThailandLocationSelector({
       </div>
     );
   };
-
   return (
     <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
       <Autocomplete
@@ -247,7 +290,13 @@ export default function ThailandLocationSelector({
         }
         onChange={handleProvinceChange}
         renderInput={(params) =>
-          renderCustomInput("province", "จังหวัด", params)
+          renderCustomInput(
+            "province",
+            "จังหวัด",
+            params,
+            error?.province,
+            helperText?.province
+          )
         }
       />
 
@@ -261,7 +310,15 @@ export default function ThailandLocationSelector({
           districtOptions.find((opt) => opt.label === value?.district) || null
         }
         onChange={handleDistrictChange}
-        renderInput={(params) => renderCustomInput("district", "อำเภอ", params)}
+        renderInput={(params) =>
+          renderCustomInput(
+            "district",
+            "อำเภอ",
+            params,
+            error?.district,
+            helperText?.district
+          )
+        }
         disabled={!value?.province}
       />
 
@@ -277,7 +334,13 @@ export default function ThailandLocationSelector({
         }
         onChange={handleSubdistrictChange}
         renderInput={(params) =>
-          renderCustomInput("subDistrict", "ตำบล", params)
+          renderCustomInput(
+            "subDistrict",
+            "ตำบล",
+            params,
+            error?.subdistrict,
+            helperText?.subdistrict
+          )
         }
         disabled={!value?.district}
       />
@@ -286,10 +349,11 @@ export default function ThailandLocationSelector({
         <TextField
           id="postalCode"
           type="text"
-          value={value?.postalCode || ""}
+          value={value?.postalCode}
           label="รหัสไปรษณีย์"
           placeholder="รหัสไปรษณีย์"
           required
+          readOnly={true}
         />
       </div>
     </div>

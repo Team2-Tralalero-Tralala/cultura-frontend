@@ -36,12 +36,9 @@ export async function getCommunityById(id: number) {
  * Output : Response จาก API หลังอัปเดตข้อมูลสำเร็จ
  */
 export async function updateCommunity(id: number, data: CommunityFormData) {
-  return (
-    await axios.put(`${apiUrl}/super/community/${id}`, data),
-    {
-      withCredentials: true,
-    }
-  );
+  return await axios.put(`${apiUrl}/super/community/${id}`, data, {
+    withCredentials: true,
+  });
 }
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับลบ (Soft Delete) วิสาหกิจชุมชน
@@ -54,13 +51,25 @@ export async function deleteCommunity(id: number) {
     withCredentials: true,
   });
 }
-
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับ "ดึงรายชื่อผู้ดูแล (Admin) ที่ยังไม่ถูกผูกกับชุมชน"
+ * ใช้เพื่อให้ Super Admin สามารถเลือกผู้ดูแลใหม่สำหรับชุมชนได้
+ *
+ * Output :
+ *   - รายชื่อ Admin ที่ยังไม่ถูก assign กับชุมชนใด ๆ
+ */
 export async function getUnassignedAdmins() {
   return await axios.get(`${apiUrl}/super/admins/unassigned`, {
     withCredentials: true,
   });
 }
-
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับ "ดึงรายชื่อสมาชิก (Member) ที่ยังไม่ถูกผูกกับชุมชน"
+ * ใช้ในหน้าแก้ไขหรือสร้างชุมชน เพื่อเพิ่มสมาชิกใหม่เข้าในชุมชน
+ *
+ * Output :
+ *   - รายชื่อ Member ที่ยังไม่ถูก assign กับชุมชนใด ๆ
+ */
 export async function getUnassignedMembers() {
   return await axios.get(`${apiUrl}/super/members/unassigned`, {
     withCredentials: true,

@@ -87,7 +87,7 @@ const SidebarAdmin = () => {
     } else if (currentPath === '/booking/refunds') {
       setActiveMenuKey('booking-refunds');
       setOpenDropdown('booking');
-    } else if (currentPath === '/booking/histories') {
+    } else if (currentPath === '/booking-histories/done') {
       setActiveMenuKey('booking-histories');
       setOpenDropdown('booking');
     } else if (currentPath.startsWith('/booking')) {
@@ -233,7 +233,7 @@ const SidebarAdmin = () => {
             {openDropdown === 'booking' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 {menuLink('คำขอคืนเงิน', '/booking/refunds', 'mdi:cash-refund', 'booking-refunds', 'booking')}
-                {menuLink('ประวัติการจอง', '/booking/histories', 'mdi:history', 'booking-histories', 'booking')}
+                {menuLink('ประวัติการจอง', '/booking-histories/done', 'mdi:history', 'booking-histories', 'booking')}
               </div>
             )}
           </div>

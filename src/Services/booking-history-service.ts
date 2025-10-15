@@ -19,7 +19,7 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
   limit: number;
   hasNext: boolean;
 }> {
-  const response = await api.get("/booking-histories/role", {
+  const response = await api.get("/booking/histories", {
     params: { page, limit },
   });
 

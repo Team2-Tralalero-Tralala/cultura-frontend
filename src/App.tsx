@@ -15,7 +15,7 @@ export default function App() {
     <Routes>
       {/* ================= Admin ================= */}
         <Route path="/admin" element={<AdminLayout />}>
-        <Route path="booking/histories" element={<BookingHistories />} />
+        <Route path="booking-histories/done" element={<BookingHistories />} />
       </Route>
     </Routes>
   );

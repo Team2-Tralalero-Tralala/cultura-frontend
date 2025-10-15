@@ -1,17 +1,16 @@
 import { Route, Routes } from "react-router";
-import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
-import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
+import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
 
-import AdminLayout from "./Layouts/Admin/Adminlayout";
-import AdminRoutes from "./Layouts/Admin/AdminRoutes";
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
+import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
 
+import MemberLayout from "@/Layouts/Member/MemberLayout";
+import MemberRoutes from "@/Layouts/Member/MemberRoutes";
 
-import MemberLayout from "./Layouts/Member/MemberLayout";
-import MemberRoutes from "./Layouts/Member/MemberRoutes";
-
-import ProtectedRoute from "./Libs/ProtectedRoute";
-import LoginTourist from "./Pages/LoginTourist";
-import LoginAdmin from "./Pages/LoginAdmin";
+import ProtectedRoute from "@/Libs/ProtectedRoute";
+import LoginTourist from "@/Pages/LoginTourist";
+import LoginAdmin from "@/Pages/LoginAdmin";
 
 function App() {
   return (
@@ -40,7 +39,6 @@ function App() {
           </ProtectedRoute>
         }
       >
-
         {/* เส้นทางภายใน /super/ ทั้งหมด */}
         <Route path="*" element={<AdminRoutes />} />
       </Route>
@@ -61,5 +59,3 @@ function App() {
 }
 
 export default App;
-
-

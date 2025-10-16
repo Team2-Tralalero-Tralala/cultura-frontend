@@ -34,6 +34,7 @@ import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
 import { Icon } from "@iconify/react";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -485,21 +486,17 @@ export function EditCommunity() {
         </AccordionSummary>
         <AccordionDetails>
           <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>
-          <div className="flex flex-col items-center mb-6">
-            <div className="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center text-gray-600">
-              คลิกเพื่ออัปโหลดภาพหน้าปก
-            </div>
-            <div className="-mt-8">
-              <button
-                type="button"
-                className="flex flex-col items-center justify-center w-32 h-32 bg-gray-100 border border-gray-300 rounded-full shadow hover:bg-gray-200 transition"
-              >
-                <span className="text-4xl mb-1">🖼️</span>
-                <span className="text-sm font-medium text-gray-700">
-                  เพิ่มรูปโปรไฟล์
-                </span>
-              </button>
-            </div>
+          <div className="flex flex-col items-center mb-20">
+            <UploadProfile
+              roundedCover="rounded-[5px]"
+              width={1024}
+              coverHeight={360}
+              avatarSize={210} //รัศสมีวงกลม
+              coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
+              avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
+              onCoverChange={(file) => console.log("cover:", file)}
+              onAvatarChange={(file) => console.log("avatar:", file)}
+            />
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>

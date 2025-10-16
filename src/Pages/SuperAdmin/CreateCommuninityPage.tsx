@@ -28,6 +28,7 @@ import MemberSelector, {
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -306,7 +307,19 @@ export default function CreateCommuninityPage() {
           <div className="text-xl font-bold">ข้อมูลชุมชน</div>
         </AccordionSummary>
         <AccordionDetails>
-          <div className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</div>
+          <h1 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h1>
+          <div className="flex flex-col items-center mb-20">
+            <UploadProfile
+              roundedCover="rounded-[5px]"
+              width={1024}
+              coverHeight={360}
+              avatarSize={210} //รัศสมีวงกลม
+              coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
+              avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
+              onCoverChange={(file) => console.log("cover:", file)}
+              onAvatarChange={(file) => console.log("avatar:", file)}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField

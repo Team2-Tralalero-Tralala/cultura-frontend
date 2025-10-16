@@ -170,7 +170,7 @@ export default function TagsPage() {
         <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         <div>
           <Button type="confirm-admin" onClick={() => openInputModal("create")}>
-            เพิ่มประเภท
+            + เพิ่มประเภท
           </Button>
         </div>
       </div>

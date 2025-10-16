@@ -8,9 +8,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/Components/Button";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
+import SearchBarTable from "../../components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
-import DataTable from "../../Components/Tables/Index";
+import DataTable from "../../components/Tables/Index";
 import type { Column } from "../../Components/Tables/Types";
 import type { BookingHistoryItem } from "../../Types/BookingHistory";
 import { fetchBookingHistoriesByRole } from "../../Services/booking-history-service";

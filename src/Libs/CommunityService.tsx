@@ -47,9 +47,13 @@ export async function updateCommunity(id: number, data: CommunityFormData) {
  * Output : Response จาก API หลังการลบสำเร็จ
  */
 export async function deleteCommunity(id: number) {
-  return await axios.patch(`${apiUrl}/super/community/${id}`, {
-    withCredentials: true,
-  });
+  return await axios.patch(
+    `${apiUrl}/super/community/${id}`,
+    {},
+    {
+      withCredentials: true,
+    }
+  );
 }
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับ "ดึงรายชื่อผู้ดูแล (Admin) ที่ยังไม่ถูกผูกกับชุมชน"
@@ -75,7 +79,6 @@ export async function getUnassignedMembers() {
     withCredentials: true,
   });
 }
-
 
 // axios instance (แนบ cookie)
 const api = axios.create({

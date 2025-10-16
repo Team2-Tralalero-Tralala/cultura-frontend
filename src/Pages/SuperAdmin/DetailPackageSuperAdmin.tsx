@@ -191,7 +191,6 @@ export default function DetailPackageSuperAdmin() {
               className="text-black bg-white"
             />
           ))}
-          
         </p>
       )}
 
@@ -252,7 +251,13 @@ export default function DetailPackageSuperAdmin() {
           <h2 className="font-semibold text-lg mb-6">แผนที่</h2>
           <iframe
             title="map"
-            src={`https://www.google.com/maps?q=${pkg.location.latitude},${pkg.location.longitude}&z=14&output=embed`}
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${
+              pkg.location.longitude - 0.01
+            },${pkg.location.latitude - 0.01},${
+              pkg.location.longitude + 0.01
+            },${pkg.location.latitude + 0.01}&layer=mapnik&marker=${
+              pkg.location.latitude
+            },${pkg.location.longitude}`}
             className="w-full h-96 rounded-xl border"
           ></iframe>
           <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">

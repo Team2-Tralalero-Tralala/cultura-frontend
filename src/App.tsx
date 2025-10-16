@@ -12,21 +12,9 @@ import ProtectedRoute from "@/Libs/ProtectedRoute";
 import LoginTourist from "@/Pages/LoginTourist";
 import LoginAdmin from "@/Pages/LoginAdmin";
 
-import UploadProfile from "./components/calendar/upload/community/UploadProfile";
 function App() {
   return (
     <>
-      <UploadProfile
-        roundedCover="rounded-[5px]"
-        width={1024}
-        coverHeight={360}
-        avatarSize={210} //รัศสมีวงกลม
-        coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
-        avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
-        onCoverChange={(file) => console.log("cover:", file)}
-        onAvatarChange={(file) => console.log("avatar:", file)}
-      />
-
       <Routes>
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

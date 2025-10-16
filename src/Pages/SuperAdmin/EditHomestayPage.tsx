@@ -1,0 +1,500 @@
+// src/Pages/SuperAdmin/EditHomestayPage.tsx
+import React from "react";
+import * as z from "zod";
+import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import { Icon } from "@iconify/react";
+
+import Button from "@/Components/Button";
+import TextField from "@/Components/TextField";
+import TextArea from "@/Components/TextArea";
+import MapPicker from "@/Components/MapPicker";
+import ThailandLocationSelector, { type ThailandLocation } from "@/Components/Selector/ThailandLocationSelector";
+import { Modal } from "@/Components/Modal/Modal";
+
+const apiUrl = import.meta.env.VITE_API_URL as string;
+
+type HomestayForm = {
+    name: string;
+    type: string;
+    facility: string;
+    guestPerRoom: string;
+    totalRoom: string;
+
+    houseNumber: string;
+    villageNumber: string;
+    province: string;
+    district: string;
+    subDistrict: string;
+    postalCode: string;
+    addressDetail: string;
+
+    latitude: string;
+    longitude: string;
+    placeQuery: string;
+};
+
+const initialForm: HomestayForm = {
+    name: "",
+    type: "",
+    facility: "",
+    guestPerRoom: "",
+    totalRoom: "",
+    houseNumber: "",
+    villageNumber: "",
+    province: "",
+    district: "",
+    subDistrict: "",
+    postalCode: "",
+    addressDetail: "",
+    latitude: "",
+    longitude: "",
+    placeQuery: "",
+};
+
+// ใช้ schema แบบเดียวกับหน้าสร้าง (ให้ postalCode เป็น string เพื่อเข้ากับ selector)
+const schema = z.object({
+    name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
+    type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
+    facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
+
+    guestPerRoom: z
+        .string()
+        .min(1)
+        .refine((v) => Number(v) >= 1 && Number.isInteger(Number(v)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
+
+    totalRoom: z
+        .string()
+        .min(1)
+        .refine((v) => Number(v) >= 1 && Number.isInteger(Number(v)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
+
+    houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
+    villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
+    province: z.string().min(1, "กรุณาเลือกจังหวัด"),
+    district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+    subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+    postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+    addressDetail: z.string().optional().default(""),
+
+    // หากต้องการบังคับ map ให้เปิดคอมเมนต์สองบรรทัดนี้
+    // latitude: z.string().min(1, "กรุณาปักหมุดบนแผนที่"),
+    // longitude: z.string().min(1, "กรุณาปักหมุดบนแผนที่"),
+
+    placeQuery: z.string().optional().default(""),
+});
+
+type FormErrors = Partial<Record<keyof HomestayForm, string>>;
+
+export default function EditHomestayPage() {
+    const { homestayId } = useParams();
+    const navigate = useNavigate();
+
+    const [form, setForm] = React.useState<HomestayForm>(initialForm);
+    const [formErrors, setFormErrors] = React.useState<FormErrors>({});
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+
+    const [confirmOpen, setConfirmOpen] = React.useState(false);
+    const [pendingPayload, setPendingPayload] = React.useState<any | null>(null);
+
+    // เก็บ communityId ไว้ใช้ตอน navigate กลับ
+    const [communityId, setCommunityId] = React.useState<number | null>(null);
+
+    // โหลดข้อมูลเดิม
+    React.useEffect(() => {
+        (async () => {
+            try {
+                setIsLoading(true);
+                setErrorMessage(null);
+
+                const id = Number(homestayId);
+                if (!id) throw new Error("homestayId ไม่ถูกต้อง");
+
+                const res = await axios.get(`${apiUrl}/super/homestays/${id}`, {
+                    withCredentials: true,
+                });
+
+                const hs = res?.data?.data ?? res?.data;
+                if (!hs) throw new Error("ไม่พบข้อมูลที่พัก");
+
+                setCommunityId(hs.community?.id ?? null);
+
+                setForm({
+                    name: hs.name ?? "",
+                    type: hs.type ?? "",
+                    facility: hs.facility ?? "",
+                    guestPerRoom: String(hs.guestPerRoom ?? ""),
+                    totalRoom: String(hs.totalRoom ?? ""),
+
+                    houseNumber: hs.location?.houseNumber ?? "",
+                    villageNumber: String(hs.location?.villageNumber ?? ""),
+                    province: hs.location?.province ?? "",
+                    district: hs.location?.district ?? "",
+                    subDistrict: hs.location?.subDistrict ?? "",
+                    postalCode: hs.location?.postalCode ?? "",
+                    addressDetail: hs.location?.detail ?? "",
+
+                    latitude: String(hs.location?.latitude ?? ""),
+                    longitude: String(hs.location?.longitude ?? ""),
+                    placeQuery: "",
+                });
+            } catch (err: any) {
+                console.error("Load homestay error:", err?.response?.data || err);
+                setErrorMessage(
+                    err?.response?.data?.message ||
+                    err?.response?.data?.error ||
+                    err?.message ||
+                    "โหลดข้อมูลไม่สำเร็จ"
+                );
+            } finally {
+                setIsLoading(false);
+            }
+        })();
+    }, [homestayId]);
+
+    // validate ช่องใดช่องหนึ่ง
+    const validateField = (key: keyof HomestayForm, val: any) => {
+        const base = { ...form, [key]: val };
+        const r = schema.safeParse(base);
+        setFormErrors((prev) => ({
+            ...prev,
+            [key]: r.success ? undefined : r.error.issues.find((i) => i.path[0] === key)?.message,
+        }));
+    };
+
+    // validate ทั้งฟอร์ม
+    const validateAll = () => {
+        const r = schema.safeParse(form);
+        if (r.success) {
+            setFormErrors({});
+            return true;
+        }
+        const errs: FormErrors = {};
+        for (const issue of r.error.issues) {
+            errs[issue.path[0] as keyof HomestayForm] = issue.message;
+        }
+        setFormErrors(errs);
+        return false;
+    };
+
+    const setField = <K extends keyof HomestayForm>(key: K, value: HomestayForm[K]) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
+        validateField(key, value);
+    };
+
+    const startPos = React.useMemo(
+        () =>
+            [
+                Number(form.latitude) || 13.7563,
+                Number(form.longitude) || 100.5018,
+            ] as [number, number],
+        [form.latitude, form.longitude]
+    );
+
+    const normalizeOrDefault = (v: string, fallback = "") => {
+        const t = (v ?? "").toString().trim();
+        return t.length ? t : fallback;
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isSaving) return;
+
+        setErrorMessage(null);
+        setSuccessMessage(null);
+
+        if (!validateAll()) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
+        // เตรียม payload สำหรับ PATCH
+        const payload = {
+            name: normalizeOrDefault(form.name),
+            type: normalizeOrDefault(form.type),
+            guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
+            totalRoom: Math.max(1, Number(form.totalRoom || 0)),
+            facility: normalizeOrDefault(form.facility),
+            location: {
+                houseNumber: normalizeOrDefault(form.houseNumber),
+                villageNumber: Number(form.villageNumber) || null,
+                subDistrict: normalizeOrDefault(form.subDistrict),
+                district: normalizeOrDefault(form.district),
+                province: normalizeOrDefault(form.province),
+                postalCode: normalizeOrDefault(form.postalCode),
+                detail: normalizeOrDefault(form.addressDetail),
+                latitude: Number(form.latitude),
+                longitude: Number(form.longitude),
+            },
+            // ถ้าจะรองรับการแก้รูป ให้ส่ง homestayImage: [{ image, type }]
+            // homestayImage: [...]
+        };
+
+        setPendingPayload(payload);
+        setConfirmOpen(true);
+    };
+
+    const onConfirmSave = async () => {
+        setConfirmOpen(false);
+        if (!pendingPayload) return;
+
+        try {
+            setIsSaving(true);
+            setErrorMessage(null);
+            setSuccessMessage(null);
+
+            const id = Number(homestayId);
+            if (!id) throw new Error("homestayId ไม่ถูกต้อง");
+
+            await axios.patch(`${apiUrl}/super/homestays/${id}`, pendingPayload, {
+                withCredentials: true,
+                headers: { "Content-Type": "application/json" },
+            });
+
+            setSuccessMessage("อัปเดตที่พักสำเร็จ");
+
+            // กลับไปหน้าแก้ชุมชน (ใช้ communityId จากข้อมูลเดิม)
+            if (communityId) {
+                navigate(`/super/community/edit/${communityId}`);
+            } else {
+                // fallback
+                navigate(-1);
+            }
+        } catch (err: any) {
+            console.error("Update homestay error:", err?.response?.data || err);
+            setErrorMessage(
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                err?.message ||
+                "อัปเดตที่พักไม่สำเร็จ"
+            );
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } finally {
+            setIsSaving(false);
+            setPendingPayload(null);
+        }
+    };
+
+    return (
+        <div className="w-full max-w-none px-0">
+            {/* Alerts */}
+            {errorMessage && (
+                <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">
+                    {errorMessage}
+                </div>
+            )}
+            {successMessage && (
+                <div className="mb-3 rounded-md bg-emerald-50 text-emerald-700 px-4 py-2 border border-emerald-200">
+                    {successMessage}
+                </div>
+            )}
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3">
+                <button
+                    type="button"
+                    className="flex items-center gap-2 text-xl"
+                    onClick={() =>
+                        communityId
+                            ? navigate(`/super/community/edit/${communityId}`)
+                            : navigate(-1)
+                    }
+                >
+                    <Icon icon="mingcute:arrow-left-line" width={22} />
+                    <span>แก้ไขที่พัก</span>
+                </button>
+            </div>
+
+            {/* Loading */}
+            {isLoading ? (
+                <div className="rounded-lg bg-white p-5 shadow-sm border">กำลังโหลดข้อมูล...</div>
+            ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border">
+                        <div className="space-y-6">
+                            {/* ชื่อ/ประเภท/สิ่งอำนวยความสะดวก */}
+                            <div className="grid md:grid-cols-2 gap-5">
+                                <TextField
+                                    id="name"
+                                    label="ชื่อที่พัก"
+                                    required
+                                    placeholder="พิมพ์ชื่อที่พัก"
+                                    value={form.name}
+                                    onChange={(e) => setField("name", e.target.value)}
+                                    error={!!formErrors.name}
+                                    helperText={formErrors.name}
+                                />
+                                <TextField
+                                    id="type"
+                                    label="ประเภทที่พัก"
+                                    required
+                                    placeholder="พิมพ์ประเภทของที่พัก"
+                                    value={form.type}
+                                    onChange={(e) => setField("type", e.target.value)}
+                                    error={!!formErrors.type}
+                                    helperText={formErrors.type}
+                                />
+                                <div className="md:col-span-2">
+                                    <TextArea
+                                        id="facility"
+                                        label="สิ่งอำนวยความสะดวก"
+                                        required
+                                        placeholder="ใส่รายละเอียดความสะดวกสบายของที่พัก"
+                                        value={form.facility}
+                                        onChange={(e) => setField("facility", e.target.value)}
+                                        error={!!formErrors.facility}
+                                        helperText={formErrors.facility}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* จำนวนห้อง/จำนวนผู้เข้าพัก */}
+                            <div className="grid md:grid-cols-2 gap-5">
+                                <TextField
+                                    id="totalRoom"
+                                    label="จำนวนห้องทั้งหมด"
+                                    required
+                                    type="number"
+                                    placeholder="กรอกจำนวนห้องทั้งหมด"
+                                    value={form.totalRoom}
+                                    onChange={(e) => setField("totalRoom", e.target.value)}
+                                    error={!!formErrors.totalRoom}
+                                    helperText={formErrors.totalRoom}
+                                />
+                                <TextField
+                                    id="guestPerRoom"
+                                    label="จำนวนผู้เข้าพักต่อห้อง"
+                                    required
+                                    type="number"
+                                    placeholder="กรอกจำนวนผู้เข้าพักต่อห้อง"
+                                    value={form.guestPerRoom}
+                                    onChange={(e) => setField("guestPerRoom", e.target.value)}
+                                    error={!!formErrors.guestPerRoom}
+                                    helperText={formErrors.guestPerRoom}
+                                />
+                            </div>
+
+                            {/* ที่อยู่ */}
+                            <div className="grid md:grid-cols-2 gap-5">
+                                <TextField
+                                    id="houseNumber"
+                                    label="บ้านเลขที่"
+                                    required
+                                    placeholder="บ้านเลขที่"
+                                    value={form.houseNumber}
+                                    onChange={(e) => setField("houseNumber", e.target.value)}
+                                    error={!!formErrors.houseNumber}
+                                    helperText={formErrors.houseNumber}
+                                />
+                                <TextField
+                                    id="villageNumber"
+                                    label="หมู่ที่"
+                                    required
+                                    placeholder="หมู่ที่"
+                                    value={form.villageNumber}
+                                    onChange={(e) => setField("villageNumber", e.target.value)}
+                                    error={!!formErrors.villageNumber}
+                                    helperText={formErrors.villageNumber}
+                                />
+
+                                <div className="md:col-span-2">
+                                    <ThailandLocationSelector
+                                        value={{
+                                            province: form.province,
+                                            district: form.district,
+                                            subdistrict: form.subDistrict,
+                                            postalCode: form.postalCode,
+                                        }}
+                                        onChange={(loc: ThailandLocation) => {
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                province: loc.province ?? "",
+                                                district: loc.district ?? "",
+                                                subDistrict: loc.subdistrict ?? "",
+                                                postalCode: loc.postalCode ?? "",
+                                            }));
+                                            validateField("province", loc.province ?? "");
+                                            validateField("district", loc.district ?? "");
+                                            validateField("subDistrict", loc.subdistrict ?? "");
+                                            validateField("postalCode", loc.postalCode ?? "");
+                                        }}
+                                    />
+                                    <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
+                                        <div>{!!formErrors.province && <div className="text-red-600 text-sm">{formErrors.province}</div>}</div>
+                                        <div>{!!formErrors.district && <div className="text-red-600 text-sm">{formErrors.district}</div>}</div>
+                                        <div>{!!formErrors.subDistrict && <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>}</div>
+                                        <div>{!!formErrors.postalCode && <div className="text-red-600 text-sm">{formErrors.postalCode}</div>}</div>
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <TextArea
+                                        id="addressDetail"
+                                        label="คำอธิบายที่อยู่"
+                                        placeholder="คำอธิบายที่อยู่"
+                                        value={form.addressDetail}
+                                        onChange={(e) => setField("addressDetail", e.target.value)}
+                                        error={!!formErrors.addressDetail}
+                                        helperText={formErrors.addressDetail}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* ค้นหาสถานที่ + แผนที่ */}
+                            <div className="space-y-3">
+                                <TextField
+                                    id="placeQuery"
+                                    label="ค้นหาสถานที่"
+                                    placeholder="พิมพ์ชื่อสถานที่หรือสถานที่ใกล้เคียงเพื่อปักหมุด"
+                                    value={form.placeQuery}
+                                    onChange={(e) => setField("placeQuery", e.target.value)}
+                                />
+                                <MapPicker
+                                    startingPosition={startPos}
+                                    startingZoom={12}
+                                    onChange={([lat, lng]) => {
+                                        setField("latitude", String(lat));
+                                        setField("longitude", String(lng));
+                                    }}
+                                />
+                                <div className="grid grid-cols-2 gap-3 mt-2">
+                                    {!!formErrors.latitude && <div className="text-red-600 text-sm">{formErrors.latitude}</div>}
+                                    {!!formErrors.longitude && <div className="text-red-600 text-sm">{formErrors.longitude}</div>}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                        <div className="w-36">
+                            <Button type="cancel" onClick={() => (communityId ? navigate(`/super/community/edit/${communityId}`) : navigate(-1))}>
+                                ยกเลิก
+                            </Button>
+                        </div>
+                        <div className="w-36">
+                            <Button type="confirm-admin" htmlType="submit">
+                                {isSaving ? "กำลังบันทึก..." : "บันทึก"}
+                            </Button>
+                        </div>
+                    </div>
+                </form>
+            )}
+
+            {/* Modal ยืนยัน */}
+            <Modal
+                open={confirmOpen}
+                title="ยืนยันการบันทึกข้อมูลที่พัก"
+                text="คุณต้องการอัปเดตข้อมูลที่พักนี้หรือไม่"
+                confirmText="ยืนยัน"
+                cancelText="ยกเลิก"
+                onConfirm={onConfirmSave}
+                onCancel={() => {
+                    setConfirmOpen(false);
+                    setPendingPayload(null);
+                }}
+            />
+        </div>
+    );
+}

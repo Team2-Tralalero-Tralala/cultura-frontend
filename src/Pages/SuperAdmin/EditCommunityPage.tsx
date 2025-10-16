@@ -660,7 +660,7 @@ export function EditCommunity() {
                 <div className="text-base font-bold mb-1.5">
                   <h3>ที่พัก</h3>
                 </div>
-                <Link to="/super/community/:communityId/homestay/create">
+                <Link to={`/super/community/${communityId}/homestay/create`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="healthicons:home-outline"

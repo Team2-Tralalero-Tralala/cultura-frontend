@@ -4,14 +4,14 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DataTable from "../../Components/Tables/Index";
+import DataTable from "../../components/Tables/Index";
 import type {
   Column,
   DataTableActionsConfig,
   BulkAction,
 } from "../../Components/Tables/Types";
 import { TrashIcon } from "../../Components/Tables/Icon";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
+import SearchBarTable from "../../components/Search/SearchBarTable";
 import axios from "axios";
 import Button from "@/Components/Button";
 

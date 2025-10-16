@@ -14,47 +14,49 @@ import LoginAdmin from "@/Pages/LoginAdmin";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/guest/*">
-        <Route path="login" element={<LoginTourist />} />
-        <Route path="partner/login" element={<LoginAdmin />} />
-      </Route>
+    <>
+      <Routes>
+        <Route path="/guest/*">
+          <Route path="login" element={<LoginTourist />} />
+          <Route path="partner/login" element={<LoginAdmin />} />
+        </Route>
 
-      <Route
-        path="/super/*"
-        element={
-          <ProtectedRoute allow={["superadmin"]}>
-            <SuperAdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="*" element={<SuperAdminRoutes />} />
-      </Route>
+        <Route
+          path="/super/*"
+          element={
+            <ProtectedRoute allow={["superadmin"]}>
+              <SuperAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<SuperAdminRoutes />} />
+        </Route>
 
-      <Route
-        path="/admin/*"
-        element={
-          <ProtectedRoute allow={["admin"]}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        {/* เส้นทางภายใน /super/ ทั้งหมด */}
-        <Route path="*" element={<AdminRoutes />} />
-      </Route>
-      <Route
-        path="/member/*"
-        element={
-          <ProtectedRoute allow={["member"]}>
-            <MemberLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="*" element={<MemberRoutes />} />
-      </Route>
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* เส้นทางภายใน /super/ ทั้งหมด */}
+          <Route path="*" element={<AdminRoutes />} />
+        </Route>
+        <Route
+          path="/member/*"
+          element={
+            <ProtectedRoute allow={["member"]}>
+              <MemberLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<MemberRoutes />} />
+        </Route>
 
-      {/* fallback */}
-    </Routes>
+        {/* fallback */}
+      </Routes>
+    </>
   );
 }
 

@@ -85,8 +85,6 @@ const communitySchema = z.object({
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
 
-  postalCode: z.string("กรุณาเลือกข้อมูล").min(1, "กรุณาเลือกข้อมูล"),
-
   latitude: z
     .string("กรุณากรอกละติจูด")
     .min(
@@ -197,6 +195,22 @@ export default function CreateCommuninityPage() {
     return true;
   };
 
+  React.useEffect(() => {
+    if (location.province) {
+      setFormData((prev) => ({
+        ...prev,
+        province: location.province,
+        district: location.district,
+        subDistrict: location.subdistrict,
+        postalCode: location.postalCode,
+      }));
+
+      // ตรวจสอบ error ทันที
+      validateField("province", location.province);
+      validateField("district", location.district);
+      validateField("subDistrict", location.subdistrict);
+    }
+  }, [location]);
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -247,6 +261,10 @@ export default function CreateCommuninityPage() {
       longitude,
       latitude,
       villageNumber,
+      province,
+      district,
+      subDistrict,
+      postalCode,
       ...cleanForm
     } = formData;
 
@@ -540,7 +558,6 @@ export default function CreateCommuninityPage() {
                   validateField("province", loc.province);
                   validateField("district", loc.district);
                   validateField("subDistrict", loc.subdistrict);
-                  validateField("postalCode", loc.postalCode);
                 }}
                 error={{
                   province: !!formErrors.province,

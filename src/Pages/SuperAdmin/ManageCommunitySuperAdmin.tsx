@@ -22,6 +22,8 @@ import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 
 import type { CommunityRow } from "@/Types/Community";
 import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
+import Button from "@/Components/Button";
+import { Modal } from "@/Components/Modal/Modal";
 
 // ================= Utility =================
 // (แนะนำ) ถ้ามีใช้ซ้ำหลายหน้า ควรย้ายไป utils/string.ts แล้ว import มาใช้
@@ -89,6 +91,9 @@ const bulkActions: BulkAction<CommunityRow>[] = [
   },
 ];
 
+const handleDelete = async (communityId: number) => {
+  await deleteCommunity(Number(communityId));
+};
 // ================= Component =================
 export default function ManageCommunitySuperAdmin() {
   const navigate = useNavigate();
@@ -100,6 +105,8 @@ export default function ManageCommunitySuperAdmin() {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [openConfirm, setOpenConfirm] = React.useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // ====== ค้นหา + ตัวกรอง ======
   const [searchQuery, setSearchQuery] = useState("");
@@ -193,20 +200,10 @@ export default function ManageCommunitySuperAdmin() {
     className: "pr-6", //เอาไว้ขยับ "จัดการ" ให้สวยๆ
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/super/community/detail/${row.id}`),
+      edit: (row) => navigate(`/super/community/edit/${row.id}`),
       delete: async (row) => {
-        if (!window.confirm(`ยืนยันลบชุมชน "${row.name}" ?`)) return;
-        try {
-          await deleteCommunity(row.id);
-          await reload();
-        } catch (error: any) {
-          console.error(error);
-          alert(
-            `ลบไม่สำเร็จ: ${
-              error?.response?.data?.message ?? error?.message ?? "unknown error"
-            }`
-          );
-        }
+        setDeleteId(row.id);
+        setOpenConfirm(true);
       },
     },
   };
@@ -228,20 +225,21 @@ export default function ManageCommunitySuperAdmin() {
 
           {/* Filter (อยู่ขวาของ search) */}
           <FilterDropdown
-            options={statusOptions as unknown as { label: string; value: string }[]}
+            options={
+              statusOptions as unknown as { label: string; value: string }[]
+            }
             selected={statusFilter}
             onChange={(v) => setStatusFilter(v as StatusFilter)}
           />
 
           <div className="ml-auto">
-            <button
+            <Button
               onClick={() => navigate("/super/community/create")}
               // (แนะนำ) ถ้ามี theme ให้ใช้คลาสแบรนด์แทน hex
-              className="inline-flex items-center gap-2 rounded-form px-4 py-2 text-white bg-[#055035] hover:bg-[#04402a] shadow-sm transition"
               aria-label="เพิ่มชุมชนใหม่"
             >
               <span>+ เพิ่มชุมชน</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -265,6 +263,34 @@ export default function ManageCommunitySuperAdmin() {
         onPageChange={(p) => setCurrentPage(p)}
         theme="brand"
         className="bg-white rounded-lg"
+      />
+      <Modal
+        open={openConfirm}
+        title="ยืนยันการลบชุมชน"
+        text="คุณต้องการยืนยันการลบชุมชนหรือไม่"
+        onConfirm={async () => {
+          if (deleteId == null) return;
+          try {
+            await handleDelete(deleteId);
+            await reload();
+          } catch (error: any) {
+            console.error(error);
+            alert(
+              `ลบไม่สำเร็จ: ${
+                error?.response?.data?.message ??
+                error?.message ??
+                "unknown error"
+              }`
+            );
+          } finally {
+            setOpenConfirm(false);
+            setDeleteId(null);
+          }
+        }}
+        onCancel={() => {
+          setOpenConfirm(false);
+          setDeleteId(null);
+        }}
       />
     </div>
   );

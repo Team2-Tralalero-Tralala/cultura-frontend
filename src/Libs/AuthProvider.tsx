@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         switch (authUser.role) {
           case "superadmin":
-            navigate("/super/home", { replace: true });
+            navigate("super/communities", { replace: true });
             break;
           case "admin":
             navigate("/admin/home", { replace: true });

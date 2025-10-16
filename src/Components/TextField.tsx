@@ -32,8 +32,21 @@ function EyeIcon({ hidden }: { hidden: boolean }) {
     <Icon icon="mdi:eye-outline" style={{ fontSize: "24px" }} />
   );
 }
-
-/* ---------- TextField main component ---------- */
+/*
+ * ฟังก์ชัน : TextField
+ * คำอธิบาย : Component หลักสำหรับ input ฟอร์ม รองรับ text, password, และ tel
+ * Input :
+ *   - id (string) : id ของ input element
+ *   - label (string) : label ที่แสดงด้านบนของ input
+ *   - required (boolean) : แสดงเครื่องหมาย * ถ้าเป็นฟิลด์บังคับ
+ *   - placeholder (string) : ข้อความ placeholder ใน input
+ *   - type (string) : ประเภท input เช่น "text", "password", "tel"
+ *   - value (string) : ค่าปัจจุบันของ input
+ *   - onChange (function) : callback เมื่อค่ามีการเปลี่ยนแปลง
+ *   - error (boolean) : สถานะ error
+ *   - helperText (string) : ข้อความแสดง error หรือคำแนะนำ
+ * Output : React component <BaseFieldProps> สำหรับใช้งานเป็น input ในฟอร์ม
+ */
 const TextField: React.FC<BaseFieldProps> = ({
   id,
   label,
@@ -41,6 +54,8 @@ const TextField: React.FC<BaseFieldProps> = ({
   placeholder,
   type = "text",
   value,
+  name,
+  readOnly,
   onChange,
   error = false,
   helperText = "",
@@ -78,11 +93,14 @@ const TextField: React.FC<BaseFieldProps> = ({
         {!isTel && (
           <input
             id={id}
+            name={name}
             type={currentType}
             placeholder={placeholder}
             onChange={onChange}
             value={value}
-            className={`block w-full rounded-form border ${
+            readOnly={readOnly}
+            className={`block w-full rounded-form border-1 
+            ${
               error
                 ? "border-red-600 focus:ring-red-600 focus:border-red-600"
                 : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"

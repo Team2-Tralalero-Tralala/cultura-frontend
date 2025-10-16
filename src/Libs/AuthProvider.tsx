@@ -1,25 +1,20 @@
-import React, { createContext, useState, useCallback } from "react";
-import { api, setAuthToken } from "@/Libs/axios";
+import React, { createContext, useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { Navigate, useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
 
-export type RegisterData = {
+export type AuthUser = {
+  id: number;
   username: string;
-  password: string;
-  email: string;
-  fname: string;
-  lname: string;
-  phone: string;
-  role: string;
+  role: Role;
 };
-
-export type AuthUser = { id: number; username: string; role: Role };
 
 type AuthContextValue = {
   user: AuthUser | null;
   accessToken: string | null;
   login: (username: string, password: string) => Promise<AuthUser>;
-  register: (data: RegisterData) => Promise<boolean>;
+  register: (data: any) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
@@ -33,51 +28,121 @@ export const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const login = useCallback(async (username: string, password: string) => {
-    const res = await api.post("/auth/login", { username, password });
-    const payload = res.data?.data ?? res.data;
-    const u = payload?.user ?? payload;
-    const token = payload?.token;
-
-    if (token) {
-      localStorage.setItem("accessToken", token);
-      setAuthToken(token);
-    }
-
-    const roleLower = (u?.role?.name ?? u?.role ?? "").toString().toLowerCase();
-    const authUser: AuthUser = {
-      id: Number(u.id),
-      username: u.username ?? u.email ?? "",
-      role: roleLower as Role,
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/api/auth/me", {
+          withCredentials: true,
+        });
+        const { id, username, role } = res.data.data;
+        const authUser: AuthUser = {
+          id: id,
+          username: username,
+          role: role,
+        };
+        setUser(authUser);
+      } catch (err) {
+        setUser(null);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setUser(authUser);
-    return authUser;
+    fetchUser();
   }, []);
 
-  const register = useCallback(async (data: RegisterData) => {
-    try {
-      const res = await api.post("/auth/signup", data);
-      return res.status === 201 || res.status === 200;
-    } catch {
-      return false;
-    }
+  const login = useCallback(
+    async (username: string, password: string) => {
+      try {
+        const res = await axios.post(
+          "http://localhost:3000/api/auth/login",
+          { username, password },
+          { withCredentials: true }
+        );
+
+        const { user: u } = res.data.data;
+
+        const authUser: AuthUser = {
+          id: u.id,
+          username: u.username,
+          role: u.role.toLowerCase(),
+        };
+
+        setUser(authUser);
+
+        switch (authUser.role) {
+          case "superadmin":
+            navigate("super/communities", { replace: true });
+            break;
+          case "admin":
+            navigate("/admin/home", { replace: true });
+            break;
+          case "member":
+            navigate("/member/home", { replace: true });
+            break;
+          case "tourist":
+            navigate("/tourist/home", { replace: true });
+            break;
+          default:
+            navigate("/", { replace: true });
+            break;
+        }
+
+        return authUser;
+      } catch (error) {
+        console.error("Login failed:", error);
+        throw error;
+      }
+    },
+    [navigate]
+  );
+
+  const register = useCallback(async (data: any) => {
+    const res = await axios.post("http://localhost:3000/api/auth/signup", data);
+    return res.status === 200 || res.status === 201;
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await api.post("/auth/logout", {});
-    } finally {
-      localStorage.removeItem("accessToken");
-      setAuthToken(undefined);
-      setUser(null);
+      if (!user?.role) return;
+      const currentRole = user.role.toLowerCase();
+      switch (currentRole) {
+        case "tourist":
+          navigate("/guest/home", { replace: true });
+          break;
+        default:
+          navigate("/guest/partner/login", { replace: true });
+          break;
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
     }
-  }, []);
+    await new Promise((r) => setTimeout(r, 50));
+
+    await axios.post(
+      "http://localhost:3000/api/auth/logout",
+      {},
+      { withCredentials: true }
+    );
+
+    setUser(null);
+
+    // redirect ตาม role
+  }, [navigate, user]);
+
+  if (loading) return null;
 
   return (
-    <AuthContext.Provider value={{ user, accessToken: localStorage.getItem("accessToken"), login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, accessToken: null, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

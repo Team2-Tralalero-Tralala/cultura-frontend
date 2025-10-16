@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Icon } from '@iconify/react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
+import { Link, useLocation } from "react-router-dom";
 
 type MenuKey =
-  | 'communities'
-  | 'accounts'
-  | 'users-blocked'
-  | 'packages'
-  | 'package-requests'
-  | 'tags'
-  | 'dashboard'
-  | 'logs'
-  | 'setting'
-  | 'logout'
+  | "communities"
+  | "accounts"
+  | "users-blocked"
+  | "packages"
+  | "package-requests"
+  | "tags"
+  | "dashboard"
+  | "logs"
+  | "setting"
+  | "logout"
   | null;
 
 const SidebarSuperAdmin: React.FC = () => {
@@ -21,9 +21,7 @@ const SidebarSuperAdmin: React.FC = () => {
 
   // คำนวณ basePath ถ้า URL มี /superadmin
   // (หรือปรับให้ตรงกับ prefix ที่คุณใช้จริง)
-  const basePath = pathname.startsWith('/super')
-    ? '/super'
-    : '';
+  const basePath = pathname.startsWith("/super") ? "/super" : "";
 
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
@@ -34,41 +32,41 @@ const SidebarSuperAdmin: React.FC = () => {
     if (basePath) {
       subPath = pathname.substring(basePath.length);
       // ยืนยันเริ่มต้นด้วย '/'
-      if (!subPath.startsWith('/')) {
-        subPath = '/' + subPath;
+      if (!subPath.startsWith("/")) {
+        subPath = "/" + subPath;
       }
     }
 
     // ตัวอย่างเช่น subPath = '/communities' หรือ '/users/blocked' เป็นต้น
-    if (subPath === '/communities/all') {
-      setActiveMenuKey('communities');
+    if (subPath === "/communities/all") {
+      setActiveMenuKey("communities");
       setOpenDropdown(null);
-    } else if (subPath === '/users/blocked') {
-      setActiveMenuKey('users-blocked');
-      setOpenDropdown('accounts');
-    } else if (subPath.startsWith('/accounts/all')) {
-      setActiveMenuKey('accounts');
-      setOpenDropdown('accounts');
-    } else if (subPath === '/package-requests') {
-      setActiveMenuKey('package-requests');
-      setOpenDropdown('packages');
-    } else if (subPath.startsWith('/packages/all')) {
-      setActiveMenuKey('packages');
-      setOpenDropdown('packages');
-    } else if (subPath === '/tags') {
-      setActiveMenuKey('tags');
+    } else if (subPath === "/users/blocked") {
+      setActiveMenuKey("users-blocked");
+      setOpenDropdown("accounts");
+    } else if (subPath.startsWith("/accounts/all")) {
+      setActiveMenuKey("accounts");
+      setOpenDropdown("accounts");
+    } else if (subPath === "/package-requests") {
+      setActiveMenuKey("package-requests");
+      setOpenDropdown("packages");
+    } else if (subPath.startsWith("/packages/all")) {
+      setActiveMenuKey("packages");
+      setOpenDropdown("packages");
+    } else if (subPath === "/tags") {
+      setActiveMenuKey("tags");
       setOpenDropdown(null);
-    } else if (subPath === '/dashboard') {
-      setActiveMenuKey('dashboard');
+    } else if (subPath === "/dashboard") {
+      setActiveMenuKey("dashboard");
       setOpenDropdown(null);
-    } else if (subPath === '/logs') {
-      setActiveMenuKey('logs');
+    } else if (subPath === "/logs") {
+      setActiveMenuKey("logs");
       setOpenDropdown(null);
-    } else if (subPath === '/setting') {
-      setActiveMenuKey('setting');
+    } else if (subPath === "/setting") {
+      setActiveMenuKey("setting");
       setOpenDropdown(null);
-    } else if (subPath === '/logout') {
-      setActiveMenuKey('logout');
+    } else if (subPath === "/logout") {
+      setActiveMenuKey("logout");
       setOpenDropdown(null);
     } else {
       setActiveMenuKey(null);
@@ -81,7 +79,7 @@ const SidebarSuperAdmin: React.FC = () => {
     if (parentKey) {
       setOpenDropdown(parentKey);
     } else {
-      setOpenDropdown(prev => (prev === key ? null : key));
+      setOpenDropdown((prev) => (prev === key ? null : key));
     }
   };
 
@@ -91,16 +89,16 @@ const SidebarSuperAdmin: React.FC = () => {
     <div className="h-screen w-60 bg-[#055035] text-white flex flex-col justify-between py-6 px-4">
       <div>
         <div className="flex items-center justify-center mb-6">
-          <img src="/Cultura.png" alt="Cultura logo" className="h-10" />
+          <img src="/logo-white.png" alt="Cultura logo" className="h-10" />
         </div>
 
         <nav className="flex flex-col gap-2 text-base-semibold">
           {/* จัดการชุมชน */}
           <Link
             to={`${basePath}/communities`}
-            onClick={() => handleClick('communities')}
+            onClick={() => handleClick("communities")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive('communities') ? 'bg-[#0D845A]' : ''
+              isActive("communities") ? "bg-[#0D845A]" : ""
             }`}
           >
             <Icon icon="ri:community-line" className="text-xl" />
@@ -110,24 +108,30 @@ const SidebarSuperAdmin: React.FC = () => {
           {/* จัดการบัญชี (dropdown) */}
           <div>
             <button
-              onClick={() => handleClick('accounts')}
+              onClick={() => handleClick("accounts")}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive('accounts') ? 'bg-[#0D845A]' : ''
+                isActive("accounts") ? "bg-[#0D845A]" : ""
               }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
                 จัดการบัญชี
               </span>
-              <Icon icon={openDropdown === 'accounts' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              <Icon
+                icon={
+                  openDropdown === "accounts"
+                    ? "mdi:chevron-up"
+                    : "mdi:chevron-down"
+                }
+              />
             </button>
-            {openDropdown === 'accounts' && (
+            {openDropdown === "accounts" && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
                   to={`${basePath}/users/blocked`}
-                  onClick={() => handleClick('users-blocked', 'accounts')}
+                  onClick={() => handleClick("users-blocked", "accounts")}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive('users-blocked') ? 'bg-[#0D845A]' : ''
+                    isActive("users-blocked") ? "bg-[#0D845A]" : ""
                   }`}
                 >
                   การระงับบัญชี
@@ -139,24 +143,33 @@ const SidebarSuperAdmin: React.FC = () => {
           {/* จัดการแพ็กเกจ (dropdown) */}
           <div>
             <button
-              onClick={() => handleClick('packages')}
+              onClick={() => handleClick("packages")}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive('packages') ? 'bg-[#0D845A]' : ''
+                isActive("packages") ? "bg-[#0D845A]" : ""
               }`}
             >
               <span className="flex items-center gap-3">
-                <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
+                <Icon
+                  icon="material-symbols:card-travel-outline"
+                  className="text-xl"
+                />
                 จัดการแพ็กเกจ
               </span>
-              <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              <Icon
+                icon={
+                  openDropdown === "packages"
+                    ? "mdi:chevron-up"
+                    : "mdi:chevron-down"
+                }
+              />
             </button>
-            {openDropdown === 'packages' && (
+            {openDropdown === "packages" && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
                   to={`${basePath}/package-requests`}
-                  onClick={() => handleClick('package-requests', 'packages')}
+                  onClick={() => handleClick("package-requests", "packages")}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive('package-requests') ? 'bg-[#0D845A]' : ''
+                    isActive("package-requests") ? "bg-[#0D845A]" : ""
                   }`}
                 >
                   คำขออนุมัติ
@@ -168,9 +181,9 @@ const SidebarSuperAdmin: React.FC = () => {
           {/* จัดการประเภท */}
           <Link
             to={`${basePath}/tags`}
-            onClick={() => handleClick('tags')}
+            onClick={() => handleClick("tags")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive('tags') ? 'bg-[#0D845A]' : ''
+              isActive("tags") ? "bg-[#0D845A]" : ""
             }`}
           >
             <Icon icon="bi:tags" className="text-xl" />
@@ -180,9 +193,9 @@ const SidebarSuperAdmin: React.FC = () => {
           {/* รายงาน */}
           <Link
             to={`${basePath}/dashboard`}
-            onClick={() => handleClick('dashboard')}
+            onClick={() => handleClick("dashboard")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive('dashboard') ? 'bg-[#0D845A]' : ''
+              isActive("dashboard") ? "bg-[#0D845A]" : ""
             }`}
           >
             <Icon icon="mdi:view-dashboard-outline" className="text-xl" />
@@ -192,9 +205,9 @@ const SidebarSuperAdmin: React.FC = () => {
           {/* ประวัติการเข้าใช้งาน */}
           <Link
             to={`${basePath}/logs`}
-            onClick={() => handleClick('logs')}
+            onClick={() => handleClick("logs")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive('logs') ? 'bg-[#0D845A]' : ''
+              isActive("logs") ? "bg-[#0D845A]" : ""
             }`}
           >
             <Icon icon="ix:log" className="text-xl" />
@@ -207,9 +220,9 @@ const SidebarSuperAdmin: React.FC = () => {
         {/* ตั้งค่า */}
         <Link
           to={`${basePath}/setting`}
-          onClick={() => handleClick('setting')}
+          onClick={() => handleClick("setting")}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-            isActive('setting') ? 'bg-[#0D845A]' : ''
+            isActive("setting") ? "bg-[#0D845A]" : ""
           }`}
         >
           <Icon icon="mdi:cog-outline" className="text-xl" />
@@ -219,9 +232,9 @@ const SidebarSuperAdmin: React.FC = () => {
         {/* ออกจากระบบ */}
         <Link
           to={`${basePath}/logout`}
-          onClick={() => handleClick('logout')}
+          onClick={() => handleClick("logout")}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-            isActive('logout') ? 'bg-[#0D845A]' : ''
+            isActive("logout") ? "bg-[#0D845A]" : ""
           }`}
         >
           <Icon icon="mdi:logout" className="text-xl" />

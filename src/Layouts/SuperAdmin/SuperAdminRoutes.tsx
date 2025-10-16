@@ -1,18 +1,23 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
+import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
+import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
+import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
+import { Routes, Route } from "react-router-dom";
+import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
+import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 
-{/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/ }
-//import CommunityManagement from '../../Pages/SuperAdmin/ManageCommunity';
-
-const SuperAdminRoutes: React.FC = () => {
+export default function SuperAdminRoutes() {
   return (
     <Routes>
-      {/* 
-      <Route path="communities/all" element={<CommunityManagement />} />
-      <Route path="accounts/all" element={<ManageAccount />} />
-*/}
+      <Route path="community/create" element={<CreateCommuninityPage />} />
+      <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
+      <Route path="package/edit/:id" element={<EditPackagePage />} />
+      <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+      <Route
+        path="community/detail/:id"
+        element={<CommunityDetailSuperAdmin />}
+      />
     </Routes>
   );
-};
-
-export default SuperAdminRoutes;
+}

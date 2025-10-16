@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
-  // โหลดตัวแปรจาก .env ตาม mode (development / production)
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
@@ -12,6 +11,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        "~": path.resolve(__dirname, "./src"),
       },
     },
     server: {

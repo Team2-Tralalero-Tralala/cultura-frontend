@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router";
 import SuperAdminLayout from "./Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "./Layouts/SuperAdmin/SuperAdminRoutes";
 
-import AdminLayout from "./Layouts/Admin/Adminlayout";
+import AdminLayout from "./Layouts/Admin/AdminLayout";
 import AdminRoutes from "./Layouts/Admin/AdminRoutes";
 
 

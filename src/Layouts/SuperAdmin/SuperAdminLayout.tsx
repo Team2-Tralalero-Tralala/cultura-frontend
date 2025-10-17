@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import SidebarSuperAdmin from "../../Components/SidebarSuperAdmin";
 import NavbarSuperAdmin from "../../Components/NavbarSam";
 
-const SuperAdminLayout: React.FC = () => {
+export default function SuperAdminLayout() {
   return (
     <div className="flex h-screen">
       {/* Sidebar ด้านซ้าย */}
@@ -24,3 +24,4 @@ const SuperAdminLayout: React.FC = () => {
 };
 
 export default SuperAdminLayout;
+}

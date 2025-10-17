@@ -44,7 +44,7 @@ const NavbarSam = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-base font-medium">John Doe</span>
                     <span className="border-blue-400 border-1.8 text-xs bg-blue-100 text-blue-500 font-bold px-2 py-0.5 rounded-md">
-                      Super Admin
+                      Admin
                     </span>
                   </div>
                   <span className="text-gray-500 text-sm">

@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
-  // โหลดตัวแปรจาก .env ตาม mode (development / production)
+  const env = loadEnv(mode, process.cwd(), "");
 
   return {
     plugins: [react(), tailwindcss()],
@@ -13,4 +13,3 @@ export default defineConfig(({ mode }) => {
   },
   };
 });
-

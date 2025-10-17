@@ -33,6 +33,10 @@ export type CommunityFormData = {
   villageNumber?: number | null;
   longitude: number;
   latitude: number;
+  province: string;
+  district: string;
+  subDistrict: string;
+  postalCode: string;
   location: {
     province: string;
     district: string;

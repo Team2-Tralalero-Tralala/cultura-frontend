@@ -12,20 +12,23 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
-import Alert from "@mui/material/Alert";
 import * as z from "zod";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/Components/ThailandLocationSelector";
+} from "@/Components/Selector/ThailandLocationSelector";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
 import { createCommunity } from "@/Libs/CommunityService";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
-import MemberSelector from "@/Components/Selector/MemberSelector";
+import MemberSelector, {
+  type Member,
+} from "@/Components/Selector/MemberSelector";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -82,10 +85,6 @@ const communitySchema = z.object({
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-
-  postalCode: z
-    .string("กรุณาเลือกรหัสไปรษณีย์")
-    .min(1, "กรุณาเลือกรหัสไปรษณีย์"),
 
   latitude: z
     .string("กรุณากรอกละติจูด")
@@ -146,20 +145,17 @@ export default function CreateCommuninityPage() {
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [alert, setAlert] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-
+  const [coverFiles, setCoverFiles] = useState<File[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
    * Input : panel (string)
    * Output : อัปเดต state expanded
    */
   const handleChange =
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
       setExpanded(isExpanded ? panel : false);
-    };
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
@@ -170,7 +166,7 @@ export default function CreateCommuninityPage() {
    *    - หากตรวจสอบไม่ผ่าน จะเซ็ตข้อความ error ลงใน formErrors
    *    - คืนค่า boolean แสดงผลการตรวจสอบ (true = ผ่าน, false = ไม่ผ่าน)
    */
-  const validateField = (field?: keyof typeof formData, value?: any) => {
+  const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
     if (field) {
       const result = communitySchema.safeParse({ ...formData, [field]: value });
@@ -200,6 +196,22 @@ export default function CreateCommuninityPage() {
     return true;
   };
 
+  React.useEffect(() => {
+    if (location.province) {
+      setFormData((prev) => ({
+        ...prev,
+        province: location.province,
+        district: location.district,
+        subDistrict: location.subdistrict,
+        postalCode: location.postalCode,
+      }));
+
+      // ตรวจสอบ error ทันที
+      validateField("province", location.province);
+      validateField("district", location.district);
+      validateField("subDistrict", location.subdistrict);
+    }
+  }, [location]);
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -227,8 +239,8 @@ export default function CreateCommuninityPage() {
     setFormData(updated);
     validateField(field, value);
   };
-  const memberList = React.useMemo(
-    () => formData.member ?? [],
+  const memberList = React.useMemo<Member[]>(
+    () => (formData.member ?? []).map((id) => ({ id, fname: "", lname: "" })),
     [formData.member]
   );
 
@@ -250,6 +262,10 @@ export default function CreateCommuninityPage() {
       longitude,
       latitude,
       villageNumber,
+      province,
+      district,
+      subDistrict,
+      postalCode,
       ...cleanForm
     } = formData;
 
@@ -274,18 +290,11 @@ export default function CreateCommuninityPage() {
 
   return (
     <div>
-      {alert && (
-        <Alert
-          variant="outlined"
-          severity={alert.type}
-          onClose={() => setAlert(null)}
-          className="mb-2"
-        >
-          {alert.message}
-        </Alert>
-      )}
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-bold">เพิ่มวิสาหกิจชุมชน</h1>
+      </div>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0  !bg-white mt-3"
         expanded={expanded === "panel2"}
         onChange={handleChange("panel2")}
       >
@@ -293,11 +302,24 @@ export default function CreateCommuninityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
+          className="!rounded-t-lg "
         >
           <div className="text-xl font-bold">ข้อมูลชุมชน</div>
         </AccordionSummary>
         <AccordionDetails>
-          <div className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</div>
+          <h1 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h1>
+          <div className="flex flex-col items-center mb-20">
+            <UploadProfile
+              roundedCover="rounded-[5px]"
+              width={1024}
+              coverHeight={360}
+              avatarSize={210} //รัศสมีวงกลม
+              coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
+              avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
+              onCoverChange={(file) => console.log("cover:", file)}
+              onAvatarChange={(file) => console.log("avatar:", file)}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -442,11 +464,59 @@ export default function CreateCommuninityPage() {
                 helperText={formErrors.mainActivityDescription}
               />
             </div>
+            <div className="flex col-span-2">
+              <div className="mr-5">
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดรูปภาพเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="image/*"
+                  multiple={false}
+                  value={galleryFiles}
+                  onChange={setGalleryFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
+              </div>
+            </div>
+            <div className="col-span-2">
+              <div className="mr-5">
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดวิดีโอเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="video/*"
+                  multiple={false}
+                  value={videoFiles}
+                  onChange={setVideoFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
+              </div>
+            </div>
           </div>
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0 mt-3"
         expanded={expanded === "panel3"}
         onChange={handleChange("panel3")}
       >
@@ -454,6 +524,7 @@ export default function CreateCommuninityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
+          className="!rounded-t-lg "
         >
           <div className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</div>
         </AccordionSummary>
@@ -487,7 +558,30 @@ export default function CreateCommuninityPage() {
             <div className="col-span-2">
               <ThailandLocationSelector
                 value={location}
-                onChange={(loc) => setLocation(loc)}
+                onChange={(loc) => {
+                  setLocation(loc); // เก็บไว้แสดงผลใน selector
+                  setFormData((prev) => ({
+                    ...prev,
+                    province: loc.province,
+                    district: loc.district,
+                    subDistrict: loc.subdistrict,
+                    postalCode: loc.postalCode,
+                  }));
+                  // ตรวจสอบความถูกต้องของ field ที่เกี่ยวข้อง
+                  validateField("province", loc.province);
+                  validateField("district", loc.district);
+                  validateField("subDistrict", loc.subdistrict);
+                }}
+                error={{
+                  province: !!formErrors.province,
+                  district: !!formErrors.district,
+                  subdistrict: !!formErrors.subDistrict,
+                }}
+                helperText={{
+                  province: formErrors.province,
+                  district: formErrors.district,
+                  subdistrict: formErrors.subDistrict,
+                }}
               />
             </div>
             <div className="col-span-2">
@@ -523,7 +617,7 @@ export default function CreateCommuninityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0 mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
       >
@@ -531,6 +625,7 @@ export default function CreateCommuninityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
+          className="!rounded-t-lg "
         >
           <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</div>
         </AccordionSummary>
@@ -678,6 +773,8 @@ export default function CreateCommuninityPage() {
               <AdminSelector
                 value={formData.adminId}
                 onChange={(adminId) => handleValueChange("adminId", adminId)}
+                error={!!formErrors.adminId}
+                helperText={formErrors.adminId}
               />
             </div>
 

@@ -1,69 +1,73 @@
-/*
- * คำอธิบาย : Page Component สำหรับหน้า "จัดการประเภทกิจกรรม"
- * หน้าที่ :
- *   - ดึงข้อมูลแท็กทั้งหมดจาก API
- *   - สร้าง, แก้ไข และลบแท็ก
- *   - ค้นหาแท็กตามชื่อ
- *   - แสดงข้อมูลในตาราง พร้อมปุ่มจัดการ
- *   - เปิด SweetAlert2 Modal เพื่อยืนยันก่อนสร้าง/แก้ไข/ลบ
- */
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Button from "../Components/Button";
-import SearchBarTable from "../Components/Search/SerachBarTable";
+import SearchBarTable from "../Components/Search/SearchBarTable";
 import DataTable from "../Components/Tables/Index";
-import type { Column, DataTableActionsConfig } from "../Components/Tables/Types";
+import type {
+  Column,
+  DataTableActionsConfig,
+  Pagination,
+  BulkAction,
+} from "../Components/Tables/Types";
 import {
   getAllTags,
   createTag,
   updateTag,
   deleteTag as deleteTagAPI,
 } from "../Libs/TagService";
+import { TrashIcon } from "../Components/Tables/Icon";
 
-// Modal Input (แบบกรอกชื่อ tag)
 import TagModal from "../Components/ModalTags";
-
-// Modal Confirm (SweetAlert2)
 import { Modal as ModalConfirm } from "../Components/Modal/Modal";
 
-// ประเภทข้อมูล Tag
 export type Tag = {
   id: number;
   name: string;
 };
 
-// ตั้งค่าคอลัมน์ของตาราง
 const columns: Column<Tag>[] = [
   { key: "name", header: "ชื่อแท็ก", className: "min-w-[200px]" },
 ];
 
 export default function TagsPage() {
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>(""); // <-- คุณอาจยังใช้สำหรับ search later
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    limit: 10,
+  });
 
-  // State หลักของ component
-  const [tags, setTags] = useState<Tag[]>([]); // รายการแท็กทั้งหมด
-  const [searchQuery, setSearchQuery] = useState<string>(""); // ค่าค้นหา
-  const [isLoading, setIsLoading] = useState<boolean>(true); // สถานะกำลังโหลด
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // ข้อความ error ตอนโหลดข้อมูล
-  const [submitError, setSubmitError] = useState<string | null>(null); // error ตอน submit ฟอร์ม (เช่น ชื่อซ้ำ)
+  const [selectedRows, setSelectedRows] = useState<Tag[]>([]);
+  const [showInputModal, setShowInputModal] = useState(false);
+  const [modalType, setModalType] = useState<"create" | "edit" | "delete" | null>(null);
+  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingTagName, setPendingTagName] = useState<string>("");
 
-  // สำหรับ modal input
-  const [showInputModal, setShowInputModal] = useState(false); // ควบคุมการแสดง modal input
-  const [modalType, setModalType] = useState<"create" | "edit" | "delete" | null>(null); // ประเภท modal ที่แสดง
-  const [selectedTag, setSelectedTag] = useState<Tag | null>(null); // แท็กที่ถูกเลือก (ใช้กับ edit/delete)
-
-  // สำหรับ SweetAlert2 Confirm
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // ควบคุมการแสดง modal ยืนยัน
-  const [pendingTagName, setPendingTagName] = useState<string>(""); // เก็บชื่อแท็กที่กำลังจะสร้าง/แก้ไข
-
-  // ดึงข้อมูลแท็กทั้งหมดจาก API
-  const fetchTags = useCallback(async () => {
+  // fetch tags จาก backend พร้อม pagination params
+  const fetchTags = useCallback(async (page = 1, limit = 15) => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const response = await getAllTags();
+      const response = await getAllTags(page, limit); // ส่ง page และ limit ไปด้วย
       const tagsData = response.data.data as Tag[];
+
       if (!Array.isArray(tagsData)) throw new Error("API data is not an array");
+
       setTags(tagsData);
+
+      const { currentPage, totalPages, totalCount, limit: limitFromAPI } = response.data.pagination;
+
+      setPagination({
+        currentPage,
+        totalPages,
+        totalCount,
+        limit: limitFromAPI,
+      });
     } catch (error: any) {
       setErrorMessage(error?.message ?? "ไม่สามารถโหลดข้อมูลแท็กได้");
     } finally {
@@ -71,19 +75,17 @@ export default function TagsPage() {
     }
   }, []);
 
-  // เรียก fetchTags เมื่อโหลดหน้า
+  // โหลดข้อมูลเมื่อหน้า หรือ limit เปลี่ยน
   useEffect(() => {
-    fetchTags();
-  }, [fetchTags]);
+    fetchTags(pagination.currentPage, pagination.limit);
+  }, [fetchTags, pagination.currentPage, pagination.limit]);
 
-  // เปิด modal สร้าง/แก้ไข
   const openInputModal = (type: "create" | "edit", tag: Tag | null = null) => {
     setModalType(type);
     setSelectedTag(tag);
     setShowInputModal(true);
   };
 
-  // ปิด modal input
   const closeInputModal = () => {
     setShowInputModal(false);
     setSelectedTag(null);
@@ -91,22 +93,17 @@ export default function TagsPage() {
     setSubmitError(null);
   };
 
-  // เมื่อกดยืนยันใน modal input (create/edit)
   const handleInputModalConfirm = (name: string) => {
-    setPendingTagName(name); // เก็บชื่อไว้ก่อน
-    setShowConfirmModal(true); // เปิด modal ยืนยัน
+    setPendingTagName(name);
+    setShowConfirmModal(true);
   };
 
-
-  // เมื่อกดลบแท็ก
   const handleDelete = (tag: Tag) => {
-    setSelectedTag(tag); // เก็บแท็กที่ต้องการลบ
+    setSelectedTag(tag);
     setModalType("delete");
-    setShowConfirmModal(true); // เปิด modal ยืนยันลบ
+    setShowConfirmModal(true);
   };
 
-
-  // เมื่อกดยืนยันใน SweetAlert2 (create/edit/delete)
   const handleFinalConfirm = async () => {
     try {
       if (modalType === "create") {
@@ -116,8 +113,9 @@ export default function TagsPage() {
       } else if (modalType === "delete" && selectedTag) {
         await deleteTagAPI(selectedTag.id);
       }
-
-      await fetchTags(); // โหลดข้อมูลใหม่
+      // โหลดข้อมูลใหม่หลังแก้ไข
+      await fetchTags(pagination.currentPage, pagination.limit);
+      setSelectedRows([]);
     } catch (error: any) {
       alert(`เกิดข้อผิดพลาด: ${error.message}`);
     } finally {
@@ -129,8 +127,6 @@ export default function TagsPage() {
     }
   };
 
-
-  // กำหนด action ในแต่ละแถวของตาราง
   const rowActions = useMemo<DataTableActionsConfig<Tag>>(
     () => ({
       header: "จัดการ",
@@ -146,28 +142,44 @@ export default function TagsPage() {
     []
   );
 
+  const bulkActions: BulkAction<Tag>[] = [
+    {
+      id: "bulk-delete",
+      label: "ลบทั้งหมด",
+      icon: TrashIcon,
+      intent: "danger",
+      confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
+      onClick: async (rows) => {
+        const confirmed = window.confirm(`ยืนยันลบ ${rows.length} รายการหรือไม่?`);
+        if (!confirmed) return;
+        try {
+          for (const r of rows) {
+            await deleteTagAPI(r.id);
+          }
+          await fetchTags(pagination.currentPage, pagination.limit);
+          setSelectedRows([]);
+        } catch (e: any) {
+          alert(e.message || "ลบไม่สำเร็จ");
+        }
+      },
+    },
+  ];
 
-  // Normalize ข้อความเพื่อใช้ค้นหา
-  const normalizeText = (s: string) =>
-    (s ?? "").toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
-
-  // กรองแท็กตามข้อความค้นหา
-  const filteredTags = useMemo(() => {
-    const q = normalizeText(searchQuery);
-    return q ? tags.filter((tag) => normalizeText(tag.name).includes(q)) : tags;
-  }, [tags, searchQuery]);
-
-  // Render ส่วน UI
-  if (isLoading) return <div>กำลังโหลดข้อมูล...</div>;
-  if (errorMessage) return <div className="text-red-500">เกิดข้อผิดพลาด: {errorMessage}</div>;
+  // **ตัด normalizeText, filteredTags, paginatedData ออกไป**
 
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold text-gray-800">จัดการประเภท</h1>
 
-      {/* แถบค้นหาและปุ่มเพิ่ม */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <SearchBarTable
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            // หากอยากทำ search server-side ในอนาคต สามารถใส่ logic ที่นี่ได้
+            // ตอนนี้ยังไม่มี search server-side เลย ไม่ต้อง set page เป็น 1
+          }}
+        />
         <div>
           <Button type="confirm-admin" onClick={() => openInputModal("create")}>
             + เพิ่มประเภท
@@ -175,18 +187,31 @@ export default function TagsPage() {
         </div>
       </div>
 
-      {/* ตารางข้อมูลแท็ก */}
       <DataTable<Tag>
-        data={filteredTags}
+        data={tags} // ใช้ข้อมูลที่ได้จาก backend โดยตรง
         columns={columns}
-        getRowKey={(tag) => tag.id}
+        getKey={(tag) => String(tag.id)}
         actions={rowActions}
-        theme="brand"
-        striped
-        className="bg-white rounded-lg w-full"
+        bulkActions={bulkActions}
+        selectable={true}
+        pagination={pagination}
+        pageSizeOptions={[10, 20, 50]}
+        onPageChange={(p) => {
+          setPagination((prev) => ({ ...prev, currentPage: p }));
+        }}
+        onPageSizeChange={(newLimit) => {
+          setPagination((prev) => ({
+            ...prev,
+            currentPage: 1,
+            limit: newLimit,
+          }));
+        }}
+        onSelectedChange={(rows) => {
+          setSelectedRows(rows);
+        }}
+        isLoading={isLoading}
       />
 
-      {/* Modal กรอกชื่อประเภท (สร้าง/แก้ไข) */}
       <TagModal
         isOpen={showInputModal}
         onClose={closeInputModal}
@@ -196,7 +221,6 @@ export default function TagsPage() {
         errorMessage={submitError ?? ""}
       />
 
-      {/* SweetAlert2 Modal ยืนยัน */}
       <ModalConfirm
         open={showConfirmModal}
         onConfirm={handleFinalConfirm}
@@ -210,15 +234,15 @@ export default function TagsPage() {
           modalType === "delete"
             ? `ยืนยันการลบประเภท`
             : modalType === "edit"
-              ? `ยืนยันการแก้ไขประเภท`
-              : `ยืนยันการเพิ่มประเภท`
+            ? `ยืนยันการแก้ไขประเภท`
+            : `ยืนยันการเพิ่มประเภท`
         }
         text={
           modalType === "delete"
             ? "คุณต้องการยืนยันการลบประเภทหรือไม่"
-            : modalType == "edit"
-              ? "คุณต้องการยืนยันการแก้ไขประเภทหรือไม่"
-              : "คุณต้องการยืนยันการเพิ่มประเภทหรือไม่"
+            : modalType === "edit"
+            ? "คุณต้องการยืนยันการแก้ไขประเภทหรือไม่"
+            : "คุณต้องการยืนยันการเพิ่มประเภทหรือไม่"
         }
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"

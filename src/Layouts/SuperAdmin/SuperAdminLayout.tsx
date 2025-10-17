@@ -23,5 +23,5 @@ export default function SuperAdminLayout() {
   );
 };
 
-export default SuperAdminLayout;
-}
+
+

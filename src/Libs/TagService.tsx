@@ -24,11 +24,18 @@ export type Tag = {
 console.log("API URL:", apiUrl);
 
 //ดึงข้อมูลแท็กทั้งหมด
-export async function getAllTags() {
-  return await axios.get(`${apiUrl}/tags`, {
+/*export async function getAllTags() {
+  return await axios.get(`${apiUrl}/shared/tags`, {
+    withCredentials: true,
+  });
+}*/
+
+export async function getAllTags(page: number = 1, limit: number = 10) {
+  return await axios.get(`${apiUrl}/shared/tags?page=${page}&limit=${limit}`, {
     withCredentials: true,
   });
 }
+ 
 
 //สร้างแท็กใหม่
 export async function createTag(name: string) {

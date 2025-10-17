@@ -1,3 +1,13 @@
+/**
+ * Component: SidebarAdmin
+ * คำอธิบาย: แถบเมนูด้านข้างสำหรับผู้ดูแลชุมชน (Admin)
+ * Features:
+ * - แสดงเมนูที่เกี่ยวข้องกับการจัดการ เช่น ชุมชน, สมาชิก, แพ็กเกจ, การจอง, รายงาน และ logs
+ * - รองรับเมนูหลักและเมนูย่อยแบบ dropdown
+ * - ใช้ React Router ในการจัดการการนำทาง
+ * - ใช้ไอคอนจาก Iconify
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { Link, useLocation } from 'react-router-dom';
@@ -21,37 +31,17 @@ type MenuKey =
   | 'logout'
   | null;
 
-// ใช้สำหรับ map เมนูลูกกับเมนูแม่ (เพื่อช่วยเปิด dropdown)
-const parentMap: Record<Exclude<MenuKey, null>, MenuKey | null> = {
-  'community': null,
-  'community-stores': 'community',
-  'community-homestays': 'community',
-  'members': null,
-  'member-status': 'members',
-  'packages': null,
-  'packages-requests': 'packages',
-  'packages-draft': 'packages',
-  'packages-histories': 'packages',
-  'packages-feedbacks': 'packages',
-  'booking': null,
-  'booking-refunds': 'booking',
-  'booking-histories': 'booking',
-  'dashboard': null,
-  'logs': null,
-  'logout': null,
-};
-
 const SidebarAdmin = () => {
   const location = useLocation();
   const { pathname } = location;
-
-  const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
-  const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
   const basePath = '/admin';
   const currentPath = pathname.startsWith(basePath)
     ? pathname.slice(basePath.length) || '/'
     : pathname;
+
+  const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
+  const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
   useEffect(() => {
     if (currentPath.startsWith('/community/stores')) {
@@ -108,7 +98,6 @@ const SidebarAdmin = () => {
     }
   }, [currentPath]);
 
-  // ✅ Highlight เฉพาะเมนูที่ถูก active
   const isActive = (key: MenuKey) => activeMenuKey === key;
 
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
@@ -147,100 +136,96 @@ const SidebarAdmin = () => {
           <img src="/Cultura.png" alt="Cultura logo" className="h-10" />
         </div>
 
-        {/* เมนูหลัก */}
-        <nav className="flex flex-col gap-2 text-base-semibold">
+        {/* เมนู */}
+        <nav className="flex flex-col gap-2 text-sm">
           {/* === ชุมชน === */}
-          <div>
-            <button
-              onClick={() => handleClick('community')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive('community') ? 'bg-[#0D845A]' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon icon="ri:community-line" className="text-xl" />
-                จัดการชุมชน
-              </span>
-              <Icon icon={openDropdown === 'community' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-            </button>
-            {openDropdown === 'community' && (
-              <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                {menuLink('จัดการร้านค้า', '/community/stores', 'mdi:store-outline', 'community-stores', 'community')}
-                {menuLink('จัดการที่พัก', '/community/homestays', 'mdi:home-city-outline', 'community-homestays', 'community')}
-              </div>
-            )}
-          </div>
+          <Link
+            to={`${basePath}/community`}
+            onClick={() => handleClick('community')}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive('community') ? 'bg-[#0D845A]' : ''
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Icon icon="ri:community-line" className="text-xl" />
+              จัดการชุมชน
+            </span>
+            <Icon icon={openDropdown === 'community' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+          </Link>
+          {openDropdown === 'community' && (
+            <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
+              {menuLink('จัดการร้านค้า', '/community/stores', 'mdi:store-outline', 'community-stores', 'community')}
+              {menuLink('จัดการที่พัก', '/community/homestays', 'mdi:home-city-outline', 'community-homestays', 'community')}
+            </div>
+          )}
 
           {/* === สมาชิก === */}
-          <div>
-            <button
-              onClick={() => handleClick('members')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive('members') ? 'bg-[#0D845A]' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon icon="mdi:account-cog-outline" className="text-xl" />
-                จัดการสมาชิก
-              </span>
-              <Icon icon={openDropdown === 'members' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-            </button>
-            {openDropdown === 'members' && (
-              <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                {menuLink('การระงับบัญชี', '/member/status', 'mdi:account-cancel-outline', 'member-status', 'members')}
-              </div>
-            )}
-          </div>
+          <Link
+            to={`${basePath}/members`}
+            onClick={() => handleClick('members')}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive('members') ? 'bg-[#0D845A]' : ''
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Icon icon="mdi:account-cog-outline" className="text-xl" />
+              จัดการสมาชิก
+            </span>
+            <Icon icon={openDropdown === 'members' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+          </Link>
+          {openDropdown === 'members' && (
+            <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
+              {menuLink('การระงับบัญชี', '/member/status', 'mdi:account-cancel-outline', 'member-status', 'members')}
+            </div>
+          )}
 
           {/* === แพ็กเกจ === */}
-          <div>
-            <button
-              onClick={() => handleClick('packages')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive('packages') ? 'bg-[#0D845A]' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
-                จัดการแพ็กเกจ
-              </span>
-              <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-            </button>
-            {openDropdown === 'packages' && (
-              <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                {menuLink('คำขออนุมัติ', '/package/requests', 'mdi:file-document-outline', 'packages-requests', 'packages')}
-                {menuLink('ฉบับร่าง', '/package/draft', 'mdi:file-edit-outline', 'packages-draft', 'packages')}
-                {menuLink('ประวัติแพ็กเกจ', '/package/histories', 'mdi:history', 'packages-histories', 'packages')}
-                {menuLink('ข้อเสนอแนะ', '/package/feedbacks', 'mdi:comment-text-outline', 'packages-feedbacks', 'packages')}
-              </div>
-            )}
-          </div>
+          <Link
+            to={`${basePath}/package/requests`}
+            onClick={() => handleClick('packages')}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive('packages') ? 'bg-[#0D845A]' : ''
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
+              จัดการแพ็กเกจ
+            </span>
+            <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+          </Link>
+          {openDropdown === 'packages' && (
+            <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
+              {menuLink('คำขออนุมัติ', '/package/requests', 'mdi:file-document-outline', 'packages-requests', 'packages')}
+              {menuLink('ฉบับร่าง', '/package/draft', 'mdi:file-edit-outline', 'packages-draft', 'packages')}
+              {menuLink('ประวัติแพ็กเกจ', '/package/histories', 'mdi:history', 'packages-histories', 'packages')}
+              {menuLink('ข้อเสนอแนะ', '/package/feedbacks', 'mdi:comment-text-outline', 'packages-feedbacks', 'packages')}
+            </div>
+          )}
 
           {/* === การจอง === */}
-          <div>
-            <button
-              onClick={() => handleClick('booking')}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive('booking') ? 'bg-[#0D845A]' : ''
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
-                จัดการการจอง
-              </span>
-              <Icon icon={openDropdown === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-            </button>
-            {openDropdown === 'booking' && (
-              <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-                {menuLink('คำขอคืนเงิน', '/booking/refunds', 'mdi:cash-refund', 'booking-refunds', 'booking')}
-                {menuLink('ประวัติการจอง', '/booking/histories', 'mdi:history', 'booking-histories', 'booking')}
-              </div>
-            )}
-          </div>
+          <Link
+            to={`${basePath}/booking`}
+            onClick={() => handleClick('booking')}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive('booking') ? 'bg-[#0D845A]' : ''
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
+              จัดการการจอง
+            </span>
+            <Icon icon={openDropdown === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+          </Link>
+          {openDropdown === 'booking' && (
+            <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
+              {menuLink('คำขอคืนเงิน', '/booking/refunds', 'mdi:cash-refund', 'booking-refunds', 'booking')}
+              {menuLink('ประวัติการจอง', '/booking/histories', 'mdi:history', 'booking-histories', 'booking')}
+            </div>
+          )}
 
-          {/* === รายงาน & Logs === */}
+          {/* === รายงาน และ Logs === */}
           {menuLink('รายงาน', '/dashboard', 'mdi:view-dashboard-outline', 'dashboard')}
-          {menuLink('ประวัติการเข้าใช้งาน', '/logs', 'ix:log', 'logs')}
+          {menuLink('ประวัติการเข้าใช้งาน', '/logs', 'mdi:clipboard-text-clock-outline', 'logs')}
         </nav>
       </div>
 

@@ -286,6 +286,7 @@ export default function CreateCommuninityPage() {
       },
     };
     await createCommunity(payload);
+    alert("บันทึกข้อมูลสำเร็จ!");
   };
 
   return (

@@ -1,8 +1,8 @@
 /*
-* คำอธิบาย : ไฟล์ประกาศชนิดข้อมูล (Type Definitions) สำหรับคอมโพเนนต์ DataTable
-* ใช้กำหนดโครงสร้างคอลัมน์ ปุ่มการทำงานต่อแถว/แบบกลุ่ม ธีม และพร็อพหลักของตาราง
-* เน้นให้พิมพ์เขียวโครงสร้างข้อมูลชัดเจนและใช้งานซ้ำได้ในหลายบริบท
-*/
+ * คำอธิบาย : ไฟล์ประกาศชนิดข้อมูล (Type Definitions) สำหรับคอมโพเนนต์ DataTable
+ * ใช้กำหนดโครงสร้างคอลัมน์ ปุ่มการทำงานต่อแถว/แบบกลุ่ม ธีม และพร็อพหลักของตาราง
+ * เน้นให้พิมพ์เขียวโครงสร้างข้อมูลชัดเจนและใช้งานซ้ำได้ในหลายบริบท
+ */
 import React from "react";
 
 export type Column<T extends Record<string, unknown>> = {
@@ -14,7 +14,6 @@ export type Column<T extends Record<string, unknown>> = {
 };
 
 export type IconComponent = React.ComponentType<{ className?: string }>;
-
 
 export type RowAction<T> = {
     id: string;
@@ -38,15 +37,23 @@ export type BulkAction<T> = {
 };
 
 export type PresetId =
-    | "edit" | "delete" | "block" | "unblock" | "approve" | "reject" | "copy" | "users";
-
+    | "edit"
+    | "delete"
+    | "block"
+    | "unblock"
+    | "approve"
+    | "reject"
+    | "copy"
+    | "users";
 
 export type DataTableActionsConfig<T> = {
     header?: React.ReactNode;
     align?: "left" | "right";
     width?: string;
     variant?: "icons" | "buttons";
-    items: Array<PresetId | RowAction<T>> | ((row: T) => Array<PresetId | RowAction<T>>);
+    items:
+        | Array<PresetId | RowAction<T>>
+        | ((row: T) => Array<PresetId | RowAction<T>>);
     callbacks?: Partial<Record<PresetId, (row: T) => void | Promise<void>>>;
     visible?: boolean;
     className?: string;
@@ -54,25 +61,36 @@ export type DataTableActionsConfig<T> = {
 
 export type ThemeColor = "emerald" | "teal" | "blue" | "violet" | "brand";
 
+export type RowKey = string;
+
 export interface DataTableProps<T extends Record<string, unknown>> {
     data: T[];
-    total?: number;
-    columns: Column<T>[];
-    getRowKey?: (row: T, index: number) => React.Key;
+    getKey(data: T): RowKey;
 
-    page?: number;
-    onPageChange?: (page: number) => void;
+    columns: Column<T>[];
+
+    pageSize?: number;
     pageSizeOptions?: number[];
-    defaultPageSize?: number;
+    onPageChange?: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
 
     selectable?: boolean;
-    selectedKeys?: React.Key[];
-    onSelectedChange?: (keys: React.Key[], rows: T[]) => void;
+    onSelectedChange?: (rows: T[]) => void;
+
+
     bulkActions?: BulkAction<T>[];
 
     actions?: DataTableActionsConfig<T>;
 
-    striped?: boolean;
-    className?: string;
     theme?: ThemeColor;
+
+    pagination: Pagination;
+    isLoading: boolean;
 }
+
+export type Pagination = {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+};

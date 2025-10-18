@@ -48,13 +48,11 @@ const PackageDraftAdmin = () => {
   }, [searchTerm]);
 
   const handleEdit = (pkg: Package) => {
-    alert(`📝 แก้ไขแพ็กเกจ: ${pkg.name}`);
+    alert(`แก้ไขแพ็กเกจ: ${pkg.name} เสร็จสิ้น`);
   };
 
   const handleDelete = (pkg: Package) => {
-    if (confirm(`คุณต้องการลบแพ็กเกจ: ${pkg.name} ใช่ไหม?`)) {
-      setPackages((prev) => prev.filter((p) => p.name !== pkg.name));
-    }
+    alert(`ลบแพ็กเกจ: ${pkg.name} เสร็จสิ้น`);
   };
 
   const columns: Column<Package>[] = [
@@ -86,7 +84,6 @@ const PackageDraftAdmin = () => {
 
   return (
     <div className="font-sarabun bg-[#F0F0F0] ">
-      <div className="pt-2 px-4 pb-4">
         <div className="text-[14px] text-black mb-1 flex items-center">
           <span>จัดการแพ็กเกจ</span>
           <ChevronRight size={20} className="mx-1 text-black" />
@@ -122,7 +119,6 @@ const PackageDraftAdmin = () => {
           theme="brand"
         />
       </div>
-    </div>
   );
 };
 

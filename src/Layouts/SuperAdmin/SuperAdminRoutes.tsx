@@ -10,6 +10,7 @@ import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin"
 export default function SuperAdminRoutes() {
   return (
     <Routes>
+      <Route path="community/create" element={<CreateCommuninityPage />} />
       <Route path="community/edit/:communityId" element={<EditCommunity />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />

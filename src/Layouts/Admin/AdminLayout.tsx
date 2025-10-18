@@ -14,7 +14,6 @@ const AdminLayout: React.FC = () => {
       <div className="flex flex-col flex-1 h-full">
         {/* Navbar ด้านบน */}
         <NavbarSam />
-         <PackageDraftAdmin />
         
 
         {/* พื้นที่เนื้อหา */}

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import NavbarSam from "../../Components/NavbarSam";
 import DataTable, { type Column } from "../../Components/Tables/Index";
-import SearchBarTable from "../../Components/Search/SerachBarTable";
+import SearchBarTable from "../../Components/Search/SearchBarTable";
 import { Plus, Edit, Trash } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 
@@ -86,8 +85,7 @@ const PackageDraftAdmin = () => {
   ];
 
   return (
-    <div className="font-sarabun">
-      <NavbarSam />
+    <div className="font-sarabun bg-[#F0F0F0] ">
       <div className="pt-2 px-4 pb-4">
         <div className="text-[14px] text-black mb-1 flex items-center">
           <span>จัดการแพ็กเกจ</span>

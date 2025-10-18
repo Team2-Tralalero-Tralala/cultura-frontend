@@ -3,7 +3,7 @@
  * โดยรองรับหลายประเภท เช่น Confirm สำหรับ Tourist, Confirm สำหรับ Admin และ Cancel
  */
 
-import type { BaseButtonProps } from "../Types/Button";
+import type { BaseButtonProps } from "@/Types/Button";
 
 /*
  * ฟังก์ชัน : Button

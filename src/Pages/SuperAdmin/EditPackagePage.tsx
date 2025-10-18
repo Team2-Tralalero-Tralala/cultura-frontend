@@ -13,7 +13,7 @@ import * as z from "zod";
 import TextField from "../../Components/TextField";
 import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
-import UploadCard from "@/components/upload/UploadCard";
+import UploadCard from "@/components/calendar/upload/UploadCard";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";

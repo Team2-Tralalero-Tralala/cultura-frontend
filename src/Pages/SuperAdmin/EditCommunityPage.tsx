@@ -33,8 +33,8 @@ import MemberSelector, {
 import TextField from "@/components/TextField";
 import { Modal } from "@/components/Modal/Modal";
 import { Icon } from "@iconify/react";
-import UploadCard from "@/components/upload/UploadCard";
-import UploadProfile from "@/components/upload/community/UploadProfile";
+import UploadCard from "@/components/calendar/upload/UploadCard";
+import UploadProfile from "@/components/calendar/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน

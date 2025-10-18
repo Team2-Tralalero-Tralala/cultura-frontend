@@ -27,8 +27,8 @@ import MemberSelector, {
 } from "@/components/Selector/MemberSelector";
 import MapPicker from "@/components/MapPicker";
 import { Modal } from "@/components/Modal/Modal";
-import UploadCard from "@/components/upload/UploadCard";
-import UploadProfile from "@/components/upload/community/UploadProfile";
+import UploadCard from "@/components/calendar/upload/UploadCard";
+import UploadProfile from "@/components/calendar/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน

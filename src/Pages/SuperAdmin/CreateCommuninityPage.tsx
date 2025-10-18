@@ -13,22 +13,22 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
 import * as z from "zod";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/components/TextField";
+import TextArea from "@/components/TextArea";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/Components/Selector/ThailandLocationSelector";
+} from "@/components/Selector/ThailandLocationSelector";
 import type { CommunityFormData } from "@/Types/CommunityForm";
-import Button from "@/Components/Button";
+import Button from "@/components/Button";
 import { createCommunity } from "@/Libs/CommunityService";
-import { AdminSelector } from "@/Components/Selector/AdminSelector";
+import { AdminSelector } from "@/components/Selector/AdminSelector";
 import MemberSelector, {
   type Member,
-} from "@/Components/Selector/MemberSelector";
-import MapPicker from "@/Components/MapPicker";
-import { Modal } from "@/Components/Modal/Modal";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+} from "@/components/Selector/MemberSelector";
+import MapPicker from "@/components/MapPicker";
+import { Modal } from "@/components/Modal/Modal";
+import UploadCard from "@/components/upload/UploadCard";
+import UploadProfile from "@/components/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน

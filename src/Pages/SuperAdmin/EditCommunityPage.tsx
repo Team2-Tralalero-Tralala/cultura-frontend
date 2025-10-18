@@ -22,19 +22,19 @@ import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
 import Backdrop from "@mui/material/Backdrop";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
-import MapPicker from "@/Components/MapPicker";
-import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
-import Button from "@/Components/Button";
+} from "@/components/Selector/ThailandLocationSelector";
+import TextArea from "@/components/TextArea";
+import MapPicker from "@/components/MapPicker";
+import { AdminSelector, type Admin } from "@/components/Selector/AdminSelector";
+import Button from "@/components/Button";
 import MemberSelector, {
   type Member,
-} from "@/Components/Selector/MemberSelector";
-import TextField from "@/Components/TextField";
-import { Modal } from "@/Components/Modal/Modal";
+} from "@/components/Selector/MemberSelector";
+import TextField from "@/components/TextField";
+import { Modal } from "@/components/Modal/Modal";
 import { Icon } from "@iconify/react";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import UploadCard from "@/components/upload/UploadCard";
+import UploadProfile from "@/components/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน

@@ -56,6 +56,7 @@ interface ThailandLocationSelectProps {
     province?: boolean;
     district?: boolean;
     subdistrict?: boolean;
+    
   };
   helperText?: {
     province?: string;

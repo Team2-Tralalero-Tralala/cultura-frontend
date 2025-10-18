@@ -1,24 +1,39 @@
+import { Routes, Route } from "react-router-dom";
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
-import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 
+// import เพิ่มเติมสำหรับจัดการบัญชีผู้ใช้
+import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
+import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
+
 export default function SuperAdminRoutes() {
   return (
     <Routes>
+      {/* ---------------- ชุมชน ---------------- */}
       <Route path="community/create" element={<CreateCommuninityPage />} />
       <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+      <Route path="community/detail/:id" element={<CommunityDetailSuperAdmin />} />
+
+      {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
-      <Route path="communities" element={<ManageCommunitySuperAdmin />} />
-      <Route
-        path="community/detail/:id"
-        element={<CommunityDetailSuperAdmin />}
-      />
+
+      {/* ---------------- บัญชีผู้ใช้ ---------------- */}
+      <Route path="account/admin/create" element={<CreateAccountPage />} />
+      <Route path="account/member/create" element={<CreateAccountPage />} />
+      <Route path="account/tourist/create" element={<CreateAccountPage />} />
+
+      <Route path="account/admin/:adminId/edit" element={<EditAccountPage />} />
+      <Route path="account/member/:memberId/edit" element={<EditAccountPage />} />
+      <Route path="account/tourist/:touristId/edit" element={<EditAccountPage />} />
+
+      {/* ---------------- Log ---------------- */}
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
     </Routes>
   );

@@ -119,7 +119,7 @@ export default function MemberSelector({
       setSelectedMembers([]);
       return;
     }
-
+    
     const preselected = members.filter((m) => value.includes(m.id));
     setSelectedMembers(preselected);
   }, [members, value]);

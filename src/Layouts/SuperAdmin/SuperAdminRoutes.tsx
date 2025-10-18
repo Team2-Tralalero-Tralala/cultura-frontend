@@ -1,11 +1,16 @@
+import { Routes, Route } from "react-router-dom";
+
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
-import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+
+import UserStatusPage from "@/Pages/SuperAdmin/BlockUserPage";
+import UserDetailPage from "@/Pages/SuperAdmin/UserDetailPage";
+
 
 export default function SuperAdminRoutes() {
   return (
@@ -20,6 +25,8 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="users/blocked" element={<UserStatusPage />} />
+      <Route path="users/:id" element={<UserDetailPage />} />
     </Routes>
   );
 }

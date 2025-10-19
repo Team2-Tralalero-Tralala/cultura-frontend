@@ -115,7 +115,11 @@ const SidebarSuperAdmin: React.FC = () => {
             >
               <span className="flex items-center gap-3">
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
-                จัดการบัญชี
+                <Link
+                  to={`${basePath}/accounts`}
+                >
+                  จัดการบัญชี
+                </Link>
               </span>
               <Icon
                 icon={

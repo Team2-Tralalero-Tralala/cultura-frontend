@@ -35,44 +35,75 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-/** ===========================
- * 📋 ฟังก์ชัน: fetchBlockedUsersByRole()
- * วัตถุประสงค์ : ดึงรายชื่อผู้ใช้ที่ถูกระงับการใช้งานตาม Role
- * Input  :
- *    - role (admin / superadmin)
- *    - page, limit (ใช้สำหรับ pagination)
- * Output :
- *    - { rows, total, page, limit }
- * =========================== */
-export async function fetchBlockedUsersByRole(
-  role: Role,
-  page = 1,
-  limit = 10
+/**
+ * ดึงข้อมูลผู้ใช้ทั้งหมด (SuperAdmin)
+ * Mapping: GET /super/accounts
+ * Params: page, limit, searchName, filterRole (optional)
+ */
+export async function fetchAccounts(
+  page: number,
+  limit: number,
+  searchName?: string,
+  filterRole?: string
 ) {
-  const rolePrefix = role === "superadmin" ? "super" : "admin";
-  const url = `/${rolePrefix}/users/status/BLOCKED`;
+  const url = `/super/accounts`;
 
-  const res = await api.get(url, { params: { page, limit } });
-  const payload = res.data?.data ?? res.data;
+  const res = await api.get(url, {
+    params: {
+      page,
+      limit,
+      searchName,
+      filterRole,
+    },
+    withCredentials: true,
+  });
 
-  // ✅ ตรวจสอบโครงสร้างข้อมูลที่กลับมาจาก API
-  const list: any[] = Array.isArray(payload?.data)
-    ? payload.data
-    : Array.isArray(payload)
-    ? payload
-    : [];
+  return res.data;
+}
 
-  // 🔄 Map ข้อมูลที่ได้ให้เป็นรูปแบบ UserRow
-  const rows: UserRow[] = list.map((u) => ({
-    id: Number(u.id),
-    username: u.username ?? "(ไม่มีชื่อ)",
-    activityRole: u.activityRole ?? "-",
-    email: u.email ?? "-",
-    BLOCKED: u.status === "BLOCKED",
-  }));
+/**
+ * ดึงข้อมูลผู้ใช้ที่ถูกระงับการใช้งาน (BLOCKED)
+ * Mapping: GET /super/users/status/BLOCKED
+ */
+export async function fetchBlockedAccounts(page: number, limit: number, searchName?: string) {
+  const res = await api.get(`/super/accounts/status/BLOCKED`, {
+    params: { page, limit, searchName },
+    withCredentials: true,
+  });
+  return res.data;
+}
 
-  const total = Number(payload?.pagination?.totalCount ?? list.length) || 0;
-  return { rows, total, page, limit };
+/**
+ * ยกเลิกการระงับผู้ใช้รายเดียว
+ */
+export async function unblockAccountById(userId: number) {
+  return await api.put(`/super/users/unblock/${userId}`, {}, { withCredentials: true });
+}
+
+/**
+ * ยกเลิกการระงับหลายรายการ
+ */
+export async function unblockMultipleAccounts(ids: number[]) {
+  for (const id of ids) {
+    await unblockAccountById(id);
+  }
+}
+
+/**
+ * ระงับการใช้งานผู้ใช้รายเดียว (Block Account)
+ * Mapping: PUT /super/users/block/:userId
+ */
+export async function blockAccountById(userId: number) {
+  return await api.put(`/super/users/block/${userId}`, {}, { withCredentials: true });
+}
+
+/**
+ * ระงับการใช้งานหลายรายการ (Block หลายบัญชี)
+ */
+export async function blockMultipleAccounts(ids: number[]) {
+  for (const id of ids) {
+    await blockAccountById(id);
+  }
 }
 
 /** ===========================

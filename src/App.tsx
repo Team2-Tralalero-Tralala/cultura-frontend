@@ -12,9 +12,12 @@ import ProtectedRoute from "@/Libs/ProtectedRoute";
 import LoginTourist from "@/Pages/LoginTourist";
 import LoginAdmin from "@/Pages/LoginAdmin";
 
+import UploadLogoImagePage from "./Pages/SuperAdmin/UploadLogoImagePage";
+
 function App() {
   return (
     <>
+    <UploadLogoImagePage/>
       <Routes>
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

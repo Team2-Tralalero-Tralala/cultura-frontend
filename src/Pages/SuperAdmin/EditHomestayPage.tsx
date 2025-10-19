@@ -1,4 +1,18 @@
 // src/Pages/SuperAdmin/EditHomestayPage.tsx
+
+/**
+ * คำอธิบาย : หน้าแก้ไขข้อมูลที่พัก (Super Admin)
+ * หน้าที่หลัก:
+ *   - โหลดข้อมูลที่พักจาก homestayId
+ *   - ตรวจความถูกต้องด้วย zod (สอดคล้อง UI: postalCode เป็น string)
+ *   - แสดงฟอร์มให้แก้ไข + ยืนยันผ่าน Modal แล้ว PATCH ไปยัง API
+ * Input:
+ *   - useParams(): homestayId
+ *   - สถานะภายใน: form, formErrors, loading/saving state, communityId
+ * Output:
+ *   - PATCH ข้อมูลสำเร็จ → แจ้งข้อความและนำทางกลับหน้าแก้ชุมชน
+ */
+
 import React from "react";
 import * as z from "zod";
 import axios from "axios";
@@ -12,7 +26,7 @@ import MapPicker from "@/Components/MapPicker";
 import ThailandLocationSelector, { type ThailandLocation } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
 
-const apiUrl = import.meta.env.VITE_API_URL as string;
+const API_URL = import.meta.env.VITE_API_URL as string; // เดิม: apiUrl
 
 type HomestayForm = {
     name: string;
@@ -52,34 +66,25 @@ const initialForm: HomestayForm = {
     placeQuery: "",
 };
 
-// ใช้ schema แบบเดียวกับหน้าสร้าง (ให้ postalCode เป็น string เพื่อเข้ากับ selector)
 const schema = z.object({
     name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
     type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
     facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
-
     guestPerRoom: z
         .string()
         .min(1)
         .refine((v) => Number(v) >= 1 && Number.isInteger(Number(v)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
-
     totalRoom: z
         .string()
         .min(1)
         .refine((v) => Number(v) >= 1 && Number.isInteger(Number(v)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
-
     houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
     villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
-    province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-    district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
-    subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
-    postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+    // province: z.string().min(1, "กรุณาเลือกจังหวัด"),
+    // district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+    // subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+    // postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
     addressDetail: z.string().optional().default(""),
-
-    // หากต้องการบังคับ map ให้เปิดคอมเมนต์สองบรรทัดนี้
-    // latitude: z.string().min(1, "กรุณาปักหมุดบนแผนที่"),
-    // longitude: z.string().min(1, "กรุณาปักหมุดบนแผนที่"),
-
     placeQuery: z.string().optional().default(""),
 });
 
@@ -88,21 +93,22 @@ type FormErrors = Partial<Record<keyof HomestayForm, string>>;
 export default function EditHomestayPage() {
     const { homestayId } = useParams();
     const navigate = useNavigate();
-
     const [form, setForm] = React.useState<HomestayForm>(initialForm);
     const [formErrors, setFormErrors] = React.useState<FormErrors>({});
     const [isLoading, setIsLoading] = React.useState(true);
     const [isSaving, setIsSaving] = React.useState(false);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-
     const [confirmOpen, setConfirmOpen] = React.useState(false);
-    const [pendingPayload, setPendingPayload] = React.useState<any | null>(null);
-
-    // เก็บ communityId ไว้ใช้ตอน navigate กลับ
     const [communityId, setCommunityId] = React.useState<number | null>(null);
 
-    // โหลดข้อมูลเดิม
+    // ❗ ทำให้เหมือน Edit Store: ใช้ position เป็น source of truth
+    const [position, setPosition] = React.useState<[number, number]>([0, 0]);
+    const startingZoom = 12;
+
+    /**
+     * โหลดข้อมูลที่พักจาก homestayId แล้วแมปใส่ฟอร์ม + ตั้ง position
+     */
     React.useEffect(() => {
         (async () => {
             try {
@@ -112,15 +118,16 @@ export default function EditHomestayPage() {
                 const id = Number(homestayId);
                 if (!id) throw new Error("homestayId ไม่ถูกต้อง");
 
-                const res = await axios.get(`${apiUrl}/super/homestays/${id}`, {
-                    withCredentials: true,
-                });
-
+                const res = await axios.get(`${API_URL}/super/homestays/${id}`, { withCredentials: true });
                 const hs = res?.data?.data ?? res?.data;
                 if (!hs) throw new Error("ไม่พบข้อมูลที่พัก");
 
                 setCommunityId(hs.community?.id ?? null);
 
+                const lat = Number(hs.location?.latitude ?? 13.7563);
+                const lng = Number(hs.location?.longitude ?? 100.5018);
+
+                setPosition([lat, lng]); // ✅ ใช้ position เป็นจริง
                 setForm({
                     name: hs.name ?? "",
                     type: hs.type ?? "",
@@ -136,8 +143,10 @@ export default function EditHomestayPage() {
                     postalCode: hs.location?.postalCode ?? "",
                     addressDetail: hs.location?.detail ?? "",
 
-                    latitude: String(hs.location?.latitude ?? ""),
-                    longitude: String(hs.location?.longitude ?? ""),
+                    // เก็บไว้แสดงเฉย ๆ (ไม่ใช้เป็น source of truth)
+                    latitude: String(lat),
+                    longitude: String(lng),
+
                     placeQuery: "",
                 });
             } catch (err: any) {
@@ -154,7 +163,9 @@ export default function EditHomestayPage() {
         })();
     }, [homestayId]);
 
-    // validate ช่องใดช่องหนึ่ง
+    /**
+     * ตรวจ field เดี่ยวด้วย zod
+     */
     const validateField = (key: keyof HomestayForm, val: any) => {
         const base = { ...form, [key]: val };
         const r = schema.safeParse(base);
@@ -164,7 +175,9 @@ export default function EditHomestayPage() {
         }));
     };
 
-    // validate ทั้งฟอร์ม
+    /**
+     * ตรวจทั้งฟอร์ม
+     */
     const validateAll = () => {
         const r = schema.safeParse(form);
         if (r.success) {
@@ -179,25 +192,32 @@ export default function EditHomestayPage() {
         return false;
     };
 
+    /**
+     * setField พร้อม validate ตามคีย์
+     */
     const setField = <K extends keyof HomestayForm>(key: K, value: HomestayForm[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
         validateField(key, value);
     };
-
-    const startPos = React.useMemo(
-        () =>
-            [
-                Number(form.latitude) || 13.7563,
-                Number(form.longitude) || 100.5018,
-            ] as [number, number],
-        [form.latitude, form.longitude]
-    );
 
     const normalizeOrDefault = (v: string, fallback = "") => {
         const t = (v ?? "").toString().trim();
         return t.length ? t : fallback;
     };
 
+    /**
+     * 👉 ป้องกันลูป: onChange ของแผนที่ที่ "ไม่ set ซ้ำเมื่อค่าเดิมเท่าเดิม"
+     *    และมี identity คงที่ด้วย useCallback
+     */
+    const handleMapChange = React.useCallback((pos: [number, number]) => {
+        setPosition((prev) =>
+            prev[0] === pos[0] && prev[1] === pos[1] ? prev : pos
+        );
+    }, []);
+
+    /**
+     * กด "บันทึก" → validate → เปิด Modal
+     */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isSaving) return;
@@ -209,36 +229,14 @@ export default function EditHomestayPage() {
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
-
-        // เตรียม payload สำหรับ PATCH
-        const payload = {
-            name: normalizeOrDefault(form.name),
-            type: normalizeOrDefault(form.type),
-            guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
-            totalRoom: Math.max(1, Number(form.totalRoom || 0)),
-            facility: normalizeOrDefault(form.facility),
-            location: {
-                houseNumber: normalizeOrDefault(form.houseNumber),
-                villageNumber: Number(form.villageNumber) || null,
-                subDistrict: normalizeOrDefault(form.subDistrict),
-                district: normalizeOrDefault(form.district),
-                province: normalizeOrDefault(form.province),
-                postalCode: normalizeOrDefault(form.postalCode),
-                detail: normalizeOrDefault(form.addressDetail),
-                latitude: Number(form.latitude),
-                longitude: Number(form.longitude),
-            },
-            // ถ้าจะรองรับการแก้รูป ให้ส่ง homestayImage: [{ image, type }]
-            // homestayImage: [...]
-        };
-
-        setPendingPayload(payload);
         setConfirmOpen(true);
     };
 
+    /**
+     * ยืนยันบันทึก → สร้าง payload สดจากฟอร์ม + ใช้ position เป็นแหล่ง lat/lng
+     */
     const onConfirmSave = async () => {
         setConfirmOpen(false);
-        if (!pendingPayload) return;
 
         try {
             setIsSaving(true);
@@ -248,20 +246,35 @@ export default function EditHomestayPage() {
             const id = Number(homestayId);
             if (!id) throw new Error("homestayId ไม่ถูกต้อง");
 
-            await axios.patch(`${apiUrl}/super/homestays/${id}`, pendingPayload, {
+            const payload = {
+                name: normalizeOrDefault(form.name),
+                type: normalizeOrDefault(form.type),
+                guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
+                totalRoom: Math.max(1, Number(form.totalRoom || 0)),
+                facility: normalizeOrDefault(form.facility),
+                location: {
+                    houseNumber: normalizeOrDefault(form.houseNumber),
+                    villageNumber: Number(form.villageNumber) || null,
+                    subDistrict: normalizeOrDefault(form.subDistrict),
+                    district: normalizeOrDefault(form.district),
+                    province: normalizeOrDefault(form.province),
+                    postalCode: normalizeOrDefault(form.postalCode),
+                    detail: normalizeOrDefault(form.addressDetail),
+
+                    // ✅ ใช้ตำแหน่งจาก state position (source of truth)
+                    latitude: position[0],
+                    longitude: position[1],
+                },
+            };
+
+            await axios.put(`${API_URL}/super/homestay/edit/${id}`, payload, {
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
             });
 
             setSuccessMessage("อัปเดตที่พักสำเร็จ");
-
-            // กลับไปหน้าแก้ชุมชน (ใช้ communityId จากข้อมูลเดิม)
-            if (communityId) {
-                navigate(`/super/community/edit/${communityId}`);
-            } else {
-                // fallback
-                navigate(-1);
-            }
+            if (communityId) navigate(`/super/community/edit/${communityId}`);
+            else navigate(-1);
         } catch (err: any) {
             console.error("Update homestay error:", err?.response?.data || err);
             setErrorMessage(
@@ -273,7 +286,6 @@ export default function EditHomestayPage() {
             window.scrollTo({ top: 0, behavior: "smooth" });
         } finally {
             setIsSaving(false);
-            setPendingPayload(null);
         }
     };
 
@@ -444,25 +456,14 @@ export default function EditHomestayPage() {
 
                             {/* ค้นหาสถานที่ + แผนที่ */}
                             <div className="space-y-3">
-                                <TextField
-                                    id="placeQuery"
-                                    label="ค้นหาสถานที่"
-                                    placeholder="พิมพ์ชื่อสถานที่หรือสถานที่ใกล้เคียงเพื่อปักหมุด"
-                                    value={form.placeQuery}
-                                    onChange={(e) => setField("placeQuery", e.target.value)}
-                                />
-                                <MapPicker
-                                    startingPosition={startPos}
-                                    startingZoom={12}
-                                    onChange={([lat, lng]) => {
-                                        setField("latitude", String(lat));
-                                        setField("longitude", String(lng));
-                                    }}
-                                />
-                                <div className="grid grid-cols-2 gap-3 mt-2">
-                                    {!!formErrors.latitude && <div className="text-red-600 text-sm">{formErrors.latitude}</div>}
-                                    {!!formErrors.longitude && <div className="text-red-600 text-sm">{formErrors.longitude}</div>}
-                                </div>
+                                {/* ✅ แสดงแผนที่เมื่อมีพิกัดแล้ว */}
+                                {position[0] !== 0 && position[1] !== 0 && (
+                                    <MapPicker
+                                        startingPosition={position}
+                                        startingZoom={startingZoom}
+                                        onChange={handleMapChange}
+                                    />
+                                )}
                             </div>
                         </div>
                     </section>
@@ -492,7 +493,6 @@ export default function EditHomestayPage() {
                 onConfirm={onConfirmSave}
                 onCancel={() => {
                     setConfirmOpen(false);
-                    setPendingPayload(null);
                 }}
             />
         </div>

@@ -6,6 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 
 export default function SuperAdminRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="account/change-password" element={<ChangePasswordPage />} />
     </Routes>
   );
 }

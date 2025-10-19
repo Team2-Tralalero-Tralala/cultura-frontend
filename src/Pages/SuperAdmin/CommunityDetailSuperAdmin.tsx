@@ -9,7 +9,7 @@
 import { Icon } from "@iconify/react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getCommunityDetailById } from "@/Libs/CommunityService";
+import { getCommunityDetailById } from "@/Services/community-service";
 
 // =========================
 // Helpers: แสดงค่า / วันที่
@@ -38,7 +38,11 @@ function toPublicUrl(path?: string | null): string | null {
   if (!path) return null;
 
   // URL เต็ม หรือ data/blob URL -> ใช้ได้เลย
-  if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:") || path.startsWith("blob:")) {
+  if (
+    /^(https?:)?\/\//i.test(path) ||
+    path.startsWith("data:") ||
+    path.startsWith("blob:")
+  ) {
     return path;
   }
 
@@ -72,7 +76,13 @@ function listImagesByType(community: any, type: string): string[] {
 // ========================================
 // แถว Label : Value (หัวข้อหนา + ข้อมูลบาง)
 // ========================================
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div
       className="
@@ -84,7 +94,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
     >
       <div className="font-semibold text-gray-900 text-base">{label}</div>
       <div className="text-gray-400 text-base">:</div>
-      <div className="text-gray-700 font-normal break-words text-base">{children ?? "-"}</div>
+      <div className="text-gray-700 font-normal break-words text-base">
+        {children ?? "-"}
+      </div>
     </div>
   );
 }
@@ -116,8 +128,9 @@ function AvatarCircle({
     );
   }
 
-  const initial =
-    (name || "").trim().charAt(0) ? (name || "").trim().charAt(0).toUpperCase() : "?";
+  const initial = (name || "").trim().charAt(0)
+    ? (name || "").trim().charAt(0).toUpperCase()
+    : "?";
 
   return (
     <div
@@ -132,7 +145,8 @@ function AvatarCircle({
 }
 
 // ===== Logo + Cover =====
-const getInitial = (name?: string) => (name || "").trim().charAt(0).toUpperCase() || "?";
+const getInitial = (name?: string) =>
+  (name || "").trim().charAt(0).toUpperCase() || "?";
 
 function LogoCircle({
   src,
@@ -191,7 +205,10 @@ function CoverRect({
     );
   }
   return (
-    <div style={{ height }} className={`w-full bg-gray-100 grid place-items-center ${className}`}>
+    <div
+      style={{ height }}
+      className={`w-full bg-gray-100 grid place-items-center ${className}`}
+    >
       <div className="w-[92%] h-[70%] border-2 border-dashed border-gray-300 rounded-xl grid place-items-center">
         <span className="text-gray-500">ไม่มีภาพปก</span>
       </div>
@@ -243,7 +260,11 @@ function Section({
       >
         <span className="font-medium">{title}</span>
         <div className="flex items-center gap-3 text-sm text-slate-600">
-          {typeof count === "number" && <span>จำนวน {count} {title}</span>}
+          {typeof count === "number" && (
+            <span>
+              จำนวน {count} {title}
+            </span>
+          )}
           <Chevron open={open} />
         </div>
       </button>
@@ -265,17 +286,20 @@ function Section({
 // ===== Cover pickers (ห่อด้วย toPublicUrl) =====
 const getPkgCover = (p: any) =>
   toPublicUrl(
-    p?.packageFile?.find((f: any) => String(f.type).toUpperCase() === "COVER")?.filePath
+    p?.packageFile?.find((f: any) => String(f.type).toUpperCase() === "COVER")
+      ?.filePath
   );
 
 const getStoreCover = (s: any) =>
   toPublicUrl(
-    s?.storeImage?.find((f: any) => String(f.type).toUpperCase() === "COVER")?.image
+    s?.storeImage?.find((f: any) => String(f.type).toUpperCase() === "COVER")
+      ?.image
   );
 
 const getHomestayCover = (h: any) =>
   toPublicUrl(
-    h?.homestayImage?.find((f: any) => String(f.type).toUpperCase() === "COVER")?.image
+    h?.homestayImage?.find((f: any) => String(f.type).toUpperCase() === "COVER")
+      ?.image
   );
 
 // ===== Simple card =====
@@ -301,7 +325,9 @@ function ItemCard({
       </div>
       <div className="min-w-0">
         <div className="font-semibold">{title}</div>
-        {children && <div className="mt-2 text-sm text-slate-700">{children}</div>}
+        {children && (
+          <div className="mt-2 text-sm text-slate-700">{children}</div>
+        )}
       </div>
     </div>
   );
@@ -363,15 +389,24 @@ export default function CommunityDetailSuperAdmin() {
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb แบบเรียบง่าย */}
-      <nav aria-label="breadcrumb" className="flex items-center text-gray-700 mb-4">
+      <nav
+        aria-label="breadcrumb"
+        className="flex items-center text-gray-700 mb-4"
+      >
         <Link
           to="/super/communities"
           className="text-gray-800 hover:text-dark-green font-medium text-base"
         >
           จัดการชุมชน
         </Link>
-        <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-4 h-4" aria-hidden="true" />
-        <span className="text-gray-500 font-medium text-base">รายละเอียดของชุมชน</span>
+        <Icon
+          icon="mdi:chevron-right"
+          className="mx-2 text-gray-400 w-4 h-4"
+          aria-hidden="true"
+        />
+        <span className="text-gray-500 font-medium text-base">
+          รายละเอียดของชุมชน
+        </span>
       </nav>
 
       {/* กล่องใหญ่ */}
@@ -383,7 +418,9 @@ export default function CommunityDetailSuperAdmin() {
             className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
           >
             <Icon icon="lucide:arrow-left" className="w-5 h-5" />
-            <h2 className="text-lg font-semibold text-xl">รายละเอียดของชุมชน</h2>
+            <h2 className="text-lg font-semibold text-xl">
+              รายละเอียดของชุมชน
+            </h2>
           </Link>
 
           <button
@@ -408,17 +445,28 @@ export default function CommunityDetailSuperAdmin() {
 
                 {/* โลโก้ + ข้อความ */}
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
-                  <div className="absolute left-6 md:left-8 -translate-y-1/2" style={{ top: 0 }}>
-                    <LogoCircle src={logoImage} name={community?.name} size={LOGO} />
+                  <div
+                    className="absolute left-6 md:left-8 -translate-y-1/2"
+                    style={{ top: 0 }}
+                  >
+                    <LogoCircle
+                      src={logoImage}
+                      name={community?.name}
+                      size={LOGO}
+                    />
                   </div>
 
                   <div style={{ paddingLeft: LOGO + 24 }}>
                     <div className="flex items-center gap-3">
-                      <h1 className="text-[22px] font-bold leading-tight">{show(community.name)}</h1>
+                      <h1 className="text-[22px] font-bold leading-tight">
+                        {show(community.name)}
+                      </h1>
                       {!!community.status && (
                         <span
                           className={`px-2.5 py-0.5 text-sm rounded-full ${
-                            isOpen ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
+                            isOpen
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-slate-100 text-slate-700"
                           }`}
                         >
                           {isOpen ? "เปิด" : "ปิด"}
@@ -428,7 +476,9 @@ export default function CommunityDetailSuperAdmin() {
 
                     <div className="mt-2 flex items-start gap-2 text-slate-700">
                       <Pin className="mt-0.5 shrink-0" />
-                      <span className="leading-relaxed">{show(community.location?.address)}</span>
+                      <span className="leading-relaxed">
+                        {show(community.location?.address)}
+                      </span>
                     </div>
 
                     <p className="mt-3 text-slate-700 leading-relaxed max-w-4xl">
@@ -448,14 +498,18 @@ export default function CommunityDetailSuperAdmin() {
             <div className="space-y-2.5">
               <Row label="ชื่อวิสาหกิจชุมชน">{show(community.name)}</Row>
               <Row label="ประเภทวิสาหกิจชุมชน">{show(community.type)}</Row>
-              <Row label="วันที่จดทะเบียน">{toThaiDate(community.registerDate)}</Row>
+              <Row label="วันที่จดทะเบียน">
+                {toThaiDate(community.registerDate)}
+              </Row>
               <Row label="อีเมล">{show(community.email)}</Row>
               <Row label="ละติจูด / ลองจิจูด">
                 {community.location?.latitude && community.location?.longitude
                   ? `${community.location.latitude}, ${community.location.longitude}`
                   : "-"}
               </Row>
-              <Row label="ชื่อกิจกรรมหลัก">{show(community.mainActivityName)}</Row>
+              <Row label="ชื่อกิจกรรมหลัก">
+                {show(community.mainActivityName)}
+              </Row>
               <Row label="เว็บไซต์">
                 {community.urlWebsite ? (
                   <a
@@ -484,9 +538,15 @@ export default function CommunityDetailSuperAdmin() {
               <Row label="เลขทะเบียน">{show(community.registerNumber)}</Row>
               <Row label="เบอร์โทร">{show(community.phone)}</Row>
               <Row label="ที่อยู่">{show(community.location?.address)}</Row>
-              <Row label="คำอธิบายที่อยู่">{show(community.location?.detail)}</Row>
-              <Row label="รายละเอียดกิจกรรมหลัก">{show(community.mainActivityDescription)}</Row>
-              <Row label="จำนวนสมาชิก">{show(community.member?.length || 0)} คน</Row>
+              <Row label="คำอธิบายที่อยู่">
+                {show(community.location?.detail)}
+              </Row>
+              <Row label="รายละเอียดกิจกรรมหลัก">
+                {show(community.mainActivityDescription)}
+              </Row>
+              <Row label="จำนวนสมาชิก">
+                {show(community.member?.length || 0)} คน
+              </Row>
               <Row label="เบอร์โทร">{show(community.mainAdminPhone)}</Row>
               <Row label="เบอร์โทร">{show(community.coordinatorPhone)}</Row>
               <br />
@@ -558,7 +618,12 @@ export default function CommunityDetailSuperAdmin() {
           {galleries?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {galleries.map((url, i) => (
-                <img key={`${url}-${i}`} src={url} alt="" className="h-40 w-full object-cover rounded-xl" />
+                <img
+                  key={`${url}-${i}`}
+                  src={url}
+                  alt=""
+                  className="h-40 w-full object-cover rounded-xl"
+                />
               ))}
             </div>
           ) : (
@@ -572,7 +637,12 @@ export default function CommunityDetailSuperAdmin() {
           {videos?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {videos.map((url, i) => (
-                <img key={`${url}-${i}`} src={url} alt="" className="h-40 w-full object-cover rounded-xl" />
+                <img
+                  key={`${url}-${i}`}
+                  src={url}
+                  alt=""
+                  className="h-40 w-full object-cover rounded-xl"
+                />
               ))}
             </div>
           ) : (
@@ -590,7 +660,9 @@ export default function CommunityDetailSuperAdmin() {
                 const lng = community.location.longitude;
                 const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
                   lng - 0.01
-                }%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&layer=mapnik&marker=${lat}%2C${lng}`;
+                }%2C${lat - 0.01}%2C${lng + 0.01}%2C${
+                  lat + 0.01
+                }&layer=mapnik&marker=${lat}%2C${lng}`;
 
                 return (
                   <iframe
@@ -610,14 +682,21 @@ export default function CommunityDetailSuperAdmin() {
           </div>
         )}
 
-
         {/* Accordion: แพ็กเกจ/ร้านค้า/ที่พัก/สมาชิก */}
         <div className="px-6 sm:px-8 mt-6 pb-8">
           {(() => {
-            const pkgs = (community.packages || []).filter((x: any) => x.communityId === community.id);
-            const stores = (community.stores || []).filter((x: any) => x.communityId === community.id);
-            const homestays = (community.homestays || []).filter((x: any) => x.communityId === community.id);
-            const members = (community.member || []).filter((x: any) => x.memberOfCommunity === community.id);
+            const pkgs = (community.packages || []).filter(
+              (x: any) => x.communityId === community.id
+            );
+            const stores = (community.stores || []).filter(
+              (x: any) => x.communityId === community.id
+            );
+            const homestays = (community.homestays || []).filter(
+              (x: any) => x.communityId === community.id
+            );
+            const members = (community.member || []).filter(
+              (x: any) => x.memberOfCommunity === community.id
+            );
 
             return (
               <>
@@ -626,18 +705,29 @@ export default function CommunityDetailSuperAdmin() {
                   {pkgs.length ? (
                     <div className="space-y-4">
                       {pkgs.map((p: any) => (
-                        <ItemCard key={p.id} image={getPkgCover(p)} title={p.name}>
+                        <ItemCard
+                          key={p.id}
+                          image={getPkgCover(p)}
+                          title={p.name}
+                        >
                           <div className="space-y-1">
                             <div>
-                              - ความจุ {p.capacity} คน • ราคา {p.price?.toLocaleString?.() ?? p.price} บาท
+                              - ความจุ {p.capacity} คน • ราคา{" "}
+                              {p.price?.toLocaleString?.() ?? p.price} บาท
                             </div>
-                            {p.description && <div className="line-clamp-3">{p.description}</div>}
+                            {p.description && (
+                              <div className="line-clamp-3">
+                                {p.description}
+                              </div>
+                            )}
                           </div>
                         </ItemCard>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">ยังไม่มีแพ็กเกจ</div>
+                    <div className="text-slate-500 text-sm">
+                      ยังไม่มีแพ็กเกจ
+                    </div>
                   )}
                 </Section>
 
@@ -646,13 +736,19 @@ export default function CommunityDetailSuperAdmin() {
                   {stores.length ? (
                     <div className="space-y-4">
                       {stores.map((s: any) => (
-                        <ItemCard key={s.id} image={getStoreCover(s)} title={s.name}>
+                        <ItemCard
+                          key={s.id}
+                          image={getStoreCover(s)}
+                          title={s.name}
+                        >
                           <div className="line-clamp-3">{s.detail || "-"}</div>
                         </ItemCard>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">ยังไม่มีร้านค้า</div>
+                    <div className="text-slate-500 text-sm">
+                      ยังไม่มีร้านค้า
+                    </div>
                   )}
                 </Section>
 
@@ -661,13 +757,20 @@ export default function CommunityDetailSuperAdmin() {
                   {homestays.length ? (
                     <div className="space-y-4">
                       {homestays.map((h: any) => (
-                        <ItemCard key={h.id} image={getHomestayCover(h)} title={h.name}>
+                        <ItemCard
+                          key={h.id}
+                          image={getHomestayCover(h)}
+                          title={h.name}
+                        >
                           <div className="space-y-1">
                             <div>
-                              - ประเภท {show(h.type)} • รองรับ {show(h.guestPerRoom)} คน/ห้อง • ทั้งหมด{" "}
+                              - ประเภท {show(h.type)} • รองรับ{" "}
+                              {show(h.guestPerRoom)} คน/ห้อง • ทั้งหมด{" "}
                               {show(h.totalRoom)} ห้อง
                             </div>
-                            <div className="line-clamp-3">{show(h.facility)}</div>
+                            <div className="line-clamp-3">
+                              {show(h.facility)}
+                            </div>
                           </div>
                         </ItemCard>
                       ))}
@@ -682,20 +785,35 @@ export default function CommunityDetailSuperAdmin() {
                   {members.length ? (
                     <div className="space-y-3">
                       {members.map((m: any) => {
-                        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
+                        const fullName = [m.fname, m.lname]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim();
                         return (
                           <div
                             key={m.id}
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
-                            <AvatarCircle src={toPublicUrl(m.profileImage)} name={fullName || m.username} size={64} />
+                            <AvatarCircle
+                              src={toPublicUrl(m.profileImage)}
+                              name={fullName || m.username}
+                              size={64}
+                            />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{fullName || m.username}</div>
+                              <div className="font-medium truncate">
+                                {fullName || m.username}
+                              </div>
                               {m.activityRole && (
-                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
+                                <div className="text-sm text-slate-700">
+                                  • {m.activityRole}
+                                </div>
                               )}
-                              <div className="mt-1 text-sm text-slate-600 truncate">{m.email || "-"}</div>
-                              <div className="text-sm text-slate-600">{m.phone || "-"}</div>
+                              <div className="mt-1 text-sm text-slate-600 truncate">
+                                {m.email || "-"}
+                              </div>
+                              <div className="text-sm text-slate-600">
+                                {m.phone || "-"}
+                              </div>
                             </div>
                           </div>
                         );

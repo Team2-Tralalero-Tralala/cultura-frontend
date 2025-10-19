@@ -20,7 +20,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
-import { createCommunity } from "@/Libs/CommunityService";
+import { createCommunity } from "@/Services/community-service";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
 import MemberSelector, {
   type Member,
@@ -239,6 +239,7 @@ export default function CreateCommuninityPage() {
     setFormData(updated);
     validateField(field, value);
   };
+
   const memberList = React.useMemo<Member[]>(
     () => (formData.member ?? []).map((id) => ({ id, fname: "", lname: "" })),
     [formData.member]

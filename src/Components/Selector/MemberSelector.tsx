@@ -17,7 +17,7 @@ import Checkbox from "@mui/material/Checkbox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Popper from "@mui/material/Popper";
-import { getUnassignedMembers } from "@/Libs/CommunityService";
+import { getUnassignedMembers } from "@/Services/community-service";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -141,6 +141,7 @@ export default function MemberSelector({
       <Autocomplete
         multiple
         disablePortal
+        disableClearable
         disableCloseOnSelect
         PopperComponent={CustomPopper}
         options={members}
@@ -164,13 +165,12 @@ export default function MemberSelector({
         renderInput={(params) => {
           // Destructure props carefully
           const { InputProps, inputProps } = params;
-          const { ref: InputRef, ...InputPropsRest } = InputProps;
+          const { ref: InputRef } = InputProps;
           const { ref: InputElementRef, ...inputPropsRest } = inputProps;
 
           return (
             <div
               // Pass event handlers and wrapper-ref from InputProps to the outer div
-              {...InputPropsRest}
               ref={InputRef}
               className="w-full"
             >
@@ -192,6 +192,11 @@ export default function MemberSelector({
                   leading-relaxed placeholder:leading-relaxed
                   focus:outline-none focus:ring-1 transition-shadow"
                 />
+                {InputProps.endAdornment && ( // ✅ render แยกเอง
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {InputProps.endAdornment}
+                  </div>
+                )}
               </div>
             </div>
           );

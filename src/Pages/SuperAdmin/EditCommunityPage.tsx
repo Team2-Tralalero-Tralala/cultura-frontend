@@ -18,7 +18,10 @@ import z from "zod";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
+import {
+  getCommunityById,
+  updateCommunity,
+} from "@/Services/community-service";
 import Backdrop from "@mui/material/Backdrop";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -645,14 +648,14 @@ export function EditCommunity() {
             <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
               <div>
                 <h3 className="text-base font-bold mb-1.5">ร้านค้า</h3>
-                <Link to="/super/community/:communityId/store/create">
+                <Link to={`/super/community/${communityId}/stores/all`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="carbon:store"
                       style={{ fontSize: "24px" }}
                       className="mr-2"
                     />
-                    เพิ่มร้านค้า
+                    จัดการร้านค้า
                   </Button>
                 </Link>
               </div>
@@ -660,14 +663,14 @@ export function EditCommunity() {
                 <div className="text-base font-bold mb-1.5">
                   <h3>ที่พัก</h3>
                 </div>
-                <Link to="/super/community/:communityId/homestay/create">
+                <Link to={`/super/community/${communityId}/homestays/all`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="healthicons:home-outline"
                       style={{ fontSize: "24px" }}
                       className="mr-2"
                     />
-                    เพิ่มที่พัก
+                    จัดการที่พัก
                   </Button>
                 </Link>
               </div>

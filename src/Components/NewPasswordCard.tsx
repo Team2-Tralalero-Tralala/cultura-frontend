@@ -1,0 +1,178 @@
+/*
+ * คำอธิบาย : Component ฟอร์มเข้าสู่ระบบสำหรับผู้ใช้ที่เป็น "วิสาหกิจชุมชน (Admin)"
+ * ใช้ Zod schema ในการตรวจสอบความถูกต้องของข้อมูล,
+ * มีการ validate แบบ real-time ขณะกรอก และเรียกใช้งาน AuthContext ในการ login
+ */
+import TextField from "./TextField";
+import Button from "./Button";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../Libs/AuthProvider";
+// import ModalBlocked from "./ModalBlocked";
+import CircularProgress from "@mui/material/CircularProgress";
+import React, { useContext, useState } from "react";
+import { z } from "zod";
+import ModalBlocked from "./Modal/ModalBlocked";
+
+const loginSchema = z.object({
+  password: z.string().min(1, "กรุณาป้อนรหัสผ่าน"),
+  newPassword: z.string().min(1, "กรุณายืนยันรหัสผ่าน"),
+});
+/*
+ * ฟังก์ชัน : LoginAdminCard
+ * คำอธิบาย : ฟอร์มเข้าสู่ระบบสำหรับ Admin โดยตรวจสอบ input ผ่าน Zod และ AuthContext
+ * Input : -
+ * Output : React Component ที่แสดงฟอร์ม login และจัดการ redirect/error
+ */
+export function NewPasswordCard() {
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+  const [showBlocked, setShowBlocked] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState<{
+    password?: string;
+    newPassword?: string;
+  }>({});
+
+  /*
+   * ฟังก์ชัน : validateField
+   * คำอธิบาย : ตรวจสอบค่าของ field เดียว (username หรือ password)
+   * โดยใช้ Zod และ update state formErrors
+   */
+
+  const validateField = (field: "username" | "password", value: string) => {
+    const result = loginSchema.safeParse({
+      username: field === "username" ? value : username,
+      password: field === "password" ? value : password,
+    });
+    setFormErrors((prev) => ({
+      ...prev,
+      [field]: result.success
+        ? undefined
+        : result.error.issues.find((i) => i.path[0] === field)?.message,
+    }));
+  };
+
+  type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  // Handler เมื่อกรอก username
+  const handleUsernameChange = (e: React.ChangeEvent<FormElement>) => {
+    const value = e.target.value;
+    setUsername(value);
+    validateField("username", value);
+  };
+  // Handler เมื่อกรอกรหัสผ่าน
+  const handlePasswordChange = (e: React.ChangeEvent<FormElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    validateField("password", value);
+  };
+  /*
+   * ฟังก์ชัน : handleLogin
+   * คำอธิบาย : จัดการ event เมื่อผู้ใช้ submit ฟอร์ม
+   * ขั้นตอน:
+   *   1) Validate input ด้วย Zod
+   *   2) เรียก AuthContext.login
+   *   3) ตรวจสอบ role และ error message จาก backend
+   * Output : redirect หรือแสดง error/modal
+   */
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setFormErrors({});
+    setIsLoading(true);
+
+    // Validate with Zod
+    const result = loginSchema.safeParse({ username, password });
+    if (!result.success) {
+      const errors: { username?: string; password?: string } = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0] === "username") errors.username = err.message;
+        if (err.path[0] === "password") errors.password = err.message;
+      });
+      setFormErrors(errors);
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const loggedInUser = await login(username, password); // ให้ login return user
+
+      if (loggedInUser.role === "tourist") {
+        setError("ไม่พบบัญชี");
+      } else {
+        navigate("/tourist");
+      }
+      await login(username, password);
+    } catch (error: any) {
+      const blockedMsg = error?.response?.data?.message ?? "";
+      const isBlocked = blockedMsg.includes("ผู้ใช้ถูกบล็อก");
+
+      // กรณี User is blocked
+      if (isBlocked) {
+        if (blockedMsg && blockedMsg.includes("tourist")) {
+          setError("ไม่พบบัญชี");
+        } else {
+          setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
+          setShowBlocked(true);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // ส่ง error ภาษาไทยมาแสดง
+      const backendMsg = error?.response?.data?.message;
+      setError(backendMsg);
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className=" flex shadow-auth-card p-10 rounded-auth-card">
+      <form className="w-sm space-y-1" onSubmit={handleLogin}>
+        <h1 className="text-26 text-center">สร้างรหัสผ่านใหม่</h1>
+        <div className="mb-3">
+          <TextField
+            id="password"
+            label="รหัสผ่านใหม่"
+            required
+            placeholder="ป้อนรหัสผ่านใหม่"
+            type="password"
+            value={username}
+            onChange={handleUsernameChange}
+            error={!!formErrors.password}
+            helperText={formErrors.password}
+          />
+          <div className="ml-6 text-xs text-[#3B3B3B] mt-2">
+            <li>ความยาวอย่างน้อย 8 ตัวอักษร</li>
+            <li>ประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z) พิมพ์ใหญ่ (A-Z)</li>
+            <li>ประกอบด้วยตัวเลข (0-9)</li>
+          </div>
+        </div>
+        <div className="mb-3">
+          <TextField
+            id="newPassword"
+            label="ยืนยันรหัสผ่าน"
+            required
+            placeholder="ป้อนรหัสผ่านอีกครั้ง"
+            type="password"
+            value={password}
+            onChange={handleUsernameChange}
+            error={!!formErrors.newPassword}
+            helperText={formErrors.newPassword}
+          />
+        </div>
+        <Link to=""> </Link>
+        <Button type="confirm-admin" htmlType="submit">
+          {isLoading ? (
+            <CircularProgress color="inherit" size="28px" />
+          ) : (
+            "ถัดไป"
+          )}
+        </Button>
+      </form>
+    </div>
+  );
+}

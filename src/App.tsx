@@ -11,6 +11,8 @@ import MemberRoutes from "@/Layouts/Member/MemberRoutes";
 import ProtectedRoute from "@/Libs/ProtectedRoute";
 import LoginTourist from "@/Pages/LoginTourist";
 import LoginAdmin from "@/Pages/LoginAdmin";
+import NewPassword from "./Pages/NewPassword";
+import ForgetPassword from "./Pages/ForgetPassword";
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />
           <Route path="partner/login" element={<LoginAdmin />} />
+          <Route path="partner/forget-password" element={<ForgetPassword />} />
+          <Route path="partner/new-password" element={<NewPassword />} />
         </Route>
 
         <Route

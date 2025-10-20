@@ -21,10 +21,7 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
-      <Route
-        path="package-requests/:requestId"
-        element={<DetailPackageRequriedPage />}
-      />
+      <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>
     </Routes>
   );
 }

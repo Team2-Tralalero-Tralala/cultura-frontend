@@ -1,11 +1,12 @@
 // src/Pages/SuperAdmin/EditHomestayPage.tsx
-
 /**
- * คำอธิบาย : หน้าแก้ไขข้อมูลที่พัก (Super Admin)
- * วิธีการเหมือนหน้า Edit Store:
- *  - โหลดรูปเดิมจาก backend แล้วแปลงเป็น File (urlToFile) เพื่อใช้กับ UploadCard
- *  - แสดงรูปเดิมใน UploadCard ได้ทันที
- *  - บันทึกเป็น multipart/form-data เสมอ: data(JSON) + cover[] + gallery[]
+ * Component: EditHomestayPage
+ * คำอธิบาย: หน้าแก้ไขข้อมูลที่พักของ Super Admin
+ * ข้อกำหนด:
+ *  - ใช้วิธีจัดการรูป (cover/gallery) เหมือนหน้า Store ทุกประการ
+ *  - โหลดรูปจาก backend → แปลงเป็น File เพื่อใช้กับ UploadCard
+ *  - บันทึกเป็น multipart/form-data: data(JSON) + cover[] + gallery[]
+ * หมายเหตุ: ปรับเฉพาะรูปแบบโค้ดและคอมเมนต์ให้เป็นไปตาม Coding Standard เท่านั้น
  */
 
 import React from "react";
@@ -14,16 +15,22 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
 
+// Internal Components
 import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
 import MapPicker from "@/Components/MapPicker";
-import ThailandLocationSelector, { type ThailandLocation } from "@/Components/Selector/ThailandLocationSelector";
+import ThailandLocationSelector, {
+    type ThailandLocation,
+} from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
+import { TagSelector } from "@/Components/Selector/TagSelector";
 
+// Config Variables (UPPER_SNAKE_CASE ตามมาตรฐาน)
 const API_URL = import.meta.env.VITE_API_URL as string;
 
+/** ฟอร์มข้อมูลที่พัก */
 type HomestayForm = {
     name: string;
     type: string;
@@ -44,6 +51,7 @@ type HomestayForm = {
     placeQuery: string;
 };
 
+/** ค่าเริ่มต้นของฟอร์ม */
 const initialForm: HomestayForm = {
     name: "",
     type: "",
@@ -62,6 +70,7 @@ const initialForm: HomestayForm = {
     placeQuery: "",
 };
 
+/** Schema ตรวจสอบค่าฟอร์ม (Zod) */
 const schema = z.object({
     name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
     type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
@@ -69,70 +78,140 @@ const schema = z.object({
     guestPerRoom: z
         .string()
         .min(1)
-        .refine((v) => Number(v) >= 1 && Number.isInteger(Number(v)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
+        .refine(
+            (v) => Number(v) >= 1 && Number.isInteger(Number(v)),
+            "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+        ),
     totalRoom: z
         .string()
         .min(1)
-        .refine((v) => Number(v) >= 1 && Number.isInteger(Number(v)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
+        .refine(
+            (v) => Number(v) >= 1 && Number.isInteger(Number(v)),
+            "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+        ),
     houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
     villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
     addressDetail: z.string().optional().default(""),
     placeQuery: z.string().optional().default(""),
 });
 
-/** แปลง path/URL จาก DB → URL เต็มที่เรียกได้ */
-function toAbsoluteUrl(p: string): string {
-    if (!p) return "";
-    if (/^https?:\/\//i.test(p)) return p;
-
-    // origin ของ backend จาก VITE_API_URL (กันเคสมี /api ต่อท้าย)
-    let origin = "";
-    try {
-        origin = new URL(API_URL).origin;
-    } catch {
-        origin = window.location.origin;
-    }
-
-    const rel = p.replace(/\\/g, "/").replace(/^\.?\/*/, "");
-    const path = rel.startsWith("uploads/") ? rel : `uploads/${rel}`;
-    return `${origin}/${path}`;
-}
-
-/** ดึงไฟล์จาก URL แล้วสร้างเป็น File object เพื่อใช้กับ UploadCard */
+/**
+ * ฟังก์ชัน: urlToFile
+ * คำอธิบาย: ดึงไฟล์จาก URL แล้วแปลงเป็น File object (ใช้กับ UploadCard)
+ * Input : url, filename
+ * Output: File object (กำหนด MIME type และเติม flag isFromServer)
+ */
 async function urlToFile(url: string, filename: string): Promise<File> {
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
     const blob = await res.blob();
     const ext = filename.split(".").pop() || "jpg";
     const type = blob.type || `image/${ext}`;
     const file = new File([blob], filename, { type });
-    // ให้เหมือนวิธีในหน้า Store เป๊ะ ๆ (มี flag ไว้ได้แม้ไม่ใช้กรองตอนส่ง)
     (file as any).isFromServer = true;
     return file;
 }
 
+/**
+ * ฟังก์ชัน: buildImageCandidates
+ * คำอธิบาย: สร้างรายการ URL ผู้สมัครโหลดภาพจากค่า image ใน DB
+ * เหตุผล: ป้องกันปัญหา 404 จาก path ที่ต่างกัน (เช่น มี/ไม่มี /api/)
+ * Input : raw (path/filename จากฐานข้อมูล)
+ * Output: รายการ URL ที่เป็นไปได้ (เรียงตามความเป็นไปได้)
+ */
+function buildImageCandidates(raw: string): string[] {
+    if (!raw) return [];
+    if (/^https?:\/\//i.test(raw)) return [raw];
+
+    const origin = (() => {
+        try {
+            return new URL(API_URL).origin;
+        } catch {
+            return window.location.origin;
+        }
+    })();
+
+    const cleaned = String(raw).replace(/\\/g, "/").replace(/^\.?\/*/, "");
+
+    const prefixes = [
+        "",
+        "uploads/",
+        "upload/",
+        "images/",
+        "image/",
+        "homestay/",
+        "homestays/",
+        "homestay/uploads/",
+        "homestays/uploads/",
+    ];
+
+    const candidates = new Set<string>();
+    for (const p of prefixes) {
+        const path = cleaned.startsWith(p) ? cleaned : `${p}${cleaned}`;
+        candidates.add(`${origin}/${encodeURI(path)}`);
+        candidates.add(`${origin}/api/${encodeURI(path)}`);
+    }
+    return Array.from(candidates);
+}
+
+/**
+ * ฟังก์ชัน: bestEffortUrlToFile
+ * คำอธิบาย: ทดลองโหลดภาพตาม candidate URL ไปทีละรายการจนกว่าจะสำเร็จ
+ * Input : rawPath, filename
+ * Output: File object ที่แปลงสำเร็จ
+ */
+async function bestEffortUrlToFile(
+    rawPath: string,
+    filename: string
+): Promise<File> {
+    const candidates = buildImageCandidates(rawPath);
+    let lastErr: unknown = null;
+    for (const u of candidates) {
+        try {
+            return await urlToFile(u, filename);
+        } catch (e) {
+            lastErr = e;
+        }
+    }
+    throw lastErr || new Error("no image url works");
+}
+
 type FormErrors = Partial<Record<keyof HomestayForm, string>>;
 
+/**
+ * Component: EditHomestayPage
+ * หน้าที่: โหลดข้อมูลที่พัก, แสดงฟอร์มแก้ไข, จัดการอัปโหลด/แสดงรูป, และบันทึกข้อมูล
+ */
 export default function EditHomestayPage() {
     const { homestayId } = useParams();
     const navigate = useNavigate();
+
+    // ฟอร์มและสถานะทั่วไป
     const [form, setForm] = React.useState<HomestayForm>(initialForm);
     const [formErrors, setFormErrors] = React.useState<FormErrors>({});
     const [isLoading, setIsLoading] = React.useState(true);
     const [isSaving, setIsSaving] = React.useState(false);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = React.useState<string | null>(
+        null
+    );
     const [confirmOpen, setConfirmOpen] = React.useState(false);
     const [communityId, setCommunityId] = React.useState<number | null>(null);
 
-    // ใช้ position เป็น source of truth
+    // แผนที่
     const [position, setPosition] = React.useState<[number, number]>([0, 0]);
     const startingZoom = 12;
 
-    // รูปสำหรับ UploadCard (เหมือนหน้า Store)
+    // รูปภาพ
     const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
     const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
 
-    /** โหลดข้อมูล + โหลดรูปเดิมเป็น File */
+    // แท็ก
+    const [tagIds, setTagIds] = React.useState<number[]>([]);
+
+    /**
+     * Effect: โหลดข้อมูลที่พักและแปลงรูปเป็น File
+     */
     React.useEffect(() => {
         (async () => {
             try {
@@ -142,7 +221,9 @@ export default function EditHomestayPage() {
                 const id = Number(homestayId);
                 if (!id) throw new Error("homestayId ไม่ถูกต้อง");
 
-                const res = await axios.get(`${API_URL}/super/homestays/${id}`, { withCredentials: true });
+                const res = await axios.get(`${API_URL}/super/homestays/${id}`, {
+                    withCredentials: true,
+                });
                 const hs = res?.data?.data ?? res?.data;
                 if (!hs) throw new Error("ไม่พบข้อมูลที่พัก");
 
@@ -150,15 +231,14 @@ export default function EditHomestayPage() {
 
                 const lat = Number(hs.location?.latitude ?? 13.7563);
                 const lng = Number(hs.location?.longitude ?? 100.5018);
-
                 setPosition([lat, lng]);
+
                 setForm({
                     name: hs.name ?? "",
                     type: hs.type ?? "",
                     facility: hs.facility ?? "",
                     guestPerRoom: String(hs.guestPerRoom ?? ""),
                     totalRoom: String(hs.totalRoom ?? ""),
-
                     houseNumber: hs.location?.houseNumber ?? "",
                     villageNumber: String(hs.location?.villageNumber ?? ""),
                     province: hs.location?.province ?? "",
@@ -166,35 +246,48 @@ export default function EditHomestayPage() {
                     subDistrict: hs.location?.subDistrict ?? "",
                     postalCode: hs.location?.postalCode ?? "",
                     addressDetail: hs.location?.detail ?? "",
-
                     latitude: String(lat),
                     longitude: String(lng),
                     placeQuery: "",
                 });
 
-                // --- โหลดไฟล์รูปเดิม (แบบหน้า Store) ---
-                const imgs: any[] = Array.isArray(hs?.homestayImage) ? hs.homestayImage : [];
+                // โหลดรูปภาพเดิม
+                const imgs: any[] = Array.isArray(hs?.homestayImage)
+                    ? hs.homestayImage
+                    : [];
 
-                const coverFetched: File[] = await Promise.all(
+                const coverFilesFetched: File[] = await Promise.all(
                     imgs
-                        .filter((x) => x.type === "COVER")
-                        .map(async (x) => {
-                            const fullUrl = toAbsoluteUrl(x.image);
-                            return await urlToFile(fullUrl, x.image);
-                        })
+                        .filter((img) => img.type === "COVER")
+                        .map((img) =>
+                            bestEffortUrlToFile(
+                                String(img.image || ""),
+                                String(img.image || "cover.jpg")
+                            )
+                        )
                 );
 
-                const galleryFetched: File[] = await Promise.all(
+                const galleryFilesFetched: File[] = await Promise.all(
                     imgs
-                        .filter((x) => x.type === "GALLERY")
-                        .map(async (x) => {
-                            const fullUrl = toAbsoluteUrl(x.image);
-                            return await urlToFile(fullUrl, x.image);
-                        })
+                        .filter((img) => img.type === "GALLERY")
+                        .map((img) =>
+                            bestEffortUrlToFile(
+                                String(img.image || ""),
+                                String(img.image || "gallery.jpg")
+                            )
+                        )
                 );
 
-                setCoverFiles(coverFetched);
-                setGalleryFiles(galleryFetched);
+                setCoverFiles(coverFilesFetched);
+                setGalleryFiles(galleryFilesFetched);
+
+                // ตั้งค่าแท็กเดิมจาก backend (รองรับทั้ง {tag:{id}} และ {id})
+                const currentTagIds: number[] = Array.isArray(hs?.tagHomestays)
+                    ? hs.tagHomestays
+                        .map((t: any) => t?.tag?.id ?? t?.id)
+                        .filter((x: any) => typeof x === "number")
+                    : [];
+                setTagIds(currentTagIds);
             } catch (err: any) {
                 console.error("Load homestay error:", err?.response?.data || err);
                 setErrorMessage(
@@ -209,17 +302,25 @@ export default function EditHomestayPage() {
         })();
     }, [homestayId]);
 
-    /** validate ฟิลด์เดี่ยว */
+    /**
+     * ฟังก์ชัน: validateField
+     * คำอธิบาย: ตรวจสอบความถูกต้องของฟิลด์เดี่ยวด้วย Zod แล้วบันทึก error
+     */
     const validateField = (key: keyof HomestayForm, val: any) => {
         const base = { ...form, [key]: val };
         const r = schema.safeParse(base);
         setFormErrors((prev) => ({
             ...prev,
-            [key]: r.success ? undefined : r.error.issues.find((i) => i.path[0] === key)?.message,
+            [key]: r.success
+                ? undefined
+                : r.error.issues.find((i) => i.path[0] === key)?.message,
         }));
     };
 
-    /** validate ทั้งฟอร์ม */
+    /**
+     * ฟังก์ชัน: validateAll
+     * คำอธิบาย: ตรวจสอบทั้งฟอร์ม หากไม่ผ่านจะสะสม error ของแต่ละฟิลด์
+     */
     const validateAll = () => {
         const r = schema.safeParse(form);
         if (r.success) {
@@ -234,22 +335,39 @@ export default function EditHomestayPage() {
         return false;
     };
 
-    /** setField + validate */
-    const setField = <K extends keyof HomestayForm>(key: K, value: HomestayForm[K]) => {
+    /**
+     * ฟังก์ชัน: setField
+     * คำอธิบาย: อัปเดตค่าฟอร์มและตรวจสอบความถูกต้องของฟิลด์นั้นทันที
+     */
+    const setField = <K extends keyof HomestayForm>(
+        key: K,
+        value: HomestayForm[K]
+    ) => {
         setForm((prev) => ({ ...prev, [key]: value }));
         validateField(key, value);
     };
 
+    /**
+     * ฟังก์ชัน: normalizeOrDefault
+     * คำอธิบาย: trim และคืนค่า fallback หากเป็นค่าว่าง
+     */
     const normalizeOrDefault = (v: string, fallback = "") => {
         const t = (v ?? "").toString().trim();
         return t.length ? t : fallback;
     };
 
+    /**
+     * ฟังก์ชัน: handleMapChange
+     * คำอธิบาย: อัปเดต position เมื่อผู้ใช้เลื่อนพินบนแผนที่
+     */
     const handleMapChange = React.useCallback((pos: [number, number]) => {
         setPosition((prev) => (prev[0] === pos[0] && prev[1] === pos[1] ? prev : pos));
     }, []);
 
-    /** submit → เปิด modal */
+    /**
+     * ฟังก์ชัน: handleSubmit
+     * คำอธิบาย: ตรวจสอบฟอร์มและเปิด Modal เพื่อยืนยันการบันทึก
+     */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isSaving) return;
@@ -264,7 +382,14 @@ export default function EditHomestayPage() {
         setConfirmOpen(true);
     };
 
-    /** ยืนยันบันทึก → ส่ง FormData เสมอ (เหมือนหน้า Store) */
+    /**
+     * ฟังก์ชัน: onConfirmSave
+     * คำอธิบาย: เมื่อยืนยันบันทึก → สร้าง FormData และส่ง PUT ไปยัง API
+     * รูปแบบข้อมูล:
+     *  - data: JSON (string) รวมข้อมูล text และ tagHomestays
+     *  - cover: File(s)
+     *  - gallery: File(s)
+     */
     const onConfirmSave = async () => {
         setConfirmOpen(false);
 
@@ -282,6 +407,7 @@ export default function EditHomestayPage() {
                 guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
                 totalRoom: Math.max(1, Number(form.totalRoom || 0)),
                 facility: normalizeOrDefault(form.facility),
+                tagHomestays: Array.isArray(tagIds) ? tagIds : [],
                 location: {
                     houseNumber: normalizeOrDefault(form.houseNumber),
                     villageNumber: Number(form.villageNumber) || null,
@@ -297,18 +423,11 @@ export default function EditHomestayPage() {
 
             const fd = new FormData();
             fd.append("data", JSON.stringify(payload));
-
-            // ส่งไฟล์แบบเดียวกับหน้า Store (append ทุกไฟล์ที่อยู่ใน state)
-            coverFiles.forEach((file: any) => {
-                fd.append("cover", file);
-            });
-            galleryFiles.forEach((file: any) => {
-                fd.append("gallery", file);
-            });
+            coverFiles.forEach((file: any) => fd.append("cover", file));
+            galleryFiles.forEach((file: any) => fd.append("gallery", file));
 
             await axios.put(`${API_URL}/super/homestay/edit/${id}`, fd, {
                 withCredentials: true,
-                // อย่าตั้ง Content-Type เอง ให้ browser ใส่ boundary อัตโนมัติ
             });
 
             setSuccessMessage("อัปเดตที่พักสำเร็จ");
@@ -328,6 +447,7 @@ export default function EditHomestayPage() {
         }
     };
 
+    // ===== Render =====
     return (
         <div className="w-full max-w-none px-0">
             {/* Alerts */}
@@ -356,14 +476,14 @@ export default function EditHomestayPage() {
                 </button>
             </div>
 
-            {/* Loading */}
+            {/* Loading / Form */}
             {isLoading ? (
                 <div className="rounded-lg bg-white p-5 shadow-sm border">กำลังโหลดข้อมูล...</div>
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border">
                         <div className="space-y-6">
-                            {/* ชื่อ/ประเภท/สิ่งอำนวยความสะดวก */}
+                            {/* ฟิลด์ข้อมูลหลัก */}
                             <div className="grid md:grid-cols-2 gap-5">
                                 <TextField
                                     id="name"
@@ -471,10 +591,26 @@ export default function EditHomestayPage() {
                                         }}
                                     />
                                     <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
-                                        <div>{!!formErrors.province && <div className="text-red-600 text-sm">{formErrors.province}</div>}</div>
-                                        <div>{!!formErrors.district && <div className="text-red-600 text-sm">{formErrors.district}</div>}</div>
-                                        <div>{!!formErrors.subDistrict && <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>}</div>
-                                        <div>{!!formErrors.postalCode && <div className="text-red-600 text-sm">{formErrors.postalCode}</div>}</div>
+                                        <div>
+                                            {!!formErrors.province && (
+                                                <div className="text-red-600 text-sm">{formErrors.province}</div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            {!!formErrors.district && (
+                                                <div className="text-red-600 text-sm">{formErrors.district}</div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            {!!formErrors.subDistrict && (
+                                                <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            {!!formErrors.postalCode && (
+                                                <div className="text-red-600 text-sm">{formErrors.postalCode}</div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -494,11 +630,20 @@ export default function EditHomestayPage() {
                             {/* แผนที่ */}
                             <div className="space-y-3">
                                 {position[0] !== 0 && position[1] !== 0 && (
-                                    <MapPicker startingPosition={position} startingZoom={startingZoom} onChange={handleMapChange} />
+                                    <MapPicker
+                                        startingPosition={position}
+                                        startingZoom={startingZoom}
+                                        onChange={handleMapChange}
+                                    />
                                 )}
                             </div>
 
-                            {/* UploadCard แบบเดียวกับหน้า Store */}
+                            {/* เลือกแท็ก */}
+                            <div className="md:col-span-2">
+                                <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
+                            </div>
+
+                            {/* อัปโหลดรูปภาพ */}
                             <section className="mt-4">
                                 <h3 className="font-semibold text-base mb-2">
                                     ภาพหน้าปก (COVER) <span className="text-red-600">*</span>
@@ -543,9 +688,17 @@ export default function EditHomestayPage() {
                         </div>
                     </section>
 
+                    {/* Action Buttons */}
                     <div className="flex justify-end gap-2 pt-2">
                         <div className="w-36">
-                            <Button type="cancel" onClick={() => (communityId ? navigate(`/super/community/edit/${communityId}`) : navigate(-1))}>
+                            <Button
+                                type="cancel"
+                                onClick={() =>
+                                    communityId
+                                        ? navigate(`/super/community/edit/${communityId}`)
+                                        : navigate(-1)
+                                }
+                            >
                                 ยกเลิก
                             </Button>
                         </div>

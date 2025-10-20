@@ -46,20 +46,20 @@ const SidebarSuperAdmin: React.FC = () => {
     if (subPath === '/communities/all') {
       setActiveMenuKey('communities');
       setOpenDropdown(null);
-    } else if (subPath === '/users/blocked') {
-      setActiveMenuKey('users-blocked');
-      setOpenDropdown('accounts');
-    } else if (subPath.startsWith('/accounts/all')) {
-      setActiveMenuKey('accounts');
-      setOpenDropdown('accounts');
-    } else if (subPath === '/package-requests') {
-      setActiveMenuKey('package-requests');
-      setOpenDropdown('packages');
-    } else if (subPath.startsWith('/packages/all')) {
-      setActiveMenuKey('packages');
-      setOpenDropdown('packages');
-    } else if (subPath === '/tags') {
-      setActiveMenuKey('tags');
+    } else if (subPath === "/users/blocked") {
+      setActiveMenuKey("users-blocked");
+      setOpenDropdown("accounts");
+    } else if (subPath.startsWith("/accounts/all")) {
+      setActiveMenuKey("accounts");
+      setOpenDropdown("accounts");
+    } else if (subPath === "/package-requests") {
+      setActiveMenuKey("package-requests");
+      setOpenDropdown("packages");
+    } else if (subPath.startsWith("/packages/all")) {
+      setActiveMenuKey("packages");
+      setOpenDropdown("packages");
+    } else if (subPath === "/shared/tags") {
+      setActiveMenuKey("tags");
       setOpenDropdown(null);
     } else if (subPath === '/dashboard') {
       setActiveMenuKey('dashboard');
@@ -172,8 +172,8 @@ const SidebarSuperAdmin: React.FC = () => {
 
           {/* === จัดการประเภท === */}
           <Link
-            to={`${basePath}/tags`}
-            onClick={() => handleClick('tags')}
+            to={`${basePath}/shared/tags`}
+            onClick={() => handleClick("tags")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
               isActive('tags') ? 'bg-[#0D845A]' : ''
             }`}

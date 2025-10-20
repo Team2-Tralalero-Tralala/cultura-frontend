@@ -6,6 +6,7 @@ export default function SuperAdminLayout() {
   return (
     <div className="flex h-screen">
       {/* Sidebar ด้านซ้าย */}
+      {/* Sidebar ด้านซ้าย */}
       <SidebarSuperAdmin />
 
       {/* พื้นที่หลัก */}

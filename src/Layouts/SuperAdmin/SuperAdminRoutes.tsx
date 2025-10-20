@@ -6,7 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
-import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequriedPage";
+import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 
 export default function SuperAdminRoutes() {
   return (

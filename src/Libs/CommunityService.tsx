@@ -32,7 +32,7 @@ export async function getCommunityById(id: number) {
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลวิสาหกิจชุมชน
  * Input : id (number) - รหัสของวิสาหกิจชุมชน
- *         data (any) - ข้อมูลที่ต้องการอัปเดต
+ *         data (any) - ข้อมูลที่ต้องการอัปเดต  
  * Output : Response จาก API หลังอัปเดตข้อมูลสำเร็จ
  */
 export async function updateCommunity(id: number, data: CommunityFormData) {

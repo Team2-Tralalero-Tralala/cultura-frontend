@@ -6,11 +6,10 @@
  */
 
 import axios from "axios";
-const apiUrl = import.meta.env.VITE_API_URL;
 
-// ✅ axios instance (แนบ cookie อัตโนมัติ)
+// axios instance (แนบ cookie อัตโนมัติ)
 const api = axios.create({
-  baseURL: apiUrl,
+  baseURL: "http://localhost:3000/api",
   withCredentials: true,
 });
 
@@ -25,12 +24,27 @@ const api = axios.create({
  *   - รายการ homestay ทั้งหมด + pagination metadata
  * Mapping : GET /super/community/:communityId/homestays/all
  */
+
 export async function getHomestaysAll(
   communityId: number,
   page = 1,
   limit = 10
 ) {
-  return api.get(`/super/community/${communityId}/homestays/all`, {
-    params: { page, limit },
-  });
+ return api.get(`/super/community/${communityId}/homestays/all`, {
+   params: { page, limit },
+ });
 }
+  /*
+ * ฟังก์ชัน : deleteHomestay
+ * อธิบาย : ลบข้อมูลที่พัก (Soft Delete)
+ * Input : id - รหัสโฮมสเตย์
+ * Output : Response จาก API
+ * Mapping : PATCH /homestaydata/:id
+ */
+
+export async function deleteHomestay(id: number) {
+  return api.patch(`/homestaydata/${id}`);
+}
+
+
+

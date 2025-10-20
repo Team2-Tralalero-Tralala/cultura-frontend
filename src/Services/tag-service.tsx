@@ -1,5 +1,3 @@
-// src/Libs/Tags.ts
-
 /*
  * คำอธิบาย : Service สำหรับจัดการข้อมูล Tag
  * หน้าที่ :
@@ -23,37 +21,47 @@ export type Tag = {
 
 console.log("API URL:", apiUrl);
 
-//ดึงข้อมูลแท็กทั้งหมด
-/*export async function getAllTags() {
-  return await axios.get(`${apiUrl}/shared/tags`, {
-    withCredentials: true,
-  });
-}*/
+/**
+* คำอธิบาย : ดึงข้อมูลแท็กทั้งหมด
+*/
+export async function fetchTags(page: number, limit: number, search: string) {
+    const params: any = { page, limit, search };
+    if (search) params.search = search;
+    const res = await axios.get(`${apiUrl}/shared/tags`, {
+      params,
+      withCredentials: true,
+    });
+    return {
+      data: res.data.data.data,
+      pagination: res.data.data.pagination,
+      
+    }
+  };
 
-export async function getAllTags(page: number = 1, limit: number = 10) {
-  return await axios.get(`${apiUrl}/shared/tags?page=${page}&limit=${limit}`, {
-    withCredentials: true,
-  });
-}
- 
-
-//สร้างแท็กใหม่
+/**
+* คำอธิบาย : สร้างแท็กใหม่
+*/
 export async function createTag(name: string) {
-  return await axios.post(`${apiUrl}/tags`, { name }, {
+   console.log("🚀 Sending tag name:", name);
+  return await axios.post(`${apiUrl}/tag`, { name }, {
     withCredentials: true,
   });
 }
 
-//แก้ไขแท็ก
+/**
+* คำอธิบาย : แก้ไขแท็ก
+*/
 export async function updateTag(id: number, name: string) {
-  return await axios.put(`${apiUrl}/tags/${id}`, { name }, {
+  return await axios.put(`${apiUrl}/tag/${id}`, { name }, {
     withCredentials: true,
   });
 }
 
-//ลบแท็ก
+/**
+* คำอธิบาย : ลบแท็ก
+*/
 export async function deleteTag(id: number) {
-  return await axios.delete(`${apiUrl}/tags/${id}`, {
+  return await axios.patch(`${apiUrl}/tag/${id}`, updateTag,{
     withCredentials: true,
   });
 }

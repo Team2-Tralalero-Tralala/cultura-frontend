@@ -6,7 +6,8 @@ import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
-import ManageTag from "@/Pages/ManageTags";
+import ManageTags from "@/Pages/SuperAdmin/ManageTags";
+
 
 export default function SuperAdminRoutes() {
   return (
@@ -16,12 +17,12 @@ export default function SuperAdminRoutes() {
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
-      <Route path="tags" element={<ManageTag />} />
       <Route
         path="community/detail/:id"
         element={<CommunityDetailSuperAdmin />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="shared/tags" element={<ManageTags/>}/>
     </Routes>
   );
 }

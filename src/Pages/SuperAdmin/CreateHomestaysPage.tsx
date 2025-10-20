@@ -292,24 +292,41 @@ export default function CreateHomestaysPage() {
       const cid = Number(communityId);
       if (!cid) throw new Error("communityId ไม่ถูกต้อง");
 
+      // ส่งทีละรายการ (serial) เพื่อง่ายต่อการ handle error
       for (const p of pendingPayloads) {
-        // ถ้ายังไม่มี flow อัปโหลดไฟล์ แนะนำส่งเป็น URL/พาธใน homestayImage แทนไฟล์
-        // ตอนนี้ส่งเป็นอาเรย์ว่างไปก่อน
-        const payload = {
+        // 1) payload ส่วนที่เป็น JSON (ห้ามใส่ไฟล์ในนี้)
+        const dataPayload = {
           ...p.base,
-          homestayImage: [], // หรือใส่ [{ image: "https://.../cover.jpg", type: "cover" }, ...]
+          // ไม่ต้องใส่ homestayImage ใน JSON — จะส่งเป็นไฟล์แยก
+          // homestayImage: undefined,
         };
+
+        // 2) สร้าง FormData และแนบ data + ไฟล์
+        const fd = new FormData();
+        fd.append("data", JSON.stringify(dataPayload));
+
+        // cover: เอา 1 ไฟล์แรกพอ (ตาม backend กำหนด maxCount:1)
+        if (p.coverFiles?.length) {
+          fd.append("cover", p.coverFiles[0]);
+        }
+
+        // gallery: แนบได้หลายไฟล์
+        if (Array.isArray(p.galleryFiles)) {
+          for (const gf of p.galleryFiles) {
+            fd.append("gallery", gf);
+          }
+        }
 
         await axios.post(
           `${API_URL}/super/community/${cid}/homestay`,
-          payload,
+          fd,
           {
             withCredentials: true,
-            headers: { "Content-Type": "application/json" },
+            // อย่าตั้ง Content-Type เอง ให้ browser ใส่ boundary
+            // headers: { "Content-Type": "multipart/form-data" },
           }
         );
       }
-
 
       setSuccessMessage("บันทึกที่พักสำเร็จ");
       navigate(`/super/community/edit/${communityId}`);
@@ -317,9 +334,9 @@ export default function CreateHomestaysPage() {
       console.error("Create homestays error:", error?.response?.data || error);
       setErrorMessage(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "บันทึกที่พักไม่สำเร็จ"
+        error?.response?.data?.error ||
+        error?.message ||
+        "บันทึกที่พักไม่สำเร็จ"
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -327,6 +344,7 @@ export default function CreateHomestaysPage() {
       setPendingPayloads(null);
     }
   };
+
 
   return (
     <div className="w-full max-w-none px-0">
@@ -554,7 +572,7 @@ export default function CreateHomestaysPage() {
                       onChange={(ids) => setTags(x.id, ids)}
                     />
                   </div>
-                  
+
                   {/* อัปโหลดรูป */}
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">

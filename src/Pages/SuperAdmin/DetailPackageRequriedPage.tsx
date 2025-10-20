@@ -15,6 +15,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// ===== เพิ่มตัวช่วยต่อ URL รูปจาก backend =====
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const resolveImageUrl = (filePath?: string) => {
+  if (!filePath) return undefined;
+  // รองรับทั้ง "pkg1.jpg", "uploads/pkg1.jpg", "/uploads/pkg1.jpg"
+  const clean = filePath.replace(/^\/?uploads\//, "");
+  return `${BACKEND_URL}/uploads/${clean}`;
+};
+
 export default function DetailPackageRequriedPage() {
   const navigate = useNavigate();
   const { requestId } = useParams<{ requestId: string }>();
@@ -25,7 +34,13 @@ export default function DetailPackageRequriedPage() {
   }, [requestId]);
 
   const fmtDate = (s?: string) =>
-    s ? new Date(s).toLocaleDateString("th-TH", { day: "2-digit", month: "2-digit", year: "numeric" }) : "-";
+    s
+      ? new Date(s).toLocaleDateString("th-TH", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "-";
 
   const extractTime = (s?: string) =>
     s ? s.split("T")[1]?.substring(0, 5) || "-" : "-";
@@ -49,7 +64,6 @@ export default function DetailPackageRequriedPage() {
             </div>
           </Button>
         </div>
-
       </div>
 
       {/* ชื่อแพ็กเกจ */}
@@ -95,18 +109,27 @@ export default function DetailPackageRequriedPage() {
         </div>
       </div>
 
-      {/* รูปภาพ */}
+      {/* ✅ รูปภาพ (เพิ่มใหม่) */}
       <div>
         {data?.packageFile?.length ? (
           <div className="flex flex-wrap gap-4">
-            {data.packageFile.map((file, index) => (
-              <img
-                key={index}
-                src={file.filePath}
-                alt={`package-image-${index}`}
-                className="rounded-xl border border-gray-200 shadow-sm object-cover w-full max-w-2xl"
-              />
-            ))}
+            {data.packageFile.map((file, index) => {
+              const url = resolveImageUrl(file.filePath);
+              return (
+                <img
+                  key={index}
+                  src={url}
+                  alt={`package-image-${index}`}
+                  className="rounded-xl border border-gray-200 shadow-sm object-cover w-full max-w-2xl"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "https://placehold.co/600x400?text=No+Image";
+                  }}
+                />
+              );
+            })}
           </div>
         ) : (
           <p className="text-gray-500 text-sm">ไม่มีรูปภาพ</p>

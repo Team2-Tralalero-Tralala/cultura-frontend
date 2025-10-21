@@ -123,7 +123,6 @@ export default function HomestayDetailPage() {
             (() => {
               const url = resolveBackendUploadUrl(mainImage.image) ??
                 "https://placehold.co/600x400?text=No+Image";
-              console.log("mainImage URL:", url);
               return (
                 <img
                   src={url}
@@ -201,21 +200,21 @@ export default function HomestayDetailPage() {
           </div>
         </div>
 
-        {/* ===== รูปภาพเพิ่มเติม ===== */}
+       {/* ===== รูปภาพเพิ่มเติม ===== */}
         <div className="mt-10">
           <h3 className="text-lg font-semibold mb-3">รูปภาพเพิ่มเติม</h3>
           {extraImages?.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {extraImages.map((img: any, i: number) => {
-                const url = resolveBackendUploadUrl(img.image) ??
+            <div className="flex overflow-x-auto gap-4 pb-2 ">
+              {extraImages.slice(0, 5).map((img: any, i: number) => {
+                const url =
+                  resolveBackendUploadUrl(img.image) ??
                   "https://placehold.co/400x300?text=No+Image";
-                console.log(`extraImage[${i}] URL:`, url);
                 return (
                   <img
                     key={i}
                     src={url}
                     alt={`extra-${i}`}
-                    className="rounded-xl object-cover w-full h-44 hover:scale-[1.03] transition-transform duration-200"
+                    className="rounded-xl w-70 h-45"
                   />
                 );
               })}

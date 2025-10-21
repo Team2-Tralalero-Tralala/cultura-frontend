@@ -295,23 +295,6 @@ const EditAccountPage: React.FC = () => {
               onChange={handleChange}
             />
 
-            <div className="grid grid-cols-2 gap-6">
-              <TextField
-                id="password"
-                label="รหัสผ่านใหม่ (ถ้ามี)"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              <TextField
-                id="confirmPassword"
-                label="ยืนยันรหัสผ่าน"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
-
             {/* 🔹 ปุ่มเปลี่ยน Role */}
             <div>
               <label className="font-semibold text-gray-800 block mb-2">

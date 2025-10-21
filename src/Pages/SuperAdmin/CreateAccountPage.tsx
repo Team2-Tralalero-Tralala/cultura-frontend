@@ -266,15 +266,18 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               <TextField
                 id="fname"
                 label="ชื่อ"
+                placeholder="ชื่อ"
                 required
                 value={formData.fname}
                 onChange={handleChange}
                 error={!!formErrors.fname}
                 helperText={formErrors.fname}
+               
               />
               <TextField
                 id="lname"
                 label="นามสกุล"
+                placeholder="นามสกุล"
                 required
                 value={formData.lname}
                 onChange={handleChange}
@@ -286,6 +289,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <TextField
               id="username"
               label="ชื่อผู้ใช้"
+              placeholder="ชื่อผู้ใช้"
               required
               value={formData.username}
               onChange={handleChange}
@@ -295,6 +299,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <TextField
               id="email"
               label="อีเมล"
+              placeholder="อีเมล"
               required
               value={formData.email}
               onChange={handleChange}
@@ -304,6 +309,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <TextField
               id="phone"
               label="โทรศัพท์"
+              placeholder="หมายเลขโทรศัพท์"
               required
               value={formData.phone}
               onChange={handleChange}
@@ -315,6 +321,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               <TextField
                 id="password"
                 label="รหัสผ่าน"
+                placeholder="รหัสผ่าน"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -324,6 +331,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               <TextField
                 id="confirmPassword"
                 label="ยืนยันรหัสผ่าน"
+                placeholder="ยืนยันรหัสผ่าน"
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}

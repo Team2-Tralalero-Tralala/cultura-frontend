@@ -68,21 +68,21 @@ export default function HomestayDetailPage() {
       {/* ===== Breadcrumb ===== */}
       <div className="text-sm text-gray-900">
         <Link
-          to="/super/communities"
+          to="/super/communities/all"
           className="p-2 rounded-full hover:bg-gray-100 transition"
         >
           จัดการชุมชน
         </Link>
         ›
         <Link
-          to={`/super/community/detail/${homestay.community.id}`}
+          to={`/super/community/${homestay.community.id}`}
           className="p-2 rounded-full hover:bg-gray-100 transition"
         >
           {homestay.community.name}
         </Link>
         ›
         <Link
-          to="/super/homestays"
+          to={`/super/community/${homestay.community.id}/homestay/all`}
           className="p-2 rounded-full hover:bg-gray-100 transition"
         >
           จัดการที่พัก
@@ -96,7 +96,7 @@ export default function HomestayDetailPage() {
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <Link
-              to="/super/homestays"
+              to={`/super/community/${homestay.community.id}/homestay/all`}
               className="p-2 rounded-full hover:bg-gray-100 transition"
             >
               <ArrowLeft size={22} strokeWidth={2.2} />

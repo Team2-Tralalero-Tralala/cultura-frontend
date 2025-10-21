@@ -22,7 +22,7 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
 
-      <Route path="homestay/:homestayId" element={<HomestayDetailPage />} />
+      <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
     </Routes>
   );

@@ -100,7 +100,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-semibold text-gray-900 text-base">{label}</div>
       <div className="text-gray-400 text-base">:</div>
-      <div className="text-gray-700 font-normal break-words text-base">{children ?? "-"}</div>
+      <div className="text-gray-700 font-normal break-words text-base">
+        {children ?? "-"}
+      </div>
     </div>
   );
 }
@@ -249,7 +251,9 @@ function ItemCard({ image, title, children }: any) {
       </div>
       <div className="min-w-0">
         <div className="font-semibold">{title}</div>
-        {children && <div className="mt-2 text-sm text-slate-700">{children}</div>}
+        {children && (
+          <div className="mt-2 text-sm text-slate-700">{children}</div>
+        )}
       </div>
     </div>
   );
@@ -322,7 +326,9 @@ export default function CommunityDetailSuperAdmin() {
         <div className="px-6 pt-5 pb-3 flex items-center justify-between">
           <Link to="/super/communities" className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green">
             <Icon icon="lucide:arrow-left" className="w-5 h-5" />
-            <h2 className="text-lg font-semibold text-xl">รายละเอียดของชุมชน</h2>
+            <h2 className="text-lg font-semibold text-xl">
+              รายละเอียดของชุมชน
+            </h2>
           </Link>
 
           <button
@@ -345,13 +351,22 @@ export default function CommunityDetailSuperAdmin() {
               <div className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
                 <CoverRect src={coverImage} height={COVER_H} />
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
-                  <div className="absolute left-6 md:left-8 -translate-y-1/2" style={{ top: 0 }}>
-                    <LogoCircle src={logoImage} name={community?.name} size={LOGO} />
+                  <div
+                    className="absolute left-6 md:left-8 -translate-y-1/2"
+                    style={{ top: 0 }}
+                  >
+                    <LogoCircle
+                      src={logoImage}
+                      name={community?.name}
+                      size={LOGO}
+                    />
                   </div>
 
                   <div style={{ paddingLeft: LOGO + 24 }}>
                     <div className="flex items-center gap-3">
-                      <h1 className="text-[22px] font-bold leading-tight">{show(community.name)}</h1>
+                      <h1 className="text-[22px] font-bold leading-tight">
+                        {show(community.name)}
+                      </h1>
                       {!!community.status && (
                         <span
                           className={`px-2.5 py-0.5 text-sm rounded-full ${isOpen ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
@@ -626,7 +641,9 @@ export default function CommunityDetailSuperAdmin() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">ยังไม่มีแพ็กเกจ</div>
+                    <div className="text-slate-500 text-sm">
+                      ยังไม่มีแพ็กเกจ
+                    </div>
                   )}
                 </Section>
 
@@ -650,7 +667,9 @@ export default function CommunityDetailSuperAdmin() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">ยังไม่มีร้านค้า</div>
+                    <div className="text-slate-500 text-sm">
+                      ยังไม่มีร้านค้า
+                    </div>
                   )}
                 </Section>
 
@@ -679,7 +698,9 @@ export default function CommunityDetailSuperAdmin() {
                               {show(h.guestPerRoom)} คน/ห้อง • ทั้งหมด{" "}
                               {show(h.totalRoom)} ห้อง
                             </div>
-                            <div className="line-clamp-3">{show(h.facility)}</div>
+                            <div className="line-clamp-3">
+                              {show(h.facility)}
+                            </div>
                           </div>
                         </ItemCard>
                       ))}
@@ -714,7 +735,9 @@ export default function CommunityDetailSuperAdmin() {
                                 {fullName || m.username}
                               </div>
                               {m.activityRole && (
-                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
+                                <div className="text-sm text-slate-700">
+                                  • {m.activityRole}
+                                </div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
                                 {m.email || "-"}

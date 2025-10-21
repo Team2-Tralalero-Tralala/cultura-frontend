@@ -6,7 +6,10 @@ import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
-import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
+import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
+import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+
+import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
 export default function SuperAdminRoutes() {
   return (
@@ -20,6 +23,13 @@ export default function SuperAdminRoutes() {
         path="community/:id"
         element={<CommunityDetailSuperAdmin />}
       />
+      <Route
+        path="/community/:communityId/store/create"
+        element={<CreateStore />}
+      />
+      <Route path="/store/:storeId/edit" element={<EditStore />} />
+
+      <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route
         path="community/:communityId/homestay/all"

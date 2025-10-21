@@ -1,18 +1,22 @@
 /**
- * จัดการบัญชี (Super Admin)
+ * Component : ManageAccountPage (Super Admin)
+ * Description : หน้าจัดการบัญชีผู้ใช้ (Super Admin)
  * - แสดงตารางบัญชีผู้ใช้: ชื่อจริง-นามสกุล / ประเภท / ชุมชน / อีเมล
  * - ค้นหา + ตัวกรองประเภท
  * - เลือกหลายแถว / ลบหลายรายการ / ระงับหลายรายการ
  * - ปุ่มระงับ / แก้ไข / ลบ ต่อแถว
  */
 
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { TrashIcon, BanIcon } from "lucide-react";
+
+// Components
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
-import { TrashIcon, BanIcon } from "lucide-react"; // 🔒 icon สำหรับ Block
 
+// Types
 import type {
   Column,
   DataTableActionsConfig,
@@ -21,17 +25,25 @@ import type {
 } from "@/Components/Tables/Types";
 import type { AccountRow } from "@/Types/User";
 
+// Services
 import {
   fetchAccounts,
   blockAccountById,
   blockMultipleAccounts,
+  deleteAccountById,
+  deleteMultipleAccounts,
 } from "@/Libs/AccountServices";
 
-/* 🧩 แปลงชื่อ role เป็นภาษาไทย */
-const thaiRoleName = (role: string) => {
+/* ===========================================================
+ * Function : thaiRoleName
+ * Description : แปลงชื่อ Role เป็นภาษาไทย
+ * =========================================================== */
+function thaiRoleName(role: string): string {
   switch (role) {
-    case "admin":
+    case "superadmin":
       return "ผู้ดูแลระบบ";
+    case "admin":
+      return "ผู้ดูแลชุมชน";
     case "member":
       return "สมาชิก";
     case "tourist":
@@ -39,9 +51,11 @@ const thaiRoleName = (role: string) => {
     default:
       return role;
   }
-};
+}
 
-/* ====== คอลัมน์ตาราง ====== */
+/* ===========================================================
+ * Variable : columns (คอลัมน์ของตาราง)
+ * =========================================================== */
 const columns: Column<AccountRow>[] = [
   {
     key: "fullname",
@@ -49,9 +63,9 @@ const columns: Column<AccountRow>[] = [
     className: "min-w-[240px]",
     render: (r) => (
       <Link
-        to={`/super/users/${r.id}`} // 🔗 ลิงก์ไปหน้าแสดงรายละเอียดผู้ใช้
+        to={`/super/users/${r.id}`}
         onClick={(e) => e.stopPropagation()}
-        className="text-[#4A816F] hover:underline"
+        className="hover:underline"
       >
         {`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}
       </Link>
@@ -77,24 +91,31 @@ const columns: Column<AccountRow>[] = [
   },
 ];
 
-export default function ManageAccountPage() {
-  // ====== state ตาราง ======
-  const [rows, setRows] = useState<AccountRow[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+/* ===========================================================
+ * Component : ManageAccountPage
+ * =========================================================== */
+export function ManageAccountPage() {
+  const navigate = useNavigate();
 
+  /* ===========================================================
+   * State : จัดการข้อมูลของตาราง
+   * =========================================================== */
+  const [rows, setRows] = useState<AccountRow[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
     limit: 10,
   });
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filterRole, setFilterRole] = useState<string>("all");
   const [selectedRows, setSelectedRows] = useState<AccountRow[]>([]);
 
-  // ====== ตัวเลือกกรองประเภท ======
+  /* ===========================================================
+   * Variable : ตัวเลือกตัวกรองประเภทผู้ใช้
+   * =========================================================== */
   const optionsRole = [
     { label: "ทั้งหมด", value: "all" },
     { label: "ผู้ดูแลระบบ", value: "admin" },
@@ -102,8 +123,11 @@ export default function ManageAccountPage() {
     { label: "ผู้ใช้งานทั่วไป", value: "tourist" },
   ];
 
-  /* ===== โหลดข้อมูล ===== */
-  const fetchData = async () => {
+  /* ===========================================================
+   * Function : fetchData
+   * Description : ดึงข้อมูลบัญชีผู้ใช้จาก API
+   * =========================================================== */
+  async function fetchData(): Promise<void> {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -119,19 +143,23 @@ export default function ManageAccountPage() {
 
       setRows(resultData);
       setPagination(resultPagination);
-    } catch (err: any) {
-      console.error("Fetch failed:", err);
-      setErrorMessage(err?.message || "โหลดข้อมูลไม่สำเร็จ");
+    } catch (err: unknown) {
+      const e = err as Error;
+      console.error("Fetch failed:", e);
+      setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
+  // โหลดข้อมูลทุกครั้งที่มีการเปลี่ยนหน้า / เงื่อนไขค้นหา / กรอง
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
 
-  /* ===== Action ต่อแถว ===== */
+  /* ===========================================================
+   * Config : Action ต่อแถว
+   * =========================================================== */
   const rowActions: DataTableActionsConfig<AccountRow> = {
     header: "จัดการ",
     align: "right",
@@ -146,16 +174,21 @@ export default function ManageAccountPage() {
         alert("ระงับบัญชีสำเร็จ");
         await fetchData();
       },
-      edit: (row) => alert(`แก้ไขผู้ใช้ ID: ${row.id}`),
+      edit: (row) => {
+        navigate(`/super/account/edit/${row.id}`);
+      },
       delete: async (row) => {
-        if (!window.confirm(`ยืนยันลบ "${row.fname} ${row.lname}" ?`)) return;
-        alert("ลบผู้ใช้สำเร็จ (mock)");
+        if (!window.confirm(`ยืนยันลบบัญชี "${row.fname} ${row.lname}" ?`)) return;
+        await deleteAccountById(row.id);
+        alert("ลบบัญชีสำเร็จ");
         await fetchData();
       },
     },
   };
 
-  /* ===== Action หลายแถว ===== */
+  /* ===========================================================
+   * Config : Action หลายแถว
+   * =========================================================== */
   const bulkActions: BulkAction<AccountRow>[] = [
     {
       id: "bulk-block",
@@ -176,21 +209,25 @@ export default function ManageAccountPage() {
       intent: "danger",
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        alert("bulk delete: " + rows.map((r) => r.id).join(", "));
+        await deleteMultipleAccounts(rows.map((r) => r.id));
+        alert("ลบบัญชีทั้งหมดสำเร็จ");
         await fetchData();
       },
     },
   ];
 
+  /* ===========================================================
+   * Return : UI หลักของหน้า
+   * =========================================================== */
   return (
     <div className="space-y-4">
-      {/* ===== Header Section ===== */}
+      {/* Header Section */}
       <div className="flex flex-col gap-2 w-full">
         <h2 className="text-sm text-gray-500">จัดการบัญชี</h2>
         <h1 className="text-xl font-semibold">จัดการบัญชีผู้ใช้</h1>
 
         <div className="flex items-center justify-between w-full mt-2">
-          {/* กล่องซ้าย : search + filter */}
+          {/* ช่องค้นหา + ตัวกรอง */}
           <div className="flex items-center gap-2">
             <div className="w-[260px]">
               <SearchBarTable
@@ -216,7 +253,8 @@ export default function ManageAccountPage() {
 
           {/* ปุ่มเพิ่มบัญชี */}
           <button
-            className="top-6 right-6 flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-4 py-3 rounded-xl transition text-base font-medium"
+            onClick={() => navigate("/super/account/create")}
+            className="flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-4 py-3 rounded-xl transition text-base font-medium"
           >
             <span className="text-lg leading-none">＋</span>
             <span>เพิ่มบัญชี</span>
@@ -224,10 +262,10 @@ export default function ManageAccountPage() {
         </div>
       </div>
 
-      {/* ===== แสดงข้อความ Error ===== */}
+      {/* แสดงข้อความ Error */}
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      {/* ===== Table Section ===== */}
+      {/* Table Section */}
       <DataTable<AccountRow>
         data={rows}
         getKey={(row) => row.id.toString()}
@@ -235,12 +273,8 @@ export default function ManageAccountPage() {
         selectable={true}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: p }))
-        }
-        onPageSizeChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit: p }))
-        }
+        onPageChange={(p) => setPagination((prev) => ({ ...prev, currentPage: p }))}
+        onPageSizeChange={(p) => setPagination((prev) => ({ ...prev, currentPage: 1, limit: p }))}
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}

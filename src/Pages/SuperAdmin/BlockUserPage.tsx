@@ -4,8 +4,9 @@
  * - สามารถค้นหา / ยกเลิกการระงับรายบุคคล / ยกเลิกทั้งหมด
  */
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { TrashIcon } from "@/Components/Tables/Icon";
@@ -23,7 +24,7 @@ import {
 } from "@/Libs/AccountServices";
 
 /** ==========================
- * 🔤 แปลงชื่อ role → ไทย
+ * แปลงชื่อ role → ไทย
  * ========================== */
 const thaiRoleName = (role: string) => {
   switch (role) {
@@ -41,7 +42,7 @@ const thaiRoleName = (role: string) => {
 };
 
 /** ==========================
- * 🧩 คอลัมน์ของตาราง
+ * คอลัมน์ของตาราง
  * ========================== */
 const columns: Column<BlockedAccountRow>[] = [
   {
@@ -49,12 +50,9 @@ const columns: Column<BlockedAccountRow>[] = [
     header: "ชื่อจริง-นามสกุล",
     className: "min-w-[240px]",
     render: (r) => (
-      <Link
-        to={`/super/users/${r.id}`} // 🔗 ลิงก์ไปหน้าแสดงรายละเอียดผู้ใช้
-        onClick={(e) => e.stopPropagation()} // ป้องกันไม่ให้ trigger การเลือกแถว
-      >
+      <div>
         {`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}
-      </Link>
+      </div>
     ),
   },
   {
@@ -77,7 +75,12 @@ const columns: Column<BlockedAccountRow>[] = [
   },
 ];
 
-export default function BlockedAccountSuperAdmin() {
+/* ===========================================================
+ * Component : BlockedAccountSuperAdmin
+ * =========================================================== */
+export function BlockedAccountSuperAdmin() {
+  
+  
   const [rows, setRows] = useState<BlockedAccountRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -88,12 +91,12 @@ export default function BlockedAccountSuperAdmin() {
     limit: 10,
   });
 
-
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<BlockedAccountRow[]>([]);
 
   /** ==========================
-   * 🔄 โหลดข้อมูล
+   * ฟังก์ชัน: fetchData
+   * คำอธิบาย: โหลดข้อมูลบัญชีที่ถูกระงับจาก API
    * ========================== */
   const fetchData = async () => {
     try {
@@ -108,9 +111,10 @@ export default function BlockedAccountSuperAdmin() {
       );
       setRows(resultData);
       setPagination(resultPagination);
-    } catch (err: any) {
-      console.error("load failed:", err);
-      setErrorMessage(err?.message || "โหลดข้อมูลไม่สำเร็จ");
+    } catch (err: unknown) {
+      const e = err as Error;
+      console.error("load failed:", e);
+      setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +125,7 @@ export default function BlockedAccountSuperAdmin() {
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
   /** ==========================
-   * ⚙️ Action ต่อแถว
+   * Action ต่อแถว
    * ========================== */
   const rowActions: DataTableActionsConfig<BlockedAccountRow> = {
     header: "จัดการ",
@@ -129,7 +133,6 @@ export default function BlockedAccountSuperAdmin() {
     width: "180px",
     variant: "buttons",
     className: "pr-12",
-    //labels: { unblock: "ยกเลิกการระงับ" },
     items: () => ["unblock"],
     callbacks: {
       unblock: async (row) => {
@@ -139,7 +142,7 @@ export default function BlockedAccountSuperAdmin() {
           await unblockAccountById(row.id);
           alert("ยกเลิกการระงับสำเร็จ");
           await fetchData();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(err);
           alert("เกิดข้อผิดพลาดในการยกเลิกการระงับ");
         }
@@ -148,7 +151,7 @@ export default function BlockedAccountSuperAdmin() {
   };
 
   /** ==========================
-   * ⚙️ Bulk Actions
+   * Bulk Actions
    * ========================== */
   const bulkActions: BulkAction<BlockedAccountRow>[] = [
     {
@@ -156,13 +159,14 @@ export default function BlockedAccountSuperAdmin() {
       label: "ยกเลิกการระงับทั้งหมด",
       icon: TrashIcon,
       intent: "neutral",
-      confirm: (rows) => `ยืนยันยกเลิกการระงับ ${rows.length} รายการหรือไม่?`,
+      confirm: (rows) =>
+        `ยืนยันยกเลิกการระงับ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         try {
           await unblockMultipleAccounts(rows.map((r) => r.id));
           alert("ยกเลิกการระงับสำเร็จ");
           await fetchData();
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(err);
           alert("เกิดข้อผิดพลาดในการยกเลิกการระงับทั้งหมด");
         }
@@ -171,31 +175,29 @@ export default function BlockedAccountSuperAdmin() {
   ];
 
   /** ==========================
-   * 🎨 ส่วน UI
+   * ส่วน UI
    * ========================== */
-    /* ส่วนแสดงผล */
   return (
     <div className="space-y-4">
-      {/* 🔹 ส่วนหัวของหน้า */}
+      {/* ส่วนหัวของหน้า */}
       <div className="flex flex-col gap-2">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-600">
           <Link
             to="/super/accounts"
-            className="text-[#4A816F] hover:underline font-medium"
+            className="text-gray-900 hover:underline font-medium"
           >
             จัดการบัญชี
           </Link>
           <span className="mx-1 text-gray-500">&gt;</span>
-          <span className="text-gray-700">การระงับบัญชี</span>
+          <span>การระงับบัญชี</span>
         </div>
 
         {/* Title */}
         <h1 className="text-xl font-semibold text-gray-900">การระงับบัญชี</h1>
 
-        {/* 🔍 แถวค้นหา + ตัวกรอง */}
+        {/* แถวค้นหา */}
         <div className="flex items-center justify-between w-full mt-2">
-          {/* ฝั่งซ้าย: ช่องค้นหา + ตัวกรอง */}
           <div className="flex items-center gap-2">
             <div className="w-[260px]">
               <SearchBarTable
@@ -212,7 +214,7 @@ export default function BlockedAccountSuperAdmin() {
 
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      {/* 🧮 ตาราง */}
+      {/* ตาราง */}
       <DataTable<BlockedAccountRow>
         data={rows}
         getKey={(row) => row.id.toString()}

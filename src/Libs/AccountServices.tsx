@@ -8,7 +8,7 @@
 import axios from "axios";
 
 /** ===========================
- * 🧩 ประเภทข้อมูล (Type Definitions)
+ * ประเภทข้อมูล (Type Definitions)
  * =========================== */
 export type Role = "admin" | "superadmin";
 
@@ -21,7 +21,7 @@ export type UserRow = {
 };
 
 /** ===========================
- * ⚙️ สร้าง instance ของ Axios
+ * สร้าง instance ของ Axios
  * - baseURL มาจาก ENV (รองรับหลายรูปแบบ)
  * - withCredentials เพื่อแนบ cookie อัตโนมัติ
  * - Content-Type: application/json
@@ -106,8 +106,26 @@ export async function blockMultipleAccounts(ids: number[]) {
   }
 }
 
+/**
+ * ลบบัญชีผู้ใช้รายเดียว (Soft Delete)
+ * Mapping: PATCH /super/users/:userId
+ */
+export async function deleteAccountById(userId: number) {
+  const res = await api.patch(`/super/users/${userId}`, {}, { withCredentials: true });
+  return res.data;
+}
+
+/**
+ * ลบผู้ใช้หลายรายการ (Bulk Delete)
+ */
+export async function deleteMultipleAccounts(ids: number[]) {
+  for (const id of ids) {
+    await deleteAccountById(id);
+  }
+}
+
 /** ===========================
- * 👤 ฟังก์ชัน: fetchUserDetail()
+ * ฟังก์ชัน: fetchUserDetail()
  * วัตถุประสงค์ : ดึงรายละเอียดของผู้ใช้ตาม userId
  * Input  : userId (หมายเลขผู้ใช้)
  * Output : ข้อมูลรายละเอียดของผู้ใช้ (object)

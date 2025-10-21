@@ -12,6 +12,19 @@ export type BlockedAccountRow = {
   } | null;
 };
 
+// รายละเอียดข้อมูลผู้ใช้
+export type UserDetail = {
+  id: number;
+  fname: string;
+  lname: string;
+  username: string;
+  email: string;
+  phone: string;
+  profileImage?: string;
+  role?: { name: string };
+  memberOf?: { name: string };
+};
+
 // รูปแบบข้อมูลที่ได้จาก API (ตรงกับ Prisma Service)
 export type UserDtoFromApi = {
   id: number;

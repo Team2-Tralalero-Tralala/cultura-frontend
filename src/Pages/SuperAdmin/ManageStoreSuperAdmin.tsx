@@ -16,10 +16,9 @@ import { Modal } from "@/Components/Modal/Modal";
 import { Icon } from "@iconify/react";
 import { TrashIcon } from "@/Components/Tables/Icon";
 
-
 // service
 import { getAllStore } from "@/Services/store-service";
-import { getCommunityById } from "@/Libs/CommunityService";
+import { getCommunityById } from "@/Services/community-service";
 
 // Types
 import type {
@@ -63,7 +62,6 @@ const columns: Column<StoreRow>[] = [
     key: "name",
     header: "ชื่อร้านค้า",
     className: "min-w-[200px]",
-
   },
   { key: "detail", header: "รายละเอียด" },
   { key: "tagStores", header: "ประเภท" },
@@ -110,8 +108,9 @@ export default function ManageStores() {
 
       const res = await getAllStore(Number(communityId), currentPage, pageSize);
       const payload = res.data?.data;
-      const list: StoreFromApi[] = Array.isArray(payload?.data) ?
-        payload.data : [];
+      const list: StoreFromApi[] = Array.isArray(payload?.data)
+        ? payload.data
+        : [];
 
       console.log("Store Payload", res.data);
 
@@ -120,13 +119,14 @@ export default function ManageStores() {
 
       // map ข้อมูลกับ type ตาราง
       const mapped: StoreRow[] = list.map((store) => {
-        const tagNames = store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
+        const tagNames =
+          store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
           detail: store.detail ?? "-",
           tagStores: tagNames.join(", ") || "-",
-        }
+        };
       });
 
       setRows(mapped);
@@ -150,12 +150,11 @@ export default function ManageStores() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) =>
-        navigate(`/super/store/${storeId}/edit/${row.id}`),
+      edit: (row) => navigate(`/super/store/${storeId}/edit/${row.id}`),
       delete: (row) => {
         setDeleteId(row.id);
         setOpenConfirm(true);
-      }
+      },
     },
   };
 
@@ -163,19 +162,17 @@ export default function ManageStores() {
   const filteredRows = useMemo(() => {
     const q = normalizeText(searchQuery);
     return rows.filter((row) => {
-     const haystacks =  [row.name, row.detail, row.tagStores].map(
-      (v) => normalizeText(String(v ?? ""))
-    );
-    const passSearch = !q || haystacks.some((h) => h.includes(q));
-  return passSearch
-  });
-
+      const haystacks = [row.name, row.detail, row.tagStores].map((v) =>
+        normalizeText(String(v ?? ""))
+      );
+      const passSearch = !q || haystacks.some((h) => h.includes(q));
+      return passSearch;
+    });
   }, [rows, searchQuery]);
 
   const handleDelete = (storeId: number) => {
-    console.log("ลบ store : ", storeId)
-  }
-
+    console.log("ลบ store : ", storeId);
+  };
 
   const bulkActions: BulkAction<StoreFromApi>[] = [
     {
@@ -204,26 +201,34 @@ export default function ManageStores() {
     limit: pageSize,
   };
 
-
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div className="px-6 pb-1">
-        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
+        <nav
+          aria-label="breadcrumb"
+          className="flex items-center text-gray-700 text-sm"
+        >
           <Link
             to="/super/communities"
             className="text-gray-800 hover:text-dark-green font-medium"
           >
             จัดการชุมชน
           </Link>
-          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
+          <Icon
+            icon="mdi:chevron-right"
+            className="mx-2 text-gray-400 w-3.5 h-3.5"
+          />
           <Link
             to={`/super/community/detail/${communityId}`}
             className="text-gray-800 hover:text-dark-green font-medium"
           >
             {communityName || "ชุมชน"}
           </Link>
-          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
+          <Icon
+            icon="mdi:chevron-right"
+            className="mx-2 text-gray-400 w-3.5 h-3.5"
+          />
           <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
         </nav>
       </div>
@@ -263,8 +268,7 @@ export default function ManageStores() {
       </div>
       <div className="px-6 pb-10">
         {errorMessage && (
-          <div className="text-sm text-red-600 mb-2">{errorMessage}
-          </div>
+          <div className="text-sm text-red-600 mb-2">{errorMessage}</div>
         )}
 
         {/* Table */}
@@ -283,7 +287,6 @@ export default function ManageStores() {
         />
       </div>
 
-
       {/* Modal ยืนยันการลบ */}
       <Modal
         open={openConfirm}
@@ -297,9 +300,10 @@ export default function ManageStores() {
           } catch (error: any) {
             console.error(error);
             alert(
-              `ลบไม่สำเร็จ: ${error?.response?.data?.message ??
-              error?.message ??
-              "unknown error"
+              `ลบไม่สำเร็จ: ${
+                error?.response?.data?.message ??
+                error?.message ??
+                "unknown error"
               }`
             );
           } finally {

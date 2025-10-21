@@ -1,11 +1,18 @@
-//import type { StoreData } from "@/Types/Store";
 import axios from "axios";
+import type { StoreData } from "@/Types/Store";
 const apiUrl = import.meta.env.VITE_API_URL;
 
-
-  export async function getAllStore(communityId: number, page: number, limit: number) {
+export async function getAllStore(
+  communityId: number,
+  page: number,
+  limit: number
+) {
   const params = { page, limit };
-  return axios.get(`${apiUrl}/super/community/${communityId}/store`, { params, withCredentials: true });
+  return axios.get(`${apiUrl}/super/community/${communityId}/store`, {
+    params,
+    withCredentials: true,
+  });
+}
 /**
  * คำอธิบาย : บริการสำหรับจัดการร้านค้า (Store) ผ่าน API
  * ฟังก์ชันที่มีอยู่ :
@@ -15,9 +22,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
  *  Input : พารามิเตอร์ที่จำเป็นสำหรับแต่ละฟังก์ชัน
  *  Output : ผลลัพธ์จากการเรียก API (Promise)
  */
-import type { StoreData } from "@/Types/Store";
-import axios from "axios";
-const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
  * คำอธิบาย : ฟังก์ชันสำหรับสร้างร้านค้าใหม่ในชุมชน

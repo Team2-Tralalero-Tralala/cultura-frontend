@@ -27,7 +27,6 @@ export default function SuperAdminRoutes() {
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
-<<<<<<< HEAD
 
       {/* ---------------- บัญชีผู้ใช้ ---------------- */}
       <Route path="account/admin/create" element={<CreateAccountPage />} />
@@ -39,7 +38,6 @@ export default function SuperAdminRoutes() {
       <Route path="account/tourist/:touristId/edit" element={<EditAccountPage />} />
 
       {/* ---------------- Log ---------------- */}
-=======
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route
         path="community/detail/:id"
@@ -52,7 +50,6 @@ export default function SuperAdminRoutes() {
       <Route path="/store/:storeId/edit" element={<EditStore />} />
 
       <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
->>>>>>> 3cc3fa12e775f3cff5536c2c07542ca2ad09e7d7
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
     </Routes>
   );

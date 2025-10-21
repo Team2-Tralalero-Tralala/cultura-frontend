@@ -99,17 +99,6 @@ export default function MemberSelector({
    * Input : none (อ้างอิง state 'members' และ prop 'value')
    * Output : อัปเดต state 'selectedMembers' ให้ตรงกับ id ที่เลือกอยู่ใน value
    */
-<<<<<<< HEAD
-  React.useEffect(() => {
-    if (!members || members.length === 0) return;
-    if (!value || value.length === 0) {
-      setSelectedMembers([]);
-      return;
-    }
-    
-    const preselected = members.filter((m) => value.includes(m.id));
-    setSelectedMembers(preselected);
-=======
 
   React.useEffect(() => {
     if (!members?.length || !value?.length) return;
@@ -118,7 +107,6 @@ export default function MemberSelector({
       if (prev.length > 0) return prev; // ถ้ามีอยู่แล้วไม่ต้องเซ็ตซ้ำ
       return members.filter((m) => value.includes(m.id));
     });
->>>>>>> 3cc3fa12e775f3cff5536c2c07542ca2ad09e7d7
   }, [members, value]);
 
   /*

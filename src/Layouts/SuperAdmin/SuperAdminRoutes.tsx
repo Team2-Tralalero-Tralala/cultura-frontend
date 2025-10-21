@@ -20,7 +20,7 @@ export default function SuperAdminRoutes() {
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route
-        path="community/detail/:id"
+        path="community/:id"
         element={<CommunityDetailSuperAdmin />}
       />
       <Route
@@ -31,6 +31,10 @@ export default function SuperAdminRoutes() {
 
       <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route
+        path="community/:communityId/homestay/all"
+        element={<ManageHomestaySuperAdmin />}
+      />
     </Routes>
   );
 }

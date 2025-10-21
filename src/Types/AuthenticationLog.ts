@@ -15,9 +15,3 @@ export type AuthenticationLogRow = {
   };
 };
 
-export type Pagination = {
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
-  limit: number;
-};

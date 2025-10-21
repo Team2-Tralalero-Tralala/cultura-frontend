@@ -21,7 +21,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 
 import type { CommunityRow } from "@/Types/Community";
-import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
+import { getCommunities, deleteCommunity } from "@/Services/community-service";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 

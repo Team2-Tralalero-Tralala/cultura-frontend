@@ -1,3 +1,7 @@
+/**
+ * ฟังก์ชันหลักของหน้า CreateStore
+ * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
+ */
 import Button from "@/Components/Button";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import MapPicker from "@/Components/MapPicker";
@@ -35,6 +39,10 @@ const storeSchema = z.object({
     ),
   tagStores: z.number(),
 });
+/**
+ * ฟังก์ชันหลักของหน้า CreateStore
+ * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
+ */
 export function CreateStore() {
   const [formData, setFormData] = React.useState<Partial<StoreData>>({});
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
@@ -53,7 +61,12 @@ export function CreateStore() {
   const [position, setPosition] = useState<[number, number]>(startingPosition);
   const [openConfirm, setOpenConfirm] = useState(false);
   const { communityId } = useParams();
-
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input :
+   *   - field (string | undefined) : ชื่อฟิลด์ที่ต้องการตรวจสอบ (ถ้าไม่ระบุจะตรวจสอบทั้งฟอร์ม)
+   *   - value (any | undefined) : ค่าของฟิลด์ที่ต้องการตรวจสอบ (ใช้เมื่อระบุ field)
+   */
   const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
     if (field) {
@@ -70,7 +83,12 @@ export function CreateStore() {
       return result.success;
     }
 
-    // ถ้าไม่มี field แปลว่าต้องตรวจทั้งฟอร์ม
+    /**
+     * คำอธิบาย : ตรวจสอบความถูกต้องของฟอร์มทั้งหมด
+     * ถ้าไม่ผ่านจะแสดงข้อความผิดพลาดใต้ฟิลด์ที่เกี่ยวข้อง
+     * Input : none (ใช้ข้อมูลจาก state formData)
+     * Output : boolean (true ถ้าผ่านทั้งหมด, false ถ้าไม่ผ่าน)
+     */
     const result = storeSchema.safeParse(formData);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -86,7 +104,12 @@ export function CreateStore() {
     setFormErrors({});
     return true;
   };
-
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
+   * Input :
+   *   - e : เหตุการณ์การเปลี่ยนแปลงจาก input field
+   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   */
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -97,6 +120,13 @@ export function CreateStore() {
     validateField(id as keyof typeof formData, value);
   };
 
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
+   * Input :
+   *   - field : ชื่อฟิลด์ที่ต้องการอัปเดต
+   *   - value : ค่าที่จะตั้งให้กับฟิลด์นั้น
+   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
     setFormData(updated);
@@ -106,7 +136,12 @@ export function CreateStore() {
     () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
     [formData.tagStores]
   );
-
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มไปยัง backend เพื่อสร้างร้านค้าใหม่
+   * โดยจะจัดการแยกข้อมูล location และไฟล์รูปภาพออกจากกัน
+   * Input : none (ใช้ข้อมูลจาก state formData, location, position, coverFiles, galleryFiles)
+   * Output : none (เรียกใช้ createStore() เพื่อส่งข้อมูลไปยัง backend)
+   */
   const handleSubmit = async () => {
     const {
       locationDetail,
@@ -121,10 +156,8 @@ export function CreateStore() {
       ...cleanForm
     } = formData;
 
-    // สร้าง FormData เพื่อส่ง multipart/form-data
     const formDataToSend = new FormData();
 
-    // ส่งข้อมูลที่ไม่ใช่ไฟล์เป็น JSON string
     formDataToSend.append(
       "data",
       JSON.stringify({
@@ -140,11 +173,9 @@ export function CreateStore() {
           latitude: Number(position[0]),
           longitude: Number(position[1]),
         },
-        // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
       })
     );
 
-    // ✅ แนบไฟล์ พร้อมส่ง type กลับไปให้ backend ผ่านชื่อ field
     coverFiles.forEach((file) => {
       formDataToSend.append("cover", file);
     });

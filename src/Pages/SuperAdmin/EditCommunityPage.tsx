@@ -569,7 +569,13 @@ export function EditCommunity() {
         <CircularProgress color="inherit" />
       </Backdrop>
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">แก้ไขวิสาหกิจชุมชน</h1>
+        <Link
+          to="/super/communities"
+          className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+        >
+          <Icon icon="lucide:arrow-left" className="w-5 h-5" />
+          <h1 className="text-xl font-bold">แก้ไขวิสาหกิจชุมชน</h1>
+        </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           สถานะชุมชน
           <Switch checked={checked} onChange={handleCheck} />
@@ -587,7 +593,7 @@ export function EditCommunity() {
           id="panel2bh-header"
           className="!rounded-t-lg "
         >
-          <div className="text-xl font-bold">ข้อมูลชุมชน</div>
+          <h1 className="text-xl font-bold">ข้อมูลชุมชน</h1>
         </AccordionSummary>
         <AccordionDetails>
           <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>

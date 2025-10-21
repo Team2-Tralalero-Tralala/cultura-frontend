@@ -29,6 +29,8 @@ import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import { Link, useNavigate } from "react-router";
+import { Icon } from "@iconify/react";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -149,6 +151,7 @@ export default function CreateCommuninityPage() {
   const [logoFile, setLogoFile] = useState<File | null>();
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const naigate = useNavigate();
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
    * Input : panel (string)
@@ -329,12 +332,20 @@ export default function CreateCommuninityPage() {
       console.log(key, val);
     }
     await createCommunity(formDataToSend);
+    alert("success");
+    naigate("/super/communities");
   };
 
   return (
     <div>
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">เพิ่มวิสาหกิจชุมชน</h1>
+        <Link
+          to="/super/communities"
+          className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+        >
+          <Icon icon="lucide:arrow-left" className="w-5 h-5" />
+          <h1 className="text-xl font-bold">เพิ่มวิสาหกิจชุมชน</h1>
+        </Link>
       </div>
       <Accordion
         className="!shadow-sm !rounded-lg !border-0  !bg-white mt-3"

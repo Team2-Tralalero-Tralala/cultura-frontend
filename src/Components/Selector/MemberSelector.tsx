@@ -73,7 +73,6 @@ export default function MemberSelector({
 }: MemberSelectorProps) {
   const [members, setMembers] = React.useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<Member[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(true);
   /*
    * คำอธิบาย : ฟังก์ชันภายในสำหรับโหลดรายชื่อสมาชิกจาก API
    * โดยจะรวมข้อมูลสมาชิกที่มีอยู่ในชุมชน (prop member) เข้ากับสมาชิกที่ยังไม่ถูกใช้
@@ -95,7 +94,6 @@ export default function MemberSelector({
       active = false;
     };
   }, [member]);
-
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับตั้งค่า selectedMembers ให้ตรงกับค่า value ปัจจุบัน
    * Input : none (อ้างอิง state 'members' และ prop 'value')
@@ -135,7 +133,7 @@ export default function MemberSelector({
         options={members}
         getOptionLabel={(option) => `${option.fname} ${option.lname}`}
         value={selectedMembers}
-        loading={loading}
+        noOptionsText="ไม่พบสมาชิก"
         onChange={handleChange}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         renderTags={() => null}

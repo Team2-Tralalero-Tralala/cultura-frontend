@@ -142,6 +142,7 @@ export function AdminSelector({
       disableClearable
       loading={loading}
       options={admins}
+      noOptionsText="ไม่พบผู้ดูแล"
       getOptionLabel={(option) =>
         option ? `${option.fname} ${option.lname}` : ""
       }

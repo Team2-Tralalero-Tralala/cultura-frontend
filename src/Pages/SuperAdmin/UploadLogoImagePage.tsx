@@ -276,15 +276,29 @@ export default function UploadLogoImagePage() {
                                     <div className="flex flex-wrap items-start gap-3">
                                         {renderPreviewCards(generalPreviews, "general")}
                                         {remainGeneral > 0 && (
+                                            // <UploadCard
+                                            //     max={remainGeneral}
+                                            //     accept="image/*"
+                                            //     multiple={false}
+                                            //     value={[]}
+                                            //     onChange={(files: File[]) => handleAddFiles("general", files)}
+                                            //     itemW={200}
+                                            //     itemH={120}
+                                            //     square={false}
+                                            // />
                                             <UploadCard
                                                 max={remainGeneral}
                                                 accept="image/*"
-                                                multiple={false}
-                                                value={[]}
-                                                onChange={(files: File[]) => handleAddFiles("general", files)}
+                                                persistToPublic
+                                                variant="white"
+                                                onPersisted={(paths) => {
+                                                    // paths[0] === "/logo-white.png?v=..."
+                                                    // จะเอาไป set ลง preview ก็ได้
+                                                }}
                                                 itemW={200}
                                                 itemH={120}
                                                 square={false}
+                                                onChange={(files) => handleAddFiles("general", files)}
                                             />
                                         )}
                                     </div>

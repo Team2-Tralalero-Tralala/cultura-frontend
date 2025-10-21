@@ -129,7 +129,7 @@ export default function CreateCommuninityPage() {
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
     status: "CLOSED",
     rating: 0,
-    member: [],
+    communityMembers: [],
   });
   const [location, setLocation] = useState<ThailandLocation>({
     province: "",
@@ -145,7 +145,8 @@ export default function CreateCommuninityPage() {
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [coverFiles, setCoverFiles] = useState<File[]>([]);
+  const [coverFiles, setCoverFiles] = useState<File | null>();
+  const [logoFile, setLogoFile] = useState<File | null>();
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   /*
@@ -239,10 +240,23 @@ export default function CreateCommuninityPage() {
     setFormData(updated);
     validateField(field, value);
   };
-
+  /*
+   * คำอธิบาย : ตัวแปร memberList สำหรับสร้างรายการสมาชิกจากข้อมูลใน formData.communityMembers
+   * ใช้ useMemo เพื่อป้องกันการคำนวณซ้ำโดยไม่จำเป็น (re-render optimization)
+   * Input :
+   *   - formData.communityMembers (number[] | undefined) : รายการ id ของสมาชิกในชุมชน
+   * Output :
+   *   - memberList (Member[]) : อาร์เรย์ของวัตถุสมาชิกที่มีโครงสร้าง { id, fname, lname }
+   *     โดย fname และ lname จะเป็นค่าว่างไว้ก่อนเพื่อรองรับข้อมูลที่โหลดภายหลัง
+   */
   const memberList = React.useMemo<Member[]>(
-    () => (formData.member ?? []).map((id) => ({ id, fname: "", lname: "" })),
-    [formData.member]
+    () =>
+      (formData.communityMembers ?? []).map((id) => ({
+        id,
+        fname: "",
+        lname: "",
+      })),
+    [formData.communityMembers]
   );
 
   /*
@@ -270,23 +284,51 @@ export default function CreateCommuninityPage() {
       ...cleanForm
     } = formData;
 
-    const payload = {
-      adminId: Number(formData.adminId),
-      member: formData.member ?? [],
-      ...cleanForm,
-      location: {
-        houseNumber: formData.houseNumber,
-        villageNumber: Number(formData.villageNumber),
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: String(location.postalCode),
-        detail: formData.detail,
-        latitude: Number(position[0]),
-        longitude: Number(position[1]),
-      },
-    };
-    await createCommunity(payload);
+    // สร้าง FormData เพื่อส่ง multipart/form-data
+    const formDataToSend = new FormData();
+
+    formDataToSend.append(
+      "data",
+      JSON.stringify({
+        adminId: Number(formData.adminId),
+        communityMembers: formData.communityMembers ?? [],
+        ...cleanForm,
+        registerDate: formData.registerDate
+          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
+          : undefined,
+        location: {
+          houseNumber: formData.houseNumber,
+          villageNumber: Number(formData.villageNumber),
+          province: location.province,
+          district: location.district,
+          subDistrict: location.subdistrict,
+          postalCode: String(location.postalCode),
+          detail: formData.detail,
+          latitude: Number(position[0]),
+          longitude: Number(position[1]),
+        },
+        // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
+      })
+    );
+
+    if (logoFile) {
+      formDataToSend.append("logo", logoFile);
+    }
+    if (coverFiles) {
+      formDataToSend.append("cover", coverFiles);
+    }
+
+    galleryFiles.forEach((file) => {
+      formDataToSend.append("gallery", file);
+    });
+
+    videoFiles.forEach((file) => {
+      formDataToSend.append("video", file);
+    });
+    for (const [key, val] of formDataToSend.entries()) {
+      console.log(key, val);
+    }
+    await createCommunity(formDataToSend);
   };
 
   return (
@@ -317,8 +359,8 @@ export default function CreateCommuninityPage() {
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
-              onCoverChange={(file) => console.log("cover:", file)}
-              onAvatarChange={(file) => console.log("avatar:", file)}
+              onCoverChange={setCoverFiles}
+              onAvatarChange={setLogoFile}
             />
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
@@ -606,12 +648,7 @@ export default function CreateCommuninityPage() {
                   Number(formData.longitude) || startingPosition[1],
                 ]}
                 startingZoom={startingZoom}
-                onChange={([lat, lng]) => {
-                  // อัปเดตพิกัดใน formData และ position พร้อม validate
-                  setPosition([lat, lng]);
-                  handleValueChange("latitude", lat.toString());
-                  handleValueChange("longitude", lng.toString());
-                }}
+                onChange={setPosition}
               />
             </div>
           </div>
@@ -781,9 +818,9 @@ export default function CreateCommuninityPage() {
 
             <div>
               <MemberSelector
-                value={formData.member}
+                value={formData.communityMembers}
                 member={memberList}
-                onChange={(ids) => handleValueChange("member", ids)}
+                onChange={(ids) => handleValueChange("communityMembers", ids)}
               />
             </div>
           </div>

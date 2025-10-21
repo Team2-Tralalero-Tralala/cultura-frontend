@@ -128,6 +128,46 @@ const communitySchema = z.object({
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 /*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
+ * ใช้สำหรับโหลดไฟล์ (เช่น รูปภาพหรือวิดีโอ) จาก server แล้วจำลองให้เหมือนผู้ใช้อัปโหลดจากเครื่อง
+ * Input :
+ *   - url (string) : URL ของไฟล์ที่ต้องการโหลด
+ *   - filename (string) : ชื่อไฟล์ที่ต้องการตั้งให้กับไฟล์ที่สร้างขึ้น
+ * Output :
+ *   - Promise<File> : วัตถุไฟล์ (File object) ที่สามารถใช้กับ input type="file" หรือ FormData ได้
+ * หมายเหตุ :
+ *   - เพิ่ม property isFromServer = true เพื่อระบุว่าไฟล์นี้มาจาก server (ไม่ใช่ไฟล์ใหม่ที่ผู้ใช้อัปโหลด)
+ */
+async function urlToFile(url: string, filename: string): Promise<File> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const ext = filename.split(".").pop() || "jpg";
+  const type = blob.type || `image/${ext}`;
+  const file = new File([blob], filename, { type });
+  (file as any).isFromServer = true; // ✅ เพิ่ม flag สำหรับแยกไฟล์จาก server
+  return file;
+}
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL พรีวิวไฟล์ (เช่น รูปภาพหรือวิดีโอ) จากวัตถุ File
+ * ใช้เพื่อแสดงตัวอย่างไฟล์ในหน้าเว็บ โดยไม่ต้องอัปโหลดไปยังเซิร์ฟเวอร์ก่อน
+ * Input :
+ *   - file (File | null) : วัตถุไฟล์ที่ต้องการสร้างพรีวิว หรือ null หากไม่มีไฟล์
+ * Output :
+ *   - string | null : URL สำหรับใช้แสดงพรีวิวไฟล์ หรือ null หากไม่มีไฟล์
+ * หมายเหตุ :
+ *   - ถ้าไฟล์มี property isFromServer หมายถึงไฟล์นั้นถูกโหลดมาจากเซิร์ฟเวอร์แล้ว
+ *     จะสร้าง URL ชั่วคราวจาก object URL เช่นเดียวกับไฟล์ที่ผู้ใช้อัปโหลดใหม่
+ */
+const getFilePreview = (file: File | null): string | null => {
+  if (!file) return null;
+  if ((file as any).isFromServer) {
+    // ถ้าเป็นไฟล์จากเซิร์ฟเวอร์ (ถูก flag แล้ว)
+    return URL.createObjectURL(file);
+  }
+  return URL.createObjectURL(file);
+};
+
+/*
  * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
  * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
  * Input : communityId (ดึงจาก useParams)
@@ -136,7 +176,7 @@ const communitySchema = z.object({
 export function EditCommunity() {
   const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
-    member: [],
+    communityMembers: [],
   });
 
   const [location, setLocation] = React.useState<ThailandLocation>({
@@ -152,14 +192,15 @@ export function EditCommunity() {
   const [checked, setChecked] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
-  const [position, setPosition] = React.useState<[number, number]>([
-    13.736717, 100.523186,
-  ]);
+  const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
   const [isSubmitting, setIsSubmitting] = React.useState(false); // สำหรับตอนกดบันทึก
+  const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
+  const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
@@ -186,7 +227,6 @@ export function EditCommunity() {
         const [response] = await Promise.all([fetchDataPromise, delayPromise]);
 
         const data = response.data.data;
-
         if (data.registerDate) {
           data.registerDate = new Date(data.registerDate)
             .toISOString()
@@ -197,12 +237,13 @@ export function EditCommunity() {
         setFormData({
           ...data,
           adminId: data.admin.id,
-          member: data.member.map((m: any) => m.id) ?? [],
           houseNumber: data.location?.houseNumber,
           villageNumber: data.location?.villageNumber,
           detail: data.location?.detail,
           latitude: String(data.location?.latitude),
           longitude: String(data.location?.longitude),
+          communityMembers:
+            data.communityMembers?.map((member: Member) => member.id) ?? [],
           location: {
             province: data.location.province,
             district: data.location.district,
@@ -222,13 +263,54 @@ export function EditCommunity() {
           lname: data.admin.lname,
         });
         setMembers(
-          data.member?.map((m: any) => ({
-            id: m.id,
-            fname: m.fname,
-            lname: m.lname,
+          data.communityMembers?.map((m: any) => ({
+            id: m.user.id,
+            fname: m.user.fname,
+            lname: m.user.lname,
           })) ?? []
         );
         setPosition([lat, lng]);
+        setChecked(data.status === "OPEN" ? true : false);
+
+        const logoFileFetch: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "LOGO")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        const coverFileFetched: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "COVER")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        const galleryFilesFetched: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "GALLERY")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        const videoFileFetch: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "VIDEO")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        setLogoFile(logoFileFetch[0] || null);
+        setCoverFiles(coverFileFetched[0] || null);
+        setGalleryFiles(galleryFilesFetched);
+        setVideoFiles(videoFileFetch);
+        const memberIds =
+          data.communityMembers?.map((m: any) => m.user.id) ?? [];
+        setSelectedMembers(memberIds);
       } catch (error) {
         console.error(error);
       } finally {
@@ -237,7 +319,7 @@ export function EditCommunity() {
     }
     fetchData();
   }, [communityId]);
-
+  console.log(checked);
   React.useEffect(() => {
     if (location.province) {
       setFormData((prev) => ({
@@ -254,6 +336,7 @@ export function EditCommunity() {
       validateField("subDistrict", location.subdistrict);
     }
   }, [location]);
+  console.log(videoFiles);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -365,8 +448,6 @@ export function EditCommunity() {
       const firstErrorField = Object.keys(formErrors).find(
         (key) => formErrors[key]
       );
-      console.log(formData.location?.province);
-      console.log(firstErrorField);
       if (firstErrorField) {
         // เช็คว่า field นั้นอยู่ใน Accordion ไหน แล้วเปิด Accordion นั้น
         const panel2Fields = [
@@ -430,6 +511,10 @@ export function EditCommunity() {
 
       const payload = {
         ...cleanForm,
+        communityMembers: selectedMembers,
+        registerDate: formData.registerDate
+          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
+          : undefined,
         location: {
           houseNumber: formData.houseNumber,
           villageNumber:
@@ -439,16 +524,33 @@ export function EditCommunity() {
           subDistrict: location.subdistrict,
           postalCode: String(location.postalCode),
           detail: formData.detail,
-          latitude: Number(formData.latitude),
-          longitude: Number(formData.longitude),
+          latitude: Number(position[0]),
+          longitude: Number(position[1]),
         },
       };
       console.log(payload);
-      await updateCommunity(Number(communityId), payload);
-      alert("บันทึกข้อมูลสำเร็จ!"); // ✅ แจ้งเตือนเมื่อสำเร็จ
 
-      // สามารถเพิ่มการ redirect ไปหน้าอื่นได้ตรงนี้ เช่น
-      // window.location.href = '/super/community';
+      const formDataToSend = new FormData();
+
+      formDataToSend.append("data", JSON.stringify(payload));
+
+      if (logoFile) {
+        formDataToSend.append("logo", logoFile);
+      }
+      if (coverFiles) {
+        formDataToSend.append("cover", coverFiles);
+      }
+
+      galleryFiles.forEach((file) => {
+        formDataToSend.append("gallery", file);
+      });
+
+      videoFiles.forEach((file) => {
+        formDataToSend.append("video", file);
+      });
+
+      await updateCommunity(Number(communityId), formDataToSend);
+      alert("บันทึกข้อมูลสำเร็จ!"); // ✅ แจ้งเตือนเมื่อสำเร็จ
     } catch (error) {
       console.error("Failed to update community:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล"); // ✅ แจ้งเตือนเมื่อล้มเหลว
@@ -497,8 +599,10 @@ export function EditCommunity() {
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
-              onCoverChange={(file) => console.log("cover:", file)}
-              onAvatarChange={(file) => console.log("avatar:", file)}
+              coverUrl={getFilePreview(coverFiles)} // ✅ แปลงเป็น URL
+              avatarUrl={getFilePreview(logoFile)}
+              onCoverChange={setCoverFiles}
+              onAvatarChange={setLogoFile}
             />
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
@@ -812,16 +916,13 @@ export function EditCommunity() {
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
-              <MapPicker
-                startingPosition={position}
-                startingZoom={13}
-                onChange={([lat, lng]) => {
-                  // เมื่อเลือกหมุดใหม่ ให้เซ็ตค่าทั้ง state position และ formData
-                  setPosition([lat, lng]);
-                  handleValueChange("latitude", lat);
-                  handleValueChange("longitude", lng);
-                }}
-              />
+              {position[0] !== 0 && position[1] !== 0 && (
+                <MapPicker
+                  startingPosition={position}
+                  startingZoom={13}
+                  onChange={setPosition}
+                />
+              )}
             </div>
           </div>
         </AccordionDetails>
@@ -991,9 +1092,9 @@ export function EditCommunity() {
 
             <div>
               <MemberSelector
-                value={formData.member}
+                value={selectedMembers}
                 member={members}
-                onChange={(ids) => handleValueChange("member", ids)}
+                onChange={(ids) => setSelectedMembers(ids)}
               />
             </div>
           </div>

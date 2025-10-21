@@ -69,7 +69,7 @@ interface MemberSelectorProps {
 export default function MemberSelector({
   value = [],
   member = [],
-  onChange,
+  onChange = () => {},
 }: MemberSelectorProps) {
   const [members, setMembers] = React.useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<Member[]>([]);
@@ -81,48 +81,36 @@ export default function MemberSelector({
    * Output : อัปเดต state 'members' ด้วยข้อมูลสมาชิกทั้งหมดที่เลือกได้
    */
   React.useEffect(() => {
-    async function loadMembers() {
-      try {
-        setLoading(true);
-        const response = await getUnassignedMembers();
-        const unassigned = response.data?.data || [];
-
-        // ป้องกัน null/undefined จาก prop member
-        const safeMember = Array.isArray(member) ? member : [];
-
-        // รวมข้อมูลโดยกรอง undefined ออก
-        const merged = [
-          ...unassigned,
-          ...safeMember.filter(
-            (old) => old && !unassigned.some((m: Member) => m.id === old.id)
-          ),
-        ].filter((m) => m && m.id); // กรอง object ที่ไม่มี id ออก
-
-        setMembers(merged);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadMembers();
+    let active = true;
+    getUnassignedMembers().then((response) => {
+      if (!active) return;
+      const data = response.data.data || [];
+      const merged = [
+        ...data,
+        ...member.filter((t) => t && !data.some((x: Member) => x.id === t.id)),
+      ];
+      setMembers(merged);
+    });
+    return () => {
+      active = false;
+    };
   }, [member]);
+
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับตั้งค่า selectedMembers ให้ตรงกับค่า value ปัจจุบัน
    * Input : none (อ้างอิง state 'members' และ prop 'value')
    * Output : อัปเดต state 'selectedMembers' ให้ตรงกับ id ที่เลือกอยู่ใน value
    */
-  React.useEffect(() => {
-    if (!members || members.length === 0) return;
-    if (!value || value.length === 0) {
-      setSelectedMembers([]);
-      return;
-    }
 
-    const preselected = members.filter((m) => value.includes(m.id));
-    setSelectedMembers(preselected);
+  React.useEffect(() => {
+    if (!members?.length || !value?.length) return;
+
+    setSelectedMembers((prev) => {
+      if (prev.length > 0) return prev; // ถ้ามีอยู่แล้วไม่ต้องเซ็ตซ้ำ
+      return members.filter((m) => value.includes(m.id));
+    });
   }, [members, value]);
+
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อมีการเลือกสมาชิกใน Autocomplete
    * Input :

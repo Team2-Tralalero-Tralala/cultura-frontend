@@ -101,3 +101,11 @@ export async function getCommunities(page = 1, limit = 10) {
 export async function getCommunityDetailById(id: number) {
   return api.get(`/super/community/detail/${id}`);
 }
+
+type MemberQuery = { q?: string; limit?: number };
+
+/** ดึง “สมาชิกในชุมชน” (สำหรับ Superadmin) */
+export async function getCommunityMembers(communityId: number, params?: MemberQuery) {
+  const { q = "", limit = 20 } = params ?? {};
+  return api.get(`/super/community/${communityId}/members`, { params: { q, limit } });
+}

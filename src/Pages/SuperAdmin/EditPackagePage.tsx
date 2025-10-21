@@ -2,8 +2,8 @@
 /**
  * - หน้าแก้ไขแพ็กเกจ (บทบาท Superadmin)
  * - ดึงรายละเอียดแพ็กเกจด้วย /super/package/:id แล้วเติมฟอร์ม
- * - ใช้ Zod validate แบบเดียวกับหน้า Create
- * - ส่งอัปเดตด้วย PUT /super/package/:id
+ * - ส่งอัปเดตด้วย multipart/form-data (data + cover[] + gallery[]) แบบเดียวกับหน้า EditHomestay
+ * - เลือกแท็กด้วย TagSelector เหมือนหน้า EditHomestay
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -13,16 +13,23 @@ import * as z from "zod";
 import TextField from "../../Components/TextField";
 import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import Button from "@/Components/Button";
+import CommunityMemberSelector, {
+  type Member as CommunityMember,
+} from "@/Components/Selector/CommunityMemberSelector";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+// ==== เพิ่มให้ตรงกับ EditHomestay ====
+import UploadCard from "@/Components/calendar/upload/UploadCard";
+import { TagSelector } from "@/Components/Selector/TagSelector";
+// =====================================
 
-// ===== Helpers =====
+const apiUrl = import.meta.env.VITE_API_URL as string;
+
+/* -------------------- Helpers (เดิม) -------------------- */
 function normalizeOrDefault(value: string, fallback = "-") {
   const trimmed = (value ?? "").toString().trim();
   return trimmed.length ? trimmed : fallback;
@@ -35,7 +42,7 @@ function toTimeInput(input?: string | Date | null) {
   if (!input) return "";
   if (typeof input === "string") {
     const m = input.match(
-      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
+      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/,
     );
     if (m && m[4] !== undefined && m[5] !== undefined) {
       const hh = m[4].padStart(2, "0");
@@ -63,6 +70,57 @@ function toDateOnly(input?: string | Date | null) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+/* -------------------- Helpers (เพิ่มให้เหมือน EditHomestay) -------------------- */
+async function urlToFile(url: string, filename: string): Promise<File> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
+  const blob = await res.blob();
+  const ext = filename.split(".").pop() || "jpg";
+  const type = blob.type || `image/${ext}`;
+  const file = new File([blob], filename, { type });
+  (file as any).isFromServer = true;
+  return file;
+}
+function buildImageCandidates(raw: string): string[] {
+  if (!raw) return [];
+  if (/^https?:\/\//i.test(raw)) return [raw];
+
+  const origin = (() => {
+    try {
+      return new URL(apiUrl).origin;
+    } catch {
+      return window.location.origin;
+    }
+  })();
+
+  const cleaned = String(raw).replace(/\\/g, "/").replace(/^\.?\/*/, "");
+  const prefixes = [
+    "",
+    "uploads/"
+  ];
+
+  const candidates = new Set<string>();
+  for (const p of prefixes) {
+    const path = cleaned.startsWith(p) ? cleaned : `${p}${cleaned}`;
+    candidates.add(`${origin}/${encodeURI(path)}`);
+    candidates.add(`${origin}/api/${encodeURI(path)}`);
+  }
+  return Array.from(candidates);
+}
+async function bestEffortUrlToFile(rawPath: string, filename: string): Promise<File> {
+  const candidates = buildImageCandidates(rawPath);
+  let lastErr: unknown = null;
+  for (const u of candidates) {
+    try {
+      return await urlToFile(u, filename);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("no image url works");
+}
+/* ------------------------------------------------------------------------------- */
+
 type PackageForm = {
   name: string;
   description: string;
@@ -79,7 +137,7 @@ type PackageForm = {
   placeQuery: string;
 
   overseerMemberId: string;
-  tagId: string;
+  tagId: string; // (ไม่ได้ใช้แล้ว แต่คงไว้ให้ safest)
   facility: string;
 
   startDate: string;
@@ -142,9 +200,7 @@ const packageSchema = z.object({
   postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
 
   latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
-  longitude: z
-    .string()
-    .min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
+  longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
 
   overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
   capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
@@ -169,13 +225,22 @@ export const EditPackagePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
+  const [communityId, setCommunityId] = useState<number | undefined>(undefined);
+  const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // errors (เพิ่มเพื่อ validate)
   const [formErrors, setFormErrors] = useState<PackageErrors>({});
+  const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
+
+  // ====== Tag (ใช้วิธีเดียวกับ EditHomestay) ======
+  const [tagIds, setTagIds] = useState<number[]>([]);
+
+  // ====== รูปภาพ (เหมือน EditHomestay) ======
+  const [coverFiles, setCoverFiles] = useState<File[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
   // validate ช่องเดียว
   const validateField = (field: keyof PackageForm, value: any) => {
@@ -203,22 +268,14 @@ export const EditPackagePage: React.FC = () => {
     } else {
       setFormErrors({});
     }
-    if (
-      formState.openDate &&
-      formState.closeDate &&
-      formState.openDate > formState.closeDate
-    ) {
+    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
       setFormErrors((prev) => ({
         ...prev,
         closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
       }));
       ok = false;
     }
-    if (
-      formState.closeDate &&
-      formState.endDate &&
-      formState.closeDate > formState.endDate
-    ) {
+    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
       setFormErrors((prev) => ({
         ...prev,
         closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
@@ -227,55 +284,30 @@ export const EditPackagePage: React.FC = () => {
     }
     if (selectedHomestay) {
       if (!hsCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
-        }));
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
         ok = false;
       }
       if (!hsCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
-        }));
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
         ok = false;
       }
       if (!hsCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
-        }));
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
         ok = false;
       }
       if (!hsCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
-        }));
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
         ok = false;
       }
     }
     return ok;
   };
 
-  // + types ภายในไฟล์
-  type TagOption = { id: number; name: string };
-
-  // + states
-  const [tagQuery, setTagQuery] = useState("");
-  const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>([]);
-
-  // + ค้นหาแท็กแบบ debounce + dropdown control
-  const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openTagBox, setOpenTagBox] = useState(false);
-
-  // ===== Member picker =====
+  // ===== Member picker (คงของเดิม) =====
   type MemberOption = { id: number; fname: string; lname: string };
   const [memberQuery, setMemberQuery] = useState("");
   const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
-  const showMemberBox =
-    memberQuery.trim().length >= 1 && memberOptions.length > 0;
+  const showMemberBox = memberQuery.trim().length >= 1 && memberOptions.length > 0;
 
   React.useEffect(() => {
     const q = memberQuery.trim();
@@ -283,171 +315,21 @@ export const EditPackagePage: React.FC = () => {
       setMemberOptions([]);
       return;
     }
+    // (เดิมคุณใช้ homestay query ซ้ำใน effect member — ขอเคลียร์ทิ้งเพื่อไม่ให้ยิง API ผิด)
+    setMemberOptions([]);
+  }, [memberQuery]);
 
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/member/community/members`, {
-          params: { q, limit: 10 },
-          withCredentials: true,
-        });
+  const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
+  const [openTagBox, setOpenTagBox] = useState(false); // ไม่ใช้แล้ว แต่คงตัวแปรไว้ให้ compile
 
-        const raw = res?.data?.data ?? [];
-        setMemberOptions(
-          (Array.isArray(raw) ? raw : []).map((m: any) => ({
-            id: Number(m.id),
-            fname: m.fname ?? "",
-            lname: m.lname ?? "",
-          }))
-        );
-      } catch (e) {
-        console.error("search members error:", e);
-        setMemberOptions([]);
-      }
-    }, 250);
-
-    return () => clearTimeout(t);
-  }, [memberQuery, apiUrl]);
-
-  // ปิด dropdown เมื่อคลิกนอกกรอบ
   React.useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (!searchBoxRef.current) return;
-      if (!searchBoxRef.current.contains(e.target as Node))
-        setOpenTagBox(false);
+      if (!searchBoxRef.current.contains(e.target as Node)) setOpenTagBox(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
-
-  const MIN_TAG_QUERY_CHARS = 2;
-  const norm = (s: string) => (s ?? "").toLowerCase().normalize("NFC").trim();
-
-  React.useEffect(() => {
-    const q = tagQuery.trim();
-    if (q.length < MIN_TAG_QUERY_CHARS) {
-      setTagOptions([]);
-      setOpenTagBox(false);
-      return;
-    }
-
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/tags`, {
-          params: { q, limit: 8 },
-          withCredentials: true,
-        });
-        const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
-        const opts = (Array.isArray(raw) ? raw : []).map((t: any) => ({
-          id: Number(t.id),
-          name: t.name ?? t.title ?? "",
-        }));
-        const byText = opts.filter((o) => norm(o.name).includes(norm(q)));
-        const filtered = byText.filter(
-          (o) => !selectedTags.some((s) => s.id === o.id)
-        );
-        setTagOptions(filtered);
-        setOpenTagBox(filtered.length > 0);
-      } catch (e) {
-        console.error("search tags error:", e);
-      }
-    }, 250);
-
-    return () => clearTimeout(t);
-  }, [tagQuery, selectedTags]);
-
-  const addTag = (opt: TagOption) => {
-    if (selectedTags.some((t) => t.id === opt.id)) return;
-    setSelectedTags((prev) => [...prev, opt]);
-    setTagQuery("");
-    setTagOptions([]);
-    setOpenTagBox(false);
-  };
-  const removeTag = (id: number) =>
-    setSelectedTags((prev) => prev.filter((t) => t.id !== id));
-
-  // ===== Homestay picker =====
-  type HomestayOption = {
-    id: number;
-    name: string;
-    facility?: string;
-    images?: { image: string }[];
-  };
-
-  const [homestayQuery, setHomestayQuery] = useState("");
-  const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
-  const [selectedHomestay, setSelectedHomestay] =
-    useState<HomestayOption | null>(null);
-
-  const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openHomestayBox, setOpenHomestayBox] = useState(false);
-  const [coverFiles, setCoverFiles] = useState<File[]>([]);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
-
-  React.useEffect(() => {
-    const onDown = (e: MouseEvent) => {
-      if (
-        homestayBoxRef.current &&
-        !homestayBoxRef.current.contains(e.target as Node)
-      ) {
-        setOpenHomestayBox(false);
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, []);
-
-  const MIN_HOMESTAY_QUERY_CHARS = 2;
-  React.useEffect(() => {
-    const q = homestayQuery.trim();
-    if (q.length < MIN_HOMESTAY_QUERY_CHARS) {
-      setHomestayOptions([]);
-      setOpenHomestayBox(false);
-      return;
-    }
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/member/community/homestays`, {
-          params: { q, limit: 8 },
-          withCredentials: true,
-        });
-
-        const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
-        const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map(
-          (h: any) => ({
-            id: Number(h.id),
-            name: h.name ?? "",
-            facility: h.facility ?? h.description ?? "",
-            images: h.homestayImage ?? h.images ?? [],
-          })
-        );
-        setHomestayOptions(opts);
-        setOpenHomestayBox(opts.length > 0);
-      } catch (e) {
-        console.error("search homestays error:", e);
-        setHomestayOptions([]);
-        setOpenHomestayBox(false);
-      }
-    }, 250);
-    return () => clearTimeout(t);
-  }, [homestayQuery]);
-
-  const chooseHomestay = (h: HomestayOption) => {
-    setSelectedHomestay(h);
-    setHomestayQuery("");
-    setHomestayOptions([]);
-    setOpenHomestayBox(false);
-    setFormField("tagId" as any, formState.tagId);
-  };
-
-  // ฟังก์ชัน set field + validate ช่องนั้น
-  const setFormField = <K extends keyof PackageForm>(
-    key: K,
-    value: PackageForm[K]
-  ) => {
-    setFormState((prev) => ({ ...prev, [key]: value }));
-    validateField(key, value);
-  };
 
   const canSubmitForm = useMemo(() => {
     const required = [
@@ -472,7 +354,78 @@ export const EditPackagePage: React.FC = () => {
     return required.every((v) => String(v ?? "").trim() !== "");
   }, [formState]);
 
-  // ====== Homestay check-in/out (optional) ======
+  // ===== Homestay picker (คงของเดิม) =====
+  type HomestayOption = {
+    id: number;
+    name: string;
+    facility?: string;
+    images?: { image: string }[];
+  };
+
+  const [homestayQuery, setHomestayQuery] = useState("");
+  const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
+  const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
+
+  const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
+  const [openHomestayBox, setOpenHomestayBox] = useState(false);
+
+  React.useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (homestayBoxRef.current && !homestayBoxRef.current.contains(e.target as Node)) {
+        setOpenHomestayBox(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  const MIN_HOMESTAY_QUERY_CHARS = 2;
+  React.useEffect(() => {
+    const q = homestayQuery.trim();
+    if (q.length < MIN_HOMESTAY_QUERY_CHARS) {
+      setHomestayOptions([]);
+      setOpenHomestayBox(false);
+      return;
+    }
+    const t = setTimeout(async () => {
+      try {
+        const res = await axios.get(`${apiUrl}/super/package/${id}/homestays`, {
+          params: { q, limit: 8 },
+          withCredentials: true,
+        });
+        const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
+        const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map((h: any) => ({
+          id: Number(h.id),
+          name: h.name ?? "",
+          facility: h.facility ?? h.description ?? "",
+          images: h.homestayImage ?? h.images ?? [],
+        }));
+        setHomestayOptions(opts);
+        setOpenHomestayBox(opts.length > 0);
+      } catch (e) {
+        console.error("search homestays error:", e);
+        setHomestayOptions([]);
+        setOpenHomestayBox(false);
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [homestayQuery, id]);
+
+  const chooseHomestay = (h: HomestayOption) => {
+    setSelectedHomestay(h);
+    setHomestayQuery("");
+    setHomestayOptions([]);
+    setOpenHomestayBox(false);
+    setFormField("tagId" as any, formState.tagId);
+  };
+
+  // ฟังก์ชัน set field + validate ช่องนั้น
+  const setFormField = <K extends keyof PackageForm>(key: K, value: PackageForm[K]) => {
+    setFormState((prev) => ({ ...prev, [key]: value }));
+    validateField(key, value);
+  };
+
+  // ====== Homestay check-in/out ======
   const [hsCheckInDate, setHsCheckInDate] = useState("");
   const [hsCheckInTime, setHsCheckInTime] = useState("");
   const [hsCheckOutDate, setHsCheckOutDate] = useState("");
@@ -497,15 +450,22 @@ export const EditPackagePage: React.FC = () => {
         });
         const p = res?.data?.data;
 
+        setCommunityId(Number(p?.communityId ?? p?.community?.id ?? NaN) || undefined);
+
+        if (p?.overseerPackage) {
+          setCurrentOverseer({
+            id: Number(p.overseerPackage.id),
+            fname: p.overseerPackage.fname ?? "",
+            lname: p.overseerPackage.lname ?? "",
+          });
+        }
         if (!mounted || !p) return;
 
-        // map basic
         const location = p.location ?? {};
-        const tags = (p.tagPackages ?? [])
-          .map((tp: any) => tp.tag)
-          .filter(Boolean);
+        const lat = Number(location.latitude ?? 13.7563);
+        const lng = Number(location.longitude ?? 100.5018);
+        setPosition([lat, lng]);
 
-        // homestay (ใช้รายการแรกหากมี)
         const hs =
           Array.isArray(p.homestayHistories) && p.homestayHistories.length > 0
             ? p.homestayHistories[0]
@@ -515,22 +475,17 @@ export const EditPackagePage: React.FC = () => {
           name: p.name ?? "",
           description: p.description ?? "",
           houseNumber: location.houseNumber ?? "",
-          villageNumber:
-            location.villageNumber != null
-              ? String(location.villageNumber)
-              : "",
+          villageNumber: location.villageNumber != null ? String(location.villageNumber) : "",
           province: location.province ?? "",
           district: location.district ?? "",
           subDistrict: location.subDistrict ?? "",
           postalCode: location.postalCode ?? "",
           addressDetail: location.detail ?? "",
           latitude: location.latitude != null ? String(location.latitude) : "",
-          longitude:
-            location.longitude != null ? String(location.longitude) : "",
+          longitude: location.longitude != null ? String(location.longitude) : "",
           placeQuery: "",
 
-          overseerMemberId:
-            p.overseerMemberId != null ? String(p.overseerMemberId) : "",
+          overseerMemberId: p.overseerMemberId != null ? String(p.overseerMemberId) : "",
           tagId: "",
           facility: p.warning ?? "",
 
@@ -538,31 +493,44 @@ export const EditPackagePage: React.FC = () => {
           startTime: toTimeInput(p.startDate),
           endDate: toDateOnly(p.dueDate),
           endTime: toTimeInput(p.dueDate),
-          openDate: toDateOnly(p.openBookingAt),
-          openTime: toTimeInput(p.openBookingAt),
-          closeDate: toDateOnly(p.closeBookingAt),
-          closeTime: toTimeInput(p.closeBookingAt),
+          openDate: toDateOnly(p.bookingOpenDate),
+          openTime: toTimeInput(p.bookingOpenDate),
+          closeDate: toDateOnly(p.bookingCloseDate),
+          closeTime: toTimeInput(p.bookingCloseDate),
 
           capacity: p.capacity != null ? String(p.capacity) : "",
           price: p.price != null ? String(p.price) : "",
           addHomestay: !!hs,
         });
 
-        // ตั้งชื่อผู้ดูแลเริ่มต้นในช่องค้นหา (อ่านได้อย่างเดียว)
-        if (p.overseerPackage) {
-          setMemberQuery(
-            `${p.overseerPackage.fname ?? ""} ${
-              p.overseerPackage.lname ?? ""
-            }`.trim()
-          );
-        }
+        // ตั้ง tagIds (เหมือนหน้า homestay)
+        const tagsFromServer: number[] = Array.isArray(p?.tagPackages)
+          ? p.tagPackages
+            .map((tp: any) => tp?.tag?.id ?? tp?.id)
+            .filter((x: any) => typeof x === "number")
+          : [];
+        setTagIds(tagsFromServer);
 
-        // ตั้งแท็กเริ่มต้น
-        setSelectedTags(
-          (tags as any[]).map((t) => ({ id: Number(t.id), name: t.name ?? "" }))
+        // โหลดรูปของแพ็กเกจ (เหมือน homestay: cover + gallery)
+        const imgs: any[] = Array.isArray(p?.packageFile) ? p.packageFile : [];
+        const coverFetched: File[] = await Promise.all(
+          imgs
+            .filter((img) => String(img.type).toUpperCase() === "COVER")
+            .map((img) =>
+              bestEffortUrlToFile(String(img.filePath || img.image || ""), String(img.filePath || "cover.jpg")),
+            ),
         );
+        const galleryFetched: File[] = await Promise.all(
+          imgs
+            .filter((img) => String(img.type).toUpperCase() === "GALLERY")
+            .map((img) =>
+              bestEffortUrlToFile(String(img.filePath || img.image || ""), String(img.filePath || "gallery.jpg")),
+            ),
+        );
+        setCoverFiles(coverFetched);
+        setGalleryFiles(galleryFetched);
 
-        // ตั้งค่า homestay และเวลา (ถ้ามี)
+        // ตั้ง homestay + เวลา (ถ้ามี)
         if (hs?.homestay) {
           setSelectedHomestay({
             id: Number(hs.homestay.id),
@@ -581,11 +549,7 @@ export const EditPackagePage: React.FC = () => {
         }
       } catch (e: any) {
         console.error("Load package detail error:", e?.response?.data || e);
-        setErrorMessage(
-          e?.response?.data?.message ||
-            e?.message ||
-            "ไม่สามารถโหลดข้อมูลแพ็กเกจ"
-        );
+        setErrorMessage(e?.response?.data?.message || e?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -610,22 +574,12 @@ export const EditPackagePage: React.FC = () => {
 
     if (!window.confirm("ยืนยันการบันทึกการแก้ไขแพ็กเกจใช่หรือไม่?")) return;
 
-    if (
-      formState.openDate &&
-      formState.closeDate &&
-      formState.openDate > formState.closeDate
-    ) {
-      setErrorMessage(
-        "ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง"
-      );
+    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
+      setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    if (
-      formState.closeDate &&
-      formState.endDate &&
-      formState.closeDate > formState.endDate
-    ) {
+    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
       setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -636,6 +590,7 @@ export const EditPackagePage: React.FC = () => {
     setSuccessMessage(null);
 
     try {
+      // payload หลัก (จะถูกใส่ลง fd ใน key "data")
       const payload = {
         overseerMemberId: Number(formState.overseerMemberId),
         name: normalizeOrDefault(formState.name),
@@ -643,33 +598,26 @@ export const EditPackagePage: React.FC = () => {
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
         warning: normalizeOrDefault(formState.facility),
-        // สถานะคงเดิมตามระบบของคุณ หรือให้แก้ในหน้าอื่น
+
         startDate: normalizeOrDefault(formState.startDate),
         dueDate: normalizeOrDefault(formState.endDate),
-        ...(formState.startTime.trim() && {
-          startTime: formState.startTime.trim(),
-        }),
+        ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
         ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
         openBookingAt: normalizeOrDefault(formState.openDate),
         closeBookingAt: normalizeOrDefault(formState.closeDate),
-        ...(formState.openTime.trim() && {
-          openTime: formState.openTime.trim(),
-        }),
-        ...(formState.closeTime.trim() && {
-          closeTime: formState.closeTime.trim(),
-        }),
+        ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
+        ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
 
-        ...(selectedHomestay &&
-          hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
-        ...(selectedHomestay &&
-          hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
-        ...(selectedHomestay &&
-          hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
-        ...(selectedHomestay &&
-          hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
+        ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
+        ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
+        ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
+        ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
 
         facility: normalizeOrDefault(formState.facility),
-        tagIds: selectedTags.map((t) => t.id),
+
+        // ใช้เลขล้วนเหมือนหน้า homestay
+        tagIds,
+
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
 
         location: {
@@ -685,9 +633,15 @@ export const EditPackagePage: React.FC = () => {
         },
       };
 
-      await axios.put(`${apiUrl}/super/package/${id}`, payload, {
+      // ===== ส่งแบบเดียวกับ EditHomestay =====
+      const fd = new FormData();
+      fd.append("data", JSON.stringify(payload));
+      coverFiles.forEach((f: any) => fd.append("cover", f));
+      galleryFiles.forEach((f: any) => fd.append("gallery", f));
+
+      // NOTE: ให้ตรงกับ BE ที่รับ multipart ของ package
+      await axios.put(`${apiUrl}/super/package/${id}`, fd, {
         withCredentials: true,
-        headers: { "Content-Type": "application/json" },
       });
 
       alert("บันทึกแพ็กเกจสำเร็จ!");
@@ -696,9 +650,9 @@ export const EditPackagePage: React.FC = () => {
       console.error("Edit package (superadmin) error:", error?.response?.data);
       setErrorMessage(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "บันทึกแพ็กเกจไม่สำเร็จ"
+        error?.response?.data?.error ||
+        error?.message ||
+        "บันทึกแพ็กเกจไม่สำเร็จ",
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -706,28 +660,14 @@ export const EditPackagePage: React.FC = () => {
     }
   }
 
-  const startPos = React.useMemo(
-    () =>
-      [
-        Number(formState.latitude) || 13.7563,
-        Number(formState.longitude) || 100.5018,
-      ] as [number, number],
-    [formState.latitude, formState.longitude]
-  );
-
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
-      {errorMessage && (
-        <div className="text-red-600 text-sm">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
       {successMessage && (
         <div className="text-emerald-700 text-sm">{successMessage}</div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
-      >
+      <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
           onClick={() => navigate("/super/packages/all")}
@@ -762,9 +702,7 @@ export const EditPackagePage: React.FC = () => {
               helperText={formErrors?.description}
             />
             {!!formErrors.description && (
-              <div className="text-red-600 text-sm mt-1">
-                {formErrors.description}
-              </div>
+              <div className="text-red-600 text-sm mt-1">{formErrors.description}</div>
             )}
           </div>
         </section>
@@ -793,7 +731,7 @@ export const EditPackagePage: React.FC = () => {
               helperText={formErrors.villageNumber}
             />
 
-            {/* ที่อยู่แบบ selector */}
+            {/* Selector ที่อยู่ */}
             <div className="md:col-span-2">
               <ThailandLocationSelector
                 value={{
@@ -816,36 +754,12 @@ export const EditPackagePage: React.FC = () => {
                   validateField("postalCode", loc.postalCode ?? "");
                 }}
               />
-              {/* แสดง error ใต้ selector */}
+              {/* errors */}
               <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
-                <div>
-                  {!!formErrors.province && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.province}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  {!!formErrors.district && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.district}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  {!!formErrors.subDistrict && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.subDistrict}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  {!!formErrors.postalCode && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.postalCode}
-                    </div>
-                  )}
-                </div>
+                <div>{!!formErrors.province && <div className="text-red-600 text-sm">{formErrors.province}</div>}</div>
+                <div>{!!formErrors.district && <div className="text-red-600 text-sm">{formErrors.district}</div>}</div>
+                <div>{!!formErrors.subDistrict && <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>}</div>
+                <div>{!!formErrors.postalCode && <div className="text-red-600 text-sm">{formErrors.postalCode}</div>}</div>
               </div>
             </div>
 
@@ -866,24 +780,17 @@ export const EditPackagePage: React.FC = () => {
             {/* Map Picker */}
             <div className="md:col-span-2">
               <MapPicker
-                startingPosition={startPos}
+                startingPosition={position}
                 startingZoom={13}
                 onChange={([lat, lng]) => {
-                  setFormField("latitude", String(lat));
+                  setPosition([lat, lng]);                 // คุมพินด้วย state เดียว
+                  setFormField("latitude", String(lat));   // sync เข้า formState เพื่อ validate/ส่งขึ้น BE
                   setFormField("longitude", String(lng));
                 }}
               />
               <div className="grid grid-cols-2 gap-3 mt-2">
-                {!!formErrors.latitude && (
-                  <div className="text-red-600 text-sm">
-                    {formErrors.latitude}
-                  </div>
-                )}
-                {!!formErrors.longitude && (
-                  <div className="text-red-600 text-sm">
-                    {formErrors.longitude}
-                  </div>
-                )}
+                {!!formErrors.latitude && <div className="text-red-600 text-sm">{formErrors.latitude}</div>}
+                {!!formErrors.longitude && <div className="text-red-600 text-sm">{formErrors.longitude}</div>}
               </div>
             </div>
           </div>
@@ -893,31 +800,18 @@ export const EditPackagePage: React.FC = () => {
         <section className="grid md:grid-cols-2 gap-5">
           {/* เลือกผู้ดูแล */}
           <div className="space-y-2">
-            <label className="block text-base font-semibold">
-              เลือกผู้ดูแล <span className="text-red-600">*</span>
-            </label>
-
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
-                <Icon icon="mingcute:search-line" width="22" />
-                <input
-                  type="text"
-                  placeholder="พิมพ์ชื่อ/นามสกุล เพื่อค้นหา"
-                  className="w-full outline-none border-none bg-transparent"
-                  value={memberQuery}
-                  onChange={(e) => setMemberQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && memberOptions[0]) {
-                      e.preventDefault();
-                      const m = memberOptions[0];
-                      setFormField("overseerMemberId", String(m.id));
-                      setMemberQuery(`${m.fname} ${m.lname}`);
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Dropdown */}
+              <CommunityMemberSelector
+                communityId={communityId}
+                value={formState.overseerMemberId ? Number(formState.overseerMemberId) : undefined}
+                member={currentOverseer}
+                disabled={!communityId}
+                error={!!formErrors.overseerMemberId}
+                helperText={formErrors.overseerMemberId}
+                onChange={(newId) => {
+                  setFormField("overseerMemberId", newId ? String(newId) : "");
+                }}
+              />
               {showMemberBox && (
                 <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
                   {memberOptions.map((m) => (
@@ -936,11 +830,8 @@ export const EditPackagePage: React.FC = () => {
                 </div>
               )}
             </div>
-
             {!!formErrors.overseerMemberId && (
-              <div className="text-red-600 text-sm">
-                {formErrors.overseerMemberId}
-              </div>
+              <div className="text-red-600 text-sm">{formErrors.overseerMemberId}</div>
             )}
           </div>
 
@@ -972,9 +863,7 @@ export const EditPackagePage: React.FC = () => {
               helperText={formErrors?.facility}
             />
             {!!formErrors.facility && (
-              <div className="text-red-600 text-sm mt-1">
-                {formErrors.facility}
-              </div>
+              <div className="text-red-600 text-sm mt-1">{formErrors.facility}</div>
             )}
           </div>
         </section>
@@ -1063,78 +952,15 @@ export const EditPackagePage: React.FC = () => {
           />
         </section>
 
-        {/* แท็ก / ราคา */}
+        {/* แท็ก / ราคา (แท็กใช้ TagSelector เหมือน EditHomestay) */}
         <section className="grid md:grid-cols-2 gap-5">
-          {/* ช่องค้นหาแท็ก */}
-          <div className="space-y-2">
-            <label htmlFor="tags" className="block text-base font-semibold">
+          <div className="md:col-span-2">
+            <label className="block text-base font-semibold">
               แท็ก <span className="text-red-600">*</span>
             </label>
-
-            <div ref={searchBoxRef} className="relative">
-              <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
-                <Icon icon="mingcute:search-line" width="22" />
-                <input
-                  id="tags"
-                  type="text"
-                  placeholder="ค้นหาแท็ก เช่น เดินป่า ทะเล ภูเขา"
-                  className="w-full outline-none border-none bg-transparent"
-                  value={tagQuery}
-                  onChange={(e) => setTagQuery(e.target.value)}
-                  onFocus={() =>
-                    setOpenTagBox(
-                      tagQuery.trim().length >= MIN_TAG_QUERY_CHARS &&
-                        tagOptions.length > 0
-                    )
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && tagOptions[0]) {
-                      e.preventDefault();
-                      addTag(tagOptions[0]);
-                    }
-                    if (e.key === "Escape") setOpenTagBox(false);
-                  }}
-                />
-              </div>
-
-              {openTagBox && tagOptions.length > 0 && (
-                <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
-                  {tagOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className="w-full text-left px-4 py-2 hover:bg-green-50"
-                      onClick={() => addTag(opt)}
-                    >
-                      {opt.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div ref={searchBoxRef}>
+              <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
             </div>
-
-            {/* แสดงแท็กที่เลือกแล้ว (โหลดมาจาก server + เพิ่มใหม่) */}
-            {selectedTags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {selectedTags.map((t) => (
-                  <span
-                    key={t.id}
-                    className="inline-flex items-center gap-2 rounded-md px-3 py-1 border bg-gray-50"
-                  >
-                    {t.name}
-                    <button
-                      type="button"
-                      className="leading-none text-gray-600 hover:text-black"
-                      onClick={() => removeTag(t.id)}
-                      aria-label={`ลบแท็ก ${t.name}`}
-                      title="ลบ"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* ราคา */}
@@ -1151,11 +977,11 @@ export const EditPackagePage: React.FC = () => {
           />
         </section>
 
-        {/* สื่อแพ็กเกจ (ยังไม่ bind ไฟล์เดิม — ใช้สำหรับอัปโหลดเพิ่ม/แทน) */}
+        {/* สื่อแพ็กเกจ: COVER + GALLERY (เหมือน EditHomestay) */}
         <section className="space-y-6">
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              อัปโหลดภาพหน้าปก <span className="text-red-600">*</span>
+              ภาพหน้าปก (COVER) <span className="text-red-600">*</span>
             </label>
             <UploadCard
               max={1}
@@ -1177,36 +1003,14 @@ export const EditPackagePage: React.FC = () => {
 
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              อัปโหลดรูปภาพเพิ่มเติม <span className="text-red-600">*</span>
+              รูปเพิ่มเติม (GALLERY) <span className="text-red-600">*</span>
             </label>
             <UploadCard
-              max={5}
+              max={10}
               accept="image/*"
               multiple
               value={galleryFiles}
               onChange={setGalleryFiles}
-              itemW={160}
-              itemH={110}
-              square={false}
-              itemClass="border border-dashed border-black/60 bg-slate-200/60"
-              rounded="rounded-lg"
-              gapCls="gap-4"
-              containerClass="w-full"
-              wrap
-              iconSizeCls="w-10 h-10"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-base font-semibold">
-              อัปโหลดวิดีโอเพิ่มเติม <span className="text-red-600">*</span>
-            </label>
-            <UploadCard
-              max={5}
-              accept="video/*"
-              multiple
-              value={videoFiles}
-              onChange={setVideoFiles}
               itemW={160}
               itemH={110}
               square={false}
@@ -1226,7 +1030,7 @@ export const EditPackagePage: React.FC = () => {
             ที่พัก <span className="text-gray-500 text-sm">(ไม่บังคับ)</span>
           </label>
 
-          {/* กล่องค้นหาที่พัก */}
+          {/* ค้นหาที่พัก */}
           <div ref={homestayBoxRef} className="relative">
             <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
               <Icon icon="mingcute:search-line" width="22" />
@@ -1239,7 +1043,7 @@ export const EditPackagePage: React.FC = () => {
                 onFocus={() =>
                   setOpenHomestayBox(
                     homestayQuery.trim().length >= MIN_HOMESTAY_QUERY_CHARS &&
-                      homestayOptions.length > 0
+                    homestayOptions.length > 0,
                   )
                 }
                 onKeyDown={(e) => {
@@ -1268,10 +1072,9 @@ export const EditPackagePage: React.FC = () => {
             )}
           </div>
 
-          {/* การ์ดแสดงที่พักที่เลือก */}
+          {/* การ์ดที่พักที่เลือก + เวลาเช็กอิน/เอาท์ */}
           {selectedHomestay && (
             <>
-              {/* แถววันที่/เวลา (ถ้ามีที่พัก) */}
               <div className="grid md:grid-cols-4 gap-4 mb-3">
                 <TextField
                   id="hsCheckInDate"
@@ -1311,7 +1114,6 @@ export const EditPackagePage: React.FC = () => {
                 />
               </div>
 
-              {/* การ์ดที่พัก + ปุ่มถังขยะ */}
               <div className="relative rounded-xl border p-4 bg-white shadow-sm">
                 <button
                   type="button"
@@ -1336,15 +1138,11 @@ export const EditPackagePage: React.FC = () => {
                   </div>
 
                   <div className="col-span-12 sm:col-span-8">
-                    <div className="font-semibold text-lg mb-2">
-                      {selectedHomestay.name}
-                    </div>
+                    <div className="font-semibold text-lg mb-2">{selectedHomestay.name}</div>
 
                     {selectedHomestay.facility && (
                       <div>
-                        <div className="font-semibold mb-1">
-                          สิ่งอำนวยความสะดวกที่พัก
-                        </div>
+                        <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
                         <ul className="list-disc pl-5 space-y-1">
                           {selectedHomestay.facility
                             .split(/[,•\n]/)

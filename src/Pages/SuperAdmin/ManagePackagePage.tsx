@@ -107,11 +107,10 @@ export default function ManagePackageSuperAdmin() {
           title: p?.name ?? p?.title ?? "-",
           community: p?.community?.name ?? p?.communityName ?? "-",
           owner: p?.overseerPackage
-            ? `${p.overseerPackage.fname ?? ""} ${
-                p.overseerPackage.lname ?? ""
+            ? `${p.overseerPackage.fname ?? ""} ${p.overseerPackage.lname ?? ""
               }`.trim() ||
-              p.overseerPackage.username ||
-              "-"
+            p.overseerPackage.username ||
+            "-"
             : p?.ownerName ?? "-",
           published:
             p?.statusPackage === "PUBLISH" ||
@@ -130,9 +129,9 @@ export default function ManagePackageSuperAdmin() {
       console.error("reloadPackages error:", error?.response?.data ?? error);
       setErrorMessage(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "โหลดข้อมูลไม่สำเร็จ"
+        error?.response?.data?.error ||
+        error?.message ||
+        "โหลดข้อมูลไม่สำเร็จ"
       );
     } finally {
       setIsLoading(false);
@@ -143,7 +142,7 @@ export default function ManagePackageSuperAdmin() {
   const rowActions: DataTableActionsConfig<Row> = React.useMemo(
     () => ({
       header: "จัดการ",
-      align: "right",
+      align: "left",
       width: "120px",
       variant: "icons",
       items: () => ["edit", "delete"],
@@ -157,8 +156,8 @@ export default function ManagePackageSuperAdmin() {
 
             // ถ้าเป็น soft-delete ด้วย PATCH (สมมติใช้ path นี้):
             await axios.patch(
-              `${apiUrl}/super/package/${row.id}/delete`,
-              {},
+              `${apiUrl}/super/package/${row.id}`,
+              null,
               { withCredentials: true }
             );
 
@@ -166,11 +165,10 @@ export default function ManagePackageSuperAdmin() {
           } catch (error: any) {
             console.error("delete failed:", error?.response?.data ?? error);
             alert(
-              `ลบไม่สำเร็จ: ${
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error?.message ||
-                "unknown error"
+              `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+              error?.response?.data?.error ||
+              error?.message ||
+              "unknown error"
               }`
             );
           }
@@ -223,6 +221,13 @@ export default function ManagePackageSuperAdmin() {
 
   const goToApprovalRequests = () => navigate("/super/package-requests");
 
+
+  const pagination = React.useMemo(() => ({
+    currentPage,
+    totalPages: Math.max(1, Math.ceil((totalItems || 0) / (pageSize || 10))),
+    totalCount: totalItems,
+    limit: pageSize,
+  }), [currentPage, pageSize, totalItems]);
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
@@ -251,17 +256,16 @@ export default function ManagePackageSuperAdmin() {
       <DataTable<Row>
         data={filteredRows}
         columns={columns}
-        getRowKey={(r) => r.id}
+        getKey={(r) => r.id.toString()}
         actions={rowActions}
         bulkActions={bulkActions}
         selectable
-        striped
-        // หมายเหตุ: ถ้า DataTable ของคุณรองรับ total/pagination control ให้ส่ง totalItems ด้วย
+        pagination={pagination}
         pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={pageSize}
         onPageChange={(p) => setCurrentPage(p)}
+        onPageSizeChange={(p) => { setPageSize(p); setCurrentPage(1); }}
+        isLoading={isLoading}
         theme="brand"
-        className="bg-white rounded-lg"
       />
     </div>
   );

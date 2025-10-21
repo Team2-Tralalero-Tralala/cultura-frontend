@@ -61,7 +61,11 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   (file as any).isFromServer = true; // ✅ เพิ่ม flag สำหรับแยกไฟล์จาก server
   return file;
 }
-
+/**
+ * ฟังก์ชันหลักของหน้า EditStore
+ * คำอธิบาย : แสดงฟอร์มแก้ไขร้านค้า พร้อมโหลดข้อมูลเดิมจาก backend
+ * รวมถึงจัดการการอัปโหลดรูปภาพโดยไม่ซ้ำกับไฟล์เดิมจาก server
+ */
 export function EditStore() {
   const [formData, setFormData] = React.useState<Partial<StoreData>>({});
   const [tags, setTags] = React.useState<Tag[]>([]);
@@ -145,8 +149,6 @@ export function EditStore() {
 
         setCoverFiles(coverFilesFetched);
         setGalleryFiles(galleryFilesFetched);
-        console.log(coverFilesFetched);
-        console.log(galleryFilesFetched);
 
         const tagIds = data.tagStores?.map((ts: any) => ts.tag.id) ?? [];
         setSelectedTagIds(tagIds);
@@ -156,8 +158,7 @@ export function EditStore() {
     }
     loadData();
   }, [storeId]);
-  console.log("eiei", coverFiles);
-  console.log("eiei", galleryFiles);
+
   /**
    * อัปเดตค่า location ใน formData ทุกครั้งเมื่อผู้ใช้เลือกจังหวัด/อำเภอ/ตำบลใหม่
    */
@@ -221,14 +222,6 @@ export function EditStore() {
   };
 
   /**
-   * ฟังก์ชัน handleValueChange สำหรับ MapPicker / ตัวอื่น
-   */
-  const handleValueChange = (field: keyof typeof formData, value: any) => {
-    const updated = { ...formData, [field]: value };
-    setFormData(updated);
-    validateField(field, value);
-  };
-  /**
    * ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
    */
   const handleSubmit = async () => {
@@ -272,10 +265,6 @@ export function EditStore() {
     galleryFiles.forEach((file: any) => {
       formDataToSend.append("gallery", file);
     });
-
-    for (const [key, val] of formDataToSend.entries()) {
-      console.log(key, val);
-    }
 
     await editStore(Number(storeId), formDataToSend);
   };

@@ -9,6 +9,8 @@ import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin"
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
 import { EditStore } from "@/Pages/SuperAdmin/EditStore";
 
+import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
+
 export default function SuperAdminRoutes() {
   return (
     <Routes>
@@ -26,6 +28,8 @@ export default function SuperAdminRoutes() {
         element={<CreateStore />}
       />
       <Route path="/store/:storeId/edit" element={<EditStore />} />
+
+      <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
     </Routes>
   );

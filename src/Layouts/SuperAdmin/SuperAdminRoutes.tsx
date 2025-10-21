@@ -7,6 +7,8 @@ import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAd
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 
+import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
+
 export default function SuperAdminRoutes() {
   return (
     <Routes>
@@ -19,6 +21,8 @@ export default function SuperAdminRoutes() {
         path="community/detail/:id"
         element={<CommunityDetailSuperAdmin />}
       />
+
+      <Route path="homestay/:homestayId" element={<HomestayDetailPage />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
     </Routes>
   );

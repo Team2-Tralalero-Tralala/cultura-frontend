@@ -11,6 +11,8 @@ import { EditStore } from "@/Pages/SuperAdmin/EditStore";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
+import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
+
 export default function SuperAdminRoutes() {
   return (
     <Routes>
@@ -31,6 +33,8 @@ export default function SuperAdminRoutes() {
         element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+
+      <Route path="community/:communityId/stores/all" element={<ManageStores/>}/>
       <Route
         path="community/:communityId/homestay/all"
         element={<ManageHomestaySuperAdmin />}
@@ -38,3 +42,5 @@ export default function SuperAdminRoutes() {
     </Routes>
   );
 }
+    
+ 

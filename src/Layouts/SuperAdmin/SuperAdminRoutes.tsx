@@ -8,6 +8,7 @@ import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAd
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
 import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 
 export default function SuperAdminRoutes() {
   return (
@@ -26,6 +27,7 @@ export default function SuperAdminRoutes() {
         element={<CreateStore />}
       />
       <Route path="/store/:storeId/edit" element={<EditStore />} />
+      <Route path="/reset-password/:userId" element={<ResetPassword />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
     </Routes>
   );

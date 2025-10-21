@@ -204,7 +204,7 @@ export default function HomestayDetailPage() {
         <div className="mt-10">
           <h3 className="text-lg font-semibold mb-3">รูปภาพเพิ่มเติม</h3>
           {extraImages?.length > 0 ? (
-            <div className="flex overflow-x-auto gap-4 pb-2 ">
+            <div className="flex overflow-x-auto gap-9 pb-2">
               {extraImages.slice(0, 5).map((img: any, i: number) => {
                 const url =
                   resolveBackendUploadUrl(img.image) ??
@@ -214,7 +214,7 @@ export default function HomestayDetailPage() {
                     key={i}
                     src={url}
                     alt={`extra-${i}`}
-                    className="rounded-xl w-70 h-45"
+                    className="rounded-xl w-75 h-45"
                   />
                 );
               })}

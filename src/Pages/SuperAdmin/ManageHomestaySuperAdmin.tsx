@@ -24,7 +24,7 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
    Services
    =========================================================== */
 import { getHomestaysAll } from "@/Libs/HomestayService";
-import { getCommunityById } from "@/Libs/CommunityService";
+import { getCommunityById } from "@/Services/community-service";
 
 /* ===========================================================
    Types
@@ -280,8 +280,7 @@ export default function ManageHomestaySuperAdmin() {
             await reload();
           } catch (error: unknown) {
             console.error(error);
-            if (error instanceof Error)
-              alert(`ลบไม่สำเร็จ: ${error.message}`);
+            if (error instanceof Error) alert(`ลบไม่สำเร็จ: ${error.message}`);
             else alert("ลบไม่สำเร็จ (unknown error)");
           } finally {
             setIsOpenConfirm(false);

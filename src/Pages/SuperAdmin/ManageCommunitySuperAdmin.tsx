@@ -246,11 +246,7 @@ export default function ManageCommunitySuperAdmin() {
     <div className="space-y-4 cursor-default">
       {/* Breadcrumb */}
       <div className="-ml-6 pt-1 pb-1">
-        <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน" }
-          ]}
-        />
+        <Breadcrumb items={[{ label: "จัดการชุมชน" }]} />
       </div>
 
       {/* ส่วนหัวข้อและ Toolbar */}
@@ -318,8 +314,7 @@ export default function ManageCommunitySuperAdmin() {
             await reload();
           } catch (error: unknown) {
             console.error(error);
-            if (error instanceof Error)
-              alert(`ลบไม่สำเร็จ: ${error.message}`);
+            if (error instanceof Error) alert(`ลบไม่สำเร็จ: ${error.message}`);
             else alert("ลบไม่สำเร็จ (unknown error)");
           } finally {
             setOpenConfirm(false);

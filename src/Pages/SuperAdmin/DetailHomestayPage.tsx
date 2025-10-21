@@ -10,23 +10,27 @@ import type { HomestayDetail } from "@/Types/HomestayDetail";
 
 import { fetchHomestayDetail } from "@/Services/homestay-services";
 
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/";
-/* ===========================================================
- * Function : resolveBackendUploadUrl
- * Description : แปลงพาธไฟล์ให้เป็น URL ดาวน์โหลดจาก Backend
- * Input : fileName (string | undefined)
- * Output : string | undefined
- * =========================================================== */
+const BACKEND_BASE_URL =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+/**
+ * ฟังก์ชัน: resolveBackendUploadUrl
+ * ป้องกันไม่ให้เกิด "//" ซ้ำ
+ */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
 
-  const cleaned = fileName.replace(/^\/+/, "");
-  const finalPath = cleaned.startsWith("uploads/") ? cleaned : `uploads/${cleaned}`;
+  // ตัด / หน้า "uploads" และตัด / ท้ายออก
+  const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
 
-  const fullUrl = `${BACKEND_BASE_URL}${finalPath}`;
+  // ถ้าไม่มีคำว่า uploads ใน path ให้เพิ่มเอง
+  if (!cleaned.startsWith("uploads/")) {
+    return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
+  }
 
-  return fullUrl;
+  return `${BACKEND_BASE_URL}/${cleaned}`;
 }
+
 /* ===========================================================
  * Component : HomestayDetailPage
  * =========================================================== */
@@ -39,7 +43,6 @@ export default function HomestayDetailPage() {
     if (!homestayId) return;
     fetchHomestayDetail(Number(homestayId))
       .then((res) => {
-        console.log("📦 Homestay Data:", res);
         setHomestay(res);
       })
       .catch((err) => console.error(err));
@@ -118,10 +121,9 @@ export default function HomestayDetailPage() {
           {/* ===== รูปหลัก ===== */}
           {mainImage ? (
             (() => {
-              const url =
-                resolveBackendUploadUrl(mainImage.image) ??
+              const url = resolveBackendUploadUrl(mainImage.image) ??
                 "https://placehold.co/600x400?text=No+Image";
-              console.log("🖼️ mainImage URL:", url);
+              console.log("mainImage URL:", url);
               return (
                 <img
                   src={url}
@@ -205,10 +207,9 @@ export default function HomestayDetailPage() {
           {extraImages?.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {extraImages.map((img: any, i: number) => {
-                const url =
-                  resolveBackendUploadUrl(img.image) ??
+                const url = resolveBackendUploadUrl(img.image) ??
                   "https://placehold.co/400x300?text=No+Image";
-                console.log(`🖼️ extraImage[${i}] URL:`, url);
+                console.log(`extraImage[${i}] URL:`, url);
                 return (
                   <img
                     key={i}
@@ -244,7 +245,7 @@ export default function HomestayDetailPage() {
             ></iframe>
 
             <div className="text-[15px] leading-relaxed text-gray-700 grid md:grid-cols-2 gap-x-8">
-              <div className="space-y-1">
+              <div className="space-y-3">
                 <p>
                   <strong>ที่อยู่ :</strong>{" "}
                   {homestay.location.houseNumber}{" "}
@@ -271,7 +272,7 @@ export default function HomestayDetailPage() {
                 </p>
               </div>
 
-              <div>
+              <div className="space-y-3">
                 <p>
                   <strong>คำอธิบายที่อยู่ :</strong>{" "}
                   {show(homestay.location.detail || "-")}

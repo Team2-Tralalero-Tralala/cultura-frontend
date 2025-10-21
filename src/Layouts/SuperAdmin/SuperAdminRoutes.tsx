@@ -1,13 +1,20 @@
-import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
-import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
-import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
-import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
-import { Routes, Route } from "react-router-dom";
-import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
-import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
-import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+/**
+ * Component: SuperAdminRoutes
+ * คำอธิบาย: กำหนดเส้นทาง (Route) ภายในระบบหลังบ้านของผู้ดูแลระดับสูง (Super Admin)
+ * หน้าที่หลัก:
+ * - ใช้ <Routes> และ <Route> จาก react-router-dom เพื่อ map path → component
+ * - จัดการหน้า/เส้นทางต่าง ๆ เช่น:
+ *   - จัดการชุมชน
+ *   - จัดการบัญชี
+ * - สามารถกำหนด route ย่อยภายใต้ path เช่น `/super/...`
+ */
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-export default function SuperAdminRoutes() {
+{/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/ }
+//import CommunityManagement from '../../Pages/SuperAdmin/ManageCommunity';
+
+const SuperAdminRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />

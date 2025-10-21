@@ -17,8 +17,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
-      <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      
+      {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
+      <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
+      
     </Routes>
   );
 };

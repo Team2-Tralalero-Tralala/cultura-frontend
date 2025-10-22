@@ -80,6 +80,7 @@ export default function ManageHomestaySuperAdmin() {
   const [communityName, setCommunityName] = useState<string>("");
   const [rows, setRows] = useState<HomestayRow[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -254,19 +255,26 @@ export default function ManageHomestaySuperAdmin() {
       </div>
 
       {/* ตารางข้อมูลที่พัก */}
-      <DataTable<HomestayRow>
-        data={filteredRows}
-        total={totalItems}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        page={currentPage}
-        onPageChange={(p) => setCurrentPage(p)}
-        actions={rowActions}
-        selectable
-        striped
-        theme="brand"
-        className="bg-white rounded-lg"
-      />
+      <div className="bg-white rounded-lg shadow-sm">
+        <DataTable<HomestayRow>
+          data={filteredRows}
+          columns={columns}
+          getKey={(row) => String(row.id)}
+          actions={rowActions}
+          selectable
+          theme="brand"
+          isLoading={isLoading}
+          pageSizeOptions={[10, 30, 50]}
+          pagination={{
+            currentPage,
+            totalPages: Math.ceil(totalItems / 10),
+            totalCount: totalItems,
+            limit: 10,
+          }}
+          onPageChange={(p) => setCurrentPage(p)}
+          onPageSizeChange={(s) => setPageSize(s)}
+        />
+      </div>
 
       {/* Modal: ยืนยันการลบ */}
       <Modal

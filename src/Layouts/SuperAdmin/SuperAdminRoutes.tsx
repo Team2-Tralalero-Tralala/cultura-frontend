@@ -6,6 +6,8 @@ import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
+import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
 import { EditStore } from "@/Pages/SuperAdmin/EditStore";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
@@ -26,6 +28,7 @@ export default function SuperAdminRoutes() {
       <Route path="community/detail/:id" element={<CommunityDetailSuperAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
+      <Route path="community/:communityId/edit" element={<EditCommunity />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
 
@@ -52,8 +55,13 @@ export default function SuperAdminRoutes() {
         element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
+      <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
 
-      <Route path="community/:communityId/stores/all" element={<ManageStores/>}/>
+      <Route
+        path="community/:communityId/stores/all"
+        element={<ManageStores />}
+      />
       <Route
         path="community/:communityId/homestay/all"
         element={<ManageHomestaySuperAdmin />}
@@ -61,5 +69,3 @@ export default function SuperAdminRoutes() {
     </Routes>
   );
 }
-    
- 

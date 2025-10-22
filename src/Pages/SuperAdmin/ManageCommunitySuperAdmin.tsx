@@ -290,16 +290,22 @@ export default function ManageCommunitySuperAdmin() {
       <DataTable<CommunityRow>
         data={filteredRows}
         columns={columns}
-        getRowKey={(row) => row.id}
+        getKey={(row) => String(row.id)} // ใช้ getKey (ต้อง return string)
         actions={rowActions}
         bulkActions={bulkActions}
         selectable
-        striped
-        pageSizeOptions={[10, 30, 50]}
-        defaultPageSize={pageSize}
+        pageSizeOptions={[10, 30, 50]} // มีใน type เดิม
+        pagination={{
+          currentPage,
+          totalPages: Math.ceil(totalItems / pageSize),
+          totalCount: totalItems,
+          limit: pageSize,
+        }} // ใช้ object pagination ตาม component จริง
         onPageChange={(p) => setCurrentPage(p)}
+        onPageSizeChange={(s) => setPageSize(s)}
+        isLoading={isLoading}
         theme="brand"
-        className="bg-white rounded-lg"
+        // อย่าใส่ className / striped / defaultPageSize
       />
 
       {/* Modal ยืนยันการลบ */}

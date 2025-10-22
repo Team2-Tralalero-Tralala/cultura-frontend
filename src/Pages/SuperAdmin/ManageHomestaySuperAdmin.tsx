@@ -151,7 +151,12 @@ export default function ManageHomestaySuperAdmin() {
       header: "ชื่อที่พัก",
       className: "min-w-[200px]",
       render: (row) => (
-        <span className="text-dark-green font-medium">{row.name}</span>
+        <Link
+          to={`/super/community/${communityId}/homestay/${row.id}`}
+          className="text-dark-green font-medium hover:underline focus:underline"
+        >
+          {row.name}
+        </Link>
       ),
     },
     { key: "facility", header: "สิ่งอำนวยความสะดวก" },
@@ -173,7 +178,7 @@ export default function ManageHomestaySuperAdmin() {
     items: () => ["edit", "delete"],
     callbacks: {
       edit: (row) =>
-        navigate(`/super/community/${communityId}/homestay/edit/${row.id}`),
+        navigate(`/super/homestay/edit/${row.id}`),
       delete: (row) => {
         setDeleteId(row.id);
         setIsOpenConfirm(true);

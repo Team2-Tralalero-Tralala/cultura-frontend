@@ -43,7 +43,7 @@ export default function SuperAdminRoutes() {
         element={<ManageStores />}
       />
       <Route
-        path="community/:communityId/homestay/all"
+        path="community/:communityId/homestays/all"
         element={<ManageHomestaySuperAdmin />}
       />
     </Routes>

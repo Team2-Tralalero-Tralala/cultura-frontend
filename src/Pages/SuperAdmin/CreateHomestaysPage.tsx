@@ -402,7 +402,7 @@ export default function CreateHomestaysPage() {
       }
 
       setSuccessMessage("บันทึกที่พักสำเร็จ");
-      navigate(`/super/community/edit/${communityId}`);
+      navigate(`/super/community/${communityId}/homestays/all`);
     } catch (error: any) {
       console.error("Create homestays error:", error?.response?.data || error);
       setErrorMessage(
@@ -437,7 +437,7 @@ export default function CreateHomestaysPage() {
       <div className="flex items-center justify-between mb-3">
         <div
           className="flex items-center gap-2 text-xl cursor-pointer"
-          onClick={() => navigate(`/super/community/edit/${communityId}`)}
+          onClick={() => navigate(`/super/community/${communityId}/homestays/all`)}
         >
           <Icon icon="mingcute:arrow-left-line" width={22} />
           <span>เพิ่มที่พัก</span>

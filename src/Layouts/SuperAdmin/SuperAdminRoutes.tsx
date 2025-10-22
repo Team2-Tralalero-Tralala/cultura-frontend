@@ -21,7 +21,7 @@ export default function SuperAdminRoutes() {
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
-      <Route path="packages/all" element={<ManagePackagePage />} />
+      {/* <Route path="packages/all" element={<ManagePackagePage />} /> */}
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />

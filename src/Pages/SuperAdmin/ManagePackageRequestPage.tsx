@@ -14,6 +14,7 @@ import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
+import { Link } from "react-router-dom";
 
 /** แถวข้อมูลของตาราง */
 export type PackageRequestRow = {
@@ -85,7 +86,14 @@ const makeColumns = (
             key: "name",
             header: "ชื่อแพ็กเกจ",
             className: "min-w-[220px]",
-            render: (r) => <div className="font-medium">{r.name}</div>,
+            render: (r) => (
+                <Link
+                    to={`/super/package-requests/${r.id}`}
+                    className="font-medium text-dark-green hover:underline focus:underline"
+                >
+                    {r.name}
+                </Link>
+            ),
         },
         {
             key: "community",
@@ -144,7 +152,7 @@ export default function PackageRequestsSuperAdmin() {
     const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
     const [currentPage, setCurrentPage] = React.useState<number>(1);
     // const [pageSize, setPageSize] = React.useState<number>(10);
-    const [pageSize] = React.useState<number>(10);
+    const [pageSize, setPageSize] = React.useState<number>(10);
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
     const [pagination, setPagination] = React.useState<Pagination>({
@@ -251,16 +259,23 @@ export default function PackageRequestsSuperAdmin() {
             {/* ตาราง */}
             <DataTable<PackageRequestRow>
                 data={rows}
-                total={pagination.totalCount}
-                page={pagination.currentPage}
                 columns={makeColumns(openApproveModal, handleReject)}
-                getRowKey={(r) => r.id}
+                getKey={(r: PackageRequestRow) => String(r.id)}
                 selectable={false}
-                pageSizeOptions={[10, 30, 50]}
-                defaultPageSize={pageSize}
-                onPageChange={(p) => setCurrentPage(p)}
                 theme="brand"
-                className="bg-white rounded-lg"
+                isLoading={isLoading}
+                pageSizeOptions={[10, 30, 50]}
+                pagination={{
+                    currentPage: pagination.currentPage,
+                    totalPages: pagination.totalPages,
+                    totalCount: pagination.totalCount,
+                    limit: pagination.limit,
+                }}
+                onPageChange={(p) => setCurrentPage(p)}
+                onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setCurrentPage(1); // รีเซ็ตไปหน้าแรกเมื่อเปลี่ยนจำนวนแถว
+                }}
             />
 
             {/* Modal: ยืนยันอนุมัติ */}

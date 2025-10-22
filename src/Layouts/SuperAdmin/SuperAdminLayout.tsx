@@ -1,7 +1,6 @@
-import React from "react";
-import SidebarSuperAdmin from "@/Components/SidebarSuperAdmin";
-import NavbarSuperAdmin from "@/Components/NavbarSam"; // ✅ import Navbar
 import { Outlet } from "react-router-dom";
+import SidebarSuperAdmin from "../../Components/SidebarSuperAdmin";
+import NavbarSuperAdmin from "../../Components/NavbarSam";
 
 export default function SuperAdminLayout() {
   return (
@@ -11,6 +10,7 @@ export default function SuperAdminLayout() {
 
       {/* พื้นที่หลัก */}
       <div className="flex flex-col flex-1 h-full">
+        
         {/* Navbar ด้านบน */}
         <NavbarSuperAdmin />
 
@@ -21,4 +21,6 @@ export default function SuperAdminLayout() {
       </div>
     </div>
   );
-}
+};
+
+

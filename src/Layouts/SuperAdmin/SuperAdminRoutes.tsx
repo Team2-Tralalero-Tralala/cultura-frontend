@@ -8,22 +8,44 @@ import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAd
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
+import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
+import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
+import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
+
+import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
 export default function SuperAdminRoutes() {
   return (
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />
-      <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="community/:communityId/edit" element={<EditCommunity />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+      <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />
       <Route
-        path="community/detail/:id"
-        element={<CommunityDetailSuperAdmin />}
+        path="/community/:communityId/store/create"
+        element={<CreateStore />}
+      />
+      <Route path="/store/:storeId/edit" element={<EditStore />} />
+
+      <Route
+        path="community/:communityId/homestay/:homestayId"
+        element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
+
+      <Route
+        path="community/:communityId/stores/all"
+        element={<ManageStores />}
+      />
+      <Route
+        path="community/:communityId/homestay/all"
+        element={<ManageHomestaySuperAdmin />}
+      />
     </Routes>
   );
 }

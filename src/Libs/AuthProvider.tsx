@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { Navigate, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
 
@@ -13,7 +13,10 @@ export type AuthUser = {
 type AuthContextValue = {
   user: AuthUser | null;
   accessToken: string | null;
-  login: (username: string, password: string) => Promise<AuthUser>;
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{ user: AuthUser; navigateToFirstPage: () => void }>;
   register: (data: any) => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -28,9 +31,7 @@ export const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -77,25 +78,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setUser(authUser);
 
-        switch (authUser.role) {
-          case "superadmin":
-            navigate("super/communities", { replace: true });
-            break;
-          case "admin":
-            navigate("/admin/home", { replace: true });
-            break;
-          case "member":
-            navigate("/member/home", { replace: true });
-            break;
-          case "tourist":
-            navigate("/tourist/home", { replace: true });
-            break;
-          default:
-            navigate("/", { replace: true });
-            break;
-        }
+        const navigateToFirstPage = () => {
+          switch (authUser.role) {
+            case "superadmin":
+              navigate("super/communities", { replace: true });
+              break;
+            case "admin":
+              navigate("/admin/home", { replace: true });
+              break;
+            case "member":
+              navigate("/member/home", { replace: true });
+              break;
+            case "tourist":
+              navigate("/tourist/home", { replace: true });
+              break;
+            default:
+              navigate("/", { replace: true });
+              break;
+          }
+        };
 
-        return authUser;
+        return {
+          user: authUser,
+          navigateToFirstPage: navigateToFirstPage,
+        };
       } catch (error) {
         console.error("Login failed:", error);
         throw error;
@@ -126,11 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     await new Promise((r) => setTimeout(r, 50));
 
-    await axios.post(
-      "http://localhost:3000/api/auth/logout",
-      {},
-      { withCredentials: true }
-    );
+    await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
 
     setUser(null);
 
@@ -140,9 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   if (loading) return null;
 
   return (
-    <AuthContext.Provider
-      value={{ user, accessToken: null, login, register, logout }}
-    >
+    <AuthContext.Provider value={{ user, accessToken: null, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

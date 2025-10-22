@@ -150,7 +150,7 @@ export default function ManageStores() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/super/store/${storeId}/edit/${row.id}`),
+      edit: (row) => navigate(`/super/store/${row.id}/edit/`),
       delete: (row) => {
         setDeleteId(row.id);
         setOpenConfirm(true);

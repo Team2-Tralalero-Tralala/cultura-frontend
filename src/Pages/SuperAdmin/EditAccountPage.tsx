@@ -197,7 +197,8 @@ const EditAccountPage: React.FC = () => {
       if (formData.password) requestBody.password = formData.password;
 
       if (formData.role === "Member") {
-        requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
+        requestBody.memberOfCommunity =
+          Number(roleSpecificData.communityId) || null;
       } else if (formData.role === "Tourist") {
         requestBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -301,20 +302,22 @@ const EditAccountPage: React.FC = () => {
                 Role <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4">
-                {(["Admin", "Member", "Tourist"] as RoleType[]).map((roleItem) => (
-                  <button
-                    key={roleItem}
-                    type="button"
-                    onClick={() => handleRoleSelect(roleItem)}
-                    className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
-                      formData.role === roleItem
-                        ? "bg-green-800 text-white border-green-800"
-                        : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
-                    }`}
-                  >
-                    {roleItem}
-                  </button>
-                ))}
+                {(["Admin", "Member", "Tourist"] as RoleType[]).map(
+                  (roleItem) => (
+                    <button
+                      key={roleItem}
+                      type="button"
+                      onClick={() => handleRoleSelect(roleItem)}
+                      className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
+                        formData.role === roleItem
+                          ? "bg-green-800 text-white border-green-800"
+                          : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
+                      }`}
+                    >
+                      {roleItem}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
@@ -358,7 +361,10 @@ const EditAccountPage: React.FC = () => {
                     </label>
                     <div className="flex gap-4">
                       {["ชาย", "หญิง", "ไม่ระบุ"].map((genderLabel) => (
-                        <label key={genderLabel} className="flex items-center gap-2">
+                        <label
+                          key={genderLabel}
+                          className="flex items-center gap-2"
+                        >
                           <input
                             type="radio"
                             name="gender"
@@ -433,7 +439,9 @@ const EditAccountPage: React.FC = () => {
                   onClick={() => {
                     setShowConfirm(false);
                     handleSubmit(
-                      new Event("submit") as unknown as React.FormEvent<HTMLFormElement>
+                      new Event(
+                        "submit"
+                      ) as unknown as React.FormEvent<HTMLFormElement>
                     );
                   }}
                 >

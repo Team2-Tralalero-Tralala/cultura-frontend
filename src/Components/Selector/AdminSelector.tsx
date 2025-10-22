@@ -11,7 +11,7 @@
  *   - แสดง Autocomplete dropdown ของผู้ดูแลทั้งหมดที่สามารถเลือกได้
  */
 
-import { getUnassignedAdmins } from "@/Libs/CommunityService";
+import { getUnassignedAdmins } from "@/Services/community-service";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useState, useEffect } from "react";
 
@@ -142,6 +142,7 @@ export function AdminSelector({
       disableClearable
       loading={loading}
       options={admins}
+      noOptionsText="ไม่พบผู้ดูแล"
       getOptionLabel={(option) =>
         option ? `${option.fname} ${option.lname}` : ""
       }

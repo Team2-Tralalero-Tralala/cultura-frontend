@@ -17,7 +17,7 @@ export default function SuperAdminRoutes() {
   return (
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />
-      <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="community/:communityId/edit" element={<EditCommunity />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
@@ -34,7 +34,10 @@ export default function SuperAdminRoutes() {
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
 
-      <Route path="community/:communityId/stores/all" element={<ManageStores/>}/>
+      <Route
+        path="community/:communityId/stores/all"
+        element={<ManageStores />}
+      />
       <Route
         path="community/:communityId/homestay/all"
         element={<ManageHomestaySuperAdmin />}
@@ -42,5 +45,3 @@ export default function SuperAdminRoutes() {
     </Routes>
   );
 }
-    
- 

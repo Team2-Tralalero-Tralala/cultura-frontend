@@ -1,9 +1,12 @@
-//import type { StoreData } from "@/Types/Store";
-import axios from "axios";
-const apiUrl = import.meta.env.VITE_API_URL;
+import { api } from "@/Libs/axios"; // ✅ ใช้ instance ที่มี withCredentials แล้ว
 
-
-  export async function getAllStore(communityId: number, page: number, limit: number) {
+// ✅ ดึงร้านค้าทั้งหมด
+export async function getAllStore(communityId: number, page: number, limit: number) {
   const params = { page, limit };
-  return axios.get(`${apiUrl}/super/community/${communityId}/store`, { params, withCredentials: true });
+  return api.get(`/super/community/${communityId}/store`, { params });
+}
+
+// ✅ ลบร้านค้า (Soft Delete)
+export async function deleteStore(storeId: number) {
+  return api.patch(`/shared/store/${storeId}/delete`);
 }

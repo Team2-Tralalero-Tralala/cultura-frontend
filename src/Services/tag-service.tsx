@@ -27,7 +27,7 @@ console.log("API URL:", apiUrl);
 export async function fetchTags(page: number, limit: number, search: string) {
     const params: any = { page, limit, search };
     if (search) params.search = search;
-    const res = await axios.get(`${apiUrl}/shared/tags`, {
+    const res = await axios.get(`${apiUrl}/super/shared/tags`, {
       params,
       withCredentials: true,
     });
@@ -42,8 +42,7 @@ export async function fetchTags(page: number, limit: number, search: string) {
 * คำอธิบาย : สร้างแท็กใหม่
 */
 export async function createTag(name: string) {
-   console.log("🚀 Sending tag name:", name);
-  return await axios.post(`${apiUrl}/tag`, { name }, {
+  return await axios.post(`${apiUrl}/super/tag`, { name }, {
     withCredentials: true,
   });
 }
@@ -52,7 +51,7 @@ export async function createTag(name: string) {
 * คำอธิบาย : แก้ไขแท็ก
 */
 export async function updateTag(id: number, name: string) {
-  return await axios.put(`${apiUrl}/tag/${id}`, { name }, {
+  return await axios.put(`${apiUrl}/super/tag/${id}`, { name }, {
     withCredentials: true,
   });
 }
@@ -61,7 +60,7 @@ export async function updateTag(id: number, name: string) {
 * คำอธิบาย : ลบแท็ก
 */
 export async function deleteTag(id: number) {
-  return await axios.patch(`${apiUrl}/tag/${id}`, updateTag,{
+  return await axios.patch(`${apiUrl}/super/tag/${id}`, updateTag,{
     withCredentials: true,
   });
 }

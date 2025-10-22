@@ -82,7 +82,7 @@ export default function HomestayDetailPage() {
         </Link>
         ›
         <Link
-          to={`/super/community/${homestay.community.id}/homestay/all`}
+          to={`/super/community/${homestay.community.id}/homestays/all`}
           className="p-2 rounded-full hover:bg-gray-100 transition"
         >
           จัดการที่พัก

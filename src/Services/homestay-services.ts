@@ -21,6 +21,6 @@ const api = axios.create({
  * Output: homestay + relations
  */
 export async function fetchHomestayDetail(homestayId: number) {
-  const res = await api.get(`/super/homestay/${homestayId}`);
+  const res = await api.get(`/super/homestays/${homestayId}`);
   return res.data?.data;
 }

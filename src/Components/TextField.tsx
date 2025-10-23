@@ -1,44 +1,31 @@
 /*
  * คำอธิบาย : Component สำหรับสร้าง TextField (อินพุตฟอร์ม)
- * ที่รองรับหลายประเภท เช่น ข้อความทั่วไป, รหัสผ่าน (พร้อมปุ่ม toggle แสดง/ซ่อน),
- * และเบอร์โทรศัพท์ (พร้อม prefix +66 และไอคอนธงไทย)
- * ตัวอย่างการใช้งาน 
+ * รองรับ text, password (พร้อม toggle), และเบอร์โทรศัพท์ (+66)
+ * ตัวอย่างการใช้งาน:
  * <TextField
-    id="password"
-    label="รหัสผ่าน"
-    required
-    placeholder="ป้อนรหัสผ่าน"
-    type="password"
-    value={password}
-    onChange={handlePasswordChange}
-    error={!!formErrors.password}
-    helperText={formErrors.password}
-    />
+ *   id="password"
+ *   label="รหัสผ่าน"
+ *   required
+ *   placeholder="ป้อนรหัสผ่าน"
+ *   type="password"
+ *   value={password}
+ *   onChange={handleChange}
+ *   error={!!formErrors.password}
+ *   helperText={formErrors.password}
+ * />
  */
+
 import React, { useState } from "react";
 import type { BaseFieldProps } from "@/Types/BaseField";
 import { Icon } from "@iconify/react";
 
-/*
- * ฟังก์ชัน : RequiredMark
- * คำอธิบาย : แสดงเครื่องหมาย * สีแดง เมื่อฟิลด์เป็น required
- * Input : -
- * Output : React element <span>
- */
-
+/* ---------- Required mark ---------- */
 function RequiredMark() {
   return <span className="text-red-600"> *</span>;
 }
 
-/*
- * ฟังก์ชัน : EyeIcon
- * คำอธิบาย : แสดงไอคอนตา (eye / eye-off) สำหรับ toggle password
- * Input : hidden (boolean) - ถ้า true แสดงไอคอน eye-off, ถ้า false แสดง eye
- * Output : React element <Icon>
- */
-
+/* ---------- Eye icon for password toggle ---------- */
 function EyeIcon({ hidden }: { hidden: boolean }) {
-  // ถ้า hidden = true แปลว่า "กำลังซ่อน" => แสดงไอคอนมีเส้นพาด (eye-off)
   return hidden ? (
     <Icon icon="mdi:eye-off-outline" style={{ fontSize: "24px" }} />
   ) : (
@@ -68,19 +55,20 @@ const TextField: React.FC<BaseFieldProps> = ({
   type = "text",
   value,
   name,
+  readOnly,
   onChange,
   error = false,
   helperText = "",
 }) => {
   const isPassword = type === "password";
-  const [showPassword, setShowPassword] = useState(false);
   const isTel = type === "tel";
+  const [showPassword, setShowPassword] = useState(false);
 
   const currentType = isPassword ? (showPassword ? "text" : "password") : type;
 
   return (
     <div className="space-y-1.5">
-      {/* Label + helperText in one row */}
+      {/* Label + helperText */}
       <div className="flex items-center justify-between">
         <label
           htmlFor={id}
@@ -89,7 +77,6 @@ const TextField: React.FC<BaseFieldProps> = ({
           {label}
           {required && <RequiredMark />}
         </label>
-        {/* helperText on the right */}
         <span
           id={`${id}-helper-text`}
           className={`text-xs ml-2 min-h-[18px] transition-all ${
@@ -100,7 +87,9 @@ const TextField: React.FC<BaseFieldProps> = ({
         </span>
       </div>
 
+      {/* Input */}
       <div className="relative">
+        {/* ---------- Text / Password ---------- */}
         {!isTel && (
           <input
             id={id}
@@ -109,29 +98,29 @@ const TextField: React.FC<BaseFieldProps> = ({
             placeholder={placeholder}
             onChange={onChange}
             value={value}
+            readOnly={readOnly}
             className={`block w-full rounded-form border-1 
             ${
               error
                 ? "border-red-600 focus:ring-red-600 focus:border-red-600"
                 : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"
             }
-            bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed placeholder:leading-relaxed
+            bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed
             focus:outline-none focus:ring-1 transition-shadow ${
               isPassword ? "pr-12" : ""
             }`}
           />
         )}
 
+        {/* ---------- Telephone ---------- */}
         {isTel && (
           <div
-            className={`flex items-center rounded-form border-1 overflow-hidden 
-            ${
+            className={`flex items-center rounded-form border overflow-hidden ${
               error
                 ? "border-red-600 focus-within:ring-red-600 focus-within:border-red-600"
                 : "border-gray-400 focus-within:ring-gray-400 focus-within:border-gray-500"
             }`}
           >
-            {/* flag +66 */}
             <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 border-r">
               <Icon icon="twemoji:flag-thailand" style={{ fontSize: "24px" }} />
               <span className="text-gray-700 font-medium">+66</span>
@@ -143,19 +132,17 @@ const TextField: React.FC<BaseFieldProps> = ({
               value={value}
               placeholder={placeholder || "หมายเลขโทรศัพท์"}
               className="block w-full px-5 py-2 text-base text-gray-900 placeholder:text-gray-500
-                leading-relaxed placeholder:leading-relaxed
-                focus:outline-none focus:ring-1 transition-shadow"
+                leading-relaxed focus:outline-none focus:ring-1 transition-shadow"
             />
           </div>
         )}
 
+        {/* ---------- Password toggle ---------- */}
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md focus:outline-none focus:ring-2  ${
-              error ? "focus:red-600" : "focus:ring-gray-400"
-            }`}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
             aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
             aria-pressed={showPassword}
             title={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}

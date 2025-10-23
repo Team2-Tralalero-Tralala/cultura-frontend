@@ -1,11 +1,6 @@
-
-/*
- * คำอธิบาย : Context สำหรับการจัดการ Authentication ในฝั่ง Client
- * ประกอบด้วย AuthProvider ที่ห่อหุ้ม React tree และ AuthContext สำหรับแชร์ข้อมูลผู้ใช้
- * ฟังก์ชันที่ให้บริการ ได้แก่ login, register, logout โดยเชื่อมต่อกับ Backend API
- */
-import React, { createContext, useState, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
 
@@ -28,7 +23,10 @@ export type AuthUser = {
 type AuthContextValue = {
   user: AuthUser | null;
   accessToken: string | null;
-  login: (username: string, password: string) => Promise<AuthUser>;
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{ user: AuthUser; navigateToFirstPage: () => void }>;
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -43,56 +41,84 @@ export const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
 });
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
-/*
- * ฟังก์ชัน : AuthProvider
- * คำอธิบาย : Component ที่ห่อหุ้ม React tree เพื่อให้ component ลูกใช้ AuthContext ได้
- * Input : children (ReactNode)
- * Output : <AuthContext.Provider> พร้อมค่าของ user, accessToken และ method ต่าง ๆ
- */
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(
-    localStorage.getItem("accessToken")
-  );
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  /*
-   * ฟังก์ชัน : login
-   * คำอธิบาย : เรียก API /auth/login เพื่อตรวจสอบผู้ใช้และบันทึก user + token
-   * Input : username, password
-   * Output : AuthUser (id, username, role)
-   */
-  const login = useCallback(async (username: string, password: string) => {
-    const res = await axios.post(
-      `${apiUrl}/auth/login`,
-      { username, password },
-      { withCredentials: true }
-    );
-
-    // ✅ ดึงข้อมูล user + token จาก response
-    const { user: u, token } = res.data.data;
-
-    const authUser: AuthUser = {
-      id: u.id,
-      username: u.username,
-      role: u.role.toLowerCase(),
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/api/auth/me", {
+          withCredentials: true,
+        });
+        const { id, username, role } = res.data.data;
+        const authUser: AuthUser = {
+          id: id,
+          username: username,
+          role: role,
+        };
+        setUser(authUser);
+      } catch (err) {
+        setUser(null);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
-
-    // ✅ บันทึก token ลง localStorage และ state
-    localStorage.setItem("accessToken", token);
-    setAccessToken(token);
-
-    // ✅ ตั้งค่า default header ให้ axios ใช้งาน token นี้อัตโนมัติ
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    // ✅ บันทึก user ลง state
-    setUser(authUser);
-
-    return authUser;
+    fetchUser();
   }, []);
+
+  const login = useCallback(
+    async (username: string, password: string) => {
+      try {
+        const res = await axios.post(
+          "http://localhost:3000/api/auth/login",
+          { username, password },
+          { withCredentials: true }
+        );
+
+        const { user: u } = res.data.data;
+
+        const authUser: AuthUser = {
+          id: u.id,
+          username: u.username,
+          role: u.role.toLowerCase(),
+        };
+
+        setUser(authUser);
+
+        const navigateToFirstPage = () => {
+          switch (authUser.role) {
+            case "superadmin":
+              navigate("super/communities", { replace: true });
+              break;
+            case "admin":
+              navigate("/admin/home", { replace: true });
+              break;
+            case "member":
+              navigate("/member/home", { replace: true });
+              break;
+            case "tourist":
+              navigate("/tourist/home", { replace: true });
+              break;
+            default:
+              navigate("/", { replace: true });
+              break;
+          }
+        };
+
+        return {
+          user: authUser,
+          navigateToFirstPage: navigateToFirstPage,
+        };
+      } catch (error) {
+        console.error("Login failed:", error);
+        throw error;
+      }
+    },
+    [navigate]
+  );
 
   /*
    * ฟังก์ชัน : register
@@ -100,32 +126,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const register = useCallback(async (data: RegisterData) => {
     try {
-      const res = await axios.post(`${apiUrl}/auth/signup`, data);
+      const res = await axios.post(`http://localhost:3000/auth/signup`, data);
       return res.status === 201 || res.status === 200;
     } catch {
       return false;
     }
   }, []);
 
-  /*
-   * ฟังก์ชัน : logout
-   * คำอธิบาย : เรียก API /auth/logout และลบข้อมูล token + user
-   */
   const logout = useCallback(async () => {
-    await axios.post(`${apiUrl}/auth/logout`, {}, { withCredentials: true });
+    try {
+      if (!user?.role) return;
+      const currentRole = user.role.toLowerCase();
+      switch (currentRole) {
+        case "tourist":
+          navigate("/guest/home", { replace: true });
+          break;
+        default:
+          navigate("/guest/partner/login", { replace: true });
+          break;
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+    await new Promise((r) => setTimeout(r, 50));
 
-    // 🧹 ล้าง token ทั้งหมด
-    localStorage.removeItem("accessToken");
-    delete axios.defaults.headers.common["Authorization"];
+    await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
 
     setUser(null);
-    setAccessToken(null);
-  }, []);
+
+    // redirect ตาม role
+  }, [navigate, user]);
+
+
+  if (loading) return null;
 
   return (
-    <AuthContext.Provider
-      value={{ user, accessToken, login, register, logout }}
-    >
+    <AuthContext.Provider value={{ user, accessToken: null, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

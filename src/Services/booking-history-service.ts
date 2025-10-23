@@ -1,17 +1,22 @@
 /*
  * คำอธิบาย : Service ฝั่ง Client สำหรับดึงประวัติการจองตามสิทธิ์ของผู้ใช้ (Role)
- * Input  : page (number), limit (number)
- * Output : { list, page, limit, hasNext }
+ * วัตถุประสงค์ : ใช้ในการเรียก API เพื่อดึงข้อมูลประวัติการจอง โดยจัดการแบ่งหน้า (Pagination)
+ * Input : 
+ *   - page (number) : หมายเลขหน้าปัจจุบัน (ค่าเริ่มต้น 1)
+ *   - limit (number) : จำนวนรายการต่อหน้า (ค่าเริ่มต้น 10)
+ * Output : 
+ *   - list (BookingHistoryItem[]) : รายการประวัติการจอง
+ *   - page (number) : หมายเลขหน้าปัจจุบัน
+ *   - limit (number) : จำนวนรายการต่อหน้า
+ *   - hasNext (boolean) : ระบุว่ามีหน้าถัดไปหรือไม่
  */
 
-import { api } from "../Libs/axios";
 import type { BookingHistoryItem } from "../Types/BookingHistory";
 
 /**
  * ดึงประวัติการจองตามสิทธิ์ของผู้ใช้
- * @param page หมายเลขหน้าปัจจุบัน (ค่าเริ่มต้น 1)
- * @param limit จำนวนรายการต่อหน้า (ค่าเริ่มต้น 10)
- * @returns Promise<{ list, page, limit, hasNext }>
+ * ใช้เรียก API `/booking/histories` โดยแนบ page และ limit เป็น query parameter
+ * และส่ง cookie ไปพร้อมคำขอ เพื่อรักษา session ผู้ใช้งาน
  */
 export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise<{
   list: BookingHistoryItem[];
@@ -19,11 +24,18 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
   limit: number;
   hasNext: boolean;
 }> {
-  const response = await api.get("/booking/histories", {
-    params: { page, limit },
+  const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+  const response = await fetch(`${baseURL}/booking/histories?page=${page}&limit=${limit}`, {
+    method: "GET",
+    credentials: "include", // ส่ง cookie ไป
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 
-  const list: BookingHistoryItem[] = response?.data?.data ?? [];
+  const data = await response.json();
+
+  const list: BookingHistoryItem[] = data?.data ?? [];
 
   return {
     list,

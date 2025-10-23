@@ -1,3 +1,13 @@
+/**
+ * Component: SidebarMember
+ * คำอธิบาย: แถบเมนูด้านข้างสำหรับสมาชิกทั่วไป (Member)
+ * Features:
+ * - แสดงเมนูที่เกี่ยวข้องกับการจัดการของสมาชิก เช่น ชุมชน, แพ็กเกจ, การจอง
+ * - รองรับเมนูหลักและเมนูย่อยแบบ dropdown
+ * - ใช้ React Router สำหรับการนำทางภายในระบบ
+ *  * - ใช้ไอคอนจาก Iconify
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Link, useLocation } from 'react-router-dom';
@@ -19,14 +29,12 @@ const SidebarMember: React.FC = () => {
   const location = useLocation();
   const { pathname } = location;
 
-  // ถ้าคุณใช้ prefix “/member” ให้ตรวจ
   const basePath = pathname.startsWith('/member') ? '/member' : '';
 
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
   useEffect(() => {
-    // ตัด prefix ออกก่อน จัดการ path ย่อย
     let subPath = pathname;
     if (basePath) {
       subPath = pathname.substring(basePath.length);
@@ -44,7 +52,7 @@ const SidebarMember: React.FC = () => {
     } else if (subPath === '/packages/done') {
       setActiveMenuKey('packages-done');
       setOpenDropdown('packages');
-    } else if (subPath === '/reviews/all') {
+    } else if (subPath === '/package/reviews') {
       setActiveMenuKey('reviews');
       setOpenDropdown('packages');
     } else if (subPath.startsWith('/packages/all')) {
@@ -104,7 +112,8 @@ const SidebarMember: React.FC = () => {
 
           {/* จัดการแพ็กเกจ */}
           <div>
-            <button
+            <Link
+              to={`${basePath}/packages/all`}
               onClick={() => handleClick('packages')}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive('packages') ? 'bg-[#0D845A]' : ''
@@ -115,7 +124,7 @@ const SidebarMember: React.FC = () => {
                 จัดการแพ็กเกจ
               </span>
               <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-            </button>
+            </Link>
 
             {openDropdown === 'packages' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
@@ -152,7 +161,8 @@ const SidebarMember: React.FC = () => {
 
           {/* จัดการการจอง */}
           <div>
-            <button
+            <Link
+              to={`${basePath}/booking/panding`}
               onClick={() => handleClick('booking')}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive('booking') ? 'bg-[#0D845A]' : ''
@@ -163,7 +173,7 @@ const SidebarMember: React.FC = () => {
                 จัดการการจอง
               </span>
               <Icon icon={openDropdown === 'booking' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
-            </button>
+            </Link>
 
             {openDropdown === 'booking' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">

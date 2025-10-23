@@ -1,6 +1,6 @@
 import { useState } from "react";
-import FiltersForCM from "../Components/Filters/Communitys/FiltersForCM";
-import FiltersStatusForCM from "../Components/Filters/Communitys/FiltersStatusForCM";
+import FiltersForCM from "../Components/Filters/Communities/FiltersForCM";
+import FiltersStatusForCM from "../Components/Filters/Communities/FiltersStatusForCM";
 import FiltersForTR from "../Components/Filters/Tourists/FiltersForTR";
 import FiltersStatusForTR from "../Components/Filters/Tourists/FiltersStatusForTR";
 

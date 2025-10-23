@@ -29,7 +29,7 @@ const NavbarTourist = () => {
       <nav className="flex items-center justify-between m-80px px-12 h-16 lg:gab-6">
         <a href="#">
           <img
-            src={"/public/Cultura.png"}
+            src={"/public/logo-black.png"}
             className="w-40.25 h-7.93"
             alt="Cultura logo"
           />

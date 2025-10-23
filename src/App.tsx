@@ -2,6 +2,9 @@ import { Route, Routes } from "react-router";
 import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
 
+// Toastify สำหรับแจ้งเตือน
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
 
@@ -58,8 +61,20 @@ function App() {
 
         {/* fallback */}
       </Routes>
+
+      {/* Toastify */}
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="light"
+      />
     </>
   );
-};
+}
 
-export default CreatePackagePage;
+export default App;

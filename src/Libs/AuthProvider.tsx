@@ -4,6 +4,16 @@ import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
 
+export type RegisterData = {
+  username: string;
+  password: string;
+  email: string;
+  fname: string;
+  lname: string;
+  phone: string;
+  role: string;
+};
+
 export type AuthUser = {
   id: number;
   username: string;
@@ -17,7 +27,7 @@ type AuthContextValue = {
     username: string,
     password: string
   ) => Promise<{ user: AuthUser; navigateToFirstPage: () => void }>;
-  register: (data: any) => Promise<boolean>;
+  register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
@@ -110,9 +120,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [navigate]
   );
 
-  const register = useCallback(async (data: any) => {
-    const res = await axios.post("http://localhost:3000/api/auth/signup", data);
-    return res.status === 200 || res.status === 201;
+  /*
+   * ฟังก์ชัน : register
+   * คำอธิบาย : เรียก API /auth/signup เพื่อสมัครสมาชิกใหม่
+   */
+  const register = useCallback(async (data: RegisterData) => {
+    try {
+      const res = await axios.post(`http://localhost:3000/auth/signup`, data);
+      return res.status === 201 || res.status === 200;
+    } catch {
+      return false;
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -138,6 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // redirect ตาม role
   }, [navigate, user]);
+
 
   if (loading) return null;
 

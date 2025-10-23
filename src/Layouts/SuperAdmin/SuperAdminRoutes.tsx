@@ -16,6 +16,10 @@ import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
+import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
+
+
+
 export default function SuperAdminRoutes() {
   return (
     <Routes>
@@ -48,6 +52,7 @@ export default function SuperAdminRoutes() {
         path="community/:communityId/homestays/all"
         element={<ManageHomestaySuperAdmin />}
       />
+      <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>
     </Routes>
   );
 }

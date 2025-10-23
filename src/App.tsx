@@ -1,22 +1,64 @@
-import { useState } from "react";
-import Sort, { type OptionItem } from "./Components/Sort";
+import { Route, Routes } from "react-router";
+import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
 
-type SortValue = "latest" | "recommended" | "price_asc" | "price_desc";
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
+import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
 
-const sortOptions: OptionItem<SortValue>[] = [
-  { value: "latest", label: "ล่าสุด" },
-  { value: "recommended", label: "แนะนำ" },
-  { value: "price_asc", label: "ราคาต่ำสุด" },
-  { value: "price_desc", label: "ราคาสูงสุด" },
-];
+import MemberLayout from "@/Layouts/Member/MemberLayout";
+import MemberRoutes from "@/Layouts/Member/MemberRoutes";
+
+import ProtectedRoute from "@/Libs/ProtectedRoute";
+import LoginTourist from "@/Pages/LoginTourist";
+import LoginAdmin from "@/Pages/LoginAdmin";
 
 function App() {
   const [sort, setSort] = useState<SortValue>("latest");
 
   return (
-    <div className="p-6 flex justify-start">
-      <Sort value={sort} onChange={setSort} options={sortOptions} />
-    </div>
+    <>
+      <Routes>
+        <Route path="/guest/*">
+          <Route path="login" element={<LoginTourist />} />
+          <Route path="partner/login" element={<LoginAdmin />} />
+        </Route>
+
+        <Route
+          path="/super/*"
+          element={
+            <ProtectedRoute allow={["superadmin"]}>
+              <SuperAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<SuperAdminRoutes />} />
+        </Route>
+
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* เส้นทางภายใน /super/ ทั้งหมด */}
+          <Route path="*" element={<AdminRoutes />} />
+        </Route>
+        <Route
+          path="/member/*"
+          element={
+            <ProtectedRoute allow={["member"]}>
+              <MemberLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<MemberRoutes />} />
+        </Route>
+
+        {/* fallback */}
+      </Routes>
+    </>
   );
 }
 

@@ -1,4 +1,3 @@
-
 /*
  * Page: ประวัติการจอง
  * - ดึงข้อมูลการจองทั้งหมดจาก API
@@ -8,10 +7,10 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "../../Components/Button";
-import SearchBarTable from "../../Components/Search/SerachBarTable";
-import FilterDropdown from "../../Components/Filters/Communitys/FiltersForCM";
-import DataTable from "../../Components/Tables/Index";
+import Button from "@/Components/Button";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
+import DataTable from "@/components/Tables/Index";
 import type { Column } from "../../Components/Tables/Types";
 import type { BookingHistoryItem } from "../../Types/BookingHistory";
 import { fetchBookingHistoriesByRole } from "../../Services/booking-history-service";
@@ -97,9 +96,9 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
   const price =
     typeof item?.package?.price === "number"
       ? item.package.price.toLocaleString("th-TH", {
-        style: "currency",
-        currency: "THB",
-      })
+          style: "currency",
+          currency: "THB",
+        })
       : "-";
 
   const rawStatus = (item?.status ?? "").toUpperCase();
@@ -109,12 +108,12 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
 
   const bookedAt = item?.bookingAt
     ? new Date(item.bookingAt).toLocaleString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "-";
 
   return { customerName, activityTitle, price, status, evidence, bookedAt };
@@ -148,7 +147,10 @@ export default function BookingHistoryAdmin(): React.ReactElement {
     const allRows: BookingRow[] = [];
     let page = 1;
     while (true) {
-      const { list, hasNext } = await fetchBookingHistoriesByRole(page, PAGE_LIMIT);
+      const { list, hasNext } = await fetchBookingHistoriesByRole(
+        page,
+        PAGE_LIMIT
+      );
       if (Array.isArray(list) && list.length > 0) {
         allRows.push(...list.map(mapApiToRow));
       }
@@ -181,10 +183,10 @@ export default function BookingHistoryAdmin(): React.ReactElement {
       selectedStatus === "ALL"
         ? rows
         : rows.filter(
-          (r) =>
-            r.status ===
-            STATUS_OPTIONS.find((o) => o.value === selectedStatus)?.label
-        );
+            (r) =>
+              r.status ===
+              STATUS_OPTIONS.find((o) => o.value === selectedStatus)?.label
+          );
     if (!q) return statusFiltered;
     return statusFiltered.filter((r) =>
       Object.values(r).join(" ").toLowerCase().includes(q)
@@ -214,7 +216,10 @@ export default function BookingHistoryAdmin(): React.ReactElement {
           </div>
           <div>
             {/*ปุ่มนำทางไปยังหน้า "คำขอคืนเงิน"onClick: ใช้ useNavigate เปลี่ยนเส้นทางไป /admin/booking/refunds*/}
-            <Button type="confirm-admin" onClick={() => navigate("/admin/booking/refunds")}>
+            <Button
+              type="confirm-admin"
+              onClick={() => navigate("/admin/booking/refunds")}
+            >
               คำขอคืนเงิน
             </Button>
           </div>

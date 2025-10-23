@@ -2,7 +2,7 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ ผู้ใช้ทั่วไป (Tourist)
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขข้อมูลส่วนตัว, ประวัติการจอง, เปลี่ยนรหัสผ่าน, ดูรายงาน และออกจากระบบ
  */
-import React, { useState } from "react";
+import { useState } from "react";
 
 const NavbarTourist = () => {
   // State สำหรับจัดการการเข้าสู่ระบบ
@@ -29,7 +29,7 @@ const NavbarTourist = () => {
       <nav className="flex items-center justify-between m-80px px-12 h-16 lg:gab-6">
         <a href="#">
           <img
-            src={"/public/Cultura.png"}
+            src={"/public/logo-black.png"}
             className="w-40.25 h-7.93"
             alt="Cultura logo"
           />

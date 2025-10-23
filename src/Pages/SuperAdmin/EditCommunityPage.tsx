@@ -9,18 +9,23 @@
  */
 import * as React from "react";
 import { Link, useParams } from "react-router";
-import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { CommunityFormData } from "@/Types/CommunityForm";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
 import z from "zod";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
+import CircularProgress from "@mui/material/CircularProgress";
+import {
+  getCommunityById,
+  updateCommunity,
+} from "@/Services/community-service";
+import Backdrop from "@mui/material/Backdrop";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/Components/ThailandLocationSelector";
+} from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
@@ -30,6 +35,9 @@ import MemberSelector, {
 } from "@/Components/Selector/MemberSelector";
 import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
+import { Icon } from "@iconify/react";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -50,7 +58,6 @@ const communitySchema = z.object({
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
-  // ✅ เปลี่ยนจาก z.date() → z.string() เพราะ input date ส่ง string
   registerDate: z
     .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
@@ -88,10 +95,6 @@ const communitySchema = z.object({
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
 
-  postalCode: z
-    .string("กรุณาเลือกรหัสไปรษณีย์")
-    .min(1, "กรุณาเลือกรหัสไปรษณีย์"),
-
   latitude: z
     .string("กรุณากรอกละติจูด")
     .min(
@@ -125,6 +128,46 @@ const communitySchema = z.object({
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 /*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
+ * ใช้สำหรับโหลดไฟล์ (เช่น รูปภาพหรือวิดีโอ) จาก server แล้วจำลองให้เหมือนผู้ใช้อัปโหลดจากเครื่อง
+ * Input :
+ *   - url (string) : URL ของไฟล์ที่ต้องการโหลด
+ *   - filename (string) : ชื่อไฟล์ที่ต้องการตั้งให้กับไฟล์ที่สร้างขึ้น
+ * Output :
+ *   - Promise<File> : วัตถุไฟล์ (File object) ที่สามารถใช้กับ input type="file" หรือ FormData ได้
+ * หมายเหตุ :
+ *   - เพิ่ม property isFromServer = true เพื่อระบุว่าไฟล์นี้มาจาก server (ไม่ใช่ไฟล์ใหม่ที่ผู้ใช้อัปโหลด)
+ */
+async function urlToFile(url: string, filename: string): Promise<File> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const ext = filename.split(".").pop() || "jpg";
+  const type = blob.type || `image/${ext}`;
+  const file = new File([blob], filename, { type });
+  (file as any).isFromServer = true; // ✅ เพิ่ม flag สำหรับแยกไฟล์จาก server
+  return file;
+}
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL พรีวิวไฟล์ (เช่น รูปภาพหรือวิดีโอ) จากวัตถุ File
+ * ใช้เพื่อแสดงตัวอย่างไฟล์ในหน้าเว็บ โดยไม่ต้องอัปโหลดไปยังเซิร์ฟเวอร์ก่อน
+ * Input :
+ *   - file (File | null) : วัตถุไฟล์ที่ต้องการสร้างพรีวิว หรือ null หากไม่มีไฟล์
+ * Output :
+ *   - string | null : URL สำหรับใช้แสดงพรีวิวไฟล์ หรือ null หากไม่มีไฟล์
+ * หมายเหตุ :
+ *   - ถ้าไฟล์มี property isFromServer หมายถึงไฟล์นั้นถูกโหลดมาจากเซิร์ฟเวอร์แล้ว
+ *     จะสร้าง URL ชั่วคราวจาก object URL เช่นเดียวกับไฟล์ที่ผู้ใช้อัปโหลดใหม่
+ */
+const getFilePreview = (file: File | null): string | null => {
+  if (!file) return null;
+  if ((file as any).isFromServer) {
+    // ถ้าเป็นไฟล์จากเซิร์ฟเวอร์ (ถูก flag แล้ว)
+    return URL.createObjectURL(file);
+  }
+  return URL.createObjectURL(file);
+};
+
+/*
  * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
  * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
  * Input : communityId (ดึงจาก useParams)
@@ -133,7 +176,7 @@ const communitySchema = z.object({
 export function EditCommunity() {
   const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
-    member: [],
+    communityMembers: [],
   });
 
   const [location, setLocation] = React.useState<ThailandLocation>({
@@ -149,25 +192,41 @@ export function EditCommunity() {
   const [checked, setChecked] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
-  const [position, setPosition] = React.useState<[number, number]>([
-    13.736717, 100.523186,
-  ]);
+  const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
+  const [isSubmitting, setIsSubmitting] = React.useState(false); // สำหรับตอนกดบันทึก
+  const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
+  const [logoFile, setLogoFile] = React.useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
+  const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
    * Input : ไม่มี (ใช้ communityId จาก useParams)
    * Output :
-   *   - เซ็ตค่า state formData, location, admin, members
-   *   - เซ็ตค่าพิกัดตำแหน่ง (position) สำหรับแผนที่
+   * - เซ็ตค่า state formData, location, admin, members
+   * - เซ็ตค่าพิกัดตำแหน่ง (position) สำหรับแผนที่
+   */
+  /*
+   * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
+   * Input : ไม่มี (ใช้ communityId จาก useParams)
+   * Output :
+   * - เซ็ตค่า state formData, location, admin, members
+   * - เซ็ตค่าพิกัดตำแหน่ง (position) สำหรับแผนที่
    */
   React.useEffect(() => {
     async function fetchData() {
       if (!communityId) return;
       try {
-        const response = await getCommunityById(Number(communityId));
-        const data = response.data.data;
+        const delayPromise = new Promise((resolve) => setTimeout(resolve, 400));
 
+        const fetchDataPromise = getCommunityById(Number(communityId));
+
+        const [response] = await Promise.all([fetchDataPromise, delayPromise]);
+
+        const data = response.data.data;
         if (data.registerDate) {
           data.registerDate = new Date(data.registerDate)
             .toISOString()
@@ -178,12 +237,19 @@ export function EditCommunity() {
         setFormData({
           ...data,
           adminId: data.admin.id,
-          member: data.member.map((m: any) => m.id) ?? [],
           houseNumber: data.location?.houseNumber,
           villageNumber: data.location?.villageNumber,
           detail: data.location?.detail,
           latitude: String(data.location?.latitude),
           longitude: String(data.location?.longitude),
+          communityMembers:
+            data.communityMembers?.map((member: Member) => member.id) ?? [],
+          location: {
+            province: data.location.province,
+            district: data.location.district,
+            subDistrict: data.location.subDistrict,
+            postalCode: data.location.postalCode,
+          },
         });
         setLocation({
           province: data.location.province,
@@ -197,19 +263,80 @@ export function EditCommunity() {
           lname: data.admin.lname,
         });
         setMembers(
-          data.member?.map((m: any) => ({
-            id: m.id,
-            fname: m.fname,
-            lname: m.lname,
+          data.communityMembers?.map((m: any) => ({
+            id: m.user.id,
+            fname: m.user.fname,
+            lname: m.user.lname,
           })) ?? []
         );
         setPosition([lat, lng]);
+        setChecked(data.status === "OPEN" ? true : false);
+
+        const logoFileFetch: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "LOGO")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        const coverFileFetched: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "COVER")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        const galleryFilesFetched: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "GALLERY")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        const videoFileFetch: File[] = await Promise.all(
+          (data.communityImage || [])
+            .filter((img: any) => img.type === "VIDEO")
+            .map(async (img: any) => {
+              const fullUrl = `http://localhost:3000/${img.image}`;
+              return await urlToFile(fullUrl, img.image);
+            })
+        );
+        setLogoFile(logoFileFetch[0] || null);
+        setCoverFiles(coverFileFetched[0] || null);
+        setGalleryFiles(galleryFilesFetched);
+        setVideoFiles(videoFileFetch);
+        const memberIds =
+          data.communityMembers?.map((m: any) => m.user.id) ?? [];
+        setSelectedMembers(memberIds);
       } catch (error) {
         console.error(error);
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchData();
   }, [communityId]);
+  console.log(checked);
+  React.useEffect(() => {
+    if (location.province) {
+      setFormData((prev) => ({
+        ...prev,
+        province: location.province,
+        district: location.district,
+        subDistrict: location.subdistrict,
+        postalCode: location.postalCode,
+      }));
+
+      // ตรวจสอบ error ทันที
+      validateField("province", location.province);
+      validateField("district", location.district);
+      validateField("subDistrict", location.subdistrict);
+    }
+  }, [location]);
+  console.log(videoFiles);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -222,13 +349,13 @@ export function EditCommunity() {
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
    * Input :
-   *   - field (string) : ชื่อฟิลด์ที่ต้องการตรวจสอบ
-   *   - value (any) : ค่าของฟิลด์นั้น
+   * - field (string) : ชื่อฟิลด์ที่ต้องการตรวจสอบ
+   * - value (any) : ค่าของฟิลด์นั้น
    * Output :
-   *   - คืนค่า boolean (true = ผ่าน, false = ไม่ผ่าน)
-   *   - อัปเดต state formErrors ให้แสดงข้อความ error ของฟิลด์ที่ไม่ผ่าน
+   * - คืนค่า boolean (true = ผ่าน, false = ไม่ผ่าน)
+   * - อัปเดต state formErrors ให้แสดงข้อความ error ของฟิลด์ที่ไม่ผ่าน
    */
-  const validateField = (field?: keyof typeof formData, value?: any) => {
+  const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
     if (field) {
       const result = communitySchema.safeParse({ ...formData, [field]: value });
@@ -287,8 +414,8 @@ export function EditCommunity() {
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ (ใช้กับ Selector/MapPicker)
    * Input :
-   *   - field (keyof typeof formData) : ชื่อฟิลด์ที่ต้องอัปเดต
-   *   - value (any) : ค่าที่ต้องการเซ็ตลงใน formData
+   * - field (keyof typeof formData) : ชื่อฟิลด์ที่ต้องอัปเดต
+   * - value (any) : ค่าที่ต้องการเซ็ตลงใน formData
    * Output : อัปเดตค่าใน formData และเรียก validateField เพื่อเช็กความถูกต้อง
    */
   const handleValueChange = <K extends keyof typeof formData>(
@@ -308,52 +435,155 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
-   * Input : ไม่มี (ใช้ค่าจาก state formData และ location)
-   * Output : ส่งข้อมูลอัปเดตไปยัง API updateCommunity และแสดงผลลัพธ์ใน console
+   * ✅ อัปเดต:
+   * 1. ตรวจสอบ validation แล้วเปิด Accordion ที่มี error แรกให้เอง
+   * 2. เพิ่มการแจ้งเตือน (alert) ทั้งกรณีสำเร็จและล้มเหลว
    */
+
   const handleSubmit = async () => {
-    validateField();
+    const isFormValid = validateField();
 
-    const {
-      id,
-      locationId,
-      detail,
-      houseNumber,
-      longitude,
-      latitude,
-      villageNumber,
-      ...cleanForm
-    } = formData;
+    if (!isFormValid) {
+      // หาชื่อ field แรกที่เกิด error
+      const firstErrorField = Object.keys(formErrors).find(
+        (key) => formErrors[key]
+      );
+      if (firstErrorField) {
+        // เช็คว่า field นั้นอยู่ใน Accordion ไหน แล้วเปิด Accordion นั้น
+        const panel2Fields = [
+          "name",
+          "type",
+          "registerNumber",
+          "registerDate",
+          "bankName",
+          "accountName",
+          "accountNumber",
+          "description",
+          "mainActivityName",
+          "mainActivityDescription",
+        ];
+        const panel3Fields = [
+          "houseNumber",
+          "province",
+          "district",
+          "subDistrict",
+          "postalCode",
+          "latitude",
+          "longitude",
+        ];
+        const panel4Fields = [
+          "phone",
+          "email",
+          "mainAdmin",
+          "mainAdminPhone",
+          "adminId",
+        ];
 
-    const payload = {
-      ...cleanForm,
-      location: {
-        houseNumber: formData.houseNumber,
-        villageNumber:
-          formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
+        if (panel2Fields.includes(firstErrorField)) {
+          setExpanded("panel2");
+        } else if (panel3Fields.includes(firstErrorField)) {
+          setExpanded("panel3");
+        } else if (panel4Fields.includes(firstErrorField)) {
+          setExpanded("panel4");
+        }
+      }
 
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: String(location.postalCode),
-        detail: formData.detail,
-        latitude: Number(formData.latitude),
-        longitude: Number(formData.longitude),
-      },
-    };
-    await updateCommunity(Number(communityId), payload);
+      alert("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const {
+        id,
+        locationId,
+        detail,
+        houseNumber,
+        longitude,
+        latitude,
+        villageNumber,
+        province,
+        district,
+        subDistrict,
+        postalCode,
+        ...cleanForm
+      } = formData;
+
+      const payload = {
+        ...cleanForm,
+        communityMembers: selectedMembers,
+        registerDate: formData.registerDate
+          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
+          : undefined,
+        location: {
+          houseNumber: formData.houseNumber,
+          villageNumber:
+            formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
+          province: location.province,
+          district: location.district,
+          subDistrict: location.subdistrict,
+          postalCode: String(location.postalCode),
+          detail: formData.detail,
+          latitude: Number(position[0]),
+          longitude: Number(position[1]),
+        },
+      };
+      console.log(payload);
+
+      const formDataToSend = new FormData();
+
+      formDataToSend.append("data", JSON.stringify(payload));
+
+      if (logoFile) {
+        formDataToSend.append("logo", logoFile);
+      }
+      if (coverFiles) {
+        formDataToSend.append("cover", coverFiles);
+      }
+
+      galleryFiles.forEach((file) => {
+        formDataToSend.append("gallery", file);
+      });
+
+      videoFiles.forEach((file) => {
+        formDataToSend.append("video", file);
+      });
+
+      await updateCommunity(Number(communityId), formDataToSend);
+      alert("บันทึกข้อมูลสำเร็จ!"); // ✅ แจ้งเตือนเมื่อสำเร็จ
+    } catch (error) {
+      console.error("Failed to update community:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล"); // ✅ แจ้งเตือนเมื่อล้มเหลว
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div>
-      <div className="flex justify-end">
+      {/* ✅ 3. เพิ่ม Backdrop เพื่อแสดงสถานะ Loading */}
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isLoading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+      <div className="flex justify-between items-center">
+        <Link
+          to="/super/communities"
+          className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+        >
+          <Icon icon="lucide:arrow-left" className="w-5 h-5" />
+          <h1 className="text-xl font-bold">แก้ไขวิสาหกิจชุมชน</h1>
+        </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           สถานะชุมชน
           <Switch checked={checked} onChange={handleCheck} />
         </Stack>
       </div>
+
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0 mt-3"
         expanded={expanded === "panel2"}
         onChange={handleChange("panel2")}
       >
@@ -361,11 +591,26 @@ export function EditCommunity() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
+          className="!rounded-t-lg "
         >
-          <div className="text-xl font-bold">ข้อมูลชุมชน</div>
+          <h1 className="text-xl font-bold">ข้อมูลชุมชน</h1>
         </AccordionSummary>
         <AccordionDetails>
-          <div className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</div>
+          <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>
+          <div className="flex flex-col items-center mb-20">
+            <UploadProfile
+              roundedCover="rounded-[5px]"
+              width={1024}
+              coverHeight={360}
+              avatarSize={210} //รัศสมีวงกลม
+              coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
+              avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
+              coverUrl={getFilePreview(coverFiles)} // ✅ แปลงเป็น URL
+              avatarUrl={getFilePreview(logoFile)}
+              onCoverChange={setCoverFiles}
+              onAvatarChange={setLogoFile}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -481,9 +726,9 @@ export function EditCommunity() {
               />
             </div>
           </div>
-          <div className="text-lg font-bold mt-[24px] mb-[24px]">
+          <h3 className="text-lg font-bold mt-[24px] mb-[24px]">
             กิจกรรมหลักของวิสาหกิจชุมชน
-          </div>
+          </h3>
           <div className="grid grid-cols-1 gap-y-[24px] ">
             <div>
               <TextField
@@ -512,23 +757,85 @@ export function EditCommunity() {
             </div>
             <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
               <div>
-                <div className="text-base font-bold mb-1.5">ร้านค้า</div>
-                <Link to="/super/community/:communityId/store/create">
-                  <Button type="confirm-admin">เพิ่มร้านค้า</Button>
+                <h3 className="text-base font-bold mb-1.5">ร้านค้า</h3>
+                <Link to={`/super/community/${communityId}/stores/all`}>
+                  <Button type="confirm-admin">
+                    <Icon
+                      icon="carbon:store"
+                      style={{ fontSize: "24px" }}
+                      className="mr-2"
+                    />
+                    จัดการร้านค้า
+                  </Button>
                 </Link>
               </div>
               <div>
-                <div className="text-base font-bold mb-1.5">ที่พัก</div>
-                <Link to="/super/community/:communityId/homestay/create">
-                  <Button type="confirm-admin">เพิ่มที่พัก</Button>
+                <div className="text-base font-bold mb-1.5">
+                  <h3>ที่พัก</h3>
+                </div>
+                <Link to={`/super/community/${communityId}/homestays/all`}>
+                  <Button type="confirm-admin">
+                    <Icon
+                      icon="healthicons:home-outline"
+                      style={{ fontSize: "24px" }}
+                      className="mr-2"
+                    />
+                    จัดการที่พัก
+                  </Button>
                 </Link>
+              </div>
+            </div>
+            <div className="flex col-span-2">
+              <div className="mr-5">
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดรูปภาพเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="image/*"
+                  multiple={false}
+                  value={galleryFiles}
+                  onChange={setGalleryFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
+              </div>
+              <div>
+                <h3 className="font-bold text-base mb-3">
+                  อัพโหลดวิดีโอเพิ่มเติม
+                  <span className="text-red-600"> *</span>{" "}
+                </h3>
+                <UploadCard
+                  max={5}
+                  accept="video/*"
+                  multiple={false}
+                  value={videoFiles}
+                  onChange={setVideoFiles}
+                  itemW={160}
+                  itemH={110}
+                  square={false}
+                  itemClass="border border-dashed border-black/60 bg-slate-200/60"
+                  rounded="rounded-lg"
+                  gapCls="gap-4"
+                  containerClass="w-full"
+                  wrap
+                  iconSizeCls="w-10 h-10"
+                />
               </div>
             </div>
           </div>
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border-0 mt-3"
         expanded={expanded === "panel3"}
         onChange={handleChange("panel3")}
       >
@@ -537,7 +844,7 @@ export function EditCommunity() {
           aria-controls="panel3bh-content"
           id="panel3bh-header"
         >
-          <div className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</div>
+          <h2 className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</h2>
         </AccordionSummary>
         <AccordionDetails>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
@@ -574,7 +881,29 @@ export function EditCommunity() {
                   subdistrict: location.subdistrict,
                   postalCode: location.postalCode,
                 }}
-                onChange={(loc) => setLocation(loc)}
+                onChange={(loc) => {
+                  setLocation(loc);
+                  setFormData((prev) => ({
+                    ...prev,
+                    province: loc.province,
+                    district: loc.district,
+                    subDistrict: loc.subdistrict,
+                    postalCode: loc.postalCode,
+                  }));
+                  validateField("province", loc.province);
+                  validateField("district", loc.district);
+                  validateField("subDistrict", loc.subdistrict);
+                }}
+                error={{
+                  province: !!formErrors.province,
+                  district: !!formErrors.district,
+                  subdistrict: !!formErrors.subDistrict,
+                }}
+                helperText={{
+                  province: formErrors.province,
+                  district: formErrors.district,
+                  subdistrict: formErrors.subDistrict,
+                }}
               />
             </div>
             <div className="col-span-2">
@@ -593,22 +922,19 @@ export function EditCommunity() {
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
-              <MapPicker
-                startingPosition={position}
-                startingZoom={13}
-                onChange={([lat, lng]) => {
-                  // เมื่อเลือกหมุดใหม่ ให้เซ็ตค่าทั้ง state position และ formData
-                  setPosition([lat, lng]);
-                  handleValueChange("latitude", lat);
-                  handleValueChange("longitude", lng);
-                }}
-              />
+              {position[0] !== 0 && position[1] !== 0 && (
+                <MapPicker
+                  startingPosition={position}
+                  startingZoom={13}
+                  onChange={setPosition}
+                />
+              )}
             </div>
           </div>
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="mt-3"
+        className="!shadow-sm !rounded-lg !border- mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
       >
@@ -617,7 +943,7 @@ export function EditCommunity() {
           aria-controls="panel4bh-content"
           id="panel4bh-header"
         >
-          <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</div>
+          <h2 className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</h2>
         </AccordionSummary>
         <AccordionDetails>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
@@ -765,14 +1091,16 @@ export function EditCommunity() {
                 onChange={(adminId) =>
                   handleValueChange("adminId", Number(adminId))
                 }
+                error={!!formErrors.adminId}
+                helperText={String(formErrors.adminId)}
               />
             </div>
 
             <div>
               <MemberSelector
-                value={formData.member}
+                value={selectedMembers}
                 member={members}
-                onChange={(ids) => handleValueChange("member", ids)}
+                onChange={(ids) => setSelectedMembers(ids)}
               />
             </div>
           </div>

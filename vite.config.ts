@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
-  // โหลดตัวแปรจาก .env ตาม mode (development / production)
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
@@ -16,7 +15,13 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: Number(env.VITE_PORT) || 4000,
+      port: Number(env.VITE_PORT) || 4000, // พอร์ตของ frontend
+      proxy: {
+        "/api": {
+          target: "http://localhost:3000", //  backend (Express)
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

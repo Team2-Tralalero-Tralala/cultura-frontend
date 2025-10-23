@@ -1,25 +1,64 @@
-import React from "react";
-import TablePagination from "./Components/Pagination/TablePagination";
-import PaginationRoundedForCardPackage from "./Components/Pagination/PaginationRoundedForCardPackage";
-import PaginationRoundedForCardCommunity from "./Components/Pagination/PaginationRoundedForCardCommunity";
+import { Route, Routes } from "react-router";
+import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
+
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
+import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
+
+import MemberLayout from "@/Layouts/Member/MemberLayout";
+import MemberRoutes from "@/Layouts/Member/MemberRoutes";
+
+import ProtectedRoute from "@/Libs/ProtectedRoute";
+import LoginTourist from "@/Pages/LoginTourist";
+import LoginAdmin from "@/Pages/LoginAdmin";
 
 function App() {
-  const totalData = 100; // จำลองข้อมูลทั้งหมด
-
-  // รับ page, limit ที่เปลี่ยนแปลงจาก pagination components
-  const handleQueryChange = (query: { page: number; limit: number }) => { 
-    alert(`page: ${query.page}, limit: ${query.limit}`);
-  };
+  const [sort, setSort] = useState<SortValue>("latest");
 
   return (
-    <div>
-      <TablePagination totalData={totalData} onQueryChange={handleQueryChange} />
-      <br />
-      <PaginationRoundedForCardPackage totalData={totalData} onQueryChange={handleQueryChange} />
-      <br />
-      <PaginationRoundedForCardCommunity totalData={totalData} onQueryChange={handleQueryChange} />
-      <br />
-    </div>
+    <>
+      <Routes>
+        <Route path="/guest/*">
+          <Route path="login" element={<LoginTourist />} />
+          <Route path="partner/login" element={<LoginAdmin />} />
+        </Route>
+
+        <Route
+          path="/super/*"
+          element={
+            <ProtectedRoute allow={["superadmin"]}>
+              <SuperAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<SuperAdminRoutes />} />
+        </Route>
+
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* เส้นทางภายใน /super/ ทั้งหมด */}
+          <Route path="*" element={<AdminRoutes />} />
+        </Route>
+        <Route
+          path="/member/*"
+          element={
+            <ProtectedRoute allow={["member"]}>
+              <MemberLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<MemberRoutes />} />
+        </Route>
+
+        {/* fallback */}
+      </Routes>
+    </>
   );
 }
 

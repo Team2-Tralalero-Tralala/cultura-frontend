@@ -1,9 +1,9 @@
 // แถวข้อมูลแต่ละรายการในตาราง (พร้อมแสดงผล)
 export type CommunityRow = {
   id: number;
-  name: string;
-  province: string;
-  admin: string;
+  name: string; // ชื่อชุมชน
+  province: string; // จังหวัด
+  admin: string; // ชื่อผู้ดูแล
   status: string; // OPEN | CLOSED
 };
 
@@ -18,8 +18,12 @@ export type CommunityDtoFromApi = {
 
 // โครงสร้าง Pagination Response (ข้อมูล + pagination)
 export type PaginationResponse<T> = {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
+  data: T[]; // ✅ backend ส่งข้อมูลใน key = "data"
+  pagination: {
+    // ✅ โครงสร้างย่อย pagination
+    currentPage: number; // หน้าปัจจุบัน
+    totalPages: number; // จำนวนหน้าทั้งหมด
+    totalCount: number; // จำนวนรายการทั้งหมด
+    limit: number; // จำนวนรายการต่อหน้า
+  };
 };

@@ -4,7 +4,7 @@
 * เลือกแถว + bulk actions + row actions (icons/buttons), ธีมสี, และลายแถวสลับสี
 */
 
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { DataTableProps } from "./Types";
 import { resolveActions, getActionButtonClass } from "./TablePresets";
 import { themeHead, borderTone, softBg, containerBorderCls, containerRingCls } from "./Theme";
@@ -43,12 +43,12 @@ function PageSizeDropdown({
   }, []);
 
   return (
-    <div ref={ref} className="relative inline-block text-left">
+    <div ref={ref} className="relative inline-block text-left cursor-pointer">
       {/* ปุ่มหลัก (หน้าตาเหมือน select เดิม) */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="h-9 min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 text-sm inline-flex items-center justify-between gap-2"
+        className="h-9 min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 text-sm inline-flex items-center justify-between gap-2 cursor-pointer"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -62,7 +62,7 @@ function PageSizeDropdown({
       {open && (
         <div
           role="listbox"
-          className="absolute z-20 mt-1 w-full rounded-lg border border-slate-300 bg-white shadow-md overflow-hidden"
+          className="absolute z-20 mt-1 w-full rounded-lg border border-slate-300 bg-white shadow-md overflow-hidden cursor-pointer"
         >
           {options.map((opt) => {
             const active = opt === value;
@@ -76,7 +76,7 @@ function PageSizeDropdown({
                 }}
                 className={`w-full px-3 py-2 text-left text-sm ${
                   active ? "bg-[#9EFFA2]/70" : "hover:bg-[#9EFFA2]"
-                }`}
+                } cursor-pointer`}
                 role="option"
                 aria-selected={active}
               >
@@ -103,107 +103,42 @@ function PageSizeDropdown({
 */
 export function DataTable<T extends Record<string, unknown>>({
   data,
-  total,
+  getKey,
   columns,
-  getRowKey,
-  page,
-  onPageChange,
   pageSizeOptions = [10, 20, 50],
-  defaultPageSize = 10,
-  selectable = true,
-  selectedKeys,
+  selectable = false,
+  onPageChange,
+  onPageSizeChange,
   onSelectedChange,
   bulkActions,
   actions,
-  striped = true,
-  className,
   theme = "brand", // ค่าเริ่มต้น: ใช้ธีมสี brand
+  pagination,
+  isLoading
 }: DataTableProps<T>) {
-  /* State: หน้าปัจจุบัน (กรณี uncontrolled) */
-  const [pageUnctrl, setPageUnctrl] = useState(1);
 
-  /* ค่าคงที่ UI : ความสูงเซลล์/การจัดแนวแนวตั้ง */
   const rowCellBase = "h-12 align-middle"; // h-12 ≈ 48px
+  
+  const [selected, setSelected] = useState<string[]>([]);
 
-  /* ตรวจโหมด pagination ที่คุมจากภายนอก (controlled) */
-  const isCtrlPage = typeof page === "number" && !!onPageChange;
-  const pageNow = isCtrlPage ? page! : pageUnctrl;
+  useEffect(() => {
+    onSelectedChange?.(data.filter((row) => selected.includes(getKey(row))));
+  }, [selected]);
 
-  /** setPageNow
-   * อธิบาย : อัปเดตหมายเลขหน้า รองรับทั้งโหมด controlled/uncontrolled
-   * พารามิเตอร์ : v หมายเลขหน้าใหม่
-   */
-  const setPageNow = (v: number) => (isCtrlPage ? onPageChange!(v) : setPageUnctrl(v));
 
-  /* State: จำนวนแถวต่อหน้า */
-  const [pageSize, setPageSize] = useState(defaultPageSize);
-
-  /* การเลือกแถว: รองรับทั้ง controlled/uncontrolled */
-  const [selInternal, setSelInternal] = useState<Set<React.Key>>(new Set());
-  const sel = selectedKeys ? new Set(selectedKeys) : selInternal;
-
-  /** setSel
-   * อธิบาย : อัปเดตชุด keys ที่ถูกเลือก และแจ้งผลออกไปถ้าเป็นโหมด controlled
-   */
-  const setSel = (keys: React.Key[]) => {
-    if (selectedKeys) onSelectedChange?.(keys, data.filter((_, i) => keys.includes(getKey(_, i))));
-    else setSelInternal(new Set(keys));
-  };
-
-  /** getKey
-   * อธิบาย : คืน key ของแต่ละแถว (หากไม่ส่ง getRowKey เข้ามา ใช้ index)
-   */
-  const getKey = (row: T, i: number) => (getRowKey ? getRowKey(row, i) : i);
-
-  /* นับรวมรายการทั้งหมด (server/client mode) */
-  const totalCount = typeof total === "number" ? total : data.length;
-  const start = totalCount === 0 ? 0 : (pageNow - 1) * pageSize + 1;
-  const end = Math.min(totalCount, pageNow * pageSize);
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-
-  /** pageData (useMemo)
-   * อธิบาย : คำนวณข้อมูลหน้าปัจจุบัน
-   * - server-mode (มี total) : ใช้ data ตรง ๆ (ไม่ slice)
-   * - client-mode : slice จาก data ตาม pageNow/pageSize
-   */
-  const pageData = useMemo(() => {
-    if (typeof total === "number") return data; // server-mode
-    const s = (pageNow - 1) * pageSize;
-    return data.slice(s, s + pageSize);
-  }, [data, pageNow, pageSize, total]);
-
-  /* คีย์ทั้งหมดในหน้านี้ (ช่วยเช็กเลือกทั้งหมด/บางส่วน) */
-  const allKeysOnPage = pageData.map((r, i) => getKey(r, (pageNow - 1) * pageSize + i));
-  const allChecked = selectable && allKeysOnPage.length > 0 && allKeysOnPage.every((k) => sel.has(k));
-  const someChecked = selectable && !allChecked && allKeysOnPage.some((k) => sel.has(k));
-  const selectedOnPageCount = allKeysOnPage.filter((k) => sel.has(k)).length;
-
-  /** toggleAll
-   * อธิบาย : เลือก/ยกเลิกเลือกทุกแถวภายใน "หน้านี้"
-   */
   const toggleAll = () => {
-    if (!selectable) return;
-    const next = new Set(sel);
-    if (allChecked) allKeysOnPage.forEach((k) => next.delete(k));
-    else allKeysOnPage.forEach((k) => next.add(k));
-    setSel(Array.from(next));
+    setSelected(selected.length === data.length ? [] : data.map((row) => getKey(row)));
   };
 
-  /** toggleOne
-   * อธิบาย : เลือก/ยกเลิกเลือกแถวเดียวตาม key ที่ระบุ
-   */
-  const toggleOne = (k: React.Key) => {
-    if (!selectable) return;
-    const next = new Set(sel);
-    next.has(k) ? next.delete(k) : next.add(k);
-    setSel(Array.from(next));
+  const toggle = (rowKey: string) => {
+    setSelected(selected.includes(rowKey) ? selected.filter((k) => k !== rowKey) : [...selected, rowKey]);
   };
+
+
 
   return (
     <div
-      className={`rounded-2xl border ${containerBorderCls[theme]} shadow-sm ring-1 ${containerRingCls[theme]} bg-white ${
-        className ?? ""
-      }`}
+      className={`rounded-2xl border ${containerBorderCls[theme]} shadow-sm ring-1 ${containerRingCls[theme]} bg-white`}
     >
       <div className="overflow-x-auto">
         <table className="min-w-full rounded-xl overflow-hidden">
@@ -216,10 +151,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   <label className="inline-flex items-center">
                     <input
                       type="checkbox"
-                      checked={allChecked}
-                      ref={(el) => {
-                        if (el) el.indeterminate = someChecked;
-                      }}
+                      checked={selected.length === data.length}
                       onChange={toggleAll}
                       className="h-4 w-4 rounded border-slate-300 accent-[#989898]"
                     />
@@ -237,7 +169,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 </th>
               ))}
               {/* คอลัมน์ "จัดการ" (actions) */}
-              {actions?.visible !== false && actions && (
+              {actions && actions?.visible !== false && (
                 <th
                   className={`px-4 py-3 text-lg font-light ${
                     actions.align === "left" ? "text-left" : "text-right"
@@ -252,36 +184,46 @@ export function DataTable<T extends Record<string, unknown>>({
 
           {/* ── เนื้อหาตาราง (tbody) ────────────────────────────────────────── */}
           <tbody>
-            {pageData.map((row, i) => {
-              const gi = (pageNow - 1) * pageSize + i; // ดัชนีรวม (คุมลายสลับสี)
-              const k = getKey(row, gi);
-              const rowActions = actions?.visible === false || !actions ? [] : resolveActions(actions, row);
+              {isLoading ? (
+                <tr>
+                  <td colSpan={columns.length + (selectable ? 1 : 0) + (actions?.visible === false || !actions ? 0 : 1)} className="px-4 text-center text-sm font-light text-slate-500 h-12 align-middle">
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                <>
+                            {data.map((rowData, index) => {
+              const rowIndex = index;
+              const rowKey = getKey(rowData);
+              const rowActions = actions &&  actions?.visible === false || !actions ? [] : resolveActions(actions, rowData);
 
               return (
                 <tr
-                  key={String(k)}
-                  className={`${striped && gi % 2 === 1 ? softBg[theme] : "bg-white"} ${borderTone[theme]} border-b`}
+                  key={rowKey}
+                  className={`${rowIndex % 2 === 1 ? softBg[theme] : "bg-white"} ${borderTone[theme]} border-b`}
                 >
                   {/* เช็กบ็อกซ์ต่อแถว */}
                   {selectable && (
                     <td className={`w-12 px-3 text-center ${rowCellBase}`}>
                       <input
                         type="checkbox"
-                        checked={sel.has(k)}
-                        onChange={() => toggleOne(k)}
+                        checked={selected.includes(rowKey)}
+                        onChange={() => toggle(rowKey)}
                         className="h-4 w-4 rounded border-slate-300 accent-[#989898]"
                       />
                     </td>
                   )}
 
                   {/* เซลล์ของแต่ละคอลัมน์ */}
-                  {columns.map((c) => (
+                  {columns.map((column) => (
                     <td
-                      key={String(c.key)}
-                      className={`px-4 text-base font-light text-slate-800 ${c.className ?? ""} ${rowCellBase}`}
-                      style={c.width ? { width: c.width } : undefined}
+                      key={String(column.key)}
+                      className={`px-4 text-base font-light text-slate-800 ${column.className ?? ""} ${rowCellBase}`}
+                      style={column.width ? { width: column.width } : undefined}
                     >
-                      {c.render ? c.render(row) : String((row as any)[c.key] ?? "")}
+                      {column.render ? column.render(rowData) : String((rowData as any)[column.key] ?? "")}
                     </td>
                   ))}
 
@@ -297,7 +239,7 @@ export function DataTable<T extends Record<string, unknown>>({
                           <button
                             key={a.id}
                             type="button"
-                            onClick={() => a.onClick(row)}
+                            onClick={() => a.onClick(rowData)}
                             className={`${getActionButtonClass(actions.variant ?? "icons", a.intent)} ${
                               a.className ?? ""
                             }`}
@@ -324,19 +266,19 @@ export function DataTable<T extends Record<string, unknown>>({
             })}
 
             {/* เติมแถวว่างให้ครบ pageSize (เมื่อมีข้อมูลรวม > 0) */}
-            {Array.from({ length: Math.max(0, totalCount > 0 ? pageSize - pageData.length : 0) }).map((_, i) => {
-              const giEmpty = (pageNow - 1) * pageSize + pageData.length + i; // คุมลายสลับสีให้ต่อเนื่อง
+            {Array.from({ length: Math.max(0, pagination.limit - data.length) }).map((_, i) => {
+              const rowIndex = data.length + i;
               return (
                 <tr
-                  key={`empty-${i}`}
-                  className={`${striped && giEmpty % 2 === 1 ? softBg[theme] : "bg-white"} ${borderTone[theme]} border-b`}
+                  key={`empty-${rowIndex}`}
+                  className={`${rowIndex % 2 === 1 ? softBg[theme] : "bg-white"} ${borderTone[theme]} border-b`}
                 >
                   {selectable && <td className={`w-12 px-3 ${rowCellBase}`} />}
-                  {columns.map((c, ci) => (
+                  {columns.map((column, columnIndex) => (
                     <td
-                      key={`empty-cell-${ci}`}
-                      className={`px-4 text-base font-light text-slate-800 ${c.className ?? ""} ${rowCellBase}`}
-                      style={c.width ? { width: c.width } : undefined}
+                      key={`empty-cell-${columnIndex}`}
+                      className={`px-4 text-base font-light text-slate-800 ${column.className ?? ""} ${rowCellBase}`}
+                      style={column.width ? { width: column.width } : undefined}
                     />
                   ))}
                   {actions?.visible !== false && actions && <td className={`px-4 ${rowCellBase}`} />}
@@ -345,7 +287,7 @@ export function DataTable<T extends Record<string, unknown>>({
             })}
 
             {/* ไม่มีข้อมูลจริง ๆ */}
-            {pageData.length === 0 && totalCount === 0 && (
+            {data.length === 0 && (
               <tr>
                 <td
                   colSpan={
@@ -357,6 +299,8 @@ export function DataTable<T extends Record<string, unknown>>({
                 </td>
               </tr>
             )}
+                </>
+              )}
           </tbody>
         </table>
       </div>
@@ -365,17 +309,17 @@ export function DataTable<T extends Record<string, unknown>>({
       <div className={`border-t ${borderTone[theme]} ${softBg[theme]} px-4 py-3`}>
         {/* แถวบน: สรุปการเลือก + ปุ่ม bulk (ขวา) */}
         <div className="flex items-center justify-between gap-3 mb-2">
-          {selectedOnPageCount > 0 ? (
+          {selected.length > 0 ? (
             <>
               <span className="text-sm font-light text-slate-700">
-                เลือก <b>{selectedOnPageCount}</b> แถว จากทั้งหมด <b>{pageSize}</b> แถว
+                เลือก <b>{selected.length}</b> แถว จากทั้งหมด <b>{pagination.limit}</b> แถว
               </span>
               <div className="flex items-center gap-2">
                 {bulkActions?.map((ba) => (
                   <button
                     key={ba.id}
                     onClick={() =>
-                      ba.onClick(pageData.filter((_, i) => sel.has(allKeysOnPage[i]))) // ส่งเฉพาะแถวที่เลือกในหน้านี้
+                      ba.onClick(data.filter((row) => selected.includes(getKey(row)))) // ส่งเฉพาะแถวที่เลือกในหน้านี้
                     }
                     className={`${getActionButtonClass("buttons", ba.intent)} ${ba.className ?? ""}`}
                   >
@@ -387,7 +331,7 @@ export function DataTable<T extends Record<string, unknown>>({
           ) : (
             <>
               <span className="text-sm font-light text-slate-700">
-                ทั้งหมด <b>{totalCount.toLocaleString()}</b> แถว
+                ทั้งหมด <b>{data.length.toLocaleString()}</b> แถว
               </span>
               <span />
             </>
@@ -399,32 +343,31 @@ export function DataTable<T extends Record<string, unknown>>({
           <div className="flex items-center gap-2 text-sm">
             <label className="text-slate-700">จำนวนแถวต่อหน้า :</label>
             <PageSizeDropdown
-              value={pageSize}
+              value={pagination.limit}
               options={pageSizeOptions}
               onChange={(v) => {
-                setPageSize(v);
-                setPageNow(1);
+                onPageSizeChange?.(v);
               }}
             />
           </div>
 
           <div className="flex items-center gap-2 text-sm text-slate-700">
             <span>
-              {start}-{end} จาก {totalCount.toLocaleString()}
+              {pagination.currentPage}-{pagination.totalPages} จาก {pagination.totalCount.toLocaleString()}
             </span>
             <div className="flex items-center">
               <button
-                onClick={() => setPageNow(Math.max(1, pageNow - 1))}
-                disabled={pageNow === 1}
-                className="ml-2 rounded-md p-1 disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => onPageChange?.(Math.max(1, pagination.currentPage - 1))}
+                disabled={pagination.currentPage === 1}
+                className="ml-2 rounded-md p-1 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 aria-label="ก่อนหน้า"
               >
                 <ChevronLeftIcon className="h-5 w-5" />
               </button>
               <button
-                onClick={() => setPageNow(Math.min(totalPages, pageNow + 1))}
-                disabled={pageNow === totalPages}
-                className="ml-2 rounded-md p-1 disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => onPageChange?.(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+                disabled={pagination.currentPage === pagination.totalPages}
+                className="ml-2 rounded-md p-1 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 aria-label="ถัดไป"
               >
                 <ChevronRightIcon className="h-5 w-5" />

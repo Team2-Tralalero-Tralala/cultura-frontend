@@ -48,14 +48,17 @@ export const Modal: React.FC<ModalProps> = ({
         iconHtml: (
           <Icon
             icon="circum:circle-alert"
-            style={{ fontSize: 150, color: "#004D2C" }}
+            width={164}           
+            height={164}
+            style={{color: "#000"}}
           />
         ),
         iconColor: "#004D2C",
         title,
         text,
-        width: 560,
-        padding: "1.75rem",
+        width: 612,
+        color: "#0f172a",
+        padding: "1.5rem",
         showCancelButton: true,
         showConfirmButton: true,
         confirmButtonText: confirmText,
@@ -64,16 +67,17 @@ export const Modal: React.FC<ModalProps> = ({
         allowOutsideClick: false,
         allowEscapeKey: true,
         reverseButtons: true,
+        heightAuto: false,
 
         customClass: {
-          popup: "rounded-2xl",
-          title: "text-2xl font-bold leading-tight",
-          htmlContainer: "text-base",
-          actions: "mt-6 flex justify-center gap-4",
+          popup: "rounded-[32px] h-[380px] px-8 py-6",
+          title: "text-3xl font-semibold text-gray-800 mt-2 mb-2",
+          htmlContainer: "text-lg text-gray-600 mb-6",
+          actions: "mt-4 flex justify-center gap-4",
           confirmButton:
-            "px-6 py-2.5 rounded-lg bg-[#004D2C] text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
+            "w-[120px] py-2.5 text-lg rounded-lg bg-[#004D2C] text-white hover:bg-[#003c22] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
           cancelButton:
-            "px-6 py-2.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400",
+            "w-[120px] py-2.5 text-lg rounded-lg border border-[#000000] bg-white text-[#000000] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
           icon: "!border-0 !bg-transparent !shadow-none !w-auto !h-auto p-0",
         },
 
@@ -87,6 +91,17 @@ export const Modal: React.FC<ModalProps> = ({
           if (titleEl) titleEl.style.fontFamily = fontStack;
           if (html) html.style.fontFamily = fontStack;
           if (btns) btns.style.fontFamily = fontStack;
+          const p = Swal.getPopup();
+          const ic = Swal.getIcon();
+          if (p) {
+            // แบ่งแถว: [ไอคอน, หัวข้อ, เนื้อหา, ปุ่ม]
+            p.style.display = "grid";
+            p.style.gridTemplateRows = "160px 50px 48px 42px";
+            p.style.fontFamily = 'var(--font-sarabun), "Sarabun", sans-serif';
+            p.style.borderRadius = "20px";
+          }
+          if (ic) { ic.style.height = "150px"; ic.style.background = "transparent"; ic.style.boxShadow = "none"; }
+
         },
       }).then((result) => {
         isFired = false;

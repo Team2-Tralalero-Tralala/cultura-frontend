@@ -1,34 +1,62 @@
-import CardPackage from "./Components/CardPackage";
+import { Route, Routes } from "react-router";
+import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
+
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
+import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
+
+import MemberLayout from "@/Layouts/Member/MemberLayout";
+import MemberRoutes from "@/Layouts/Member/MemberRoutes";
+
+import ProtectedRoute from "@/Libs/ProtectedRoute";
+import LoginTourist from "@/Pages/LoginTourist";
+import LoginAdmin from "@/Pages/LoginAdmin";
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-wrap justify-center gap-6 p-6">
-      <CardPackage
-        image="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop"
-        title="เที่ยวชุมชนบ้านทุ่งสุขใจ"
-        location="อำเภอปัว จังหวัดน่าน"
-        bookingStatus="OPEN"
-        bookingStart="2025-05-27"
-        bookingEnd="2025-07-31"
-        booked={23}
-        capacity={50}
-        tags={["ธรรมชาติ", "วัฒนธรรม", "โฮมสเตย์", "อาหารพื้นบ้าน"]}
-        priceTHB={2500}
-      />
+    <>
+      <Routes>
+        <Route path="/guest/*">
+          <Route path="login" element={<LoginTourist />} />
+          <Route path="partner/login" element={<LoginAdmin />} />
+        </Route>
 
-      <CardPackage
-        image="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1200&auto=format&fit=crop"
-        title="แพ็กเกจท่องเที่ยวชุมชนบ้านปากคลองอันงดงามริมทะเลที่มีทั้งการทำประมงพื้นบ้านและสอนทำอาหารทะเลสดใหม่"
-        location="หมู่ 5 ตำบลปากคลอง อำเภอเมืองระยอง จังหวัดระยอง ประเทศไทย"
-        bookingStatus="OPEN"
-        bookingStart="2025-05-27"
-        bookingEnd="2025-07-31"
-        booked={49}
-        capacity={50}
-        tags={["ชุมชนประมง", "ของฝากทะเล", "กิจกรรมกลางแจ้ง", "เรียนรู้วิถีชีวิต", "หัตถกรรม", "อาหารพื้นถิ่น"]}
-        priceTHB={4800}
-      />
-    </div>
+        <Route
+          path="/super/*"
+          element={
+            <ProtectedRoute allow={["superadmin"]}>
+              <SuperAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<SuperAdminRoutes />} />
+        </Route>
+
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* เส้นทางภายใน /super/ ทั้งหมด */}
+          <Route path="*" element={<AdminRoutes />} />
+        </Route>
+        <Route
+          path="/member/*"
+          element={
+            <ProtectedRoute allow={["member"]}>
+              <MemberLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<MemberRoutes />} />
+        </Route>
+
+        {/* fallback */}
+      </Routes>
+    </>
   );
 }
 

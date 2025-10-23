@@ -1,27 +1,64 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import SidebarAdmin from "./Components/SidebarAdmin";
-import BookingDetailAdmin from "./Pages/BookingDetailAdmin";
-import NavbarSam from "./Components/NavbarSam";
+import { Route, Routes } from "react-router";
+import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
+import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
 
+import AdminLayout from "@/Layouts/Admin/AdminLayout";
+import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
+
+import MemberLayout from "@/Layouts/Member/MemberLayout";
+import MemberRoutes from "@/Layouts/Member/MemberRoutes";
+
+import ProtectedRoute from "@/Libs/ProtectedRoute";
+import LoginTourist from "@/Pages/LoginTourist";
+import LoginAdmin from "@/Pages/LoginAdmin";
 
 function App() {
+  const [sort, setSort] = useState<SortValue>("latest");
+
   return (
-    <div className="flex h-screen">
-      <SidebarAdmin />
-      <div className="flex-1 flex flex-col bg-[#f4f5f7]">
-        <NavbarSam />
-        {/* <BookingDetailAdmin /> */}
-        <div className="flex-1 p-4 overflow-auto">
-          <Routes>
-            <Route
-              path="/admin/booking/:bookingId"
-              element={<BookingDetailAdmin />}
-            />
-          </Routes>
-        </div>
-      </div>
-    </div>
+    <>
+      <Routes>
+        <Route path="/guest/*">
+          <Route path="login" element={<LoginTourist />} />
+          <Route path="partner/login" element={<LoginAdmin />} />
+        </Route>
+
+        <Route
+          path="/super/*"
+          element={
+            <ProtectedRoute allow={["superadmin"]}>
+              <SuperAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<SuperAdminRoutes />} />
+        </Route>
+
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute allow={["admin"]}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* เส้นทางภายใน /super/ ทั้งหมด */}
+          <Route path="*" element={<AdminRoutes />} />
+        </Route>
+        <Route
+          path="/member/*"
+          element={
+            <ProtectedRoute allow={["member"]}>
+              <MemberLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="*" element={<MemberRoutes />} />
+        </Route>
+
+        {/* fallback */}
+      </Routes>
+    </>
   );
 }
 

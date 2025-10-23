@@ -1,18 +1,53 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
+import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
+import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
+import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
+import { Routes, Route } from "react-router-dom";
+import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
+import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
+import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
+import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
+import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
+import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
+import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
+import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
-{/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/ }
-//import CommunityManagement from '../../Pages/SuperAdmin/ManageCommunity';
+import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
-const SuperAdminRoutes: React.FC = () => {
+export default function SuperAdminRoutes() {
   return (
     <Routes>
-      {/* 
-      <Route path="communities/all" element={<CommunityManagement />} />
-      <Route path="accounts/all" element={<ManageAccount />} />
-*/}
+      <Route path="community/create" element={<CreateCommuninityPage />} />
+      <Route path="community/:communityId/edit" element={<EditCommunity />} />
+      {/* <Route path="packages/all" element={<ManagePackagePage />} /> */}
+      <Route path="package/edit/:id" element={<EditPackagePage />} />
+      <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+      <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />
+      <Route
+        path="/community/:communityId/store/create"
+        element={<CreateStore />}
+      />
+      <Route path="/store/:storeId/edit" element={<EditStore />} />
+
+      <Route
+        path="community/:communityId/homestay/:homestayId"
+        element={<HomestayDetailPage />}
+      />
+      <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="package-requests" element={<ManagePackageRequestPage />} />
+      <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
+      <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
+
+      <Route
+        path="community/:communityId/stores/all"
+        element={<ManageStores />}
+      />
+      <Route
+        path="community/:communityId/homestays/all"
+        element={<ManageHomestaySuperAdmin />}
+      />
     </Routes>
   );
-};
-
-export default SuperAdminRoutes;
+}

@@ -6,6 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
@@ -46,6 +47,7 @@ export default function SuperAdminRoutes() {
         element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="account/change-password" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />

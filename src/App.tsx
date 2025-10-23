@@ -60,6 +60,6 @@ function App() {
       </Routes>
     </>
   );
-}
+};
 
-export default App;
+export default CreatePackagePage;

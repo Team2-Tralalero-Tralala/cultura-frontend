@@ -13,11 +13,11 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
 import * as z from "zod";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/components/TextField";
+import TextArea from "@/components/TextArea";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/Components/Selector/ThailandLocationSelector";
+} from "@/components/Selector/ThailandLocationSelector";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
 import { createCommunity } from "@/Services/community-service";

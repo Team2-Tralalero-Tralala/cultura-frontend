@@ -427,12 +427,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { toast } from "react-toastify";
 
-import api from "../../Libs/api";
-import TextField from "../../Components/TextField";
-import Button from "../../Components/Button";
-import SubmitButton from "../../Components/SubmitButton";
-import ThailandLocationSelector from "../../Components/ThailandLocationSelector";
-import type { ThailandLocation } from "../../Components/ThailandLocationSelector";
+import api from "@/Libs/api";
+import TextField from "@/Components/TextField";
+import Button from "@/Components/Button";
+import SubmitButton from "@/Components/SubmitButton";
+import ThailandLocationSelector from "@/components/Selector/ThailandLocationSelector";
+import type { ThailandLocation } from "@/components/Selector/ThailandLocationSelector";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -570,7 +570,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         body.birthDate = roleSpecificData.birthDate || null;
         body.province = locationData.province;
         body.district = locationData.district;
-        body.subDistrict = locationData.subdistrict; 
+        body.subDistrict = locationData.subdistrict;
         body.postalCode = locationData.postalCode;
       }
 

@@ -117,6 +117,25 @@ export function BankSelector({
       value={selectedBanks!}
       onChange={(_, newValue) => onChange(newValue ? newValue.name : null)}
       renderInput={(params) => renderCustomInput("bank-selector", "ชื่อธนาคาร", params)}
+      slotProps={{
+        popper: {
+          sx: {
+            "& .MuiAutocomplete-listbox": {
+              fontFamily: "var(--font-sarabun)",
+              fontSize: "16px",
+            },
+            "& .MuiAutocomplete-option": {
+              fontFamily: "var(--font-sarabun)",
+              fontSize: "16px",
+            },
+          },
+        },
+      }}
+      sx={{
+        "& .MuiInputBase-input": {
+          fontFamily: "var(--font-sarabun)",
+        },
+      }}
     />
   );
 }

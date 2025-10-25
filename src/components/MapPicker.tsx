@@ -85,19 +85,9 @@ function MapPicker({
   const [search, setSearch] = React.useState<string>("");
 
   // แจ้ง parent เมื่อ position เปลี่ยน
-  const prevRef = React.useRef<[number, number]>(position);
-  // ✅ sync startingPosition จาก parent เมื่อเปลี่ยน (เช่นหลังโหลด API)
   React.useEffect(() => {
-    if (
-      startingPosition[0] !== position[0] ||
-      startingPosition[1] !== position[1]
-    ) {
-      setPosition(startingPosition);
-      setLat(startingPosition[0]);
-      setLng(startingPosition[1]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startingPosition]);
+    onChange(position);
+  }, [position, onChange]);
 
   const [_popOverOpen, _setPopOverOpen] = React.useState(false);
 
@@ -119,6 +109,7 @@ function MapPicker({
     setLat(position[0]);
     setLng(position[1]);
   }, [position]);
+
   // อัปเดตตำแหน่งเมื่อแก้ไขค่า lat/lng ใน input
   const handleLatChange = (v: string) => {
     const n = Number(v);

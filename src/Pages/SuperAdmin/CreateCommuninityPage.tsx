@@ -6,31 +6,31 @@
  * 3. ข้อมูลติดต่อและผู้ดูแล (เบอร์โทร, อีเมล, ผู้ดูแลหลัก)
  * ใช้ร่วมกับ Component ย่อย เช่น TextField, TextArea, ThailandLocationSelect
  */
-import * as React from "react";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useState } from "react";
-import * as z from "zod";
-import TextField from "@/components/TextField";
-import TextArea from "@/components/TextArea";
-import ThailandLocationSelector, {
-  type ThailandLocation,
-} from "@/components/Selector/ThailandLocationSelector";
-import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
-import { createCommunity } from "@/Services/community-service";
+import MapPicker from "@/Components/MapPicker";
+import { Modal } from "@/Components/Modal/Modal";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
 import MemberSelector, {
   type Member,
 } from "@/Components/Selector/MemberSelector";
-import MapPicker from "@/Components/MapPicker";
-import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
-import { Link, useNavigate } from "react-router";
+import { createCommunity } from "@/Services/community-service";
+import type { CommunityFormData } from "@/Types/CommunityForm";
+import ThailandLocationSelector, {
+  type ThailandLocation,
+} from "@/components/Selector/ThailandLocationSelector";
+import TextArea from "@/components/TextArea";
+import TextField from "@/components/TextField";
 import { Icon } from "@iconify/react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import * as React from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import * as z from "zod";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน

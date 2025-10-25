@@ -7,37 +7,37 @@
  * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
-import * as React from "react";
-import { Link, useParams } from "react-router";
+import {
+    getCommunityById,
+    updateCommunity,
+} from "@/Services/community-service";
+import type { CommunityFormData } from "@/Types/CommunityForm";
+import Button from "@/components/Button";
+import MapPicker from "@/components/MapPicker";
+import { Modal } from "@/components/Modal/Modal";
+import { AdminSelector, type Admin } from "@/components/Selector/AdminSelector";
+import MemberSelector, {
+    type Member,
+} from "@/components/Selector/MemberSelector";
+import ThailandLocationSelector, {
+    type ThailandLocation,
+} from "@/components/Selector/ThailandLocationSelector";
+import TextArea from "@/components/TextArea";
+import TextField from "@/components/TextField";
+import UploadCard from "@/components/calendar/upload/UploadCard";
+import UploadProfile from "@/components/calendar/upload/community/UploadProfile";
+import { Icon } from "@iconify/react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import type { CommunityFormData } from "@/Types/CommunityForm";
-import z from "zod";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
-import CircularProgress from "@mui/material/CircularProgress";
-import {
-  getCommunityById,
-  updateCommunity,
-} from "@/Services/community-service";
-import Backdrop from "@mui/material/Backdrop";
-import ThailandLocationSelector, {
-  type ThailandLocation,
-} from "@/components/Selector/ThailandLocationSelector";
-import TextArea from "@/components/TextArea";
-import MapPicker from "@/components/MapPicker";
-import { AdminSelector, type Admin } from "@/components/Selector/AdminSelector";
-import Button from "@/components/Button";
-import MemberSelector, {
-  type Member,
-} from "@/components/Selector/MemberSelector";
-import TextField from "@/components/TextField";
-import { Modal } from "@/components/Modal/Modal";
-import { Icon } from "@iconify/react";
-import UploadCard from "@/components/calendar/upload/UploadCard";
-import UploadProfile from "@/components/calendar/upload/community/UploadProfile";
+import * as React from "react";
+import { Link, useParams } from "react-router";
+import z from "zod";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน

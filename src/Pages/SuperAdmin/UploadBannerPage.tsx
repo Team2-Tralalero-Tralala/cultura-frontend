@@ -34,21 +34,21 @@ import axios from "axios";
  * - interceptor: แนบ Authorization Bearer จาก localStorage
  * - debug: แสดงปลายทางเต็มที่กำลังเรียก
  */
-const RAW_BASE = import.meta.env.VITE_API_BASE_URL?.trim();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
 const API_BASE =
-    RAW_BASE && /^https?:\/\//i.test(RAW_BASE)
-        ? RAW_BASE.replace(/\/+$/, "")
+    API_BASE_URL && /^https?:\/\//i.test(API_BASE_URL)
+        ? API_BASE_URL.replace(/\/+$/, "")
         : "http://localhost:3000";
 const API_PREFIX = (import.meta.env.VITE_API_PREFIX ?? "/api").replace(/\/+$/, "");
 
-const api = axios.create({ baseURL: API_BASE, withCredentials: true });
-api.interceptors.request.use((cfg) => {
-    const t = localStorage.getItem("access_token");
-    if (t) cfg.headers.Authorization = `Bearer ${t}`;
+const apiClient = axios.create({ baseURL: API_BASE, withCredentials: true });
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem("access_token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     // debug: ดูปลายทางจริงที่กำลังจะยิง (method + URL ที่ resolve แล้ว)
-    const full = api.getUri({ url: cfg.url!, params: cfg.params });
-    console.debug("[API] →", cfg.method?.toUpperCase(), full);
-    return cfg;
+    const fullUrl = apiClient.getUri({ url: config.url!, params: config.params });
+    console.debug("[API] →", config.method?.toUpperCase(), fullUrl);
+    return config;
 });
 
 
@@ -57,15 +57,15 @@ api.interceptors.request.use((cfg) => {
  * isAbsUrl: ตรวจว่า string เป็น URL แบบ absolute (http/https) หรือไม่
  * bannerPreviewUrl: คืน URL สำหรับพรีวิวรูปจาก item (รองรับกรณี URL แบบ absolute และกรณี path จากเซิร์ฟเวอร์)
  */
-const STATIC_PREFIX = (import.meta.env.VITE_STATIC_PREFIX ?? "/uploads").replace(/\/+$/, "") || "/";
+const STATIC_BASE_PATH = (import.meta.env.VITE_STATIC_PREFIX ?? "/uploads").replace(/\/+$/, "") || "/";
 
-const isAbsUrl = (s?: string) => !!s && /^https?:\/\//i.test(s);
+const isAbsUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
 
-const bannerPreviewUrl = (it: { path: string; url?: string }) => {
-    if (isAbsUrl(it.url)) return it.url as string;
-    const raw = it.path || "";
-    const lead = "/" + raw.replace(/^\/+/, "");
-    return `${API_BASE}${lead}`;
+const bannerPreviewUrl = (item: { path: string; url?: string }) => {
+    if (isAbsUrl(item.url)) return item.url as string;
+    const rawPath = item.path || "";
+    const leadingPath = "/" + rawPath.replace(/^\/+/, "");
+    return `${API_BASE}${leadingPath}`;
 };
 
 /* ---------- Types ----------
@@ -94,46 +94,46 @@ type BannerItem = {
  * หมายเหตุ: โครงสร้าง field name ต้องตรงกับฝั่ง server/multer
  */
 async function fetchBanners(): Promise<BannerItem[]> {
-    const r = await api.get(`${API_PREFIX}/banner`, { params: { _: Date.now() } });
+    const resp = await apiClient.get(`${API_PREFIX}/banner`, { params: { _: Date.now() } });
     // รองรับรูปแบบห่อผลลัพธ์ที่หลากหลาย (data.data | data.banners | data)
-    const rawArr = Array.isArray(r.data?.data) ? r.data.data
-        : Array.isArray(r.data?.banners) ? r.data.banners
-            : Array.isArray(r.data) ? r.data
+    const rawArr = Array.isArray(resp.data?.data) ? resp.data.data
+        : Array.isArray(resp.data?.banners) ? resp.data.banners
+            : Array.isArray(resp.data) ? resp.data
                 : [];
 
     // map → BannerItem (กำหนด order fallback ด้วย index+1)
-    return (rawArr as RawBannerItem[]).map((it, index) => {
-        const item: BannerItem = {
-            id: it.id,
-            path: it.image,
-            order: it.order ?? (index + 1),
+    return (rawArr as RawBannerItem[]).map((raw, index) => {
+        const bannerItem: BannerItem = {
+            id: raw.id,
+            path: raw.image,
+            order: raw.order ?? (index + 1),
         };
 
         return {
-            ...item,
-            url: item.url ?? bannerPreviewUrl(item) // สร้าง URL สำหรับพรีวิว
+            ...bannerItem,
+            url: bannerItem.url ?? bannerPreviewUrl(bannerItem) // สร้าง URL สำหรับพรีวิว
         };
     });
 }
 
 async function uploadBanners(files: File[]) {
-    const fd = new FormData();
-    files.forEach((f) => fd.append("banner", f, f.name));
-    const r = await api.post(`${API_PREFIX}/banner`, fd, {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("banner", file, file.name));
+    const resp = await apiClient.post(`${API_PREFIX}/banner`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
-    return r.data;
+    return resp.data;
 }
 
 async function deleteBanner(id: number) {
-    await api.delete(`${API_PREFIX}/banner/${id}`);
+    await apiClient.delete(`${API_PREFIX}/banner/${id}`);
 }
 
 async function replaceBanner(id: number, file: File) {
-    const fd = new FormData();
-    fd.append("banner", file, file.name);
-    const r = await api.put(`${API_PREFIX}/banner/${id}`, fd);
-    return r.data;
+    const formData = new FormData();
+    formData.append("banner", file, file.name);
+    const resp = await apiClient.put(`${API_PREFIX}/banner/${id}`, formData);
+    return resp.data;
 }
 
 /* -------------------- Result Modal --------------------
@@ -200,15 +200,15 @@ export default function UploadBannerPage() {
     const [localPreviews, setLocalPreviews] = useState<{ url: string }[]>([]);
     useEffect(() => {
         // สร้าง object URLs สำหรับไฟล์ที่เลือก เพื่อพรีวิวในหน้า
-        const urls = bannerFiles.map((f) => ({ url: URL.createObjectURL(f) }));
-        setLocalPreviews(urls);
+        const previewUrls = bannerFiles.map((file) => ({ url: URL.createObjectURL(file) }));
+        setLocalPreviews(previewUrls);
         // cleanup: ยกเลิก URL เพื่อเลี่ยง memory leak
-        return () => urls.forEach((u) => URL.revokeObjectURL(u.url));
+        return () => previewUrls.forEach((u) => URL.revokeObjectURL(u.url));
     }, [bannerFiles]);
 
     // Combine previews (server first, then local)
     const combinedPreviews = useMemo(
-        () => [...serverBanners.map((b) => ({ url: b.url ?? bannerPreviewUrl(b) })), ...localPreviews],
+        () => [...serverBanners.map((banner) => ({ url: banner.url ?? bannerPreviewUrl(banner) })), ...localPreviews],
         [serverBanners, localPreviews]
     );
 
@@ -241,8 +241,8 @@ export default function UploadBannerPage() {
             items.sort((a, b) => a.order - b.order);
             setServerBanners(items);
             setBannerFiles([]);
-        } catch (e) {
-            console.error("Failed to fetch banners:", e);
+        } catch (error) {
+            console.error("Failed to fetch banners:", error);
             // TODO: สามารถแสดง ResultModal แจ้งข้อผิดพลาดเพิ่มได้
         }
     };
@@ -261,23 +261,23 @@ export default function UploadBannerPage() {
      * - แจ้งผลด้วย ResultModal
      */
     const handleAddFiles = async (files: File[]) => {
-        const toAdd = files.slice(0, remainBanner);
-        if (!toAdd.length) return;
+        const filesToUpload = files.slice(0, remainBanner);
+        if (!filesToUpload.length) return;
 
         try {
-            await uploadBanners(toAdd);
+            await uploadBanners(filesToUpload);
             await refresh();
             setBannerFiles([]);
 
             setResultStatus("success");
-            setResultMessage(`อัปโหลดสำเร็จ ${toAdd.length} ไฟล์`);
+            setResultMessage(`อัปโหลดสำเร็จ ${filesToUpload.length} ไฟล์`);
             setResultOpen(true);
-        } catch (e: any) {
+        } catch (error: any) {
             setResultStatus("error");
-            setResultMessage(e?.message || "อัปโหลดไม่สำเร็จ");
+            setResultMessage(error?.message || "อัปโหลดไม่สำเร็จ");
             setResultOpen(true);
             // เก็บไฟล์ไว้ใน local (พรีวิว) เผื่อผู้ใช้จะส่งใหม่ภายหลัง
-            setBannerFiles((prev) => [...prev, ...toAdd]);
+            setBannerFiles((prev) => [...prev, ...filesToUpload]);
         }
     };
 
@@ -296,14 +296,14 @@ export default function UploadBannerPage() {
      * - เก็บไฟล์ไว้ใน tempFile
      * - เปิด Confirm modal เพื่อยืนยัน
      */
-    const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const fileList = Array.from(e.target.files ?? []);
-        if (!fileList.length) return;
-        setTempFile(fileList[0]);
+    const handleEditFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const pickedFiles = Array.from(event.target.files ?? []);
+        if (!pickedFiles.length) return;
+        setTempFile(pickedFiles[0]);
         setConfirmTitle("ยืนยันการแก้ไขรูปภาพหรือไม่");
         setConfirmDesc("คุณจะไม่สามารถย้อนกลับได้");
         setConfirmOpen(true);
-        e.target.value = "";
+        event.target.value = "";
     };
 
     /**
@@ -353,8 +353,8 @@ export default function UploadBannerPage() {
                     await deleteBanner(serverBanners[pendingIndex].id);
                     await refresh();
                 } else {
-                    const localIdx = pendingIndex - serverCount;
-                    setBannerFiles((prev) => prev.filter((_, i) => i !== localIdx));
+                    const localIndex = pendingIndex - serverCount;
+                    setBannerFiles((prev) => prev.filter((_, i) => i !== localIndex));
                 }
                 setResultStatus("success");
                 setResultMessage("ลบรูปภาพสำเร็จ");
@@ -368,11 +368,11 @@ export default function UploadBannerPage() {
                     await replaceBanner(serverBanners[pendingIndex].id, tempFile);
                     await refresh();
                 } else {
-                    const localIdx = pendingIndex - serverCount;
+                    const localIndex = pendingIndex - serverCount;
                     setBannerFiles((prev) => {
-                        const arr = [...prev];
-                        arr[localIdx] = tempFile;
-                        return arr;
+                        const next = [...prev];
+                        next[localIndex] = tempFile;
+                        return next;
                     });
                 }
 
@@ -380,9 +380,9 @@ export default function UploadBannerPage() {
                 setResultMessage("แก้ไขรูปภาพสำเร็จ");
                 setResultOpen(true);
             }
-        } catch (e: any) {
+        } catch (error: any) {
             setResultStatus("error");
-            setResultMessage(e?.message || "ไม่สำเร็จ");
+            setResultMessage(error?.message || "ไม่สำเร็จ");
             setResultOpen(true);
         }
 
@@ -398,17 +398,17 @@ export default function UploadBannerPage() {
      * - index ของการ์ดคือ index ใน combinedPreviews (ใช้ตัดสิน server/local)
      */
     const renderPreviewCards = (previews: { url: string }[]) =>
-        previews.map((p, idx) => (
+        previews.map((preview, index) => (
             <div
-                key={idx}
+                key={index}
                 className="relative shrink-0 overflow-hidden rounded-xl shadow border border-gray-200"
                 style={{ width: 200, height: 120 }}
             >
-                <img src={p.url} alt={`preview-banner-${idx}`} className="w-full h-full object-cover" draggable={false} />
+                <img src={preview.url} alt={`preview-banner-${index}`} className="w-full h-full object-cover" draggable={false} />
                 <div className="absolute bottom-2 right-2 z-20 flex space-x-2">
                     <button
                         type="button"
-                        onClick={() => onEditClick(idx)}
+                        onClick={() => onEditClick(index)}
                         className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                         title="แก้ไขรูป"
                     >
@@ -416,7 +416,7 @@ export default function UploadBannerPage() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => onDeleteClick(idx)}
+                        onClick={() => onDeleteClick(index)}
                         className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                         title="ลบรูป"
                     >

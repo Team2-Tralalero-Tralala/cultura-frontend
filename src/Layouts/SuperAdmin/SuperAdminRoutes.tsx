@@ -21,7 +21,7 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
-      <Route path="banner" element={<UploadBannerPage />} />
+      <Route path="banners" element={<UploadBannerPage />} />
     </Routes>
   );
 }

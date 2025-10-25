@@ -30,11 +30,7 @@ interface TagSelectorProps {
  *   - tag : รายการแท็กทั้งหมด (array ของ Tag)
  *   - onChange : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของแท็กที่ถูกเลือก
  */
-export function TagSelector({
-  value = [],
-  tag = [],
-  onChange,
-}: TagSelectorProps) {
+export function TagSelector({ value = [], tag = [], onChange }: TagSelectorProps) {
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = React.useState<Tag[]>([]);
 
@@ -44,10 +40,7 @@ export function TagSelector({
     getTags().then((respone) => {
       if (!active) return;
       const data = respone.data.data || [];
-      const merged = [
-        ...data,
-        ...tag.filter((t) => t && !data.some((x: Tag) => x.id === t.id)),
-      ];
+      const merged = [...data, ...tag.filter((t) => t && !data.some((x: Tag) => x.id === t.id))];
       setTags(merged);
     });
     return () => {
@@ -88,15 +81,29 @@ export function TagSelector({
         renderTags={() => null}
         renderOption={(props, option, { selected }) => (
           <li {...props} key={option.id}>
-            <Checkbox
-              icon={icon}
-              checkedIcon={checkedIcon}
-              className="mr-2"
-              checked={selected}
-            />
+            <Checkbox icon={icon} checkedIcon={checkedIcon} className="mr-2" checked={selected} />
             {option.name}
           </li>
         )}
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         renderInput={(params) => {
           // Destructure props carefully
           const { InputProps, inputProps } = params;
@@ -148,9 +155,7 @@ export function TagSelector({
                 <span>{item.name}</span>
                 <button
                   onClick={() => {
-                    const updated = selectedTags.filter(
-                      (m) => m.id !== item.id
-                    );
+                    const updated = selectedTags.filter((m) => m.id !== item.id);
                     setSelectedTags(updated);
                     onChange(updated.map((v) => v.id));
                   }}

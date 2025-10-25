@@ -61,9 +61,7 @@ export function AdminSelector({
         const unassigned = res.data.data as Admin[];
 
         // ✅ รวม admin ปัจจุบัน (ถ้ามี) เข้ากับลิสต์โดยไม่ซ้ำ
-        const merged = admin
-          ? [admin, ...unassigned.filter((a) => a.id !== admin.id)]
-          : unassigned;
+        const merged = admin ? [admin, ...unassigned.filter((a) => a.id !== admin.id)] : unassigned;
 
         setAdmins(merged);
       } catch (error) {
@@ -95,17 +93,11 @@ export function AdminSelector({
       <div ref={InputProps.ref} className="w-full">
         {/* Label + Error message ในบรรทัดเดียวกัน */}
         <div className="flex items-center justify-between mb-1.5">
-          <label
-            htmlFor={id}
-            className="block text-base font-semibold text-gray-800"
-          >
+          <label htmlFor={id} className="block text-base font-semibold text-gray-800">
             {label} <span className="text-red-600">*</span>
           </label>
           {error && (
-            <span
-              id={`${id}-helper-text`}
-              className="text-xs text-red-600 ml-2 whitespace-nowrap"
-            >
+            <span id={`${id}-helper-text`} className="text-xs text-red-600 ml-2 whitespace-nowrap">
               {helperText}
             </span>
           )}
@@ -143,14 +135,29 @@ export function AdminSelector({
       loading={loading}
       options={admins}
       noOptionsText="ไม่พบผู้ดูแล"
-      getOptionLabel={(option) =>
-        option ? `${option.fname} ${option.lname}` : ""
-      }
+      getOptionLabel={(option) => (option ? `${option.fname} ${option.lname}` : "")}
       value={selectedAdmin!}
       onChange={(_, newValue) => onChange(newValue ? newValue.id : null)}
-      renderInput={(params) =>
-        renderCustomInput("admin-selector", "เลือกผู้ดูแล", params)
-      }
+      renderInput={(params) => renderCustomInput("admin-selector", "เลือกผู้ดูแล", params)}
+      slotProps={{
+        popper: {
+          sx: {
+            "& .MuiAutocomplete-listbox": {
+              fontFamily: "var(--font-sarabun)",
+              fontSize: "16px",
+            },
+            "& .MuiAutocomplete-option": {
+              fontFamily: "var(--font-sarabun)",
+              fontSize: "16px",
+            },
+          },
+        },
+      }}
+      sx={{
+        "& .MuiInputBase-input": {
+          fontFamily: "var(--font-sarabun)",
+        },
+      }}
     />
   );
 }

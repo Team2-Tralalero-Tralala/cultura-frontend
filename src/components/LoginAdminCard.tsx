@@ -99,10 +99,10 @@ export function LoginAdminCard() {
     try {
       const loggedInUser = await login(username, password); // ให้ login return user
 
-      if (loggedInUser.role === "tourist") {
+      if (loggedInUser.user.role === "tourist") {
         setError("ไม่พบบัญชี");
       } else {
-        navigate("/tourist");
+        loggedInUser.navigateToFirstPage();
       }
       await login(username, password);
     } catch (error: any) {

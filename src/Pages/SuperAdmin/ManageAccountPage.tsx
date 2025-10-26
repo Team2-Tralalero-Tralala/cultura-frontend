@@ -1,10 +1,8 @@
 /**
  * Component : ManageAccountPage (Super Admin)
  * Description : หน้าจัดการบัญชีผู้ใช้ (Super Admin)
- * - แสดงตารางบัญชีผู้ใช้: ชื่อจริง-นามสกุล / ประเภท / ชุมชน / อีเมล
- * - ค้นหา + ตัวกรองประเภท
- * - เลือกหลายแถว / ลบหลายรายการ / ระงับหลายรายการ
- * - ปุ่มระงับ / แก้ไข / ลบ ต่อแถว
+ * - แสดงตารางบัญชีผู้ใช้
+ * - มีฟังก์ชันค้นหา / กรอง / เพิ่ม / ระงับ / ลบ / ระงับทั้งหมด / ลบทั้งหมด
  */
 
 import { useEffect, useState } from "react";
@@ -15,6 +13,7 @@ import { TrashIcon, BanIcon } from "lucide-react";
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
+import { Modal } from "@/Components/Modal/Modal";
 
 // Types
 import type {
@@ -32,11 +31,10 @@ import {
   blockMultipleAccounts,
   deleteAccountById,
   deleteMultipleAccounts,
-} from "@/Libs/AccountServices";
+} from "@/Services/account-services";
 
 /* ===========================================================
- * Function : thaiRoleName
- * Description : แปลงชื่อ Role เป็นภาษาไทย
+ * Function : แปลงชื่อ Role เป็นภาษาไทย
  * =========================================================== */
 function thaiRoleName(role: string): string {
   switch (role) {
@@ -54,7 +52,7 @@ function thaiRoleName(role: string): string {
 }
 
 /* ===========================================================
- * Variable : columns (คอลัมน์ของตาราง)
+ * ตัวคอลัมน์ในตาราง
  * =========================================================== */
 const columns: Column<AccountRow>[] = [
   {
@@ -97,11 +95,9 @@ const columns: Column<AccountRow>[] = [
 export function ManageAccountPage() {
   const navigate = useNavigate();
 
-  /* ===========================================================
-   * State : จัดการข้อมูลของตาราง
-   * =========================================================== */
+  /* --------------------------- State หลัก --------------------------- */
   const [rows, setRows] = useState<AccountRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
@@ -109,12 +105,28 @@ export function ManageAccountPage() {
     totalCount: 0,
     limit: 10,
   });
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filterRole, setFilterRole] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
   const [selectedRows, setSelectedRows] = useState<AccountRow[]>([]);
 
+  /* --------------------------- State สำหรับ Modal --------------------------- */
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalText, setModalText] = useState("");
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
+
   /* ===========================================================
-   * Variable : ตัวเลือกตัวกรองประเภทผู้ใช้
+   * ฟังก์ชันเปิด Modal
+   * =========================================================== */
+  function openModal(title: string, text: string, onConfirm: () => void) {
+    setModalTitle(title);
+    setModalText(text);
+    setOnConfirmAction(() => onConfirm);
+    setModalOpen(true);
+  }
+
+  /* ===========================================================
+   * ตัวเลือกกรองประเภทผู้ใช้
    * =========================================================== */
   const optionsRole = [
     { label: "ทั้งหมด", value: "all" },
@@ -124,8 +136,7 @@ export function ManageAccountPage() {
   ];
 
   /* ===========================================================
-   * Function : fetchData
-   * Description : ดึงข้อมูลบัญชีผู้ใช้จาก API
+   * ดึงข้อมูลบัญชีผู้ใช้
    * =========================================================== */
   async function fetchData(): Promise<void> {
     try {
@@ -152,13 +163,41 @@ export function ManageAccountPage() {
     }
   }
 
-  // โหลดข้อมูลทุกครั้งที่มีการเปลี่ยนหน้า / เงื่อนไขค้นหา / กรอง
+  // โหลดข้อมูลเมื่อเปลี่ยนหน้า / ค้นหา / กรอง
   useEffect(() => {
-    void fetchData();
-  }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
+    let isCancelled = false;
+    const delay = setTimeout(async () => {
+      try {
+        setIsLoading(true);
+        const {
+          data: { data: resultData, pagination: resultPagination },
+        } = await fetchAccounts(
+          pagination.currentPage,
+          pagination.limit,
+          searchQuery,
+          filterRole === "all" ? undefined : filterRole
+        );
 
+        if (!isCancelled) {
+          setRows(resultData);
+          setPagination(resultPagination);
+        }
+      } catch (err) {
+        const e = err as Error;
+        if (!isCancelled) setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
+      } finally {
+        if (!isCancelled) setIsLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(delay);
+    };
+  }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
+  
   /* ===========================================================
-   * Config : Action ต่อแถว
+   * Action ต่อแถว (ระงับ / ลบ / แก้ไข)
    * =========================================================== */
   const rowActions: DataTableActionsConfig<AccountRow> = {
     header: "จัดการ",
@@ -168,56 +207,70 @@ export function ManageAccountPage() {
     className: "pr-11",
     items: () => ["block", "edit", "delete"],
     callbacks: {
-      block: async (row) => {
-        if (!window.confirm(`ยืนยันระงับบัญชี "${row.fname} ${row.lname}" ?`)) return;
-        await blockAccountById(row.id);
-        alert("ระงับบัญชีสำเร็จ");
-        await fetchData();
+      block: (row) => {
+        openModal(
+          "ยืนยันระงับบัญชีผู้ใช้",
+          `คุณต้องการยืนยันการระงับบัญชี "${row.fname} ${row.lname}" หรือไม่?`,
+          async () => {
+            await blockAccountById(row.id);
+            await fetchData();
+          }
+        );
       },
-      edit: (row) => {
-        navigate(`/super/account/edit/${row.id}`);
-      },
-      delete: async (row) => {
-        if (!window.confirm(`ยืนยันลบบัญชี "${row.fname} ${row.lname}" ?`)) return;
-        await deleteAccountById(row.id);
-        alert("ลบบัญชีสำเร็จ");
-        await fetchData();
+      edit: (row) => navigate(`/super/account/edit/${row.id}`),
+      delete: (row) => {
+        openModal(
+          "ยืนยันการลบบัญชี",
+          `คุณต้องการยืนยันการลบบัญชี "${row.fname} ${row.lname}" หรือไม่?`,
+          async () => {
+            await deleteAccountById(row.id);
+            await fetchData();
+          }
+        );
       },
     },
   };
 
   /* ===========================================================
-   * Config : Action หลายแถว
+   * Action หลายแถว (ระงับทั้งหมด / ลบทั้งหมด)
    * =========================================================== */
   const bulkActions: BulkAction<AccountRow>[] = [
     {
       id: "bulk-block",
       label: "ระงับทั้งหมด",
       icon: BanIcon,
-      intent: "warning",
-      confirm: (rows) => `ยืนยันระงับบัญชีทั้งหมด ${rows.length} รายการหรือไม่?`,
-      onClick: async (rows) => {
-        await blockMultipleAccounts(rows.map((r) => r.id));
-        alert("ระงับบัญชีสำเร็จ");
-        await fetchData();
+      intent: "neutral",
+      onClick: (rows) => {
+        openModal(
+          "ยืนยันระงับบัญชีผู้ใช้",
+          `คุณต้องการระงับบัญชีทั้งหมด ${rows.length} รายการหรือไม่?`,
+          async () => {
+            await blockMultipleAccounts(rows.map((r) => r.id));
+            await fetchData();
+          }
+        );
       },
     },
     {
       id: "bulk-delete",
       label: "ลบทั้งหมด",
       icon: TrashIcon,
-      intent: "danger",
-      confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-      onClick: async (rows) => {
-        await deleteMultipleAccounts(rows.map((r) => r.id));
-        alert("ลบบัญชีทั้งหมดสำเร็จ");
-        await fetchData();
+      intent: "neutral",
+      onClick: (rows) => {
+        openModal(
+          "ยืนยันการลบบัญชี",
+          `คุณต้องการลบบัญชีทั้งหมด ${rows.length} รายการหรือไม่?`,
+          async () => {
+            await deleteMultipleAccounts(rows.map((r) => r.id));
+            await fetchData();
+          }
+        );
       },
     },
   ];
 
   /* ===========================================================
-   * Return : UI หลักของหน้า
+   * UI หลักของหน้า
    * =========================================================== */
   return (
     <div className="space-y-4">
@@ -262,7 +315,7 @@ export function ManageAccountPage() {
         </div>
       </div>
 
-      {/* แสดงข้อความ Error */}
+      {/* Error Message */}
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       {/* Table Section */}
@@ -274,11 +327,26 @@ export function ManageAccountPage() {
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
         onPageChange={(p) => setPagination((prev) => ({ ...prev, currentPage: p }))}
-        onPageSizeChange={(p) => setPagination((prev) => ({ ...prev, currentPage: 1, limit: p }))}
+        onPageSizeChange={(p) =>
+          setPagination((prev) => ({ ...prev, currentPage: 1, limit: p }))
+        }
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}
         bulkActions={bulkActions}
+
+      />
+      <Modal
+        open={modalOpen}
+        title={modalTitle}
+        text={modalText}
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          onConfirmAction();
+          setModalOpen(false);
+        }}
+        onCancel={() => setModalOpen(false)}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import { useParams, Link, useNavigate} from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Pencil, SquarePen } from "lucide-react";
 
-import { fetchUserDetail } from "../../Libs/AccountServices";
+import { fetchUserDetail } from "../../Services/account-services";
 import type { UserDetail } from "@/Types/User";
 
 /* ===========================================================
@@ -51,11 +51,11 @@ export function UserDetailPage() {
         <div className="text-base text-gray-600 flex items-center gap-2">
           <Link
             to="/super/accounts"
-            className="text-gray-900 hover:underline font-medium"
+            className="text-gray-900 hover:underline text-sm"
           >
             จัดการบัญชี
           </Link>
-          <span className="text-gray-400 text-lg">{">"}</span>
+          <span className="text-gray-400 text-sm">{">"}</span>
           <span>รายละเอียดบัญชี</span>
         </div>
 

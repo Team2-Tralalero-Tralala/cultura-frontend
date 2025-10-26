@@ -8,9 +8,9 @@ import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAd
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 
-import UserStatusPage from "@/Pages/SuperAdmin/BlockUserPage";
-import UserDetailPage from "@/Pages/SuperAdmin/UserDetailPage";
-import ManageAccountPage from "@/Pages/SuperAdmin/ManageAccountPage";
+import { BlockedAccountPage } from "@/Pages/SuperAdmin/BlockUserPage";
+import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
+import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 
 
 export default function SuperAdminRoutes() {
@@ -26,7 +26,7 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
-      <Route path="users/blocked" element={<UserStatusPage />} />
+      <Route path="users/blocked" element={<BlockedAccountPage />} />
       <Route path="users/:id" element={<UserDetailPage />} />
       <Route path="accounts" element={<ManageAccountPage />} />
     </Routes>

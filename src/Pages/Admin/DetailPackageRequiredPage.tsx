@@ -5,7 +5,7 @@
  * มีการเปลี่ยนสถานะ อนุมัติ/ปฏิเสธ 
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState,} from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -153,27 +153,6 @@ function rejectPackageRequest(packageId: number, reason: string) {
   return apiPatch(`${API_BASE_URL}/admin/package-requests/${packageId}/reject`, { reason });
 }
 
-/* ----------------------------- Utils ----------------------------- */
-/**
- * ฟังก์ชัน : getThaiApproveStatus
- * คำอธิบาย : แปลงสถานะการอนุมัติ (อังกฤษ) เป็นคำอธิบายภาษาไทยที่อ่านง่าย
- * Input : status?: string | null
- * Output: string (คำอธิบายสถานะภาษาไทย)
- */
-function getThaiApproveStatus(status?: string | null) {
-  switch ((status || "").toUpperCase()) {
-    case "PENDING":
-      return "รออนุมัติ";
-    case "APPROVE":
-    case "APPROVED":
-      return "อนุมัติแล้ว";
-    case "REJECT":
-    case "REJECTED":
-      return "ถูกปฏิเสธ";
-    default:
-      return "-";
-  }
-}
 
 /* ----------------------------- Page ------------------------------ */
 /**
@@ -214,17 +193,7 @@ export default function DetailPackageRequiredPage() {
     };
   }, [requestId]);
 
-  /**
-   * ฟังก์ชัน : reloadPackageRequestDetail
-   * คำอธิบาย : โหลดรายละเอียดคำขอแพ็กเกจซ้ำ (เผื่อเรียกใช้หลังเปลี่ยนสถานะ)
-   * Input : -
-   * Output: Promise<void>
-   */
-  const reloadPackageRequestDetail = useCallback(async () => {
-    if (!requestId) return;
-    const response = await fetchPackageRequestDetailForAdmin(requestId);
-    setPackageRequestDetail(response);
-  }, [requestId]);
+
 
   /* ค่าศูนย์กลางแผนที่ (fallback: กรุงเทพมหานคร) */
   const mapCenterLatitude = packageRequestDetail?.location?.latitude ?? 13.7563;

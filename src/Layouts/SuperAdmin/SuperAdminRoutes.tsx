@@ -12,7 +12,6 @@ import { BlockedAccountPage } from "@/Pages/SuperAdmin/BlockUserPage";
 import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
 import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 
-import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
 export default function SuperAdminRoutes() {
   return (
@@ -27,7 +26,6 @@ export default function SuperAdminRoutes() {
         element={<CommunityDetailSuperAdmin />}
       />
 
-      <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="users/blocked" element={<BlockedAccountPage />} />
       <Route path="users/:id" element={<UserDetailPage />} />

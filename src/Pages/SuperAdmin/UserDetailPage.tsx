@@ -1,15 +1,16 @@
 /**
  * Component : UserDetailPage (Super Admin)
  * Description : แสดงรายละเอียดบัญชีผู้ใช้งานตาม ID ที่ได้รับจาก URL
- * ใช้ดึงข้อมูลจาก API ผ่าน fetchUserDetail() และแสดงผลในรูปแบบการ์ด
+ * สามารถอัปโหลดรูปโปรไฟล์ใหม่ได้ โดยบันทึกเข้า Database ผ่าน route PUT /super/users/profile/:userId
  */
 
-import { useParams, Link, useNavigate} from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Pencil, SquarePen } from "lucide-react";
+import { SquarePen } from "lucide-react";
 
 import { fetchUserDetail } from "../../Services/account-services";
 import type { UserDetail } from "@/Types/User";
+import AvatarUploader from "@/Components/AvatarUploader";
 
 /* ===========================================================
  * Component : UserDetailPage
@@ -21,10 +22,9 @@ export function UserDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* 
-   * ฟังก์ชัน: useEffect โหลดข้อมูลผู้ใช้
-   * คำอธิบาย: ดึงรายละเอียดบัญชีจาก API ตาม ID ที่รับจาก URL
-   */
+  /* ===========================================================
+   * โหลดข้อมูลผู้ใช้ตาม ID
+   * =========================================================== */
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -33,13 +33,67 @@ export function UserDetailPage() {
         setUser(data);
       } catch (err: unknown) {
         const e = err as Error;
-        setError((e as any)?.message || "ไม่สามารถโหลดข้อมูลได้");
+        setError(e.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setLoading(false);
       }
     })();
   }, [id]);
 
+  // ==========================
+  // ฟังก์ชันช่วยแปลง path จาก backend
+  // ==========================
+  function resolveBackendUploadUrl(fileName?: string): string | undefined {
+    if (!fileName) return undefined;
+
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+    // ถ้า path ไม่มีคำว่า "uploads" ให้เติมเอง
+    if (!fileName.startsWith("uploads/")) {
+      const cleaned = fileName.replace(/^\/+/, ""); // ตัด / หน้าไฟล์ออก
+      return `${baseUrl}/uploads/${cleaned}`;
+    }
+
+    return `${baseUrl}/${fileName}`;
+  }
+  /* ===========================================================
+   * ฟังก์ชัน: handleAvatarChange
+   * คำอธิบาย : เมื่ออัปโหลดรูปใหม่ → ส่งไฟล์ไป backend เพื่ออัปเดต profileImage
+   * =========================================================== */
+  const handleAvatarChange = async (file: File | null) => {
+    if (!id || !file) return;
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+
+      const res = await fetch(
+        `${baseUrl}/api/super/users/profile/${id}`,
+        {
+          method: "PUT",
+          body: formData,
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+
+      // อัปเดตภาพใหม่ใน state
+      setUser((prev) =>
+        prev ? { ...prev, profileImage: data.data.profileImage } : prev
+      );
+
+      alert("อัปโหลดรูปโปรไฟล์สำเร็จ!");
+    } catch (err) {
+      console.error(err);
+      alert("อัปโหลดรูปไม่สำเร็จ");
+    }
+  };
+
+  /* ===========================================================
+   * Render ส่วนแสดงผล
+   * =========================================================== */
   if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
@@ -80,27 +134,15 @@ export function UserDetailPage() {
           <div className="flex flex-col md:flex-row justify-center items-center gap-24 mt-12 w-full">
             {/* รูปโปรไฟล์ */}
             <div className="flex justify-center flex-1">
-              <div className="relative w-72 h-72 md:w-80 md:h-80 rounded-full bg-gray-200 grid place-items-center text-gray-400 text-8xl font-bold shadow-lg">
-                {user.profileImage ? (
-                  <img
-                    src={user.profileImage}
-                    alt="profile"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  user.fname?.charAt(0)?.toUpperCase()
-                )}
-                {/* ปุ่มแก้ไขรูปภาพ */}
-                <button
-                  className="absolute bottom-4 right-4 grid place-items-center w-10 h-10 rounded-full bg-[#3D4650] text-white ring-2 ring-white shadow-md hover:bg-[#2e343b] transition"
-                  title="แก้ไขรูปภาพ"
-                >
-                  <Pencil className="w-5 h-5" />
-                </button>
-              </div>
+              <AvatarUploader
+                avatarUrl={resolveBackendUploadUrl(user.profileImage)}
+                avatarSize={300}
+                onAvatarChange={handleAvatarChange}
+              />
+
             </div>
 
-            {/* รายละเอียด */}
+            {/* รายละเอียดบัญชี */}
             <div className="flex-1">
               <div className="space-y-3 text-lg text-slate-800 leading-relaxed">
                 <h2 className="text-xl font-semibold mb-3">

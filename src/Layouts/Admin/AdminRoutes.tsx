@@ -9,6 +9,8 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import DetailPackageRequriedPage from "@/Pages/Admin/DetailPackageRequiredPage";
+
 
 {/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/}
 
@@ -17,10 +19,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
-      
+      <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} />
     </Routes>
   );
 };

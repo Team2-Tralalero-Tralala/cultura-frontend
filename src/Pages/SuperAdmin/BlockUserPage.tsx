@@ -9,9 +9,7 @@ import { Link } from "react-router-dom";
 
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
-import { TrashIcon } from "lucide-react";
-import { Modal } from "@/Components/Modal/Modal";
-
+import { TrashIcon } from "@/Components/Tables/Icon";
 import type {
   Column,
   DataTableActionsConfig,
@@ -19,17 +17,16 @@ import type {
   Pagination,
 } from "@/Components/Tables/Types";
 import type { BlockedAccountRow } from "@/Types/User";
-
 import {
   fetchBlockedAccounts,
   unblockAccountById,
   unblockMultipleAccounts,
-} from "@/Services/account-services";
+} from "@/Libs/AccountServices";
 
-/* ===========================================================
- * ฟังก์ชัน : แปลงชื่อ Role เป็นภาษาไทย
- * =========================================================== */
-const thaiRoleName = (role: string): string => {
+/** ==========================
+ * แปลงชื่อ role → ไทย
+ * ========================== */
+const thaiRoleName = (role: string) => {
   switch (role) {
     case "superadmin":
       return "ผู้ดูแลระบบ";
@@ -44,16 +41,18 @@ const thaiRoleName = (role: string): string => {
   }
 };
 
-/* ===========================================================
+/** ==========================
  * คอลัมน์ของตาราง
- * =========================================================== */
+ * ========================== */
 const columns: Column<BlockedAccountRow>[] = [
   {
     key: "fullname",
     header: "ชื่อจริง-นามสกุล",
     className: "min-w-[240px]",
     render: (r) => (
-      <div>{`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}</div>
+      <div>
+        {`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}
+      </div>
     ),
   },
   {
@@ -77,9 +76,11 @@ const columns: Column<BlockedAccountRow>[] = [
 ];
 
 /* ===========================================================
- * Component : BlockedAccountPage
+ * Component : BlockedAccountSuperAdmin
  * =========================================================== */
-export function BlockedAccountPage() {
+export function BlockedAccountSuperAdmin() {
+  
+  
   const [rows, setRows] = useState<BlockedAccountRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -93,30 +94,14 @@ export function BlockedAccountPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<BlockedAccountRow[]>([]);
 
-  /* --------------------------- State สำหรับ Modal --------------------------- */
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState("");
-  const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
-
-  /* ===========================================================
-   * ฟังก์ชันเปิด Modal
-   * =========================================================== */
-  function openModal(title: string, text: string, onConfirm: () => void) {
-    setModalTitle(title);
-    setModalText(text);
-    setOnConfirmAction(() => onConfirm);
-    setModalOpen(true);
-  }
-
-  /* ===========================================================
-   * ดึงข้อมูลบัญชีที่ถูกระงับ
-   * =========================================================== */
-  async function fetchData(): Promise<void> {
+  /** ==========================
+   * ฟังก์ชัน: fetchData
+   * คำอธิบาย: โหลดข้อมูลบัญชีที่ถูกระงับจาก API
+   * ========================== */
+  const fetchData = async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-
       const {
         data: { data: resultData, pagination: resultPagination },
       } = await fetchBlockedAccounts(
@@ -124,25 +109,24 @@ export function BlockedAccountPage() {
         pagination.limit,
         searchQuery
       );
-
       setRows(resultData);
       setPagination(resultPagination);
     } catch (err: unknown) {
       const e = err as Error;
-      console.error("โหลดข้อมูลล้มเหลว:", e);
+      console.error("load failed:", e);
       setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchData();
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
-  /* ===========================================================
-   * Action ต่อแถว (ยกเลิกการระงับรายบุคคล)
-   * =========================================================== */
+  /** ==========================
+   * Action ต่อแถว
+   * ========================== */
   const rowActions: DataTableActionsConfig<BlockedAccountRow> = {
     header: "จัดการ",
     align: "right",
@@ -151,48 +135,53 @@ export function BlockedAccountPage() {
     className: "pr-12",
     items: () => ["unblock"],
     callbacks: {
-      unblock: (row) => {
-        openModal(
-          "ยืนยันการยกเลิกการระงับ",
-          `คุณต้องการยกเลิกการระงับบัญชี "${row.fname} ${row.lname}" หรือไม่?`,
-          async () => {
-            await unblockAccountById(row.id);
-            await fetchData();
-          }
-        );
+      unblock: async (row) => {
+        if (!window.confirm(`ยืนยันยกเลิกการระงับ "${row.fname} ${row.lname}" ?`))
+          return;
+        try {
+          await unblockAccountById(row.id);
+          alert("ยกเลิกการระงับสำเร็จ");
+          await fetchData();
+        } catch (err: unknown) {
+          console.error(err);
+          alert("เกิดข้อผิดพลาดในการยกเลิกการระงับ");
+        }
       },
     },
   };
 
-  /* ===========================================================
-   * Bulk Actions (ยกเลิกการระงับทั้งหมด)
-   * =========================================================== */
+  /** ==========================
+   * Bulk Actions
+   * ========================== */
   const bulkActions: BulkAction<BlockedAccountRow>[] = [
     {
       id: "bulk-unblock",
       label: "ยกเลิกการระงับทั้งหมด",
       icon: TrashIcon,
       intent: "neutral",
-      onClick: (rows) => {
-        openModal(
-          "ยืนยันการยกเลิกการระงับทั้งหมด",
-          `คุณต้องการยกเลิกการระงับทั้งหมด ${rows.length} รายการหรือไม่?`,
-          async () => {
-            await unblockMultipleAccounts(rows.map((r) => r.id));
-            await fetchData();
-          }
-        );
+      confirm: (rows) =>
+        `ยืนยันยกเลิกการระงับ ${rows.length} รายการหรือไม่?`,
+      onClick: async (rows) => {
+        try {
+          await unblockMultipleAccounts(rows.map((r) => r.id));
+          alert("ยกเลิกการระงับสำเร็จ");
+          await fetchData();
+        } catch (err: unknown) {
+          console.error(err);
+          alert("เกิดข้อผิดพลาดในการยกเลิกการระงับทั้งหมด");
+        }
       },
     },
   ];
 
-  /* ===========================================================
+  /** ==========================
    * ส่วน UI
-   * =========================================================== */
+   * ========================== */
   return (
     <div className="space-y-4">
-      {/* Header Section */}
+      {/* ส่วนหัวของหน้า */}
       <div className="flex flex-col gap-2">
+        {/* Breadcrumb */}
         <div className="text-sm text-gray-600">
           <Link
             to="/super/accounts"
@@ -204,29 +193,28 @@ export function BlockedAccountPage() {
           <span>การระงับบัญชี</span>
         </div>
 
-        <h1 className="text-xl font-semibold text-gray-900">
-          การระงับบัญชี
-        </h1>
+        {/* Title */}
+        <h1 className="text-xl font-semibold text-gray-900">การระงับบัญชี</h1>
 
-        {/* Search bar */}
+        {/* แถวค้นหา */}
         <div className="flex items-center justify-between w-full mt-2">
-          <div className="w-[260px]">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPagination((prev) => ({ ...prev, currentPage: 1 }));
-              }}
-            />
+          <div className="flex items-center gap-2">
+            <div className="w-[260px]">
+              <SearchBarTable
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      {/* ตารางข้อมูล */}
+      {/* ตาราง */}
       <DataTable<BlockedAccountRow>
         data={rows}
         getKey={(row) => row.id.toString()}
@@ -244,19 +232,6 @@ export function BlockedAccountPage() {
         isLoading={isLoading}
         actions={rowActions}
         bulkActions={bulkActions}
-      />
-
-      <Modal
-        open={modalOpen}
-        title={modalTitle}
-        text={modalText}
-        confirmText="ยืนยัน"
-        cancelText="ยกเลิก"
-        onConfirm={() => {
-          onConfirmAction();
-          setModalOpen(false);
-        }}
-        onCancel={() => setModalOpen(false)}
       />
     </div>
   );

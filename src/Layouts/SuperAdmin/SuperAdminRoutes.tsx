@@ -29,9 +29,9 @@ import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
  * - เมื่อเปลี่ยน role ในหน้า CreateAccountPage จะเปลี่ยน path อัตโนมัติ
  */
 
-import { BlockedAccountPage } from "@/Pages/SuperAdmin/BlockUserPage";
-import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
-import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
+import UserStatusPage from "@/Pages/SuperAdmin/BlockUserPage";
+import UserDetailPage from "@/Pages/SuperAdmin/UserDetailPage";
+import ManageAccountPage from "@/Pages/SuperAdmin/ManageAccountPage";
 
 
 export default function SuperAdminRoutes() {
@@ -54,7 +54,7 @@ export default function SuperAdminRoutes() {
         element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
-      <Route path="users/blocked" element={<BlockedAccountPage />} />
+      <Route path="users/blocked" element={<UserStatusPage />} />
       <Route path="users/:id" element={<UserDetailPage />} />
       <Route path="accounts" element={<ManageAccountPage />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>

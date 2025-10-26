@@ -55,7 +55,7 @@ export async function fetchPackageRequestDetail(
  * @returns ข้อมูลรายละเอียดคำขอแพ็กเกจแบบ Type-safe
  * @throws Error เมื่อการเรียก API ล้มเหลว หรือสถานะไม่ใช่ 2xx
  */
-export async function fetchPackageRequestDetailAdmin(
+export async function fetchPackageRequestDetailForAdmin(
   requestId: string
 ): Promise<PackageRequestDetail> {
   const url = buildApiUrl(`/admin/package-requests/${requestId}`);

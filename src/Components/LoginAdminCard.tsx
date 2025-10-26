@@ -25,7 +25,6 @@ const loginSchema = z.object({
  */
 export function LoginAdminCard() {
   const [showBlocked, setShowBlocked] = useState(false);
-  const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
   const [username, setUsername] = useState("");
@@ -98,13 +97,12 @@ export function LoginAdminCard() {
     }
     try {
       const loggedInUser = await login(username, password); // ให้ login return user
-
-      if (loggedInUser.role === "tourist") {
+      
+      if (loggedInUser.user.role === "tourist") {
         setError("ไม่พบบัญชี");
       } else {
-        navigate("/tourist");
+        loggedInUser.navigateToFirstPage();
       }
-      await login(username, password);
     } catch (error: any) {
       const blockedMsg = error?.response?.data?.message ?? "";
       const isBlocked = blockedMsg.includes("ผู้ใช้ถูกบล็อก");

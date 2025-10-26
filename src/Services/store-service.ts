@@ -1,7 +1,27 @@
+/**
+ * คำอธิบาย : บริการสำหรับจัดการร้านค้า (Store) ผ่าน API
+ * ฟังก์ชันที่มีอยู่ :
+ * - createStore : สร้างร้านค้าใหม่ในชุมชน
+ * - editStore : แก้ไขข้อมูลร้านค้าที่มีอยู่
+ * - getStoreById : ดึงข้อมูลร้านค้าตาม ID
+ * - getAllStore : ดึงรายการร้านค้าทั้งหมดในชุมชน
+ *  Input : พารามิเตอร์ที่จำเป็นสำหรับแต่ละฟังก์ชัน
+ *  Output : ผลลัพธ์จากการเรียก API (Promise)
+ */
 import axios from "axios";
 import type { StoreData } from "@/Types/Store";
 const apiUrl = import.meta.env.VITE_API_URL;
 
+
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงรายการร้านค้าทั้งหมดในชุมชน
+ * Input :
+ *   - communityId (number) : ID ของชุมชนที่ต้องการดึงร้านค้า
+ *   - page (number)        : หมายเลขหน้าของผลลัพธ์สำหรับการแบ่งหน้า
+ *   - limit (number)       : จำนวนรายการต่อหน้า
+ * Output :
+ *   - Promise ของผลลัพธ์การเรียก API (axios response) ที่มีข้อมูลร้านค้า
+ */
 export async function getAllStore(
   communityId: number,
   page: number,
@@ -13,15 +33,6 @@ export async function getAllStore(
     withCredentials: true,
   });
 }
-/**
- * คำอธิบาย : บริการสำหรับจัดการร้านค้า (Store) ผ่าน API
- * ฟังก์ชันที่มีอยู่ :
- * - createStore : สร้างร้านค้าใหม่ในชุมชน
- * - editStore : แก้ไขข้อมูลร้านค้าที่มีอยู่
- * - getStoreById : ดึงข้อมูลร้านค้าตาม ID
- *  Input : พารามิเตอร์ที่จำเป็นสำหรับแต่ละฟังก์ชัน
- *  Output : ผลลัพธ์จากการเรียก API (Promise)
- */
 
 /**
  * คำอธิบาย : ฟังก์ชันสำหรับสร้างร้านค้าใหม่ในชุมชน

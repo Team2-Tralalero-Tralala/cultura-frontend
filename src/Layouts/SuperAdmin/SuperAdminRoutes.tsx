@@ -53,7 +53,8 @@ export default function SuperAdminRoutes() {
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
-
+      
+      {/* หน้าตารางร้านค้าทั้งหมดในชุมชนของ super admin */}
       <Route
         path="community/:communityId/stores/all"
         element={<ManageStores />}

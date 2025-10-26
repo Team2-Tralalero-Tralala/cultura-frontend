@@ -54,7 +54,7 @@ const normalizeText = (s: string) =>
     .trim();
 
 // ================= Component =================
-export default function ManageHomestaySuperAdmin() {
+export default function ManageHomestayAdmin() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
 

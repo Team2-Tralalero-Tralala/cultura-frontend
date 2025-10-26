@@ -6,7 +6,7 @@
 
 import TextField from "./TextField";
 import Button from "./Button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../Libs/AuthProvider";
 import ModalBlocked from "./Modal/ModalBlocked";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -25,6 +25,7 @@ const loginSchema = z.object({
  */
 export function LoginTouristCard() {
   const [showBlocked, setShowBlocked] = useState(false);
+  const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   // State สำหรับควบคุม input และ error
   const [username, setUsername] = useState("");
@@ -100,10 +101,10 @@ export function LoginTouristCard() {
     try {
       const loggedInUser = await login(username, password); // ให้ login return user
 
-      if (loggedInUser.user.role !== "tourist") {
+      if (loggedInUser.role !== "tourist") {
         setError("ไม่พบบัญชี");
       } else {
-        loggedInUser.navigateToFirstPage();
+        navigate("/tourist/home");
       }
     } catch (error: any) {
       const blockedMsg = error?.response?.data?.message;

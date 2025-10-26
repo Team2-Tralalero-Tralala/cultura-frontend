@@ -17,7 +17,7 @@ import Checkbox from "@mui/material/Checkbox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Popper from "@mui/material/Popper";
-import { getUnassignedMembers } from "@/Services/community-service";
+import { getUnassignedMembers } from "@/Libs/CommunityService";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -69,10 +69,11 @@ interface MemberSelectorProps {
 export default function MemberSelector({
   value = [],
   member = [],
-  onChange = () => {},
+  onChange,
 }: MemberSelectorProps) {
   const [members, setMembers] = React.useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<Member[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
   /*
    * คำอธิบาย : ฟังก์ชันภายในสำหรับโหลดรายชื่อสมาชิกจาก API
    * โดยจะรวมข้อมูลสมาชิกที่มีอยู่ในชุมชน (prop member) เข้ากับสมาชิกที่ยังไม่ถูกใช้
@@ -80,35 +81,48 @@ export default function MemberSelector({
    * Output : อัปเดต state 'members' ด้วยข้อมูลสมาชิกทั้งหมดที่เลือกได้
    */
   React.useEffect(() => {
-    let active = true;
-    getUnassignedMembers().then((response) => {
-      if (!active) return;
-      const data = response.data.data || [];
-      const merged = [
-        ...data,
-        ...member.filter((t) => t && !data.some((x: Member) => x.id === t.id)),
-      ];
-      setMembers(merged);
-    });
-    return () => {
-      active = false;
-    };
+    async function loadMembers() {
+      try {
+        setLoading(true);
+        const response = await getUnassignedMembers();
+        const unassigned = response.data?.data || [];
+
+        // ป้องกัน null/undefined จาก prop member
+        const safeMember = Array.isArray(member) ? member : [];
+
+        // รวมข้อมูลโดยกรอง undefined ออก
+        const merged = [
+          ...unassigned,
+          ...safeMember.filter(
+            (old) => old && !unassigned.some((m: Member) => m.id === old.id)
+          ),
+        ].filter((m) => m && m.id); // กรอง object ที่ไม่มี id ออก
+
+        setMembers(merged);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadMembers();
   }, [member]);
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับตั้งค่า selectedMembers ให้ตรงกับค่า value ปัจจุบัน
    * Input : none (อ้างอิง state 'members' และ prop 'value')
    * Output : อัปเดต state 'selectedMembers' ให้ตรงกับ id ที่เลือกอยู่ใน value
    */
-
   React.useEffect(() => {
-    if (!members?.length || !value?.length) return;
+    if (!members || members.length === 0) return;
+    if (!value || value.length === 0) {
+      setSelectedMembers([]);
+      return;
+    }
 
-    setSelectedMembers((prev) => {
-      if (prev.length > 0) return prev; // ถ้ามีอยู่แล้วไม่ต้องเซ็ตซ้ำ
-      return members.filter((m) => value.includes(m.id));
-    });
+    const preselected = members.filter((m) => value.includes(m.id));
+    setSelectedMembers(preselected);
   }, [members, value]);
-
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อมีการเลือกสมาชิกใน Autocomplete
    * Input :
@@ -127,13 +141,12 @@ export default function MemberSelector({
       <Autocomplete
         multiple
         disablePortal
-        disableClearable
         disableCloseOnSelect
         PopperComponent={CustomPopper}
         options={members}
         getOptionLabel={(option) => `${option.fname} ${option.lname}`}
         value={selectedMembers}
-        noOptionsText="ไม่พบสมาชิก"
+        loading={loading}
         onChange={handleChange}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         renderTags={() => null}
@@ -151,12 +164,13 @@ export default function MemberSelector({
         renderInput={(params) => {
           // Destructure props carefully
           const { InputProps, inputProps } = params;
-          const { ref: InputRef } = InputProps;
+          const { ref: InputRef, ...InputPropsRest } = InputProps;
           const { ref: InputElementRef, ...inputPropsRest } = inputProps;
 
           return (
             <div
               // Pass event handlers and wrapper-ref from InputProps to the outer div
+              {...InputPropsRest}
               ref={InputRef}
               className="w-full"
             >
@@ -178,11 +192,6 @@ export default function MemberSelector({
                   leading-relaxed placeholder:leading-relaxed
                   focus:outline-none focus:ring-1 transition-shadow"
                 />
-                {InputProps.endAdornment && ( // ✅ render แยกเอง
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    {InputProps.endAdornment}
-                  </div>
-                )}
               </div>
             </div>
           );

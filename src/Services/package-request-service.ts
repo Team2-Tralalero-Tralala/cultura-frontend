@@ -48,3 +48,27 @@ export async function fetchPackageRequestDetail(
 
   return payload;
 }
+
+/**
+ * ดึงรายละเอียดคำขอแพ็กเกจตาม requestId
+ * @param requestId รหัสคำขอแพ็กเกจ
+ * @returns ข้อมูลรายละเอียดคำขอแพ็กเกจแบบ Type-safe
+ * @throws Error เมื่อการเรียก API ล้มเหลว หรือสถานะไม่ใช่ 2xx
+ */
+export async function fetchPackageRequestDetailAdmin(
+  requestId: string
+): Promise<PackageRequestDetail> {
+  const url = buildApiUrl(`/admin/package-requests/${requestId}`);
+
+  const res = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // รูปแบบที่รองรับ: { data: PackageRequestDetail } หรือ PackageRequestDetail ตรง ๆ
+  const body = await res.json();
+  const payload = (body?.data ?? body) as PackageRequestDetail;
+
+  return payload;
+}

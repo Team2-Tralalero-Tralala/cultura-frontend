@@ -63,7 +63,7 @@ async function apiGet<T>(url: string): Promise<T> {
 export async function fetchPackageRequestDetail(
   requestId: string
 ): Promise<PackageRequestDetail> {
-  const url = buildApiUrl(`/package-requests/${requestId}`);
+  const url = buildApiUrl(`super/package-requests/${requestId}`);
   return apiGet<PackageRequestDetail>(url);
 }
 

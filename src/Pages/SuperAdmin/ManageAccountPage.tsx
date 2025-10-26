@@ -306,7 +306,7 @@ export function ManageAccountPage() {
 
           {/* ปุ่มเพิ่มบัญชี */}
           <button
-            onClick={() => navigate("/super/account/create")}
+            onClick={() => navigate("/super/account/admin/create")}
             className="flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-4 py-3 rounded-xl transition text-base font-medium"
           >
             <span className="text-lg leading-none">＋</span>

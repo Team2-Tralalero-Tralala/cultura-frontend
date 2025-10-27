@@ -71,3 +71,15 @@ export async function getStoreById(storeId: number) {
     withCredentials: true,
   });
 }
+
+
+export async function getAllStoreAdmin(
+  page: number,
+  limit: number
+) {
+  const params = { page, limit };
+  return axios.get(`${apiUrl}/admin/community/own/stores/all`, {
+    params,
+    withCredentials: true,
+  });
+}

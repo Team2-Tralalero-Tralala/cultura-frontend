@@ -1,25 +1,24 @@
-import { Route, Routes } from "react-router";
 import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
+import { Route, Routes } from "react-router";
 
 // Toastify สำหรับแจ้งเตือน
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import MemberLayout from "@/Layouts/Member/MemberLayout";
 import MemberRoutes from "@/Layouts/Member/MemberRoutes";
 
+import { AuthProvider } from "@/Libs/AuthProvider";
 import ProtectedRoute from "@/Libs/ProtectedRoute";
-import LoginTourist from "@/Pages/LoginTourist";
 import LoginAdmin from "@/Pages/LoginAdmin";
+import LoginTourist from "@/Pages/LoginTourist";
 
 function App() {
-  const [sort, setSort] = useState<SortValue>("latest");
-
   return (
-    <>
+    <AuthProvider>
       <Routes>
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />
@@ -73,7 +72,7 @@ function App() {
         draggable
         theme="light"
       />
-    </>
+    </AuthProvider>
   );
 }
 

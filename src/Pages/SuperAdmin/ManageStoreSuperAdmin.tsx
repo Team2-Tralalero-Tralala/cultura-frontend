@@ -195,7 +195,7 @@ export default function ManageStores() {
   const startItem = (currentPage - 1) * pageSize + 1; // index ข้อมูลแรกของหน้า
   const endItem = Math.min(currentPage * pageSize, totalItems); // index ข้อมูลสุดท้ายของหน้า
 
-  // ปรับ pagination props ตามที่คุณต้องการ:
+  // ปรับ pagination props 
   const pagination = {
     currentPage: startItem,
     totalPages: endItem,

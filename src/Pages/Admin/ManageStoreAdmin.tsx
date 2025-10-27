@@ -151,8 +151,6 @@ const pagination = {
   limit: pageSize,
 };
 
-
-
   return (
     <div className="space-y-4">
       <div className="px-6 pb-1">
@@ -163,17 +161,15 @@ const pagination = {
 
       <div className="px-6 py-1 flex items-center justify-between">
         <h2 className="text-xl font-semibold"> จัดการร้านค้า </h2>
+        <div>
         <Button onClick={() => navigate("/admin/store/create")} aria-label="เพิ่มร้านค้า">
           + เพิ่มร้านค้า
         </Button>
+        </div>
       </div>
 
       <div className="px-6 pb-2">
         <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-      </div>
-
-      <div className="px-6 pb-2 text-sm text-gray-500">
-        แสดง {startItem}-{endItem} จาก {totalItems} รายการ
       </div>
 
       <div className="px-6 pb-10">
@@ -190,10 +186,6 @@ const pagination = {
           pageSizeOptions={[10, 30, 50]}
           pagination={pagination}
           onPageChange={(p) => setCurrentPage(p)}
-          onPageSizeChange={(limit) => {
-            setPageSize(limit);
-            setCurrentPage(1); // รีเซ็ตไปหน้า 1 เวลาเปลี่ยน page size
-          }}
           theme="brand"
         />
       </div>

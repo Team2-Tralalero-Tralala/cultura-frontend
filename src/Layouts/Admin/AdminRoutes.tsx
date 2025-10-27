@@ -7,20 +7,22 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-{/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/}
+{
+  /* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/
+}
 
 //import ManageCommunityAdmin from '../../Pages/Admin/ManageCommunityAdmin';
 
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      
+      <Route path="community/own" element={<EditCommunity />} />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
-      
     </Routes>
   );
 };

@@ -48,10 +48,7 @@ export async function getCommunityById(id: number) {
  * หมายเหตุ :
  *   - ใช้ header "multipart/form-data" เพื่อรองรับการอัปโหลดไฟล์ใหม่หรือไฟล์ที่แก้ไข
  */
-export async function updateCommunity(
-  id: number,
-  data: CommunityFormData | FormData
-) {
+export async function updateCommunity(id: number, data: CommunityFormData | FormData) {
   return await axios.put(`${apiUrl}/super/community/${id}`, data, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -120,4 +117,31 @@ export async function getCommunities(page = 1, limit = 10) {
  */
 export async function getCommunityDetailById(id: number) {
   return api.get(`/super/community/detail/${id}`);
+}
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลวิสาหกิจชุมชนของผู้ดูแลชุมชน (Admin)
+ * Output : Response ที่ประกอบด้วยข้อมูลของวิสาหกิจชุมชน
+ */
+export async function getCommunityOwn() {
+  return await axios.get(`${apiUrl}/admin/community/own`, {
+    withCredentials: true,
+  });
+}
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลวิสาหกิจชุมชนสำหรับผู้ดูแลชุมชน (Admin)
+ * Input :
+ *   - data (CommunityFormData | FormData) : ข้อมูลที่ต้องการอัปเดต
+ * Output :
+ *   - Promise<Response> : คำตอบจาก API หลังอัปเดตข้อมูลสำเร็จ
+ * หมายเหตุ :
+ *   - ใช้ header "multipart/form-data" เพื่อรองรับการอัปโหลดไฟล์ใหม่หรือไฟล์ที่แก้ไข
+ */
+export async function updateCommunityOwn(data: CommunityFormData | FormData) {
+  return await axios.put(`${apiUrl}/admin/community/own`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    withCredentials: true,
+  });
 }

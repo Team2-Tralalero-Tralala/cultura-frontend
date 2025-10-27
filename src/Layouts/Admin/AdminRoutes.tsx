@@ -14,10 +14,10 @@ import ManageStoreAdmin from '@/Pages/Admin/ManageStoreAdmin';
 export default function AdminRoutes() {
   return (
     <Routes>
-      
-    
-      <Route path="/community/stores" element={<ManageStoreAdmin />} /> 
-      
+
+      {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
+      <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
     </Routes>
   );
 };

@@ -1,3 +1,7 @@
+/*
+ * คำอธิบาย : หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
+ * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
+ */
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -14,6 +18,7 @@ import { getAllStoreAdmin } from "@/Services/store-service";
 // Types
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
+// ประเภทข้อมูลร้านค้าในตาราง
 type StoreRow = {
   id: number;
   name: string;
@@ -21,6 +26,7 @@ type StoreRow = {
   tagStores: string;
 };
 
+// ประเภทข้อมูลร้านค้าที่ได้รับจาก API
 type StoreFromApi = {
   id: number;
   name: string;
@@ -36,6 +42,7 @@ const normalizeText = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// กำหนดคอลัมน์ของตาราง
 const columns: Column<StoreRow>[] = [
   { key: "name", header: "ชื่อร้านค้า", className: "min-w-[200px]" },
   { key: "detail", header: "รายละเอียด" },
@@ -58,17 +65,23 @@ export default function ManageStoreAdmin() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // โหลดข้อมูลร้านค้า
+  /*
+* คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
+*/
   const loadStores = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
       const res = await getAllStoreAdmin(currentPage, pageSize);
+      // แปลงข้อมูลจาก API เป็นรูปแบบที่ใช้ในตาราง
       const payload = res.data?.data;
+      // ตรวจสอบว่า payload.data เป็น array หรือไม่
       const list: StoreFromApi[] = Array.isArray(payload?.data) ? payload.data : [];
+      // ดึงข้อมูล pagination
       const pg = payload?.pagination ?? {};
 
+      // แปลงข้อมูลร้านค้าเป็นรูปแบบ StoreRow
       const mapped: StoreRow[] = list.map((store) => {
         const tagNames = store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
         return {
@@ -109,7 +122,11 @@ export default function ManageStoreAdmin() {
     },
   };
 
-  // ค้นหา
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับกรองข้อมูลร้านค้าตามคำค้นหา
+  * Input : searchQuery
+  * Output : รายการร้านค้าที่ผ่านการกรอง
+  */
   const filteredRows = useMemo(() => {
     const q = normalizeText(searchQuery);
     return rows.filter((row) => {
@@ -120,10 +137,18 @@ export default function ManageStoreAdmin() {
     });
   }, [rows, searchQuery]);
 
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
+  * Input : storeID
+  */
   const handleDelete = async (storeId: number) => {
     console.log("ลบ store:", storeId);
   };
 
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
+  * Input : rows
+  */
   const bulkActions: BulkAction<StoreFromApi>[] = [
     {
       id: "bulk-delete",
@@ -139,18 +164,29 @@ export default function ManageStoreAdmin() {
     },
   ];
 
-  // คำนวณ start/end ของ pagination
-const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-const endItem = Math.min(currentPage * pageSize, totalItems);
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับคำนวณข้อมูล pagination
+  * Input : currentPage, pageSize, totalItems
+  * Output : pagination object
+  */
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
 
-// pagination object
-const pagination = {
-  currentPage: startItem,  // ตำแหน่งของข้อมูลแรก
-  totalPages: endItem,     // ตำแหน่งของข้อมูลสุดท้าย
-  totalCount: totalItems,  // จำนวนทั้งหมด
-  limit: pageSize,
-};
+ /*
+  * คำอธิบาย : ฟังก์ชันสำหรับกำหนดข้อมูล pagination
+  * Input : currentPage, pageSize, totalItems
+  * Output : pagination object
+  */
+  const pagination = {
+    currentPage: startItem,  // ตำแหน่งของข้อมูลแรก
+    totalPages: endItem,     // ตำแหน่งของข้อมูลสุดท้าย
+    totalCount: totalItems,  // จำนวนทั้งหมด
+    limit: pageSize,
+  };
 
+   /*
+  * คำอธิบาย : ฟังก์ชันหลักของหน้า manage store admin
+  */
   return (
     <div className="space-y-4">
       <div className="px-6 pb-1">
@@ -162,9 +198,9 @@ const pagination = {
       <div className="px-6 py-1 flex items-center justify-between">
         <h2 className="text-xl font-semibold"> จัดการร้านค้า </h2>
         <div>
-        <Button onClick={() => navigate("/admin/store/create")} aria-label="เพิ่มร้านค้า">
-          + เพิ่มร้านค้า
-        </Button>
+          <Button onClick={() => navigate("/admin/store/create")} aria-label="เพิ่มร้านค้า">
+            + เพิ่มร้านค้า
+          </Button>
         </div>
       </div>
 
@@ -176,20 +212,21 @@ const pagination = {
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<StoreRow>
-          data={filteredRows}
-          columns={columns}
-          getKey={(row) => String(row.id)}
-          actions={rowActions}
-          bulkActions={bulkActions}
-          selectable
-          isLoading={isLoading}
-          pageSizeOptions={[10, 30, 50]}
-          pagination={pagination}
-          onPageChange={(p) => setCurrentPage(p)}
+          data={filteredRows} // ใช้ข้อมูลที่ผ่านการกรอง
+          columns={columns} // กำหนดคอลัมน์
+          getKey={(row) => String(row.id)} // กำหนด key ของแต่ละแถว
+          actions={rowActions} // กำหนด actions ของแต่ละแถว
+          bulkActions={bulkActions} // กำหนด bulk actions
+          selectable // เปิดใช้งานการเลือกหลายแถว
+          isLoading={isLoading} // สถานะการโหลดข้อมูล
+          pageSizeOptions={[10, 30, 50]} //ตัวเลือกขนาดหน้า
+          pagination={pagination} // กำหนดข้อมูล pagination
+          onPageChange={(p) => setCurrentPage(p)} // ฟังก์ชันเปลี่ยนหน้า
           theme="brand"
         />
       </div>
 
+{/* Modal สำหรับยืนยันการลบร้านค้า */}
       <Modal
         open={openConfirm}
         title="ยืนยันการลบร้านค้า"

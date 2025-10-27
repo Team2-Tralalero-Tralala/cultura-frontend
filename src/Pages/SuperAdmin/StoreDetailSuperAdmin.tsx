@@ -23,14 +23,14 @@ const StoreDetailPage = () => {
 
   const fetchStore = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/stores/${storeId}`, {
+      const res = await fetch(`http://localhost:3000/api/super/stores/${storeId}`, {
         credentials: "include",
       });
       const result = await res.json();
 
       if (result?.data) {
         const data = result.data;
-        const backendUrl = "http://localhost:3000"; // สำหรับ prepend path รูปภาพ
+        const backendUrl = "http://localhost:3000"; // prepend path รูปภาพ
 
         // แปลง path ของรูปให้เป็น URL เต็ม
         const images: string[] =
@@ -80,7 +80,6 @@ const StoreDetailPage = () => {
   if (loading) return <div className="p-6 text-gray-600">กำลังโหลดข้อมูล...</div>;
   if (!store) return <div className="p-6 text-red-500">ไม่พบข้อมูลร้านค้า</div>;
 
-  // ใช้ภาพแรกเป็น cover image
   const coverImage = store.images[0];
 
   return (
@@ -111,9 +110,9 @@ const StoreDetailPage = () => {
           {coverImage && (
             <div className="mb-6">
               <img
-                src={"/store1.png"}
+                src={"/store1.png"} 
                 alt={store.name}
-                className="w-full h-[300px] object-cover rounded-lg "
+                className="w-full h-[300px] object-cover rounded-lg border-2 border-gray-400"
               />
             </div>
           )}
@@ -134,7 +133,7 @@ const StoreDetailPage = () => {
                 store.tags.map((tag, i) => (
                   <span
                     key={i}
-                    className="bg-white text-black px-3 py-1 rounded-lg text-[14px] border-1 border-[#F0F0F0]"
+                    className="bg-white text-black px-3 py-1 rounded-lg text-[14px] border border-gray-300"
                   >
                     {tag}
                   </span>
@@ -163,14 +162,14 @@ const StoreDetailPage = () => {
           </div>
         )}
 
-        {/* แผนที่ */}
+        {/* แผนที่ (OpenStreetMap) */}
         <h2 className="text-[18px] font-semibold mt-10 mb-3">แผนที่</h2>
         {store.location ? (
           <>
             <div className="w-full h-[300px] rounded-xl overflow-hidden mb-4">
               <iframe
                 title="store-map"
-                src={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}&z=15&output=embed`}
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${store.location.longitude - 0.005},${store.location.latitude - 0.005},${store.location.longitude + 0.005},${store.location.latitude + 0.005}&layer=mapnik&marker=${store.location.latitude},${store.location.longitude}`}
                 className="w-full h-full border-0"
                 loading="lazy"
               ></iframe>
@@ -185,16 +184,16 @@ const StoreDetailPage = () => {
                   <strong>ละติจูด / ลองจิจูด :</strong> {store.location.latitude}, {store.location.longitude}
                 </p>
                 <p className="mb-2">
-                  <strong>Google Maps URL :</strong>{" "}
-                  <a
-                    href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    https://www.google.com/maps?q={store.location.latitude},{store.location.longitude}
-                  </a>
-                </p>
+                  <strong>OpenStreetMap URL :</strong>{" "}
+                    <a
+                     href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                    </a>
+                  </p>
               </div>
               <div className="mt-6">
                 <p className="mb-2">
@@ -202,6 +201,7 @@ const StoreDetailPage = () => {
                 </p>
               </div>
             </div>
+            
           </>
         ) : (
           <p className="text-gray-500">ไม่มีข้อมูลตำแหน่งร้านค้า</p>

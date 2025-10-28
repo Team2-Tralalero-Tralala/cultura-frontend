@@ -92,6 +92,21 @@ export function UserDetailPage() {
   };
 
   /* ===========================================================
+  * ฟังก์ชันช่วยจัดรูปแบบเบอร์โทรศัพท์
+  * =========================================================== */
+  function formatPhoneNumber(phone?: string | null): string {
+    if (!phone) return "-";
+    // ลบอักขระที่ไม่ใช่ตัวเลขออกก่อน
+    const digits = phone.replace(/\D/g, "");
+    // ถ้ายาว 10 หลัก เช่น 0810001111
+    if (digits.length === 10) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    // ถ้าไม่ครบ 10 หลัก แสดงตามเดิม
+    return phone;
+  }
+
+  /* ===========================================================
    * Render ส่วนแสดงผล
    * =========================================================== */
   if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
@@ -161,7 +176,7 @@ export function UserDetailPage() {
                 </p>
                 <p>
                   <span className="font-semibold">โทรศัพท์ :</span>{" "}
-                  {user.phone}
+                  {formatPhoneNumber(user.phone)}
                 </p>
                 <p>
                   <span className="font-semibold">Role :</span>{" "}
@@ -169,7 +184,7 @@ export function UserDetailPage() {
                 </p>
                 <p>
                   <span className="font-semibold">ชุมชนวิสาหกิจ :</span>{" "}
-                  {user.memberOf?.name ?? "-"}
+                  {user.communityAdmin?.name || user.communityMembers?.[0]?.Community?.name || "-"}
                 </p>
               </div>
             </div>

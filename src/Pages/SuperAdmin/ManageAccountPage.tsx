@@ -76,10 +76,15 @@ const columns: Column<AccountRow>[] = [
     render: (r) => <div>{thaiRoleName(r.role.name)}</div>,
   },
   {
-    key: "memberOf",
+    key: "community",
     header: "ชุมชน",
     className: "min-w-[160px]",
-    render: (r) => <div>{r.memberOf?.name ?? "-"}</div>,
+    render: (r) => {
+      const adminName = r.communityAdmin?.[0]?.name ?? null;
+      const memberName = r.communityMembers?.[0]?.Community?.name ?? null;
+
+      return <div>{adminName || memberName || "-"}</div>;
+    },
   },
   {
     key: "email",

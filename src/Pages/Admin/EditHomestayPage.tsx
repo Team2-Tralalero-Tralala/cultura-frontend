@@ -1,12 +1,11 @@
-// src/Pages/SuperAdmin/EditHomestayPage.tsx
+// src/Pages/Admin/EditHomestayPage.tsx
 /**
- * Component: EditHomestayPage
- * คำอธิบาย: หน้าแก้ไขข้อมูลที่พักของ Super Admin
+ * Component: EditHomestayPageAdmin
+ * คำอธิบาย: หน้าแก้ไขข้อมูลที่พักของ Admin (เจ้าของชุมชน)
  * ข้อกำหนด:
- *  - ใช้วิธีจัดการรูป (cover/gallery) เหมือนหน้า Store ทุกประการ
- *  - โหลดรูปจาก backend → แปลงเป็น File เพื่อใช้กับ UploadCard
- *  - บันทึกเป็น multipart/form-data: data(JSON) + cover[] + gallery[]
- * หมายเหตุ: ปรับเฉพาะรูปแบบโค้ดและคอมเมนต์ให้เป็นไปตาม Coding Standard เท่านั้น
+ * - โหลดข้อมูลโดยใช้ endpoint ของ Admin (`/admin/homestays/:homestayId`)
+ * - บันทึกข้อมูลโดยใช้ endpoint ของ Admin (`/admin/homestay/edit/:homestayId`)
+ * - Backend จะตรวจสอบสิทธิ์ว่า Admin เป็นเจ้าของที่พักนี้หรือไม่
  */
 
 import React from "react";
@@ -27,7 +26,7 @@ import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 
-// Config Variables (UPPER_SNAKE_CASE ตามมาตรฐาน)
+// Config Variables
 const API_URL = import.meta.env.VITE_API_URL as string;
 
 /** ฟอร์มข้อมูลที่พัก */
@@ -37,7 +36,6 @@ type HomestayForm = {
     facility: string;
     guestPerRoom: string;
     totalRoom: string;
-
     houseNumber: string;
     villageNumber: string;
     province: string;
@@ -45,7 +43,6 @@ type HomestayForm = {
     subDistrict: string;
     postalCode: string;
     addressDetail: string;
-
     latitude: string;
     longitude: string;
     placeQuery: string;
@@ -96,10 +93,7 @@ const schema = z.object({
 });
 
 /**
- * ฟังก์ชัน: urlToFile
- * คำอธิบาย: ดึงไฟล์จาก URL แล้วแปลงเป็น File object (ใช้กับ UploadCard)
- * Input : url, filename
- * Output: File object (กำหนด MIME type และเติม flag isFromServer)
+ * ฟังก์ชัน: urlToFile (เหมือนเดิม)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
     const res = await fetch(url);
@@ -113,16 +107,11 @@ async function urlToFile(url: string, filename: string): Promise<File> {
 }
 
 /**
- * ฟังก์ชัน: buildImageCandidates
- * คำอธิบาย: สร้างรายการ URL ผู้สมัครโหลดภาพจากค่า image ใน DB
- * เหตุผล: ป้องกันปัญหา 404 จาก path ที่ต่างกัน (เช่น มี/ไม่มี /api/)
- * Input : raw (path/filename จากฐานข้อมูล)
- * Output: รายการ URL ที่เป็นไปได้ (เรียงตามความเป็นไปได้)
+ * ฟังก์ชัน: buildImageCandidates (เหมือนเดิม)
  */
 function buildImageCandidates(raw: string): string[] {
     if (!raw) return [];
     if (/^https?:\/\//i.test(raw)) return [raw];
-
     const origin = (() => {
         try {
             return new URL(API_URL).origin;
@@ -130,21 +119,11 @@ function buildImageCandidates(raw: string): string[] {
             return window.location.origin;
         }
     })();
-
     const cleaned = String(raw).replace(/\\/g, "/").replace(/^\.?\/*/, "");
-
     const prefixes = [
-        "",
-        "uploads/",
-        "upload/",
-        "images/",
-        "image/",
-        "homestay/",
-        "homestays/",
-        "homestay/uploads/",
-        "homestays/uploads/",
+        "", "uploads/", "upload/", "images/", "image/", "homestay/",
+        "homestays/", "homestay/uploads/", "homestays/uploads/",
     ];
-
     const candidates = new Set<string>();
     for (const p of prefixes) {
         const path = cleaned.startsWith(p) ? cleaned : `${p}${cleaned}`;
@@ -155,10 +134,7 @@ function buildImageCandidates(raw: string): string[] {
 }
 
 /**
- * ฟังก์ชัน: bestEffortUrlToFile
- * คำอธิบาย: ทดลองโหลดภาพตาม candidate URL ไปทีละรายการจนกว่าจะสำเร็จ
- * Input : rawPath, filename
- * Output: File object ที่แปลงสำเร็จ
+ * ฟังก์ชัน: bestEffortUrlToFile (เหมือนเดิม)
  */
 async function bestEffortUrlToFile(
     rawPath: string,
@@ -179,10 +155,10 @@ async function bestEffortUrlToFile(
 type FormErrors = Partial<Record<keyof HomestayForm, string>>;
 
 /**
- * Component: EditHomestayPage
- * หน้าที่: โหลดข้อมูลที่พัก, แสดงฟอร์มแก้ไข, จัดการอัปโหลด/แสดงรูป, และบันทึกข้อมูล
+ * Component: EditHomestayPageAdmin
+ * หน้าที่: โหลดข้อมูลที่พัก (ของ Admin), แสดงฟอร์มแก้ไข, และบันทึกข้อมูล
  */
-export default function EditHomestayPage() {
+export default function EditHomestaysPage() {
     const { homestayId } = useParams();
     const navigate = useNavigate();
 
@@ -196,7 +172,8 @@ export default function EditHomestayPage() {
         null
     );
     const [confirmOpen, setConfirmOpen] = React.useState(false);
-    const [communityId, setCommunityId] = React.useState<number | null>(null);
+    // (Admin ไม่จำเป็นต้องใช้ communityId ในการนำทาง)
+    // const [communityId, setCommunityId] = React.useState<number | null>(null);
 
     // แผนที่
     const [position, setPosition] = React.useState<[number, number]>([0, 0]);
@@ -210,7 +187,7 @@ export default function EditHomestayPage() {
     const [tagIds, setTagIds] = React.useState<number[]>([]);
 
     /**
-     * Effect: โหลดข้อมูลที่พักและแปลงรูปเป็น File
+     * Effect: โหลดข้อมูลที่พัก (ปรับปรุง API Endpoint)
      */
     React.useEffect(() => {
         (async () => {
@@ -221,13 +198,15 @@ export default function EditHomestayPage() {
                 const id = Number(homestayId);
                 if (!id) throw new Error("homestayId ไม่ถูกต้อง");
 
-                const res = await axios.get(`${API_URL}/super/homestays/${id}`, {
+                // *** เปลี่ยน Endpoint เป็นของ Admin ***
+                const res = await axios.get(`${API_URL}/admin/homestays/${id}`, {
                     withCredentials: true,
                 });
                 const hs = res?.data?.data ?? res?.data;
                 if (!hs) throw new Error("ไม่พบข้อมูลที่พัก");
 
-                setCommunityId(hs.community?.id ?? null);
+                // (ไม่จำเป็นต้องเก็บ communityId แล้ว)
+                // setCommunityId(hs.community?.id ?? null);
 
                 const lat = Number(hs.location?.latitude ?? 13.7563);
                 const lng = Number(hs.location?.longitude ?? 100.5018);
@@ -251,7 +230,7 @@ export default function EditHomestayPage() {
                     placeQuery: "",
                 });
 
-                // โหลดรูปภาพเดิม
+                // โหลดรูปภาพเดิม (เหมือนเดิม)
                 const imgs: any[] = Array.isArray(hs?.homestayImage)
                     ? hs.homestayImage
                     : [];
@@ -281,7 +260,7 @@ export default function EditHomestayPage() {
                 setCoverFiles(coverFilesFetched);
                 setGalleryFiles(galleryFilesFetched);
 
-                // ตั้งค่าแท็กเดิมจาก backend (รองรับทั้ง {tag:{id}} และ {id})
+                // ตั้งค่าแท็กเดิม (เหมือนเดิม)
                 const currentTagIds: number[] = Array.isArray(hs?.tagHomestays)
                     ? hs.tagHomestays
                         .map((t: any) => t?.tag?.id ?? t?.id)
@@ -294,7 +273,7 @@ export default function EditHomestayPage() {
                     err?.response?.data?.message ||
                     err?.response?.data?.error ||
                     err?.message ||
-                    "โหลดข้อมูลไม่สำเร็จ"
+                    "โหลดข้อมูลไม่สำเร็จ (หรือคุณไม่มีสิทธิ์)"
                 );
             } finally {
                 setIsLoading(false);
@@ -303,8 +282,7 @@ export default function EditHomestayPage() {
     }, [homestayId]);
 
     /**
-     * ฟังก์ชัน: validateField
-     * คำอธิบาย: ตรวจสอบความถูกต้องของฟิลด์เดี่ยวด้วย Zod แล้วบันทึก error
+     * ฟังก์ชัน: validateField (เหมือนเดิม)
      */
     const validateField = (key: keyof HomestayForm, val: any) => {
         const base = { ...form, [key]: val };
@@ -318,8 +296,7 @@ export default function EditHomestayPage() {
     };
 
     /**
-     * ฟังก์ชัน: validateAll
-     * คำอธิบาย: ตรวจสอบทั้งฟอร์ม หากไม่ผ่านจะสะสม error ของแต่ละฟิลด์
+     * ฟังก์ชัน: validateAll (เหมือนเดิม)
      */
     const validateAll = () => {
         const r = schema.safeParse(form);
@@ -336,8 +313,7 @@ export default function EditHomestayPage() {
     };
 
     /**
-     * ฟังก์ชัน: setField
-     * คำอธิบาย: อัปเดตค่าฟอร์มและตรวจสอบความถูกต้องของฟิลด์นั้นทันที
+     * ฟังก์ชัน: setField (เหมือนเดิม)
      */
     const setField = <K extends keyof HomestayForm>(
         key: K,
@@ -348,8 +324,7 @@ export default function EditHomestayPage() {
     };
 
     /**
-     * ฟังก์ชัน: normalizeOrDefault
-     * คำอธิบาย: trim และคืนค่า fallback หากเป็นค่าว่าง
+     * ฟังก์ชัน: normalizeOrDefault (เหมือนเดิม)
      */
     const normalizeOrDefault = (v: string, fallback = "") => {
         const t = (v ?? "").toString().trim();
@@ -357,16 +332,14 @@ export default function EditHomestayPage() {
     };
 
     /**
-     * ฟังก์ชัน: handleMapChange
-     * คำอธิบาย: อัปเดต position เมื่อผู้ใช้เลื่อนพินบนแผนที่
+     * ฟังก์ชัน: handleMapChange (เหมือนเดิม)
      */
     const handleMapChange = React.useCallback((pos: [number, number]) => {
         setPosition((prev) => (prev[0] === pos[0] && prev[1] === pos[1] ? prev : pos));
     }, []);
 
     /**
-     * ฟังก์ชัน: handleSubmit
-     * คำอธิบาย: ตรวจสอบฟอร์มและเปิด Modal เพื่อยืนยันการบันทึก
+     * ฟังก์ชัน: handleSubmit (เหมือนเดิม)
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -383,12 +356,7 @@ export default function EditHomestayPage() {
     };
 
     /**
-     * ฟังก์ชัน: onConfirmSave
-     * คำอธิบาย: เมื่อยืนยันบันทึก → สร้าง FormData และส่ง PUT ไปยัง API
-     * รูปแบบข้อมูล:
-     *  - data: JSON (string) รวมข้อมูล text และ tagHomestays
-     *  - cover: File(s)
-     *  - gallery: File(s)
+     * ฟังก์ชัน: onConfirmSave (ปรับปรุง API Endpoint และ Navigation)
      */
     const onConfirmSave = async () => {
         setConfirmOpen(false);
@@ -419,6 +387,8 @@ export default function EditHomestayPage() {
                     latitude: position[0],
                     longitude: position[1],
                 },
+                // (Admin ไม่ควรส่ง communityId ตอนแก้ไข
+                // Backend จะป้องกันการย้ายข้ามชุมชนเอง)
             };
 
             const fd = new FormData();
@@ -426,13 +396,16 @@ export default function EditHomestayPage() {
             coverFiles.forEach((file: any) => fd.append("cover", file));
             galleryFiles.forEach((file: any) => fd.append("gallery", file));
 
-            await axios.put(`${API_URL}/super/homestay/edit/${id}`, fd, {
+            // *** เปลี่ยน Endpoint เป็นของ Admin ***
+            await axios.put(`${API_URL}/admin/community/homestay/edit/${id}`, fd, {
                 withCredentials: true,
             });
 
             setSuccessMessage("อัปเดตที่พักสำเร็จ");
-            if (communityId) navigate(`/super/community/${communityId}/homestays/all`);
-            else navigate(-1);
+
+            // *** เปลี่ยนเส้นทางกลับไปหน้า List ของ Admin ***
+            navigate(`/admin/homestays/all`);
+
         } catch (err: any) {
             console.error("Update homestay error:", err?.response?.data || err);
             setErrorMessage(
@@ -447,10 +420,10 @@ export default function EditHomestayPage() {
         }
     };
 
-    // ===== Render =====
+    // ===== Render (ปรับปรุง Navigation) =====
     return (
         <div className="w-full max-w-none px-8">
-            {/* Alerts */}
+            {/* Alerts (เหมือนเดิม) */}
             {errorMessage && (
                 <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">
                     {errorMessage}
@@ -462,21 +435,20 @@ export default function EditHomestayPage() {
                 </div>
             )}
 
-            {/* Header */}
+            {/* Header (ปรับปรุง Navigation) */}
             <div className="flex items-center justify-between mb-3">
                 <button
                     type="button"
                     className="flex items-center gap-2 text-xl"
-                    onClick={() =>
-                        communityId ? navigate(`/super/community/${communityId}/homestays/all`) : navigate(-1)
-                    }
+                    // *** เปลี่ยนเส้นทางกลับไปหน้า List ของ Admin ***
+                    onClick={() => navigate("/admin/homestays/all")}
                 >
                     <Icon icon="mingcute:arrow-left-line" width={22} />
                     <span>แก้ไขที่พัก</span>
                 </button>
             </div>
 
-            {/* Loading / Form */}
+            {/* Loading / Form (เหมือนเดิม) */}
             {isLoading ? (
                 <div className="rounded-lg bg-white p-5 shadow-sm border">กำลังโหลดข้อมูล...</div>
             ) : (
@@ -567,7 +539,6 @@ export default function EditHomestayPage() {
                                     error={!!formErrors.villageNumber}
                                     helperText={formErrors.villageNumber}
                                 />
-
                                 <div className="md:col-span-2">
                                     <ThailandLocationSelector
                                         value={{
@@ -613,7 +584,6 @@ export default function EditHomestayPage() {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="md:col-span-2">
                                     <TextArea
                                         id="addressDetail"
@@ -688,16 +658,13 @@ export default function EditHomestayPage() {
                         </div>
                     </section>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons (ปรับปรุง Navigation) */}
                     <div className="flex justify-end gap-2 pt-2">
                         <div className="w-36">
                             <Button
                                 type="cancel"
-                                onClick={() =>
-                                    communityId
-                                        ? navigate(`/super/community/${communityId}/homestays/all`)
-                                        : navigate(-1)
-                                }
+                                // *** เปลี่ยนเส้นทางกลับไปหน้า List ของ Admin ***
+                                onClick={() => navigate("/admin/homestays/all")}
                             >
                                 ยกเลิก
                             </Button>
@@ -711,7 +678,7 @@ export default function EditHomestayPage() {
                 </form>
             )}
 
-            {/* Modal ยืนยัน */}
+            {/* Modal ยืนยัน (เหมือนเดิม) */}
             <Modal
                 open={confirmOpen}
                 title="ยืนยันการบันทึกข้อมูลที่พัก"

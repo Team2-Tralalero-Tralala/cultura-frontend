@@ -1,0 +1,96 @@
+import { fetchServerStatus } from "@/Services/server-status-service";
+import { Icon } from "@iconify/react";
+import React from "react";
+
+export default function SettingHomePage() {
+  // ====== state ตาราง ======
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [serverStatus, setServerStatus] = React.useState<boolean>(true);
+  // ====== โหลดข้อมูล ======
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const serverStatusData = await fetchServerStatus();
+      setServerStatus(serverStatusData.serverOnline);
+    } catch (e: any) {
+      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setServerStatus(false); // Set to offline if there's an error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="space-y-4 h-full">
+      <h2 className="text-sm">การตั้งค่า</h2>
+      <div className="flex flex-col gap-2 w-full bg-white rounded-lg p-4 h-full">
+        <div className="flex items-center justify-between align-top">
+          <h1 className="text-xl">การตั้งค่า</h1>
+          <div>
+            สถานะเซิร์ฟเวอร์
+            <div
+              className={`flex items-center gap-2 px-2 py-2 rounded-full bg-black text-white`}
+            >
+              {isLoading ? (
+                <div className="w-6 h-6 rounded-full bg-gray-400 animate-pulse"></div>
+              ) : (
+                <div
+                  className={`w-6 h-6 rounded-full ${serverStatus ? "bg-green-500" : "bg-red-500"}`}
+                ></div>
+              )}
+              <span className="font-medium pr-4">
+                {isLoading ? "กำลังตรวจสอบ..." : serverStatus ? "ออนไลน์" : "ออฟไลน์"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Settings Cards */}
+        <div className="flex gap-8 justify-center items-center h-full">
+          {/* Logo and Images Card */}
+          <div className="bg-white border-4 border-[#8FCEB7] rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-48 h-48 mb-4 flex items-center justify-center">
+                <Icon
+                  icon="material-symbols:image-outline"
+                  className="w-full h-full text-teal-600"
+                />
+              </div>
+              <h3 className="text-lg font-medium text-gray-800">การเพิ่ม/แก้ไข โลโก้และรูปภาพ</h3>
+            </div>
+          </div>
+
+          <a href="/super/backups">
+            <div className="bg-white border-4 border-[#8FCEB7] rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-4 flex items-center justify-center">
+                  <Icon icon="mdi:cloud-upload-outline" className="w-full h-full text-teal-600" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-800">การสำรองข้อมูล</h3>
+              </div>
+            </div>
+          </a>
+
+          <a href="/super/toggle-system">
+            <div className="bg-white border-4 border-[#8FCEB7] rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-4 flex items-center justify-center">
+                  <Icon icon="clarity:power-solid" className="w-full h-full text-teal-600" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-800">การเปิด/ปิด ระบบ</h3>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
+    </div>
+  );
+}

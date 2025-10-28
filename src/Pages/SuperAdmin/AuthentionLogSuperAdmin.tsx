@@ -8,12 +8,11 @@
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import React, { useState } from "react";
-import type { BulkAction, Column, DataTableActionsConfig, Pagination } from "../../Components/Tables/Types";
+import type { Column, Pagination } from "../../Components/Tables/Types";
 
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { fetchAuthenticationLog } from "@/Services/authenticationLog-services";
 import type { AuthenticationLogRow } from "@/Types/AuthenticationLog";
-import { TrashIcon } from "@/Components/Tables/Icon";
 
 const thaiRoleName = (role: string) => {
     switch (role) {
@@ -119,55 +118,6 @@ export default function AuthentionLogSuperAdmin() {
         fetchData();
     }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
 
-    const [selectedRows, setSelectedRows] = useState<AuthenticationLogRow[]>([]);
-
-
-
-
-    const rowActions: DataTableActionsConfig<AuthenticationLogRow> = {
-        header: "จัดการ",
-        align: "right",
-        width: "120px",
-        variant: "icons",
-        items: () => ["edit", "delete"],
-        callbacks: {
-          edit: (row) => alert(`/${row.id}`),
-          delete: async (row) => {
-            if (!window.confirm(`ยืนยันลบแพ็กเกจ "${row.id}" ?`)) return;
-            try {
-              // สมมติ soft-delete
-              alert("delete jaa");
-              await fetchData();
-            } catch (error: any) {
-              console.error("delete failed:", error?.response?.data ?? error);
-              alert(
-                `ลบไม่สำเร็จ: ${
-                  error?.response?.data?.message ||
-                  error?.response?.data?.error ||
-                  error?.message ||
-                  "unknown error"
-                }`
-              );
-            }
-          },
-        },
-      }
-    
-    const bulkActions: BulkAction<AuthenticationLogRow>[] = [
-      {
-        id: "bulk-delete",
-        label: "ลบทั้งหมด",
-        icon: TrashIcon,
-        intent: "danger",
-        confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-        onClick: async (rows) => {
-          const ids = rows.map((r) => r.id);
-          alert("bulk delete:" + ids);
-          await fetchData();
-          // TODO: เรียก API bulk ถ้ามี
-        },
-      },
-    ];
 
 
 
@@ -180,8 +130,6 @@ export default function AuthentionLogSuperAdmin() {
             <div className="flex flex-col gap-2 w-full">
                 <h2 className="text-sm">ประวัติการเข้าใช้งาน</h2>
                 <h1 className="text-xl">ประวัติการเข้าใช้งาน</h1>
-                {/* {JSON.stringify({pagination, searchQuery, filterRole})} */}
-                {/* {JSON.stringify(selectedRows)} */}
                 <div className="flex items-center justify-between gap-3 w-full">
                     <div className="flex-1 max-w-md">
                         <SearchBarTable
@@ -213,7 +161,6 @@ export default function AuthentionLogSuperAdmin() {
                 data={rows}
                 getKey={(row) => row.id.toString()}
                 columns={columns}
-                selectable={true}
                 pageSizeOptions={[10, 30, 50]}
                 onPageChange={(p) => {
                     setPagination((prev) => ({ ...prev, currentPage: p }));
@@ -225,14 +172,8 @@ export default function AuthentionLogSuperAdmin() {
                         limit: p,
                     }));
                 }}
-                onSelectedChange={(rows) => {
-                    console.log("rows", rows);
-                    setSelectedRows(rows);
-                }}
                 pagination={pagination}
                 isLoading={isLoading}
-                actions={rowActions}
-                bulkActions={bulkActions}
             />
         </div>
     );

@@ -1,0 +1,105 @@
+import { fetchServerStatus } from "@/Services/server-status-service";
+import { disableSystem, enableSystem } from "@/Services/system-toggle-service";
+import { Icon } from "@iconify/react";
+import React from "react";
+
+export default function ToggleSystemPage() {
+  // ====== state ======
+  const [serverStatus, setServerStatus] = React.useState<boolean>(true);
+
+  // ====== โหลดข้อมูล ======
+  const fetchData = async () => {
+    try {
+      // Fetch server status
+      const serverStatusData = await fetchServerStatus();
+      setServerStatus(serverStatusData.serverOnline);
+    } catch (e: any) {
+      setServerStatus(false);
+    }
+  };
+
+  // ====== turn system on ======
+  const handleTurnOnSystem = async () => {
+    const result = await enableSystem();
+    console.log(result);
+    setServerStatus(result.data.serverOnline);
+  };
+
+  // ====== turn system off ======
+  const handleTurnOffSystem = async () => {
+    const result = await disableSystem();
+    setServerStatus(result.data.serverOnline);
+  };
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="space-y-4 h-full">
+      <h2 className="text-sm">การเปิด/ปิด ระบบ</h2>
+      <div className="flex flex-col gap-2 w-full bg-white rounded-lg p-4 h-full">
+        <div className="flex items-center justify-between align-top">
+          <h1 className="text-xl">การเปิด/ปิด ระบบ</h1>
+          <div>
+            สถานะเซิร์ฟเวอร์
+            <div className="flex items-center gap-2 px-2 py-2 rounded-full bg-black text-white">
+              <div
+                className={`w-6 h-6 rounded-full ${serverStatus ? "bg-green-500" : "bg-red-500"}`}
+              ></div>
+              <span className="font-medium pr-4">
+                {serverStatus ? "ออนไลน์" : "ออฟไลน์"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* System Status Display */}
+        <div className="flex flex-col items-center justify-center h-full space-y-8">
+          {/* Large Status Icon */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="flex flex-col items-center justify-center">
+              <Icon
+                icon={serverStatus ? "wpf:online" : "heroicons-solid:status-offline"}
+                className={`w-64 h-64  ${serverStatus ? "text-green-500" : "text-red-500"}`}
+              />
+              <h2
+                className={`text-4xl font-bold ${serverStatus ? "text-green-500" : "text-red-500"}`}
+              >
+                {serverStatus ? "ออนไลน์" : "ออฟไลน์"}
+              </h2>
+            </div>
+
+            <h2 className="text-2xl font-medium flex items-center">
+              <Icon icon="material-symbols:settings" className="w-5 h-5" />
+              คลิกปุ่มหากต้องการ{serverStatus ? "ปิด" : "เปิด"}ระบบ
+            </h2>
+          </div>
+
+          {/* System Control Buttons */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="flex gap-4">
+              {!serverStatus ? (
+                <button
+                  onClick={handleTurnOnSystem}
+                  className="px-6 py-3 rounded-lg shadow-lg bg-white text-black flex items-center gap-3 cursor-pointer"
+                >
+                  <Icon icon="mingcute:power-fill" className="w-5 h-5" />
+                  <span>เปิดระบบ</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleTurnOffSystem}
+                  className="px-6 py-3 rounded-lg shadow-lg bg-white text-black flex items-center gap-3 cursor-pointer"
+                >
+                  <Icon icon="mingcute:power-fill" className="w-5 h-5" />
+                  <span>ปิดระบบ</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

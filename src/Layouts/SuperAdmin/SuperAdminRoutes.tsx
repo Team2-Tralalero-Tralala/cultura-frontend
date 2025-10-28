@@ -1,23 +1,25 @@
-import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
-import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
-import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
-import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
-import { Routes, Route } from "react-router-dom";
-import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
-import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
-import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
-import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
+import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
+import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
-import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
-import { EditStore } from "@/Pages/SuperAdmin/EditStore";
-import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
+import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
+import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
+import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
+import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
+import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
+import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
+import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
+import { Route, Routes } from "react-router-dom";
 
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
+import BackupsPage from "@/Pages/SuperAdmin/BackupsPage";
+import SettingHomePage from "@/Pages/SuperAdmin/SettingHomePage";
+import ToggleSystemPage from "@/Pages/SuperAdmin/ToggleSystemPage";
 import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 
@@ -53,7 +55,9 @@ export default function SuperAdminRoutes() {
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
-
+      <Route path="setting" element={<SettingHomePage />} />
+      <Route path="backups" element={<BackupsPage />} />
+      <Route path="toggle-system" element={<ToggleSystemPage />} />
       <Route
         path="community/:communityId/stores/all"
         element={<ManageStores />}

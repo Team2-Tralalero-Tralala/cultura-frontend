@@ -9,6 +9,8 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayAdminPage';
+import { MemberDetailPage } from '@/Pages/Admin/MemberDetailPage';
 
 {/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/}
 
@@ -17,7 +19,14 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      
+      <Route
+        path="community/homestays"
+        element={<ManageHomestayAdmin />}
+      />
+      <Route
+        path="member/:userId"
+        element={<MemberDetailPage />}
+      />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       

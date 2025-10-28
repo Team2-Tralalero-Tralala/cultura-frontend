@@ -24,3 +24,12 @@ export async function fetchHomestayDetail(homestayId: number) {
   const res = await api.get(`/super/homestays/${homestayId}`);
   return res.data?.data;
 }
+
+/*
+ * ฟังก์ชัน : getHomestaysAllAdmin
+ * อธิบาย : ดึงข้อมูลที่พัก (homestay)
+ * Mapping : GET /admin/community/homestays/all
+ */
+export async function getHomestaysAllAdmin() {
+  return api.get(`/admin/community/homestays/all`);
+}

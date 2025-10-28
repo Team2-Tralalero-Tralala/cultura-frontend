@@ -9,6 +9,7 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ManageMembers from '@/Pages/Admin/ManageMembers';
 
 {/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/}
 
@@ -17,7 +18,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      
+      <Route path="/members" element={<ManageMembers />} />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       

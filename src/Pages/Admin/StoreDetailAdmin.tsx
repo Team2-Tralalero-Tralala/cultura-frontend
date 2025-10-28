@@ -23,7 +23,7 @@ const StoreDetailPage = () => {
 
   const fetchStore = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/super/stores/${storeId}`, {
+      const res = await fetch(`http://localhost:3000/api/admin/stores/${storeId}`, {
         credentials: "include",
       });
       const result = await res.json();
@@ -110,7 +110,7 @@ const StoreDetailPage = () => {
           {coverImage && (
             <div className="mb-6">
               <img
-                src={"/store1.png"} 
+                src={"/store2.png"} 
                 alt={store.name}
                 className="w-full h-[300px] object-cover rounded-lg border-2 border-gray-400"
               />

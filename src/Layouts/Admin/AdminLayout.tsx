@@ -2,8 +2,6 @@ import React from "react";
 import SidebarAdmin from "../../Components/SidebarAdmin";
 import { Outlet } from "react-router-dom";
 import NavbarSam from "@/Components/NavbarSam";
-import PackageDraftAdmin from "@/Pages/Admin/PackageDraftAdmin";
-
 const AdminLayout: React.FC = () => {
   return (
     <div className="flex h-screen">

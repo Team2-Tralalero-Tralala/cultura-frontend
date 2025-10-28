@@ -6,7 +6,6 @@ import { Routes, Route } from "react-router-dom";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
-import StoreDetailSuperAdmin from "@/Pages/SuperAdmin/StoreDetailSuperAdmin";
 
 export default function SuperAdminRoutes() {
   return (
@@ -16,8 +15,6 @@ export default function SuperAdminRoutes() {
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
-      <Route path="store/:storeId" element={<StoreDetailSuperAdmin />} />
-
       <Route
         path="community/detail/:id"
         element={<CommunityDetailSuperAdmin />}

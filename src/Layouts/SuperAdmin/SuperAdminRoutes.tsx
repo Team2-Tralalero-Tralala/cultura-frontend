@@ -13,6 +13,7 @@ import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
 import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
@@ -42,6 +43,7 @@ export default function SuperAdminRoutes() {
         element={<CreateStore />}
       />
       <Route path="/store/:storeId/edit" element={<EditStore />} />
+      <Route path="/reset-password/:userId" element={<ResetPassword />} />
 
       <Route
         path="community/:communityId/homestay/:homestayId"

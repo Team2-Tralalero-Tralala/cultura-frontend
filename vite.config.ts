@@ -15,7 +15,13 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: Number(env.VITE_PORT) || 4000,
+      port: Number(env.VITE_PORT) || 4000, // พอร์ตของ frontend
+      proxy: {
+        "/api": {
+          target: "http://localhost:3000", //  backend (Express)
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

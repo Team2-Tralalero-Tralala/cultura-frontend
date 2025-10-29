@@ -1,6 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Icon } from "@iconify/react";
-import { Link, useLocation } from "react-router-dom";
+/**
+ * Component: SidebarSuperAdmin
+ * คำอธิบาย: แถบเมนูด้านข้างสำหรับผู้ดูแลระบบระดับสูง (Super Admin)
+ * Features:
+ * - แสดงเมนูทั้งหมดที่เกี่ยวข้องกับการจัดการระบบ (เช่น ชุมชน, บัญชี, แพ็กเกจ)
+ * - รองรับเมนูหลัก และเมนูย่อย (dropdown)
+ * - ใช้ React Router ในการนำทาง
+ *  * - ใช้ไอคอนจาก Iconify
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Icon } from '@iconify/react';
+import { Link, useLocation } from 'react-router-dom';
 
 type MenuKey =
   | "communities"
@@ -19,27 +29,22 @@ const SidebarSuperAdmin: React.FC = () => {
   const location = useLocation();
   const { pathname } = location;
 
-  // คำนวณ basePath ถ้า URL มี /superadmin
-  // (หรือปรับให้ตรงกับ prefix ที่คุณใช้จริง)
-  const basePath = pathname.startsWith("/super") ? "/super" : "";
+  const basePath = pathname.startsWith('/super') ? '/super' : '';
 
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
   useEffect(() => {
-    // เอา prefix ออก เพื่อเช็ค path ย่อย
     let subPath = pathname;
     if (basePath) {
       subPath = pathname.substring(basePath.length);
-      // ยืนยันเริ่มต้นด้วย '/'
-      if (!subPath.startsWith("/")) {
-        subPath = "/" + subPath;
+      if (!subPath.startsWith('/')) {
+        subPath = '/' + subPath;
       }
     }
 
-    // ตัวอย่างเช่น subPath = '/communities' หรือ '/users/blocked' เป็นต้น
-    if (subPath === "/communities/all") {
-      setActiveMenuKey("communities");
+    if (subPath === '/communities/all') {
+      setActiveMenuKey('communities');
       setOpenDropdown(null);
     } else if (subPath === "/users/blocked") {
       setActiveMenuKey("users-blocked");
@@ -53,7 +58,7 @@ const SidebarSuperAdmin: React.FC = () => {
     } else if (subPath.startsWith("/packages/all")) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (subPath === "/tags") {
+    } else if (subPath === "/shared/tags") {
       setActiveMenuKey("tags");
       setOpenDropdown(null);
     } else if (subPath === "/dashboard") {
@@ -93,7 +98,7 @@ const SidebarSuperAdmin: React.FC = () => {
         </div>
 
         <nav className="flex flex-col gap-2 text-base-semibold">
-          {/* จัดการชุมชน */}
+          {/* === จัดการชุมชน === */}
           <Link
             to={`${basePath}/communities`}
             onClick={() => handleClick("communities")}
@@ -105,10 +110,11 @@ const SidebarSuperAdmin: React.FC = () => {
             จัดการชุมชน
           </Link>
 
-          {/* จัดการบัญชี (dropdown) */}
+          {/* === จัดการบัญชี (Dropdown) === */}
           <div>
-            <button
-              onClick={() => handleClick("accounts")}
+            <Link
+              to={`${basePath}/accounts/all`}
+              onClick={() => handleClick('accounts')}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive("accounts") ? "bg-[#0D845A]" : ""
               }`}
@@ -121,15 +127,9 @@ const SidebarSuperAdmin: React.FC = () => {
                   จัดการบัญชี
                 </Link>
               </span>
-              <Icon
-                icon={
-                  openDropdown === "accounts"
-                    ? "mdi:chevron-up"
-                    : "mdi:chevron-down"
-                }
-              />
-            </button>
-            {openDropdown === "accounts" && (
+              <Icon icon={openDropdown === 'accounts' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+            </Link>
+            {openDropdown === 'accounts' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
                   to={`${basePath}/users/blocked`}
@@ -144,10 +144,11 @@ const SidebarSuperAdmin: React.FC = () => {
             )}
           </div>
 
-          {/* จัดการแพ็กเกจ (dropdown) */}
+          {/* === จัดการแพ็กเกจ (Dropdown) === */}
           <div>
-            <button
-              onClick={() => handleClick("packages")}
+            <Link
+              to={`${basePath}/packages/all`}
+              onClick={() => handleClick('packages')}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive("packages") ? "bg-[#0D845A]" : ""
               }`}
@@ -159,15 +160,9 @@ const SidebarSuperAdmin: React.FC = () => {
                 />
                 จัดการแพ็กเกจ
               </span>
-              <Icon
-                icon={
-                  openDropdown === "packages"
-                    ? "mdi:chevron-up"
-                    : "mdi:chevron-down"
-                }
-              />
-            </button>
-            {openDropdown === "packages" && (
+              <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+            </Link>
+            {openDropdown === 'packages' && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
                   to={`${basePath}/package-requests`}
@@ -182,9 +177,9 @@ const SidebarSuperAdmin: React.FC = () => {
             )}
           </div>
 
-          {/* จัดการประเภท */}
+          {/* === จัดการประเภท === */}
           <Link
-            to={`${basePath}/tags`}
+            to={`${basePath}/shared/tags`}
             onClick={() => handleClick("tags")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
               isActive("tags") ? "bg-[#0D845A]" : ""
@@ -194,7 +189,7 @@ const SidebarSuperAdmin: React.FC = () => {
             จัดการประเภท
           </Link>
 
-          {/* รายงาน */}
+          {/* === รายงาน === */}
           <Link
             to={`${basePath}/dashboard`}
             onClick={() => handleClick("dashboard")}
@@ -206,7 +201,7 @@ const SidebarSuperAdmin: React.FC = () => {
             รายงาน
           </Link>
 
-          {/* ประวัติการเข้าใช้งาน */}
+          {/* === ประวัติการเข้าใช้งาน === */}
           <Link
             to={`${basePath}/logs`}
             onClick={() => handleClick("logs")}
@@ -220,8 +215,8 @@ const SidebarSuperAdmin: React.FC = () => {
         </nav>
       </div>
 
+      {/* === ตั้งค่า & ออกจากระบบ === */}
       <div className="flex flex-col gap-2 text-sm">
-        {/* ตั้งค่า */}
         <Link
           to={`${basePath}/setting`}
           onClick={() => handleClick("setting")}
@@ -233,7 +228,6 @@ const SidebarSuperAdmin: React.FC = () => {
           การตั้งค่า
         </Link>
 
-        {/* ออกจากระบบ */}
         <Link
           to={`${basePath}/logout`}
           onClick={() => handleClick("logout")}

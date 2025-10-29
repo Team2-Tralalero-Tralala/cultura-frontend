@@ -7,15 +7,19 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
-
+import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
+import CreateHomestaysPage from '@/Pages/Admin/CreateHomestaysPage';
+import EditHomestayPage from '@/Pages/Admin/EditHomestayPage';
 import DetailPackageRequiredPage from "@/Pages/Admin/DetailPackageRequiredPage";
 
 export default function AdminRoutes() {
   return (
     <Routes>
+      <Route path="/community/homestay" element={<CreateHomestaysPage />} />
+      <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />

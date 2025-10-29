@@ -8,25 +8,21 @@
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
 
-import { Routes, Route, Navigate } from 'react-router-dom';
-import ManageStoreAdmin from '@/Pages/Admin/ManageStoreAdmin';
+import { Routes, Route, Navigate } from "react-router-dom";
+import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
+import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
+import DetailPackageRequiredPage from "@/Pages/Admin/DetailPackageRequiredPage";
 
 export default function AdminRoutes() {
   return (
     <Routes>
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
-      <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} />
-    <Route
-        path="community/homestay/:homestayId"
-        element={<DetailHomestayAdmin />}
-      />
+      <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
+      <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
-
     </Routes>
   );
-};
-
-
+}

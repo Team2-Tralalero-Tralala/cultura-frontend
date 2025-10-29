@@ -1,13 +1,35 @@
+/*
+ * คำอธิบาย : Component สำหรับหน้าแรกของการตั้งค่าระบบ (Super Admin)
+ * โดยแบ่งออกเป็นส่วนหลัก ได้แก่
+ * 1. แสดงสถานะเซิร์ฟเวอร์ (ออนไลน์/ออฟไลน์)
+ * 2. เมนูการตั้งค่าต่างๆ ประกอบด้วย:
+ *    - การเพิ่ม/แก้ไข โลโก้และรูปภาพ
+ *    - การสำรองข้อมูล
+ *    - การเปิด/ปิด ระบบ
+ * ใช้ร่วมกับ Service สำหรับตรวจสอบสถานะเซิร์ฟเวอร์
+ */
 import { fetchServerStatus } from "@/Services/server-status-service";
 import { Icon } from "@iconify/react";
 import React from "react";
 
+/*
+ * คำอธิบาย : Component หลักสำหรับหน้า "การตั้งค่า"
+ * ใช้จัดการ state ของสถานะเซิร์ฟเวอร์ การโหลดข้อมูล
+ * รวมถึงการแสดงเมนูการตั้งค่าต่างๆ และการแจ้งเตือนผลลัพธ์
+ */
 export default function SettingHomePage() {
   // ====== state ตาราง ======
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [serverStatus, setServerStatus] = React.useState<boolean>(true);
   // ====== โหลดข้อมูล ======
+  /*
+   * คำอธิบาย : ดึงสถานะเซิร์ฟเวอร์จาก API
+   * Input : ไม่มี
+   * Output :
+   *    - อัพเดท state ของ serverStatus
+   *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage และ serverStatus เป็น false
+   */
   const fetchData = async () => {
     try {
       setIsLoading(true);

@@ -1,13 +1,33 @@
+/*
+ * คำอธิบาย : Component สำหรับการเปิด/ปิดระบบ (Super Admin)
+ * โดยแบ่งออกเป็นส่วนหลัก ได้แก่
+ * 1. แสดงสถานะปัจจุบันของระบบ (ออนไลน์/ออฟไลน์)
+ * 2. ปุ่มสำหรับเปิด/ปิดระบบ
+ * 3. แสดงไอคอนและข้อความสถานะแบบใหญ่
+ * ใช้ร่วมกับ Service สำหรับจัดการการเปิด/ปิดระบบ
+ */
 import { fetchServerStatus } from "@/Services/server-status-service";
 import { disableSystem, enableSystem } from "@/Services/system-toggle-service";
 import { Icon } from "@iconify/react";
 import React from "react";
 
+/*
+ * คำอธิบาย : Component หลักสำหรับหน้า "การเปิด/ปิด ระบบ"
+ * ใช้จัดการ state ของสถานะระบบ การเปิด/ปิดระบบ
+ * รวมถึงการแสดงสถานะและปุ่มควบคุมระบบ
+ */
 export default function ToggleSystemPage() {
   // ====== state ======
   const [serverStatus, setServerStatus] = React.useState<boolean>(true);
 
   // ====== โหลดข้อมูล ======
+  /*
+   * คำอธิบาย : ดึงสถานะปัจจุบันของระบบจาก API
+   * Input : ไม่มี
+   * Output :
+   *    - อัพเดท state ของ serverStatus
+   *    - หากเกิดข้อผิดพลาดจะเซ็ต serverStatus เป็น false
+   */
   const fetchData = async () => {
     try {
       // Fetch server status
@@ -19,6 +39,14 @@ export default function ToggleSystemPage() {
   };
 
   // ====== turn system on ======
+  /*
+   * คำอธิบาย : เปิดระบบผ่าน API
+   * Input : ไม่มี
+   * Output :
+   *    - เรียกใช้ enableSystem API
+   *    - อัพเดท serverStatus ตามผลลัพธ์ที่ได้
+   *    - แสดงผลลัพธ์ใน console
+   */
   const handleTurnOnSystem = async () => {
     const result = await enableSystem();
     console.log(result);
@@ -26,6 +54,13 @@ export default function ToggleSystemPage() {
   };
 
   // ====== turn system off ======
+  /*
+   * คำอธิบาย : ปิดระบบผ่าน API
+   * Input : ไม่มี
+   * Output :
+   *    - เรียกใช้ disableSystem API
+   *    - อัพเดท serverStatus ตามผลลัพธ์ที่ได้
+   */
   const handleTurnOffSystem = async () => {
     const result = await disableSystem();
     setServerStatus(result.data.serverOnline);

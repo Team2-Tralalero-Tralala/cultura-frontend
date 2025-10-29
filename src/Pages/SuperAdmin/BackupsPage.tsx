@@ -1,9 +1,12 @@
-// src/Pages/SuperAdmin/BackupsPage.tsx
-/**
- * จัดการสำรองข้อมูล (Super Admin)
- * - แสดงตารางไฟล์สำรองข้อมูล: ชื่อไฟล์ / ขนาด / สถานะ / วันที่สร้าง
- * - ค้นหา, ลบไฟล์สำรองข้อมูล (เดี่ยว/หลายไฟล์)
- * - ปุ่มลบ ต่อแถว และลบหลายแถว
+/*
+ * คำอธิบาย : Component สำหรับจัดการไฟล์สำรองข้อมูล (Super Admin)
+ * โดยแบ่งออกเป็นส่วนหลัก ได้แก่
+ * 1. แสดงตารางไฟล์สำรองข้อมูล: ชื่อไฟล์ / ขนาด / สถานะ / วันที่สร้าง
+ * 2. ค้นหาไฟล์สำรองข้อมูล
+ * 3. ดาวน์โหลดไฟล์สำรองข้อมูล
+ * 4. ลบไฟล์สำรองข้อมูล (เดี่ยว/หลายไฟล์)
+ * 5. แสดงสถานะเซิร์ฟเวอร์ (ออนไลน์/ออฟไลน์)
+ * ใช้ร่วมกับ Component ย่อย เช่น DataTable, SearchBarTable, Modal
  */
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
@@ -18,10 +21,17 @@ import {
   downloadBackup,
   fetchBackups,
 } from "@/Services/backup-service";
+import { fetchServerStatus } from "@/Services/server-status-service";
 import type { BackupRow } from "@/Types/Backup";
 import { Icon } from "@iconify/react";
-import { fetchServerStatus } from "@/Services/server-status-service";
 
+/*
+ * คำอธิบาย : แปลงสถานะไฟล์สำรองข้อมูลจากภาษาอังกฤษเป็นภาษาไทย
+ * Input :
+ *    - status (string): สถานะที่ต้องการแปลง (completed, processing, failed)
+ * Output :
+ *    - คืนค่าข้อความสถานะเป็นภาษาไทย (เสร็จสิ้น, กำลังดำเนินการ, ล้มเหลว)
+ */
 const thaiStatusName = (status: string) => {
   switch (status) {
     case "completed":
@@ -35,6 +45,13 @@ const thaiStatusName = (status: string) => {
   }
 };
 
+/*
+ * คำอธิบาย : แปลงวันที่และเวลาการสร้างไฟล์สำรองข้อมูลเป็นรูปแบบภาษาไทย
+ * Input :
+ *    - createdAt (string): วันที่และเวลาในรูปแบบ ISO string
+ * Output :
+ *    - คืนค่าวันที่และเวลาในรูปแบบภาษาไทย (เช่น "28 ต.ค. 2567, 14:30 น.")
+ */
 const thaiBackupTime = (createdAt: string) => {
   return (
     new Date(createdAt).toLocaleString("th-TH", {
@@ -49,6 +66,13 @@ const thaiBackupTime = (createdAt: string) => {
 };
 
 // ====== คอลัมน์ตาราง ======
+/*
+ * คำอธิบาย : สร้างคอลัมน์สำหรับตารางแสดงไฟล์สำรองข้อมูล
+ * Input :
+ *    - onDownload (function): ฟังก์ชันสำหรับดาวน์โหลดไฟล์สำรองข้อมูล
+ * Output :
+ *    - คืนค่า array ของคอลัมน์ตารางประกอบด้วย ชื่อไฟล์, ขนาด, สถานะ, วันที่สร้าง
+ */
 const createColumns = (onDownload: (filename: string) => void): Column<BackupRow>[] => [
   {
     key: "filename",
@@ -91,6 +115,13 @@ const createColumns = (onDownload: (filename: string) => void): Column<BackupRow
 ];
 
 // ====== Row Actions ======
+/*
+ * คำอธิบาย : สร้างรายการปุ่มดำเนินการต่อแถวในตาราง
+ * Input :
+ *    - onDelete (function): ฟังก์ชันสำหรับลบไฟล์สำรองข้อมูล
+ * Output :
+ *    - คืนค่า array ของปุ่มดำเนินการ (ลบ)
+ */
 const rowActions = (onDelete: (filename: string) => void): RowAction<BackupRow>[] => [
   {
     id: "delete",
@@ -102,6 +133,13 @@ const rowActions = (onDelete: (filename: string) => void): RowAction<BackupRow>[
 ];
 
 // ====== Bulk Actions ======
+/*
+ * คำอธิบาย : สร้างรายการปุ่มดำเนินการแบบหลายแถวในตาราง
+ * Input :
+ *    - onBulkDelete (function): ฟังก์ชันสำหรับลบไฟล์สำรองข้อมูลหลายไฟล์
+ * Output :
+ *    - คืนค่า array ของปุ่มดำเนินการแบบ bulk (ลบที่เลือก)
+ */
 const bulkActions = (onBulkDelete: (filenames: string[]) => void): BulkAction<BackupRow>[] => [
   {
     id: "delete-bulk",
@@ -112,6 +150,11 @@ const bulkActions = (onBulkDelete: (filenames: string[]) => void): BulkAction<Ba
   },
 ];
 
+/*
+ * คำอธิบาย : Component หลักสำหรับหน้า "สำรองข้อมูล"
+ * ใช้จัดการ state ของข้อมูลตาราง การค้นหา การลบ การดาวน์โหลดไฟล์
+ * รวมถึง modal ยืนยันการลบและการแจ้งเตือนผลลัพธ์
+ */
 export default function BackupsPage() {
   // ====== state ตาราง ======
   const [rows, setRows] = React.useState<BackupRow[]>([]);
@@ -139,6 +182,13 @@ export default function BackupsPage() {
   });
 
   // ====== โหลดข้อมูล ======
+  /*
+   * คำอธิบาย : ดึงข้อมูลไฟล์สำรองข้อมูลจาก API และตรวจสอบสถานะเซิร์ฟเวอร์
+   * Input : ไม่มี
+   * Output :
+   *    - อัพเดท state ของ rows, pagination, serverStatus
+   *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage
+   */
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -158,6 +208,13 @@ export default function BackupsPage() {
   };
 
   // ====== ฟังก์ชันจัดการการลบ ======
+  /*
+   * คำอธิบาย : เปิด modal ยืนยันการลบไฟล์สำรองข้อมูลไฟล์เดียว
+   * Input :
+   *    - filename (string): ชื่อไฟล์ที่ต้องการลบ
+   * Output :
+   *    - เซ็ต deleteModal state เพื่อเปิด modal ยืนยันการลบ
+   */
   const handleDeleteSingle = (filename: string) => {
     setDeleteModal({
       isOpen: true,
@@ -166,6 +223,13 @@ export default function BackupsPage() {
     });
   };
 
+  /*
+   * คำอธิบาย : เปิด modal ยืนยันการลบไฟล์สำรองข้อมูลหลายไฟล์
+   * Input :
+   *    - filenames (string[]): array ของชื่อไฟล์ที่ต้องการลบ
+   * Output :
+   *    - เซ็ต deleteModal state เพื่อเปิด modal ยืนยันการลบแบบ bulk
+   */
   const handleDeleteBulk = (filenames: string[]) => {
     setDeleteModal({
       isOpen: true,
@@ -174,6 +238,15 @@ export default function BackupsPage() {
     });
   };
 
+  /*
+   * คำอธิบาย : ดำเนินการลบไฟล์สำรองข้อมูลหลังจากยืนยันใน modal
+   * Input : ไม่มี
+   * Output :
+   *    - ลบไฟล์สำรองข้อมูลตามประเภท (single หรือ bulk)
+   *    - โหลดข้อมูลใหม่หลังจากลบสำเร็จ
+   *    - ปิด modal และรีเซ็ต deleteModal state
+   *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage
+   */
   const confirmDelete = async () => {
     try {
       if (deleteModal.type === "single" && deleteModal.filename) {
@@ -190,11 +263,25 @@ export default function BackupsPage() {
     }
   };
 
+  /*
+   * คำอธิบาย : ยกเลิกการลบไฟล์สำรองข้อมูลและปิด modal
+   * Input : ไม่มี
+   * Output :
+   *    - ปิด modal และรีเซ็ต deleteModal state
+   */
   const cancelDelete = () => {
     setDeleteModal({ isOpen: false, type: "single" });
   };
 
   // ====== ฟังก์ชันดาวน์โหลด ======
+  /*
+   * คำอธิบาย : ดาวน์โหลดไฟล์สำรองข้อมูลจากเซิร์ฟเวอร์
+   * Input :
+   *    - filename (string): ชื่อไฟล์ที่ต้องการดาวน์โหลด
+   * Output :
+   *    - ดาวน์โหลดไฟล์สำรองข้อมูลผ่านเบราว์เซอร์
+   *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage
+   */
   const handleDownload = async (filename: string) => {
     try {
       await downloadBackup(filename);

@@ -31,7 +31,7 @@ import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 
 // Config
-const API_URL = import.meta.env.VITE_API_URL as string;
+const apiUrl = import.meta.env.VITE_API_URL as string;
 
 /** ประเภทไฟล์ที่แนบมากับฟอร์ม */
 type FileLike = File;
@@ -94,7 +94,6 @@ const homestaySchema = z.object({
             "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
         ),
     houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-    villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
     subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
@@ -110,38 +109,6 @@ type HSFormErrors = Partial<Record<keyof HomestayForm, string>>;
 function normalizeOrDefault(value: string, fallback = "") {
     const trimmed = (value ?? "").toString().trim();
     return trimmed.length ? trimmed : fallback;
-}
-
-/**
- * (Interceptor - เหมือนเดิม)
- */
-declare global {
-    interface Window {
-        __tagsInterceptorAdded?: boolean;
-    }
-}
-if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
-    window.__tagsInterceptorAdded = true;
-    axios.interceptors.response.use(
-        (res) => {
-            try {
-                const url = res?.config?.url ?? "";
-                if (typeof url === "string" && url.includes("/shared/tags")) {
-                    const d = (res as any)?.data?.data;
-                    if (!Array.isArray(d) && d && Array.isArray(d.data)) {
-                        (res as any).data.data = d.data;
-                    }
-                    if (!Array.isArray((res as any).data?.data)) {
-                        (res as any).data.data = Array.isArray(d) ? d : [];
-                    }
-                }
-            } catch {
-                /* no-op */
-            }
-            return res;
-        },
-        (err) => Promise.reject(err)
-    );
 }
 
 /**
@@ -296,22 +263,22 @@ export default function CreateHomestayPageAdmin() {
             // const cid = Number(communityId);
             // if (!cid) throw new Error("communityId ไม่ถูกต้อง");
 
-            for (const p of pendingPayloads) {
-                const dataPayload = { ...p.base };
-                const fd = new FormData();
-                fd.append("data", JSON.stringify(dataPayload));
+            for (const pendingPayload of pendingPayloads) {
+                const dataPayload = { ...pendingPayload.base };
+                const formData = new FormData();
+                formData.append("data", JSON.stringify(dataPayload));
 
-                if (p.coverFiles?.length) {
-                    fd.append("cover", p.coverFiles[0]);
+                if (pendingPayload.coverFiles?.length) {
+                    formData.append("cover", pendingPayload.coverFiles[0]);
                 }
-                if (Array.isArray(p.galleryFiles)) {
-                    for (const gf of p.galleryFiles) {
-                        fd.append("gallery", gf);
+                if (Array.isArray(pendingPayload.galleryFiles)) {
+                    for (const gf of pendingPayload.galleryFiles) {
+                        formData.append("gallery", gf);
                     }
                 }
 
                 // *** เปลี่ยน Endpoint เป็นของ Admin (ไม่ต้องระบุ communityId) ***
-                await axios.post(`${API_URL}/admin/community/homestay`, fd, {
+                await axios.post(`${apiUrl}/admin/community/homestay`, formData, {
                     withCredentials: true,
                 });
             }
@@ -337,11 +304,11 @@ export default function CreateHomestayPageAdmin() {
 
     // Memoize ค่าสำหรับ MapPicker (เหมือนเดิม)
     const startingPosition = React.useMemo<[number, number]>(() => {
-        const nlat = Number(form.latitude);
-        const nlng = Number(form.longitude);
+        const numberLat = Number(form.latitude);
+        const numberLng = Number(form.longitude);
         return [
-            !Number.isNaN(nlat) && form.latitude !== "" ? nlat : 13.7563,
-            !Number.isNaN(nlng) && form.longitude !== "" ? nlng : 100.5018,
+            !Number.isNaN(numberLat) && form.latitude !== "" ? numberLat : 13.7563,
+            !Number.isNaN(numberLng) && form.longitude !== "" ? numberLng : 100.5018,
         ];
     }, [form.latitude, form.longitude]);
 
@@ -454,7 +421,6 @@ export default function CreateHomestayPageAdmin() {
                             <TextField
                                 id="villageNumber"
                                 label="หมู่ที่"
-                                required
                                 placeholder="หมู่ที่"
                                 value={form.villageNumber}
                                 onChange={(e) => setField("villageNumber", e.target.value)}

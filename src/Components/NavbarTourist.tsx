@@ -2,7 +2,7 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ ผู้ใช้ทั่วไป (Tourist)
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขข้อมูลส่วนตัว, ประวัติการจอง, เปลี่ยนรหัสผ่าน, ดูรายงาน และออกจากระบบ
  */
-import { useState } from "react";
+import React, { useState } from "react";
 
 const NavbarTourist = () => {
   // State สำหรับจัดการการเข้าสู่ระบบ

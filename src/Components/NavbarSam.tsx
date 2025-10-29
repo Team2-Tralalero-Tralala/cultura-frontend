@@ -5,7 +5,6 @@
 import { AuthContext } from "@/Libs/AuthProvider";
 import { useContext, useState } from "react";
 import imgUser from "/profile.png";
-import { Link } from "react-router-dom";
 
 const NavbarSam = () => {
   // State สำหรับจัดการการเปิด-ปิด dropdown
@@ -22,7 +21,6 @@ const NavbarSam = () => {
       console.error("Logout failed:", error);
     }
   };
-  const closeDropdown = () => setIsOpen(false);
   return (
     <header className="bg-white">
       <nav className="flex items-center justify-between px-12 h-16">
@@ -61,13 +59,8 @@ const NavbarSam = () => {
               <li className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
                 แก้ไขโปรไฟล์
               </li>
-              <li
-                className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
-                <Link
-                  to="/super/account/change-password"
-                  onClick={closeDropdown}>
-                  เปลี่ยนรหัสผ่าน
-                </Link>
+              <li className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
+                เปลี่ยนรหัสผ่าน
               </li>
               <hr className="border-gray-200 my-2" />
               <li

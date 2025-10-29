@@ -27,7 +27,7 @@ import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 
 // Config Variables
-const API_URL = import.meta.env.VITE_API_URL as string;
+const apiUrl = import.meta.env.VITE_API_URL as string;
 
 /** ฟอร์มข้อมูลที่พัก */
 type HomestayForm = {
@@ -113,7 +113,7 @@ function buildImageCandidates(rawPath: string): string[] {
     if (/^https?:\/\//i.test(rawPath)) return [rawPath];
     const origin = (() => {
         try {
-            return new URL(API_URL).origin;
+            return new URL(apiUrl).origin;
         } catch {
             return window.location.origin;
         }
@@ -198,7 +198,7 @@ export default function EditHomestaysPage() {
                 if (!id) throw new Error("homestayId ไม่ถูกต้อง");
 
                 // *** เปลี่ยน Endpoint เป็นของ Admin ***
-                const res = await axios.get(`${API_URL}/admin/homestays/${id}`, {
+                const res = await axios.get(`${apiUrl}/admin/homestays/${id}`, {
                     withCredentials: true,
                 });
                 const hs = res?.data?.data ?? res?.data;
@@ -396,7 +396,7 @@ export default function EditHomestaysPage() {
             galleryFiles.forEach((file: any) => formData.append("gallery", file));
 
             // *** เปลี่ยน Endpoint เป็นของ Admin ***
-            await axios.put(`${API_URL}/admin/community/homestay/edit/${id}`, formData, {
+            await axios.put(`${apiUrl}/admin/community/homestay/edit/${id}`, formData, {
                 withCredentials: true,
             });
 

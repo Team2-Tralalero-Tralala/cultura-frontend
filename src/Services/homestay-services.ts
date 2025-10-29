@@ -25,6 +25,14 @@ export async function fetchHomestayDetail(homestayId: number) {
   return res.data?.data;
 }
 
+/**
+ * ฟังก์ชัน: fetchHomestayDetailByAdmin()
+ * Input : homestayId (หมายเลขที่พัก)
+ * Output: homestay + ความสัมพันธ์ (community, location, image, tag)
+ */
+export async function fetchHomestayDetailByAdmin(homestayId: number) {
+  const res = await api.get(`/admin/community/homestay/${homestayId}`);
+  return res.data?.data;
 
 
 /*

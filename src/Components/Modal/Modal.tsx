@@ -37,20 +37,22 @@ export const Modal: React.FC<ModalProps> = ({
   confirmText = "ยืนยัน",
   cancelText = "ยกเลิก",
 }) => {
-  const MySwal = withReactContent(Swal);
+  const sweetAlert = withReactContent(Swal);
 
   useEffect(() => {
     if (!open) return;
+
     let isFired = false;
     if (!isFired) {
       isFired = true;
-      void MySwal.fire({
+
+      void sweetAlert.fire({
         iconHtml: (
           <Icon
             icon="circum:circle-alert"
-            width={164}           
+            width={164}
             height={164}
-            style={{color: "#000"}}
+            style={{ color: "#000" }}
           />
         ),
         iconColor: "#004D2C",
@@ -83,25 +85,30 @@ export const Modal: React.FC<ModalProps> = ({
 
         didOpen: () => {
           const fontStack = 'var(--font-sarabun), "Sarabun", sans-serif';
-          const popup = Swal.getPopup();
-          const titleEl = Swal.getTitle();
-          const html = Swal.getHtmlContainer();
-          const btns = Swal.getActions();
-          if (popup) popup.style.fontFamily = fontStack;
-          if (titleEl) titleEl.style.fontFamily = fontStack;
-          if (html) html.style.fontFamily = fontStack;
-          if (btns) btns.style.fontFamily = fontStack;
-          const p = Swal.getPopup();
-          const ic = Swal.getIcon();
-          if (p) {
-            // แบ่งแถว: [ไอคอน, หัวข้อ, เนื้อหา, ปุ่ม]
-            p.style.display = "grid";
-            p.style.gridTemplateRows = "160px 50px 48px 42px";
-            p.style.fontFamily = 'var(--font-sarabun), "Sarabun", sans-serif';
-            p.style.borderRadius = "20px";
-          }
-          if (ic) { ic.style.height = "150px"; ic.style.background = "transparent"; ic.style.boxShadow = "none"; }
 
+          const popupEl = Swal.getPopup();
+          const titleEl = Swal.getTitle();
+          const htmlContainerEl = Swal.getHtmlContainer();
+          const actionsEl = Swal.getActions();
+
+          if (popupEl) popupEl.style.fontFamily = fontStack;
+          if (titleEl) titleEl.style.fontFamily = fontStack;
+          if (htmlContainerEl) htmlContainerEl.style.fontFamily = fontStack;
+          if (actionsEl) actionsEl.style.fontFamily = fontStack;
+
+          // จัดเลย์เอาต์ popup + ปรับขนาดไอคอน
+          const iconEl = Swal.getIcon();
+          if (popupEl) {
+            popupEl.style.display = "grid";
+            popupEl.style.gridTemplateRows = "160px 50px 48px 42px";
+            popupEl.style.fontFamily = fontStack;
+            popupEl.style.borderRadius = "20px";
+          }
+          if (iconEl) {
+            iconEl.style.height = "150px";
+            iconEl.style.background = "transparent";
+            iconEl.style.boxShadow = "none";
+          }
         },
       }).then((result) => {
         isFired = false;
@@ -111,9 +118,9 @@ export const Modal: React.FC<ModalProps> = ({
     }
 
     return () => {
-      isFired = true; // block re-run if component unmounts
+      isFired = true; // กัน re-run ตอน unmount
     };
-  }, [open]);
+  }, [open, onConfirm, onCancel, sweetAlert]);
 
   return null;
 };

@@ -12,115 +12,115 @@ import { fetchMemberDetail } from "@/Services/account-services";
 import type { UserDetail } from "@/Types/User";
 import AvatarUploader from "@/Components/AvatarUploader";
 
-/* ===========================================================
- * Component : MemberDetailPage
- * =========================================================== */
+/**
+ * Component: MemberDetailPage
+ * วัตถุประสงค์: แสดงรายละเอียดบัญชีสมาชิกของชุมชน (Admin)
+ * Input: userId (ได้จาก useParams)
+ * Output: แสดงรายละเอียดบัญชีและรูปโปรไฟล์
+ */
 export function MemberDetailPage() {
   const navigate = useNavigate();
-  const { userId  } = useParams<{ userId : string }>();
+  const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ===========================================================
-   * โหลดข้อมูลผู้ใช้ตาม user
-   * =========================================================== */
-    useEffect(() => {
-        if (!userId) return;
-        (async () => {
-            try {
-            const data = await fetchMemberDetail(Number(userId));
-            setUser(data);
-            } catch (err: any) {
-            console.error("โหลดข้อมูลล้มเหลว:", err);
+  /**
+   * ฟังก์ชัน: useEffect โหลดข้อมูลผู้ใช้
+   * วัตถุประสงค์: ดึงข้อมูลรายละเอียดผู้ใช้จาก API
+   * Input: userId จาก URL parameter
+   * Output: อัปเดต state user หรือ error
+   */
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const data = await fetchMemberDetail(Number(userId));
+        setUser(data);
+      } catch (err: any) {
+        console.error("โหลดข้อมูลล้มเหลว:", err);
+        const status = err.response?.status;
+        if (status === 403 || status === 404) {
+          navigate("/admin/members");
+        } else {
+          setError("ไม่สามารถโหลดข้อมูลได้");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [userId]);
 
-            // ถ้ามี response status จาก axios
-            const status = err.response?.status;
-
-            if (status === 403 || status === 404) {
-                navigate("/admin/members"); // redirect กลับ
-            } else {
-                setError("ไม่สามารถโหลดข้อมูลได้");
-            }
-            } finally {
-            setLoading(false);
-            }
-        })();
-    }, [userId]);
-
-  /* ===========================================================
-   * ฟังก์ชันช่วยแปลง path จาก backend
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: resolveBackendUploadUrl
+   * วัตถุประสงค์: แปลง path ของรูปจาก backend ให้เป็น URL ที่ใช้แสดงใน frontend
+   * Input: fileName (string | undefined)
+   * Output: URL string หรือ undefined
+   */
   function resolveBackendUploadUrl(fileName?: string): string | undefined {
     if (!fileName) return undefined;
     const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
-    // ถ้า path ไม่มีคำว่า "uploads" ให้เติมเอง
     if (!fileName.startsWith("uploads/")) {
-      const cleaned = fileName.replace(/^\/+/, ""); // ตัด / หน้าไฟล์ออก
+      const cleaned = fileName.replace(/^\/+/, "");
       return `${baseUrl}/uploads/${cleaned}`;
     }
     return `${baseUrl}/${fileName}`;
   }
 
-  /* ===========================================================
-   * ฟังก์ชัน : handleAvatarChange
-   * คำอธิบาย : เมื่ออัปโหลดรูปใหม่ → ส่งไฟล์ไป backend เพื่ออัปเดต profileImage
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: handleAvatarChange
+   * วัตถุประสงค์: เมื่ออัปโหลดรูปใหม่ → ส่งไฟล์ไป backend เพื่ออัปเดต profileImage
+   * Input: file (File | null)
+   * Output: อัปเดตรูปโปรไฟล์ใน state user
+   */
   const handleAvatarChange = async (file: File | null) => {
     if (!userId || !file) return;
     const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
     try {
       const formData = new FormData();
       formData.append("profileImage", file);
-
       const res = await fetch(`${baseUrl}/api/admin/member/profile/${userId}`, {
         method: "PUT",
         body: formData,
         credentials: "include",
       });
-
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
-
-      // อัปเดตภาพใหม่ใน state
       setUser((prev) =>
         prev ? { ...prev, profileImage: data.data.profileImage } : prev
       );
-
       alert("อัปโหลดรูปโปรไฟล์สำเร็จ!");
     } catch (err) {
       console.error(err);
       alert("อัปโหลดรูปไม่สำเร็จ");
     }
   };
-  
-  /* ===========================================================
- * ฟังก์ชันช่วยจัดรูปแบบเบอร์โทรศัพท์
- * =========================================================== */
-function formatPhoneNumber(phone?: string | null): string {
-  if (!phone) return "-";
-  // ลบอักขระที่ไม่ใช่ตัวเลขออกก่อน
-  const digits = phone.replace(/\D/g, "");
-  // ถ้ายาว 10 หลัก เช่น 0810001111
-  if (digits.length === 10) {
-    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  // ถ้าไม่ครบ 10 หลัก แสดงตามเดิม
-  return phone;
-}
 
-  /* ===========================================================
-   * Render ส่วนแสดงผล
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: formatPhoneNumber
+   * วัตถุประสงค์: จัดรูปแบบเบอร์โทรศัพท์ให้อยู่ในรูปแบบ ###-###-####
+   * Input: phone (string | null | undefined)
+   * Output: string ที่จัดรูปแบบแล้ว
+   */
+  function formatPhoneNumber(phone?: string | null): string {
+    if (!phone) return "-";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 10) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    return phone;
+  }
+
+  // Section: Loading and Error handling
   if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
 
+  // Section: Render Layout
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
-        {/* Breadcrumb */}
+        {/* Section: Breadcrumb */}
         <div className="text-base text-gray-600 flex items-center gap-2">
           <Link
             to="/admin/members"
@@ -132,12 +132,12 @@ function formatPhoneNumber(phone?: string | null): string {
           <span>รายละเอียดบัญชี</span>
         </div>
 
-        {/* Header */}
+        {/* Section: Header */}
         <h1 className="text-xl font-semibold text-gray-900 mt-1">
           รายละเอียดบัญชี
         </h1>
 
-        {/* Card */}
+        {/* Section: Account Detail Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
           {/* ปุ่มแก้ไขข้อมูล */}
           <button
@@ -149,7 +149,7 @@ function formatPhoneNumber(phone?: string | null): string {
             <span>แก้ไข</span>
           </button>
 
-          {/* เนื้อหา */}
+          {/* Section: Profile Info */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-24 mt-12 w-full">
             {/* รูปโปรไฟล์ */}
             <div className="flex justify-center flex-1">
@@ -164,7 +164,6 @@ function formatPhoneNumber(phone?: string | null): string {
             <div className="flex-1">
               <div className="space-y-3 text-lg text-slate-800 leading-relaxed">
                 <h2 className="text-xl font-semibold mb-3">รายละเอียดบัญชี</h2>
-
                 <p>
                   <span className="font-semibold">ชื่อ - นามสกุล :</span>{" "}
                   {user.fname} {user.lname}
@@ -184,7 +183,6 @@ function formatPhoneNumber(phone?: string | null): string {
                   <span className="font-semibold">Role :</span>{" "}
                   {user.role?.name ?? "-"}
                 </p>
-
                 <p>
                   <span className="font-semibold">ชุมชนวิสาหกิจ :</span>{" "}
                   {user.communityMembers?.[0]?.Community?.name ?? "-"}

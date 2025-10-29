@@ -1,11 +1,13 @@
 /**
- * คำอธิบาย : Service สำหรับดึงข้อมูลรายละเอียดที่พัก (Homestay)
- * ใช้เชื่อมต่อกับ API: GET /super/homestay/:homestayId
+ * คำอธิบาย : Service สำหรับจัดการข้อมูลที่พัก (Homestay)
+ * ใช้สำหรับเชื่อมต่อ API ฝั่ง SuperAdmin และ Admin
+ * เช่น ดึงรายละเอียดที่พักทั้งหมด หรือข้อมูลที่พักรายรายการ
+ * ใช้ในฝั่ง Client (Frontend)
  */
 
 import axios from "axios";
 
-// ตั้งค่า baseURL จาก ENV
+// สร้าง instance ของ axios พร้อม baseURL จาก ENV
 const api = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE ||
@@ -16,20 +18,25 @@ const api = axios.create({
 });
 
 /**
- * ฟังก์ชัน: fetchHomestayDetail()
- * Input : homestayId (หมายเลขที่พัก)
- * Output: homestay + relations
+ * ฟังก์ชัน: fetchHomestayDetail
+ * วัตถุประสงค์: ดึงข้อมูลรายละเอียดของที่พัก (homestay) ตามรหัส
+ * Mapping: GET /super/homestays/:homestayId
+ * Input: homestayId (number) – หมายเลขของที่พัก
+ * Output: ข้อมูลที่พักและความสัมพันธ์ทั้งหมด
  */
 export async function fetchHomestayDetail(homestayId: number) {
   const res = await api.get(`/super/homestays/${homestayId}`);
   return res.data?.data;
 }
 
-/*
- * ฟังก์ชัน : getHomestaysAllAdmin
- * อธิบาย : ดึงข้อมูลที่พัก (homestay)
- * Mapping : GET /admin/community/homestays/all
+/**
+ * ฟังก์ชัน: getHomestaysAllAdmin
+ * วัตถุประสงค์: ดึงข้อมูลรายการที่พักทั้งหมดของผู้ดูแลชุมชน (Admin)
+ * Mapping: GET /admin/community/homestays/all
+ * Input: ไม่มี
+ * Output: รายการข้อมูลที่พักทั้งหมด
  */
 export async function getHomestaysAllAdmin() {
-  return api.get(`/admin/community/homestays/all`);
+  const res = await api.get(`/admin/community/homestays/all`);
+  return res.data?.data;
 }

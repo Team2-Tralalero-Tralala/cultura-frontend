@@ -55,12 +55,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     if (!open) return;
 
     void MySwal.fire({
-      iconHtml: (
-        <Icon
-          icon="circum:circle-alert"
-          style={{ fontSize: 150, color: "#004D2C" }}
-        />
-      ),
+      iconHtml: <Icon icon="circum:circle-alert" style={{ fontSize: 150, color: "#004D2C" }} />,
       iconColor: "#004D2C",
       title,
       text,
@@ -117,9 +112,7 @@ function toIntOrNull(v: any): number | null {
 function toTimeInput(input?: string | Date | null) {
   if (!input) return "";
   if (typeof input === "string") {
-    const m = input.match(
-      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
-    );
+    const m = input.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
     if (m && m[4] !== undefined && m[5] !== undefined) {
       const hh = m[4].padStart(2, "0");
       const mm = m[5].padStart(2, "0");
@@ -274,22 +267,14 @@ export const CreatePackagePage: React.FC = () => {
       setFormErrors({});
     }
     // เงื่อนไขช่วงเปิด/ปิดการจอง และสิ้นสุดกิจกรรม
-    if (
-      formState.openDate &&
-      formState.closeDate &&
-      formState.openDate > formState.closeDate
-    ) {
+    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
       setFormErrors((prev) => ({
         ...prev,
         closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
       }));
       ok = false;
     }
-    if (
-      formState.closeDate &&
-      formState.endDate &&
-      formState.closeDate > formState.endDate
-    ) {
+    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
       setFormErrors((prev) => ({
         ...prev,
         closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
@@ -346,8 +331,7 @@ export const CreatePackagePage: React.FC = () => {
   type MemberOption = { id: number; fname: string; lname: string };
   const [memberQuery, setMemberQuery] = useState("");
   const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
-  const showMemberBox =
-    memberQuery.trim().length >= 1 && memberOptions.length > 0;
+  const showMemberBox = memberQuery.trim().length >= 1 && memberOptions.length > 0;
 
   React.useEffect(() => {
     const q = memberQuery.trim();
@@ -384,8 +368,7 @@ export const CreatePackagePage: React.FC = () => {
   React.useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (!searchBoxRef.current) return;
-      if (!searchBoxRef.current.contains(e.target as Node))
-        setOpenTagBox(false);
+      if (!searchBoxRef.current.contains(e.target as Node)) setOpenTagBox(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -414,9 +397,7 @@ export const CreatePackagePage: React.FC = () => {
           name: t.name ?? t.title ?? "",
         }));
         const byText = opts.filter((o) => norm(o.name).includes(norm(q)));
-        const filtered = byText.filter(
-          (o) => !selectedTags.some((s) => s.id === o.id)
-        );
+        const filtered = byText.filter((o) => !selectedTags.some((s) => s.id === o.id));
         setTagOptions(filtered);
         setOpenTagBox(filtered.length > 0);
       } catch (e) {
@@ -434,8 +415,7 @@ export const CreatePackagePage: React.FC = () => {
     setTagOptions([]);
     setOpenTagBox(false);
   };
-  const removeTag = (id: number) =>
-    setSelectedTags((prev) => prev.filter((t) => t.id !== id));
+  const removeTag = (id: number) => setSelectedTags((prev) => prev.filter((t) => t.id !== id));
 
   // ===== Homestay picker =====
   type HomestayOption = {
@@ -447,8 +427,7 @@ export const CreatePackagePage: React.FC = () => {
 
   const [homestayQuery, setHomestayQuery] = useState("");
   const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
-  const [selectedHomestay, setSelectedHomestay] =
-    useState<HomestayOption | null>(null);
+  const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
 
   const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
   const [openHomestayBox, setOpenHomestayBox] = useState(false);
@@ -459,10 +438,7 @@ export const CreatePackagePage: React.FC = () => {
   // click-outside สำหรับกล่องค้นหาที่พัก
   React.useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      if (
-        homestayBoxRef.current &&
-        !homestayBoxRef.current.contains(e.target as Node)
-      ) {
+      if (homestayBoxRef.current && !homestayBoxRef.current.contains(e.target as Node)) {
         setOpenHomestayBox(false);
       }
     };
@@ -486,14 +462,12 @@ export const CreatePackagePage: React.FC = () => {
         });
 
         const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
-        const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map(
-          (h: any) => ({
-            id: Number(h.id),
-            name: h.name ?? "",
-            facility: h.facility ?? h.description ?? "",
-            images: h.homestayImage ?? h.images ?? [],
-          })
-        );
+        const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map((h: any) => ({
+          id: Number(h.id),
+          name: h.name ?? "",
+          facility: h.facility ?? h.description ?? "",
+          images: h.homestayImage ?? h.images ?? [],
+        }));
         setHomestayOptions(opts);
         setOpenHomestayBox(opts.length > 0);
       } catch (e) {
@@ -515,10 +489,7 @@ export const CreatePackagePage: React.FC = () => {
   };
 
   // ฟังก์ชัน set field + validate ช่องนั้น
-  const setFormField = <K extends keyof PackageForm>(
-    key: K,
-    value: PackageForm[K]
-  ) => {
+  const setFormField = <K extends keyof PackageForm>(key: K, value: PackageForm[K]) => {
     setFormState((prev) => ({ ...prev, [key]: value }));
     validateField(key, value);
   };
@@ -603,22 +574,12 @@ export const CreatePackagePage: React.FC = () => {
     }
 
     // (คง custom validation เดิมต่อจากนี้)
-    if (
-      formState.openDate &&
-      formState.closeDate &&
-      formState.openDate > formState.closeDate
-    ) {
-      setErrorMessage(
-        "ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง"
-      );
+    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
+      setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    if (
-      formState.closeDate &&
-      formState.endDate &&
-      formState.closeDate > formState.endDate
-    ) {
+    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
       setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -646,14 +607,10 @@ export const CreatePackagePage: React.FC = () => {
       ...(formState.closeTime.trim() && {
         closeTime: formState.closeTime.trim(),
       }),
-      ...(selectedHomestay &&
-        hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
-      ...(selectedHomestay &&
-        hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
-      ...(selectedHomestay &&
-        hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
-      ...(selectedHomestay &&
-        hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
+      ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
+      ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
+      ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
+      ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
 
       facility: normalizeOrDefault(formState.facility),
       tagIds: selectedTags.map((t) => t.id),
@@ -678,21 +635,17 @@ export const CreatePackagePage: React.FC = () => {
 
   const startPos = React.useMemo(
     () =>
-      [
-        Number(formState.latitude) || 13.7563,
-        Number(formState.longitude) || 100.5018,
-      ] as [number, number],
+      [Number(formState.latitude) || 13.7563, Number(formState.longitude) || 100.5018] as [
+        number,
+        number
+      ],
     [formState.latitude, formState.longitude]
   );
 
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
-      {errorMessage && (
-        <div className="text-red-600 text-sm">{errorMessage}</div>
-      )}
-      {successMessage && (
-        <div className="text-emerald-700 text-sm">{successMessage}</div>
-      )}
+      {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
+      {successMessage && <div className="text-emerald-700 text-sm">{successMessage}</div>}
 
       <form
         onSubmit={handleSubmit}
@@ -732,9 +685,7 @@ export const CreatePackagePage: React.FC = () => {
               helperText={formErrors?.description}
             />
             {!!formErrors.description && (
-              <div className="text-red-600 text-sm mt-1">
-                {formErrors.description}
-              </div>
+              <div className="text-red-600 text-sm mt-1">{formErrors.description}</div>
             )}
           </div>
         </section>
@@ -790,30 +741,22 @@ export const CreatePackagePage: React.FC = () => {
               <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
                 <div>
                   {!!formErrors.province && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.province}
-                    </div>
+                    <div className="text-red-600 text-sm">{formErrors.province}</div>
                   )}
                 </div>
                 <div>
                   {!!formErrors.district && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.district}
-                    </div>
+                    <div className="text-red-600 text-sm">{formErrors.district}</div>
                   )}
                 </div>
                 <div>
                   {!!formErrors.subDistrict && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.subDistrict}
-                    </div>
+                    <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>
                   )}
                 </div>
                 <div>
                   {!!formErrors.postalCode && (
-                    <div className="text-red-600 text-sm">
-                      {formErrors.postalCode}
-                    </div>
+                    <div className="text-red-600 text-sm">{formErrors.postalCode}</div>
                   )}
                 </div>
               </div>
@@ -845,14 +788,10 @@ export const CreatePackagePage: React.FC = () => {
               />
               <div className="grid grid-cols-2 gap-3 mt-2">
                 {!!formErrors.latitude && (
-                  <div className="text-red-600 text-sm">
-                    {formErrors.latitude}
-                  </div>
+                  <div className="text-red-600 text-sm">{formErrors.latitude}</div>
                 )}
                 {!!formErrors.longitude && (
-                  <div className="text-red-600 text-sm">
-                    {formErrors.longitude}
-                  </div>
+                  <div className="text-red-600 text-sm">{formErrors.longitude}</div>
                 )}
               </div>
             </div>
@@ -908,9 +847,7 @@ export const CreatePackagePage: React.FC = () => {
             </div>
 
             {!!formErrors.overseerMemberId && (
-              <div className="text-red-600 text-sm">
-                {formErrors.overseerMemberId}
-              </div>
+              <div className="text-red-600 text-sm">{formErrors.overseerMemberId}</div>
             )}
           </div>
 
@@ -943,9 +880,7 @@ export const CreatePackagePage: React.FC = () => {
             />
 
             {!!formErrors.facility && (
-              <div className="text-red-600 text-sm mt-1">
-                {formErrors.facility}
-              </div>
+              <div className="text-red-600 text-sm mt-1">{formErrors.facility}</div>
             )}
           </div>
         </section>
@@ -1054,8 +989,7 @@ export const CreatePackagePage: React.FC = () => {
                   onChange={(e) => setTagQuery(e.target.value)}
                   onFocus={() =>
                     setOpenTagBox(
-                      tagQuery.trim().length >= MIN_TAG_QUERY_CHARS &&
-                        tagOptions.length > 0
+                      tagQuery.trim().length >= MIN_TAG_QUERY_CHARS && tagOptions.length > 0
                     )
                   }
                   onKeyDown={(e) => {
@@ -1306,15 +1240,11 @@ export const CreatePackagePage: React.FC = () => {
                   </div>
 
                   <div className="col-span-12 sm:col-span-8">
-                    <div className="font-semibold text-lg mb-2">
-                      {selectedHomestay.name}
-                    </div>
+                    <div className="font-semibold text-lg mb-2">{selectedHomestay.name}</div>
 
                     {selectedHomestay.facility && (
                       <div>
-                        <div className="font-semibold mb-1">
-                          สิ่งอำนวยความสะดวกที่พัก
-                        </div>
+                        <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
                         <ul className="list-disc pl-5 space-y-1">
                           {selectedHomestay.facility
                             .split(/[,•\n]/)

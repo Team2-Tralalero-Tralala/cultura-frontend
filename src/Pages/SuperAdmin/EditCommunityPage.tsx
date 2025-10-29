@@ -7,37 +7,32 @@
  * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
-import * as React from "react";
-import { Link, useParams } from "react-router";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { getCommunityById, updateCommunity } from "@/Services/community-service";
 import type { CommunityFormData } from "@/Types/CommunityForm";
-import z from "zod";
-import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
-import CircularProgress from "@mui/material/CircularProgress";
-import {
-  getCommunityById,
-  updateCommunity,
-} from "@/Services/community-service";
-import Backdrop from "@mui/material/Backdrop";
+import Button from "@/Components/Button";
+import MapPicker from "@/Components/MapPicker";
+import { Modal } from "@/Components/Modal/Modal";
+import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
+import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
-import MapPicker from "@/Components/MapPicker";
-import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
-import Button from "@/Components/Button";
-import MemberSelector, {
-  type Member,
-} from "@/Components/Selector/MemberSelector";
 import TextField from "@/Components/TextField";
-import { Modal } from "@/Components/Modal/Modal";
-import { Icon } from "@iconify/react";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import { Icon } from "@iconify/react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
+import * as React from "react";
+import { Link, useParams } from "react-router";
+import z from "zod";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -46,13 +41,9 @@ import UploadProfile from "@/Components/calendar/upload/community/UploadProfile"
  * Output : หากไม่ผ่าน validation จะคืนข้อความ error ของแต่ละ field
  */
 const communitySchema = z.object({
-  name: z
-    .string("กรุณากรอกชื่อวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+  name: z.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
 
-  type: z
-    .string("กรุณากรอกประเภทวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  type: z.string("กรุณากรอกประเภทวิสาหกิจชุมชน").min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
 
   registerNumber: z
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
@@ -67,21 +58,13 @@ const communitySchema = z.object({
     .min(1, "กรุณาเลือกธนาคาร")
     .max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
 
-  accountName: z
-    .string("กรุณากรอกชื่อบัญชีธนาคาร")
-    .min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountName: z.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
 
-  accountNumber: z
-    .string("กรุณากรอกหมายเลขบัญชี")
-    .min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: z.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
 
-  description: z
-    .string("กรุณากรอกประวัติวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  description: z.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
 
-  mainActivityName: z
-    .string("กรุณากรอกชื่อกิจกรรมหลัก")
-    .min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityName: z.string("กรุณากรอกชื่อกิจกรรมหลัก").min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
 
   mainActivityDescription: z
     .string("กรุณากรอกรายละเอียดกิจกรรมหลัก")
@@ -97,29 +80,19 @@ const communitySchema = z.object({
 
   latitude: z
     .string("กรุณากรอกละติจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
+    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
 
   longitude: z
     .string("กรุณากรอกลองจิจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
+    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
 
   phone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
 
-  email: z
-    .string("กรุณากรอกอีเมลของวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  email: z.string("กรุณากรอกอีเมลของวิสาหกิจชุมชน").min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
 
-  mainAdmin: z
-    .string("กรุณากรอกชื่อผู้ดูแลหลัก")
-    .min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdmin: z.string("กรุณากรอกชื่อผู้ดูแลหลัก").min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
 
   mainAdminPhone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก")
@@ -186,9 +159,7 @@ export function EditCommunity() {
     postalCode: "",
   });
   const [expanded, setExpanded] = React.useState<string | false>(false);
-  const [formErrors, setFormErrors] = React.useState<
-    Record<string, string | undefined>
-  >({});
+  const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
   const [checked, setChecked] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
@@ -228,9 +199,7 @@ export function EditCommunity() {
 
         const data = response.data.data;
         if (data.registerDate) {
-          data.registerDate = new Date(data.registerDate)
-            .toISOString()
-            .split("T")[0];
+          data.registerDate = new Date(data.registerDate).toISOString().split("T")[0];
         }
         const lat = Number(data.location?.latitude ?? 13.736717);
         const lng = Number(data.location?.longitude ?? 100.523186);
@@ -242,8 +211,7 @@ export function EditCommunity() {
           detail: data.location?.detail,
           latitude: String(data.location?.latitude),
           longitude: String(data.location?.longitude),
-          communityMembers:
-            data.communityMembers?.map((member: Member) => member.id) ?? [],
+          communityMembers: data.communityMembers?.map((member: Member) => member.id) ?? [],
           location: {
             province: data.location.province,
             district: data.location.district,
@@ -308,8 +276,7 @@ export function EditCommunity() {
         setCoverFiles(coverFileFetched[0] || null);
         setGalleryFiles(galleryFilesFetched);
         setVideoFiles(videoFileFetch);
-        const memberIds =
-          data.communityMembers?.map((m: any) => m.user.id) ?? [];
+        const memberIds = data.communityMembers?.map((m: any) => m.user.id) ?? [];
         setSelectedMembers(memberIds);
       } catch (error) {
         console.error(error);
@@ -343,9 +310,8 @@ export function EditCommunity() {
    * Input : panel (string) — รหัสของ panel ที่ต้องการเปิด/ปิด
    * Output : อัปเดต state expanded เพื่อควบคุมการเปิด/ปิด Accordion
    */
-  const handleChange =
-    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
-      setExpanded(isExpanded ? panel : false);
+  const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
+    setExpanded(isExpanded ? panel : false);
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
    * Input :
@@ -403,9 +369,7 @@ export function EditCommunity() {
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
    * Output : อัปเดตค่าใน formData และเรียก validateField() เพื่อตรวจสอบข้อมูล
    */
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     const updated = { ...formData, [id]: value };
     setFormData(updated);
@@ -445,9 +409,7 @@ export function EditCommunity() {
 
     if (!isFormValid) {
       // หาชื่อ field แรกที่เกิด error
-      const firstErrorField = Object.keys(formErrors).find(
-        (key) => formErrors[key]
-      );
+      const firstErrorField = Object.keys(formErrors).find((key) => formErrors[key]);
       if (firstErrorField) {
         // เช็คว่า field นั้นอยู่ใน Accordion ไหน แล้วเปิด Accordion นั้น
         const panel2Fields = [
@@ -471,13 +433,7 @@ export function EditCommunity() {
           "latitude",
           "longitude",
         ];
-        const panel4Fields = [
-          "phone",
-          "email",
-          "mainAdmin",
-          "mainAdminPhone",
-          "adminId",
-        ];
+        const panel4Fields = ["phone", "email", "mainAdmin", "mainAdminPhone", "adminId"];
 
         if (panel2Fields.includes(firstErrorField)) {
           setExpanded("panel2");
@@ -517,8 +473,7 @@ export function EditCommunity() {
           : undefined,
         location: {
           houseNumber: formData.houseNumber,
-          villageNumber:
-            formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
+          villageNumber: formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
           province: location.province,
           district: location.district,
           subDistrict: location.subdistrict,
@@ -562,10 +517,7 @@ export function EditCommunity() {
   return (
     <div>
       {/* ✅ 3. เพิ่ม Backdrop เพื่อแสดงสถานะ Loading */}
-      <Backdrop
-        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={isLoading}
-      >
+      <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>
       <div className="flex justify-between items-center">
@@ -726,9 +678,7 @@ export function EditCommunity() {
               />
             </div>
           </div>
-          <h3 className="text-lg font-bold mt-[24px] mb-[24px]">
-            กิจกรรมหลักของวิสาหกิจชุมชน
-          </h3>
+          <h3 className="text-lg font-bold mt-[24px] mb-[24px]">กิจกรรมหลักของวิสาหกิจชุมชน</h3>
           <div className="grid grid-cols-1 gap-y-[24px] ">
             <div>
               <TextField
@@ -760,11 +710,7 @@ export function EditCommunity() {
                 <h3 className="text-base font-bold mb-1.5">ร้านค้า</h3>
                 <Link to={`/super/community/${communityId}/stores/all`}>
                   <Button type="confirm-admin">
-                    <Icon
-                      icon="carbon:store"
-                      style={{ fontSize: "24px" }}
-                      className="mr-2"
-                    />
+                    <Icon icon="carbon:store" style={{ fontSize: "24px" }} className="mr-2" />
                     จัดการร้านค้า
                   </Button>
                 </Link>
@@ -923,11 +869,7 @@ export function EditCommunity() {
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
               {position[0] !== 0 && position[1] !== 0 && (
-                <MapPicker
-                  startingPosition={position}
-                  startingZoom={13}
-                  onChange={setPosition}
-                />
+                <MapPicker startingPosition={position} startingZoom={13} onChange={setPosition} />
               )}
             </div>
           </div>
@@ -1032,9 +974,7 @@ export function EditCommunity() {
               />
             </div>
           </div>
-          <div className="text-lg font-bold mt-[24px] mb-[24px]">
-            ข้อมูลผู้ดูแลวิสาหกิจชุมชน
-          </div>
+          <div className="text-lg font-bold mt-[24px] mb-[24px]">ข้อมูลผู้ดูแลวิสาหกิจชุมชน</div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -1088,9 +1028,7 @@ export function EditCommunity() {
               <AdminSelector
                 value={formData.adminId}
                 admin={admin}
-                onChange={(adminId) =>
-                  handleValueChange("adminId", Number(adminId))
-                }
+                onChange={(adminId) => handleValueChange("adminId", Number(adminId))}
                 error={!!formErrors.adminId}
                 helperText={String(formErrors.adminId)}
               />

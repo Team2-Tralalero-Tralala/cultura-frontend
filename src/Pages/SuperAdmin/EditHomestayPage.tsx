@@ -431,7 +431,7 @@ export default function EditHomestayPage() {
             });
 
             setSuccessMessage("อัปเดตที่พักสำเร็จ");
-            if (communityId) navigate(`/super/community/edit/${communityId}`);
+            if (communityId) navigate(`/super/community/${communityId}/homestays/all`);
             else navigate(-1);
         } catch (err: any) {
             console.error("Update homestay error:", err?.response?.data || err);
@@ -449,7 +449,7 @@ export default function EditHomestayPage() {
 
     // ===== Render =====
     return (
-        <div className="w-full max-w-none px-0">
+        <div className="w-full max-w-none px-8">
             {/* Alerts */}
             {errorMessage && (
                 <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">
@@ -468,7 +468,7 @@ export default function EditHomestayPage() {
                     type="button"
                     className="flex items-center gap-2 text-xl"
                     onClick={() =>
-                        communityId ? navigate(`/super/community/edit/${communityId}`) : navigate(-1)
+                        communityId ? navigate(`/super/community/${communityId}/homestays/all`) : navigate(-1)
                     }
                 >
                     <Icon icon="mingcute:arrow-left-line" width={22} />
@@ -669,7 +669,7 @@ export default function EditHomestayPage() {
                                     รูปเพิ่มเติม (GALLERY) <span className="text-red-600">*</span>
                                 </h3>
                                 <UploadCard
-                                    max={10}
+                                    max={5}
                                     accept="image/*"
                                     multiple
                                     value={galleryFiles}
@@ -695,7 +695,7 @@ export default function EditHomestayPage() {
                                 type="cancel"
                                 onClick={() =>
                                     communityId
-                                        ? navigate(`/super/community/edit/${communityId}`)
+                                        ? navigate(`/super/community/${communityId}/homestays/all`)
                                         : navigate(-1)
                                 }
                             >

@@ -21,6 +21,8 @@ interface TagSelectorProps {
   value?: number[];
   tag?: Tag[];
   onChange: (value: number[]) => void;
+  error?: boolean;
+  helperText?: string;
 }
 /**
  * คำอธิบาย : Component หลักสำหรับเลือกแท็ก (Tag) ของชุมชน
@@ -30,7 +32,13 @@ interface TagSelectorProps {
  *   - tag : รายการแท็กทั้งหมด (array ของ Tag)
  *   - onChange : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของแท็กที่ถูกเลือก
  */
-export function TagSelector({ value = [], tag = [], onChange }: TagSelectorProps) {
+export function TagSelector({
+  value = [],
+  tag = [],
+  onChange,
+  error = false,
+  helperText = "",
+}: TagSelectorProps) {
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = React.useState<Tag[]>([]);
 
@@ -68,6 +76,12 @@ export function TagSelector({ value = [], tag = [], onChange }: TagSelectorProps
 
   return (
     <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="block text-base font-semibold text-gray-800">
+          แท็ก <span className="text-red-600">*</span>
+        </label>
+        {error && <span className="text-xs text-red-600 ml-2 whitespace-nowrap">{helperText}</span>}
+      </div>
       <Autocomplete
         multiple
         disableClearable
@@ -111,25 +125,20 @@ export function TagSelector({ value = [], tag = [], onChange }: TagSelectorProps
           const { ref: InputElementRef, ...inputPropsRest } = inputProps;
 
           return (
-            <div
-              // Pass event handlers and wrapper-ref from InputProps to the outer div
-              ref={InputRef}
-              className="w-full"
-            >
+            <div ref={InputRef} className="w-full">
               <div className="relative">
                 <input
-                  // Pass native input props to the actual input element
                   {...inputPropsRest}
-                  // Pass the actual input element ref here
                   ref={InputElementRef}
-                  id="custom-autocomplete"
+                  id="tag-selector"
                   type="text"
                   placeholder="ค้นหาแท็ก เช่น เดินป่า ทะเล ภูเขา"
-                  className="block w-full rounded-form border-1
-                    border-gray-400 focus:ring-gray-400 focus:border-gray-500
-                    bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500
-                    leading-relaxed placeholder:leading-relaxed
-                    focus:outline-none focus:ring-1 transition-shadow"
+                  className={`block w-full rounded-form border px-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
+                  ${
+                    error
+                      ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
+                      : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
+                  }`}
                 />
                 {InputProps.endAdornment && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">

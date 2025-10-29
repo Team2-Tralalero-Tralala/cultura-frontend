@@ -1,7 +1,23 @@
+import { Routes, Route } from "react-router-dom";
+
+import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
+import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
+import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
+import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
+import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
+import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import UploadBannerPage from "@/Pages/SuperAdmin/UploadBannerPage";
+
+import { BlockedAccountPage } from "@/Pages/SuperAdmin/BlockUserPage";
+import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
+import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
+
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
+import ManageTags from "@/Pages/SuperAdmin/ManageTags";
+
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
@@ -10,10 +26,10 @@ import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
 import { EditStore } from "@/Pages/SuperAdmin/EditStore";
+import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
-import { Route, Routes } from "react-router-dom";
 
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
@@ -44,15 +60,18 @@ export default function SuperAdminRoutes() {
         element={<CreateStore />}
       />
       <Route path="/store/:storeId/edit" element={<EditStore />} />
+      <Route path="/reset-password/:userId" element={<ResetPassword />} />
 
       <Route
         path="community/:communityId/homestay/:homestayId"
         element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="banners" element={<UploadBannerPage />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>
       <Route path="account/change-password" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
+      <Route path="shared/tags" element={<ManageTags/>}/>
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
       <Route path="setting" element={<SettingHomePage />} />
@@ -63,7 +82,7 @@ export default function SuperAdminRoutes() {
         element={<ManageStores />}
       />
       <Route
-        path="community/:communityId/homestays/all"
+        path="community/:communityId/homestay/all"
         element={<ManageHomestaySuperAdmin />}
       />
             {/* 🔹 หน้าเพิ่มบัญชีผู้ดูแลระบบ (Admin) */}
@@ -72,6 +91,10 @@ export default function SuperAdminRoutes() {
         element={<CreateAccountPage defaultRole="Admin" />}
       />
 
+      <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="users/blocked" element={<BlockedAccountPage />} />
+      <Route path="users/:id" element={<UserDetailPage />} />
+      <Route path="accounts" element={<ManageAccountPage />} />
       {/* 🔹 หน้าเพิ่มบัญชีสมาชิก (Member) */}
       <Route
         path="/member/create"

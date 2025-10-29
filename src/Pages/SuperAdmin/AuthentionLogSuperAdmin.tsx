@@ -120,11 +120,6 @@ export default function AuthentionLogSuperAdmin() {
 
 
 
-
-
-
-
-
     return (
         <div className="space-y-4">
             <div className="flex flex-col gap-2 w-full">

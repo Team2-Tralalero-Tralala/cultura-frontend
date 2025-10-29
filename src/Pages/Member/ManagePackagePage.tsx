@@ -5,12 +5,8 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DataTable from "@/components/Tables/Index";
-import type {
-  Column,
-  DataTableActionsConfig,
-  BulkAction,
-} from "../../Components/Tables/Types";
+import DataTable from "@/Components/Tables/Index";
+import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
 import { TrashIcon } from "../../Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
@@ -86,11 +82,7 @@ export default function ManagePackagePage() {
 
       // รองรับหลายทรง payload
       let listRaw: any =
-        payload?.data?.data ??
-        payload?.data ??
-        payload?.items ??
-        payload?.rows ??
-        payload;
+        payload?.data?.data ?? payload?.data ?? payload?.items ?? payload?.rows ?? payload;
 
       if (!Array.isArray(listRaw)) {
         console.warn("Expected array but got:", listRaw);
@@ -110,20 +102,14 @@ export default function ManagePackagePage() {
           title: p?.name ?? p?.title ?? "-",
           community: p?.community?.name ?? p?.communityName ?? "-",
           owner: p?.overseerPackage
-            ? `${p.overseerPackage.fname ?? ""} ${
-                p.overseerPackage.lname ?? ""
-              }`.trim() ||
+            ? `${p.overseerPackage.fname ?? ""} ${p.overseerPackage.lname ?? ""}`.trim() ||
               p.overseerPackage.username ||
               "-"
             : p?.ownerName ?? "-",
           published:
-            p?.statusPackage === "PUBLISH" ||
-            p?.published === true ||
-            p?.isPublished === true,
+            p?.statusPackage === "PUBLISH" || p?.published === true || p?.isPublished === true,
           approved:
-            p?.statusApprove === "APPROVE" ||
-            p?.approved === true ||
-            p?.isApproved === true,
+            p?.statusApprove === "APPROVE" || p?.approved === true || p?.isApproved === true,
         })
       );
 
@@ -186,12 +172,7 @@ export default function ManagePackagePage() {
   // ค้นหา
   const [searchQuery, setSearchQuery] = useState("");
   const normalizeText = (s: string) =>
-    (s ?? "")
-      .toString()
-      .toLowerCase()
-      .normalize("NFC")
-      .replace(/\s+/g, " ")
-      .trim();
+    (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
   const toPublishedText = (r: Row) => (r.published ? "เผยแพร่" : "ไม่เผยแพร่");
   const toApprovedText = (r: Row) => (r.approved ? "อนุมัติ" : "รออนุมัติ");
@@ -200,13 +181,9 @@ export default function ManagePackagePage() {
     const q = normalizeText(searchQuery);
     if (!q) return tableRows;
     return tableRows.filter((r) => {
-      const haystacks = [
-        r.title,
-        r.community,
-        r.owner,
-        toPublishedText(r),
-        toApprovedText(r),
-      ].map(normalizeText);
+      const haystacks = [r.title, r.community, r.owner, toPublishedText(r), toApprovedText(r)].map(
+        normalizeText
+      );
       return haystacks.some((h) => h.includes(q));
     });
   }, [tableRows, searchQuery]);
@@ -225,10 +202,7 @@ export default function ManagePackagePage() {
 
         <div className="flex items-center gap-3">
           <div className="flex-1 max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           <div className="ml-auto flex items-center gap-3">
@@ -245,9 +219,7 @@ export default function ManagePackagePage() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<Row>
         data={filteredRows}

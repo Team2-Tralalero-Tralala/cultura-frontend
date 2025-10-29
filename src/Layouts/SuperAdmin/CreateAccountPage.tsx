@@ -414,7 +414,6 @@
 
 // export default CreateAccountPage;
 
-
 /*
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ของระบบ Super Admin
@@ -431,8 +430,8 @@ import api from "@/Libs/api";
 import TextField from "@/Components/TextField";
 import Button from "@/Components/Button";
 import SubmitButton from "@/Components/SubmitButton";
-import ThailandLocationSelector from "@/components/Selector/ThailandLocationSelector";
-import type { ThailandLocation } from "@/components/Selector/ThailandLocationSelector";
+import ThailandLocationSelector from "@/Components/Selector/ThailandLocationSelector";
+import type { ThailandLocation } from "@/Components/Selector/ThailandLocationSelector";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -463,9 +462,7 @@ interface CreateAccountBody {
   postalCode?: string;
 }
 
-const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
-  defaultRole,
-}) => {
+const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -514,9 +511,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
   }, [location.pathname]);
 
   /**  handle input change */
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
@@ -616,9 +611,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow max-w-6xl mx-auto text-[15px] space-y-10 border border-gray-200"
       >
-        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          สร้างบัญชี
-        </h2>
+        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">สร้างบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           {/* รูปโปรไฟล์ */}
@@ -712,9 +705,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
             {/* Member extra field */}
             {role === "Member" && (
               <div>
-                <label className="font-semibold text-gray-800">
-                  ชุมชนที่สังกัด
-                </label>
+                <label className="font-semibold text-gray-800">ชุมชนที่สังกัด</label>
                 <input
                   id="communityId"
                   className="border rounded px-3 py-2 w-full"
@@ -751,10 +742,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
                     </label>
                     <div className="flex gap-4">
                       {["ชาย", "หญิง", "ไม่ระบุ"].map((g) => (
-                        <label
-                          key={g}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
+                        <label key={g} className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="gender"
@@ -791,10 +779,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton
-              htmlType="button"
-              onClick={() => setShowConfirm(true)}
-            >
+            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
               สร้างบัญชี
             </SubmitButton>
           </div>
@@ -806,16 +791,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
           <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center space-y-6 border border-gray-200 animate-fade-in">
             <div className="flex flex-col items-center gap-4">
-              <Icon
-                icon="mdi:alert-circle-outline"
-                className="text-green-800 text-6xl"
-              />
-              <h3 className="text-xl font-bold text-gray-800">
-                ยืนยันการสร้างบัญชี
-              </h3>
-              <p className="text-gray-600 text-sm">
-                คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่
-              </p>
+              <Icon icon="mdi:alert-circle-outline" className="text-green-800 text-6xl" />
+              <h3 className="text-xl font-bold text-gray-800">ยืนยันการสร้างบัญชี</h3>
+              <p className="text-gray-600 text-sm">คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่</p>
             </div>
             <div className="flex justify-center gap-4 pt-4">
               <div className="w-28">
@@ -829,9 +807,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
                   onClick={() => {
                     setShowConfirm(false);
                     handleSubmit(
-                      new Event(
-                        "submit"
-                      ) as unknown as React.FormEvent<HTMLFormElement>
+                      new Event("submit") as unknown as React.FormEvent<HTMLFormElement>
                     );
                   }}
                 >

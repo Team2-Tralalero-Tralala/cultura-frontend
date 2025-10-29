@@ -1,15 +1,13 @@
-/* 
- * Component: BEDateInput (Client)
+/*
+ * File: BoxDateInput.tsx
+ * Component: BoxDateInput (Client)
  * Standard: CS v1.1.1 (TH)
  * หน้าที่:
- *   - อินพุตวันที่ระบบ พ.ศ. แบบกล่องแยก (วัน/เดือน/ปี) + ปุ่มเปิดปฏิทิน
- *   - ตรวจรูปแบบ dd/MM/yyyy (BE), ตรวจขอบเขต min/max (AD), รองรับ i18n(th), A11y
- *   - รองรับโหมด controlled/uncontrolled, มี onTextCommit/onOpenChange สำหรับ hook ภายนอก
- * หมายเหตุด้านมาตรฐาน:
- *   - A11y: ใช้ role="group" + aria-describedby สำหรับ error; แนะนำเพิ่ม fieldset/legend ในอนาคต (ดู NOTE[a11y])
- *   - i18n: ปรับปีใน dropdown ของ react-datepicker เป็น พ.ศ. ด้วย side-effect
- *   - UX: auto-advance กล่องถัดไปเมื่อกรอกครบ, backspace ถอยไปกล่องก่อนหน้า
- *   - Security: ไม่มีการ parse/format ข้ามเขตเวลา (ใช้ Date local) — เพียงพอสำหรับ UI ทั่วไป
+ *  - อินพุตวันที่ระบบ พ.ศ. แบบกล่องแยก (วัน/เดือน/ปี) + ปุ่มเปิดปฏิทิน
+ *  - ตรวจรูปแบบ dd/MM/yyyy (BE) → แปลงเป็น Date(AD) พร้อมตรวจขอบเขต min/max (AD)
+ *  - รองรับ controlled/uncontrolled, onTextCommit/onOpenChange สำหรับ hook ภายนอก
+ * หมายเหตุ:
+ *  - แก้เฉพาะ "ชื่อตัวแปร" ให้สื่อความหมาย + camelCase เท่านั้น (ไม่เปลี่ยนพฤติกรรมโค้ด)
  */
 
 import React, { useEffect, useMemo, useRef, useState, useId } from "react";
@@ -22,31 +20,37 @@ import type { Locale } from "date-fns";
 import { th as thLocale } from "date-fns/locale";
 
 /** ---------- Utils (Pure) ----------
- * คำอธิบาย: ฟังก์ชันบริสุทธิ์สำหรับจัดรูปแบบ/แปลงปี พ.ศ. ↔ ค.ศ.
+ * ฟังก์ชันบริสุทธิ์สำหรับจัดรูปแบบ/แปลงปี พ.ศ. ↔ ค.ศ.
  */
 
 /** เติมเลขให้ครบ 2 หลัก (01, 02, ... 31) */
 const pad2 = (n: number) => n.toString().padStart(2, "0");
 
 /** แปลง Date(AD) → สตริง พ.ศ. รูปแบบ dd/MM/yyyy (ถ้า null คืน "") */
-const toBE = (d: Date | null, beOffset = 543) =>
-    d ? `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear() + beOffset}` : "";
+const formatDateToBEString = (dateAD: Date | null, buddhistYearOffset = 543) =>
+    dateAD ? `${pad2(dateAD.getDate())}/${pad2(dateAD.getMonth() + 1)}/${dateAD.getFullYear() + buddhistYearOffset}` : "";
 
 /** แปลงสตริง dd/MM/yyyy(BE) → Date(AD) (ตรวจวัน/เดือน/ปีจริงด้วยการเทียบค่าที่ new Date คืนมา) */
-const parseBE = (s: string, beOffset = 543): Date | null => {
-    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (!m) return null;
-    const dd = +m[1], mm = +m[2] - 1, yBE = +m[3], yAD = yBE - beOffset;
-    const d = new Date(yAD, mm, dd);
-    return d.getFullYear() === yAD && d.getMonth() === mm && d.getDate() === dd ? d : null;
+const parseBE = (dateText: string, beOffset = 543): Date | null => {
+    const matches = dateText.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!matches) return null;
+
+    const dayNumber = +matches[1];
+    const monthIndex = +matches[2] - 1; // 0-based
+    const beYearNumber = +matches[3];
+    const adYearNumber = beYearNumber - beOffset;
+
+    const candidate = new Date(adYearNumber, monthIndex, dayNumber);
+    const isValidDate =
+        candidate.getFullYear() === adYearNumber &&
+        candidate.getMonth() === monthIndex &&
+        candidate.getDate() === dayNumber;
+
+    return isValidDate ? candidate : null;
 };
 
-/** ---------- Props ----------
- * หมายเหตุ:
- *  - inputClassName: ไม่ถูกใช้เมื่อ segmented=true (เก็บไว้เพื่อ compatibility)
- *  - placeholder: ใช้เฉพาะแสดงบนกล่องย่อย (วว/ดด/ปปปป) เมื่อ segmented=true
- */
-export type BEDateInputProps = {
+/** ---------- Props ---------- */
+export type BoxDateInputProps = {
     value?: Date | null;
     defaultValue?: Date | null;
     onChange?: (date: Date | null) => void;
@@ -61,37 +65,37 @@ export type BEDateInputProps = {
     id?: string;
     disabled?: boolean;
 
-    width?: number | string;   // default 520
-    height?: number | string;  // default 44
+    width?: number | string; // default 520
+    height?: number | string; // default 44
 
     className?: string;
-    inputClassName?: string;       // not used in segmented boxes; kept for compat
+    inputClassName?: string; // not used in segmented boxes; kept for compat
     dropdownClassName?: string;
     calendarButtonClassName?: string;
 
-    locale?: Locale;               // default: Thai
-    beOffset?: number;             // default: 543
-    placeholder?: string;          // default: "วว/ดด/ปปปป"
+    locale?: Locale; // default: Thai
+    beOffset?: number; // default: 543
+    placeholder?: string; // default: "วว/ดด/ปปปป"
 
-    showMonthDropdown?: boolean;   // default: true
-    showYearDropdown?: boolean;    // default: true
+    showMonthDropdown?: boolean; // default: true
+    showYearDropdown?: boolean; // default: true
     yearDropdownMode?: "scroll" | "select"; // default: "select"
 
-    autoCloseOnSelect?: boolean;   // default: true
+    autoCloseOnSelect?: boolean; // default: true
     onTextCommit?: (text: string, parsed: Date | null, inRange: boolean) => void;
     onOpenChange?: (open: boolean) => void;
 
-    clearable?: boolean;           // default: true
+    clearable?: boolean; // default: true
     onClear?: () => void;
 
-    errorText?: string;            // default: "รูปแบบวันที่ไม่ถูกต้อง"
+    errorText?: string; // default: "รูปแบบวันที่ไม่ถูกต้อง"
 
     /** ใช้ segmented boxes แทน input เดียว */
-    segmented?: boolean;           // default: true
+    segmented?: boolean; // default: true
 };
 
 /** ---------- Component ---------- */
-export const BEDateInput: React.FC<BEDateInputProps> = ({
+export const BoxDateInput: React.FC<BoxDateInputProps> = ({
     value,
     defaultValue = null,
     onChange,
@@ -124,8 +128,8 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
 }) => {
     /** ---------- ค่าเริ่มต้นช่วงวันที่ (AD) ---------- */
     const today = useMemo(() => new Date(), []);
-    const min = minDate ?? subYears(today, 15);
-    const max = maxDate ?? addYears(today, 2);
+    const minDateResolved = minDate ?? subYears(today, 15);
+    const maxDateResolved = maxDate ?? addYears(today, 2);
 
     /** ---------- โหมด controlled/uncontrolled ---------- */
     const isControlled = value !== undefined;
@@ -133,21 +137,24 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
     const selectedDate = isControlled ? (value as Date | null) : internalDate;
 
     /** ---------- สถานะ popover ---------- */
-    const [isOpen, setIsOpen] = useState(false);
-    const wrapRef = useRef<HTMLDivElement>(null);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     /** ---------- A11y IDs ---------- */
     const autoId = useId();
     const inputId = id ?? `be-date-${autoId}`;
     const errorId = `${inputId}-err`;
 
-    /** ---------- สถานะกล่องแยก (dd/mm/yyyy BE) ---------- */
-    const [dd, setDD] = useState<string>(selectedDate ? pad2(selectedDate.getDate()) : "");
-    const [mm, setMM] = useState<string>(selectedDate ? pad2(selectedDate.getMonth() + 1) : "");
-    const [yyyyBE, setYYYY] = useState<string>(selectedDate ? String(selectedDate.getFullYear() + beOffset) : "");
-    const dRef = useRef<HTMLInputElement | null>(null);
-    const mRef = useRef<HTMLInputElement | null>(null);
-    const yRef = useRef<HTMLInputElement | null>(null);
+    /** ---------- สถานะกล่องแยก (วัน/เดือน/ปี: BE) ---------- */
+    const [dayText, setDayText] = useState<string>(selectedDate ? pad2(selectedDate.getDate()) : "");
+    const [monthText, setMonthText] = useState<string>(selectedDate ? pad2(selectedDate.getMonth() + 1) : "");
+    const [yearBeText, setYearBeText] = useState<string>(
+        selectedDate ? String(selectedDate.getFullYear() + beOffset) : ""
+    );
+
+    const dayInputRef = useRef<HTMLInputElement | null>(null);
+    const monthInputRef = useRef<HTMLInputElement | null>(null);
+    const yearInputRef = useRef<HTMLInputElement | null>(null);
 
     type InputRef =
         | React.RefObject<HTMLInputElement | null>
@@ -158,86 +165,92 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
 
     /** ---------- ปิดปฏิทินเมื่อคลิกนอก ---------- */
     useEffect(() => {
-        const onClick = (e: MouseEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
+        const handleDocumentMouseDown = (e: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                setIsCalendarOpen(false);
                 onOpenChange?.(false);
             }
         };
-        document.addEventListener("mousedown", onClick);
-        return () => document.removeEventListener("mousedown", onClick);
+        document.addEventListener("mousedown", handleDocumentMouseDown);
+        return () => document.removeEventListener("mousedown", handleDocumentMouseDown);
     }, [onOpenChange]);
 
     /** ---------- sync state จาก selectedDate ---------- */
     useEffect(() => {
         if (!selectedDate) {
-            setDD(""); setMM(""); setYYYY(""); setIsValid(true);
+            setDayText("");
+            setMonthText("");
+            setYearBeText("");
+            setIsValid(true);
             return;
         }
-        setDD(pad2(selectedDate.getDate()));
-        setMM(pad2(selectedDate.getMonth() + 1));
-        setYYYY(String(selectedDate.getFullYear() + beOffset));
+        setDayText(pad2(selectedDate.getDate()));
+        setMonthText(pad2(selectedDate.getMonth() + 1));
+        setYearBeText(String(selectedDate.getFullYear() + beOffset));
         setIsValid(true);
     }, [selectedDate, beOffset]);
 
     /** ---------- ปรับ year dropdown ของ react-datepicker ให้แสดงเป็น พ.ศ. ---------- */
     useEffect(() => {
-        if (!isOpen || !showYearDropdown) return;
-        const root = wrapRef.current;
-        const sel = root?.querySelector(".react-datepicker__year-select") as HTMLSelectElement | null;
-        if (!sel) return;
-        Array.from(sel.options).forEach((opt) => {
-            const y = Number(opt.value);
-            if (!Number.isNaN(y)) opt.textContent = String(y + beOffset);
-        });
-    }, [isOpen, selectedDate, showYearDropdown, beOffset]);
+        if (!isCalendarOpen || !showYearDropdown) return;
+        const selectEl = wrapperRef.current?.querySelector(
+            ".react-datepicker__year-select"
+        ) as HTMLSelectElement | null;
+        if (!selectEl) return;
 
-    /** ตั้งค่า selectedDate โดยเซฟกับภายนอกถ้า onChange ถูกส่งเข้ามา (รองรับ controlled/uncontrolled) */
-    const setDateSafe = (d: Date | null) => {
-        if (!isControlled) setInternalDate(d);
-        onChange?.(d);
+        Array.from(selectEl.options).forEach((opt) => {
+            const adYear = Number(opt.value);
+            if (!Number.isNaN(adYear)) opt.textContent = String(adYear + beOffset);
+        });
+    }, [isCalendarOpen, selectedDate, showYearDropdown, beOffset]);
+
+    /** ตั้งค่า selectedDate (รองรับ controlled/uncontrolled) */
+    const setDateSafe = (dateValue: Date | null) => {
+        if (!isControlled) setInternalDate(dateValue);
+        onChange?.(dateValue);
     };
 
     /** รวมค่าสตริง BE จาก 3 กล่อง (ว่างถ้าขาดกล่องใดกล่องหนึ่ง) */
-    const beString = () => (dd && mm && yyyyBE ? `${dd}/${mm}/${yyyyBE}` : "");
+    const beDateText = () => (dayText && monthText && yearBeText ? `${dayText}/${monthText}/${yearBeText}` : "");
 
     /** คอมมิตค่าจากกล่องแยก → แปลงเป็น Date(AD) + ตรวจขอบเขต + แจ้งผล */
-    const commitSegments = () => {
-        const s = beString();
-        if (!s) {
+    const commitSegmentsToDate = () => {
+        const combinedText = beDateText();
+        if (!combinedText) {
             setIsValid(true);
             onTextCommit?.("", null, true);
             setDateSafe(null);
             return;
         }
-        const parsed = parseBE(s, beOffset);
-        const inRange = !!parsed && parsed >= min && parsed <= max;
+        const parsed = parseBE(combinedText, beOffset);
+        const inRange = !!parsed && parsed >= minDateResolved && parsed <= maxDateResolved;
         setIsValid(inRange);
-        onTextCommit?.(s, parsed, inRange);
+        onTextCommit?.(combinedText, parsed, inRange);
         if (inRange) setDateSafe(parsed!);
     };
 
     /** ---------- Helpers สำหรับกล่องแยก ---------- */
-    const onlyDigits = (v: string) => v.replace(/\D+/g, "");
-    const handleDD = (v: string) => {
-        const nxt = onlyDigits(v).slice(0, 2);
-        setDD(nxt);
-        if (nxt.length === 2) mRef.current?.focus();
+    const extractDigits = (v: string) => v.replace(/\D+/g, "");
+
+    const handleDayInput = (v: string) => {
+        const nextValue = extractDigits(v).slice(0, 2);
+        setDayText(nextValue);
+        if (nextValue.length === 2) monthInputRef.current?.focus();
     };
-    const handleMM = (v: string) => {
-        const nxt = onlyDigits(v).slice(0, 2);
-        setMM(nxt);
-        if (nxt.length === 2) yRef.current?.focus();
+
+    const handleMonthInput = (v: string) => {
+        const nextValue = extractDigits(v).slice(0, 2);
+        setMonthText(nextValue);
+        if (nextValue.length === 2) yearInputRef.current?.focus();
     };
-    const handleYYYY = (v: string) => {
-        const nxt = onlyDigits(v).slice(0, 4);
-        setYYYY(nxt);
+
+    const handleYearInput = (v: string) => {
+        const nextValue = extractDigits(v).slice(0, 4);
+        setYearBeText(nextValue);
     };
+
     /** Backspace ที่ตำแหน่งเริ่มต้น → โฟกัสกล่องก่อนหน้า */
-    const onKeyBack = (
-        e: React.KeyboardEvent<HTMLInputElement>,
-        prev?: InputRef
-    ) => {
+    const handleBackspaceToPrev = (e: React.KeyboardEvent<HTMLInputElement>, prev?: InputRef) => {
         if (e.key === "Backspace") {
             const el = e.currentTarget as HTMLInputElement;
             if (el.selectionStart === 0 && el.selectionEnd === 0 && prev?.current) {
@@ -246,9 +259,15 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
         }
     };
 
-    /** แผนที่ชื่อวันย่อภาษาไทย */
-    const weekdayShortTH: Record<string, string> = {
-        "อาทิตย์": "อา.", "จันทร์": "จ.", "อังคาร": "อ.", "พุธ": "พ.", "พฤหัสบดี": "พฤ.", "ศุกร์": "ศ.", "เสาร์": "ส.",
+    /** แผนที่ชื่อวันย่อภาษาไทย (ใช้กับ formatWeekDay) */
+    const weekdayAbbrevTH: Record<string, string> = {
+        "อาทิตย์": "อา.",
+        "จันทร์": "จ.",
+        "อังคาร": "อ.",
+        "พุธ": "พ.",
+        "พฤหัสบดี": "พฤ.",
+        "ศุกร์": "ศ.",
+        "เสาร์": "ส.",
     };
 
     /** คำนวณขนาดสำหรับ wrapper/อินพุตหลัก */
@@ -256,7 +275,7 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
     const resolvedHeight = typeof height === "number" ? `${height}px` : height ?? "44px";
 
     return (
-        <div ref={wrapRef} className={`relative m-2 ${className ?? ""}`} style={{ width: resolvedWidth }}>
+        <div ref={wrapperRef} className={`relative m-2 ${className ?? ""}`} style={{ width: resolvedWidth }}>
             {/* NOTE[a11y]: label + htmlFor ชี้ไปที่ div[role=group] จะไม่โฟกัสอินพุตโดยตรง
           แนะนำใช้ <fieldset><legend> หรือ aria-labelledby ครอบกล่องทั้งสามในอนาคต */}
             {label && (
@@ -278,59 +297,72 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
                 >
                     {/* dd */}
                     <input
-                        ref={dRef}
+                        ref={dayInputRef}
                         inputMode="numeric"
-                        pattern="\\d{2}"           /* NOTE[html]: ใช้ช่วย validation ใน native submit; onChange ตัด non-digit อยู่แล้ว */
+                        pattern="\\d{2}" /* NOTE[html]: ใช้ช่วย validation ใน native submit; onChange ตัด non-digit อยู่แล้ว */
                         placeholder={segmented ? "วว" : ""}
-                        value={dd}
+                        value={dayText}
                         disabled={disabled}
                         required={required}
-                        onChange={(e) => handleDD(e.target.value)}
-                        onBlur={commitSegments}
-                        onKeyDown={(e) => e.key === "Enter" && commitSegments()}
+                        onChange={(e) => handleDayInput(e.target.value)}
+                        onBlur={commitSegmentsToDate}
+                        onKeyDown={(e) => e.key === "Enter" && commitSegmentsToDate()}
                         className="w-10 text-center outline-none"
                         aria-invalid={!isValid}
                     />
                     <span className="text-gray-500 select-none">/</span>
+
                     {/* mm */}
                     <input
-                        ref={mRef}
+                        ref={monthInputRef}
                         inputMode="numeric"
                         pattern="\\d{2}"
                         placeholder={segmented ? "ดด" : ""}
-                        value={mm}
+                        value={monthText}
                         disabled={disabled}
-                        onChange={(e) => handleMM(e.target.value)}
-                        onBlur={commitSegments}
-                        onKeyDown={(e) => { onKeyBack(e, dRef); if (e.key === "Enter") commitSegments(); }}
+                        onChange={(e) => handleMonthInput(e.target.value)}
+                        onBlur={commitSegmentsToDate}
+                        onKeyDown={(e) => {
+                            handleBackspaceToPrev(e, dayInputRef);
+                            if (e.key === "Enter") commitSegmentsToDate();
+                        }}
                         className="w-10 text-center outline-none"
                         aria-invalid={!isValid}
                     />
                     <span className="text-gray-500 select-none">/</span>
+
                     {/* yyyy (BE) */}
                     <input
-                        ref={yRef}
+                        ref={yearInputRef}
                         inputMode="numeric"
                         pattern="\\d{4}"
                         placeholder={segmented ? "ปปปป" : ""}
-                        value={yyyyBE}
+                        value={yearBeText}
                         disabled={disabled}
                         name={name}
-                        onChange={(e) => handleYYYY(e.target.value)}
-                        onBlur={commitSegments}
-                        onKeyDown={(e) => { onKeyBack(e, mRef); if (e.key === "Enter") commitSegments(); }}
+                        onChange={(e) => handleYearInput(e.target.value)}
+                        onBlur={commitSegmentsToDate}
+                        onKeyDown={(e) => {
+                            handleBackspaceToPrev(e, monthInputRef);
+                            if (e.key === "Enter") commitSegmentsToDate();
+                        }}
                         className="w-16 text-center outline-none"
                         aria-invalid={!isValid}
                     />
                 </div>
 
                 {/* ปุ่มล้างค่า (โชว์เมื่อมีค่าอย่างน้อยหนึ่งกล่อง) */}
-                {clearable && (dd || mm || yyyyBE) && !disabled && (
+                {clearable && (dayText || monthText || yearBeText) && !disabled && (
                     <button
                         type="button"
                         onClick={() => {
-                            setDD(""); setMM(""); setYYYY(""); setIsValid(true);
-                            setDateSafe(null); onTextCommit?.("", null, true); onClear?.();
+                            setDayText("");
+                            setMonthText("");
+                            setYearBeText("");
+                            setIsValid(true);
+                            setDateSafe(null);
+                            onTextCommit?.("", null, true);
+                            onClear?.();
                         }}
                         className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         aria-label="ล้างค่า"
@@ -344,12 +376,15 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
                     type="button"
                     onClick={() => {
                         if (disabled) return;
-                        setIsOpen((v) => { onOpenChange?.(!v); return !v; });
+                        setIsCalendarOpen((open) => {
+                            onOpenChange?.(!open);
+                            return !open;
+                        });
                     }}
                     className={`absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 ${calendarButtonClassName ?? ""}`}
                     aria-label="เปิดปฏิทิน"
                     aria-haspopup="dialog"
-                    aria-expanded={isOpen}
+                    aria-expanded={isCalendarOpen}
                     disabled={disabled}
                 >
                     <Icon icon="uil:calendar" className="w-[24px] h-[24px]" />
@@ -364,25 +399,28 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
             )}
 
             {/* Calendar popover */}
-            {isOpen && !disabled && (
+            {isCalendarOpen && !disabled && (
                 <div className={`absolute z-20 mt-2 w-auto ${dropdownClassName ?? ""}`}>
                     <DailyWrapper>
                         <DailyDatePickerContainer>
                             <DatePicker
                                 inline
                                 selected={selectedDate ?? undefined}
-                                onChange={(d: Date | [Date, Date] | null) => {
-                                    const picked = Array.isArray(d) ? d[0] ?? null : d;
+                                onChange={(dateOrRange: Date | [Date, Date] | null) => {
+                                    const picked = Array.isArray(dateOrRange) ? dateOrRange[0] ?? null : dateOrRange;
                                     if (!picked) return;
                                     setDateSafe(picked);
-                                    setDD(pad2(picked.getDate()));
-                                    setMM(pad2(picked.getMonth() + 1));
-                                    setYYYY(String(picked.getFullYear() + beOffset));
+                                    setDayText(pad2(picked.getDate()));
+                                    setMonthText(pad2(picked.getMonth() + 1));
+                                    setYearBeText(String(picked.getFullYear() + beOffset));
                                     setIsValid(true);
-                                    if (autoCloseOnSelect) { setIsOpen(false); onOpenChange?.(false); }
+                                    if (autoCloseOnSelect) {
+                                        setIsCalendarOpen(false);
+                                        onOpenChange?.(false);
+                                    }
                                 }}
-                                minDate={min}
-                                maxDate={max}
+                                minDate={minDateResolved}
+                                maxDate={maxDateResolved}
                                 dateFormat="dd/MM/yyyy"
                                 shouldCloseOnSelect={false}
                                 showMonthDropdown={showMonthDropdown}
@@ -390,7 +428,7 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
                                 dropdownMode={yearDropdownMode}
                                 locale={locale}
                                 /* ย่อชื่อวันเป็นภาษาไทย */
-                                formatWeekDay={(name) => ({ "อาทิตย์": "อา.", "จันทร์": "จ.", "อังคาร": "อ.", "พุธ": "พ.", "พฤหัสบดี": "พฤ.", "ศุกร์": "ศ.", "เสาร์": "ส." }[name] ?? name)}
+                                formatWeekDay={(name) => weekdayAbbrevTH[name] ?? name}
                             />
                         </DailyDatePickerContainer>
                     </DailyWrapper>
@@ -399,3 +437,6 @@ export const BEDateInput: React.FC<BEDateInputProps> = ({
         </div>
     );
 };
+
+// (ถ้าโปรเจกต์คุณใช้ default export เดิมอยู่ ให้คงบรรทัดนี้ไว้)
+export default BoxDateInput;

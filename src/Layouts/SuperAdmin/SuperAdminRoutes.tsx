@@ -7,6 +7,7 @@ import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import UploadBannerPage from "@/Pages/SuperAdmin/UploadBannerPage";
 
 import { BlockedAccountPage } from "@/Pages/SuperAdmin/BlockUserPage";
 import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
@@ -56,6 +57,7 @@ export default function SuperAdminRoutes() {
         element={<HomestayDetailPage />}
       />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
+      <Route path="banners" element={<UploadBannerPage />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>
       <Route path="account/change-password" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />

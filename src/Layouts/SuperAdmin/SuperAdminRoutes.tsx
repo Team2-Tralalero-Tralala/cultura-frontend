@@ -3,9 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
-import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
-import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
-import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 import UploadBannerPage from "@/Pages/SuperAdmin/UploadBannerPage";
 
@@ -15,14 +12,12 @@ import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
-import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
-import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
 import { EditStore } from "@/Pages/SuperAdmin/EditStore";
@@ -51,7 +46,7 @@ export default function SuperAdminRoutes() {
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
-      {/* <Route path="packages/all" element={<ManagePackagePage />} /> */}
+      <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />

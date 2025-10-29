@@ -139,15 +139,29 @@ export default function MemberSelector({
         renderTags={() => null}
         renderOption={(props, option, { selected }) => (
           <li {...props} key={option.id}>
-            <Checkbox
-              icon={icon}
-              checkedIcon={checkedIcon}
-              className="mr-2"
-              checked={selected}
-            />
+            <Checkbox icon={icon} checkedIcon={checkedIcon} className="mr-2" checked={selected} />
             {option.fname} {option.lname}
           </li>
         )}
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         renderInput={(params) => {
           // Destructure props carefully
           const { InputProps, inputProps } = params;
@@ -160,9 +174,7 @@ export default function MemberSelector({
               ref={InputRef}
               className="w-full"
             >
-              <label className="block text-base font-semibold text-gray-800 mb-1.5">
-                สมาชิก
-              </label>
+              <label className="block text-base font-semibold text-gray-800 mb-1.5">สมาชิก</label>
               <div className="relative">
                 <input
                   // Pass native input props to the actual input element
@@ -190,9 +202,7 @@ export default function MemberSelector({
       />
 
       <div className="mt-4">
-        <div className="text-base font-semibold mb-1">
-          จำนวนสมาชิก {selectedMembers.length} คน
-        </div>
+        <div className="text-base font-semibold mb-1">จำนวนสมาชิก {selectedMembers.length} คน</div>
         {selectedMembers.length === 0 ? (
           <div className="text-gray-500">ยังไม่ได้เลือก</div>
         ) : (
@@ -207,9 +217,7 @@ export default function MemberSelector({
                 </span>
                 <button
                   onClick={() => {
-                    const updated = selectedMembers.filter(
-                      (m) => m.id !== item.id
-                    );
+                    const updated = selectedMembers.filter((m) => m.id !== item.id);
                     setSelectedMembers(updated);
                     onChange(updated.map((v) => v.id)); // ✅ sync กลับ parent
                   }}

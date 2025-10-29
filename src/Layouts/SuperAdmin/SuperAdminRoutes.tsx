@@ -16,6 +16,8 @@ import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
+import ManageTags from "@/Pages/SuperAdmin/ManageTags";
+
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
@@ -61,6 +63,7 @@ export default function SuperAdminRoutes() {
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>
       <Route path="account/change-password" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
+      <Route path="shared/tags" element={<ManageTags/>}/>
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
 

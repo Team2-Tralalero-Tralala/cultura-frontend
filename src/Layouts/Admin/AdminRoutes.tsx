@@ -7,16 +7,11 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
-import React from 'react';
+
 import { Routes, Route, Navigate } from 'react-router-dom';
-import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
+import ManageStoreAdmin from '@/Pages/Admin/ManageStoreAdmin';
 
-
-{/* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/}
-
-//import ManageCommunityAdmin from '../../Pages/Admin/ManageCommunityAdmin';
-
-const AdminRoutes: React.FC = () => {
+export default function AdminRoutes() {
   return (
     <Routes>
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
@@ -25,8 +20,12 @@ const AdminRoutes: React.FC = () => {
         path="community/homestay/:homestayId"
         element={<DetailHomestayAdmin />}
       />
+
+      {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
+      <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
     </Routes>
   );
 };
 
-export default AdminRoutes;
+

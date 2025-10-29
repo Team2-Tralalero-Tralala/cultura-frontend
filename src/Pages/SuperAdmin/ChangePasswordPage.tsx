@@ -8,36 +8,42 @@
  * หมายเหตุ: ไม่เปลี่ยนพฤติกรรมเดิม เพิ่มคอมเมนต์และสลับไปใช้ Modal ที่ให้มาเท่านั้น
  */
 
+
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import Button from "@/Components/Button";
-import { Modal as ConfirmModal } from "@/Components/Modal/Modal"; // ปรับพาธให้ตรงโปรเจกต์คุณ
+import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
 
-/* ===== API instance: แยก BASE_URL กับ PREFIX ===== */
-const RAW_BASE = import.meta.env.VITE_API_BASE_URL?.trim();
-const ABS_BASE =
-    RAW_BASE && /^https?:\/\//i.test(RAW_BASE) ? RAW_BASE.replace(/\/+$/, "") : "http://localhost:4000";
+/* ===== API instance: แยก BASE_URL กับ PREFIX =====
+ * - apiBaseRaw   : ค่าจาก ENV เดิม
+ * - apiBaseUrl   : โดเมนฐาน (ตัด / ท้ายให้เรียบ)
+ * - apiPrefix    : พาธ prefix (เช่น /api)
+ */
+const apiBaseRaw = import.meta.env.VITE_API_BASE_URL?.trim();
+const apiBaseUrl =
+    apiBaseRaw && /^https?:\/\//i.test(apiBaseRaw)
+        ? apiBaseRaw.replace(/\/+$/, "")
+        : "http://localhost:4000";
 
-const API_PREFIX = (import.meta.env.VITE_API_PREFIX || "http://localhost:3000/api").replace(/\/+$/, "");
+const apiPrefix = (import.meta.env.VITE_API_PREFIX || "http://localhost:3000/api").replace(/\/+$/, "");
 
 /* Axios instance: เพิ่ม withCredentials และแนบ Bearer token จาก localStorage */
-const api = axios.create({
-    baseURL: ABS_BASE,
+const apiClient = axios.create({
+    baseURL: apiBaseUrl,
     withCredentials: true,
 });
-api.interceptors.request.use((cfg) => {
-    const t = localStorage.getItem("access_token");
-    if (t) cfg.headers.Authorization = `Bearer ${t}`;
-    return cfg;
+apiClient.interceptors.request.use((config) => {
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+    return config;
 });
-// console.log("API =", ABS_BASE, "PREFIX =", API_PREFIX);
 
-/* กฎความแข็งแรงของรหัสผ่าน */
-const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
+/* กฎความแข็งแรงของรหัสผ่าน (camelCase) */
+const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
 /* ========================= Modal: Result =========================
- * บทบาท: แสดงผลสำเร็จ/ผิดพลาดหลังทำงาน (คงไว้ตามเดิม)
+ * บทบาท: แสดงผลสำเร็จ/ผิดพลาดหลังทำงาน (โครงเดิม, ปรับชื่อแปรเฉพาะในฟังก์ชัน)
  */
 function ResultModal({
     open,
@@ -51,16 +57,19 @@ function ResultModal({
     onClose: () => void;
 }) {
     if (!open) return null;
-    const head = status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800";
-    const icon = status === "success" ? "circum:circle-alert" : "circum:circle-alert"; // NOTE: อาจปรับเป็น check/error
-    const title = status === "success" ? "สำเร็จ" : "ไม่สำเร็จ";
+
+    const headerClass =
+        status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800";
+    const iconName = "circum:circle-alert"; // NOTE: ใช้ไอคอนเดียวกับของเดิม
+    const titleText = status === "success" ? "สำเร็จ" : "ไม่สำเร็จ";
+
     return (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center">
             <div className="absolute inset-0 bg-black/40 z-0" onClick={onClose} />
             <div className="relative z-10 w-[612px] h-[200px] max-w-md rounded-2xl bg-white shadow-xl">
-                <div className={`flex items-center gap-2 px-5 py-3 rounded-t-2xl ${head}`}>
-                    <Icon icon={icon} className="h-5 w-5" />
-                    <h3 className="text-base font-semibold">{title}</h3>
+                <div className={`flex items-center gap-2 px-5 py-3 rounded-t-2xl ${headerClass}`}>
+                    <Icon icon={iconName} className="h-5 w-5" />
+                    <h3 className="text-base font-semibold">{titleText}</h3>
                 </div>
                 <div className="px-5 py-4 text-gray-700">{message}</div>
                 <div className="px-5 pb-5 ">
@@ -99,14 +108,14 @@ export default function ChangePasswordPage() {
     const canSubmit = useMemo(() => {
         if (!currentPassword || !newPassword || !confirmNewPassword) return false;
         if (newPassword !== confirmNewPassword) return false;
-        if (!PASSWORD_RULE.test(newPassword)) return false;
+        if (!passwordRule.test(newPassword)) return false;
         return true;
     }, [currentPassword, newPassword, confirmNewPassword]);
 
     /* hint ความแข็งแรงของรหัส */
     const strengthHint = useMemo(() => {
         if (!newPassword) return "";
-        if (!PASSWORD_RULE.test(newPassword)) {
+        if (!passwordRule.test(newPassword)) {
             return "รหัสต้องยาว ≥ 8 และมี a-z, A-Z, 0-9";
         }
         return "รหัสผ่านแข็งแรง ✓";
@@ -119,7 +128,7 @@ export default function ChangePasswordPage() {
         setConfirmNewPassword("");
     };
 
-    /* submit form -> เปิด SweetAlert2 Confirm */
+    /* submit form -> เปิด Confirm */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (submitting) return;
@@ -131,45 +140,46 @@ export default function ChangePasswordPage() {
         setConfirmOpen(false);
 
         if (!canSubmit) {
-            const t = "ข้อมูลไม่ครบหรือรูปแบบรหัสผ่านไม่ถูกต้อง";
-            setMessage({ type: "error", text: t });
+            const messageText = "ข้อมูลไม่ครบหรือรูปแบบรหัสผ่านไม่ถูกต้อง";
+            setMessage({ type: "error", text: messageText });
             setResultStatus("error");
-            setResultText(t);
+            setResultText(messageText);
             setResultOpen(true);
             return;
         }
 
         try {
             setSubmitting(true);
-            await api.post(`${API_PREFIX}/users/account/change-password/me`, {
+            await apiClient.post(`${apiPrefix}/users/account/change-password/me`, {
                 currentPassword,
                 newPassword,
                 confirmNewPassword,
             });
-            // console.log("POST →", api.getUri({ url: `${API_PREFIX}/account/change-password/me` }));
 
-            const t = "เปลี่ยนรหัสผ่านสำเร็จ";
-            setMessage({ type: "success", text: t });
+            const messageText = "เปลี่ยนรหัสผ่านสำเร็จ";
+            setMessage({ type: "success", text: messageText });
             setResultStatus("success");
-            setResultText(t);
+            setResultText(messageText);
             setResultOpen(true);
             resetForm();
         } catch (err: any) {
-            const status = err?.response?.status;
-            const apiMsg =
-                status === 401
+            const statusCode = err?.response?.status;
+            const apiMessage =
+                statusCode === 401
                     ? "กรุณาเข้าสู่ระบบอีกครั้ง"
                     : err?.response?.data?.message || err?.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ กรุณาลองใหม่";
-            setMessage({ type: "error", text: apiMsg });
+            setMessage({ type: "error", text: apiMessage });
             setResultStatus("error");
-            setResultText(apiMsg);
+            setResultText(apiMessage);
             setResultOpen(true);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const onConfirmVoid: () => void = () => { void proceedChangePassword(); };
+    const handleConfirm = () => {
+        void proceedChangePassword();
+    };
 
     /* =============================== Render =============================== */
     return (
@@ -182,8 +192,8 @@ export default function ChangePasswordPage() {
                     <div
                         role="status"
                         className={`mb-4 rounded-lg px-3 py-2 text-sm ${message.type === "success"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-red-50 text-red-700 border border-red-200"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "bg-red-50 text-red-700 border border-red-200"
                             }`}
                     >
                         {message.text}
@@ -209,7 +219,7 @@ export default function ChangePasswordPage() {
                                 type="button"
                                 aria-label={showCurrent ? "ซ่อนรหัสผ่านปัจจุบัน" : "แสดงรหัสผ่านปัจจุบัน"}
                                 className="absolute right-3 top-2.5 text-gray-500"
-                                onClick={() => setShowCurrent((p) => !p)}
+                                onClick={() => setShowCurrent((prev) => !prev)}
                             >
                                 <Icon icon={showCurrent ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
                             </button>
@@ -233,7 +243,7 @@ export default function ChangePasswordPage() {
                                 type="button"
                                 aria-label={showNew ? "ซ่อนรหัสผ่านใหม่" : "แสดงรหัสผ่านใหม่"}
                                 className="absolute right-3 top-2.5 text-gray-500"
-                                onClick={() => setShowNew((p) => !p)}
+                                onClick={() => setShowNew((prev) => !prev)}
                             >
                                 <Icon icon={showNew ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
                             </button>
@@ -258,7 +268,7 @@ export default function ChangePasswordPage() {
                                 type="button"
                                 aria-label={showConfirm ? "ซ่อนการยืนยันรหัสผ่าน" : "แสดงการยืนยันรหัสผ่าน"}
                                 className="absolute right-3 top-2.5 text-gray-500"
-                                onClick={() => setShowConfirm((p) => !p)}
+                                onClick={() => setShowConfirm((prev) => !prev)}
                             >
                                 <Icon icon={showConfirm ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
                             </button>
@@ -292,9 +302,10 @@ export default function ChangePasswordPage() {
                 </form>
             </div>
 
+            {/* Confirm Modal (ใช้คอมโพเนนต์เดิม, ไม่เปลี่ยน logic) */}
             <ConfirmModal
                 open={confirmOpen}
-                onConfirm={onConfirmVoid}
+                onConfirm={handleConfirm}
                 onCancel={() => setConfirmOpen(false)}
                 title="ยืนยันการเปลี่ยนรหัสผ่าน"
                 text="คุณต้องการยืนยันการเปลี่ยนรหัสผ่านหรือไม่"
@@ -303,7 +314,12 @@ export default function ChangePasswordPage() {
             />
 
             {/* ผลลัพธ์ */}
-            <ResultModal open={resultOpen} status={resultStatus} message={resultText} onClose={() => setResultOpen(false)} />
+            <ResultModal
+                open={resultOpen}
+                status={resultStatus}
+                message={resultText}
+                onClose={() => setResultOpen(false)}
+            />
         </main>
     );
 }

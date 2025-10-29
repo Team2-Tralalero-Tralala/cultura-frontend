@@ -33,4 +33,23 @@ export async function fetchHomestayDetail(homestayId: number) {
 export async function fetchHomestayDetailByAdmin(homestayId: number) {
   const res = await api.get(`/admin/community/homestay/${homestayId}`);
   return res.data?.data;
+
+
+/*
+ * ฟังก์ชัน : getHomestaysAll
+ * อธิบาย : ดึงข้อมูลที่พัก (homestay) ทั้งหมดในชุมชน (เฉพาะ superadmin)
+ * Mapping : GET /super/community/:communityId/homestays
+ */
+// export async function getHomestaysAll(communityId: number) {
+//   return api.get(`/super/community/${communityId}/homestays`);
+// }
+
+export async function getHomestaysAll(
+  communityId: number,
+  page = 1,
+  limit = 10
+) {
+  return api.get(`/super/community/${communityId}/homestays`, {
+    params: { page, limit },   // ส่ง page/limit แบบเดียวกับ getCommunities
+  });
 }

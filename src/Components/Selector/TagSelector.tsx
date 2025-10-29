@@ -22,6 +22,14 @@ interface TagSelectorProps {
   tag?: Tag[];
   onChange: (value: number[]) => void;
 }
+/**
+ * คำอธิบาย : Component หลักสำหรับเลือกแท็ก (Tag) ของชุมชน
+ * โดยใช้ Autocomplete ที่สามารถเลือกหลายรายการได้ (multiple select)
+ * Input :
+ *   - value : ค่าของแท็กที่ถูกเลือก (array ของ id)
+ *   - tag : รายการแท็กทั้งหมด (array ของ Tag)
+ *   - onChange : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของแท็กที่ถูกเลือก
+ */
 export function TagSelector({
   value = [],
   tag = [],
@@ -30,7 +38,7 @@ export function TagSelector({
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = React.useState<Tag[]>([]);
 
-  // โหลด tags แค่ครั้งเดียว
+  // โหลดรายการแท็กทั้งหมดจาก backend
   React.useEffect(() => {
     let active = true;
     getTags().then((respone) => {
@@ -45,15 +53,21 @@ export function TagSelector({
     return () => {
       active = false;
     };
-  }, []); // ❗ ไม่มี dependency
+  }, []);
 
-  // sync selected tags จาก props (value)
+  // ซิงค์ selectedTags กับ value ที่ได้รับจาก props
   React.useEffect(() => {
     if (tags.length === 0) return;
     const selected = tags.filter((t) => value.includes(t.id));
     setSelectedTags(selected);
   }, [tags, JSON.stringify(value)]); // ใช้ JSON.stringify เพื่อเทียบค่า ไม่ใช่ reference
-
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของแท็กที่ถูกเลือก
+   * Input :
+   *   - _ : ค่าเดิม (ไม่ใช้)
+   *   - newValue : ค่าของแท็กที่ถูกเลือกใหม่ (array ของ Tag)
+   * Output : none (อัปเดต state selectedTags และเรียกใช้ onChange เพื่อส่ง id กลับ parent)
+   */
   const handleChange = (_: any, newValue: Tag[]) => {
     setSelectedTags(newValue);
     onChange(newValue.map((v) => v.id));
@@ -69,7 +83,6 @@ export function TagSelector({
         options={tags}
         getOptionLabel={(option) => `${option.name}`}
         value={selectedTags}
-        // loading={loading}
         onChange={handleChange}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         renderTags={() => null}
@@ -111,7 +124,7 @@ export function TagSelector({
                     leading-relaxed placeholder:leading-relaxed
                     focus:outline-none focus:ring-1 transition-shadow"
                 />
-                {InputProps.endAdornment && ( // ✅ render แยกเอง
+                {InputProps.endAdornment && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">
                     {InputProps.endAdornment}
                   </div>
@@ -139,7 +152,7 @@ export function TagSelector({
                       (m) => m.id !== item.id
                     );
                     setSelectedTags(updated);
-                    onChange(updated.map((v) => v.id)); // ✅ sync กลับ parent
+                    onChange(updated.map((v) => v.id));
                   }}
                   className="ml-2 text-gray-500 hover:text-red-500"
                 >

@@ -21,6 +21,12 @@ export type Tag = {
 
 console.log("API URL:", apiUrl);
 
+export async function getTags() {
+  return await axios.get(`${apiUrl}/shared/tags`, {
+    withCredentials: true,
+  });
+}
+
 /**
 * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมด
 */
@@ -34,7 +40,7 @@ export async function fetchTags(page: number, limit: number, search: string) {
     return {
       data: res.data.data.data,
       pagination: res.data.data.pagination,
-      
+
     }
   };
 

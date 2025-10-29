@@ -28,6 +28,8 @@ import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 
+import ManageTags from "@/Pages/SuperAdmin/ManageTagSuperAdmin";
+
 /*
  * Module: SuperAdminRoutes
  * Description: กำหนดเส้นทาง (Routes) สำหรับ Super Admin
@@ -109,6 +111,12 @@ export default function SuperAdminRoutes() {
         path="/tourist/:touristId/edit"
         element={<EditAccountPage />}
       />
+
+      {/* หน้าตารางของ tag */}
+      <Route path="tags" element={<ManageTags />} />
+  
     </Routes>
+
+    
   );
 }

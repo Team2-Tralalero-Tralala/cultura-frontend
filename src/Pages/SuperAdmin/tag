@@ -1,0 +1,282 @@
+/*
+ * คำอธิบาย : หน้า Super Admin สำหรับจัดการประเภท (Tags)
+ * หน้าที่ : ใช้สำหรับแสดงตารางประเภท พร้อมค้นหา เพิ่ม แก้ไข และลบ
+ */
+
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+
+import DataTable from "@/Components/Tables/Index";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+import Button from "@/Components/Button";
+import ModalTag from "@/Components/Modal/ModalTag";
+import { Modal as ModalConfirm } from "@/Components/Modal/Modal";
+import { TrashIcon } from "@/Components/Tables/Icon";
+
+import * as TagService from "@/Services/tag-service";
+
+import type {
+    Column,
+    DataTableActionsConfig,
+    BulkAction,
+    Pagination,
+} from "@/Components/Tables/Types";
+
+export type TagRow = { id: number; name: string };
+
+const normalizeText = (s: string) =>
+    (s ?? "")
+        .toString()
+        .toLowerCase()
+        .normalize("NFC")
+        .replace(/\s+/g, " ")
+        .trim();
+
+export default function ManageTags() {
+    const navigate = useNavigate();
+
+    const [rows, setRows] = useState<TagRow[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    // ✅ pagination state
+    const [pagination, setPagination] = React.useState<Pagination>({
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        limit: 10,
+    });
+
+    const [selectedTag, setSelectedTag] = useState<TagRow | null>(null);
+    const [modalType, setModalType] = useState<"create" | "edit" | "delete" | null>(null);
+    const [showInputModal, setShowInputModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingTagName, setPendingTagName] = useState("");
+
+    // =====================================================
+    // 📦 โหลดข้อมูล + คำนวณ pagination
+    // =====================================================
+    const reload = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            setErrorMessage(null);
+
+            const res = await TagService.fetchTags(1, 1000);
+            const list: TagRow[] = Array.isArray(res.data)
+                ? res.data.map((t: any) => ({ id: t.id, name: t.name }))
+                : [];
+
+            // 🔍 filter
+            const filtered = list.filter((tag) =>
+                normalizeText(tag.name).includes(normalizeText(searchQuery))
+            );
+
+            const count = filtered.length;
+            const pages = Math.max(1, Math.ceil(count / pageSize));
+            const safePage = Math.min(currentPage, pages);
+
+            const start = (safePage - 1) * pageSize;
+            const end = start + pageSize;
+
+            setRows(filtered.slice(start, end));
+            setTotalCount(count);
+            setTotalPages(pages);
+
+            // ✅ ถ้าเปลี่ยนหน้าสุดท้ายแล้วข้อมูลหาย ให้ reset หน้าเป็น safePage
+            if (safePage !== currentPage) setCurrentPage(safePage);
+        } catch (error) {
+            console.error(error);
+            setErrorMessage("โหลดข้อมูลไม่สำเร็จ");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [currentPage, pageSize, searchQuery]);
+
+    useEffect(() => {
+        reload();
+    }, [reload]);
+
+    // =====================================================
+    // 🧩 Action / Modal
+    // =====================================================
+    const openInputModal = (type: "create" | "edit", tag: TagRow | null = null) => {
+        setModalType(type);
+        setSelectedTag(tag);
+        setShowInputModal(true);
+        setPendingTagName(tag?.name ?? "");
+    };
+
+    const closeInputModal = () => {
+        setModalType(null);
+        setSelectedTag(null);
+        setShowInputModal(false);
+        setPendingTagName("");
+    };
+
+    const handleDelete = (tag: TagRow) => {
+        setSelectedTag(tag);
+        setModalType("delete");
+        setShowConfirmModal(true);
+    };
+
+    const handleFinalConfirm = async () => {
+        try {
+            if (modalType === "create") await TagService.createTag(pendingTagName);
+            else if (modalType === "edit" && selectedTag)
+                await TagService.updateTag(selectedTag.id, pendingTagName);
+            else if (modalType === "delete" && selectedTag)
+                await TagService.deleteTag(selectedTag.id);
+
+            closeInputModal();
+            setShowConfirmModal(false);
+            await reload();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // =====================================================
+    // ⚙️ DataTable config
+    // =====================================================
+    const bulkActions: BulkAction<TagRow>[] = [
+        {
+            id: "bulk-delete",
+            label: "ลบทั้งหมด",
+            icon: TrashIcon,
+            intent: "danger",
+            confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
+            onClick: async (rows) => {
+                await Promise.all(rows.map((r) => TagService.deleteTag(r.id)));
+                await reload();
+            },
+        },
+    ];
+
+    const columns: Column<TagRow>[] = [
+        {
+            key: "name",
+            header: "ชื่อประเภท",
+            render: (tag) => (
+                <span
+                    className="text-dark-green cursor-pointer hover:underline hover:underline-offset-1"
+                    onClick={() => openInputModal("edit", tag)}
+                >
+                    {tag.name}
+                </span>
+            ),
+        },
+    ];
+
+    const rowActions: DataTableActionsConfig<TagRow> = {
+        header: "จัดการ",
+        align: "left",
+        width: "120px",
+        variant: "icons",
+        items: () => ["edit", "delete"],
+        callbacks: {
+            edit: (row) => openInputModal("edit", row),
+            delete: (row) => handleDelete(row),
+        },
+    };
+
+    // ✅ สร้าง pagination object (ให้ footer แสดงถูกต้อง)
+    const pagination: Pagination = {
+        currentPage,
+        totalPages,
+        totalCount,
+        limit: pageSize,
+    };
+
+    // =====================================================
+    // 🧾 Render
+    // =====================================================
+    return (
+        <div className="space-y-4 cursor-default">
+            <div className="px-6 pt-2 pb-1">
+                <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
+                    <span className="text-gray-800 font-medium">จัดการประเภท</span>
+                </nav>
+            </div>
+
+            <div className="px-6 py-1 flex items-center justify-between">
+                <h2 className="text-xl font-semibold">จัดการประเภท</h2>
+                <div>
+                    <Button onClick={() => openInputModal("create")}>+ เพิ่มประเภท</Button>
+                </div>
+            </div>
+
+            <div className="px-6 pb-2">
+                <SearchBarTable
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </div>
+
+            <div className="px-6 pb-10">
+                {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
+
+                <DataTable<TagRow>
+                    data={rows}
+                    columns={columns}
+                    getKey={(row) => row.id.toString()}
+                    actions={rowActions}
+                    bulkActions={bulkActions}
+                    selectable={true}
+                    isLoading={isLoading}
+                    pageSizeOptions={[10, 30, 50]}
+                    pagination={pagination} // ✅ ส่ง pagination ที่คำนวณแล้ว
+                    onPageChange={(p) => {
+                    setPagination((prev) => ({ ...prev, currentPage: p }));
+                }}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(1);
+                    }}
+                    theme="brand"
+                />
+            </div>
+
+            {/* Confirm Modal */}
+            <ModalConfirm
+                open={showConfirmModal}
+                onConfirm={handleFinalConfirm}
+                onCancel={() => {
+                    setShowConfirmModal(false);
+                    closeInputModal();
+                }}
+                title={
+                    modalType === "delete"
+                        ? "ยืนยันการลบประเภท"
+                        : modalType === "edit"
+                            ? "ยืนยันการแก้ไขประเภท"
+                            : "ยืนยันการเพิ่มประเภท"
+                }
+                text={
+                    modalType === "delete"
+                        ? "คุณต้องการลบประเภทนี้หรือไม่?"
+                        : modalType === "edit"
+                            ? "คุณต้องการแก้ไขประเภทนี้หรือไม่?"
+                            : "คุณต้องการเพิ่มประเภทนี้หรือไม่?"
+                }
+                confirmText="ยืนยัน"
+                cancelText="ยกเลิก"
+            />
+
+            {/* Input Modal */}
+            <ModalTag
+                isOpen={showInputModal}
+                onClose={closeInputModal}
+                onConfirm={(name) => {
+                    setPendingTagName(name);
+                    setShowConfirmModal(true);
+                }}
+                defaultName={pendingTagName}
+                type={modalType ?? "create"}
+            />
+        </div>
+    );
+}

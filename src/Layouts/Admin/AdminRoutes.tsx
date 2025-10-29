@@ -1,24 +1,40 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+/**
+ * Component: AdminRoutes
+ * คำอธิบาย:
+ * เส้นทาง (Routing) สำหรับผู้ดูแลระดับวิสาหกิจชุมชน (Admin)
+ * เป็น Route ย่อยที่ใช้ร่วมกับ AdminLayout
+ * หน้าที่:
+ * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
+ * - แสดง Component ที่ตรงกับแต่ละ path
+ */
+import React from 'react';
+import { Routes, Route, Navigate } from "react-router-dom";
+import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
+import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
+import CreateHomestaysPage from '@/Pages/Admin/CreateHomestaysPage';
+import EditHomestayPage from '@/Pages/Admin/EditHomestayPage';
+import DetailPackageRequiredPage from "@/Pages/Admin/DetailPackageRequiredPage";
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 import PackageDraftAdmin from "@/Pages/Admin/PackageDraftAdmin";
-{
-  /* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/
-}
 
-//import ManageCommunityAdmin from '../../Pages/Admin/ManageCommunityAdmin';
-
-const AdminRoutes: React.FC = () => {
+export default function AdminRoutes() {
   return (
     <Routes>
       <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
       <Route path="stores/:storeId" element={<StoreDetailAdmin />} />
+      <Route path="/community/homestay" element={<CreateHomestaysPage />} />
+      <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
+      {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
+      <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
+      <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
+      <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
+
+      {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
+      <Route path="/community/stores" element={<ManageStoreAdmin />} />
     </Routes>
   );
-};
-
-export default AdminRoutes;
+}

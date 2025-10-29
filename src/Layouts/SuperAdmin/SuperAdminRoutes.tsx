@@ -61,7 +61,7 @@ export default function SuperAdminRoutes() {
         element={<ManageStores />}
       />
       <Route
-        path="community/:communityId/homestays/all"
+        path="community/:communityId/homestay/all"
         element={<ManageHomestaySuperAdmin />}
       />
             {/* 🔹 หน้าเพิ่มบัญชีผู้ดูแลระบบ (Admin) */}

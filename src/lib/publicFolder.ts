@@ -15,33 +15,41 @@ export async function pickPublicDir(): Promise<FileSystemDirectoryHandle | null>
     return handle;
 }
 async function ensureDir(): Promise<FileSystemDirectoryHandle> {
-    let dir = await loadPublicDir();
-    if (!dir) dir = (await pickPublicDir()) as FileSystemDirectoryHandle;
-    if (!dir) throw new Error("No permission for public folder");
-    return dir;
+    let directoryHandle = await loadPublicDir();
+    if (!directoryHandle) directoryHandle = (await pickPublicDir()) as FileSystemDirectoryHandle;
+    if (!directoryHandle) throw new Error("No permission for public folder");
+    return directoryHandle;
 }
 
 /** แปลงภาพเป็น PNG เพื่อให้ชื่อคงที่ .png */
 async function toPNGBlob(file: File): Promise<Blob> {
     if (file.type === "image/png") return file;
-    const dataUrl = await new Promise<string>((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result as string);
-        r.onerror = rej;
-        r.readAsDataURL(file);
+
+    // อ่านไฟล์เป็น data URL
+    const dataUrlString = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
-    const img = await new Promise<HTMLImageElement>((res, rej) => {
-        const el = new Image();
-        el.onload = () => res(el);
-        el.onerror = rej;
-        el.src = dataUrl;
+
+    // โหลดเป็น <img> เพื่อวาดลง canvas
+    const imageElement = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const imgEl = new Image();
+        imgEl.onload = () => resolve(imgEl);
+        imgEl.onerror = reject;
+        imgEl.src = dataUrlString;
     });
+
+    // วาดลง canvas แล้วแปลงเป็น PNG Blob
     const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(img, 0, 0);
-    return await new Promise<Blob>((res, rej) => {
-        canvas.toBlob((b) => (b ? res(b) : rej(new Error("toBlob failed"))), "image/png", 0.92);
+    canvas.width = imageElement.naturalWidth;
+    canvas.height = imageElement.naturalHeight;
+    const canvasContext = canvas.getContext("2d")!;
+    canvasContext.drawImage(imageElement, 0, 0);
+
+    return await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((pngBlobData) => (pngBlobData ? resolve(pngBlobData) : reject(new Error("toBlob failed"))), "image/png", 0.92);
     });
 }
 
@@ -65,35 +73,42 @@ async function deleteIfExists(dir: FileSystemDirectoryHandle, base: string) {
     }
 }
 
-/** ✅ เขียนทับไฟล์โลโก้ชื่อคงที่ใน /public (ลบของเดิมก่อน) */
-export async function saveLogoVariantToPublic(variant: LogoVariant, file: File): Promise<string> {
-    const dir = await ensureDir();
-    const base = variant === "white" ? "logo-white" : "logo-black";
-    await deleteIfExists(dir, base);
+/**  เขียนทับไฟล์โลโก้ชื่อคงที่ใน /public (ลบของเดิมก่อน) */
+export async function saveLogoVariantToPublic(variant: LogoVariant, logoFile: File): Promise<string> {
+    const publicDirHandle = await ensureDir();
+    const baseName = variant === "white" ? "logo-white" : "logo-black";
 
-    // เราจะเก็บเป็น .png เสมอ
-    const target = `${base}.png`;
-    const fh = await dir.getFileHandle(target, { create: true });
-    const ws = await fh.createWritable();
-    const blob = await toPNGBlob(file);
-    await ws.write(await blob.arrayBuffer());
-    await ws.close();
+    await deleteIfExists(publicDirHandle, baseName);
+
+    const targetFileName = `${baseName}.png`;
+    const fileHandle = await publicDirHandle.getFileHandle(targetFileName, { create: true });
+    const writableStream = await fileHandle.createWritable();
+
+    const pngBlob = await toPNGBlob(logoFile);
+    await writableStream.write(await pngBlob.arrayBuffer());
+    await writableStream.close();
 
     // cache-bust เวลาเปิดดูใน <img>
-    return `/${target}?v=${Date.now()}`;
+    return `/${targetFileName}?v=${Date.now()}`;
 }
 
 /** เคสทั่วไป: เซฟชื่อที่กำหนด (จะเขียนทับไฟล์ชื่อนั้น) */
-export async function saveToPublic(file: File, name?: string): Promise<string> {
-    const dir = await ensureDir();
-    const target = name ?? file.name;
-    // ถ้าอยากให้ behavior แบบเขียนทับจริง ๆ ก็ลบทิ้งก่อน
-    try { await (dir as any).removeEntry?.(target); } catch { }
-    const fh = await dir.getFileHandle(target, { create: true });
-    const ws = await fh.createWritable();
-    await ws.write(await file.arrayBuffer());
-    await ws.close();
-    return `/${target}?v=${Date.now()}`;
+export async function saveToPublic(file: File, fileName?: string): Promise<string> {
+    const publicDirHandle = await ensureDir();
+    const targetFileName = fileName ?? file.name;
+
+    try {
+        await (publicDirHandle as any).removeEntry?.(targetFileName);
+    } catch {
+    }
+
+    const fileHandle = await publicDirHandle.getFileHandle(targetFileName, { create: true });
+    const writableStream = await fileHandle.createWritable();
+    await writableStream.write(await file.arrayBuffer());
+    await writableStream.close();
+
+    return `/${targetFileName}?v=${Date.now()}`;
 }
+
 
 export async function clearPublicDirBinding() { await del(KEY); }

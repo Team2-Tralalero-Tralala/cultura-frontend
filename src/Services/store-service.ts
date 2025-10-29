@@ -71,3 +71,19 @@ export async function getStoreById(storeId: number) {
     withCredentials: true,
   });
 }
+
+ /*
+  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
+  * Input : page, limit
+  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
+  */
+export async function getAllStoreAdmin(
+  page: number,
+  limit: number
+) {
+  const params = { page, limit };
+  return axios.get(`${apiUrl}/admin/community/own/stores/all`, {
+    params,
+    withCredentials: true,
+  });
+}

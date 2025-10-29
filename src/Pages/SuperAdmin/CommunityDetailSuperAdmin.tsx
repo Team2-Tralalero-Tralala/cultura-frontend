@@ -44,7 +44,7 @@ const toThaiDate = (iso?: string | null) => {
  * ใช้ค่าใน .env (VITE_BACKEND_URL) และ fallback เป็น localhost หากไม่พบค่า
  * ===========================================================
  */
-const BACKEND_BASE_URL =
+const backendBaseUrl =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 /**
@@ -53,9 +53,12 @@ const BACKEND_BASE_URL =
  */
 function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
-  const cleaned = fileName.replace(/^\/?uploads\//, "");
-  return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
+  // 🔹 เพิ่มบรรทัดนี้เพื่อแปลง backslash -> forward slash
+  const normalized = fileName.replace(/\\/g, "/");
+  const cleaned = normalized.replace(/^\/?uploads\//, "");
+  return `${backendBaseUrl}/uploads/${cleaned}`;
 }
+
 
 /**
  * ฟังก์ชัน : pickImagePath
@@ -385,13 +388,19 @@ export default function CommunityDetailSuperAdmin() {
             </h2>
           </Link>
 
-          <button
-            type="button"
-            className="bg-dark-green text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
+          <Link
+            to={`/super/community/${community.id}/edit`}
+            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
           >
-            <Icon icon="weui:pencil-filled" className="w-5 h-5" />
-            <span>แก้ไข</span>
-          </button>
+            <button
+              type="button"
+              className="bg-dark-green text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
+            >
+              <Icon icon="weui:pencil-filled" className="w-5 h-5" />
+              <span>แก้ไข</span>
+            </button>
+          </Link>
+
         </div>
 
         {/* --------------------------------------------------------
@@ -423,11 +432,10 @@ export default function CommunityDetailSuperAdmin() {
                       </h1>
                       {!!community.status && (
                         <span
-                          className={`px-2.5 py-0.5 text-sm rounded-full ${
-                            isOpen
+                          className={`px-2.5 py-0.5 text-sm rounded-full ${isOpen
                               ? "bg-emerald-100 text-emerald-700"
                               : "bg-slate-100 text-slate-700"
-                          }`}
+                            }`}
                         >
                           {isOpen ? "เปิด" : "ปิด"}
                         </span>
@@ -480,11 +488,10 @@ export default function CommunityDetailSuperAdmin() {
                   community.location?.subDistrict
                 )} ${show(community.location?.district)} ${show(
                   community.location?.province
-                )} ${
-                  community.location?.postalCode
+                )} ${community.location?.postalCode
                     ? `(${community.location.postalCode})`
                     : ""
-                }`}
+                  }`}
               </span>
             </Row>
 
@@ -635,7 +642,7 @@ export default function CommunityDetailSuperAdmin() {
                   key={`${url}-${i}`}
                   src={url ?? ""}
                   controls
-                  className="h-40 w-full object-cover rounded-xl bg-black"
+                  className="h-40 w-full object-cover rounded-xl bg-black [&:fullscreen]:object-contain"
                 />
               ))}
             </div>
@@ -655,11 +662,9 @@ export default function CommunityDetailSuperAdmin() {
                 const lat = community.location.latitude;
                 const lng = community.location.longitude;
                 const zoomDelta = 0.0025;
-                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
-                  lng - zoomDelta
-                }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${
-                  lat + zoomDelta
-                }&layer=mapnik&marker=${lat}%2C${lng}`;
+                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - zoomDelta
+                  }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${lat + zoomDelta
+                  }&layer=mapnik&marker=${lat}%2C${lng}`;
                 return (
                   <iframe
                     width="100%"

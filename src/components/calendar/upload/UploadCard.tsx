@@ -68,16 +68,18 @@ const toCssSize = (v?: number | string) =>
  * Output : string (icon name)
  */
 function pickDefaultIcon(accept?: string) {
-    const a = (accept || "").toLowerCase();
-    if (a.includes("video")) return VIDEO_ICON;
+    const acceptLower = (accept || "").toLowerCase();
+    if (acceptLower.includes("video")) return VIDEO_ICON;
     return IMAGE_ICON;
 }
 
-
 const splitName = (name: string) => {
-    const i = name.lastIndexOf(".");
-    return i >= 0 ? { base: name.slice(0, i), ext: name.slice(i) } : { base: name, ext: "" };
+    const lastDotIndex = name.lastIndexOf(".");
+    return lastDotIndex >= 0
+        ? { base: name.slice(0, lastDotIndex), ext: name.slice(lastDotIndex) }
+        : { base: name, ext: "" };
 };
+
 
 /** 
  * คอมโพเนนต์: UploadCard

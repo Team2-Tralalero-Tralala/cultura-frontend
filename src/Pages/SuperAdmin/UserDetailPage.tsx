@@ -1,6 +1,6 @@
 /**
- * Component : UserDetailPage (Super Admin)
- * Description : แสดงรายละเอียดบัญชีผู้ใช้งานตาม ID ที่ได้รับจาก URL
+ * Component: UserDetailPage (Super Admin)
+ * Description: แสดงรายละเอียดบัญชีผู้ใช้งานตาม ID ที่ได้รับจาก URL
  * สามารถอัปโหลดรูปโปรไฟล์ใหม่ได้ โดยบันทึกเข้า Database ผ่าน route PUT /super/users/profile/:userId
  */
 
@@ -12,9 +12,12 @@ import { fetchUserDetail } from "../../Services/account-services";
 import type { UserDetail } from "@/Types/User";
 import AvatarUploader from "@/Components/AvatarUploader";
 
-/* ===========================================================
- * Component : UserDetailPage
- * =========================================================== */
+/**
+ * Component: UserDetailPage
+ * วัตถุประสงค์: แสดงรายละเอียดบัญชีผู้ใช้ (SuperAdmin)
+ * Input: userId จาก URL parameter
+ * Output: หน้ารายละเอียดผู้ใช้ พร้อมรูปโปรไฟล์ที่อัปโหลดได้
+ */
 export function UserDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -22,9 +25,12 @@ export function UserDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ===========================================================
-   * โหลดข้อมูลผู้ใช้ตาม ID
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: useEffect
+   * วัตถุประสงค์: โหลดข้อมูลผู้ใช้จาก API ตาม ID ที่ได้รับจาก URL
+   * Input: id (string | undefined)
+   * Output: ข้อมูลผู้ใช้เก็บใน state user
+   */
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -40,9 +46,12 @@ export function UserDetailPage() {
     })();
   }, [id]);
 
-  // ==========================
-  // ฟังก์ชันช่วยแปลง path จาก backend
-  // ==========================
+  /**
+   * ฟังก์ชัน: resolveBackendUploadUrl
+   * วัตถุประสงค์: แปลง path ของรูปจาก backend ให้เป็น URL ที่เรียกใช้งานได้ใน frontend
+   * Input: fileName (string | undefined)
+   * Output: URL string หรือ undefined
+   */
   function resolveBackendUploadUrl(fileName?: string): string | undefined {
     if (!fileName) return undefined;
 
@@ -56,10 +65,13 @@ export function UserDetailPage() {
 
     return `${baseUrl}/${fileName}`;
   }
-  /* ===========================================================
+
+  /**
    * ฟังก์ชัน: handleAvatarChange
-   * คำอธิบาย : เมื่ออัปโหลดรูปใหม่ → ส่งไฟล์ไป backend เพื่ออัปเดต profileImage
-   * =========================================================== */
+   * วัตถุประสงค์: เมื่ออัปโหลดรูปใหม่ → ส่งไฟล์ไป backend เพื่ออัปเดต profileImage
+   * Input: file (File | null)
+   * Output: อัปเดตรูปโปรไฟล์ใน state
+   */
   const handleAvatarChange = async (file: File | null) => {
     if (!id || !file) return;
     const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -67,19 +79,15 @@ export function UserDetailPage() {
       const formData = new FormData();
       formData.append("profileImage", file);
 
-      const res = await fetch(
-        `${baseUrl}/api/super/users/profile/${id}`,
-        {
-          method: "PUT",
-          body: formData,
-          credentials: "include",
-        }
-      );
+      const res = await fetch(`${baseUrl}/api/super/users/profile/${id}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
+      });
 
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
 
-      // อัปเดตภาพใหม่ใน state
       setUser((prev) =>
         prev ? { ...prev, profileImage: data.data.profileImage } : prev
       );
@@ -91,32 +99,31 @@ export function UserDetailPage() {
     }
   };
 
-  /* ===========================================================
-  * ฟังก์ชันช่วยจัดรูปแบบเบอร์โทรศัพท์
-  * =========================================================== */
+  /**
+   * ฟังก์ชัน: formatPhoneNumber
+   * วัตถุประสงค์: จัดรูปแบบเบอร์โทรศัพท์ให้อยู่ในรูปแบบ ###-###-####
+   * Input: phone (string | null | undefined)
+   * Output: เบอร์โทรศัพท์ที่จัดรูปแบบแล้ว (string)
+   */
   function formatPhoneNumber(phone?: string | null): string {
     if (!phone) return "-";
-    // ลบอักขระที่ไม่ใช่ตัวเลขออกก่อน
     const digits = phone.replace(/\D/g, "");
-    // ถ้ายาว 10 หลัก เช่น 0810001111
     if (digits.length === 10) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
     }
-    // ถ้าไม่ครบ 10 หลัก แสดงตามเดิม
     return phone;
   }
 
-  /* ===========================================================
-   * Render ส่วนแสดงผล
-   * =========================================================== */
+  // Section: Loading & Error State
   if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
 
+  // Section: Render Layout
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
-        {/* Breadcrumb */}
+        {/* Section: Breadcrumb */}
         <div className="text-base text-gray-600 flex items-center gap-2">
           <Link
             to="/super/accounts"
@@ -128,12 +135,12 @@ export function UserDetailPage() {
           <span>รายละเอียดบัญชี</span>
         </div>
 
-        {/* Header */}
+        {/* Section: Header */}
         <h1 className="text-xl font-semibold text-gray-900 mt-1">
           รายละเอียดบัญชี
         </h1>
 
-        {/* Card */}
+        {/* Section: Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
           {/* ปุ่มแก้ไขข้อมูล */}
           <button
@@ -145,7 +152,7 @@ export function UserDetailPage() {
             <span>แก้ไข</span>
           </button>
 
-          {/* เนื้อหา */}
+          {/* Section: Profile Info */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-24 mt-12 w-full">
             {/* รูปโปรไฟล์ */}
             <div className="flex justify-center flex-1">
@@ -154,15 +161,13 @@ export function UserDetailPage() {
                 avatarSize={300}
                 onAvatarChange={handleAvatarChange}
               />
-
             </div>
 
             {/* รายละเอียดบัญชี */}
             <div className="flex-1">
               <div className="space-y-3 text-lg text-slate-800 leading-relaxed">
-                <h2 className="text-xl font-semibold mb-3">
-                  รายละเอียดบัญชี
-                </h2>
+                <h2 className="text-xl font-semibold mb-3">รายละเอียดบัญชี</h2>
+
                 <p>
                   <span className="font-semibold">ชื่อ - นามสกุล :</span>{" "}
                   {user.fname} {user.lname}
@@ -184,7 +189,9 @@ export function UserDetailPage() {
                 </p>
                 <p>
                   <span className="font-semibold">ชุมชนวิสาหกิจ :</span>{" "}
-                  {user.communityAdmin?.name || user.communityMembers?.[0]?.Community?.name || "-"}
+                  {user.communityAdmin?.name ||
+                    user.communityMembers?.[0]?.Community?.name ||
+                    "-"}
                 </p>
               </div>
             </div>

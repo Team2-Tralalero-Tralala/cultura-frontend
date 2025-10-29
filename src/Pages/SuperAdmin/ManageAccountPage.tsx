@@ -1,6 +1,6 @@
 /**
- * Component : ManageAccountPage (Super Admin)
- * Description : หน้าจัดการบัญชีผู้ใช้ (Super Admin)
+ * Component: ManageAccountPage (Super Admin)
+ * Description: หน้าจัดการบัญชีผู้ใช้ (Super Admin)
  * - แสดงตารางบัญชีผู้ใช้
  * - มีฟังก์ชันค้นหา / กรอง / เพิ่ม / ระงับ / ลบ / ระงับทั้งหมด / ลบทั้งหมด
  */
@@ -33,9 +33,12 @@ import {
   deleteMultipleAccounts,
 } from "@/Services/account-services";
 
-/* ===========================================================
- * Function : แปลงชื่อ Role เป็นภาษาไทย
- * =========================================================== */
+/**
+ * ฟังก์ชัน: thaiRoleName
+ * วัตถุประสงค์: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
+ * Input: role (string)
+ * Output: ชื่อ Role ภาษาไทย (string)
+ */
 function thaiRoleName(role: string): string {
   switch (role) {
     case "superadmin":
@@ -51,9 +54,10 @@ function thaiRoleName(role: string): string {
   }
 }
 
-/* ===========================================================
- * ตัวคอลัมน์ในตาราง
- * =========================================================== */
+/**
+ * ตัวแปร: columns
+ * วัตถุประสงค์: กำหนดคอลัมน์ในตารางบัญชีผู้ใช้
+ */
 const columns: Column<AccountRow>[] = [
   {
     key: "fullname",
@@ -82,7 +86,6 @@ const columns: Column<AccountRow>[] = [
     render: (r) => {
       const adminName = r.communityAdmin?.[0]?.name ?? null;
       const memberName = r.communityMembers?.[0]?.Community?.name ?? null;
-
       return <div>{adminName || memberName || "-"}</div>;
     },
   },
@@ -94,13 +97,14 @@ const columns: Column<AccountRow>[] = [
   },
 ];
 
-/* ===========================================================
- * Component : ManageAccountPage
- * =========================================================== */
+/**
+ * Component: ManageAccountPage
+ * วัตถุประสงค์: แสดงตารางบัญชีผู้ใช้ (SuperAdmin)
+ */
 export function ManageAccountPage() {
   const navigate = useNavigate();
 
-  /* --------------------------- State หลัก --------------------------- */
+  // Section: State หลัก
   const [rows, setRows] = useState<AccountRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -114,15 +118,18 @@ export function ManageAccountPage() {
   const [filterRole, setFilterRole] = useState("all");
   const [selectedRows, setSelectedRows] = useState<AccountRow[]>([]);
 
-  /* --------------------------- State สำหรับ Modal --------------------------- */
+  // Section: State สำหรับ Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
 
-  /* ===========================================================
-   * ฟังก์ชันเปิด Modal
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: openModal
+   * วัตถุประสงค์: เปิด Modal ยืนยันการทำงาน
+   * Input: title, text, onConfirm callback
+   * Output: แสดง Modal พร้อมข้อมูล
+   */
   function openModal(title: string, text: string, onConfirm: () => void) {
     setModalTitle(title);
     setModalText(text);
@@ -130,9 +137,9 @@ export function ManageAccountPage() {
     setModalOpen(true);
   }
 
-  /* ===========================================================
+  /**
    * ตัวเลือกกรองประเภทผู้ใช้
-   * =========================================================== */
+   */
   const optionsRole = [
     { label: "ทั้งหมด", value: "all" },
     { label: "ผู้ดูแลระบบ", value: "admin" },
@@ -140,9 +147,12 @@ export function ManageAccountPage() {
     { label: "ผู้ใช้งานทั่วไป", value: "tourist" },
   ];
 
-  /* ===========================================================
-   * ดึงข้อมูลบัญชีผู้ใช้
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: fetchData
+   * วัตถุประสงค์: ดึงข้อมูลบัญชีผู้ใช้ทั้งหมดจาก API
+   * Input: ไม่มี (อ้างอิง pagination, searchQuery, filterRole)
+   * Output: เซตข้อมูลบัญชีผู้ใช้ใน state rows
+   */
   async function fetchData(): Promise<void> {
     try {
       setIsLoading(true);
@@ -168,7 +178,9 @@ export function ManageAccountPage() {
     }
   }
 
-  // โหลดข้อมูลเมื่อเปลี่ยนหน้า / ค้นหา / กรอง
+  /**
+   * useEffect: โหลดข้อมูลเมื่อเปลี่ยนหน้า / ค้นหา / กรอง
+   */
   useEffect(() => {
     let isCancelled = false;
     const delay = setTimeout(async () => {
@@ -200,10 +212,13 @@ export function ManageAccountPage() {
       clearTimeout(delay);
     };
   }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
-  
-  /* ===========================================================
-   * Action ต่อแถว (ระงับ / ลบ / แก้ไข)
-   * =========================================================== */
+
+  /**
+   * ฟังก์ชัน: rowActions
+   * วัตถุประสงค์: จัดการ Action ต่อแถว (ระงับ / ลบ / แก้ไข)
+   * Input: row (AccountRow)
+   * Output: เปิด Modal หรือเปลี่ยนหน้า
+   */
   const rowActions: DataTableActionsConfig<AccountRow> = {
     header: "จัดการ",
     align: "right",
@@ -236,9 +251,12 @@ export function ManageAccountPage() {
     },
   };
 
-  /* ===========================================================
-   * Action หลายแถว (ระงับทั้งหมด / ลบทั้งหมด)
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: bulkActions
+   * วัตถุประสงค์: จัดการ Action หลายแถว (ระงับทั้งหมด / ลบทั้งหมด)
+   * Input: rows (AccountRow[])
+   * Output: เรียก API หลายรายการ
+   */
   const bulkActions: BulkAction<AccountRow>[] = [
     {
       id: "bulk-block",
@@ -274,18 +292,16 @@ export function ManageAccountPage() {
     },
   ];
 
-  /* ===========================================================
-   * UI หลักของหน้า
-   * =========================================================== */
+  // Section: Render Layout
   return (
     <div className="space-y-4">
-      {/* Header Section */}
+      {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         <h2 className="text-sm text-gray-500">จัดการบัญชี</h2>
         <h1 className="text-xl font-semibold">จัดการบัญชีผู้ใช้</h1>
 
         <div className="flex items-center justify-between w-full mt-2">
-          {/* ช่องค้นหา + ตัวกรอง */}
+          {/* Section: Search + Filter */}
           <div className="flex items-center gap-2">
             <div className="w-[260px]">
               <SearchBarTable
@@ -309,7 +325,7 @@ export function ManageAccountPage() {
             </div>
           </div>
 
-          {/* ปุ่มเพิ่มบัญชี */}
+          {/* Section: Add Account */}
           <button
             onClick={() => navigate("/super/account/admin/create")}
             className="flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-4 py-3 rounded-xl transition text-base font-medium"
@@ -320,10 +336,10 @@ export function ManageAccountPage() {
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Section: Error */}
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      {/* Table Section */}
+      {/* Section: Table */}
       <DataTable<AccountRow>
         data={rows}
         getKey={(row) => row.id.toString()}
@@ -331,16 +347,19 @@ export function ManageAccountPage() {
         selectable={true}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(p) => setPagination((prev) => ({ ...prev, currentPage: p }))}
-        onPageSizeChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit: p }))
+        onPageChange={(page) =>
+          setPagination((prev) => ({ ...prev, currentPage: page }))
+        }
+        onPageSizeChange={(limit) =>
+          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
         }
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}
         bulkActions={bulkActions}
-
       />
+
+      {/* Section: Modal */}
       <Modal
         open={modalOpen}
         title={modalTitle}

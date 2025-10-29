@@ -1,7 +1,8 @@
 /**
- * การระงับบัญชี (Super Admin)
- * - แสดงผู้ใช้ที่ถูกระงับ (BLOCKED)
- * - สามารถค้นหา / ยกเลิกการระงับรายบุคคล / ยกเลิกทั้งหมด
+ * Component: BlockedAccountPage (Super Admin)
+ * Description:
+ * - แสดงรายชื่อผู้ใช้ที่ถูกระงับ (BLOCKED)
+ * - สามารถค้นหา / ยกเลิกการระงับรายบุคคล / ยกเลิกการระงับทั้งหมด
  */
 
 import { useEffect, useState } from "react";
@@ -26,9 +27,12 @@ import {
   unblockMultipleAccounts,
 } from "@/Services/account-services";
 
-/* ===========================================================
- * ฟังก์ชัน : แปลงชื่อ Role เป็นภาษาไทย
- * =========================================================== */
+/**
+ * ฟังก์ชัน: thaiRoleName
+ * วัตถุประสงค์: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
+ * Input: role (string)
+ * Output: ชื่อ Role ภาษาไทย
+ */
 const thaiRoleName = (role: string): string => {
   switch (role) {
     case "superadmin":
@@ -44,9 +48,10 @@ const thaiRoleName = (role: string): string => {
   }
 };
 
-/* ===========================================================
- * คอลัมน์ของตาราง
- * =========================================================== */
+/**
+ * ตัวแปร: columns
+ * วัตถุประสงค์: กำหนดคอลัมน์ในตารางข้อมูลผู้ใช้ที่ถูกระงับ
+ */
 const columns: Column<BlockedAccountRow>[] = [
   {
     key: "fullname",
@@ -69,7 +74,6 @@ const columns: Column<BlockedAccountRow>[] = [
     render: (r) => {
       const adminName = r.communityAdmin?.[0]?.name ?? null;
       const memberName = r.communityMembers?.[0]?.Community?.name ?? null;
-
       return <div>{adminName || memberName || "-"}</div>;
     },
   },
@@ -81,9 +85,10 @@ const columns: Column<BlockedAccountRow>[] = [
   },
 ];
 
-/* ===========================================================
- * Component : BlockedAccountPage
- * =========================================================== */
+/**
+ * Component: BlockedAccountPage
+ * วัตถุประสงค์: แสดงบัญชีผู้ใช้ที่ถูกระงับ (SuperAdmin)
+ */
 export function BlockedAccountPage() {
   const [rows, setRows] = useState<BlockedAccountRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,15 +103,17 @@ export function BlockedAccountPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<BlockedAccountRow[]>([]);
 
-  /* --------------------------- State สำหรับ Modal --------------------------- */
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
 
-  /* ===========================================================
-   * ฟังก์ชันเปิด Modal
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: openModal
+   * วัตถุประสงค์: เปิด Modal เพื่อยืนยันการทำงาน
+   * Input: title (string), text (string), onConfirm (callback)
+   * Output: แสดง Modal บนหน้าจอ
+   */
   function openModal(title: string, text: string, onConfirm: () => void) {
     setModalTitle(title);
     setModalText(text);
@@ -114,9 +121,12 @@ export function BlockedAccountPage() {
     setModalOpen(true);
   }
 
-  /* ===========================================================
-   * ดึงข้อมูลบัญชีที่ถูกระงับ
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: fetchData
+   * วัตถุประสงค์: ดึงข้อมูลบัญชีผู้ใช้ที่ถูกระงับจาก API
+   * Input: pagination, searchQuery
+   * Output: เซตข้อมูลบัญชีใน state rows
+   */
   async function fetchData(): Promise<void> {
     try {
       setIsLoading(true);
@@ -141,13 +151,19 @@ export function BlockedAccountPage() {
     }
   }
 
+  /**
+   * useEffect: โหลดข้อมูลเมื่อมีการเปลี่ยนแปลง pagination หรือ searchQuery
+   */
   useEffect(() => {
     fetchData();
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
-  /* ===========================================================
-   * Action ต่อแถว (ยกเลิกการระงับรายบุคคล)
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: rowActions
+   * วัตถุประสงค์: Action ต่อแถว (ยกเลิกการระงับรายบุคคล)
+   * Input: row (BlockedAccountRow)
+   * Output: เปิด Modal และดำเนินการยกเลิกการระงับ
+   */
   const rowActions: DataTableActionsConfig<BlockedAccountRow> = {
     header: "จัดการ",
     align: "right",
@@ -169,9 +185,12 @@ export function BlockedAccountPage() {
     },
   };
 
-  /* ===========================================================
-   * Bulk Actions (ยกเลิกการระงับทั้งหมด)
-   * =========================================================== */
+  /**
+   * ฟังก์ชัน: bulkActions
+   * วัตถุประสงค์: Action หลายแถว (ยกเลิกการระงับทั้งหมด)
+   * Input: rows (BlockedAccountRow[])
+   * Output: เรียก API เพื่อยกเลิกการระงับทั้งหมด
+   */
   const bulkActions: BulkAction<BlockedAccountRow>[] = [
     {
       id: "bulk-unblock",
@@ -191,12 +210,10 @@ export function BlockedAccountPage() {
     },
   ];
 
-  /* ===========================================================
-   * ส่วน UI
-   * =========================================================== */
+  // Section: Render
   return (
     <div className="space-y-4">
-      {/* Header Section */}
+      {/* Section: Header */}
       <div className="flex flex-col gap-2">
         <div className="text-sm text-gray-600">
           <Link
@@ -213,7 +230,7 @@ export function BlockedAccountPage() {
           การระงับบัญชี
         </h1>
 
-        {/* Search bar */}
+        {/* Section: Search bar */}
         <div className="flex items-center justify-between w-full mt-2">
           <div className="w-[260px]">
             <SearchBarTable
@@ -227,11 +244,12 @@ export function BlockedAccountPage() {
         </div>
       </div>
 
+      {/* Section: Error */}
       {errorMessage && (
         <div className="text-sm text-red-600">{errorMessage}</div>
       )}
 
-      {/* ตารางข้อมูล */}
+      {/* Section: Table */}
       <DataTable<BlockedAccountRow>
         data={rows}
         getKey={(row) => row.id.toString()}
@@ -239,11 +257,11 @@ export function BlockedAccountPage() {
         selectable
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: p }))
+        onPageChange={(page) =>
+          setPagination((prev) => ({ ...prev, currentPage: page }))
         }
-        onPageSizeChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit: p }))
+        onPageSizeChange={(limit) =>
+          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
         }
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
@@ -251,6 +269,7 @@ export function BlockedAccountPage() {
         bulkActions={bulkActions}
       />
 
+      {/* Section: Modal */}
       <Modal
         open={modalOpen}
         title={modalTitle}

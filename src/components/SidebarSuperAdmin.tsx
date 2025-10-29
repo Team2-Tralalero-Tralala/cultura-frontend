@@ -113,7 +113,7 @@ const SidebarSuperAdmin: React.FC = () => {
           {/* === จัดการบัญชี (Dropdown) === */}
           <div>
             <Link
-              to={`${basePath}/accounts/all`}
+              to={`${basePath}/accounts`}
               onClick={() => handleClick('accounts')}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive("accounts") ? "bg-[#0D845A]" : ""
@@ -121,7 +121,11 @@ const SidebarSuperAdmin: React.FC = () => {
             >
               <span className="flex items-center gap-3">
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
-                จัดการบัญชี
+                <Link
+                  to={`${basePath}/accounts`}
+                >
+                  จัดการบัญชี
+                </Link>
               </span>
               <Icon icon={openDropdown === 'accounts' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
             </Link>

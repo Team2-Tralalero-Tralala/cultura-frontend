@@ -128,8 +128,8 @@ export default function UploadProfile({
     roundedAvatar = "rounded-full",
 
     // labels + icon
-    coverLabel = "คลิกเพื่อเพิ่มรูปภาพหน้าปก",
-    avatarLabel = "เพิ่มรูปโลโก้ / โปรไฟล์",
+    coverLabel = "คลิกเพื่อเพิ่มรูปภาพหน้าปก (JPG/JPEG/PNG)",
+    avatarLabel = "เพิ่มรูปโลโก้ / โปรไฟล์ (JPG/JPEG/PNG)",
     iconName = "cil:image-plus",
     icon,
 

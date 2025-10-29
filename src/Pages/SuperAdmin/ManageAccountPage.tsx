@@ -32,6 +32,7 @@ import {
   deleteAccountById,
   deleteMultipleAccounts,
 } from "@/Services/account-services";
+import Button from "@/Components/Button";
 
 /**
  * ฟังก์ชัน: thaiRoleName
@@ -326,13 +327,12 @@ export function ManageAccountPage() {
           </div>
 
           {/* Section: Add Account */}
-          <button
-            onClick={() => navigate("/super/account/admin/create")}
-            className="flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-4 py-3 rounded-xl transition text-base font-medium"
-          >
-            <span className="text-lg leading-none">＋</span>
-            <span>เพิ่มบัญชี</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => navigate("/super/account/admin/create")}>
+              <span className="text-lg leading-none">＋</span>
+              <span>เพิ่มบัญชี</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -347,12 +347,8 @@ export function ManageAccountPage() {
         selectable={true}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(page) =>
-          setPagination((prev) => ({ ...prev, currentPage: page }))
-        }
-        onPageSizeChange={(limit) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
-        }
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+        onPageSizeChange={(limit) => setPagination((prev) => ({ ...prev, currentPage: 1, limit }))}
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}

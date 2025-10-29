@@ -27,35 +27,8 @@ function App() {
 
         <Route
           path="/super/*"
-          element={
-            <ProtectedRoute allow={["superadmin"]}>
-              <SuperAdminLayout />
-            </ProtectedRoute>
-          }
-        >
+          element={<SuperAdminLayout />}>
           <Route path="*" element={<SuperAdminRoutes />} />
-        </Route>
-
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute allow={["admin"]}>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* เส้นทางภายใน /super/ ทั้งหมด */}
-          <Route path="*" element={<AdminRoutes />} />
-        </Route>
-        <Route
-          path="/member/*"
-          element={
-            <ProtectedRoute allow={["member"]}>
-              <MemberLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="*" element={<MemberRoutes />} />
         </Route>
 
         {/* fallback */}

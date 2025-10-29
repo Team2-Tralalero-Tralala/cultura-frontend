@@ -27,8 +27,8 @@ import { th as thLocale } from "date-fns/locale";
 const pad2 = (n: number) => n.toString().padStart(2, "0");
 
 /** แปลง Date(AD) → สตริง พ.ศ. รูปแบบ dd/MM/yyyy (ถ้า null คืน "") */
-const toBE = (d: Date | null, beOffset = 543) =>
-    d ? `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear() + beOffset}` : "";
+const formatDateToBEString = (dateAD: Date | null, buddhistYearOffset = 543) =>
+    dateAD ? `${pad2(dateAD.getDate())}/${pad2(dateAD.getMonth() + 1)}/${dateAD.getFullYear() + buddhistYearOffset}` : "";
 
 /** แปลงสตริง dd/MM/yyyy(BE) → Date(AD) (ตรวจวัน/เดือน/ปีจริงด้วยการเทียบค่าที่ new Date คืนมา) */
 const parseBE = (dateText: string, beOffset = 543): Date | null => {

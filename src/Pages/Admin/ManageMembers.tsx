@@ -6,10 +6,9 @@
  *  - ใช้ DataTable (รองรับ pagination, isLoading, actions, selectable)
  * มาตรฐาน CS v1.1.1:
  *  - React Component: PascalCase
- *  - ตัวแปร/ฟังก์ชัน: camelCase 
- *  - ค่าคงที่สภาพแวดล้อม: UPPER_SNAKE_CASE (แนะนำ)
+ *  - ตัวแปร/ฟังก์ชัน: camelCase
  *  - คอมเมนต์หัวไฟล์/หัวฟังก์ชัน/บล็อกสำคัญ
- **/
+ */
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,8 +24,8 @@ import type {
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 
-/* ENV */
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const apiBaseUrl = import.meta.env.VITE_API_URL;
 
 /* Row type -> MemberRow */
 type MemberRow = {
@@ -79,38 +78,38 @@ export default function ManageMembers() {
             setIsLoading(true);
             setErrorMessage(null);
 
-            const resp = await axios.get(`${API_BASE_URL}/api/admin/accounts`, {
+            const response = await axios.get(`${apiBaseUrl}/api/admin/accounts`, {
                 params: { page: currentPage, limit: pageSize },
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
             });
 
-            console.log(resp);
+            console.log(response);
 
-            const body = resp?.data;
+            const responseBody = response?.data;
 
-            let rawList: any =
-                body?.data?.data ??
-                body?.data ??
-                body?.items ??
-                body?.rows ??
-                body;
+            let rawMemberList: any =
+                responseBody?.data?.data ??
+                responseBody?.data ??
+                responseBody?.items ??
+                responseBody?.rows ??
+                responseBody;
 
-            if (!Array.isArray(rawList)) rawList = [];
+            if (!Array.isArray(rawMemberList)) rawMemberList = [];
 
-            const totalCountValue =
-                body?.pagination?.totalCount ??
-                body?.data?.pagination?.totalCount ??
-                body?.total ??
-                body?.totalCount ??
-                rawList.length;
+            const resolvedTotalCount =
+                responseBody?.pagination?.totalCount ??
+                responseBody?.data?.pagination?.totalCount ??
+                responseBody?.total ??
+                responseBody?.totalCount ??
+                rawMemberList.length;
 
-            const totalPagesValue =
-                body?.pagination?.totalPages ??
-                body?.data?.pagination?.totalPages ??
-                Math.max(1, Math.ceil((Number(totalCountValue) || 0) / pageSize));
+            const resolvedTotalPages =
+                responseBody?.pagination?.totalPages ??
+                responseBody?.data?.pagination?.totalPages ??
+                Math.max(1, Math.ceil((Number(resolvedTotalCount) || 0) / pageSize));
 
-            const mappedRows: MemberRow[] = rawList.map((m: any): MemberRow => ({
+            const memberRows: MemberRow[] = rawMemberList.map((m: any): MemberRow => ({
                 id: Number(m?.id ?? m?.userId ?? 0),
                 displayName:
                     [m?.fname, m?.lname].filter(Boolean).join(" ").trim() ||
@@ -120,15 +119,15 @@ export default function ManageMembers() {
                 contact: m?.email ?? m?.phone ?? "-",
             }));
 
-            setRows(mappedRows);
-            setTotalCount(Number(totalCountValue) || mappedRows.length);
-            setTotalPages(Number.isFinite(totalPagesValue) ? Number(totalPagesValue) : 1);
-        } catch (e: any) {
-            console.error("fetch members error:", e?.response?.data ?? e);
+            setRows(memberRows);
+            setTotalCount(Number(resolvedTotalCount) || memberRows.length);
+            setTotalPages(Number.isFinite(resolvedTotalPages) ? Number(resolvedTotalPages) : 1);
+        } catch (error: any) {
+            console.error("fetch members error:", error?.response?.data ?? error);
             setErrorMessage(
-                e?.response?.data?.message ||
-                e?.response?.data?.error ||
-                e?.message ||
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
                 "โหลดข้อมูลไม่สำเร็จ"
             );
         } finally {
@@ -164,16 +163,16 @@ export default function ManageMembers() {
                 delete: async (row) => {
                     if (!window.confirm(`ยืนยันลบสมาชิก “${row.displayName}” ?`)) return;
                     try {
-                        await axios.delete(`${API_BASE_URL}/super/members/${row.id}`, {
+                        await axios.delete(`${apiBaseUrl}/super/members/${row.id}`, {
                             withCredentials: true,
                         });
                         await fetchMembers();
-                    } catch (e: any) {
-                        console.error("delete failed:", e?.response?.data ?? e);
+                    } catch (error: any) {
+                        console.error("delete failed:", error?.response?.data ?? error);
                         alert(
-                            `ลบไม่สำเร็จ: ${e?.response?.data?.message ||
-                            e?.response?.data?.error ||
-                            e?.message ||
+                            `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+                            error?.response?.data?.error ||
+                            error?.message ||
                             "unknown error"
                             }`
                         );
@@ -197,14 +196,14 @@ export default function ManageMembers() {
                     try {
                         await axios.request({
                             method: "delete",
-                            url: `${API_BASE_URL}/super/members`,
+                            url: `${apiBaseUrl}/super/members`,
                             data: { ids },
                             withCredentials: true,
                             headers: { "Content-Type": "application/json" },
                         });
                         await fetchMembers();
-                    } catch (e) {
-                        console.error("bulk delete failed:", e);
+                    } catch (error) {
+                        console.error("bulk delete failed:", error);
                         alert("ลบแบบกลุ่มไม่สำเร็จ");
                     }
                 },

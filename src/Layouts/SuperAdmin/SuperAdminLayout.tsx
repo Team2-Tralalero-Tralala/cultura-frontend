@@ -17,18 +17,14 @@ export default function SuperAdminLayout() {
 
       {/* 🔹 พื้นที่หลัก */}
       <div className="flex flex-col flex-1 h-full">
-
         {/* Navbar ด้านบน */}
         <NavbarSuperAdmin />
 
-        {/* 🔸 พื้นที่เนื้อหา */}
-        <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-4 pr-8 py-8">
+        {/* เนื้อหาหลัก */}
+        <main className="flex-1 overflow-y-auto p-0 m-5">
           <Outlet />
         </main>
       </div>
     </div>
   );
-};
-
-
-
+}

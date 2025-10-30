@@ -6,31 +6,29 @@
  * 3. ข้อมูลติดต่อและผู้ดูแล (เบอร์โทร, อีเมล, ผู้ดูแลหลัก)
  * ใช้ร่วมกับ Component ย่อย เช่น TextField, TextArea, ThailandLocationSelect
  */
-import * as React from "react";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useState } from "react";
-import * as z from "zod";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import Button from "@/Components/Button";
+import MapPicker from "@/Components/MapPicker";
+import { Modal } from "@/Components/Modal/Modal";
+import { AdminSelector } from "@/Components/Selector/AdminSelector";
+import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import { createCommunity } from "@/Services/community-service";
+import type { CommunityFormData } from "@/Types/CommunityForm";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import type { CommunityFormData } from "@/Types/CommunityForm";
-import Button from "@/Components/Button";
-import { createCommunity } from "@/Services/community-service";
-import { AdminSelector } from "@/Components/Selector/AdminSelector";
-import MemberSelector, {
-  type Member,
-} from "@/Components/Selector/MemberSelector";
-import MapPicker from "@/Components/MapPicker";
-import { Modal } from "@/Components/Modal/Modal";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
-import { Link, useNavigate } from "react-router";
+import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/TextField";
 import { Icon } from "@iconify/react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import * as React from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import * as z from "zod";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -39,13 +37,9 @@ import { Icon } from "@iconify/react";
  * Output : หากไม่ผ่าน validation จะส่งข้อความ error กลับให้แสดงในฟอร์ม
  */
 const communitySchema = z.object({
-  name: z
-    .string("กรุณากรอกชื่อวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+  name: z.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
 
-  type: z
-    .string("กรุณากรอกประเภทวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  type: z.string("กรุณากรอกประเภทวิสาหกิจชุมชน").min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
 
   registerNumber: z
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
@@ -60,21 +54,13 @@ const communitySchema = z.object({
     .min(1, "กรุณาเลือกธนาคาร")
     .max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
 
-  accountName: z
-    .string("กรุณากรอกชื่อบัญชีธนาคาร")
-    .min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountName: z.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
 
-  accountNumber: z
-    .string("กรุณากรอกหมายเลขบัญชี")
-    .min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: z.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
 
-  description: z
-    .string("กรุณากรอกประวัติวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  description: z.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
 
-  mainActivityName: z
-    .string("กรุณากรอกชื่อกิจกรรมหลัก")
-    .min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityName: z.string("กรุณากรอกชื่อกิจกรรมหลัก").min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
 
   mainActivityDescription: z
     .string("กรุณากรอกรายละเอียดกิจกรรมหลัก")
@@ -90,29 +76,19 @@ const communitySchema = z.object({
 
   latitude: z
     .string("กรุณากรอกละติจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
+    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
 
   longitude: z
     .string("กรุณากรอกลองจิจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
+    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
 
   phone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
 
-  email: z
-    .string("กรุณากรอกอีเมลของวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  email: z.string("กรุณากรอกอีเมลของวิสาหกิจชุมชน").min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
 
-  mainAdmin: z
-    .string("กรุณากรอกชื่อผู้ดูแลหลัก")
-    .min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdmin: z.string("กรุณากรอกชื่อผู้ดูแลหลัก").min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
 
   mainAdminPhone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก")
@@ -140,9 +116,7 @@ export default function CreateCommuninityPage() {
     postalCode: "",
   });
 
-  const [formErrors, setFormErrors] = useState<
-    Record<string, string | undefined>
-  >({});
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
   const startingPosition: [number, number] = [13.736717, 100.523186]; // BUU
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
@@ -157,9 +131,8 @@ export default function CreateCommuninityPage() {
    * Input : panel (string)
    * Output : อัปเดต state expanded
    */
-  const handleChange =
-    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
-      setExpanded(isExpanded ? panel : false);
+  const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
+    setExpanded(isExpanded ? panel : false);
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
@@ -221,9 +194,7 @@ export default function CreateCommuninityPage() {
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
    * Output : อัปเดตค่าใน formData และตรวจสอบความถูกต้องของ field นั้น ๆ
    */
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
 
     const updated = { ...formData, [id]: value };
@@ -489,9 +460,7 @@ export default function CreateCommuninityPage() {
               />
             </div>
           </div>
-          <div className="text-lg font-bold mt-[24px] mb-[24px]">
-            กิจกรรมหลักของวิสาหกิจชุมชน
-          </div>
+          <div className="text-lg font-bold mt-[24px] mb-[24px]">กิจกรรมหลักของวิสาหกิจชุมชน</div>
           <div className="grid grid-cols-1 gap-y-[24px] ">
             <div>
               <TextField
@@ -765,9 +734,7 @@ export default function CreateCommuninityPage() {
               />
             </div>
           </div>
-          <div className="text-lg font-bold mt-[24px] mb-[24px]">
-            ข้อมูลผู้ดูแลวิสาหกิจชุมชน
-          </div>
+          <div className="text-lg font-bold mt-[24px] mb-[24px]">ข้อมูลผู้ดูแลวิสาหกิจชุมชน</div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField

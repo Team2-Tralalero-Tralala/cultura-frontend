@@ -4,39 +4,44 @@
  *   - แสดงตารางรายการที่พักในชุมชน
  *   - breadcrumb: จัดการชุมชน > [ชื่อชุมชน] > จัดการที่พัก
  *   - ปุ่มย้อนกลับไปหน้ารายละเอียดชุมชน
- *   - ชิดขอบ content ให้สม่ำเสมอกับหน้า "จัดการชุมชน"
+ *   - รองรับค้นหา / เลือกหลายแถว / ลบหลายรายการ
  * Role: SuperAdmin เท่านั้น
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+// import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 /* ===========================================================
    Components
    =========================================================== */
-import DataTable from "@/Components/Tables/Index";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
-import Button from "@/Components/Button";
+import DataTable from "@/Components/Tables/DataTable";
 import { Modal } from "@/Components/Modal/Modal";
+import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { TrashIcon } from "@/Components/Tables/Icon";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+
 
 /* ===========================================================
    Services
    =========================================================== */
-import { getHomestaysAll } from "@/Libs/HomestayService";
+import { getHomestaysAll } from "@/Services/homestay-services";
 import { getCommunityById } from "@/Services/community-service";
 
 /* ===========================================================
    Types
    =========================================================== */
-import type { Column, DataTableActionsConfig } from "@/Components/Tables/Types";
+import type {
+  Column,
+  DataTableActionsConfig,
+  BulkAction,
+  Pagination,
+} from "@/Components/Tables/Types";
 
 /* ===========================================================
-   ประเภทข้อมูลที่ใช้ภายใน Component
+   Types ภายในหน้า
    =========================================================== */
-/*
- * คำอธิบาย : โครงสร้างข้อมูลที่พักในตารางที่ใช้แสดงผลในหน้า (หลัง mapping)
- */
 type HomestayRow = {
   id: number;
   name: string;
@@ -44,48 +49,25 @@ type HomestayRow = {
   type: string;
 };
 
-/*
- * คำอธิบาย : โครงสร้างข้อมูลที่พักที่รับจาก API (ก่อน mapping)
- */
-type HomestayFromApi = {
-  id: number;
-  name: string;
-  facility: string | null;
-  type: string | null;
-};
-
 /* ===========================================================
-   Utility Function
-   =========================================================== */
-/*
- * คำอธิบาย : แปลงข้อความให้เป็นตัวพิมพ์เล็ก ลบช่องว่างเกิน และ normalize สำหรับค้นหา
- * Input : s (string)
- * Output : string ที่ถูก normalize แล้ว
- */
-const normalizeText = (s: string) =>
-  (s ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
-
-/* ===========================================================
-   Component หลัก : ManageHomestaySuperAdmin
+   Component หลัก
    =========================================================== */
 export default function ManageHomestaySuperAdmin() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
 
-  const [communityName, setCommunityName] = useState<string>("");
+  const [communityName, setCommunityName] = useState<string>("-");
   const [rows, setRows] = useState<HomestayRow[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [totalItems, setTotalItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isOpenConfirm, setIsOpenConfirm] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const [selectedRows, setSelectedRows] = useState<HomestayRow[]>([]);
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   /* ---------------------- โหลดชื่อชุมชน ---------------------- */
@@ -94,86 +76,96 @@ export default function ManageHomestaySuperAdmin() {
       try {
         if (!communityId) return;
         const res = await getCommunityById(Number(communityId));
-        setCommunityName(res.data?.data?.name || "-");
-      } catch (error: unknown) {
+        setCommunityName(res.data?.data?.name ?? "-");
+      } catch (error) {
         console.error(error);
       }
     }
     fetchCommunity();
   }, [communityId]);
 
+  // ===== utils ค้นหา =====
+  const normalizeText = (s: string) =>
+    (s ?? "")
+      .toString()
+      .toLowerCase()
+      .normalize("NFC")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  // ===== กรองข้อมูลตามคำค้นหา =====
+  const filteredRows = useMemo(() => {
+    const q = normalizeText(searchQuery);
+    if (!q) return rows;
+    return rows.filter((r) =>
+      [r.name, r.facility, r.type].some((v) => normalizeText(v).includes(q))
+    );
+  }, [rows, searchQuery]);
+
+
   /* ---------------------- โหลดข้อมูลที่พัก ---------------------- */
-  /*
-   * คำอธิบาย : ฟังก์ชันโหลดข้อมูลที่พักทั้งหมดในชุมชนตาม communityId
-   * Input : communityId (string)
-   * Output : เซตข้อมูลที่พักลงใน state rows
-   */
-  const reload = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!communityId) return;
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const res = await getHomestaysAll(Number(communityId));
-      const payload = res.data?.data;
-      const list: HomestayFromApi[] = Array.isArray(payload?.data)
-        ? payload.data
-        : [];
-      const pg = payload?.pagination ?? {};
+      // ✅ เพิ่ม page, limit
+      const { data } = await getHomestaysAll(Number(communityId), currentPage, pageSize);
+      const payload = data?.data;
 
-      const mapped: HomestayRow[] = list.map((h) => ({
+      const list = Array.isArray(payload?.data) ? payload.data : [];
+      const homestays: HomestayRow[] = list.map((h: any) => ({
         id: h.id,
         name: h.name ?? "-",
         facility: h.facility ?? "-",
         type: h.type ?? "-",
       }));
 
-      setRows(mapped);
-      setTotalItems(pg?.totalCount ?? mapped.length);
-    } catch (error: unknown) {
+      setRows(homestays);
+      setTotalPages(payload?.pagination?.totalPages ?? 1);
+      setTotalCount(payload?.pagination?.totalCount ?? list.length);
+    } catch (error: any) {
       console.error(error);
-      if (error instanceof Error)
-        setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
-      else setErrorMessage("โหลดข้อมูลไม่สำเร็จ");
+      setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  }, [communityId]);
+  }, [communityId, currentPage, pageSize]);
+
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    fetchData();
+  }, [fetchData, currentPage, pageSize]);
 
-  /* ---------------------- คอลัมน์ของตาราง ---------------------- */
+  /* ---------------------- คอลัมน์ตาราง ---------------------- */
   const columns: Column<HomestayRow>[] = [
     {
       key: "name",
       header: "ชื่อที่พัก",
       className: "min-w-[200px]",
       render: (row) => (
-        <span className="text-dark-green font-medium">{row.name}</span>
+        <Link
+          to={`/super/community/${communityId}/homestay/${row.id}`}
+          className="text-dark-green font-medium hover:underline"
+        >
+          {row.name}
+        </Link>
       ),
     },
     { key: "facility", header: "สิ่งอำนวยความสะดวก" },
-    { key: "type", header: "ประเภท" },
+    { key: "type", header: "ประเภทห้อง" },
   ];
 
   /* ---------------------- Action ต่อแถว ---------------------- */
-  /*
-   * คำอธิบาย : ปุ่มแก้ไขและลบต่อแถวในตาราง
-   * Input : ข้อมูล row ที่ผู้ใช้เลือก
-   * Output : ทำงานตาม action ที่เลือก (แก้ไข / ลบ)
-   */
   const rowActions: DataTableActionsConfig<HomestayRow> = {
     header: "จัดการ",
     align: "right",
     width: "120px",
     variant: "icons",
-    className: "pr-6",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) =>
-        navigate(`/super/community/${communityId}/homestay/edit/${row.id}`),
+      edit: (row) => navigate(`/super/homestay/edit/${row.id}`),
       delete: (row) => {
         setDeleteId(row.id);
         setIsOpenConfirm(true);
@@ -181,46 +173,43 @@ export default function ManageHomestaySuperAdmin() {
     },
   };
 
-  /* ---------------------- ลบที่พัก ---------------------- */
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลที่พักตาม ID (ยังไม่เชื่อม API)
-   * Input : homestayId (number)
-   * Output : แสดง log ใน console
-   */
-  const handleDelete = async (homestayId: number) => {
-    console.log("ลบที่พัก:", homestayId);
-  };
+  /* ---------------------- Bulk Action ---------------------- */
+  const bulkActions: BulkAction<HomestayRow>[] = [
+    {
+      id: "bulk-delete",
+      label: "ลบทั้งหมด",
+      icon: TrashIcon,
+      intent: "danger",
+      confirm: (rows) => `ยืนยันลบที่พักจำนวน ${rows.length} รายการหรือไม่?`,
+      onClick: async (rows) => {
+        const ids = rows.map((r) => r.id);
+        alert("ลบทั้งหมด: " + ids.join(", "));
+        await fetchData();
+      },
+    },
+  ];
 
-  /* ---------------------- กรองข้อมูลตามคำค้นหา ---------------------- */
-  /*
-   * คำอธิบาย : ฟังก์ชันกรองข้อมูลในตารางตามคำค้นหา
-   * Input : searchQuery (string)
-   * Output : แสดงเฉพาะรายการที่มีคำค้นหาตรงกับ name, facility หรือ type
-   */
-  const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
-    return rows.filter((row) =>
-      [row.name, row.facility, row.type].some((v) =>
-        normalizeText(v).includes(q)
-      )
-    );
-  }, [rows, searchQuery]);
+  /* ---------------------- Modal ยืนยันการลบ ---------------------- */
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    alert("ลบที่พัก ID: " + deleteId);
+    setIsOpenConfirm(false);
+    setDeleteId(null);
+    await fetchData();
+  };
 
   /* ===========================================================
      ส่วนแสดงผล (Render)
      =========================================================== */
-  /*
-   * คำอธิบาย : ส่วน Render แสดงตารางข้อมูลที่พัก พร้อม Toolbar และ Modal ยืนยันการลบ
-   */
   return (
-    <div className="space-y-4 cursor-default">
-      {/* Breadcrumb: ขยับซ้ายให้ตรงขอบตาราง */}
+    <div className="space-y-4">
+      {/* ===== Breadcrumb ===== */}
       <div className="-ml-6 pt-1 pb-1">
         <Breadcrumb
           items={[
             { label: "จัดการชุมชน", to: "/super/communities" },
             {
-              label: communityName || "ชุมชน",
+              label: communityName,
               to: `/super/community/${communityId}`,
             },
             { label: "จัดการที่พัก" },
@@ -228,25 +217,24 @@ export default function ManageHomestaySuperAdmin() {
         />
       </div>
 
-      {/* ส่วนหัวข้อ */}
-      <div className="flex flex-col gap-2">
+      {/* ===== ส่วนหัว + Search ===== */}
+      <div className="flex flex-col gap-2 w-full">
         <h1 className="text-2xl font-semibold">จัดการที่พัก</h1>
-
-        {/* Toolbar: Search + ปุ่มเพิ่มที่พัก */}
-        <div className="flex items-center gap-3">
-          <div className="max-w-md">
+        <div className="flex items-center justify-between gap-3 w-full">
+          <div className="flex-1 max-w-md">
             <SearchBarTable
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1); // ใช้ state ตัวใหม่แทน pagination
+              }}
             />
-          </div>
 
+          </div>
           <div className="ml-auto">
             <Button
-              onClick={() =>
-                navigate(`/super/community/${communityId}/homestay/create`)
-              }
-              aria-label="เพิ่มที่พัก"
+              onClick={() => navigate(`/super/community/${communityId}/homestay/create`)}
+
             >
               <span>+ เพิ่มที่พัก</span>
             </Button>
@@ -254,51 +242,44 @@ export default function ManageHomestaySuperAdmin() {
         </div>
       </div>
 
-      {/* ตารางข้อมูลที่พัก */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <DataTable<HomestayRow>
-          data={filteredRows}
-          columns={columns}
-          getKey={(row) => String(row.id)}
-          actions={rowActions}
-          selectable
-          theme="brand"
-          isLoading={isLoading}
-          pageSizeOptions={[10, 30, 50]}
-          pagination={{
-            currentPage,
-            totalPages: Math.ceil(totalItems / 10),
-            totalCount: totalItems,
-            limit: 10,
-          }}
-          onPageChange={(p) => setCurrentPage(p)}
-          onPageSizeChange={(s) => setPageSize(s)}
-        />
-      </div>
+      {/* ===== แสดงข้อความ error ===== */}
+      {errorMessage && (
+        <div className="text-sm text-red-600">{errorMessage}</div>
+      )}
 
-      {/* Modal: ยืนยันการลบ */}
+      {/* ===== DataTable ===== */}
+      <DataTable<HomestayRow>
+        data={filteredRows}
+        getKey={(row) => String(row.id)}
+        columns={columns}
+        selectable
+        pageSizeOptions={[10, 30, 50]}
+        pagination={{
+          currentPage,
+          totalPages,
+          totalCount,
+          limit: pageSize,
+        }}
+        onPageChange={(p) => setCurrentPage(p)}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setCurrentPage(1);
+        }}
+        onSelectedChange={(rows) => setSelectedRows(rows)}
+        isLoading={isLoading}
+        actions={rowActions}
+        bulkActions={bulkActions}
+        theme="brand"
+      />
+
+
+      {/* ===== Modal ยืนยันลบ ===== */}
       <Modal
         open={isOpenConfirm}
         title="ยืนยันการลบที่พัก"
         text="คุณต้องการลบที่พักนี้หรือไม่?"
-        onConfirm={async () => {
-          if (deleteId == null) return;
-          try {
-            await handleDelete(deleteId);
-            await reload();
-          } catch (error: unknown) {
-            console.error(error);
-            if (error instanceof Error) alert(`ลบไม่สำเร็จ: ${error.message}`);
-            else alert("ลบไม่สำเร็จ (unknown error)");
-          } finally {
-            setIsOpenConfirm(false);
-            setDeleteId(null);
-          }
-        }}
-        onCancel={() => {
-          setIsOpenConfirm(false);
-          setDeleteId(null);
-        }}
+        onConfirm={handleDelete}
+        onCancel={() => setIsOpenConfirm(false)}
       />
     </div>
   );

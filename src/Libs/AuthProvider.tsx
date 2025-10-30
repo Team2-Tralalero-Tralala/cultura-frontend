@@ -1,8 +1,18 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { Navigate, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
+
+export type RegisterData = {
+  username: string;
+  password: string;
+  email: string;
+  fname: string;
+  lname: string;
+  phone: string;
+  role: string;
+};
 
 export type AuthUser = {
   id: number;
@@ -13,8 +23,11 @@ export type AuthUser = {
 type AuthContextValue = {
   user: AuthUser | null;
   accessToken: string | null;
-  login: (username: string, password: string) => Promise<AuthUser>;
-  register: (data: any) => Promise<boolean>;
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{ user: AuthUser; navigateToFirstPage: () => void }>;
+  register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
@@ -28,9 +41,7 @@ export const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -60,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = useCallback(
     async (username: string, password: string) => {
+      console.log('login', 1)
       try {
         const res = await axios.post(
           "http://localhost:3000/api/auth/login",
@@ -77,25 +89,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setUser(authUser);
 
-        switch (authUser.role) {
-          case "superadmin":
-            navigate("super/communities", { replace: true });
-            break;
-          case "admin":
-            navigate("/admin/home", { replace: true });
-            break;
-          case "member":
-            navigate("/member/home", { replace: true });
-            break;
-          case "tourist":
-            navigate("/tourist/home", { replace: true });
-            break;
-          default:
-            navigate("/", { replace: true });
-            break;
-        }
+        const navigateToFirstPage = () => {
+          switch (authUser.role) {
+            case "superadmin":
+              navigate("super/communities", { replace: true });
+              break;
+            case "admin":
+              navigate("/admin/home", { replace: true });
+              break;
+            case "member":
+              navigate("/member/home", { replace: true });
+              break;
+            case "tourist":
+              navigate("/tourist/home", { replace: true });
+              break;
+            default:
+              navigate("/", { replace: true });
+              break;
+          }
+        };
 
-        return authUser;
+        return {
+          user: authUser,
+          navigateToFirstPage: navigateToFirstPage,
+        };
       } catch (error) {
         console.error("Login failed:", error);
         throw error;
@@ -104,9 +121,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [navigate]
   );
 
-  const register = useCallback(async (data: any) => {
-    const res = await axios.post("http://localhost:3000/api/auth/signup", data);
-    return res.status === 200 || res.status === 201;
+  /*
+   * ฟังก์ชัน : register
+   * คำอธิบาย : เรียก API /auth/signup เพื่อสมัครสมาชิกใหม่
+   */
+  const register = useCallback(async (data: RegisterData) => {
+    try {
+      const res = await axios.post(`http://localhost:3000/auth/signup`, data);
+      return res.status === 201 || res.status === 200;
+    } catch {
+      return false;
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -126,23 +151,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     await new Promise((r) => setTimeout(r, 50));
 
-    await axios.post(
-      "http://localhost:3000/api/auth/logout",
-      {},
-      { withCredentials: true }
-    );
+    await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
 
     setUser(null);
 
     // redirect ตาม role
   }, [navigate, user]);
 
+
   if (loading) return null;
 
   return (
-    <AuthContext.Provider
-      value={{ user, accessToken: null, login, register, logout }}
-    >
+    <AuthContext.Provider value={{ user, accessToken: null, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

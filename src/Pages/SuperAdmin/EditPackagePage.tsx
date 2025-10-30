@@ -41,9 +41,7 @@ function toIntOrNull(v: any): number | null {
 function toTimeInput(input?: string | Date | null) {
   if (!input) return "";
   if (typeof input === "string") {
-    const m = input.match(
-      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/,
-    );
+    const m = input.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
     if (m && m[4] !== undefined && m[5] !== undefined) {
       const hh = m[4].padStart(2, "0");
       const mm = m[5].padStart(2, "0");

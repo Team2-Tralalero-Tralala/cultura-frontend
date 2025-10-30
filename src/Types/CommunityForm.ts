@@ -55,5 +55,5 @@ export type CommunityFormData = {
   coordinatorName?: string;
   coordinatorPhone?: string;
   rating: number;
-  member: number[];
+  communityMembers: number[];
 };

@@ -82,7 +82,7 @@ export default function HomestayDetailPage() {
         </Link>
         ›
         <Link
-          to={`/super/community/${homestay.community.id}/homestay/all`}
+          to={`/super/community/${homestay.community.id}/homestays/all`}
           className="p-2 rounded-full hover:bg-gray-100 transition"
         >
           จัดการที่พัก
@@ -96,7 +96,7 @@ export default function HomestayDetailPage() {
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <Link
-              to={`/super/community/${homestay.community.id}/homestay/all`}
+              to={`/super/community/${homestay.community.id}/homestays/all`}
               className="p-2 rounded-full hover:bg-gray-100 transition"
             >
               <ArrowLeft size={22} strokeWidth={2.2} />

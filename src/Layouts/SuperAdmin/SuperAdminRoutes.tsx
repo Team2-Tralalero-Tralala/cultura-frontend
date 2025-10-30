@@ -26,10 +26,11 @@ import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
+// import เพิ่มเติมสำหรับจัดการบัญชีผู้ใช้
+import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
+import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
-import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
-import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 
 /*
  * Module: SuperAdminRoutes
@@ -41,10 +42,27 @@ import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 export default function SuperAdminRoutes() {
   return (
     <Routes>
+      {/* ---------------- ชุมชน ---------------- */}
       <Route path="community/create" element={<CreateCommuninityPage />} />
+      <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="communities" element={<ManageCommunitySuperAdmin />} />
+      <Route path="community/detail/:id" element={<CommunityDetailSuperAdmin />} />
+
+      {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
       {/* <Route path="packages/all" element={<ManagePackagePage />} /> */}
       <Route path="package/edit/:id" element={<EditPackagePage />} />
+
+      {/* ---------------- บัญชีผู้ใช้ ---------------- */}
+      <Route path="account/admin/create" element={<CreateAccountPage />} />
+      <Route path="account/member/create" element={<CreateAccountPage />} />
+      <Route path="account/tourist/create" element={<CreateAccountPage />} />
+
+      <Route path="account/admin/:adminId/edit" element={<EditAccountPage />} />
+      <Route path="account/member/:memberId/edit" element={<EditAccountPage />} />
+      <Route path="account/tourist/:touristId/edit" element={<EditAccountPage />} />
+
+      {/* ---------------- Log ---------------- */}
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />
       <Route path="/community/:communityId/store/create" element={<CreateStore />} />

@@ -281,7 +281,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
             <AvatarUploader
               avatarUrl={null}
               onAvatarChange={handleAvatarChange}
-              avatarSize={180}
+              avatarSize={270}
             />
           </div>
 

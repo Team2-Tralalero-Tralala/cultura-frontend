@@ -268,7 +268,7 @@ const EditAccountPage: React.FC = () => {
                 // อัปเดต preview ทันทีถ้าเปลี่ยนรูปใหม่
                 setAvatarUrl(file ? URL.createObjectURL(file) : avatarUrl);
               }}
-              avatarSize={180}
+              avatarSize={270}
             />
           </div>
 

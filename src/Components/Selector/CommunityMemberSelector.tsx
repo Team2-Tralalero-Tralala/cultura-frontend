@@ -1,20 +1,4 @@
 // src/Components/Selector/CommunityMemberSelector.tsx
-/**
- * เลือก "สมาชิกผู้ดูแลแพ็กเกจ" ภายในชุมชนที่กำหนด
- * - ใช้ MUI Autocomplete
- * - debounce ค้นหาตามชื่อ
- * - รวมสมาชิกที่ส่งเข้ามา (member ปัจจุบัน) ลงใน options โดยไม่ซ้ำ
- *
- * Props:
- *  - communityId: number | undefined   // ชุมชนที่ต้องการดึงสมาชิก
- *  - value?: number                    // id ของสมาชิกที่เลือกอยู่
- *  - member?: Member | null            // ข้อมูลสมาชิกปัจจุบัน (กรณีแก้ไข)
- *  - onChange: (value: number | null) => void
- *  - error?: boolean
- *  - helperText?: string
- *  - disabled?: boolean
- */
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import { getCommunityMembers } from "@/Libs/CommunityService";
@@ -28,7 +12,7 @@ export interface Member {
 interface CommunityMemberSelectorProps {
     communityId?: number;
     value?: number;
-    member?: Member | null;
+    member?: Member | null; // ข้อมูล member ที่ถูกเลือก (สำหรับหน้า edit)
     onChange: (value: number | null) => void;
     error?: boolean;
     helperText?: string;
@@ -49,7 +33,6 @@ export function CommunityMemberSelector({
     const [inputValue, setInputValue] = useState<string>("");
     const debounceRef = useRef<number | null>(null);
 
-    // รวม member ปัจจุบันเข้า options โดยไม่ซ้ำ
     const mergedMembers = useMemo(() => {
         if (member) {
             const exists = members.some((m) => m.id === member.id);
@@ -58,11 +41,11 @@ export function CommunityMemberSelector({
         return members;
     }, [members, member]);
 
-    // ค่าที่เลือกอยู่
     const selected = mergedMembers.find((m) => m.id === value) || member || null;
 
     const MIN_QUERY_CHARS = 2;
 
+    // [FIX 1] Effect นี้จะทำงานเมื่อ "communityId" หรือ "inputValue" (ที่ผู้ใช้พิมพ์) เปลี่ยน
     useEffect(() => {
         if (!communityId) {
             setMembers([]);
@@ -71,15 +54,17 @@ export function CommunityMemberSelector({
 
         if (debounceRef.current) {
             window.clearTimeout(debounceRef.current);
-            debounceRef.current = null;
         }
 
         debounceRef.current = window.setTimeout(async () => {
             const q = inputValue.trim();
-            if (q.length < MIN_QUERY_CHARS) {
-                setMembers(member ? [member] : []);
+
+            // [FIX 2] Logic ใหม่:
+            // 1. ถ้าพิมพ์ 1 ตัว (q.length === 1) -> ไม่ต้องทำอะไร รอพิมพ์ต่อ
+            if (q.length > 0 && q.length < MIN_QUERY_CHARS) {
                 return;
             }
+            // 2. ถ้า q.length === 0 (โหลดครั้งแรก/ลบหมด) หรือ q.length >= 2 (ค้นหา) -> ให้เรียก API
 
             try {
                 setLoading(true);
@@ -92,6 +77,7 @@ export function CommunityMemberSelector({
                 }));
                 setMembers(list);
             } catch {
+                // ถ้า Error ให้แสดงแค่ตัวที่เลือกไว้ (ถ้ามี)
                 setMembers(member ? [member] : []);
             } finally {
                 setLoading(false);
@@ -101,12 +87,21 @@ export function CommunityMemberSelector({
         return () => {
             if (debounceRef.current) {
                 window.clearTimeout(debounceRef.current);
-                debounceRef.current = null;
             }
         };
-    }, [communityId, inputValue, member]);
+    }, [communityId, inputValue, member]); // ⬅️ เรายังต้องใช้ member ที่นี่เผื่อ catch
 
-    // Input renderer (เหมือนตัวอย่าง)
+    // [FIX 3] Effect นี้จะทำงาน "ครั้งเดียว" เพื่อตั้งค่าข้อความเริ่มต้นในช่อง Input
+    // (ป้องกันไม่ให้ Autocomplete เติมคำเองในภายหลัง)
+    const [isInitialTextSet, setIsInitialTextSet] = useState(false);
+    useEffect(() => {
+        if (selected && !isInitialTextSet) {
+            setInputValue(`${selected.fname} ${selected.lname}`);
+            setIsInitialTextSet(true);
+        }
+    }, [selected, isInitialTextSet]);
+
+    // ... (โค้ด renderCustomInput เหมือนเดิม) ...
     const renderCustomInput = (id: string, label: string, params: any) => {
         const { InputProps, inputProps } = params;
         return (
@@ -129,7 +124,7 @@ export function CommunityMemberSelector({
                         placeholder={communityId ? label : "โปรดเลือกชุมชนก่อน"}
                         disabled={disabled || !communityId}
                         className={`block w-full rounded-form border px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
-              ${error
+              ${error
                                 ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
                                 : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
                             } ${disabled || !communityId ? "bg-gray-100 cursor-not-allowed" : "bg-white"}`}
@@ -149,10 +144,27 @@ export function CommunityMemberSelector({
             disableClearable
             loading={loading}
             options={mergedMembers}
+            filterOptions={(x) => x} // บอก Autocomplete ไม่ต้องกรองเอง
             getOptionLabel={(opt) => (opt ? `${opt.fname} ${opt.lname}` : "")}
             value={selected!}
-            onChange={(_, newValue) => onChange(newValue ? newValue.id : null)}
-            onInputChange={(_, newInput) => setInputValue(newInput)}
+
+            // [FIX 4] ควบคุมค่าในช่อง Input ด้วย State ของเรา
+            inputValue={inputValue}
+
+            onChange={(_, newValue, reason) => {
+                onChange(newValue ? newValue.id : null);
+                // [FIX 5] เมื่อผู้ใช้ "เลือก" รายการ ให้เราอัปเดต inputValue ด้วย
+                if (reason === 'selectOption' && newValue) {
+                    setInputValue(`${newValue.fname} ${newValue.lname}`);
+                }
+            }}
+            onInputChange={(_, newInput, reason) => {
+                // [FIX 6] อัปเดต State เฉพาะเมื่อ "ผู้ใช้พิมพ์" หรือ "ผู้ใช้ลบ"
+                if (reason === 'input' || reason === 'clear') {
+                    setInputValue(newInput);
+                }
+                // เราจะไม่ setInputValue ถ้า reason เป็น 'reset' (ที่ Autocomplete เติมคำเอง)
+            }}
             noOptionsText={communityId ? "ไม่พบสมาชิก" : "โปรดเลือกชุมชนก่อน"}
             renderInput={(params) =>
                 renderCustomInput("community-member-selector", "เลือกผู้ดูแล", params)

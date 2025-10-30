@@ -35,7 +35,9 @@ function normalizeOrDefault(value: string, fallback = "-") {
   return trimmed.length ? trimmed : fallback;
 }
 function toIntOrNull(v: any): number | null {
-  const n = Number(String(v ?? "").trim());
+  const trimmed = String(v ?? "").trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
 }
 function toTimeInput(input?: string | Date | null) {
@@ -189,21 +191,16 @@ const initialFormState: PackageForm = {
 const packageSchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
   description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
-
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
-  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ / เขต"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล / แขวง"),
-  postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
-
-  latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
-  longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
-
+  // province: z.string().min(1, "กรุณาเลือกจังหวัด"),
+  // district: z.string().min(1, "กรุณาเลือกอำเภอ / เขต"),
+  // subDistrict: z.string().min(1, "กรุณาเลือกตำบล / แขวง"),
+  // postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+  // latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
+  // longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
   overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
   capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
   price: z.string().min(1, "กรุณากรอกราคา"),
-
   startDate: z.string().min(1, "กรุณาเลือกวันที่เริ่ม"),
   startTime: z.string().min(1, "กรุณาเลือกเวลาเริ่ม"),
   endDate: z.string().min(1, "กรุณาเลือกวันที่สิ้นสุด"),
@@ -241,16 +238,19 @@ export const EditPackagePage: React.FC = () => {
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
   // validate ช่องเดียว
-  const validateField = (field: keyof PackageForm, value: any) => {
-    const base = { ...formState, [field]: value };
-    const result = packageSchema.safeParse(base);
-    setFormErrors((prev) => ({
-      ...prev,
-      [field]: result.success
-        ? undefined
-        : result.error.issues.find((i) => i.path[0] === field)?.message,
-    }));
-  };
+  const validateField = React.useCallback(
+    (field: keyof PackageForm, value: any, newState: PackageForm) => { // ⬅️ [FIX 1] เพิ่ม newState
+      // const base = { ...formState, [field]: value }; // ⬅️ [FIX 2] ลบบรรทัดนี้
+      const result = packageSchema.safeParse(newState); // ⬅️ [FIX 3] ใช้ newState ในการ validate
+      setFormErrors((prev) => ({
+        ...prev,
+        [field]: result.success
+          ? undefined
+          : result.error.issues.find((i) => i.path[0] === field)?.message,
+      }));
+    },
+    [] // ⬅️ [FIX 4] ลบ [formState] ออก ทำให้ฟังก์ชันนี้เสถียร
+  );
 
   // validate ทั้งฟอร์ม + เงื่อนไขช่วงวันที่ และเงื่อนไขที่พัก
   const validateAll = () => {
@@ -367,6 +367,9 @@ export const EditPackagePage: React.FC = () => {
   const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
   const [openHomestayBox, setOpenHomestayBox] = useState(false);
 
+
+
+
   React.useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (homestayBoxRef.current && !homestayBoxRef.current.contains(e.target as Node)) {
@@ -377,37 +380,48 @@ export const EditPackagePage: React.FC = () => {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
+
   const MIN_HOMESTAY_QUERY_CHARS = 2;
-  React.useEffect(() => {
-    const q = homestayQuery.trim();
-    if (q.length < MIN_HOMESTAY_QUERY_CHARS) {
+
+  // [FIX 1] สร้าง useCallback สำหรับ fetch ข้อมูล
+  const fetchHomestays = React.useCallback(async (query: string) => {
+    const q = query.trim();
+
+    // 1. ถ้าพิมพ์ 1 ตัว (q.length === 1) -> รอพิมพ์ต่อ
+    if (q.length > 0 && q.length < MIN_HOMESTAY_QUERY_CHARS) {
+      setHomestayOptions([]); // ล้างผลลัพธ์เก่า (ถ้ามี)
+      setOpenHomestayBox(false);
+      return; // รอพิมพ์ตัวที่ 2
+    }
+
+    // 2. ถ้า q.length === 0 (โหลดทั้งหมด) หรือ q.length >= 2 (ค้นหา) -> เรียก API
+    try {
+      const res = await axios.get(`${apiUrl}/super/homestay-select/${id}`, {
+        params: { q, limit: 8 },
+        withCredentials: true,
+      });
+      const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
+      const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map((h: any) => ({
+        id: Number(h.id),
+        name: h.name ?? "",
+        facility: h.facility ?? h.description ?? "",
+        images: h.homestayImage ?? h.images ?? [],
+      }));
+      setHomestayOptions(opts);
+      setOpenHomestayBox(opts.length > 0); // เปิดกล่องถ้ามีผลลัพธ์
+    } catch (e) {
+      console.error("search homestays error:", e);
       setHomestayOptions([]);
       setOpenHomestayBox(false);
-      return;
     }
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/super/package/${id}/homestays`, {
-          params: { q, limit: 8 },
-          withCredentials: true,
-        });
-        const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
-        const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map((h: any) => ({
-          id: Number(h.id),
-          name: h.name ?? "",
-          facility: h.facility ?? h.description ?? "",
-          images: h.homestayImage ?? h.images ?? [],
-        }));
-        setHomestayOptions(opts);
-        setOpenHomestayBox(opts.length > 0);
-      } catch (e) {
-        console.error("search homestays error:", e);
-        setHomestayOptions([]);
-        setOpenHomestayBox(false);
-      }
-    }, 250);
+  }, [id]);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      fetchHomestays(homestayQuery);
+    }, 250); // Debounce 250ms
     return () => clearTimeout(t);
-  }, [homestayQuery, id]);
+  }, [homestayQuery, fetchHomestays]);
 
   const chooseHomestay = (h: HomestayOption) => {
     setSelectedHomestay(h);
@@ -418,16 +432,23 @@ export const EditPackagePage: React.FC = () => {
   };
 
   // ฟังก์ชัน set field + validate ช่องนั้น
-  const setFormField = <K extends keyof PackageForm>(key: K, value: PackageForm[K]) => {
-    setFormState((prev) => ({ ...prev, [key]: value }));
-    validateField(key, value);
-  };
+  const setFormField = React.useCallback(
+    <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
+      setFormState((prev) => {
+        const newState = { ...prev, [key]: value };
+        validateField(key, value, newState);
+        return newState;
+      });
+    },
+    [validateField]
+  );
 
   // ====== Homestay check-in/out ======
   const [hsCheckInDate, setHsCheckInDate] = useState("");
   const [hsCheckInTime, setHsCheckInTime] = useState("");
   const [hsCheckOutDate, setHsCheckOutDate] = useState("");
   const [hsCheckOutTime, setHsCheckOutTime] = useState("");
+  const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
 
   const clearHomestay = () => {
     setSelectedHomestay(null);
@@ -435,6 +456,7 @@ export const EditPackagePage: React.FC = () => {
     setHsCheckInTime("");
     setHsCheckOutDate("");
     setHsCheckOutTime("");
+    setHsBookedRoom("1");
   };
 
   // ========= Load package detail =========
@@ -545,6 +567,9 @@ export const EditPackagePage: React.FC = () => {
           setHsCheckOutDate(toDateOnly(hs.checkOutTime));
           setHsCheckOutTime(toTimeInput(hs.checkOutTime));
         }
+        if (hs?.bookedRoom) {
+          setHsBookedRoom(String(hs.bookedRoom));
+        }
       } catch (e: any) {
         console.error("Load package detail error:", e?.response?.data || e);
         setErrorMessage(e?.response?.data?.message || e?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ");
@@ -557,6 +582,14 @@ export const EditPackagePage: React.FC = () => {
       mounted = false;
     };
   }, [id]);
+
+  const handleMapChange = React.useCallback(([lat, lng]: [number, number]) => {
+    setFormField("latitude", String(lat));
+    setFormField("longitude", String(lng));
+    setPosition([lat, lng]);
+  }, [setFormField]);
+
+  // src/Pages/SuperAdmin/EditPackagePage.tsx
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -601,8 +634,12 @@ export const EditPackagePage: React.FC = () => {
         dueDate: normalizeOrDefault(formState.endDate),
         ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
         ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-        openBookingAt: normalizeOrDefault(formState.openDate),
-        closeBookingAt: normalizeOrDefault(formState.closeDate),
+
+        // [FIX] แก้ไขชื่อ Key ให้ตรงกับ Backend
+        bookingOpenDate: normalizeOrDefault(formState.openDate),
+        bookingCloseDate: normalizeOrDefault(formState.closeDate),
+        // [FIX] (End)
+
         ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
 
@@ -610,6 +647,7 @@ export const EditPackagePage: React.FC = () => {
         ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
         ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
         ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
+        ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
 
         facility: normalizeOrDefault(formState.facility),
 
@@ -643,7 +681,7 @@ export const EditPackagePage: React.FC = () => {
       });
 
       alert("บันทึกแพ็กเกจสำเร็จ!");
-      navigate("/super/packages/all");
+      navigate("/super/packages");
     } catch (error: any) {
       console.error("Edit package (superadmin) error:", error?.response?.data);
       setErrorMessage(
@@ -668,7 +706,7 @@ export const EditPackagePage: React.FC = () => {
       <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
-          onClick={() => navigate("/super/packages/all")}
+          onClick={() => navigate("/super/packages")}
           className="inline-flex items-center gap-2 text-xl mb-1 group"
           aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
         >
@@ -721,7 +759,6 @@ export const EditPackagePage: React.FC = () => {
             <TextField
               id="villageNumber"
               label="หมู่ที่"
-              required
               placeholder="กรอกหมู่ของชุมชน"
               value={formState.villageNumber}
               onChange={(e) => setFormField("villageNumber", e.target.value)}
@@ -739,17 +776,51 @@ export const EditPackagePage: React.FC = () => {
                   postalCode: formState.postalCode,
                 }}
                 onChange={(loc: ThailandLocation) => {
-                  setFormState((prev) => ({
-                    ...prev,
-                    province: loc.province ?? "",
-                    district: loc.district ?? "",
-                    subDistrict: loc.subdistrict ?? "",
-                    postalCode: loc.postalCode ?? "",
-                  }));
-                  validateField("province", loc.province ?? "");
-                  validateField("district", loc.district ?? "");
-                  validateField("subDistrict", loc.subdistrict ?? "");
-                  validateField("postalCode", loc.postalCode ?? "");
+                  // [FIX] ย้าย Logic ทั้งหมดเข้ามาใน setFormState
+                  setFormState((prev) => {
+                    // 1. สร้าง state ใหม่
+                    const newState = {
+                      ...prev,
+                      province: loc.province ?? "",
+                      district: loc.district ?? "",
+                      subDistrict: loc.subdistrict ?? "",
+                      postalCode: loc.postalCode ?? "",
+                    };
+
+                    // 2. Validate state ใหม่
+                    const result = packageSchema.safeParse(newState);
+
+                    // 3. อัปเดต Errors สำหรับ 4 field นี้โดยเฉพาะ
+                    setFormErrors((prevErrors) => {
+                      const newErrors = { ...prevErrors };
+
+                      if (result.success) {
+                        delete newErrors.province;
+                        delete newErrors.district;
+                        delete newErrors.subDistrict;
+                        delete newErrors.postalCode;
+                      } else {
+                        newErrors.province = result.error.issues.find(
+                          (i) => i.path[0] === "province"
+                        )?.message;
+                        newErrors.district = result.error.issues.find(
+                          (i) => i.path[0] === "district"
+                        )?.message;
+                        newErrors.subDistrict = result.error.issues.find(
+                          (i) => i.path[0] === "subDistrict"
+                        )?.message;
+                        newErrors.postalCode = result.error.issues.find(
+                          (i) => i.path[0] === "postalCode"
+                        )?.message;
+                      }
+                      return newErrors;
+                    });
+
+                    // 4. คืนค่า state ใหม่
+                    return newState;
+                  });
+
+                  // [FIX] ลบการเรียก validateField() ทั้ง 4 บรรทัดข้างนอกนี้
                 }}
               />
               {/* errors */}
@@ -780,11 +851,7 @@ export const EditPackagePage: React.FC = () => {
               <MapPicker
                 startingPosition={position}
                 startingZoom={13}
-                onChange={([lat, lng]) => {
-                  setPosition([lat, lng]);                 // คุมพินด้วย state เดียว
-                  setFormField("latitude", String(lat));   // sync เข้า formState เพื่อ validate/ส่งขึ้น BE
-                  setFormField("longitude", String(lng));
-                }}
+                onChange={handleMapChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-2">
                 {!!formErrors.latitude && <div className="text-red-600 text-sm">{formErrors.latitude}</div>}
@@ -952,10 +1019,7 @@ export const EditPackagePage: React.FC = () => {
 
         {/* แท็ก / ราคา (แท็กใช้ TagSelector เหมือน EditHomestay) */}
         <section className="grid md:grid-cols-2 gap-5">
-          <div className="md:col-span-2">
-            <label className="block text-base font-semibold">
-              แท็ก <span className="text-red-600">*</span>
-            </label>
+          <div className="md:col-span-1">
             <div ref={searchBoxRef}>
               <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
             </div>
@@ -1004,7 +1068,7 @@ export const EditPackagePage: React.FC = () => {
               รูปเพิ่มเติม (GALLERY) <span className="text-red-600">*</span>
             </label>
             <UploadCard
-              max={10}
+              max={5}
               accept="image/*"
               multiple
               value={galleryFiles}
@@ -1038,12 +1102,14 @@ export const EditPackagePage: React.FC = () => {
                 className="w-full outline-none border-none bg-transparent"
                 value={homestayQuery}
                 onChange={(e) => setHomestayQuery(e.target.value)}
-                onFocus={() =>
-                  setOpenHomestayBox(
-                    homestayQuery.trim().length >= MIN_HOMESTAY_QUERY_CHARS &&
-                    homestayOptions.length > 0,
-                  )
-                }
+                onFocus={() => {
+                  if (homestayQuery.trim() === "") {
+                    fetchHomestays("");
+                  }
+                  else if (homestayOptions.length > 0) {
+                    setOpenHomestayBox(true);
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && homestayOptions[0]) {
                     e.preventDefault();
@@ -1128,8 +1194,10 @@ export const EditPackagePage: React.FC = () => {
                     <img
                       className="w-full h-40 object-cover rounded-lg"
                       src={
-                        selectedHomestay.images?.[0]?.image ||
-                        "https://placehold.co/640x480?text=Homestay"
+                        // [FIX] สร้าง URL เต็ม โดยอ้างอิงจาก apiUrl
+                        selectedHomestay.images?.[0]?.image
+                          ? `${new URL(apiUrl).origin}/uploads/${selectedHomestay.images[0].image}`
+                          : "https://placehold.co/640x480?text=Homestay"
                       }
                       alt={selectedHomestay.name}
                     />

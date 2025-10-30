@@ -43,7 +43,6 @@ export default function SuperAdminRoutes() {
     <Routes>
       <Route path="community/create" element={<CreateCommuninityPage />} />
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
-      {/* <Route path="packages/all" element={<ManagePackagePage />} /> */}
       <Route path="package/edit/:id" element={<EditPackagePage />} />
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />
@@ -57,6 +56,7 @@ export default function SuperAdminRoutes() {
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} />
       <Route path="account/change-password" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
+      <Route path="packages" element={<ManagePackagePage />} />
       <Route path="shared/tags" element={<ManageTags />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />

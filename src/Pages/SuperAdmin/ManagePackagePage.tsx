@@ -214,10 +214,10 @@ export default function ManagePackageSuperAdmin() {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  const pendingCount = React.useMemo(
-    () => tableRows.filter((r) => !r.approved).length,
-    [tableRows]
-  );
+  // const pendingCount = React.useMemo(
+  //   () => tableRows.filter((r) => !r.approved).length,
+  //   [tableRows]
+  // );
 
   const goToApprovalRequests = () => navigate("/super/package-requests");
 

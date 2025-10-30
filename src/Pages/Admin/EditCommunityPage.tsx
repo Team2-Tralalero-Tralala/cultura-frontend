@@ -35,6 +35,7 @@ import { Link } from "react-router";
 import z from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { BankSelector } from "@/Components/Selector/BankSelector";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -52,8 +53,8 @@ const communitySchema = z.object({
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
   registerDate: z
-    .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
+    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+    .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
 
   bankName: z
     .string("กรุณาเลือกธนาคาร")
@@ -175,6 +176,7 @@ export function EditCommunity() {
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
+  const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
@@ -240,6 +242,7 @@ export function EditCommunity() {
             lname: m.user.lname,
           })) ?? []
         );
+        setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([lat, lng]);
         setChecked(data.status === "OPEN" ? true : false);
 
@@ -272,7 +275,14 @@ export function EditCommunity() {
             .filter((img: any) => img.type === "VIDEO")
             .map(async (img: any) => {
               const fullUrl = `http://localhost:3000/${img.image}`;
-              return await urlToFile(fullUrl, img.image);
+              const response = await fetch(fullUrl);
+              const blob = await response.blob();
+              const fixedBlob =
+                blob.type && blob.type.startsWith("video/")
+                  ? blob
+                  : new Blob([blob], { type: "video/mp4" });
+              const file = new File([fixedBlob], img.image, { type: fixedBlob.type });
+              return file;
             })
         );
         setLogoFile(logoFileFetch[0] || null);
@@ -306,7 +316,6 @@ export function EditCommunity() {
       validateField("subDistrict", location.subdistrict);
     }
   }, [location]);
-  console.log(videoFiles);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -379,16 +388,22 @@ export function EditCommunity() {
     validateField(id as keyof typeof formData, value);
   };
   /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ (ใช้กับ Selector/MapPicker)
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ
    * Input :
    * - field (keyof typeof formData) : ชื่อฟิลด์ที่ต้องอัปเดต
    * - value (any) : ค่าที่ต้องการเซ็ตลงใน formData
    * Output : อัปเดตค่าใน formData และเรียก validateField เพื่อเช็กความถูกต้อง
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
-    const updated = { ...formData, [field]: value };
+    let newValue = value;
+    if (field === "registerDate") {
+      if (value instanceof Date) {
+        newValue = value.toISOString().split("T")[0];
+      }
+    }
+    const updated = { ...formData, [field]: newValue };
     setFormData(updated);
-    validateField(field, value);
+    validateField(field, newValue);
   };
 
   /*
@@ -430,9 +445,7 @@ export function EditCommunity() {
         ...cleanForm,
         communityMembers: selectedMembers,
         bankName: formData.bankName,
-        registerDate: formData.registerDate
-          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
-          : undefined,
+        registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
         location: {
           houseNumber: formData.houseNumber,
           villageNumber: formData.villageNumber! > 0 ? Number(formData.villageNumber) : null,
@@ -445,7 +458,6 @@ export function EditCommunity() {
           longitude: Number(position[1]),
         },
       };
-      console.log(payload);
 
       const formDataToSend = new FormData();
 
@@ -587,16 +599,19 @@ export function EditCommunity() {
               />
             </div>
             <div>
-              <TextField
+              <BoxDateInput
                 id="registerDate"
-                label="วัน/เดือน/ ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                value={registerDate}
+                onChange={(date) => {
+                  setRegisterDate(date);
+                  const isoString = date ? date.toISOString().split("T")[0] : "";
+                  handleValueChange("registerDate", isoString);
+                }}
                 required
-                placeholder="กรอกเลขทะเบียนวิสาหกิจชุมชน"
-                type="date"
-                value={formData.registerDate}
-                onChange={handleFormChange}
-                error={!!formErrors.registerDate}
-                helperText={formErrors.registerDate}
+                minDate={new Date(1980, 0, 1)}
+                maxDate={new Date(2040, 12, 31)}
+                errorText={formErrors.registerDate}
               />
             </div>
             <div>

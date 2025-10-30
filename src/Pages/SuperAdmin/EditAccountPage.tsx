@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
-import { api } from "@/Libs/axios";
+import api from "@/Libs/api";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";

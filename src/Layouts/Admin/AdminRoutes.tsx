@@ -28,6 +28,16 @@ export default function AdminRoutes() {
       <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
+      {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
+    <Route
+        path="community/homestay/:homestayId"
+        element={<DetailHomestayAdmin />}
+      />
+
+      {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
+      <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
+      <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 

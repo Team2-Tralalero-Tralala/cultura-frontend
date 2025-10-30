@@ -15,6 +15,10 @@ const NavbarSam = () => {
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
+  /**
+   * * ฟังก์ชัน : logOut
+   * * คำอธิบาย : ฟังก์ชันสำหรับออกจากระบบ โดยเรียกใช้ฟังก์ชัน logout จาก AuthContext
+   */
   const logOut = async () => {
     try {
       await logout(); // เรียก context logout (ล้าง token / session)
@@ -28,10 +32,7 @@ const NavbarSam = () => {
       <nav className="flex items-center justify-between px-12 h-16">
         <div className="relative ml-auto">
           {/* ปุ่มโปรไฟล์ */}
-          <button
-            onClick={toggleDropdown}
-            className="flex items-center justify-between gap-3 p-2"
-          >
+          <button onClick={toggleDropdown} className="flex items-center justify-between gap-3 p-2">
             <img src={imgUser} className="w-9 h-9 rounded-full" />
             <span className="font-medium text-base">John Doe</span>
           </button>
@@ -49,9 +50,7 @@ const NavbarSam = () => {
                       Admin
                     </span>
                   </div>
-                  <span className="text-gray-500 text-sm">
-                    johndoe@example.com
-                  </span>
+                  <span className="text-gray-500 text-sm">johndoe@example.com</span>
                 </div>
               </div>
 
@@ -61,11 +60,8 @@ const NavbarSam = () => {
               <li className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
                 แก้ไขโปรไฟล์
               </li>
-              <li
-                className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
-                <Link
-                  to="/super/account/change-password"
-                  onClick={closeDropdown}>
+              <li className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
+                <Link to="/super/account/change-password" onClick={closeDropdown}>
                   เปลี่ยนรหัสผ่าน
                 </Link>
               </li>

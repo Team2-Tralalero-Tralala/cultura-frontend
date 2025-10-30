@@ -121,3 +121,11 @@ export async function getCommunities(page = 1, limit = 10) {
 export async function getCommunityDetailById(id: number) {
   return api.get(`/super/community/detail/${id}`);
 }
+
+/**
+ * ดึงรายละเอียดชุมชนของแอดมินปัจจุบัน
+ * Mapping: GET /admin/community
+ */
+export async function getCommunityDetailByAdmin() {
+  return api.get(`/admin/community`);
+}

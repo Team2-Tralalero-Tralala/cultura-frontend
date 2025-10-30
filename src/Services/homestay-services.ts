@@ -33,6 +33,7 @@ export async function fetchHomestayDetail(homestayId: number) {
 export async function fetchHomestayDetailByAdmin(homestayId: number) {
   const res = await api.get(`/admin/community/homestay/${homestayId}`);
   return res.data?.data;
+}
 
 
 /*

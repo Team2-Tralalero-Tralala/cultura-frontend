@@ -6,7 +6,6 @@
  */
 
 import React from "react";
-import axios from "axios";
 
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
@@ -15,6 +14,7 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
 import { Link } from "react-router-dom";
+import { approvePackageRequest, fetchPackageRequests, rejectPackageRequest } from "@/Services/package-request-service";
 
 /** แถวข้อมูลของตาราง */
 export type PackageRequestRow = {
@@ -32,38 +32,6 @@ export type Pagination = {
     totalCount: number;
     limit: number;
 };
-
-const API_URL = import.meta.env.VITE_API_URL as string;
-
-/* --------------------------- Services --------------------------- */
-
-function fetchPackageRequests(
-    page = 1,
-    limit = 10,
-    search?: string,
-    statusApprove?: string
-) {
-    return axios.get(`${API_URL}/super/package-requests`, {
-        withCredentials: true,
-        params: { page, limit, search, statusApprove },
-    });
-}
-
-function approvePackageRequest(packageId: number) {
-    return axios.patch(
-        `${API_URL}/super/package-requests/${packageId}/approve`,
-        {},
-        { withCredentials: true }
-    );
-}
-
-function rejectPackageRequest(packageId: number, reason: string) {
-    return axios.patch(
-        `${API_URL}/super/package-requests/${packageId}/reject`,
-        { reason },
-        { withCredentials: true }
-    );
-}
 
 /* ---------------------------- Utils ---------------------------- */
 

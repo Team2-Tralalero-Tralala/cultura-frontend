@@ -21,11 +21,9 @@ export default function SuperAdminLayout() {
         {/* Navbar ด้านบน */}
         <NavbarSuperAdmin />
 
-        {/* เนื้อหาหลัก */}
-        <main className="flex-1 overflow-y-auto p-0 m-0">
-          <div className="pl-0 pr-6">
-            <Outlet />
-          </div>
+        {/* 🔸 พื้นที่เนื้อหา */}
+        <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-4 pr-8 py-8">
+          <Outlet />
         </main>
       </div>
     </div>

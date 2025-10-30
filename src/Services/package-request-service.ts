@@ -10,9 +10,10 @@
  */
 
 import type { PackageRequestDetail } from "@/Types/package-request"; // (ใช้ path alias ให้สม่ำเสมอ)
+import axios from "axios";
 
 /** ค่าฐาน URL ของ API (ควรลงท้ายโดยไม่มี /) */
-const API_BASE_URL =
+const apiUrl =
   import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
 
 /**
@@ -22,7 +23,7 @@ const API_BASE_URL =
  * Output: string (URL สมบูรณ์ เช่น "https://api.example.com/api/package-requests/123")
  */
 function buildApiUrl(endpoint: string): string {
-  const base = API_BASE_URL.replace(/\/+$/, ""); // ตัด / ท้าย
+  const base = apiUrl.replace(/\/+$/, ""); // ตัด / ท้าย
   const path = endpoint.replace(/^\/+/, ""); // ตัด / หน้า
   return `${base}/${path}`;
 }
@@ -78,4 +79,54 @@ export async function fetchPackageRequestDetailForAdmin(
 ): Promise<PackageRequestDetail> {
   const url = buildApiUrl(`/admin/package-requests/${requestId}`);
   return apiGet<PackageRequestDetail>(url);
+}
+
+/**
+ * ฟังก์ชัน : fetchPackageRequests
+ * คำอธิบาย : ดึงรายการคำขอแพ็กเกจทั้งหมด (สำหรับ Super User) พร้อมระบบ pagination และการกรอง
+ * Input : page: number (default 1) - หมายเลขหน้าที่ต้องการ
+ * Input : limit: number (default 10) - จำนวนรายการต่อหน้า
+ * Input : search?: string (optional) - คำค้นหาสำหรับชื่อแพ็กเกจ
+ * Input : statusApprove?: string (optional) - สถานะการอนุมัติที่ต้องการกรอง
+ * Output: Promise<AxiosResponse> (Axios response ที่มีข้อมูลรายการคำขอแพ็กเกจ)
+ */
+export async function fetchPackageRequests(
+    page = 1,
+    limit = 10,
+    search?: string,
+    statusApprove?: string
+) {
+    return axios.get(`${apiUrl}/super/package-requests`, {
+        withCredentials: true,
+        params: { page, limit, search, statusApprove },
+    });
+}
+
+/**
+ * ฟังก์ชัน : approvePackageRequest
+ * คำอธิบาย : อนุมัติคำขอแพ็กเกจ (สำหรับ Super User)
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการอนุมัติ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการอนุมัติ)
+ */
+export async function approvePackageRequest(packageId: number) {
+    return axios.patch(
+        `${apiUrl}/super/package-requests/${packageId}/approve`,
+        {},
+        { withCredentials: true }
+    );
+}
+
+/**
+ * ฟังก์ชัน : rejectPackageRequest
+ * คำอธิบาย : ปฏิเสธคำขอแพ็กเกจ (สำหรับ Super User) พร้อมระบุเหตุผล
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการปฏิเสธ
+ * Input : reason: string - เหตุผลในการปฏิเสธ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการปฏิเสธ)
+ */
+export async function rejectPackageRequest(packageId: number, reason: string) {
+    return axios.patch(
+        `${apiUrl}/super/package-requests/${packageId}/reject`,
+        { reason },
+        { withCredentials: true }
+    );
 }

@@ -7,16 +7,17 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
-import React from 'react';
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
-import CreateHomestaysPage from '@/Pages/Admin/CreateHomestaysPage';
-import EditHomestayPage from '@/Pages/Admin/EditHomestayPage';
+import CreateHomestaysPage from "@/Pages/Admin/CreateHomestaysPage";
+import EditHomestayPage from "@/Pages/Admin/EditHomestayPage";
 import DetailPackageRequiredPage from "@/Pages/Admin/DetailPackageRequiredPage";
 import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
+import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -29,10 +30,7 @@ export default function AdminRoutes() {
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
-    <Route
-        path="community/homestay/:homestayId"
-        element={<DetailHomestayAdmin />}
-      />
+      <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />

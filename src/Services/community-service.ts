@@ -125,6 +125,7 @@ export async function getCommunityDetailById(id: number) {
  */
 export async function getCommunityDetailByAdmin() {
   return api.get(`/admin/community`);
+}
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลวิสาหกิจชุมชนของผู้ดูแลชุมชน (Admin)
  * Output : Response ที่ประกอบด้วยข้อมูลของวิสาหกิจชุมชน

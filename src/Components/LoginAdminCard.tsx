@@ -83,6 +83,8 @@ export function LoginAdminCard() {
     setFormErrors({});
     setIsLoading(true);
 
+    console.log('1')
+
     // Validate with Zod
     const result = loginSchema.safeParse({ username, password });
     if (!result.success) {
@@ -95,15 +97,19 @@ export function LoginAdminCard() {
       setIsLoading(false);
       return;
     }
+    console.log('2')
     try {
+      console.log('3')
       const loggedInUser = await login(username, password); // ให้ login return user
-      
+      console.log('4')
+
       if (loggedInUser.user.role === "tourist") {
         setError("ไม่พบบัญชี");
       } else {
         loggedInUser.navigateToFirstPage();
       }
     } catch (error: any) {
+      console.log('loginerr', 1, error)
       const blockedMsg = error?.response?.data?.message ?? "";
       const isBlocked = blockedMsg.includes("ผู้ใช้ถูกบล็อก");
 

@@ -135,4 +135,8 @@ export default function Thumbnails({ items, options, className }: ThumbnailsProp
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> develop

@@ -164,15 +164,9 @@ export default function AuthentionLogSuperAdmin() {
           const ids = rows.map((r) => r.id);
           alert("bulk delete:" + ids);
           await fetchData();
-          // TODO: เรียก API bulk ถ้ามี
         },
       },
     ];
-
-
-
-
-
 
 
     return (

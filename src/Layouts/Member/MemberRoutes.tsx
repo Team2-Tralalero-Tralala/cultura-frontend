@@ -20,6 +20,7 @@ const MemberRoutes: React.FC = () => {
     <Routes>
       {/* 
       <Route path="community" element={<CommunityMember />} />
+  
       <Route path="package/create" element={<CreatePackagePage />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/edit/:id" element={<EditPackagePage />} />

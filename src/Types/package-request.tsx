@@ -46,4 +46,8 @@ export interface PackageRequestDetail {
     latitude: number;
     longitude: number;
   };
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> develop

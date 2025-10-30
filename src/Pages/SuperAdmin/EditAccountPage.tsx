@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import api from "@/Libs/api";
@@ -130,15 +130,8 @@ const EditAccountPage: React.FC = () => {
       setAvatarUrl(user.profileImageUrl || null);
       setRoleSpecificData({
         communityId: user.memberOfCommunity?.toString() || "",
-        gender:
-          user.gender === "MALE"
-            ? "ชาย"
-            : user.gender === "FEMALE"
-            ? "หญิง"
-            : "ไม่ระบุ",
-        birthDate: user.birthDate
-          ? new Date(user.birthDate).toISOString().split("T")[0]
-          : "",
+        gender: user.gender === "MALE" ? "ชาย" : user.gender === "FEMALE" ? "หญิง" : "ไม่ระบุ",
+        birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split("T")[0] : "",
       });
 
       setLocationData({
@@ -159,9 +152,7 @@ const EditAccountPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, formData.role]);
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
   };
@@ -208,8 +199,7 @@ const EditAccountPage: React.FC = () => {
       }
 
       if (formData.role === "Member") {
-        requestBody.memberOfCommunity =
-          Number(roleSpecificData.communityId) || null;
+        requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
       } else if (formData.role === "Tourist") {
         requestBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -223,16 +213,12 @@ const EditAccountPage: React.FC = () => {
         requestBody.province = locationData.province || null;
         requestBody.district = locationData.district || null;
         requestBody.subDistrict = locationData.subdistrict || null;
-        requestBody.postalCode = locationData.postalCode
-          ? String(locationData.postalCode)
-          : null;
+        requestBody.postalCode = locationData.postalCode ? String(locationData.postalCode) : null;
       }
 
       let endpoint = "";
-      if (formData.role === "Admin")
-        endpoint = `/super/account/admin/${userId}`;
-      else if (formData.role === "Member")
-        endpoint = `/super/account/member/${userId}`;
+      if (formData.role === "Admin") endpoint = `/super/account/admin/${userId}`;
+      else if (formData.role === "Member") endpoint = `/super/account/member/${userId}`;
       else endpoint = `/super/account/tourist/${userId}`;
 
       const response = await api.patch(endpoint, requestBody);
@@ -240,11 +226,7 @@ const EditAccountPage: React.FC = () => {
       setShowConfirm(false);
     } catch (error: any) {
       console.error("❌ Error updating account:", error);
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "ไม่สามารถบันทึกการแก้ไขได้"
-      );
+      toast.error(error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้");
     }
   };
 
@@ -254,9 +236,7 @@ const EditAccountPage: React.FC = () => {
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
       >
-        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          แก้ไขบัญชี
-        </h2>
+        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">แก้ไขบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           {/* รูปโปรไฟล์ */}
@@ -312,40 +292,40 @@ const EditAccountPage: React.FC = () => {
               value={formData.phone}
               onChange={handleChange}
             />
-
+            <Button
+              onClick={() => {
+                navigate(`/super/reset-password/${userId}`);
+              }}
+            >
+              เปลี่ยนรหัสผ่าน
+            </Button>
             {/* 🔹 ปุ่มเปลี่ยน Role */}
             <div>
               <label className="font-semibold text-gray-800 block mb-2">
                 Role <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4">
-                {(["Admin", "Member", "Tourist"] as RoleType[]).map(
-                  (roleItem) => (
-                    <button
-                      key={roleItem}
-                      type="button"
-                      onClick={() => handleRoleSelect(roleItem)}
-                      className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
-                        formData.role === roleItem
-                          ? "bg-green-800 text-white border-green-800"
-                          : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
-                      }`}
-                    >
-                      {roleItem}
-                    </button>
-                  )
-                )}
+                {(["Admin", "Member", "Tourist"] as RoleType[]).map((roleItem) => (
+                  <button
+                    key={roleItem}
+                    type="button"
+                    onClick={() => handleRoleSelect(roleItem)}
+                    className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
+                      formData.role === roleItem
+                        ? "bg-green-800 text-white border-green-800"
+                        : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
+                    }`}
+                  >
+                    {roleItem}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* เฉพาะ Member */}
             {formData.role === "Member" && (
               <CommunitySelector
-                value={
-                  roleSpecificData.communityId
-                    ? Number(roleSpecificData.communityId)
-                    : null
-                }
+                value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
                 onChange={(communityId) =>
                   setRoleSpecificData((previousState) => ({
                     ...previousState,
@@ -373,15 +353,10 @@ const EditAccountPage: React.FC = () => {
                     }
                   />
                   <div>
-                    <label className="font-semibold text-gray-800 block mb-1">
-                      เพศ
-                    </label>
+                    <label className="font-semibold text-gray-800 block mb-1">เพศ</label>
                     <div className="flex gap-4">
                       {["ชาย", "หญิง", "ไม่ระบุ"].map((genderLabel) => (
-                        <label
-                          key={genderLabel}
-                          className="flex items-center gap-2"
-                        >
+                        <label key={genderLabel} className="flex items-center gap-2">
                           <input
                             type="radio"
                             name="gender"
@@ -401,10 +376,7 @@ const EditAccountPage: React.FC = () => {
                   </div>
                 </div>
 
-                <ThailandLocationSelector
-                  value={locationData}
-                  onChange={setLocationData}
-                />
+                <ThailandLocationSelector value={locationData} onChange={setLocationData} />
               </div>
             )}
           </div>
@@ -418,10 +390,7 @@ const EditAccountPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton
-              htmlType="button"
-              onClick={() => setShowConfirm(true)}
-            >
+            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
               บันทึก
             </SubmitButton>
           </div>
@@ -430,19 +399,17 @@ const EditAccountPage: React.FC = () => {
 
       {/* Popup ยืนยัน */}
       <Modal
-  open={showConfirm}
-  title="ยืนยันการบันทึกข้อมูล"
-  text="คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่"
-  confirmText="ยืนยัน"
-  cancelText="ยกเลิก"
-  onConfirm={() => {
-    setShowConfirm(false);
-    handleSubmit(
-      new Event("submit") as unknown as React.FormEvent<HTMLFormElement>
-    );
-  }}
-  onCancel={() => setShowConfirm(false)}
-/>
+        open={showConfirm}
+        title="ยืนยันการบันทึกข้อมูล"
+        text="คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setShowConfirm(false);
+          handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
     </div>
   );
 };

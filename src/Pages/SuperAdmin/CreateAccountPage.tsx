@@ -7,7 +7,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import api from "@/Libs/api";
@@ -28,9 +27,7 @@ const accountSchema = z.object({
   lname: z.string().min(1, "กรุณากรอกนามสกุล"),
   username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
   email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  phone: z
-    .string()
-    .regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
+  phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
   password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
   confirmPassword: z.string(),
 
@@ -91,9 +88,7 @@ interface CreateAccountBody {
 }
 
 /* ---------------- Component ---------------- */
-const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
-  defaultRole,
-}) => {
+const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -116,9 +111,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
     confirmPassword: "",
     profileImage: null as File | null,
   });
-  const [formErrors, setFormErrors] = useState<
-    Record<string, string | undefined>
-  >({});
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
   const [roleSpecificData, setRoleSpecificData] = useState<RoleSpecificData>({
     communityId: "",
     gender: "",
@@ -147,8 +140,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         ...prevErrors,
         [fieldName]: result.success
           ? undefined
-          : result.error.issues.find((issue) => issue.path[0] === fieldName)
-              ?.message,
+          : result.error.issues.find((issue) => issue.path[0] === fieldName)?.message,
       }));
       return result.success;
     } else {
@@ -166,9 +158,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
     }
   };
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     const updatedFormData = { ...formData, [id]: value };
     setFormData(updatedFormData);
@@ -197,12 +187,12 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
 
     const isValid = validateField();
     if (!isValid) {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
+      console.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน ❌");
+      console.error("รหัสผ่านไม่ตรงกัน ❌");
       return;
     }
 
@@ -223,8 +213,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
       };
 
       if (role === "Member") {
-        requestBody.memberOfCommunity =
-          Number(roleSpecificData.communityId) || null;
+        requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
       } else if (role === "Tourist") {
         requestBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -238,8 +227,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         requestBody.subDistrict = locationData.subdistrict;
         requestBody.postalCode = String(locationData.postalCode || "");
       }
-      const response = await api.post(`/super/account`, requestBody);
-      toast.success(response.data.message || "สร้างบัญชีสำเร็จ ✅");
+      await api.post(`/super/account`, requestBody);
 
       setFormData({
         fname: "",
@@ -259,9 +247,10 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         postalCode: "",
       });
       setShowConfirm(false);
+      navigate("/super/accounts/all");
     } catch (error: any) {
       console.error("❌ Error creating account:", error);
-      toast.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
+      console.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
     }
   };
 
@@ -271,18 +260,12 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
       >
-        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          สร้างบัญชี
-        </h2>
+        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">สร้างบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           {/* รูปโปรไฟล์ */}
           <div className="flex flex-col items-center">
-            <AvatarUploader
-              avatarUrl={null}
-              onAvatarChange={handleAvatarChange}
-              avatarSize={270}
-            />
+            <AvatarUploader avatarUrl={null} onAvatarChange={handleAvatarChange} avatarSize={270} />
           </div>
 
           {/* ฟอร์มข้อมูล */}
@@ -368,33 +351,27 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
                 Role <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4">
-                {(["Admin", "Member", "Tourist"] as RoleType[]).map(
-                  (roleItem) => (
-                    <button
-                      key={roleItem}
-                      type="button"
-                      onClick={() => handleRoleSelect(roleItem)}
-                      className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
-                        role === roleItem
-                          ? "bg-green-800 text-white border-green-800"
-                          : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
-                      }`}
-                    >
-                      {roleItem}
-                    </button>
-                  )
-                )}
+                {(["Admin", "Member", "Tourist"] as RoleType[]).map((roleItem) => (
+                  <button
+                    key={roleItem}
+                    type="button"
+                    onClick={() => handleRoleSelect(roleItem)}
+                    className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
+                      role === roleItem
+                        ? "bg-green-800 text-white border-green-800"
+                        : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
+                    }`}
+                  >
+                    {roleItem}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Member extra field */}
             {role === "Member" && (
               <CommunitySelector
-                value={
-                  roleSpecificData.communityId
-                    ? Number(roleSpecificData.communityId)
-                    : null
-                }
+                value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
                 onChange={(communityId) =>
                   setRoleSpecificData((prevData) => ({
                     ...prevData,
@@ -427,10 +404,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
                     </label>
                     <div className="flex gap-4">
                       {["ชาย", "หญิง", "ไม่ระบุ"].map((genderLabel) => (
-                        <label
-                          key={genderLabel}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
+                        <label key={genderLabel} className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="gender"
@@ -452,9 +426,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
 
                 <ThailandLocationSelector
                   value={locationData}
-                  onChange={(updatedLocation: ThailandLocation) =>
-                    setLocationData(updatedLocation)
-                  }
+                  onChange={(updatedLocation: ThailandLocation) => setLocationData(updatedLocation)}
                 />
               </div>
             )}
@@ -469,10 +441,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton
-              htmlType="button"
-              onClick={() => setShowConfirm(true)}
-            >
+            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
               สร้างบัญชี
             </SubmitButton>
           </div>
@@ -488,9 +457,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         cancelText="ยกเลิก"
         onConfirm={() => {
           setShowConfirm(false);
-          handleSubmit(
-            new Event("submit") as unknown as React.FormEvent<HTMLFormElement>
-          );
+          handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
         onCancel={() => setShowConfirm(false)}
       />

@@ -22,10 +22,7 @@ interface CommunitySelectorProps {
   onChange: (value: number | null) => void;
 }
 
-export default function CommunitySelector({
-  value = null,
-  onChange,
-}: CommunitySelectorProps) {
+export default function CommunitySelector({ value = null, onChange }: CommunitySelectorProps) {
   const [options, setOptions] = React.useState<Community[]>([]);
   const [inputValue, setInputValue] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -35,10 +32,11 @@ export default function CommunitySelector({
     const fetchCommunities = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:3000/api/communities", {
+        const res = await axios.get("http://localhost:3000/api/super/communities", {
           params: { search: inputValue },
+          withCredentials: true,
         });
-        setOptions(res.data?.data || []);
+        setOptions(res.data?.data.data || []);
       } catch (err) {
         console.error("Error fetching communities:", err);
       } finally {
@@ -54,9 +52,7 @@ export default function CommunitySelector({
 
   return (
     <div>
-      <label className="block text-base font-semibold text-gray-800 mb-1.5">
-        ชุมชนวิสาหกิจ
-      </label>
+      <label className="block text-base font-semibold text-gray-800 mb-1.5">ชุมชนวิสาหกิจ</label>
       <Autocomplete
         value={selectedCommunity}
         onChange={(_, newValue) => onChange(newValue ? newValue.id : null)}
@@ -73,9 +69,7 @@ export default function CommunitySelector({
               ...params.InputProps,
               endAdornment: (
                 <>
-                  {loading ? (
-                    <CircularProgress color="inherit" size={20} />
-                  ) : null}
+                  {loading ? <CircularProgress color="inherit" size={20} /> : null}
                   {params.InputProps.endAdornment}
                 </>
               ),

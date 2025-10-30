@@ -31,7 +31,6 @@ import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
-
 /*
  * Module: SuperAdminRoutes
  * Description: กำหนดเส้นทาง (Routes) สำหรับ Super Admin
@@ -86,7 +85,7 @@ export default function SuperAdminRoutes() {
 
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="users/blocked" element={<BlockedAccountPage />} />
-      <Route path="users/:id" element={<UserDetailPage />} />
+      <Route path="account/:id" element={<UserDetailPage />} />
       <Route path="accounts/all" element={<ManageAccountPage />} />
       {/* 🔹 หน้าเพิ่มบัญชีสมาชิก (Member) */}
       <Route path="/member/create" element={<CreateAccountPage defaultRole="Member" />} />

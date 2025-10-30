@@ -15,11 +15,12 @@ import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import { resetPassword } from "@/Services/user-service";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 export function ResetPassword() {
   const [password, setPassword] = useState<string>("");
   const { userId } = useParams();
+  const navigate = useNavigate();
   /*
    * ฟังก์ชัน : handleReset
    * คำอธิบาย : ใช้สำหรับจัดการเหตุการณ์เมื่อผู้ใช้กดปุ่ม "ยืนยัน" เพื่อรีเซ็ตรหัสผ่านใหม่
@@ -33,9 +34,9 @@ export function ResetPassword() {
   async function handleReset() {
     try {
       if (!userId) throw new Error("ไม่พบรหัสผู้ใช้");
-      console.log(password);
       await resetPassword(Number(userId), password);
       alert("รีเซ็ตรหัสผ่านสำเร็จ");
+      navigate("/super/accounts/all");
     } catch (error) {
       console.error(error);
       alert("เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน");

@@ -88,9 +88,7 @@ export function UserDetailPage() {
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
 
-      setUser((prev) =>
-        prev ? { ...prev, profileImage: data.data.profileImage } : prev
-      );
+      setUser((prev) => (prev ? { ...prev, profileImage: data.data.profileImage } : prev));
 
       alert("อัปโหลดรูปโปรไฟล์สำเร็จ!");
     } catch (err) {
@@ -125,10 +123,7 @@ export function UserDetailPage() {
       <div className="w-full px-6 md:px-0">
         {/* Section: Breadcrumb */}
         <div className="text-base text-gray-600 flex items-center gap-2">
-          <Link
-            to="/super/accounts"
-            className="text-gray-900 hover:underline text-sm"
-          >
+          <Link to="/super/accounts/all" className="text-gray-900 hover:underline text-sm">
             จัดการบัญชี
           </Link>
           <span className="text-gray-400 text-sm">{">"}</span>
@@ -136,15 +131,13 @@ export function UserDetailPage() {
         </div>
 
         {/* Section: Header */}
-        <h1 className="text-xl font-semibold text-gray-900 mt-1">
-          รายละเอียดบัญชี
-        </h1>
+        <h1 className="text-xl font-semibold text-gray-900 mt-1">รายละเอียดบัญชี</h1>
 
         {/* Section: Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
           {/* ปุ่มแก้ไขข้อมูล */}
           <button
-            onClick={() => navigate(`/super/account/edit/${id}`)}
+            onClick={() => navigate(`/super/account/${user.role.name}/${id}/edit`)}
             className="absolute top-6 right-6 flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-6 py-3 rounded-xl transition text-base font-medium"
             title="แก้ไขข้อมูล"
           >
@@ -169,29 +162,23 @@ export function UserDetailPage() {
                 <h2 className="text-xl font-semibold mb-3">รายละเอียดบัญชี</h2>
 
                 <p>
-                  <span className="font-semibold">ชื่อ - นามสกุล :</span>{" "}
-                  {user.fname} {user.lname}
+                  <span className="font-semibold">ชื่อ - นามสกุล :</span> {user.fname} {user.lname}
                 </p>
                 <p>
-                  <span className="font-semibold">ชื่อผู้ใช้ :</span>{" "}
-                  {user.username}
+                  <span className="font-semibold">ชื่อผู้ใช้ :</span> {user.username}
                 </p>
                 <p>
                   <span className="font-semibold">อีเมล :</span> {user.email}
                 </p>
                 <p>
-                  <span className="font-semibold">โทรศัพท์ :</span>{" "}
-                  {formatPhoneNumber(user.phone)}
+                  <span className="font-semibold">โทรศัพท์ :</span> {formatPhoneNumber(user.phone)}
                 </p>
                 <p>
-                  <span className="font-semibold">Role :</span>{" "}
-                  {user.role?.name ?? "-"}
+                  <span className="font-semibold">Role :</span> {user.role?.name ?? "-"}
                 </p>
                 <p>
                   <span className="font-semibold">ชุมชนวิสาหกิจ :</span>{" "}
-                  {user.communityAdmin?.name ||
-                    user.communityMembers?.[0]?.Community?.name ||
-                    "-"}
+                  {user.communityAdmin?.name || user.communityMembers?.[0]?.Community?.name || "-"}
                 </p>
               </div>
             </div>

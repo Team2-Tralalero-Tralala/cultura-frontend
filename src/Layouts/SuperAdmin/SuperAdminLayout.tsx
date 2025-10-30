@@ -10,20 +10,14 @@ export default function SuperAdminLayout() {
 
       {/* พื้นที่หลัก */}
       <div className="flex flex-col flex-1 h-full">
-
         {/* Navbar ด้านบน */}
         <NavbarSuperAdmin />
 
         {/* เนื้อหาหลัก */}
-        <main className="flex-1 overflow-y-auto p-0 m-0">
-          <div className="pl-0 pr-6">
-            <Outlet />
-          </div>
+        <main className="flex-1 overflow-y-auto p-0 m-5">
+          <Outlet />
         </main>
       </div>
     </div>
   );
-};
-
-
-
+}

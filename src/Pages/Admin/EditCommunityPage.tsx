@@ -53,8 +53,8 @@ const communitySchema = z.object({
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
   registerDate: z
-    .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
+    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+    .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
 
   bankName: z
     .string("กรุณาเลือกธนาคาร")

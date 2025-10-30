@@ -27,6 +27,7 @@ interface AdminSelectorProps {
   onChange: (value: number | null) => void;
   error?: boolean;
   helperText?: string;
+  isDisable?: boolean;
 }
 /*
  * คำอธิบาย : ฟังก์ชันหลักของ Component สำหรับโหลดและแสดงรายชื่อผู้ดูแล (Admin)
@@ -44,6 +45,7 @@ export function AdminSelector({
   onChange,
   error = false,
   helperText = "",
+  isDisable = false,
 }: AdminSelectorProps) {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -132,13 +134,33 @@ export function AdminSelector({
       id="admin-selector"
       disablePortal
       disableClearable
+      disabled={isDisable}
       loading={loading}
       options={admins}
       noOptionsText="ไม่พบผู้ดูแล"
       getOptionLabel={(option) => (option ? `${option.fname} ${option.lname}` : "")}
       value={selectedAdmin!}
       onChange={(_, newValue) => onChange(newValue ? newValue.id : null)}
-      renderInput={(params) => renderCustomInput("admin-selector", "เลือกผู้ดูแล", params)}
+      renderInput={(params) => renderCustomInput("admin-selector", "ผู้ดูแล", params)}
+      slotProps={{
+        popper: {
+          sx: {
+            "& .MuiAutocomplete-listbox": {
+              fontFamily: "var(--font-sarabun)",
+              fontSize: "16px",
+            },
+            "& .MuiAutocomplete-option": {
+              fontFamily: "var(--font-sarabun)",
+              fontSize: "16px",
+            },
+          },
+        },
+      }}
+      sx={{
+        "& .MuiInputBase-input": {
+          fontFamily: "var(--font-sarabun)",
+        },
+      }}
     />
   );
 }

@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@fontsource/sarabun": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@iconify-icons/mdi": "^1.2.48",
     "@iconify/react": "^6.0.2",

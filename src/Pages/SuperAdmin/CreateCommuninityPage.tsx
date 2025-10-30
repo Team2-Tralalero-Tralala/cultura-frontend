@@ -29,6 +29,9 @@ import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import * as z from "zod";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import { BankSelector } from "@/Components/Selector/BankSelector";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -46,8 +49,8 @@ const communitySchema = z.object({
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
   registerDate: z
-    .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
+    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+    .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
 
   bankName: z
     .string("กรุณาเลือกธนาคาร")
@@ -125,7 +128,12 @@ export default function CreateCommuninityPage() {
   const [logoFile, setLogoFile] = useState<File | null>();
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
-  const naigate = useNavigate();
+  const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
+  const navigate = useNavigate();
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
    * Input : panel (string)
@@ -242,69 +250,89 @@ export default function CreateCommuninityPage() {
    *   - แสดง Alert สำเร็จหรือข้อผิดพลาดตามผลลัพธ์
    */
   const handleSubmit = async () => {
-    validateField();
-    const {
-      id,
-      locationId,
-      detail,
-      houseNumber,
-      longitude,
-      latitude,
-      villageNumber,
-      province,
-      district,
-      subDistrict,
-      postalCode,
-      ...cleanForm
-    } = formData;
+    try {
+      const isFormValid = validateField();
+      if (!isFormValid) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
+        setAlertOpen(true);
+        return;
+      }
+      const {
+        id,
+        locationId,
+        detail,
+        houseNumber,
+        longitude,
+        latitude,
+        villageNumber,
+        province,
+        district,
+        subDistrict,
+        postalCode,
+        ...cleanForm
+      } = formData;
 
-    // สร้าง FormData เพื่อส่ง multipart/form-data
-    const formDataToSend = new FormData();
+      // สร้าง FormData เพื่อส่ง multipart/form-data
+      const formDataToSend = new FormData();
 
-    formDataToSend.append(
-      "data",
-      JSON.stringify({
-        adminId: Number(formData.adminId),
-        communityMembers: formData.communityMembers ?? [],
-        ...cleanForm,
-        registerDate: formData.registerDate
-          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
-          : undefined,
-        location: {
-          houseNumber: formData.houseNumber,
-          villageNumber: Number(formData.villageNumber),
-          province: location.province,
-          district: location.district,
-          subDistrict: location.subdistrict,
-          postalCode: String(location.postalCode),
-          detail: formData.detail,
-          latitude: Number(position[0]),
-          longitude: Number(position[1]),
-        },
-        // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
-      })
-    );
+      formDataToSend.append(
+        "data",
+        JSON.stringify({
+          adminId: Number(formData.adminId),
+          communityMembers: formData.communityMembers ?? [],
+          ...cleanForm,
+          registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
+          location: {
+            houseNumber: formData.houseNumber,
+            villageNumber: Number(formData.villageNumber),
+            province: location.province,
+            district: location.district,
+            subDistrict: location.subdistrict,
+            postalCode: String(location.postalCode),
+            detail: formData.detail,
+            latitude: Number(position[0]),
+            longitude: Number(position[1]),
+          },
+          // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
+        })
+      );
 
-    if (logoFile) {
-      formDataToSend.append("logo", logoFile);
+      if (logoFile) {
+        formDataToSend.append("logo", logoFile);
+      }
+      if (coverFiles) {
+        formDataToSend.append("cover", coverFiles);
+      }
+
+      galleryFiles.forEach((file) => {
+        formDataToSend.append("gallery", file);
+      });
+
+      videoFiles.forEach((file) => {
+        formDataToSend.append("video", file);
+      });
+      console.log("Submitting form data:", formDataToSend);
+      await createCommunity(formDataToSend);
+      setAlertType("success");
+      setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
+      setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
+      navigate("/super/communities");
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
+
+      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
+      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
+      // หากสำเร็จ
+      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
+
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage(cleanMessage);
+      setAlertOpen(true);
     }
-    if (coverFiles) {
-      formDataToSend.append("cover", coverFiles);
-    }
-
-    galleryFiles.forEach((file) => {
-      formDataToSend.append("gallery", file);
-    });
-
-    videoFiles.forEach((file) => {
-      formDataToSend.append("video", file);
-    });
-    for (const [key, val] of formDataToSend.entries()) {
-      console.log(key, val);
-    }
-    await createCommunity(formDataToSend);
-    alert("success");
-    naigate("/super/communities");
   };
 
   return (
@@ -396,27 +424,25 @@ export default function CreateCommuninityPage() {
               />
             </div>
             <div>
-              <TextField
+              <BoxDateInput
                 id="registerDate"
-                label="วัน/เดือน/ ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                value={registerDate}
+                onChange={(date) => {
+                  setRegisterDate(date);
+                  const isoString = date ? date.toISOString().split("T")[0] : "";
+                  handleValueChange("registerDate", isoString);
+                }}
                 required
-                placeholder="กรอกเลขทะเบียนวิสาหกิจชุมชน"
-                type="date"
-                value={formData.registerDate}
-                onChange={handleFormChange}
-                error={!!formErrors.registerDate}
-                helperText={formErrors.registerDate}
+                minDate={new Date(1980, 0, 1)}
+                maxDate={new Date(2040, 12, 31)}
+                errorText={formErrors.registerDate}
               />
             </div>
             <div>
-              <TextField
-                id="bankName"
-                label="ธนาคาร"
-                required
-                placeholder="เลือกธนาคาร"
-                type="text"
+              <BankSelector
                 value={formData.bankName}
-                onChange={handleFormChange}
+                onChange={(bankName) => handleValueChange("bankName", bankName)}
                 error={!!formErrors.bankName}
                 helperText={formErrors.bankName}
               />
@@ -823,6 +849,13 @@ export default function CreateCommuninityPage() {
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

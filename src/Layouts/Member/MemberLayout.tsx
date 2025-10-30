@@ -15,6 +15,7 @@ const MemberLayout: React.FC = () => {
   return (
     <div className="flex h-screen">
       {/* Sidebar ด้านซ้าย */}
+      {/* Sidebar ด้านซ้าย */}
       <SidebarMember />
 
       <div className="flex flex-col flex-1 h-full">

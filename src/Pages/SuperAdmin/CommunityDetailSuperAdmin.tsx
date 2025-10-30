@@ -44,8 +44,7 @@ const toThaiDate = (iso?: string | null) => {
  * ใช้ค่าใน .env (VITE_BACKEND_URL) และ fallback เป็น localhost หากไม่พบค่า
  * ===========================================================
  */
-const backendBaseUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 /**
  * Input : fileName - ชื่อไฟล์หรือพาธไฟล์จาก backend
@@ -58,7 +57,6 @@ function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   const cleaned = normalized.replace(/^\/?uploads\//, "");
   return `${backendBaseUrl}/uploads/${cleaned}`;
 }
-
 
 /**
  * ฟังก์ชัน : pickImagePath
@@ -97,20 +95,12 @@ function listImagesByType(community: any, type: string): string[] {
  * Component : Row
  * แสดงแถวข้อมูลแบบ Label : Value
  */
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-semibold text-gray-900 text-base">{label}</div>
       <div className="text-gray-400 text-base">:</div>
-      <div className="text-gray-700 font-normal break-words text-base">
-        {children ?? "-"}
-      </div>
+      <div className="text-gray-700 font-normal break-words text-base">{children ?? "-"}</div>
     </div>
   );
 }
@@ -125,14 +115,7 @@ function AvatarCircle({ src, name, size = 64 }: any) {
   const style = { width: size, height: size };
 
   if (src)
-    return (
-      <img
-        src={src}
-        alt="avatar"
-        style={style}
-        className={`${base} object-cover bg-white`}
-      />
-    );
+    return <img src={src} alt="avatar" style={style} className={`${base} object-cover bg-white`} />;
 
   const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
@@ -157,21 +140,11 @@ function LogoCircle({ src, name, size = 120 }: any) {
   const style = { width: size, height: size };
 
   if (src)
-    return (
-      <img
-        src={src}
-        alt="Logo"
-        style={style}
-        className={`${base} object-cover bg-white`}
-      />
-    );
+    return <img src={src} alt="Logo" style={style} className={`${base} object-cover bg-white`} />;
 
   const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
-    <div
-      style={style}
-      className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600`}
-    >
+    <div style={style} className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600`}>
       <span className="text-white font-bold" style={{ fontSize: size * 0.45 }}>
         {initial}
       </span>
@@ -184,20 +157,9 @@ function LogoCircle({ src, name, size = 120 }: any) {
  * แสดงภาพปก (แนวนอนสี่เหลี่ยม)
  */
 function CoverRect({ src, height = 320 }: any) {
-  if (src)
-    return (
-      <img
-        src={src}
-        alt="Cover"
-        style={{ height }}
-        className="w-full object-cover"
-      />
-    );
+  if (src) return <img src={src} alt="Cover" style={{ height }} className="w-full object-cover" />;
   return (
-    <div
-      style={{ height }}
-      className="w-full bg-gray-100 grid place-items-center"
-    >
+    <div style={{ height }} className="w-full bg-gray-100 grid place-items-center">
       <div className="w-[92%] h-[70%] border-2 border-dashed border-gray-300 rounded-xl grid place-items-center">
         <span className="text-gray-500">ไม่มีภาพปก</span>
       </div>
@@ -248,10 +210,7 @@ function Section({
               จำนวน {count} {title}
             </span>
           )}
-          <Icon
-            icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"}
-            width={18}
-          />
+          <Icon icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"} width={18} />
         </div>
       </button>
 
@@ -293,9 +252,7 @@ function ItemCard({ image, title, children }: any) {
       </div>
       <div className="min-w-0">
         <div className="font-semibold">{title}</div>
-        {children && (
-          <div className="mt-2 text-sm text-slate-700">{children}</div>
-        )}
+        {children && <div className="mt-2 text-sm text-slate-700">{children}</div>}
       </div>
     </div>
   );
@@ -383,9 +340,7 @@ export default function CommunityDetailSuperAdmin() {
             className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
           >
             <Icon icon="lucide:arrow-left" className="w-5 h-5" />
-            <h2 className="text-lg font-semibold text-xl">
-              รายละเอียดของชุมชน
-            </h2>
+            <h2 className="text-lg font-semibold text-xl">รายละเอียดของชุมชน</h2>
           </Link>
 
           <Link
@@ -400,7 +355,6 @@ export default function CommunityDetailSuperAdmin() {
               <span>แก้ไข</span>
             </button>
           </Link>
-
         </div>
 
         {/* --------------------------------------------------------
@@ -414,15 +368,8 @@ export default function CommunityDetailSuperAdmin() {
               <div className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
                 <CoverRect src={coverImage} height={COVER_H} />
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
-                  <div
-                    className="absolute left-6 md:left-8 -translate-y-1/2"
-                    style={{ top: 0 }}
-                  >
-                    <LogoCircle
-                      src={logoImage}
-                      name={community?.name}
-                      size={LOGO}
-                    />
+                  <div className="absolute left-6 md:left-8 -translate-y-1/2" style={{ top: 0 }}>
+                    <LogoCircle src={logoImage} name={community?.name} size={LOGO} />
                   </div>
 
                   <div style={{ paddingLeft: LOGO + 24 }}>
@@ -432,10 +379,11 @@ export default function CommunityDetailSuperAdmin() {
                       </h1>
                       {!!community.status && (
                         <span
-                          className={`px-2.5 py-0.5 text-sm rounded-full ${isOpen
+                          className={`px-2.5 py-0.5 text-sm rounded-full ${
+                            isOpen
                               ? "bg-emerald-100 text-emerald-700"
                               : "bg-slate-100 text-slate-700"
-                            }`}
+                          }`}
                         >
                           {isOpen ? "เปิด" : "ปิด"}
                         </span>
@@ -445,13 +393,9 @@ export default function CommunityDetailSuperAdmin() {
                     <div className="mt-2 flex items-start gap-2 text-slate-700">
                       <Pin className="mt-0.5 shrink-0" />
                       <span className="leading-relaxed">
-                        {show(community.location?.detail)}{" "}
-                        {show(community.location?.subDistrict)}{" "}
-                        {show(community.location?.district)}{" "}
-                        {show(community.location?.province)}{" "}
-                        {community.location?.postalCode
-                          ? `(${community.location.postalCode})`
-                          : ""}
+                        {show(community.location?.detail)} {show(community.location?.subDistrict)}{" "}
+                        {show(community.location?.district)} {show(community.location?.province)}{" "}
+                        {community.location?.postalCode ? `(${community.location.postalCode})` : ""}
                       </span>
                     </div>
 
@@ -476,9 +420,7 @@ export default function CommunityDetailSuperAdmin() {
             <Row label="ประเภทวิสาหกิจชุมชน">{show(community.type)}</Row>
             <Row label="เลขทะเบียน">{show(community.registerNumber)}</Row>
 
-            <Row label="วันที่จดทะเบียน">
-              {toThaiDate(community.registerDate)}
-            </Row>
+            <Row label="วันที่จดทะเบียน">{toThaiDate(community.registerDate)}</Row>
             <Row label="เบอร์โทร">{show(community.phone)}</Row>
 
             <Row label="อีเมล">{show(community.email)}</Row>
@@ -486,12 +428,9 @@ export default function CommunityDetailSuperAdmin() {
               <span className="whitespace-pre-line break-words">
                 {`${show(community.location?.detail)} ${show(
                   community.location?.subDistrict
-                )} ${show(community.location?.district)} ${show(
-                  community.location?.province
-                )} ${community.location?.postalCode
-                    ? `(${community.location.postalCode})`
-                    : ""
-                  }`}
+                )} ${show(community.location?.district)} ${show(community.location?.province)} ${
+                  community.location?.postalCode ? `(${community.location.postalCode})` : ""
+                }`}
               </span>
             </Row>
 
@@ -500,16 +439,10 @@ export default function CommunityDetailSuperAdmin() {
                 ? `${community.location.latitude}, ${community.location.longitude}`
                 : "-"}
             </Row>
-            <Row label="คำอธิบายที่อยู่">
-              {show(community.location?.detailMore)}
-            </Row>
+            <Row label="คำอธิบายที่อยู่">{show(community.location?.detailMore)}</Row>
 
-            <Row label="ชื่อกิจกรรมหลัก">
-              {show(community.mainActivityName)}
-            </Row>
-            <Row label="รายละเอียดกิจกรรมหลัก">
-              {show(community.mainActivityDescription)}
-            </Row>
+            <Row label="ชื่อกิจกรรมหลัก">{show(community.mainActivityName)}</Row>
+            <Row label="รายละเอียดกิจกรรมหลัก">{show(community.mainActivityDescription)}</Row>
 
             <Row label="เว็บไซต์">
               {community.urlWebsite ? (
@@ -525,19 +458,13 @@ export default function CommunityDetailSuperAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="จำนวนสมาชิก">
-              {show(community.member?.length || 0)} คน
-            </Row>
+            <Row label="จำนวนสมาชิก">{show(community.communityMembers?.length || 0)} คน</Row>
 
             <Row label="ชื่อผู้ดูแลหลัก">{show(community.mainAdmin)}</Row>
-            <Row label="เบอร์โทรผู้ดูแลหลัก">
-              {show(community.mainAdminPhone)}
-            </Row>
+            <Row label="เบอร์โทรผู้ดูแลหลัก">{show(community.mainAdminPhone)}</Row>
 
             <Row label="ผู้ประสานงาน">{show(community.coordinatorName)}</Row>
-            <Row label="เบอร์โทรผู้ประสานงาน">
-              {show(community.coordinatorPhone)}
-            </Row>
+            <Row label="เบอร์โทรผู้ประสานงาน">{show(community.coordinatorPhone)}</Row>
 
             <Row label="ผู้ดูแล">{show(community.mainAdmin)}</Row>
             <div />
@@ -662,9 +589,11 @@ export default function CommunityDetailSuperAdmin() {
                 const lat = community.location.latitude;
                 const lng = community.location.longitude;
                 const zoomDelta = 0.0025;
-                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - zoomDelta
-                  }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${lat + zoomDelta
-                  }&layer=mapnik&marker=${lat}%2C${lng}`;
+                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
+                  lng - zoomDelta
+                }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${
+                  lat + zoomDelta
+                }&layer=mapnik&marker=${lat}%2C${lng}`;
                 return (
                   <iframe
                     width="100%"
@@ -713,8 +642,7 @@ export default function CommunityDetailSuperAdmin() {
                           key={p.id}
                           image={resolveBackendUploadUrl(
                             p?.packageFile?.find(
-                              (f: any) =>
-                                String(f.type).toUpperCase() === "COVER"
+                              (f: any) => String(f.type).toUpperCase() === "COVER"
                             )?.filePath
                           )}
                           title={p.name}
@@ -724,19 +652,13 @@ export default function CommunityDetailSuperAdmin() {
                               - ความจุ {p.capacity} คน • ราคา{" "}
                               {p.price?.toLocaleString?.() ?? p.price} บาท
                             </div>
-                            {p.description && (
-                              <div className="line-clamp-3">
-                                {p.description}
-                              </div>
-                            )}
+                            {p.description && <div className="line-clamp-3">{p.description}</div>}
                           </div>
                         </ItemCard>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">
-                      ยังไม่มีแพ็กเกจ
-                    </div>
+                    <div className="text-slate-500 text-sm">ยังไม่มีแพ็กเกจ</div>
                   )}
                 </Section>
 
@@ -744,9 +666,7 @@ export default function CommunityDetailSuperAdmin() {
                 <Section
                   title="ร้านค้า"
                   count={stores.length}
-                  onManage={() =>
-                    navigate(`/super/community/${community.id}/stores/all`)
-                  }
+                  onManage={() => navigate(`/super/community/${community.id}/stores/all`)}
                 >
                   {stores.length ? (
                     <div className="space-y-4">
@@ -755,8 +675,7 @@ export default function CommunityDetailSuperAdmin() {
                           key={s.id}
                           image={resolveBackendUploadUrl(
                             s?.storeImage?.find(
-                              (f: any) =>
-                                String(f.type).toUpperCase() === "COVER"
+                              (f: any) => String(f.type).toUpperCase() === "COVER"
                             )?.image
                           )}
                           title={s.name}
@@ -766,9 +685,7 @@ export default function CommunityDetailSuperAdmin() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">
-                      ยังไม่มีร้านค้า
-                    </div>
+                    <div className="text-slate-500 text-sm">ยังไม่มีร้านค้า</div>
                   )}
                 </Section>
 
@@ -776,9 +693,7 @@ export default function CommunityDetailSuperAdmin() {
                 <Section
                   title="ที่พัก"
                   count={homestays.length}
-                  onManage={() =>
-                    navigate(`/super/community/${community.id}/homestay/all`)
-                  }
+                  onManage={() => navigate(`/super/community/${community.id}/homestay/all`)}
                 >
                   {homestays.length ? (
                     <div className="space-y-4">
@@ -787,21 +702,17 @@ export default function CommunityDetailSuperAdmin() {
                           key={h.id}
                           image={resolveBackendUploadUrl(
                             h?.homestayImage?.find(
-                              (f: any) =>
-                                String(f.type).toUpperCase() === "COVER"
+                              (f: any) => String(f.type).toUpperCase() === "COVER"
                             )?.image
                           )}
                           title={h.name}
                         >
                           <div className="space-y-1">
                             <div>
-                              - ประเภท {show(h.type)} • รองรับ{" "}
-                              {show(h.guestPerRoom)} คน/ห้อง • ทั้งหมด{" "}
-                              {show(h.totalRoom)} ห้อง
+                              - ประเภท {show(h.type)} • รองรับ {show(h.guestPerRoom)} คน/ห้อง •
+                              ทั้งหมด {show(h.totalRoom)} ห้อง
                             </div>
-                            <div className="line-clamp-3">
-                              {show(h.facility)}
-                            </div>
+                            <div className="line-clamp-3">{show(h.facility)}</div>
                           </div>
                         </ItemCard>
                       ))}
@@ -822,14 +733,12 @@ export default function CommunityDetailSuperAdmin() {
                     <div className="space-y-3">
                       {community.communityMembers.map((cm: any) => {
                         const m = cm.user;
-                        const fullName = [m.fname, m.lname]
-                          .filter(Boolean)
-                          .join(" ")
-                          .trim();
+                        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
 
                         return (
                           <div
                             key={cm.id}
+                            onClick={() => navigate(`/super/account/${m.id}`)}
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
                             <AvatarCircle
@@ -838,20 +747,14 @@ export default function CommunityDetailSuperAdmin() {
                               size={64}
                             />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">
-                                {fullName || m.username}
-                              </div>
+                              <div className="font-medium truncate">{fullName || m.username}</div>
                               {m.activityRole && (
-                                <div className="text-sm text-slate-700">
-                                  • {m.activityRole}
-                                </div>
+                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
                                 {m.email || "-"}
                               </div>
-                              <div className="text-sm text-slate-600">
-                                {m.phone || "-"}
-                              </div>
+                              <div className="text-sm text-slate-600">{m.phone || "-"}</div>
                             </div>
                           </div>
                         );

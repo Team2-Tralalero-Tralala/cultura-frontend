@@ -7,34 +7,34 @@
  * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
-import * as React from "react";
-import { Link, useParams } from "react-router";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { getCommunityOwn, updateCommunityOwn } from "@/Services/community-service";
 import type { CommunityFormData } from "@/Types/CommunityForm";
-import z from "zod";
-import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
-import CircularProgress from "@mui/material/CircularProgress";
-import { getCommunityById, updateCommunity } from "@/Services/community-service";
-import Backdrop from "@mui/material/Backdrop";
+import Button from "@/Components/Button";
+import MapPicker from "@/Components/MapPicker";
+import { Modal } from "@/Components/Modal/Modal";
+import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
+import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
-import MapPicker from "@/Components/MapPicker";
-import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
-import Button from "@/Components/Button";
-import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import TextField from "@/Components/TextField";
-import { Modal } from "@/Components/Modal/Modal";
-import { Icon } from "@iconify/react";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
-import { BankSelector } from "@/Components/Selector/BankSelector";
+import { Icon } from "@iconify/react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
+import * as React from "react";
+import { Link } from "react-router";
+import z from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import { BankSelector } from "@/Components/Selector/BankSelector";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 
 /*
@@ -100,8 +100,6 @@ const communitySchema = z.object({
   mainAdminPhone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก")
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
-
-  adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
@@ -144,13 +142,12 @@ const getFilePreview = (file: File | null): string | null => {
 };
 
 /*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชนสำหรับผู้ดูแลชุมชน admin
  * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
  * Input : communityId (ดึงจาก useParams)
  * Output : ส่งคำขออัปเดตข้อมูลวิสาหกิจชุมชนผ่าน API updateCommunity()
  */
 export function EditCommunity() {
-  const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
     communityMembers: [],
   });
@@ -161,6 +158,7 @@ export function EditCommunity() {
     subdistrict: "",
     postalCode: "",
   });
+
   const [expanded, setExpanded] = React.useState<string | false>(false);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
   const [checked, setChecked] = React.useState(true);
@@ -169,7 +167,6 @@ export function EditCommunity() {
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
-  const [isSubmitting, setIsSubmitting] = React.useState(false); // สำหรับตอนกดบันทึก
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
@@ -197,11 +194,11 @@ export function EditCommunity() {
    */
   React.useEffect(() => {
     async function fetchData() {
-      if (!communityId) return;
       try {
+        console.log("fetch");
         const delayPromise = new Promise((resolve) => setTimeout(resolve, 400));
 
-        const fetchDataPromise = getCommunityById(Number(communityId));
+        const fetchDataPromise = getCommunityOwn();
 
         const [response] = await Promise.all([fetchDataPromise, delayPromise]);
 
@@ -301,7 +298,7 @@ export function EditCommunity() {
       }
     }
     fetchData();
-  }, [communityId]);
+  }, []);
 
   React.useEffect(() => {
     if (location.province) {
@@ -427,7 +424,6 @@ export function EditCommunity() {
       return;
     }
 
-    setIsSubmitting(true);
     try {
       const {
         id,
@@ -462,7 +458,6 @@ export function EditCommunity() {
           longitude: Number(position[1]),
         },
       };
-      console.log(payload);
 
       const formDataToSend = new FormData();
 
@@ -482,7 +477,9 @@ export function EditCommunity() {
       videoFiles.forEach((file) => {
         formDataToSend.append("video", file);
       });
-      await updateCommunity(Number(communityId), formDataToSend);
+
+      await updateCommunityOwn(formDataToSend);
+
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
@@ -500,8 +497,6 @@ export function EditCommunity() {
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage(cleanMessage);
       setAlertOpen(true);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -513,7 +508,7 @@ export function EditCommunity() {
       </Backdrop>
       <div className="flex justify-between items-center">
         <Link
-          to="/super/communities"
+          to="/admin/community/own"
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
         >
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />
@@ -543,7 +538,6 @@ export function EditCommunity() {
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
               roundedCover="rounded-[5px]"
-              width={1024}
               coverHeight={360}
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
@@ -697,7 +691,7 @@ export function EditCommunity() {
             <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
               <div>
                 <h3 className="text-base font-bold mb-1.5">ร้านค้า</h3>
-                <Link to={`/super/community/${communityId}/stores/all`}>
+                <Link to={`/super/community/own/stores/all`}>
                   <Button type="confirm-admin">
                     <Icon icon="carbon:store" style={{ fontSize: "24px" }} className="mr-2" />
                     จัดการร้านค้า
@@ -708,7 +702,7 @@ export function EditCommunity() {
                 <div className="text-base font-bold mb-1.5">
                   <h3>ที่พัก</h3>
                 </div>
-                <Link to={`/super/community/${communityId}/homestays/all`}>
+                <Link to={`/super/community/own/homestays/all`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="healthicons:home-outline"
@@ -1020,6 +1014,7 @@ export function EditCommunity() {
                 onChange={(adminId) => handleValueChange("adminId", Number(adminId))}
                 error={!!formErrors.adminId}
                 helperText={String(formErrors.adminId)}
+                isDisable={true}
               />
             </div>
 

@@ -121,11 +121,9 @@ const SidebarSuperAdmin: React.FC = () => {
             >
               <span className="flex items-center gap-3">
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
-                <Link
-                  to={`${basePath}/accounts`}
-                >
+                
                   จัดการบัญชี
-                </Link>
+            
               </span>
               <Icon icon={openDropdown === 'accounts' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
             </Link>

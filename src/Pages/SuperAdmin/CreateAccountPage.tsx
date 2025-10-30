@@ -2,15 +2,14 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 19 ตุลาคม 2568
+ * Last Modified: 30 ตุลาคม 2568
  */
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Icon } from "@iconify/react";
 import { toast } from "react-toastify";
 import * as z from "zod";
-
+import { Modal } from "@/Components/Modal/Modal";
 import { api } from "@/Libs/axios";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
@@ -19,6 +18,7 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "../../Components/Selector/ThailandLocationSelector";
 import CommunitySelector from "../../Components/Selector/CommunitySelector";
+import AvatarUploader from "@/Components/AvatarUploader";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -80,6 +80,7 @@ interface CreateAccountBody {
   email: string;
   phone: string;
   password?: string;
+  profileImage?: string | null;
   memberOfCommunity?: number | null;
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
@@ -113,8 +114,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
     phone: "",
     password: "",
     confirmPassword: "",
+    profileImage: null as File | null,
   });
-
   const [formErrors, setFormErrors] = useState<
     Record<string, string | undefined>
   >({});
@@ -174,6 +175,14 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
     validateField(id, value);
   };
 
+  const handleAvatarChange = (file: File | null) => {
+    if (!file) return;
+
+    setFormData((prev) => ({ ...prev, profileImage: file }));
+
+    console.log("📸 ได้ไฟล์ใหม่:", file.name);
+  };
+
   const handleRoleSelect = (newRole: RoleType) => {
     if (role !== newRole) {
       setRole(newRole);
@@ -210,6 +219,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         email: formData.email.trim(),
         phone: formData.phone.trim(),
         password: formData.password,
+        profileImage: formData.profileImage ? formData.profileImage.name : null,
       };
 
       if (role === "Member") {
@@ -239,6 +249,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         phone: "",
         password: "",
         confirmPassword: "",
+        profileImage: null,
       });
       setRoleSpecificData({ communityId: "", gender: "", birthDate: "" });
       setLocationData({
@@ -267,9 +278,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           {/* รูปโปรไฟล์ */}
           <div className="flex flex-col items-center">
-            <div className="relative w-48 h-48 bg-[#E3E5E9] rounded-full flex items-center justify-center shadow-sm">
-              <Icon icon="mdi:account" className="text-gray-500 w-24 h-24" />
-            </div>
+            <AvatarUploader
+              avatarUrl={null}
+              onAvatarChange={handleAvatarChange}
+              avatarSize={180}
+            />
           </div>
 
           {/* ฟอร์มข้อมูล */}
@@ -467,46 +480,20 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({
       </form>
 
       {/* Popup ยืนยัน */}
-      {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center space-y-6 border border-gray-200">
-            <div className="flex flex-col items-center gap-4">
-              <Icon
-                icon="mdi:alert-circle-outline"
-                className="text-green-800 text-6xl"
-              />
-              <h3 className="text-xl font-bold text-gray-800">
-                ยืนยันการสร้างบัญชี
-              </h3>
-              <p className="text-gray-600 text-sm">
-                คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่
-              </p>
-            </div>
-            <div className="flex justify-center gap-4 pt-4">
-              <div className="w-28">
-                <Button type="cancel" onClick={() => setShowConfirm(false)}>
-                  ยกเลิก
-                </Button>
-              </div>
-              <div className="w-28">
-                <SubmitButton
-                  htmlType="button"
-                  onClick={() => {
-                    setShowConfirm(false);
-                    handleSubmit(
-                      new Event(
-                        "submit"
-                      ) as unknown as React.FormEvent<HTMLFormElement>
-                    );
-                  }}
-                >
-                  ยืนยัน
-                </SubmitButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showConfirm}
+        title="ยืนยันการสร้างบัญชี"
+        text="คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setShowConfirm(false);
+          handleSubmit(
+            new Event("submit") as unknown as React.FormEvent<HTMLFormElement>
+          );
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
     </div>
   );
 };

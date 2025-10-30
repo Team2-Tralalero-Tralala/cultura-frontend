@@ -2,14 +2,13 @@
  * Component: EditAccountPage
  * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 19 ตุลาคม 2568
+ * Last Modified: 30 ตุลาคม 2568
  */
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Icon } from "@iconify/react";
 import { toast } from "react-toastify";
-
+import { Modal } from "@/Components/Modal/Modal";
 import { api } from "@/Libs/axios";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
@@ -18,6 +17,7 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "../../Components/Selector/ThailandLocationSelector";
 import CommunitySelector from "../../Components/Selector/CommunitySelector";
+import AvatarUploader from "@/Components/AvatarUploader";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -29,6 +29,7 @@ interface EditAccountBody {
   phone: string;
   roleId: number;
   password?: string;
+  profileImage?: string | null;
   memberOfCommunity?: number | null;
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
@@ -61,7 +62,8 @@ const EditAccountPage: React.FC = () => {
     confirmPassword: "",
     role: getRoleFromPath() as RoleType,
   });
-
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [roleSpecificData, setRoleSpecificData] = useState({
     communityId: "",
     gender: "",
@@ -125,7 +127,7 @@ const EditAccountPage: React.FC = () => {
         password: "",
         confirmPassword: "",
       }));
-
+      setAvatarUrl(user.profileImageUrl || null);
       setRoleSpecificData({
         communityId: user.memberOfCommunity?.toString() || "",
         gender:
@@ -196,6 +198,15 @@ const EditAccountPage: React.FC = () => {
 
       if (formData.password) requestBody.password = formData.password;
 
+      if (profileImage) {
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", profileImage);
+        const uploadRes = await api.post("/upload/profile", formDataUpload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        requestBody.profileImage = uploadRes.data?.filename || null;
+      }
+
       if (formData.role === "Member") {
         requestBody.memberOfCommunity =
           Number(roleSpecificData.communityId) || null;
@@ -250,9 +261,15 @@ const EditAccountPage: React.FC = () => {
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           {/* รูปโปรไฟล์ */}
           <div className="flex flex-col items-center">
-            <div className="relative w-48 h-48 bg-[#E3E5E9] rounded-full flex items-center justify-center shadow-sm">
-              <Icon icon="mdi:account" className="text-gray-500 w-24 h-24" />
-            </div>
+            <AvatarUploader
+              avatarUrl={avatarUrl}
+              onAvatarChange={(file) => {
+                setProfileImage(file);
+                // อัปเดต preview ทันทีถ้าเปลี่ยนรูปใหม่
+                setAvatarUrl(file ? URL.createObjectURL(file) : avatarUrl);
+              }}
+              avatarSize={180}
+            />
           </div>
 
           {/* ฟอร์มข้อมูล */}
@@ -412,46 +429,20 @@ const EditAccountPage: React.FC = () => {
       </form>
 
       {/* Popup ยืนยัน */}
-      {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center space-y-6 border border-gray-200">
-            <div className="flex flex-col items-center gap-4">
-              <Icon
-                icon="mdi:alert-circle-outline"
-                className="text-green-800 text-6xl"
-              />
-              <h3 className="text-xl font-bold text-gray-800">
-                ยืนยันการบันทึกข้อมูล
-              </h3>
-              <p className="text-gray-600 text-sm">
-                คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่
-              </p>
-            </div>
-            <div className="flex justify-center gap-4 pt-4">
-              <div className="w-28">
-                <Button type="cancel" onClick={() => setShowConfirm(false)}>
-                  ยกเลิก
-                </Button>
-              </div>
-              <div className="w-28">
-                <SubmitButton
-                  htmlType="button"
-                  onClick={() => {
-                    setShowConfirm(false);
-                    handleSubmit(
-                      new Event(
-                        "submit"
-                      ) as unknown as React.FormEvent<HTMLFormElement>
-                    );
-                  }}
-                >
-                  ยืนยัน
-                </SubmitButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+  open={showConfirm}
+  title="ยืนยันการบันทึกข้อมูล"
+  text="คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่"
+  confirmText="ยืนยัน"
+  cancelText="ยกเลิก"
+  onConfirm={() => {
+    setShowConfirm(false);
+    handleSubmit(
+      new Event("submit") as unknown as React.FormEvent<HTMLFormElement>
+    );
+  }}
+  onCancel={() => setShowConfirm(false)}
+/>
     </div>
   );
 };

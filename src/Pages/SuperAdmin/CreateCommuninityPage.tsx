@@ -29,6 +29,7 @@ import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import * as z from "zod";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -125,6 +126,7 @@ export default function CreateCommuninityPage() {
   const [logoFile, setLogoFile] = useState<File | null>();
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
   const naigate = useNavigate();
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
@@ -267,9 +269,7 @@ export default function CreateCommuninityPage() {
         adminId: Number(formData.adminId),
         communityMembers: formData.communityMembers ?? [],
         ...cleanForm,
-        registerDate: formData.registerDate
-          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
-          : undefined,
+        registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
         location: {
           houseNumber: formData.houseNumber,
           villageNumber: Number(formData.villageNumber),
@@ -299,9 +299,7 @@ export default function CreateCommuninityPage() {
     videoFiles.forEach((file) => {
       formDataToSend.append("video", file);
     });
-    for (const [key, val] of formDataToSend.entries()) {
-      console.log(key, val);
-    }
+
     await createCommunity(formDataToSend);
     alert("success");
     naigate("/super/communities");
@@ -396,16 +394,19 @@ export default function CreateCommuninityPage() {
               />
             </div>
             <div>
-              <TextField
+              <BoxDateInput
                 id="registerDate"
-                label="วัน/เดือน/ ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                value={registerDate}
+                onChange={(date) => {
+                  setRegisterDate(date);
+                  const isoString = date ? date.toISOString().split("T")[0] : "";
+                  handleValueChange("registerDate", isoString);
+                }}
                 required
-                placeholder="กรอกเลขทะเบียนวิสาหกิจชุมชน"
-                type="date"
-                value={formData.registerDate}
-                onChange={handleFormChange}
-                error={!!formErrors.registerDate}
-                helperText={formErrors.registerDate}
+                minDate={new Date(1980, 0, 1)}
+                maxDate={new Date(2040, 12, 31)}
+                errorText={formErrors.registerDate}
               />
             </div>
             <div>

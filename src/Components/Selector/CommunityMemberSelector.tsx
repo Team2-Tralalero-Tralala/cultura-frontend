@@ -1,5 +1,5 @@
 // src/Components/Selector/CommunityMemberSelector.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import { getCommunityMembers } from "@/Libs/CommunityService";
 
@@ -31,68 +31,58 @@ export function CommunityMemberSelector({
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [inputValue, setInputValue] = useState<string>("");
-    const debounceRef = useRef<number | null>(null);
 
-    const mergedMembers = useMemo(() => {
-        if (member) {
-            const exists = members.some((m) => m.id === member.id);
-            return exists ? members : [member, ...members];
-        }
-        return members;
-    }, [members, member]);
+    // [FIX] หาค่าที่เลือกจาก 'members' (ผลลัพธ์ API)
+    // แต่ถ้ายังโหลด/ไม่มีใน 'members' ให้ใช้ 'member' (prop) ที่ส่งมาจากหน้า Edit
+    const selected = members.find((m) => m.id === value) || member || null;
 
-    const selected = mergedMembers.find((m) => m.id === value) || member || null;
-
-    const MIN_QUERY_CHARS = 2;
-
-    // [FIX 1] Effect นี้จะทำงานเมื่อ "communityId" หรือ "inputValue" (ที่ผู้ใช้พิมพ์) เปลี่ยน
+    // [FIX] แก้ไข useEffect ให้โหลดข้อมูล "ทั้งหมด" "ครั้งเดียว"
+    // เมื่อ communityId เปลี่ยนแปลง (ลบ inputValue ออกจาก dependency array)
     useEffect(() => {
         if (!communityId) {
             setMembers([]);
             return;
         }
 
-        if (debounceRef.current) {
-            window.clearTimeout(debounceRef.current);
-        }
-
-        debounceRef.current = window.setTimeout(async () => {
-            const q = inputValue.trim();
-
-            // [FIX 2] Logic ใหม่:
-            // 1. ถ้าพิมพ์ 1 ตัว (q.length === 1) -> ไม่ต้องทำอะไร รอพิมพ์ต่อ
-            if (q.length > 0 && q.length < MIN_QUERY_CHARS) {
-                return;
-            }
-            // 2. ถ้า q.length === 0 (โหลดครั้งแรก/ลบหมด) หรือ q.length >= 2 (ค้นหา) -> ให้เรียก API
-
+        let mounted = true;
+        const fetchAllMembers = async () => {
             try {
                 setLoading(true);
-                const res = await getCommunityMembers(communityId, { q, limit: 20 });
+                // เรียก API โดยไม่ส่ง 'q' เพื่อเอาสมาชิกทั้งหมด (หรือเพิ่ม limit ให้สูงๆ)
+                const res = await getCommunityMembers(communityId, { limit: 500 });
+                if (!mounted) return;
+
                 const raw = res?.data?.data ?? [];
                 const list: Member[] = (Array.isArray(raw) ? raw : []).map((m: any) => ({
                     id: Number(m.id),
                     fname: m.fname ?? "",
                     lname: m.lname ?? "",
                 }));
-                setMembers(list);
+
+                // ตรวจสอบว่า 'member' (prop) ที่ถูกเลือกไว้ มีอยู่ใน list หรือไม่
+                if (member && !list.some(m => m.id === member.id)) {
+                    // ถ้าไม่มี ให้เพิ่มเข้าไปใน list เพื่อให้แสดงผลถูกต้อง
+                    setMembers([member, ...list]);
+                } else {
+                    setMembers(list);
+                }
             } catch {
-                // ถ้า Error ให้แสดงแค่ตัวที่เลือกไว้ (ถ้ามี)
+                if (!mounted) return;
+                // ถ้า API พัง อย่างน้อยก็แสดง 'member' ที่ถูกเลือกไว้
                 setMembers(member ? [member] : []);
             } finally {
-                setLoading(false);
-            }
-        }, 250);
-
-        return () => {
-            if (debounceRef.current) {
-                window.clearTimeout(debounceRef.current);
+                if (mounted) setLoading(false);
             }
         };
-    }, [communityId, inputValue, member]); // ⬅️ เรายังต้องใช้ member ที่นี่เผื่อ catch
 
-    // [FIX 3] Effect นี้จะทำงาน "ครั้งเดียว" เพื่อตั้งค่าข้อความเริ่มต้นในช่อง Input
-    // (ป้องกันไม่ให้ Autocomplete เติมคำเองในภายหลัง)
+        fetchAllMembers();
+
+        return () => {
+            mounted = false;
+        };
+    }, [communityId, member]); // <-- [FIX] เอา inputValue ออก
+
+    // [FIX] Effect นี้ยังคงมีประโยชน์ (ตั้งค่าข้อความเริ่มต้น)
     const [isInitialTextSet, setIsInitialTextSet] = useState(false);
     useEffect(() => {
         if (selected && !isInitialTextSet) {
@@ -143,27 +133,26 @@ export function CommunityMemberSelector({
             disablePortal
             disableClearable
             loading={loading}
-            options={mergedMembers}
-            filterOptions={(x) => x} // บอก Autocomplete ไม่ต้องกรองเอง
+            options={members} // [FIX] ใช้ 'members' (ที่เป็น list เต็ม)
+
+            // [FIX] ลบบรรทัด 'filterOptions' ออกเพื่อให้ Autocomplete กรองเอง
+            // filterOptions={(x) => x} 
+
             getOptionLabel={(opt) => (opt ? `${opt.fname} ${opt.lname}` : "")}
             value={selected!}
 
-            // [FIX 4] ควบคุมค่าในช่อง Input ด้วย State ของเรา
             inputValue={inputValue}
 
-            onChange={(_, newValue, reason) => {
+            onChange={(_, newValue) => {
                 onChange(newValue ? newValue.id : null);
-                // [FIX 5] เมื่อผู้ใช้ "เลือก" รายการ ให้เราอัปเดต inputValue ด้วย
-                if (reason === 'selectOption' && newValue) {
+                // [FIX] ให้อัปเดต inputValue เมื่อเลือกเสมอ
+                if (newValue) {
                     setInputValue(`${newValue.fname} ${newValue.lname}`);
                 }
             }}
-            onInputChange={(_, newInput, reason) => {
-                // [FIX 6] อัปเดต State เฉพาะเมื่อ "ผู้ใช้พิมพ์" หรือ "ผู้ใช้ลบ"
-                if (reason === 'input' || reason === 'clear') {
-                    setInputValue(newInput);
-                }
-                // เราจะไม่ setInputValue ถ้า reason เป็น 'reset' (ที่ Autocomplete เติมคำเอง)
+            onInputChange={(_, newInput) => {
+                // [FIX] ให้อัปเดต state ทุกครั้งที่ input เปลี่ยน
+                setInputValue(newInput);
             }}
             noOptionsText={communityId ? "ไม่พบสมาชิก" : "โปรดเลือกชุมชนก่อน"}
             renderInput={(params) =>

@@ -119,6 +119,13 @@ export async function getCommunityDetailById(id: number) {
   return api.get(`/super/community/detail/${id}`);
 }
 
+/**
+ * ดึงรายละเอียดชุมชนของแอดมินปัจจุบัน
+ * Mapping: GET /admin/community
+ */
+export async function getCommunityDetailByAdmin() {
+  return api.get(`/admin/community`);
+}
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลวิสาหกิจชุมชนของผู้ดูแลชุมชน (Admin)
  * Output : Response ที่ประกอบด้วยข้อมูลของวิสาหกิจชุมชน

@@ -16,7 +16,6 @@ import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
-import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
@@ -30,6 +29,11 @@ import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
+
+import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
+import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
+
+import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 
 /*
  * Module: SuperAdminRoutes
@@ -101,6 +105,10 @@ export default function SuperAdminRoutes() {
 
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route path="/tourist/:touristId/edit" element={<EditAccountPage />} />
+
+       {/* หน้าตารางของ tag */}
+      <Route path="tags" element={<ManageTags />} />
+
     </Routes>
   );
 }

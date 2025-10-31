@@ -18,6 +18,7 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
+import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -27,8 +28,8 @@ export default function AdminRoutes() {
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
       <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
-      {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
-      <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
+      <Route path="/bookings-histories/done" element={<BookingHistoryAdmin />} />
+      {/*<Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 

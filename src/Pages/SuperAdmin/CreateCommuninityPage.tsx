@@ -318,7 +318,7 @@ export default function CreateCommuninityPage() {
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
-      navigate("/super/communities");
+      navigate("/super/communities/all");
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
@@ -339,7 +339,7 @@ export default function CreateCommuninityPage() {
     <div>
       <div className="flex justify-between items-center">
         <Link
-          to="/super/communities"
+          to="/super/communities/all"
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
         >
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />

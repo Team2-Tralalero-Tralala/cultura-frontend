@@ -34,22 +34,6 @@ type Row = {
   approved: boolean;
 };
 
-const columns: Column<Row>[] = [
-  { key: "title", header: "ชื่อแพ็กเกจ", className: "min-w-[240px]" },
-  { key: "community", header: "ชื่อชุมชน" },
-  { key: "owner", header: "ผู้ดูแล" },
-  {
-    key: "published",
-    header: "สถานะแพ็กเกจ",
-    render: (row) => (row.published ? "เผยแพร่" : "ไม่เผยแพร่"),
-  },
-  {
-    key: "approved",
-    header: "สถานะการอนุมัติ",
-    render: (row) => (row.approved ? "อนุมัติ" : "รออนุมัติ"),
-  },
-];
-
 const bulkActions: BulkAction<Row>[] = [
   {
     id: "bulk-delete",
@@ -66,6 +50,39 @@ const bulkActions: BulkAction<Row>[] = [
 ];
 
 export default function ManagePackageSuperAdmin() {
+  const columns: Column<Row>[] = [
+    {
+      key: "title",
+      header: "ชื่อแพ็กเกจ",
+      className: "min-w-[240px]",
+      /*
+       * คำอธิบาย : Render ชื่อแพ็กเกจเป็นปุ่มที่คลิกได้
+       * Input: row - ข้อมูลแถว
+       * Output : JSX Element (button)
+       */
+      render: (row) => (
+        <button
+          type="button"
+          className="hover:underline text-left"
+          onClick={() => navigate(`/super/package/${row.id}`)}
+        >
+          {row.title}
+        </button>
+      ),
+    },
+    { key: "community", header: "ชื่อชุมชน" },
+    { key: "owner", header: "ผู้ดูแล" },
+    {
+      key: "published",
+      header: "สถานะแพ็กเกจ",
+      render: (row) => (row.published ? "เผยแพร่" : "ไม่เผยแพร่"),
+    },
+    {
+      key: "approved",
+      header: "สถานะการอนุมัติ",
+      render: (row) => (row.approved ? "อนุมัติ" : "รออนุมัติ"),
+    },
+  ];
   const navigate = useNavigate();
 
   // table state

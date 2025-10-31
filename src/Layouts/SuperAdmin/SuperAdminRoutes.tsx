@@ -25,9 +25,8 @@ import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
-
-import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
-import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
+import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
+import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 
@@ -64,7 +63,7 @@ export default function SuperAdminRoutes() {
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />
       <Route path="/community/:communityId/store/create" element={<CreateStore />} />
-      <Route path="/store/:storeId/edit" element={<EditStore />} />
+      <Route path="/community/:communityId/store/:storeId/edit" element={<EditStore />} />
       <Route path="/reset-password/:userId" element={<ResetPassword />} />
 
       <Route path="community/:communityId/homestay/:homestayId" element={<HomestayDetailPage />} />
@@ -102,9 +101,8 @@ export default function SuperAdminRoutes() {
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route path="/tourist/:touristId/edit" element={<EditAccountPage />} />
 
-       {/* หน้าตารางของ tag */}
+      {/* หน้าตารางของ tag */}
       <Route path="tags" element={<ManageTags />} />
-
     </Routes>
   );
 }

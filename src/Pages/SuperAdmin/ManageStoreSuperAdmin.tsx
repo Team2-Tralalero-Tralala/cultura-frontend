@@ -21,11 +21,7 @@ import { getAllStore } from "@/Services/store-service";
 import { getCommunityById } from "@/Services/community-service";
 
 // Types
-import type {
-  Column,
-  DataTableActionsConfig,
-  BulkAction,
-} from "@/Components/Tables/Types";
+import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 // Type ของตาราง
 type StoreRow = {
@@ -49,12 +45,7 @@ type StoreFromApi = {
 };
 
 const normalizeText = (s: string) =>
-  (s ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 // ตารางจัดการร้านค้า
 const columns: Column<StoreRow>[] = [
@@ -108,9 +99,7 @@ export default function ManageStores() {
 
       const res = await getAllStore(Number(communityId), currentPage, pageSize);
       const payload = res.data?.data;
-      const list: StoreFromApi[] = Array.isArray(payload?.data)
-        ? payload.data
-        : [];
+      const list: StoreFromApi[] = Array.isArray(payload?.data) ? payload.data : [];
 
       console.log("Store Payload", res.data);
 
@@ -119,8 +108,7 @@ export default function ManageStores() {
 
       // map ข้อมูลกับ type ตาราง
       const mapped: StoreRow[] = list.map((store) => {
-        const tagNames =
-          store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
+        const tagNames = store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
@@ -150,7 +138,7 @@ export default function ManageStores() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/super/store/${row.id}/edit/`),
+      edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
         setDeleteId(row.id);
         setOpenConfirm(true);
@@ -205,30 +193,18 @@ export default function ManageStores() {
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div className="px-6 pb-1">
-        <nav
-          aria-label="breadcrumb"
-          className="flex items-center text-gray-700 text-sm"
-        >
-          <Link
-            to="/super/communities"
-            className="text-gray-800 hover:text-dark-green font-medium"
-          >
+        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
+          <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
             จัดการชุมชน
           </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
+          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
           <Link
             to={`/super/community/detail/${communityId}`}
             className="text-gray-800 hover:text-dark-green font-medium"
           >
             {communityName || "ชุมชน"}
           </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
+          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
           <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
         </nav>
       </div>
@@ -248,17 +224,12 @@ export default function ManageStores() {
       <div className="px-6 pb-2">
         <div className="flex items-center gap-3">
           <div className="max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           <div className="ml-auto">
             <Button
-              onClick={() =>
-                navigate(`/super/community/${communityId}/store/create`)
-              }
+              onClick={() => navigate(`/super/community/${communityId}/store/create`)}
               aria-label="เพิ่มร้านค้า"
             >
               <span>+ เพิ่มร้านค้า</span>
@@ -267,9 +238,7 @@ export default function ManageStores() {
         </div>
       </div>
       <div className="px-6 pb-10">
-        {errorMessage && (
-          <div className="text-sm text-red-600 mb-2">{errorMessage}</div>
-        )}
+        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         {/* Table */}
         <DataTable<StoreRow>
@@ -300,11 +269,7 @@ export default function ManageStores() {
           } catch (error: any) {
             console.error(error);
             alert(
-              `ลบไม่สำเร็จ: ${
-                error?.response?.data?.message ??
-                error?.message ??
-                "unknown error"
-              }`
+              `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error?.message ?? "unknown error"}`
             );
           } finally {
             setOpenConfirm(false);

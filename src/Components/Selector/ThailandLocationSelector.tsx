@@ -56,7 +56,6 @@ interface ThailandLocationSelectProps {
     province?: boolean;
     district?: boolean;
     subdistrict?: boolean;
-    
   };
   helperText?: {
     province?: string;
@@ -285,6 +284,25 @@ export default function ThailandLocationSelector({
         renderInput={(params) =>
           renderCustomInput("province", "จังหวัด", params, error?.province, helperText?.province)
         }
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
       />
 
       <Autocomplete
@@ -298,6 +316,25 @@ export default function ThailandLocationSelector({
         renderInput={(params) =>
           renderCustomInput("district", "อำเภอ", params, error?.district, helperText?.district)
         }
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         disabled={!value?.province}
       />
 
@@ -318,6 +355,25 @@ export default function ThailandLocationSelector({
             helperText?.subdistrict
           )
         }
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         disabled={!value?.district}
       />
 

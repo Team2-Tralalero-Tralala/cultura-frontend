@@ -733,7 +733,7 @@ export const EditPackagePage: React.FC = () => {
         withCredentials: true,
       });
 
-      navigate("/super/packages");
+      navigate("/super/packages/all");
     } catch (error: any) {
       console.error("Edit package (superadmin) error:", error?.response?.data);
       setErrorMessage(
@@ -794,7 +794,7 @@ export const EditPackagePage: React.FC = () => {
       <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
-          onClick={() => navigate("/super/packages")}
+          onClick={() => navigate("/super/packages/all")}
           className="inline-flex items-center gap-2 text-xl mb-1 group"
           aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
         >

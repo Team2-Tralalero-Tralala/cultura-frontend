@@ -218,7 +218,7 @@ export default function ManagePackageSuperAdmin() {
       variant: "icons",
       items: () => ["edit", "delete"],
       callbacks: {
-        edit: (row) => navigate(`/super/package/edit/${row.id}`),
+        edit: (row) => navigate(`/super/package/${row.id}/edit`),
         delete: (row) => {
           // [FIX] เปลี่ยนจากการเรียก window.confirm เป็นการเปิด Modal
           setRowToDelete(row);

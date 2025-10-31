@@ -33,6 +33,9 @@ import { Modal } from "@/Components/Modal/Modal";
 import { Icon } from "@iconify/react";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import { BankSelector } from "@/Components/Selector/BankSelector";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -50,8 +53,8 @@ const communitySchema = z.object({
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
   registerDate: z
-    .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
+    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+    .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
 
   bankName: z
     .string("กรุณาเลือกธนาคาร")
@@ -172,6 +175,11 @@ export function EditCommunity() {
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
+  const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
@@ -237,6 +245,7 @@ export function EditCommunity() {
             lname: m.user.lname,
           })) ?? []
         );
+        setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([lat, lng]);
         setChecked(data.status === "OPEN" ? true : false);
 
@@ -269,7 +278,14 @@ export function EditCommunity() {
             .filter((img: any) => img.type === "VIDEO")
             .map(async (img: any) => {
               const fullUrl = `http://localhost:3000/${img.image}`;
-              return await urlToFile(fullUrl, img.image);
+              const response = await fetch(fullUrl);
+              const blob = await response.blob();
+              const fixedBlob =
+                blob.type && blob.type.startsWith("video/")
+                  ? blob
+                  : new Blob([blob], { type: "video/mp4" });
+              const file = new File([fixedBlob], img.image, { type: fixedBlob.type });
+              return file;
             })
         );
         setLogoFile(logoFileFetch[0] || null);
@@ -286,7 +302,7 @@ export function EditCommunity() {
     }
     fetchData();
   }, [communityId]);
-  console.log(checked);
+
   React.useEffect(() => {
     if (location.province) {
       setFormData((prev) => ({
@@ -303,7 +319,6 @@ export function EditCommunity() {
       validateField("subDistrict", location.subdistrict);
     }
   }, [location]);
-  console.log(videoFiles);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -376,25 +391,22 @@ export function EditCommunity() {
     validateField(id as keyof typeof formData, value);
   };
   /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ (ใช้กับ Selector/MapPicker)
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ
    * Input :
    * - field (keyof typeof formData) : ชื่อฟิลด์ที่ต้องอัปเดต
    * - value (any) : ค่าที่ต้องการเซ็ตลงใน formData
    * Output : อัปเดตค่าใน formData และเรียก validateField เพื่อเช็กความถูกต้อง
    */
-  const handleValueChange = <K extends keyof typeof formData>(
-    field: K,
-    value: (typeof formData)[K]
-  ) => {
-    setFormData((prev) => {
-      const updated = { ...prev, [field]: value };
-      return updated;
-    });
-
-    // เรียก validateField ถ้ามีฟังก์ชันตรวจ
-    if (typeof validateField === "function") {
-      validateField(field, value);
+  const handleValueChange = (field: keyof typeof formData, value: any) => {
+    let newValue = value;
+    if (field === "registerDate") {
+      if (value instanceof Date) {
+        newValue = value.toISOString().split("T")[0];
+      }
     }
+    const updated = { ...formData, [field]: newValue };
+    setFormData(updated);
+    validateField(field, newValue);
   };
 
   /*
@@ -408,43 +420,10 @@ export function EditCommunity() {
     const isFormValid = validateField();
 
     if (!isFormValid) {
-      // หาชื่อ field แรกที่เกิด error
-      const firstErrorField = Object.keys(formErrors).find((key) => formErrors[key]);
-      if (firstErrorField) {
-        // เช็คว่า field นั้นอยู่ใน Accordion ไหน แล้วเปิด Accordion นั้น
-        const panel2Fields = [
-          "name",
-          "type",
-          "registerNumber",
-          "registerDate",
-          "bankName",
-          "accountName",
-          "accountNumber",
-          "description",
-          "mainActivityName",
-          "mainActivityDescription",
-        ];
-        const panel3Fields = [
-          "houseNumber",
-          "province",
-          "district",
-          "subDistrict",
-          "postalCode",
-          "latitude",
-          "longitude",
-        ];
-        const panel4Fields = ["phone", "email", "mainAdmin", "mainAdminPhone", "adminId"];
-
-        if (panel2Fields.includes(firstErrorField)) {
-          setExpanded("panel2");
-        } else if (panel3Fields.includes(firstErrorField)) {
-          setExpanded("panel3");
-        } else if (panel4Fields.includes(firstErrorField)) {
-          setExpanded("panel4");
-        }
-      }
-
-      alert("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
+      setAlertOpen(true);
       return;
     }
 
@@ -460,6 +439,7 @@ export function EditCommunity() {
         villageNumber,
         province,
         district,
+        bankName,
         subDistrict,
         postalCode,
         ...cleanForm
@@ -468,12 +448,11 @@ export function EditCommunity() {
       const payload = {
         ...cleanForm,
         communityMembers: selectedMembers,
-        registerDate: formData.registerDate
-          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
-          : undefined,
+        bankName: formData.bankName,
+        registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
         location: {
           houseNumber: formData.houseNumber,
-          villageNumber: formData.villageNumber > 0 ? Number(formData.villageNumber) : null,
+          villageNumber: formData.villageNumber! > 0 ? Number(formData.villageNumber) : null,
           province: location.province,
           district: location.district,
           subDistrict: location.subdistrict,
@@ -503,12 +482,24 @@ export function EditCommunity() {
       videoFiles.forEach((file) => {
         formDataToSend.append("video", file);
       });
-
       await updateCommunity(Number(communityId), formDataToSend);
-      alert("บันทึกข้อมูลสำเร็จ!"); // ✅ แจ้งเตือนเมื่อสำเร็จ
-    } catch (error) {
-      console.error("Failed to update community:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล"); // ✅ แจ้งเตือนเมื่อล้มเหลว
+      setAlertType("success");
+      setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
+      setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
+      setAlertOpen(true);
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
+
+      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
+      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
+      // หากสำเร็จ
+      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
+
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage(cleanMessage);
+      setAlertOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -522,7 +513,7 @@ export function EditCommunity() {
       </Backdrop>
       <div className="flex justify-between items-center">
         <Link
-          to="/super/communities"
+          to="/super/communities/all"
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
         >
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />
@@ -614,27 +605,25 @@ export function EditCommunity() {
               />
             </div>
             <div>
-              <TextField
+              <BoxDateInput
                 id="registerDate"
-                label="วัน/เดือน/ ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                value={registerDate}
+                onChange={(date) => {
+                  setRegisterDate(date);
+                  const isoString = date ? date.toISOString().split("T")[0] : "";
+                  handleValueChange("registerDate", isoString);
+                }}
                 required
-                placeholder="กรอกเลขทะเบียนวิสาหกิจชุมชน"
-                type="date"
-                value={formData.registerDate}
-                onChange={handleFormChange}
-                error={!!formErrors.registerDate}
-                helperText={formErrors.registerDate}
+                minDate={new Date(1980, 0, 1)}
+                maxDate={new Date(2040, 12, 31)}
+                errorText={formErrors.registerDate}
               />
             </div>
             <div>
-              <TextField
-                id="bankName"
-                label="ธนาคาร"
-                required
-                placeholder="เลือกธนาคาร"
-                type="text"
+              <BankSelector
                 value={formData.bankName}
-                onChange={handleFormChange}
+                onChange={(bankName) => handleValueChange("bankName", bankName)}
                 error={!!formErrors.bankName}
                 helperText={formErrors.bankName}
               />
@@ -1063,6 +1052,13 @@ export function EditCommunity() {
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

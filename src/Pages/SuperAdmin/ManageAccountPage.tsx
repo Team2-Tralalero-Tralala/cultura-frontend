@@ -66,7 +66,7 @@ const columns: Column<AccountRow>[] = [
     className: "min-w-[240px]",
     render: (r) => (
       <Link
-        to={`/super/users/${r.id}`}
+        to={`/super/account/${r.id}`}
         onClick={(e) => e.stopPropagation()}
         className="hover:underline"
       >
@@ -238,7 +238,7 @@ export function ManageAccountPage() {
           }
         );
       },
-      edit: (row) => navigate(`/super/account/edit/${row.id}`),
+      edit: (row) => navigate(`/super/account/${row.role.name}/${row.id}/edit`),
       delete: (row) => {
         openModal(
           "ยืนยันการลบบัญชี",

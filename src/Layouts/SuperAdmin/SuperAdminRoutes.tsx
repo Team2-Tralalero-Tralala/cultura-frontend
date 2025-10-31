@@ -16,7 +16,6 @@ import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
-import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
@@ -25,11 +24,12 @@ import { EditStore } from "@/Pages/SuperAdmin/EditStore";
 import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
-
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
 import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
+
+import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 
 /*
  * Module: SuperAdminRoutes
@@ -41,10 +41,26 @@ import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 export default function SuperAdminRoutes() {
   return (
     <Routes>
+      {/* ---------------- ชุมชน ---------------- */}
       <Route path="community/create" element={<CreateCommuninityPage />} />
+      <Route path="community/edit/:communityId" element={<EditCommunity />} />
+      <Route path="communities/all" element={<ManageCommunitySuperAdmin />} />
+      <Route path="community/detail/:id" element={<CommunityDetailSuperAdmin />} />
+
+      {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
-      {/* <Route path="packages/all" element={<ManagePackagePage />} /> */}
-      <Route path="package/edit/:id" element={<EditPackagePage />} />
+      <Route path="package/:id/edit" element={<EditPackagePage />} />
+
+      {/* ---------------- บัญชีผู้ใช้ ---------------- */}
+      <Route path="account/admin/create" element={<CreateAccountPage />} />
+      <Route path="account/member/create" element={<CreateAccountPage />} />
+      <Route path="account/tourist/create" element={<CreateAccountPage />} />
+
+      <Route path="account/admin/:adminId/edit" element={<EditAccountPage />} />
+      <Route path="account/member/:memberId/edit" element={<EditAccountPage />} />
+      <Route path="account/tourist/:touristId/edit" element={<EditAccountPage />} />
+
+      {/* ---------------- Log ---------------- */}
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />
       <Route path="/community/:communityId/store/create" element={<CreateStore />} />
@@ -57,6 +73,7 @@ export default function SuperAdminRoutes() {
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} />
       <Route path="account/change-password" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="shared/tags" element={<ManageTags />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
@@ -68,8 +85,8 @@ export default function SuperAdminRoutes() {
 
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="users/blocked" element={<BlockedAccountPage />} />
-      <Route path="users/:id" element={<UserDetailPage />} />
-      <Route path="accounts" element={<ManageAccountPage />} />
+      <Route path="account/:id" element={<UserDetailPage />} />
+      <Route path="accounts/all" element={<ManageAccountPage />} />
       {/* 🔹 หน้าเพิ่มบัญชีสมาชิก (Member) */}
       <Route path="/member/create" element={<CreateAccountPage defaultRole="Member" />} />
 
@@ -84,6 +101,10 @@ export default function SuperAdminRoutes() {
 
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route path="/tourist/:touristId/edit" element={<EditAccountPage />} />
+
+       {/* หน้าตารางของ tag */}
+      <Route path="tags" element={<ManageTags />} />
+
     </Routes>
   );
 }

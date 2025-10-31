@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@fontsource/sarabun": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@iconify-icons/mdi": "^1.2.48",
     "@iconify/react": "^6.0.2",
@@ -22,6 +23,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/vite": "^4.1.13",
     "@types/react-router-dom": "^5.3.3",
+    "@types/react-toastify": "^4.0.2",
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -79,6 +81,6 @@
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.1.8"
+    "zod": "^4.1.12"
   }
 }

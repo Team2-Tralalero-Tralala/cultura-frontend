@@ -1,12 +1,10 @@
 // File: package-request-service.ts
 /*
- * คำอธิบาย : Service เรียกข้อมูล "คำขอแพ็กเกจ" จาก Backend
- * แนวทางมาตรฐาน:
- *  - ใช้ค่าฐาน URL จาก .env (VITE_API_BASE) และ fallback เป็น localhost
- *  - แยก helper สร้าง URL เพื่อลดการประกอบสตริงซ้ำ
- *  - แยก helper เรียก API แบบ GET (รวมการตรวจสอบ error)
- *  - JSDoc + บล็อกคอมเมนต์มาตรฐาน (ฟังก์ชัน/คำอธิบาย/Input/Output)
- *  - ตั้งชื่อชัดเจน: fetchPackageRequestDetail*, buildApiUrl, apiGet
+ * คำอธิบาย : Service เรียกข้อมูล "คำขอแพ็กเกจ" จาก Backend (เวอร์ชันเรียบง่ายสุด)
+ * หมายเหตุ:
+ *  - ใช้ฐาน URL จาก .env: VITE_API_URL (fallback localhost)
+ *  - ใช้ axios โดยแนบ credentials
+ *  - ไม่ดัก error / ไม่ใช้ helper ใด ๆ (เพื่อความเรียบง่ายสูงสุด)
  */
 
 import type { PackageRequestDetail } from "@/Types/package-request"; // (ใช้ path alias ให้สม่ำเสมอ)
@@ -57,28 +55,32 @@ async function apiGet<T>(url: string): Promise<T> {
 
 /**
  * ฟังก์ชัน : fetchPackageRequestDetail
- * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจตาม requestId (สิทธิ์ผู้ใช้ทั่วไป/ตามที่ backend อนุญาต)
+ * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจ (ผู้ใช้ทั่วไปหรือสิทธิ์ตามที่ backend อนุญาต)
  * Input : requestId: string (รหัสคำขอแพ็กเกจ)
- * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจแบบ type-safe)
+ * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจ)
  */
 export async function fetchPackageRequestDetail(
   requestId: string
 ): Promise<PackageRequestDetail> {
-  const url = buildApiUrl(`super/package-requests/${requestId}`);
-  return apiGet<PackageRequestDetail>(url);
+  const res = await axios.get(`${apiUrl}/super/package-requests/${requestId}`, {
+    withCredentials: true,
+  });
+  return (res.data?.data ?? res.data) as PackageRequestDetail;
 }
 
 /**
  * ฟังก์ชัน : fetchPackageRequestDetailForAdmin
- * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจตาม requestId (สิทธิ์ผู้ดูแลระบบ/เส้นทางแยกสำหรับ Admin)
+ * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจ (เส้นทางสำหรับแอดมิน)
  * Input : requestId: string (รหัสคำขอแพ็กเกจ)
- * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจแบบ type-safe)
+ * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจ)
  */
 export async function fetchPackageRequestDetailForAdmin(
   requestId: string
 ): Promise<PackageRequestDetail> {
-  const url = buildApiUrl(`/admin/package-requests/${requestId}`);
-  return apiGet<PackageRequestDetail>(url);
+  const res = await axios.get(`${apiUrl}/admin/package-requests/${requestId}`, {
+    withCredentials: true,
+  });
+  return (res.data?.data ?? res.data) as PackageRequestDetail;
 }
 
 /**

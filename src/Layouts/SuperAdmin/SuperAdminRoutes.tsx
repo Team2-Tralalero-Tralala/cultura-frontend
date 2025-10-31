@@ -24,10 +24,6 @@ import { EditStore } from "@/Pages/SuperAdmin/EditStore";
 import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
-
-// import เพิ่มเติมสำหรับจัดการบัญชีผู้ใช้
-import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
-import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
 import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";

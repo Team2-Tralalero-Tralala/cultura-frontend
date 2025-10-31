@@ -12,12 +12,10 @@ import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
-import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
 
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
 import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
-import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";

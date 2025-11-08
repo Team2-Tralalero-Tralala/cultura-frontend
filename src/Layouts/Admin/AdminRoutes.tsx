@@ -18,8 +18,6 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 
 export default function AdminRoutes() {
@@ -30,7 +28,6 @@ export default function AdminRoutes() {
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
       <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
-      <Route path="/members" element={<ManageMembers />} />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
@@ -45,6 +42,7 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
+      <Route path="/members" element={<ManageMembers />} />
     </Routes>
   );
 }

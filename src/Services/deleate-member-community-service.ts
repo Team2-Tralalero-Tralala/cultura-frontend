@@ -19,8 +19,11 @@ const apiUrl =
  * Output: Promise<AxiosResponse> (ผลลัพธ์จาก backend)
  */
 export async function deleteCommunityMember(memberId: number) {
-  const res = await axios.delete(`${apiUrl}/admin/member/${memberId}`, {
-    withCredentials: true,
-  });
+  const res = await axios.patch(
+  `${apiUrl}/admin/member/${memberId}`,
+  {},
+  { withCredentials: true }
+);
+
   return res.data;
 }

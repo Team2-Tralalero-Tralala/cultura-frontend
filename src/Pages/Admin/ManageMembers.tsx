@@ -23,7 +23,8 @@ import type {
 } from "@/Components/Tables/Types";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
-
+import { deleteCommunityMember } from "@/Services/deleate-member-community-service";
+import { Modal } from "@/Components/Modal/Modal";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL;
 
@@ -51,6 +52,9 @@ export default function ManageMembers() {
 
     /* search (client) */
     const [searchQuery, setSearchQuery] = React.useState<string>("");
+
+    const [openDeleteModal, setOpenDeleteModal] = React.useState(false);
+    const [selectedRow, setSelectedRow] = React.useState<MemberRow | null>(null);
 
     const normalizeText = (s: string) =>
         (s ?? "")
@@ -161,22 +165,8 @@ export default function ManageMembers() {
                 users: (row) => navigate(`/super/members/${row.id}/roles`),
                 edit: (row) => navigate(`/super/members/${row.id}/edit`),
                 delete: async (row) => {
-                    if (!window.confirm(`ยืนยันลบสมาชิก “${row.displayName}” ?`)) return;
-                    try {
-                        await axios.delete(`${apiBaseUrl}/super/members/${row.id}`, {
-                            withCredentials: true,
-                        });
-                        await fetchMembers();
-                    } catch (error: any) {
-                        console.error("delete failed:", error?.response?.data ?? error);
-                        alert(
-                            `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
-                            error?.response?.data?.error ||
-                            error?.message ||
-                            "unknown error"
-                            }`
-                        );
-                    }
+                    setSelectedRow(row);
+                    setOpenDeleteModal(true);
                 },
             },
         }),
@@ -224,6 +214,7 @@ export default function ManageMembers() {
     };
 
     return (
+
         <div className="space-y-4">
             {/* Header */}
             <div className="flex flex-col gap-2">
@@ -266,6 +257,38 @@ export default function ManageMembers() {
                 pagination={pagination}
                 isLoading={isLoading}
             />
+            {/* Delete Confirmation Modal */}
+            {openDeleteModal && selectedRow && (
+                <Modal
+                    open={openDeleteModal}
+                    title="ยืนยันการลบสมาชิก"
+                    text={`คุณต้องการลบสมาชิก “${selectedRow.displayName}” ใช่หรือไม่?`}
+                    confirmText="ลบ"
+                    cancelText="ยกเลิก"
+                    onConfirm={async () => {
+                        try {
+                            await deleteCommunityMember(selectedRow.id);
+                            await fetchMembers();
+                        } catch (error: any) {
+                            alert(
+                                `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+                                error?.response?.data?.error ||
+                                error?.message ||
+                                "unknown error"
+                                }`
+                            );
+                        } finally {
+                            setOpenDeleteModal(false);
+                            setSelectedRow(null);
+                        }
+                    }}
+                    onCancel={() => {
+                        setOpenDeleteModal(false);
+                        setSelectedRow(null);
+                    }}
+                />
+            )}
         </div>
+
     );
 }

@@ -44,7 +44,7 @@ export default function AdminRoutes() {
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
        {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
-      <Route path="packages/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
+      <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
 
     </Routes>
   );

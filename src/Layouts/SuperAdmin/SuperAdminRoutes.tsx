@@ -2,13 +2,11 @@ import { Routes, Route } from "react-router-dom";
 
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
-import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
 import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 import UploadBannerPage from "@/Pages/SuperAdmin/UploadBannerPage";
-
 import { BlockedAccountPage } from "@/Pages/SuperAdmin/BlockUserPage";
 import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
 import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";

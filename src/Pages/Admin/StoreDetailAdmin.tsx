@@ -30,13 +30,17 @@ const StoreDetailPage = () => {
 
       if (result?.data) {
         const data = result.data;
-        const backendUrl = "http://localhost:3000"; // prepend path รูปภาพ
+        const backendUrl = "http://localhost:3000/uploads"; // URL ของ static folder
 
-        // แปลง path ของรูปให้เป็น URL เต็ม
+        // แปลง path ของรูปให้เป็น URL เต็ม พร้อม fallback
         const images: string[] =
-          data.storeImgae?.map((img: any) =>
-            img.image.startsWith("http") ? img.image : `${backendUrl}${img.image}`
-          ) || [`/store-main.jpg`]; // fallback เป็นรูปใน public
+          data.storeImage?.map((img: any) =>
+            img.image
+              ? img.image.startsWith("http")
+                ? img.image
+                : `${backendUrl}/${img.image}`
+              : `${backendUrl}/store-main.jpg`
+          ) || [`${backendUrl}/store-main.jpg`];
 
         const formatted: Store = {
           id: data.id,
@@ -74,7 +78,7 @@ const StoreDetailPage = () => {
   };
 
   useEffect(() => {
-    fetchStore();
+    if (id) fetchStore();
   }, [id]);
 
   if (loading) return <div className="p-6 text-gray-600">กำลังโหลดข้อมูล...</div>;
@@ -110,7 +114,7 @@ const StoreDetailPage = () => {
           {coverImage && (
             <div className="mb-6">
               <img
-                src={"/store2.png"} 
+                src={coverImage}
                 alt={store.name}
                 className="w-full h-[300px] object-cover rounded-lg border-2 border-gray-400"
               />
@@ -145,7 +149,7 @@ const StoreDetailPage = () => {
           </div>
         </div>
 
-        {/* รูปภาพเพิ่มเติม */}
+        {/* Additional Images */}
         {store.images.length > 1 && (
           <div className="mt-6">
             <h2 className="text-[18px] font-semibold mb-3">รูปภาพเพิ่มเติม</h2>
@@ -162,7 +166,7 @@ const StoreDetailPage = () => {
           </div>
         )}
 
-        {/* แผนที่ (OpenStreetMap) */}
+        {/* Map */}
         <h2 className="text-[18px] font-semibold mt-10 mb-3">แผนที่</h2>
         {store.location ? (
           <>
@@ -185,15 +189,15 @@ const StoreDetailPage = () => {
                 </p>
                 <p className="mb-2">
                   <strong>OpenStreetMap URL :</strong>{" "}
-                    <a
-                     href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                    </a>
-                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                  </a>
+                </p>
               </div>
               <div className="mt-6">
                 <p className="mb-2">
@@ -201,7 +205,6 @@ const StoreDetailPage = () => {
                 </p>
               </div>
             </div>
-            
           </>
         ) : (
           <p className="text-gray-500">ไม่มีข้อมูลตำแหน่งร้านค้า</p>

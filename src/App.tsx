@@ -26,9 +26,9 @@ function App() {
         </Route>
 
         <Route
-          path="/super/*"
-          element={<SuperAdminLayout />}>
-          <Route path="*" element={<SuperAdminRoutes />} />
+          path="/admin/*"
+          element={<AdminLayout />}>
+          <Route path="*" element={<AdminRoutes />} />
         </Route>
 
         {/* fallback */}

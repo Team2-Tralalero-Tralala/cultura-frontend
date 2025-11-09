@@ -25,7 +25,7 @@ export default function AdminRoutes() {
       <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
-      <Route path="stores/:storeId" element={<StoreDetailAdmin />} />
+      <Route path="stores/:id" element={<StoreDetailAdmin />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
       <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />

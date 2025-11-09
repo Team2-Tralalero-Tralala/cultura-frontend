@@ -2,11 +2,11 @@
  * Component: EditAccountPage
  * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 30 ตุลาคม 2568
+ * Last Modified: 9 พฤษจิกายน 2568
  */
 
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import api from "@/Libs/api";
@@ -149,7 +149,6 @@ const EditAccountPage: React.FC = () => {
   /** โหลดข้อมูลเมื่อเปิดหน้า */
   useEffect(() => {
     if (userId && Number(userId) > 0) fetchUser(formData.role);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, formData.role]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -178,6 +177,18 @@ const EditAccountPage: React.FC = () => {
     }
 
     try {
+      let imageWasUpdated = false;
+      if (profileImage) {
+        const formDataUpload = new FormData();
+
+        formDataUpload.append("profileImage", profileImage);
+
+        await api.put(`/super/users/profile/${userId}`, formDataUpload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        imageWasUpdated = true;
+      }
+
       const requestBody: EditAccountBody = {
         fname: formData.fname.trim(),
         lname: formData.lname.trim(),
@@ -187,15 +198,8 @@ const EditAccountPage: React.FC = () => {
         roleId: mapRoleToId(formData.role),
       };
 
-      if (formData.password) requestBody.password = formData.password;
-
-      if (profileImage) {
-        const formDataUpload = new FormData();
-        formDataUpload.append("file", profileImage);
-        const uploadRes = await api.post("/upload/profile", formDataUpload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        requestBody.profileImage = uploadRes.data?.filename || null;
+      if (formData.password) {
+        requestBody.password = formData.password;
       }
 
       if (formData.role === "Member") {
@@ -222,8 +226,14 @@ const EditAccountPage: React.FC = () => {
       else endpoint = `/super/account/tourist/${userId}`;
 
       const response = await api.patch(endpoint, requestBody);
+
       toast.success(response.data.message || "บันทึกการแก้ไขสำเร็จ ✅");
       setShowConfirm(false);
+
+      if (imageWasUpdated) {
+        fetchUser(formData.role);
+        setProfileImage(null);
+      }
     } catch (error: any) {
       console.error("❌ Error updating account:", error);
       toast.error(error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้");
@@ -245,8 +255,6 @@ const EditAccountPage: React.FC = () => {
               avatarUrl={avatarUrl}
               onAvatarChange={(file) => {
                 setProfileImage(file);
-                // อัปเดต preview ทันทีถ้าเปลี่ยนรูปใหม่
-                setAvatarUrl(file ? URL.createObjectURL(file) : avatarUrl);
               }}
               avatarSize={270}
             />
@@ -292,13 +300,7 @@ const EditAccountPage: React.FC = () => {
               value={formData.phone}
               onChange={handleChange}
             />
-            <Button
-              onClick={() => {
-                navigate(`/super/reset-password/${userId}`);
-              }}
-            >
-              เปลี่ยนรหัสผ่าน
-            </Button>
+
             {/* 🔹 ปุ่มเปลี่ยน Role */}
             <div>
               <label className="font-semibold text-gray-800 block mb-2">

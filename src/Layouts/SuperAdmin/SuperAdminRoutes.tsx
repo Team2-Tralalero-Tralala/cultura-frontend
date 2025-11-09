@@ -29,8 +29,8 @@ import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import BackupsPage from "@/Pages/SuperAdmin/BackupsPage";
 import SettingHomePage from "@/Pages/SuperAdmin/SettingHomePage";
 import ToggleSystemPage from "@/Pages/SuperAdmin/ToggleSystemPage";
-import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
-import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
+import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage"
+import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";

@@ -8,5 +8,5 @@ export async function getAllStore(communityId: number, page: number, limit: numb
 
 // ✅ ลบร้านค้า (Soft Delete)
 export async function deleteStore(storeId: number) {
-  return api.patch(`/shared/store/${storeId}/delete`);
+  return api.delete(`/shared/store/${storeId}/delete`);
 }

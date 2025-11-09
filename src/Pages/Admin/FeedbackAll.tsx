@@ -151,19 +151,6 @@ const TopControls: React.FC<{
                             <Icon icon="hugeicons:filter" width={18} height={18} />
                             ตัวกรอง
                         </button>
-
-                        {/* Refresh */}
-                        <button
-                            type="button"
-                            onClick={onRefreshClick}
-                            className="inline-flex items-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                            aria-label="รีเฟรช"
-                            disabled={isLoading}
-                            title={isLoading ? "กำลังโหลด..." : "โหลดใหม่"}
-                        >
-                            <Icon icon="mdi:refresh" width={18} height={18} />
-                            โหลดใหม่
-                        </button>
                     </div>
                 </div>
             </section>

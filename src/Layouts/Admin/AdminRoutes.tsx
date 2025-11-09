@@ -18,6 +18,7 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
+import {ManageRefundBooking} from "@/Pages/Admin/ManageRefundBooking"
 
 export default function AdminRoutes() {
   return (
@@ -41,6 +42,9 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
+      
+      <Route path="/booking/refunds" element={<ManageRefundBooking />} />
     </Routes>
   );
 }

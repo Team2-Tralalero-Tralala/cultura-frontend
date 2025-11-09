@@ -18,6 +18,7 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
+import PackageRequestsAdmin from "@/Pages/Admin/ManagePackageRequestPage";
 
 export default function AdminRoutes() {
   return (
@@ -37,6 +38,7 @@ export default function AdminRoutes() {
 
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
+      <Route path="package/requests" element={<PackageRequestsAdmin />} />
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}

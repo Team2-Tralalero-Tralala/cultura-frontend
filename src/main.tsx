@@ -1,15 +1,18 @@
-// src/main.tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
 import { BrowserRouter } from "react-router";
-import App from "./App.tsx";
+import { AuthProvider } from "./Libs/AuthProvider";
+import App from "./App";
 
-createRoot(document.getElementById('root')!).render(
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <div className="font-sarabun">
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </div>
   </StrictMode>

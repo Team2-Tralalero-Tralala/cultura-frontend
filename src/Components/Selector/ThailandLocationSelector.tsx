@@ -238,17 +238,11 @@ export default function ThailandLocationSelector({
       <div ref={InputProps.ref} className="w-full">
         {/* Label + Error message ในบรรทัดเดียวกัน */}
         <div className="flex items-center justify-between mb-1.5">
-          <label
-            htmlFor={id}
-            className="block text-base font-semibold text-gray-800"
-          >
+          <label htmlFor={id} className="block text-base font-semibold text-gray-800">
             {label} <span className="text-red-600">*</span>
           </label>
           {error && (
-            <span
-              id={`${id}-helper-text`}
-              className="text-xs text-red-600 ml-2 whitespace-nowrap"
-            >
+            <span id={`${id}-helper-text`} className="text-xs text-red-600 ml-2 whitespace-nowrap">
               {helperText}
             </span>
           )}
@@ -285,19 +279,30 @@ export default function ThailandLocationSelector({
         disableClearable
         loading={!ready}
         options={provinceOptions}
-        value={
-          provinceOptions.find((opt) => opt.label === value?.province) || null
-        }
+        value={provinceOptions.find((opt) => opt.label === value?.province) || null}
         onChange={handleProvinceChange}
         renderInput={(params) =>
-          renderCustomInput(
-            "province",
-            "จังหวัด",
-            params,
-            error?.province,
-            helperText?.province
-          )
+          renderCustomInput("province", "จังหวัด", params, error?.province, helperText?.province)
         }
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
       />
 
       <Autocomplete
@@ -306,19 +311,30 @@ export default function ThailandLocationSelector({
         disableClearable
         loading={!ready}
         options={districtOptions}
-        value={
-          districtOptions.find((opt) => opt.label === value?.district) || null
-        }
+        value={districtOptions.find((opt) => opt.label === value?.district) || null}
         onChange={handleDistrictChange}
         renderInput={(params) =>
-          renderCustomInput(
-            "district",
-            "อำเภอ",
-            params,
-            error?.district,
-            helperText?.district
-          )
+          renderCustomInput("district", "อำเภอ", params, error?.district, helperText?.district)
         }
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         disabled={!value?.province}
       />
 
@@ -328,10 +344,7 @@ export default function ThailandLocationSelector({
         disableClearable
         loading={!ready}
         options={subdistrictOptions}
-        value={
-          subdistrictOptions.find((opt) => opt.label === value?.subdistrict) ||
-          null
-        }
+        value={subdistrictOptions.find((opt) => opt.label === value?.subdistrict) || null}
         onChange={handleSubdistrictChange}
         renderInput={(params) =>
           renderCustomInput(
@@ -342,6 +355,25 @@ export default function ThailandLocationSelector({
             helperText?.subdistrict
           )
         }
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         disabled={!value?.district}
       />
 

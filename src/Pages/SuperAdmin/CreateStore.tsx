@@ -6,6 +6,7 @@ import Button from "@/Components/Button";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { TagSelector, type Tag } from "@/Components/Selector/TagSelector";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -16,80 +17,77 @@ import { createStore } from "@/Services/store-service";
 import type { StoreData } from "@/Types/Store";
 import React from "react";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import z from "zod";
+
 const storeSchema = z.object({
-  name: z.string(),
-  detail: z.string(),
+  name: z.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
+  detail: z.string("กรุณากรอกรายละเอียดของร้านค้า").min(1, "กรุณากรอกรายละเอียดของร้านค้า"),
   houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-  latitude: z
-    .string("กรุณากรอกละติจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
-  longitude: z
-    .string("กรุณากรอกลองจิจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
-  tagStores: z.number(),
+  latitude: z.union([
+    z.string().min(1, "กรุณากรอกละติจูด"),
+    z.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
+  ]),
+  longitude: z.union([
+    z.string().min(1, "กรุณากรอกลองจิจูด"),
+    z.number().refine((n) => !isNaN(n), "กรุณากรอกลองจิจูด"),
+  ]),
+  tagStores: z
+    .array(z.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
+    .min(1, "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ"),
 });
 /**
  * ฟังก์ชันหลักของหน้า CreateStore
  * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
  */
 export function CreateStore() {
-  const [formData, setFormData] = React.useState<Partial<StoreData>>({});
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
-  const [formErrors, setFormErrors] = React.useState<
-    Record<string, string | undefined>
-  >({});
+  const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
   const [location, setLocation] = React.useState<ThailandLocation>({
     province: "",
     district: "",
     subdistrict: "",
     postalCode: "",
   });
-  const startingPosition: [number, number] = [13.736717, 100.523186]; // BUU
+  const startingPosition: [number, number] = [13.736717, 100.523186];
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
+  const [formData, setFormData] = React.useState<Partial<StoreData>>({
+    latitude: position[0],
+    longitude: position[1],
+  });
   const [openConfirm, setOpenConfirm] = useState(false);
   const { communityId } = useParams();
-  /**
-   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
-   * Input :
-   *   - field (string | undefined) : ชื่อฟิลด์ที่ต้องการตรวจสอบ (ถ้าไม่ระบุจะตรวจสอบทั้งฟอร์ม)
-   *   - value (any | undefined) : ค่าของฟิลด์ที่ต้องการตรวจสอบ (ใช้เมื่อระบุ field)
-   */
-  const validateField = (field?: string, value?: any) => {
-    // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const navigate = useNavigate();
+
+  const validateField = (field?: string, value?: any, mergedData?: any) => {
+    const data = mergedData || formData;
+
     if (field) {
-      const result = storeSchema.safeParse({
-        ...formData,
-        [field]: value,
+      const singleSchema = z.object({
+        [field]: storeSchema.shape[field as keyof typeof storeSchema.shape],
       });
+      const result = singleSchema.safeParse({ [field]: value });
+
       setFormErrors((prev) => ({
         ...prev,
         [field]: result.success
           ? undefined
           : result.error.issues.find((err) => err.path[0] === field)?.message,
       }));
+
       return result.success;
     }
 
-    /**
-     * คำอธิบาย : ตรวจสอบความถูกต้องของฟอร์มทั้งหมด
-     * ถ้าไม่ผ่านจะแสดงข้อความผิดพลาดใต้ฟิลด์ที่เกี่ยวข้อง
-     * Input : none (ใช้ข้อมูลจาก state formData)
-     * Output : boolean (true ถ้าผ่านทั้งหมด, false ถ้าไม่ผ่าน)
-     */
-    const result = storeSchema.safeParse(formData);
+    const result = storeSchema.safeParse(data);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
@@ -97,10 +95,10 @@ export function CreateStore() {
         newErrors[fieldName as string] = issue.message;
       });
       setFormErrors(newErrors);
+      console.log("❌ Validation errors:", result.error.issues); // ช่วย debug ได้ง่ายมาก
       return false;
     }
 
-    // ถ้าผ่านทั้งหมด
     setFormErrors({});
     return true;
   };
@@ -110,9 +108,7 @@ export function CreateStore() {
    *   - e : เหตุการณ์การเปลี่ยนแปลงจาก input field
    * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
 
     const updated = { ...formData, [id]: value };
@@ -143,48 +139,74 @@ export function CreateStore() {
    * Output : none (เรียกใช้ createStore() เพื่อส่งข้อมูลไปยัง backend)
    */
   const handleSubmit = async () => {
-    const {
-      locationDetail,
-      houseNumber,
-      longitude,
-      latitude,
-      villageNumber,
-      province,
-      district,
-      subDistrict,
-      postalCode,
-      ...cleanForm
-    } = formData;
+    try {
+      const isValid = validateField();
+      if (!isValid) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
+        setAlertOpen(true);
+        return;
+      }
+      const {
+        locationDetail,
+        houseNumber,
+        longitude,
+        latitude,
+        villageNumber,
+        province,
+        district,
+        subDistrict,
+        postalCode,
+        ...cleanForm
+      } = formData;
+      const formDataToSend = new FormData();
 
-    const formDataToSend = new FormData();
+      formDataToSend.append(
+        "data",
+        JSON.stringify({
+          ...cleanForm,
+          location: {
+            houseNumber: formData.houseNumber,
+            villageNumber: Number(formData.villageNumber),
+            province: location.province,
+            district: location.district,
+            subDistrict: location.subdistrict,
+            postalCode: String(location.postalCode),
+            detail: formData.locationDetail,
+            latitude: Number(position[0]),
+            longitude: Number(position[1]),
+          },
+        })
+      );
 
-    formDataToSend.append(
-      "data",
-      JSON.stringify({
-        ...cleanForm,
-        location: {
-          houseNumber: formData.houseNumber,
-          villageNumber: Number(formData.villageNumber),
-          province: location.province,
-          district: location.district,
-          subDistrict: location.subdistrict,
-          postalCode: String(location.postalCode),
-          detail: formData.locationDetail,
-          latitude: Number(position[0]),
-          longitude: Number(position[1]),
-        },
-      })
-    );
+      coverFiles.forEach((file) => {
+        formDataToSend.append("cover", file);
+      });
 
-    coverFiles.forEach((file) => {
-      formDataToSend.append("cover", file);
-    });
+      galleryFiles.forEach((file) => {
+        formDataToSend.append("gallery", file);
+      });
 
-    galleryFiles.forEach((file) => {
-      formDataToSend.append("gallery", file);
-    });
+      await createStore(Number(communityId), formDataToSend);
+      setAlertType("success");
+      setAlertTitle("สร้างวิสาหกิจชุมชนสำเร็จ");
+      setAlertMessage("ข้อมูลวิสหากิจชุมชนถูกบันทึก");
+      setAlertOpen(true);
+      navigate(`/super/community/${communityId}/stores/all`);
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
 
-    await createStore(Number(communityId), formDataToSend);
+      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
+      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
+      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
+
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage(cleanMessage);
+      setAlertOpen(true);
+    }
   };
 
   return (
@@ -356,6 +378,13 @@ export function CreateStore() {
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

@@ -18,6 +18,7 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
+import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -41,6 +42,9 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
+      {/* ---------------- แพ็กเกจ ---------------- */}
+      <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
     </Routes>
   );
 }

@@ -17,13 +17,13 @@ interface Store {
 }
 
 const StoreDetailPage = () => {
-  const { storeId } = useParams<{ storeId: string }>();
-  const [store, setStore] = useState<Store | null>(null);
+ const { id } = useParams<{ id: string }>();  
+ const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStore = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/super/stores/${storeId}`, {
+      const res = await fetch(`http://localhost:3000/api/super/stores/${id}`, {
         credentials: "include",
       });
       const result = await res.json();
@@ -75,7 +75,7 @@ const StoreDetailPage = () => {
 
   useEffect(() => {
     fetchStore();
-  }, [storeId]);
+  }, [id]);
 
   if (loading) return <div className="p-6 text-gray-600">กำลังโหลดข้อมูล...</div>;
   if (!store) return <div className="p-6 text-red-500">ไม่พบข้อมูลร้านค้า</div>;

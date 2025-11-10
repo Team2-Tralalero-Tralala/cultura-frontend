@@ -7,6 +7,7 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
@@ -19,10 +20,13 @@ import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
 import { DashboardPage } from "@/Pages/Admin/DashboardPage";
+import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
+import ManageMembers from '@/Pages/Admin/ManageMembers';
 
 export default function AdminRoutes() {
   return (
     <Routes>
+      <Route path="/members" element={<ManageMembers />} />
       <Route path="community/own/edit" element={<EditCommunity />} />
       <Route path="community/store/create" element={<CreateStore />} />
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
@@ -43,6 +47,10 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
+      {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
+      <Route path="/bookings" element={<ManageBooking />} />
+
     </Routes>
   );
 }

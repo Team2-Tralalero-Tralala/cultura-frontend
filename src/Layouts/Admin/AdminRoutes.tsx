@@ -19,6 +19,7 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
+import { DashboardPage } from "@/Pages/Admin/DashboardPage";
 import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 
@@ -42,6 +43,7 @@ export default function AdminRoutes() {
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />

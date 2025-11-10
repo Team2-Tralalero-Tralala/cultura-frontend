@@ -19,6 +19,7 @@ import { CreateStore } from "@/Pages/Admin/CreateStore";
 import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
+import PackageHistoryAdmin from "@/Pages/Admin/HistoryPackageAdmin";
 import PackageFeedbacksPage from "@/Pages/Admin/PackageFeedbacksPage";
 import { DashboardPage } from "@/Pages/Admin/DashboardPage";
 import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
@@ -49,6 +50,8 @@ export default function AdminRoutes() {
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
+      {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
+      <Route path="/package/histories" element={<PackageHistoryAdmin />} />
        {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}

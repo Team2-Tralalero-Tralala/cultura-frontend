@@ -228,7 +228,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         accountBody.postalCode = String(locationData.postalCode || "");
       }
 
-      const response = await api.post(`/super/account`, accountBody);
+      const response = await api.post(`/super/account/${role.toLowerCase()}`, accountBody);
 
       const newUserId = response.data?.data?.id;
 

@@ -225,7 +225,7 @@ const EditAccountPage: React.FC = () => {
       else if (formData.role === "Member") endpoint = `/super/account/member/${userId}`;
       else endpoint = `/super/account/tourist/${userId}`;
 
-      const response = await api.patch(endpoint, requestBody);
+      const response = await api.put(endpoint, requestBody);
 
       toast.success(response.data.message || "บันทึกการแก้ไขสำเร็จ ✅");
       setShowConfirm(false);

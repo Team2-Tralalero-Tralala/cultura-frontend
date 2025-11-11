@@ -26,27 +26,14 @@ export const api = axios.create({
  * ฟังก์ชัน: fetchAccounts
  * วัตถุประสงค์: ดึงข้อมูลผู้ใช้ทั้งหมด (SuperAdmin)
  * Mapping: GET /super/accounts
- * Input: page, limit, searchName?, filterRole?
+ * Input: page, limit
  * Output: รายการบัญชีผู้ใช้ทั้งหมด
  */
-export async function fetchAccounts(
-  page: number,
-  limit: number,
-  searchName?: string,
-  filterRole?: string
-) {
-  const url = `/super/accounts`;
-
-  const res = await api.get(url, {
-    params: {
-      page,
-      limit,
-      searchName,
-      filterRole,
-    },
+export async function fetchAccounts(page: number, limit: number) {
+  const res = await api.get(`/super/accounts`, {
+    params: { page, limit },
     withCredentials: true,
   });
-
   return res.data;
 }
 
@@ -54,12 +41,12 @@ export async function fetchAccounts(
  * ฟังก์ชัน: fetchBlockedAccounts
  * วัตถุประสงค์: ดึงข้อมูลผู้ใช้ที่ถูกระงับการใช้งาน (BLOCKED)
  * Mapping: GET /super/accounts/status/BLOCKED
- * Input: page, limit, searchName?
+ * Input: page, limit
  * Output: รายการบัญชีที่ถูกระงับ
  */
-export async function fetchBlockedAccounts(page: number, limit: number, searchName?: string) {
-  const res = await api.get(`/super/accounts/status/BLOCKED`, {
-    params: { page, limit, searchName },
+export async function fetchBlockedAccounts(page: number, limit: number) {
+  const res = await api.get(`/super/accounts/BLOCKED`, {
+    params: { page, limit },
     withCredentials: true,
   });
   return res.data;

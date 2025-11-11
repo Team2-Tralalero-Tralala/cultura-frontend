@@ -34,6 +34,7 @@ import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";
+import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
 
 /*
  * Module: SuperAdminRoutes
@@ -54,6 +55,7 @@ export default function SuperAdminRoutes() {
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />
+      <Route path="package/:id" element={<DetailPackageSuperAdmin />} />
 
       {/* ---------------- บัญชีผู้ใช้ ---------------- */}
       <Route path="account/admin/create" element={<CreateAccountPage />} />

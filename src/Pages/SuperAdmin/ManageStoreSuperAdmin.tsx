@@ -50,12 +50,7 @@ type StoreFromApi = {
 };
 
 const normalizeText = (s: string) =>
-  (s ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 // ตารางจัดการร้านค้า
 const columns: Column<StoreRow>[] = [
@@ -154,7 +149,7 @@ export default function ManageStores() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/super/store/${row.id}/edit/`),
+      edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
         setDeleteId(row.id);
         setIsOpenConfirm(true);
@@ -198,30 +193,18 @@ export default function ManageStores() {
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div className="px-6 pb-1">
-        <nav
-          aria-label="breadcrumb"
-          className="flex items-center text-gray-700 text-sm"
-        >
-          <Link
-            to="/super/communities"
-            className="text-gray-800 hover:text-dark-green font-medium"
-          >
+        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
+          <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
             จัดการชุมชน
           </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
+          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
           <Link
             to={`/super/community/detail/${communityId}`}
             className="text-gray-800 hover:text-dark-green font-medium"
           >
             {communityName || "ชุมชน"}
           </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
+          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
           <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
         </nav>
       </div>
@@ -241,17 +224,12 @@ export default function ManageStores() {
       <div className="px-6 pb-2">
         <div className="flex items-center gap-3">
           <div className="max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           <div className="ml-auto">
             <Button
-              onClick={() =>
-                navigate(`/super/community/${communityId}/store/create`)
-              }
+              onClick={() => navigate(`/super/community/${communityId}/store/create`)}
               aria-label="เพิ่มร้านค้า"
             >
               <span>+ เพิ่มร้านค้า</span>
@@ -260,9 +238,7 @@ export default function ManageStores() {
         </div>
       </div>
       <div className="px-6 pb-10">
-        {errorMessage && (
-          <div className="text-sm text-red-600 mb-2">{errorMessage}</div>
-        )}
+        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         {/* Table */}
         <DataTable<StoreRow>

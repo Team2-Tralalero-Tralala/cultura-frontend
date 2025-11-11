@@ -41,20 +41,35 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
 }
 
 
-// Services/package/package-service.ts
+// // Services/package/package-service.ts
 
- function composeDateTime(dateStr: string, timeStr?: string, useEndOfDayIfMissing = false): Date {
-     // dateStr: "yyyy-mm-dd", timeStr: "HH:mm"
-     const [y, m, d] = dateStr.split("-").map(Number);
-     let hh = 0, mm = 0, ss = 0;
+//  function composeDateTime(dateStr: string, timeStr?: string, useEndOfDayIfMissing = false): Date {
+//      // dateStr: "yyyy-mm-dd", timeStr: "HH:mm"
+//      const [y, m, d] = dateStr.split("-").map(Number);
+//      let hh = 0, mm = 0, ss = 0;
 
-     if (timeStr && /^\d{2}:\d{2}$/.test(timeStr)) {
-         const [h, min] = timeStr.split(":").map(Number);
-         hh = h; mm = min;
-     } else if (useEndOfDayIfMissing) {
-         hh = 23; mm = 59; ss = 59;   // ถ้าไม่กรอกเวลา “สิ้นสุด” ให้ปิดวันท้ายสุด
-     }
+//      if (timeStr && /^\d{2}:\d{2}$/.test(timeStr)) {
+//          const [h, min] = timeStr.split(":").map(Number);
+//          hh = h; mm = min;
+//      } else if (useEndOfDayIfMissing) {
+//          hh = 23; mm = 59; ss = 59;   // ถ้าไม่กรอกเวลา “สิ้นสุด” ให้ปิดวันท้ายสุด
+//      }
 
-     // สร้าง Date แบบ local (MySQL DATETIME ไม่มี timezone)
-     return new Date(y, (m - 1), d, hh, mm, ss, 0);
- }
+//      // สร้าง Date แบบ local (MySQL DATETIME ไม่มี timezone)
+//      return new Date(y, (m - 1), d, hh, mm, ss, 0);
+//  }
+
+
+/*
+  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
+  * Input : page, limit
+  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
+  */
+export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
+  const params = { page, limit };
+  const res = await axios.get(`${apiUrl}/admin/package/histories/all`, {
+    params,
+    withCredentials: true, // ส่ง cookie/token ไปด้วย
+  });
+  return res.data;
+}

@@ -8,6 +8,7 @@ import Button from "@/Components/Button";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { TagSelector, type Tag } from "@/Components/Selector/TagSelector";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -18,32 +19,30 @@ import { editStore, getStoreById } from "@/Services/store-service";
 import type { StoreData } from "@/Types/Store";
 import React from "react";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import z from "zod";
 
 /**
  * Schema สำหรับตรวจสอบข้อมูลร้านค้าด้วย Zod
  */
 const storeSchema = z.object({
-  name: z.string(),
-  detail: z.string(),
+  name: z.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
+  detail: z.string("กรุณากรอกรายละเอียดของร้านค้า").min(1, "กรุณากรอกรายละเอียดของร้านค้า"),
   houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-  latitude: z
-    .string("กรุณากรอกละติจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
-  longitude: z
-    .string("กรุณากรอกลองจิจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
-  tagStores: z.array(z.number()).optional(),
+  latitude: z.union([
+    z.string().min(1, "กรุณากรอกละติจูด"),
+    z.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
+  ]),
+  longitude: z.union([
+    z.string().min(1, "กรุณากรอกลองจิจูด"),
+    z.number().refine((n) => !isNaN(n), "กรุณากรอกลองจิจูด"),
+  ]),
+  tagStores: z
+    .array(z.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
+    .min(1, "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ"),
 });
 
 /**
@@ -67,13 +66,10 @@ async function urlToFile(url: string, filename: string): Promise<File> {
  * รวมถึงจัดการการอัปโหลดรูปภาพโดยไม่ซ้ำกับไฟล์เดิมจาก server
  */
 export function EditStore() {
-  const [formData, setFormData] = React.useState<Partial<StoreData>>({});
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
-  const [formErrors, setFormErrors] = React.useState<
-    Record<string, string | undefined>
-  >({});
+  const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
   const [location, setLocation] = React.useState<ThailandLocation>({
     province: "",
     district: "",
@@ -83,9 +79,19 @@ export function EditStore() {
 
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>([0, 0]);
+  const [formData, setFormData] = React.useState<Partial<StoreData>>({
+    latitude: position[0],
+    longitude: position[1],
+  });
   const [openConfirm, setOpenConfirm] = useState(false);
   const { storeId } = useParams();
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const navigate = useNavigate();
+  const { communityId } = useParams();
 
   /**
    * โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
@@ -104,7 +110,7 @@ export function EditStore() {
           longitude: String(data.location?.longitude),
           houseNumber: data.location?.houseNumber,
           villageNumber: data.location?.villageNumber,
-          tagStores: data.tagStores?.map((tag: Tag) => tag.id) ?? [],
+          tagStores: data.tagStores?.map((item: any) => item.tag.id) ?? [],
           location: {
             province: data.location.province,
             district: data.location.district,
@@ -123,8 +129,8 @@ export function EditStore() {
 
         setTags(
           data.tagStores?.map((t: any) => ({
-            id: t.id,
-            name: t.name,
+            id: t.tag.id,
+            name: t.tag.name,
           })) ?? []
         );
 
@@ -158,7 +164,6 @@ export function EditStore() {
     }
     loadData();
   }, [storeId]);
-
   /**
    * อัปเดตค่า location ใน formData ทุกครั้งเมื่อผู้ใช้เลือกจังหวัด/อำเภอ/ตำบลใหม่
    */
@@ -208,13 +213,10 @@ export function EditStore() {
     setFormErrors({});
     return true;
   };
-
   /**
    * ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
    */
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     const updated = { ...formData, [id]: value };
     setFormData(updated);
@@ -222,53 +224,102 @@ export function EditStore() {
   };
 
   /**
-   * ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
+   * Input :
+   *   - field : ชื่อฟิลด์ที่ต้องการอัปเดต
+   *   - value : ค่าที่จะตั้งให้กับฟิลด์นั้น
+   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
-  const handleSubmit = async () => {
-    const {
-      houseNumber,
-      longitude,
-      latitude,
-      villageNumber,
-      province,
-      district,
-      subDistrict,
-      postalCode,
-      locationDetail,
-      ...cleanForm
-    } = formData;
-
-    const payload = {
-      ...cleanForm,
-      tagStores: selectedTagIds, // ✅ เพิ่ม tagStores กลับเข้า payload
-      location: {
-        houseNumber: formData.houseNumber,
-        villageNumber: Number(formData.villageNumber),
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: String(location.postalCode),
-        detail: formData.locationDetail,
-        latitude: Number(position[0]),
-        longitude: Number(position[1]),
-      },
-    };
-
-    const formDataToSend = new FormData();
-    formDataToSend.append("data", JSON.stringify(payload));
-
-    // ✅ แน่ใจว่าไม่อัปโหลดซ้ำไฟล์จาก server
-    coverFiles.forEach((file: any) => {
-      formDataToSend.append("cover", file);
-    });
-
-    galleryFiles.forEach((file: any) => {
-      formDataToSend.append("gallery", file);
-    });
-
-    await editStore(Number(storeId), formDataToSend);
+  const handleValueChange = (field: keyof typeof formData, value: any) => {
+    const updated = { ...formData, [field]: value };
+    setFormData(updated);
+    validateField(field, value);
   };
+  /**
+   * ฟังก์ชัน tagList สำหรับส่ง props ให้ TagSelector
+   */
+  const tagList = React.useMemo<Tag[]>(
+    () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
+    [formData.tagStores]
+  );
+  /**
+   * ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
+   * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง
+   * และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
+   */
+  console.log(communityId);
+  const handleSubmit = async () => {
+    try {
+      const isValid = validateField();
 
+      if (!isValid) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
+        setAlertOpen(true);
+        return;
+      }
+      const {
+        houseNumber,
+        longitude,
+        latitude,
+        villageNumber,
+        province,
+        district,
+        subDistrict,
+        postalCode,
+        locationDetail,
+        ...cleanForm
+      } = formData;
+
+      const payload = {
+        ...cleanForm,
+        tagStores: selectedTagIds,
+        location: {
+          houseNumber: formData.houseNumber,
+          villageNumber: Number(formData.villageNumber),
+          province: location.province,
+          district: location.district,
+          subDistrict: location.subdistrict,
+          postalCode: String(location.postalCode),
+          detail: formData.locationDetail,
+          latitude: Number(position[0]),
+          longitude: Number(position[1]),
+        },
+      };
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("data", JSON.stringify(payload));
+
+      // ✅ แน่ใจว่าไม่อัปโหลดซ้ำไฟล์จาก server
+      coverFiles.forEach((file: any) => {
+        formDataToSend.append("cover", file);
+      });
+
+      galleryFiles.forEach((file: any) => {
+        formDataToSend.append("gallery", file);
+      });
+
+      await editStore(Number(storeId), formDataToSend);
+      setAlertType("success");
+      setAlertTitle("สร้างแก้ไขร้านค้าสำเร็จ");
+      setAlertMessage("ข้อมูลร้านค้าถูกแก้ไข");
+      setAlertOpen(true);
+      navigate(`/super/community/${communityId}/stores/all`);
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
+
+      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
+      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
+      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
+
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage(cleanMessage);
+      setAlertOpen(true);
+    }
+  };
   return (
     <div className="bg-white p-6 rounded-2xl">
       <h1 className="text-xl font-bold pt-3 mb-6">แก้ไขร้านค้า</h1>
@@ -379,9 +430,11 @@ export function EditStore() {
 
         <div className="col-span-2">
           <TagSelector
-            value={selectedTagIds}
-            tag={tags}
-            onChange={(ids) => setSelectedTagIds(ids)}
+            value={formData.tagStores}
+            tag={tagList}
+            onChange={(ids) => handleValueChange("tagStores", ids)}
+            error={!!formErrors.tagStores}
+            helperText={formErrors.tagStores}
           />
         </div>
 
@@ -453,6 +506,13 @@ export function EditStore() {
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

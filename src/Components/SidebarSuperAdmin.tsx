@@ -100,7 +100,7 @@ const SidebarSuperAdmin: React.FC = () => {
         <nav className="flex flex-col gap-2 text-base-semibold">
           {/* === จัดการชุมชน === */}
           <Link
-            to={`${basePath}/communities`}
+            to={`${basePath}/communities/all`}
             onClick={() => handleClick("communities")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
               isActive("communities") ? "bg-[#0D845A]" : ""

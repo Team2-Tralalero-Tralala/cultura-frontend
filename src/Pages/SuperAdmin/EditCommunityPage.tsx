@@ -513,7 +513,7 @@ export function EditCommunity() {
       </Backdrop>
       <div className="flex justify-between items-center">
         <Link
-          to="/super/communities"
+          to="/super/communities/all"
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
         >
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />

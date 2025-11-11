@@ -279,7 +279,7 @@ export default function ThailandLocationSelector({
         disableClearable
         loading={!ready}
         options={provinceOptions}
-        value={provinceOptions.find((opt) => opt.label === value?.province) || null}
+        value={provinceOptions.find((opt) => opt.label === value?.province) || undefined}
         onChange={handleProvinceChange}
         renderInput={(params) =>
           renderCustomInput("province", "จังหวัด", params, error?.province, helperText?.province)
@@ -311,7 +311,7 @@ export default function ThailandLocationSelector({
         disableClearable
         loading={!ready}
         options={districtOptions}
-        value={districtOptions.find((opt) => opt.label === value?.district) || null}
+        value={districtOptions.find((opt) => opt.label === value?.district) || undefined}
         onChange={handleDistrictChange}
         renderInput={(params) =>
           renderCustomInput("district", "อำเภอ", params, error?.district, helperText?.district)
@@ -344,7 +344,7 @@ export default function ThailandLocationSelector({
         disableClearable
         loading={!ready}
         options={subdistrictOptions}
-        value={subdistrictOptions.find((opt) => opt.label === value?.subdistrict) || null}
+        value={subdistrictOptions.find((opt) => opt.label === value?.subdistrict) || undefined}
         onChange={handleSubdistrictChange}
         renderInput={(params) =>
           renderCustomInput(

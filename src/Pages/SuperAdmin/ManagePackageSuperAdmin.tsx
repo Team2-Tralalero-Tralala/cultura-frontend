@@ -8,13 +8,13 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DataTable from "../../Components/Tables/Index";
-import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
-import { TrashIcon } from "../../Components/Tables/Icon";
-import { fetchPackagesByRole } from "../../Services/package-services";
-import type { PackageRow } from "../../Types/Package";
-import { api } from "../../Libs/axios";
-import SearchBarTable from "../../Components/Search/SerachBarTable";
+import DataTable from "@/Components/Tables/Index";
+import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
+import { TrashIcon } from "@/Components/Tables/Icon";
+import { fetchPackagesByRole } from "@/Services/package-services";
+import type { PackageRow } from "@/Types/Package";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+import api from "@/Libs/api";
 
 const columns: Column<PackageRow>[] = [
   { key: "title", header: "ชื่อแพ็กเกจ", className: "min-w-[240px]" },
@@ -156,16 +156,21 @@ export default function ManagePackageSuperAdmin() {
       <DataTable<PackageRow>
         data={filteredRows}
         columns={columns}
-        getRowKey={(r) => r.id}
+        getKey={(r) => String(r.id)}
         actions={rowActions}
         bulkActions={bulkActions}
         selectable
-        striped
         pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={pageSize}
+        pageSize={pageSize}
         onPageChange={(p) => setCurrentPage(p)}
         theme="brand"
-        className="bg-white rounded-lg"
+        pagination={{
+          currentPage,
+          totalPages: Math.ceil(totalItems / pageSize),
+          totalCount: totalItems,
+          limit: pageSize,
+        }}
+        isLoading={isLoading}
       />
     </div>
   );

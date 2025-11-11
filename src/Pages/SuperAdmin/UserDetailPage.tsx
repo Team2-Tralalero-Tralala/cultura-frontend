@@ -4,11 +4,11 @@
  * หน้านี้ใช้สำหรับดูข้อมูลเท่านั้น (ไม่สามารถอัปโหลดรูปโปรไฟล์ได้)
  */
 
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { SquarePen } from "lucide-react";
-import { fetchUserDetail } from "../../Services/account-services";
 import type { UserDetail } from "@/Types/User";
+import { SquarePen } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { fetchUserDetail } from "../../Services/account-services";
 
 /**
  * Component: UserDetailPage
@@ -139,7 +139,9 @@ export function UserDetailPage() {
                 </p>
                 <p>
                   <span className="font-semibold">ชุมชนวิสาหกิจ :</span>{" "}
-                  {user.communityAdmin?.name || user.communityMembers?.[0]?.Community?.name || "-"}
+                  {user.communityAdmin?.[0]?.name ||
+                    user.communityMembers?.[0]?.Community?.name ||
+                    "-"}
                 </p>
               </div>
             </div>

@@ -78,7 +78,7 @@ export interface DataTableProps<T extends Record<string, unknown>> {
     onSelectedChange?: (rows: T[]) => void;
 
 
-    bulkActions?: BulkAction<T>[];
+    bulkActions?: BulkAction<T>[] | undefined;
 
     actions?: DataTableActionsConfig<T>;
 

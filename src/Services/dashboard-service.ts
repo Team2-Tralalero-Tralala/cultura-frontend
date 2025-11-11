@@ -50,7 +50,6 @@ export interface DashboardStats {
     limit: number;
   };
 }
-
 /*
  * คำอธิบาย : Type definition สำหรับ response ของ Dashboard
  * หน้าที่ : กำหนดสัญญาโครงสร้างข้อมูลที่ใช้ทั้งฝั่งหน้าเว็บและบริการเรียกข้อมูล
@@ -84,9 +83,9 @@ export interface DashboardFilters {
  */
 export async function fetchDashboardData(filters: DashboardFilters): Promise<DashboardResponse> {
   const { dateStart, dateEnd, page, limit, groupBy, province, region, search } = filters;
-  
+
   let url = `/super/dashboard?dateStart=${dateStart}&dateEnd=${dateEnd}`;
-  
+
   if (page) url += `&page=${page}`;
   if (limit) url += `&limit=${limit}`;
   if (groupBy) url += `&groupBy=${groupBy}`;
@@ -100,4 +99,78 @@ export async function fetchDashboardData(filters: DashboardFilters): Promise<Das
 
   return res.data.data;
 }
+/*
+ * คำอธิบาย : Type definition สำหรับข้อมูลสรุปของ Admin Dashboard
+ * หน้าที่ : กำหนดโครงสร้างข้อมูล summary
+ */
+export interface AdminDashboardSummaryItem {
+  totalPackages: number;
+  totalRevenue: number;
+  successBookingCount: number;
+  cancelledBookingCount: number;
+}
+/*
+ * คำอธิบาย : Type definition สำหรับข้อมูลแพ็กเกจของ Admin Dashboard
+ * หน้าที่ : กำหนดโครงสร้างข้อมูล package
+ */
+export interface AdminDashboardPackage {
+  data: AdminDashboardSummaryItem[];
+  topPackages: {
+    rank: number;
+    name: string;
+    bookingCount: number;
+  }[];
+}
+/*
+ * คำอธิบาย : Type definition สำหรับข้อมูลกราฟของ Dashboard
+ * หน้าที่ : กำหนดโครงสร้างข้อมูล graph
+ */
+export interface AdminDashboardGraph {
+  bookingCountGraph: {
+    labels: string[];
+    data: number[];
+  };
+  revenueGraph: {
+    labels: string[];
+    data: number[];
+  };
+}
+/*
+ * คำอธิบาย : Type definition สำหรับ response ของ Admin Dashboard
+ * หน้าที่ : กำหนดสัญญาโครงสร้างข้อมูลที่ใช้ทั้งฝั่งหน้าเว็บและบริการเรียกข้อมูล
+ */
+export interface AdminDashboardResponse {
+  summary: AdminDashboardSummaryItem;
+  graph: AdminDashboardGraph;
+  package: AdminDashboardPackage;
+}
+/*
+ * คำอธิบาย : Interface สำหรับพารามิเตอร์การกรองข้อมูล Dashboard
+ */
+export interface AdminDashboardFilters {
+  dateStart: string;
+  dateEnd: string;
+  groupBy?: "hour" | "day" | "week" | "month" | "year";
+}
+/*
+ * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
+ * Input :
+ *   - filters (DashboardFilters) : พารามิเตอร์สำหรับดึงข้อมูลและกรองผลลัพธ์
+ * Output :
+ *    - คืนค่า Promise ของ DashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ stats
+ */
+export async function fetchAdminDashboardData(
+  filters: AdminDashboardFilters
+): Promise<AdminDashboardResponse> {
+  const { dateStart, dateEnd, groupBy } = filters;
 
+  let url = `/admin/dashboard?dateStart=${dateStart}&dateEnd=${dateEnd}`;
+
+  if (groupBy) url += `&groupBy=${groupBy}`;
+
+  const res = await api.get(url, {
+    withCredentials: true,
+  });
+
+  return res.data.data;
+}

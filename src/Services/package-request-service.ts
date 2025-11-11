@@ -48,7 +48,7 @@ async function apiGet<T>(url: string): Promise<T> {
   }
 
   // แปลง JSON (รองรับทั้ง { data: T } และ T)
-  const raw = await response.json().catch(() => ({})); 
+  const raw = await response.json().catch(() => ({}));
   const payload = (raw?.data ?? raw) as T;
   return payload;
 }
@@ -128,6 +128,35 @@ export async function approvePackageRequest(packageId: number) {
 export async function rejectPackageRequest(packageId: number, reason: string) {
     return axios.patch(
         `${apiUrl}/super/package-requests/${packageId}/reject`,
+        { reason },
+        { withCredentials: true }
+    );
+}
+
+/**
+ * ฟังก์ชัน : approvePackageRequestForAdmin
+ * คำอธิบาย : อนุมัติคำขอแพ็กเกจ (สำหรับ Admin)
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการอนุมัติ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการอนุมัติ)
+ */
+export async function approvePackageRequestForAdmin(packageId: number) {
+    return axios.patch(
+        `${apiUrl}/admin/package-requests/${packageId}/approve`,
+        {},
+        { withCredentials: true }
+    );
+}
+
+/**
+ * ฟังก์ชัน : rejectPackageRequestForAdmin
+ * คำอธิบาย : ปฏิเสธคำขอแพ็กเกจ (สำหรับ Admin) พร้อมระบุเหตุผล
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการปฏิเสธ
+ * Input : reason: string - เหตุผลในการปฏิเสธ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการปฏิเสธ)
+ */
+export async function rejectPackageRequestForAdmin(packageId: number, reason: string) {
+    return axios.patch(
+        `${apiUrl}/admin/package-requests/${packageId}/reject`,
         { reason },
         { withCredentials: true }
     );

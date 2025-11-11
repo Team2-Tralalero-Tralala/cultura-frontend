@@ -107,7 +107,7 @@ export default function ManagePackageSuperAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await axios.get(`${apiUrl}/super/packages`, {
+      const response = await axios.get(`${apiUrl}/packages`, {
         params: { page: currentPage, limit: pageSize },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },

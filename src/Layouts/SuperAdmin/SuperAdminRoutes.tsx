@@ -29,11 +29,12 @@ import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import BackupsPage from "@/Pages/SuperAdmin/BackupsPage";
 import SettingHomePage from "@/Pages/SuperAdmin/SettingHomePage";
 import ToggleSystemPage from "@/Pages/SuperAdmin/ToggleSystemPage";
-import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
-import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
+import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage"
+import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";
+import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
 
 /*
  * Module: SuperAdminRoutes
@@ -54,6 +55,7 @@ export default function SuperAdminRoutes() {
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="community/:communityId/edit" element={<EditCommunity />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />
+      <Route path="package/:id" element={<DetailPackageSuperAdmin />} />
 
       {/* ---------------- บัญชีผู้ใช้ ---------------- */}
       <Route path="account/admin/create" element={<CreateAccountPage />} />

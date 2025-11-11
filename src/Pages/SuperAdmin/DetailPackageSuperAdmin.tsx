@@ -87,6 +87,26 @@ function formatDateTH(dateStr: string | null) {
   return `${day}/${month}/${year}`;
 }
 
+/*
+ * คำอธิบาย : ฟังก์ชันแยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String (เช่น "2025-01-01T08:30:00.000Z")
+ * Input  : isoString (ข้อความวันที่-เวลาในรูปแบบ ISO 8601 หรือ null)
+ * Output : วัตถุ (Object) ที่ประกอบด้วยวันที่ (date) และเวลา (time) ในรูปแบบที่อ่านง่าย เช่น { date: "2025-01-01", time: "08:30" }
+ * การทำงาน :
+ *   1. ตรวจสอบว่าค่าที่รับเข้ามามีข้อมูลหรือไม่ (ถ้าไม่มีจะคืนค่า { date: null, time: null })
+ *   2. แปลงข้อความ isoString ให้เป็นวัตถุ Date ของ JavaScript
+ *   3. แยกส่วนวันที่ (YYYY-MM-DD) และเวลาชั่วโมง-นาที (HH:MM) ออกจากวัตถุ Date
+ *   4. คืนค่าผลลัพธ์เป็น Object ที่มี key 'date' และ 'time'
+ */
+function extractDateTime(isoString?: string | null) {
+  if (!isoString) return { date: null, time: null };
+  const d = new Date(isoString);
+  const date = d.toISOString().split("T")[0]; // YYYY-MM-DD
+  const time = d.toTimeString().split(" ")[0].slice(0, 5); // HH:MM
+  return { date, time };
+}
+
+
+
 export default function DetailPackageSuperAdmin() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -95,23 +115,80 @@ export default function DetailPackageSuperAdmin() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchPackage() {
-      try {
-        setLoading(true);
-        const res = await axios.get(`${apiUrl}/packages/${id}`, {
-          withCredentials: true,
-        });
-        console.log("Backend response:", res.data.data);
-        setPkg(res.data.data);
-      } catch (err) {
-        console.error("Error fetching package:", err);
-        setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-      } finally {
-        setLoading(false);
-      }
+  async function fetchPackage() {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${apiUrl}/packages/${id}`, {
+        withCredentials: true,
+      });
+
+      const raw = res.data.data;
+
+      // Map โครงสร้างข้อมูลให้ตรงกับ interface
+      const mappedData: PackageData = {
+        id: raw.id,
+        name: raw.name,
+        description: raw.description ?? "-",
+        capacity: raw.capacity ?? 0,
+        price: raw.price ?? 0,
+        facility: raw.facility ?? "-",
+        warning: raw.warning ?? "-",
+        statusPackage: raw.statusPackage ?? "-",
+        statusApprove: raw.statusApprove ?? null,
+        rejectReason: raw.rejectReason ?? null,
+        createdBy: raw.createPackage
+          ? {
+              id: raw.createPackage.id,
+              name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
+            }
+          : null,
+        overseer: raw.overseerPackage
+          ? {
+              id: raw.overseerPackage.id,
+              name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
+            }
+          : null,
+        tags: raw.tagPackages
+          ? raw.tagPackages.map((t: any) => t.tag.name)
+          : [],
+        startDate: extractDateTime(raw.startDate),
+        dueDate: extractDateTime(raw.dueDate),
+        openBookingAt: extractDateTime(raw.bookingOpenDate),
+        closeBookingAt: extractDateTime(raw.bookingCloseDate),
+        location: raw.location
+          ? {
+              address: raw.location.houseNumber ?? "-",
+              detail: raw.location.detail ?? "-",
+              subDistrict: raw.location.subDistrict,
+              district: raw.location.district,
+              province: raw.location.province,
+              postalCode: raw.location.postalCode,
+              latitude: raw.location.latitude,
+              longitude: raw.location.longitude,
+            }
+          : null,
+        files: raw.packageFile
+          ? raw.packageFile.map((f: any) => ({
+              id: f.id,
+              path: f.filePath,
+              type: f.type,
+            }))
+          : [],
+        homestayHistories: [],
+      };
+
+      setPkg(mappedData);
+      console.log("Mapped package data:", mappedData);
+    } catch (err) {
+      console.error("Error fetching package:", err);
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+    } finally {
+      setLoading(false);
     }
-    fetchPackage();
-  }, [id]);
+  }
+
+  fetchPackage();
+}, [id]);
 
   if (loading)
     return <div className="p-6 text-gray-500">กำลังโหลดข้อมูล...</div>;
@@ -132,7 +209,7 @@ export default function DetailPackageSuperAdmin() {
           {/* ปุ่มย้อนกลับ */}
           <div
             className="mt-1 mr-3 cursor-pointer"
-            onClick={() => navigate(`/super/packages`)}
+            onClick={() => navigate(`/super/packages/all`)}
           >
             <Backward></Backward>
           </div>
@@ -140,7 +217,7 @@ export default function DetailPackageSuperAdmin() {
         </div>
         <div className="w-60">
           {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
-          <Button onClick={() => navigate(`/super/package/${id}`)}>
+          <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
             <EditIcon></EditIcon>แก้ไขรายละเอียดแพ็กเกจ
           </Button>
         </div>
@@ -199,8 +276,8 @@ export default function DetailPackageSuperAdmin() {
         <div className="mb-6">
           <img
             //src={coverImage} //ใช้ในกรณีที่เก็บภาพในเครื่อง
-            //src={`${apiUrl}/files/${coverImage.path}`} //ใช้ในกรณีที่เก็บภาพบน Backend
-            src="/public/ViewTiwTouch.jpg" //ใช้ในกรณีที่เก็บภาพในโฟลเดอร์ public ของ Frontend
+            src={`${apiUrl}/files/${coverImage.path}`} //ใช้ในกรณีที่เก็บภาพบน Backend
+            //src="/public/ViewTiwTouch.jpg" //ใช้ในกรณีที่เก็บภาพในโฟลเดอร์ public ของ Frontend
             alt="package cover"
             className="w-160 h-90 object-cover rounded-xl rounded-lg border-gray-400 border-2"
           />
@@ -263,7 +340,11 @@ export default function DetailPackageSuperAdmin() {
           <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
             <div className="mt-6">
               <p className="mb-4">
-                <strong>ที่อยู่ :</strong> {pkg.location.address}
+                <strong>ที่อยู่ :</strong> {pkg.location.address}{" "}
+                                        {pkg.location.subDistrict}{" "}
+                                        {pkg.location.district}{" "}
+                                        {pkg.location.province}{" "}
+                                        {pkg.location.postalCode}
               </p>
               <p>
                 <strong>ละติจูด / ลองจิจูด : </strong> {pkg.location.latitude},{" "}

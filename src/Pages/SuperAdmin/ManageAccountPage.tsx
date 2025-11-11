@@ -5,7 +5,7 @@
  * - มีฟังก์ชันค้นหา / กรอง / เพิ่ม / ระงับ / ลบ / ระงับทั้งหมด / ลบทั้งหมด
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { TrashIcon, BanIcon } from "lucide-react";
 
@@ -14,6 +14,7 @@ import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { Modal } from "@/Components/Modal/Modal";
+import Button from "@/Components/Button";
 
 // Types
 import type {
@@ -32,13 +33,10 @@ import {
   deleteAccountById,
   deleteMultipleAccounts,
 } from "@/Services/account-services";
-import Button from "@/Components/Button";
 
 /**
  * ฟังก์ชัน: thaiRoleName
  * วัตถุประสงค์: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
- * Input: role (string)
- * Output: ชื่อ Role ภาษาไทย (string)
  */
 function thaiRoleName(role: string): string {
   switch (role) {
@@ -99,6 +97,18 @@ const columns: Column<AccountRow>[] = [
 ];
 
 /**
+ * ฟังก์ชัน normalizeText
+ * ใช้สำหรับทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
+ */
+const normalizeText = (s: string) =>
+  (s ?? "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
  * Component: ManageAccountPage
  * วัตถุประสงค์: แสดงตารางบัญชีผู้ใช้ (SuperAdmin)
  */
@@ -128,8 +138,6 @@ export function ManageAccountPage() {
   /**
    * ฟังก์ชัน: openModal
    * วัตถุประสงค์: เปิด Modal ยืนยันการทำงาน
-   * Input: title, text, onConfirm callback
-   * Output: แสดง Modal พร้อมข้อมูล
    */
   function openModal(title: string, text: string, onConfirm: () => void) {
     setModalTitle(title);
@@ -151,8 +159,6 @@ export function ManageAccountPage() {
   /**
    * ฟังก์ชัน: fetchData
    * วัตถุประสงค์: ดึงข้อมูลบัญชีผู้ใช้ทั้งหมดจาก API
-   * Input: ไม่มี (อ้างอิง pagination, searchQuery, filterRole)
-   * Output: เซตข้อมูลบัญชีผู้ใช้ใน state rows
    */
   async function fetchData(): Promise<void> {
     try {
@@ -161,12 +167,7 @@ export function ManageAccountPage() {
 
       const {
         data: { data: resultData, pagination: resultPagination },
-      } = await fetchAccounts(
-        pagination.currentPage,
-        pagination.limit,
-        searchQuery,
-        filterRole === "all" ? undefined : filterRole
-      );
+      } = await fetchAccounts(pagination.currentPage, pagination.limit);
 
       setRows(resultData);
       setPagination(resultPagination);
@@ -180,7 +181,7 @@ export function ManageAccountPage() {
   }
 
   /**
-   * useEffect: โหลดข้อมูลเมื่อเปลี่ยนหน้า / ค้นหา / กรอง
+   * useEffect: โหลดข้อมูลเมื่อเปลี่ยนหน้า
    */
   useEffect(() => {
     let isCancelled = false;
@@ -189,12 +190,7 @@ export function ManageAccountPage() {
         setIsLoading(true);
         const {
           data: { data: resultData, pagination: resultPagination },
-        } = await fetchAccounts(
-          pagination.currentPage,
-          pagination.limit,
-          searchQuery,
-          filterRole === "all" ? undefined : filterRole
-        );
+        } = await fetchAccounts(pagination.currentPage, pagination.limit);
 
         if (!isCancelled) {
           setRows(resultData);
@@ -206,19 +202,47 @@ export function ManageAccountPage() {
       } finally {
         if (!isCancelled) setIsLoading(false);
       }
-    }, 300);
+    }, 250); // ลด delay ให้ลื่นขึ้น
 
     return () => {
       isCancelled = true;
       clearTimeout(delay);
     };
-  }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
+  }, [pagination.currentPage, pagination.limit]);
+
+  /**
+   * ส่วนกรองข้อมูลสำหรับ Search + Filter (frontend)
+   */
+  const filteredRows = useMemo(() => {
+    const q = normalizeText(searchQuery);
+    const selectedRole = filterRole.toLowerCase();
+
+    return rows.filter((r) => {
+      // กรอง role
+      const role = r.role?.name?.toLowerCase() ?? "";
+      const passRole = selectedRole === "all" || role === selectedRole;
+
+      // กรอง search
+      const name = `${r.fname ?? ""} ${r.lname ?? ""}`.trim();
+      const email = r.email ?? "";
+      const community =
+        r.communityAdmin?.[0]?.name ??
+        r.communityMembers?.[0]?.Community?.name ??
+        "";
+
+      const textMatch =
+        !q ||
+        normalizeText(name).includes(q) ||
+        normalizeText(email).includes(q) ||
+        normalizeText(role).includes(q) ||
+        normalizeText(community).includes(q);
+
+      return passRole && textMatch;
+    });
+  }, [rows, searchQuery, filterRole]);
 
   /**
    * ฟังก์ชัน: rowActions
-   * วัตถุประสงค์: จัดการ Action ต่อแถว (ระงับ / ลบ / แก้ไข)
-   * Input: row (AccountRow)
-   * Output: เปิด Modal หรือเปลี่ยนหน้า
    */
   const rowActions: DataTableActionsConfig<AccountRow> = {
     header: "จัดการ",
@@ -254,9 +278,6 @@ export function ManageAccountPage() {
 
   /**
    * ฟังก์ชัน: bulkActions
-   * วัตถุประสงค์: จัดการ Action หลายแถว (ระงับทั้งหมด / ลบทั้งหมด)
-   * Input: rows (AccountRow[])
-   * Output: เรียก API หลายรายการ
    */
   const bulkActions: BulkAction<AccountRow>[] = [
     {
@@ -307,10 +328,7 @@ export function ManageAccountPage() {
             <div className="w-[260px]">
               <SearchBarTable
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
@@ -318,10 +336,7 @@ export function ManageAccountPage() {
               <FiltersForCM
                 options={optionsRole}
                 selected={filterRole}
-                onChange={(value) => {
-                  setFilterRole(value);
-                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
-                }}
+                onChange={(value) => setFilterRole(value)}
               />
             </div>
           </div>
@@ -341,14 +356,18 @@ export function ManageAccountPage() {
 
       {/* Section: Table */}
       <DataTable<AccountRow>
-        data={rows}
+        data={filteredRows}
         getKey={(row) => row.id.toString()}
         columns={columns}
         selectable={true}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
-        onPageSizeChange={(limit) => setPagination((prev) => ({ ...prev, currentPage: 1, limit }))}
+        onPageChange={(page) =>
+          setPagination((prev) => ({ ...prev, currentPage: page }))
+        }
+        onPageSizeChange={(limit) =>
+          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
+        }
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}

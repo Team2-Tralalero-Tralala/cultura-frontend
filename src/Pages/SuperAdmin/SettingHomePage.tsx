@@ -56,9 +56,7 @@ export default function SettingHomePage() {
           <h1 className="text-xl">การตั้งค่า</h1>
           <div>
             สถานะเซิร์ฟเวอร์
-            <div
-              className={`flex items-center gap-2 px-2 py-2 rounded-full bg-black text-white`}
-            >
+            <div className={`flex items-center gap-2 px-2 py-2 rounded-full bg-black text-white`}>
               {isLoading ? (
                 <div className="w-6 h-6 rounded-full bg-gray-400 animate-pulse"></div>
               ) : (
@@ -76,17 +74,19 @@ export default function SettingHomePage() {
         {/* Settings Cards */}
         <div className="flex gap-8 justify-center items-center h-full">
           {/* Logo and Images Card */}
-          <div className="bg-white border-4 border-[#8FCEB7] rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-48 h-48 mb-4 flex items-center justify-center">
-                <Icon
-                  icon="material-symbols:image-outline"
-                  className="w-full h-full text-teal-600"
-                />
+          <a href="/super/banners">
+            <div className="bg-white border-4 border-[#8FCEB7] rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-4 flex items-center justify-center">
+                  <Icon
+                    icon="material-symbols:image-outline"
+                    className="w-full h-full text-teal-600"
+                  />
+                </div>
+                <h3 className="text-lg font-medium text-gray-800">การเพิ่ม/แก้ไข โลโก้และรูปภาพ</h3>
               </div>
-              <h3 className="text-lg font-medium text-gray-800">การเพิ่ม/แก้ไข โลโก้และรูปภาพ</h3>
             </div>
-          </div>
+          </a>
 
           <a href="/super/backups">
             <div className="bg-white border-4 border-[#8FCEB7] rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200">

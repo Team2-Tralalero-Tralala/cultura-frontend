@@ -1,4 +1,4 @@
-/* 
+/*
  * Component: CalendarTrigger (Client)
  * คำอธิบาย: ปุ่ม Trigger สำหรับเปิดปฏิทิน พร้อมปุ่มเลือกโหมด (วัน/สัปดาห์/เดือน)
  *            เมื่อกดจะเปิด CalendarPopover ตามโหมดที่เลือก

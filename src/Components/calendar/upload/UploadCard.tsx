@@ -14,6 +14,7 @@
 import React, { useRef, useState, useEffect, useId, useMemo } from "react";
 import type { CSSProperties, ChangeEventHandler } from "react";
 import { IconifySvg, IMAGE_ICON, VIDEO_ICON } from "./UploadIcons";
+import { saveLogoVariantToPublic, saveToPublic } from "@/lib/publicFolder";
 
 export type UploadCardProps = {
     // จำกัดจำนวนสูงสุด
@@ -43,7 +44,12 @@ export type UploadCardProps = {
 
     // ไอคอน (ใช้ 2 ตัวตามที่กำหนด)
     iconName?: string;         // ถ้าไม่ระบุ จะเลือกจาก accept ให้เอง
-    iconSizeCls?: string;      // ขนาดไอคอนปุ่มเพิ่ม
+    iconSizeCls?: string;      // ขนาดไอคอนปุ่มเพิ่ม'
+
+    variant?: "white" | "black";
+    persistToPublic?: boolean;
+    /** callback หลังบันทึกลง public เสร็จ (คืนพาธเช่น "/my-image-1697800000.png") */
+    onPersisted?: (paths: string[]) => void;
 };
 
 /*
@@ -62,10 +68,18 @@ const toCssSize = (v?: number | string) =>
  * Output : string (icon name)
  */
 function pickDefaultIcon(accept?: string) {
-    const a = (accept || "").toLowerCase();
-    if (a.includes("video")) return VIDEO_ICON;
+    const acceptLower = (accept || "").toLowerCase();
+    if (acceptLower.includes("video")) return VIDEO_ICON;
     return IMAGE_ICON;
 }
+
+const splitName = (name: string) => {
+    const lastDotIndex = name.lastIndexOf(".");
+    return lastDotIndex >= 0
+        ? { base: name.slice(0, lastDotIndex), ext: name.slice(lastDotIndex) }
+        : { base: name, ext: "" };
+};
+
 
 /** 
  * คอมโพเนนต์: UploadCard
@@ -94,6 +108,10 @@ export const UploadCard: React.FC<UploadCardProps> = ({
 
     iconName,
     iconSizeCls = "w-10 h-10",
+
+    variant,
+    persistToPublic = false,
+    onPersisted,
 }) => {
     // ---------- Refs/IDs ----------
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -139,16 +157,47 @@ export const UploadCard: React.FC<UploadCardProps> = ({
      * คำอธิบาย : รับไฟล์จาก <input type="file"> เติมเข้า list โดยไม่เกิน max
      * Input  : e: ChangeEvent<HTMLInputElement>
      * Output : void
-     */
-    const handleInputChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+    //  */
+    // const handleInputChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+    //     const picked = Array.from(e.target.files ?? []);
+    //     if (!picked.length) return;
+
+    //     const remain = Math.max(0, max - files.length);
+    //     if (remain <= 0) return;
+
+    //     emitChange([...files, ...picked.slice(0, remain)]);
+    //     // reset เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้
+    //     e.currentTarget.value = "";
+    // };
+
+    const handleInputChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
         const picked = Array.from(e.target.files ?? []);
         if (!picked.length) return;
 
-        const remain = Math.max(0, max - files.length);
-        if (remain <= 0) return;
+        // ถ้ามี variant ให้ใช้ไฟล์แรกเท่านั้น (เขียนทับ)
+        const slice = (variant ? picked.slice(0, 1) : picked).slice(0, Math.max(0, max - files.length));
+        if (!slice.length) return;
 
-        emitChange([...files, ...picked.slice(0, remain)]);
-        // reset เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้
+        emitChange([...files, ...slice]);
+
+        if (persistToPublic) {
+            let paths: string[] = [];
+            if (variant) {
+                const p = await saveLogoVariantToPublic(variant, slice[0]); // ✅ overwrite
+                paths = [p];
+            } else {
+                // กรณีทั่วไป ตั้งชื่อเองตามต้องการ
+                const saved = await Promise.all(
+                    slice.map(async (f) => {
+                        const { name } = f;
+                        return await saveToPublic(f, name); // หรือจะใส่ timestamp ก็ได้
+                    })
+                );
+                paths = saved;
+            }
+            onPersisted?.(paths);
+        }
+
         e.currentTarget.value = "";
     };
 
@@ -193,10 +242,52 @@ export const UploadCard: React.FC<UploadCardProps> = ({
     const mainIcon = iconName ?? pickDefaultIcon(accept);
 
     // dynamic multiple: หากเหลือช่องเดียวไม่จำเป็นต้องเปิด multiple
-    const effectiveMultiple = multiple && max - files.length > 1;
+    // const effectiveMultiple = multiple && max - files.length > 1;
+    const effectiveMultiple = !disabled && !Boolean(/** single when variant */ variant)
+        ? multiple && max - files.length > 1
+        : false;
 
     // ข้อความสถานะ (เพื่อ A11y)
     const counterText = `${files.length} / ${max}`;
+
+    // เขียนไฟล์ลงโฟลเดอร์ public
+    const publicDirRef = useRef<FileSystemDirectoryHandle | null>(null);
+
+    async function ensurePublicDir(): Promise<FileSystemDirectoryHandle | null> {
+        if (!("showDirectoryPicker" in window)) {
+            console.warn("File System Access API not supported in this browser.");
+            alert("เบราว์เซอร์นี้ไม่รองรับการเขียนไฟล์ลงโฟลเดอร์ (ใช้ Chrome/Edge)");
+            return null;
+        }
+        if (!publicDirRef.current) {
+            // ให้ผู้ใช้เลือกโฟลเดอร์ public ของโปรเจกต์คุณ
+            const handle = await (window as any).showDirectoryPicker();
+            publicDirRef.current = handle as FileSystemDirectoryHandle;
+        }
+        const perm = await (publicDirRef.current as any).requestPermission?.({ mode: "readwrite" });
+        if (perm && perm !== "granted") {
+            alert("ไม่ได้รับสิทธิ์เขียนโฟลเดอร์");
+            return null;
+        }
+        return publicDirRef.current;
+    }
+
+    async function saveNewFilesToPublic(newFiles: File[]): Promise<string[] | null> {
+        const dir = await ensurePublicDir();
+        if (!dir) return null;
+
+        const saved: string[] = [];
+        for (const f of newFiles) {
+            const { base, ext } = splitName(f.name);
+            const name = `${base}-${Date.now()}${ext || ""}`; // กันชนชื่อซ้ำ
+            const fh = await dir.getFileHandle(name, { create: true });
+            const w = await fh.createWritable();
+            await w.write(await f.arrayBuffer());
+            await w.close();
+            saved.push(`/${name}`);
+        }
+        return saved;
+    }
 
     return (
         <div className={container} aria-live="polite" aria-atomic="false">

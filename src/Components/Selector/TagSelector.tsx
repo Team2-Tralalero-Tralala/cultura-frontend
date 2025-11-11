@@ -21,6 +21,8 @@ interface TagSelectorProps {
   value?: number[];
   tag?: Tag[];
   onChange: (value: number[]) => void;
+  error?: boolean;
+  helperText?: string;
 }
 /**
  * คำอธิบาย : Component หลักสำหรับเลือกแท็ก (Tag) ของชุมชน
@@ -34,6 +36,8 @@ export function TagSelector({
   value = [],
   tag = [],
   onChange,
+  error = false,
+  helperText = "",
 }: TagSelectorProps) {
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = React.useState<Tag[]>([]);
@@ -44,10 +48,7 @@ export function TagSelector({
     getTags().then((respone) => {
       if (!active) return;
       const data = respone.data.data || [];
-      const merged = [
-        ...data,
-        ...tag.filter((t) => t && !data.some((x: Tag) => x.id === t.id)),
-      ];
+      const merged = [...data, ...tag.filter((t) => t && !data.some((x: Tag) => x.id === t.id))];
       setTags(merged);
     });
     return () => {
@@ -75,6 +76,12 @@ export function TagSelector({
 
   return (
     <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="block text-base font-semibold text-gray-800">
+          แท็ก <span className="text-red-600">*</span>
+        </label>
+        {error && <span className="text-xs text-red-600 ml-2 whitespace-nowrap">{helperText}</span>}
+      </div>
       <Autocomplete
         multiple
         disableClearable
@@ -88,15 +95,29 @@ export function TagSelector({
         renderTags={() => null}
         renderOption={(props, option, { selected }) => (
           <li {...props} key={option.id}>
-            <Checkbox
-              icon={icon}
-              checkedIcon={checkedIcon}
-              className="mr-2"
-              checked={selected}
-            />
+            <Checkbox icon={icon} checkedIcon={checkedIcon} className="mr-2" checked={selected} />
             {option.name}
           </li>
         )}
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         renderInput={(params) => {
           // Destructure props carefully
           const { InputProps, inputProps } = params;
@@ -104,25 +125,20 @@ export function TagSelector({
           const { ref: InputElementRef, ...inputPropsRest } = inputProps;
 
           return (
-            <div
-              // Pass event handlers and wrapper-ref from InputProps to the outer div
-              ref={InputRef}
-              className="w-full"
-            >
+            <div ref={InputRef} className="w-full">
               <div className="relative">
                 <input
-                  // Pass native input props to the actual input element
                   {...inputPropsRest}
-                  // Pass the actual input element ref here
                   ref={InputElementRef}
-                  id="custom-autocomplete"
+                  id="tag-selector"
                   type="text"
                   placeholder="ค้นหาแท็ก เช่น เดินป่า ทะเล ภูเขา"
-                  className="block w-full rounded-form border-1
-                    border-gray-400 focus:ring-gray-400 focus:border-gray-500
-                    bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500
-                    leading-relaxed placeholder:leading-relaxed
-                    focus:outline-none focus:ring-1 transition-shadow"
+                  className={`block w-full rounded-form border px-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
+                  ${
+                    error
+                      ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
+                      : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
+                  }`}
                 />
                 {InputProps.endAdornment && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -148,9 +164,7 @@ export function TagSelector({
                 <span>{item.name}</span>
                 <button
                   onClick={() => {
-                    const updated = selectedTags.filter(
-                      (m) => m.id !== item.id
-                    );
+                    const updated = selectedTags.filter((m) => m.id !== item.id);
                     setSelectedTags(updated);
                     onChange(updated.map((v) => v.id));
                   }}

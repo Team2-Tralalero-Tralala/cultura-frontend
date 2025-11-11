@@ -10,18 +10,16 @@ import Button from "@/Components/Button";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
-import MemberSelector, {
-  type Member,
-} from "@/Components/Selector/MemberSelector";
+import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 import { createCommunity } from "@/Services/community-service";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import ThailandLocationSelector, {
   type ThailandLocation,
-} from "@/components/Selector/ThailandLocationSelector";
-import TextArea from "@/components/TextArea";
-import TextField from "@/components/TextField";
+} from "@/Components/Selector/ThailandLocationSelector";
+import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/TextField";
 import { Icon } from "@iconify/react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
@@ -31,6 +29,9 @@ import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import * as z from "zod";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import { BankSelector } from "@/Components/Selector/BankSelector";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -39,42 +40,30 @@ import * as z from "zod";
  * Output : หากไม่ผ่าน validation จะส่งข้อความ error กลับให้แสดงในฟอร์ม
  */
 const communitySchema = z.object({
-  name: z
-    .string("กรุณากรอกชื่อวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+  name: z.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
 
-  type: z
-    .string("กรุณากรอกประเภทวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  type: z.string("กรุณากรอกประเภทวิสาหกิจชุมชน").min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
 
   registerNumber: z
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
   registerDate: z
-    .string("กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"),
+    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+    .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
 
   bankName: z
     .string("กรุณาเลือกธนาคาร")
     .min(1, "กรุณาเลือกธนาคาร")
     .max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
 
-  accountName: z
-    .string("กรุณากรอกชื่อบัญชีธนาคาร")
-    .min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountName: z.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
 
-  accountNumber: z
-    .string("กรุณากรอกหมายเลขบัญชี")
-    .min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: z.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
 
-  description: z
-    .string("กรุณากรอกประวัติวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  description: z.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
 
-  mainActivityName: z
-    .string("กรุณากรอกชื่อกิจกรรมหลัก")
-    .min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityName: z.string("กรุณากรอกชื่อกิจกรรมหลัก").min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
 
   mainActivityDescription: z
     .string("กรุณากรอกรายละเอียดกิจกรรมหลัก")
@@ -90,29 +79,19 @@ const communitySchema = z.object({
 
   latitude: z
     .string("กรุณากรอกละติจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
+    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
 
   longitude: z
     .string("กรุณากรอกลองจิจูด")
-    .min(
-      1,
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
-    ),
+    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
 
   phone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
 
-  email: z
-    .string("กรุณากรอกอีเมลของวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  email: z.string("กรุณากรอกอีเมลของวิสาหกิจชุมชน").min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
 
-  mainAdmin: z
-    .string("กรุณากรอกชื่อผู้ดูแลหลัก")
-    .min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdmin: z.string("กรุณากรอกชื่อผู้ดูแลหลัก").min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
 
   mainAdminPhone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก")
@@ -140,9 +119,7 @@ export default function CreateCommuninityPage() {
     postalCode: "",
   });
 
-  const [formErrors, setFormErrors] = useState<
-    Record<string, string | undefined>
-  >({});
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
   const startingPosition: [number, number] = [13.736717, 100.523186]; // BUU
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
@@ -151,15 +128,19 @@ export default function CreateCommuninityPage() {
   const [logoFile, setLogoFile] = useState<File | null>();
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
-  const naigate = useNavigate();
+  const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
+  const navigate = useNavigate();
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
    * Input : panel (string)
    * Output : อัปเดต state expanded
    */
-  const handleChange =
-    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
-      setExpanded(isExpanded ? panel : false);
+  const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
+    setExpanded(isExpanded ? panel : false);
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
@@ -221,9 +202,7 @@ export default function CreateCommuninityPage() {
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
    * Output : อัปเดตค่าใน formData และตรวจสอบความถูกต้องของ field นั้น ๆ
    */
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
 
     const updated = { ...formData, [id]: value };
@@ -271,76 +250,96 @@ export default function CreateCommuninityPage() {
    *   - แสดง Alert สำเร็จหรือข้อผิดพลาดตามผลลัพธ์
    */
   const handleSubmit = async () => {
-    validateField();
-    const {
-      id,
-      locationId,
-      detail,
-      houseNumber,
-      longitude,
-      latitude,
-      villageNumber,
-      province,
-      district,
-      subDistrict,
-      postalCode,
-      ...cleanForm
-    } = formData;
+    try {
+      const isFormValid = validateField();
+      if (!isFormValid) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
+        setAlertOpen(true);
+        return;
+      }
+      const {
+        id,
+        locationId,
+        detail,
+        houseNumber,
+        longitude,
+        latitude,
+        villageNumber,
+        province,
+        district,
+        subDistrict,
+        postalCode,
+        ...cleanForm
+      } = formData;
 
-    // สร้าง FormData เพื่อส่ง multipart/form-data
-    const formDataToSend = new FormData();
+      // สร้าง FormData เพื่อส่ง multipart/form-data
+      const formDataToSend = new FormData();
 
-    formDataToSend.append(
-      "data",
-      JSON.stringify({
-        adminId: Number(formData.adminId),
-        communityMembers: formData.communityMembers ?? [],
-        ...cleanForm,
-        registerDate: formData.registerDate
-          ? new Date(formData.registerDate).toISOString() // ✅ แปลงเป็น ISO-8601
-          : undefined,
-        location: {
-          houseNumber: formData.houseNumber,
-          villageNumber: Number(formData.villageNumber),
-          province: location.province,
-          district: location.district,
-          subDistrict: location.subdistrict,
-          postalCode: String(location.postalCode),
-          detail: formData.detail,
-          latitude: Number(position[0]),
-          longitude: Number(position[1]),
-        },
-        // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
-      })
-    );
+      formDataToSend.append(
+        "data",
+        JSON.stringify({
+          adminId: Number(formData.adminId),
+          communityMembers: formData.communityMembers ?? [],
+          ...cleanForm,
+          registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
+          location: {
+            houseNumber: formData.houseNumber,
+            villageNumber: Number(formData.villageNumber),
+            province: location.province,
+            district: location.district,
+            subDistrict: location.subdistrict,
+            postalCode: String(location.postalCode),
+            detail: formData.detail,
+            latitude: Number(position[0]),
+            longitude: Number(position[1]),
+          },
+          // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
+        })
+      );
 
-    if (logoFile) {
-      formDataToSend.append("logo", logoFile);
+      if (logoFile) {
+        formDataToSend.append("logo", logoFile);
+      }
+      if (coverFiles) {
+        formDataToSend.append("cover", coverFiles);
+      }
+
+      galleryFiles.forEach((file) => {
+        formDataToSend.append("gallery", file);
+      });
+
+      videoFiles.forEach((file) => {
+        formDataToSend.append("video", file);
+      });
+      console.log("Submitting form data:", formDataToSend);
+      await createCommunity(formDataToSend);
+      setAlertType("success");
+      setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
+      setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
+      navigate("/super/communities/all");
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
+
+      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
+      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
+      // หากสำเร็จ
+      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
+
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage(cleanMessage);
+      setAlertOpen(true);
     }
-    if (coverFiles) {
-      formDataToSend.append("cover", coverFiles);
-    }
-
-    galleryFiles.forEach((file) => {
-      formDataToSend.append("gallery", file);
-    });
-
-    videoFiles.forEach((file) => {
-      formDataToSend.append("video", file);
-    });
-    for (const [key, val] of formDataToSend.entries()) {
-      console.log(key, val);
-    }
-    await createCommunity(formDataToSend);
-    alert("success");
-    naigate("/super/communities");
   };
 
   return (
     <div>
       <div className="flex justify-between items-center">
         <Link
-          to="/super/communities"
+          to="/super/communities/all"
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
         >
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />
@@ -425,27 +424,25 @@ export default function CreateCommuninityPage() {
               />
             </div>
             <div>
-              <TextField
+              <BoxDateInput
                 id="registerDate"
-                label="วัน/เดือน/ ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่จดทะเบียนวิสาหกิจชุมชน"
+                value={registerDate}
+                onChange={(date) => {
+                  setRegisterDate(date);
+                  const isoString = date ? date.toISOString().split("T")[0] : "";
+                  handleValueChange("registerDate", isoString);
+                }}
                 required
-                placeholder="กรอกเลขทะเบียนวิสาหกิจชุมชน"
-                type="date"
-                value={formData.registerDate}
-                onChange={handleFormChange}
-                error={!!formErrors.registerDate}
-                helperText={formErrors.registerDate}
+                minDate={new Date(1980, 0, 1)}
+                maxDate={new Date(2040, 12, 31)}
+                errorText={formErrors.registerDate}
               />
             </div>
             <div>
-              <TextField
-                id="bankName"
-                label="ธนาคาร"
-                required
-                placeholder="เลือกธนาคาร"
-                type="text"
+              <BankSelector
                 value={formData.bankName}
-                onChange={handleFormChange}
+                onChange={(bankName) => handleValueChange("bankName", bankName)}
                 error={!!formErrors.bankName}
                 helperText={formErrors.bankName}
               />
@@ -489,9 +486,7 @@ export default function CreateCommuninityPage() {
               />
             </div>
           </div>
-          <div className="text-lg font-bold mt-[24px] mb-[24px]">
-            กิจกรรมหลักของวิสาหกิจชุมชน
-          </div>
+          <div className="text-lg font-bold mt-[24px] mb-[24px]">กิจกรรมหลักของวิสาหกิจชุมชน</div>
           <div className="grid grid-cols-1 gap-y-[24px] ">
             <div>
               <TextField
@@ -765,9 +760,7 @@ export default function CreateCommuninityPage() {
               />
             </div>
           </div>
-          <div className="text-lg font-bold mt-[24px] mb-[24px]">
-            ข้อมูลผู้ดูแลวิสาหกิจชุมชน
-          </div>
+          <div className="text-lg font-bold mt-[24px] mb-[24px]">ข้อมูลผู้ดูแลวิสาหกิจชุมชน</div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -856,6 +849,13 @@ export default function CreateCommuninityPage() {
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

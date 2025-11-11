@@ -7,25 +7,26 @@
  * - แสดง SidebarAdmin ทางด้านซ้าย
  * - ใช้ <Outlet /> เพื่อแสดงคอนเทนต์ของหน้าที่ตรงกับ Route
  */
-import React from 'react';
-import SidebarAdmin from '../../Components/SidebarAdmin';
-import { Outlet } from 'react-router-dom';
+import SidebarAdmin from "../../Components/SidebarAdmin";
+import NavbarAdmin from "../../Components/NavbarSam";
+import { Outlet } from "react-router-dom";
 
-const AdminLayout: React.FC = () => {
+export default function SuperAdminLayout() {
   return (
-<div className="flex h-screen">
-      {/* Sidebar ด้านซ้าย */}
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
       <SidebarAdmin />
 
+      {/* พื้นที่หลัก */}
       <div className="flex flex-col flex-1 h-full">
+        {/* Navbar ด้านบน */}
+        <NavbarAdmin />
 
-        {/* พื้นที่เนื้อหา */}
-        <main className="flex-1 p-8 overflow-auto bg-[#F0F0F0]">
+        {/* เนื้อหาหลัก */}
+        <main className="flex-1 overflow-y-auto p-0 m-5">
           <Outlet />
         </main>
       </div>
     </div>
   );
-};
-
-export default AdminLayout;
+}

@@ -8,9 +8,9 @@
  *  * - ใช้ไอคอนจาก Iconify
  */
 
-import React, { useState, useEffect } from 'react';
-import { Icon } from '@iconify/react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
+import { Link, useLocation } from "react-router-dom";
 
 type MenuKey =
   | "communities"
@@ -29,7 +29,7 @@ const SidebarSuperAdmin: React.FC = () => {
   const location = useLocation();
   const { pathname } = location;
 
-  const basePath = pathname.startsWith('/super') ? '/super' : '';
+  const basePath = pathname.startsWith("/super") ? "/super" : "";
 
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
@@ -38,13 +38,13 @@ const SidebarSuperAdmin: React.FC = () => {
     let subPath = pathname;
     if (basePath) {
       subPath = pathname.substring(basePath.length);
-      if (!subPath.startsWith('/')) {
-        subPath = '/' + subPath;
+      if (!subPath.startsWith("/")) {
+        subPath = "/" + subPath;
       }
     }
 
-    if (subPath === '/communities/all') {
-      setActiveMenuKey('communities');
+    if (subPath === "/communities/all") {
+      setActiveMenuKey("communities");
       setOpenDropdown(null);
     } else if (subPath === "/users/blocked") {
       setActiveMenuKey("users-blocked");
@@ -100,7 +100,7 @@ const SidebarSuperAdmin: React.FC = () => {
         <nav className="flex flex-col gap-2 text-base-semibold">
           {/* === จัดการชุมชน === */}
           <Link
-            to={`${basePath}/communities`}
+            to={`${basePath}/communities/all`}
             onClick={() => handleClick("communities")}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
               isActive("communities") ? "bg-[#0D845A]" : ""
@@ -114,7 +114,7 @@ const SidebarSuperAdmin: React.FC = () => {
           <div>
             <Link
               to={`${basePath}/accounts/all`}
-              onClick={() => handleClick('accounts')}
+              onClick={() => handleClick("accounts")}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive("accounts") ? "bg-[#0D845A]" : ""
               }`}
@@ -123,9 +123,10 @@ const SidebarSuperAdmin: React.FC = () => {
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
                 จัดการบัญชี
               </span>
-              <Icon icon={openDropdown === 'accounts' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              <Icon icon={openDropdown === "accounts" ? "mdi:chevron-up" : "mdi:chevron-down"} />
             </Link>
-            {openDropdown === 'accounts' && (
+
+            {openDropdown === "accounts" && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
                   to={`${basePath}/users/blocked`}
@@ -144,21 +145,18 @@ const SidebarSuperAdmin: React.FC = () => {
           <div>
             <Link
               to={`${basePath}/packages/all`}
-              onClick={() => handleClick('packages')}
+              onClick={() => handleClick("packages")}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
                 isActive("packages") ? "bg-[#0D845A]" : ""
               }`}
             >
               <span className="flex items-center gap-3">
-                <Icon
-                  icon="material-symbols:card-travel-outline"
-                  className="text-xl"
-                />
+                <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
                 จัดการแพ็กเกจ
               </span>
-              <Icon icon={openDropdown === 'packages' ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
+              <Icon icon={openDropdown === "packages" ? "mdi:chevron-up" : "mdi:chevron-down"} />
             </Link>
-            {openDropdown === 'packages' && (
+            {openDropdown === "packages" && (
               <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
                 <Link
                   to={`${basePath}/package-requests`}

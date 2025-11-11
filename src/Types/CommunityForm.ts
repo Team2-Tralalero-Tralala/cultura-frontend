@@ -20,7 +20,7 @@ export type CommunityFormData = {
   alias?: string;
   type: string;
   registerNumber: string;
-  registerDate: string;
+  registerDate: Date;
   bankName: string;
   accountName: string;
   accountNumber: string;

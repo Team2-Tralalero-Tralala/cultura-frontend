@@ -4,6 +4,7 @@
  *   - แสดงรายการการจองทั้งหมดของแพ็กเกจในชุมชน
  *   - ตาราง: ชื่อผู้จอง / ชื่อกิจกรรม / ราคา / สถานะ / หลักฐาน / จัดการ
  *   - รองรับค้นหา, กรองสถานะ, ปุ่มคำขอคืนเงิน
+ *   - ปุ่ม "อนุมัติ" และ "ปฏิเสธ" จะอัปเดตสถานะในฐานข้อมูลจริง
  */
 
 import React from "react";
@@ -15,9 +16,11 @@ import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-import { fetchBookingsByAdmin } from "@/Services/booking-history-service";
-import type { BookingRow, Pagination } from "@/Types/BookingAdmin";
-import type { BookingAdminDtoFromApi } from "@/Types/BookingAdmin";
+import {
+  fetchBookingsByAdmin,
+  updateBookingStatus,
+} from "@/Services/booking-history-service";
+import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/BookingAdmin";
 import type { PaginationResponse } from "@/Types/Community";
 
 /* --------------------------- Columns --------------------------- */
@@ -55,7 +58,6 @@ const makeColumns = (
     {
       key: "totalPrice",
       header: "ราคา",
-      // ปรับให้ข้อความราคา (฿1,000) ชิดซ้ายของ cell และตรงกับหัวข้อ "ราคา"
       className: "min-w-[120px] text-left pl-4",
       render: (r) => <div className="text-left">{r.totalPrice}</div>,
     },
@@ -66,8 +68,12 @@ const makeColumns = (
       render: (r) => {
         const status = r.status?.toUpperCase();
         const map: Record<string, string> = {
-          BOOKED: "รอตรวจสอบ",
+          PENDING: "รอตรวจสอบ",
           REFUND_PENDING: "รอคืนเงิน",
+          BOOKED: "จองสำเร็จ",
+          REJECTED: "ปฏิเสธจอง",
+          REFUNDED: "คืนเงินแล้ว",
+          REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
         };
         return <div>{map[status ?? ""] ?? "-"}</div>;
       },
@@ -85,7 +91,6 @@ const makeColumns = (
           จัดการ
         </div>
       ),
-      // จัด header และปุ่มให้ตรงกลางแนวเดียวกัน
       className: "w-[200px] text-center pr-2",
       render: (r) => (
         <div className="flex justify-center items-center gap-3">
@@ -123,18 +128,16 @@ export default function ManageBookingAdmin() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
-  // modal states
+  // Modal states
   const [confirmOpen, setConfirmOpen] = React.useState<boolean>(false);
   const [rejectOpen, setRejectOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<BookingRow | null>(null);
 
-  // ตัวเลือกสถานะ
+  // ตัวเลือกสถานะใน filter
   const statusOptions = [
     { label: "ทั้งหมด", value: "all" },
-    { label: "รอตรวจสอบ", value: "BOOKED" },
+    { label: "รอตรวจสอบ", value: "PENDING" },
     { label: "รอคืนเงิน", value: "REFUND_PENDING" },
-    // { label: "คืนเงินแล้ว", value: "REFUNDED" },
-    // { label: "ปฏิเสธการคืนเงิน", value: "CANCELLED" },
   ];
 
   /** โหลดข้อมูลทั้งหมด */
@@ -143,7 +146,6 @@ export default function ManageBookingAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      // เรียก API ครั้งเดียว พร้อมระบุ type
       const { data, pagination: pg }: PaginationResponse<BookingAdminDtoFromApi> =
         await fetchBookingsByAdmin(currentPage, pageSize);
 
@@ -159,18 +161,12 @@ export default function ManageBookingAdmin() {
       setRows(mapped);
       setPagination(pg);
     } catch (error) {
-      // ตรวจสอบชนิดของ error แบบ Type-safe
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("โหลดข้อมูลไม่สำเร็จ");
-      }
+      if (error instanceof Error) setErrorMessage(error.message);
+      else setErrorMessage("โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
   }, [currentPage, pageSize]);
-
-
 
   React.useEffect(() => {
     reload();
@@ -184,10 +180,30 @@ export default function ManageBookingAdmin() {
   const handleApprove = async (row: BookingRow) => {
     try {
       setIsLoading(true);
-      console.log("อนุมัติ booking:", row.id);
+      const newStatus =
+        row.status === "PENDING" ? "BOOKED" : "REFUNDED";
+      await updateBookingStatus(row.id, newStatus);
       await reload();
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "ไม่สามารถอนุมัติได้");
+    } catch (error) {
+      if (error instanceof Error) setErrorMessage(error.message);
+      else setErrorMessage("ไม่สามารถอนุมัติได้");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /** ปฏิเสธ */
+  const handleReject = async (row: BookingRow, reason?: string) => {
+    try {
+      setIsLoading(true);
+      const newStatus =
+        row.status === "PENDING" ? "REJECTED" : "REFUND_REJECTED";
+      await updateBookingStatus(row.id, newStatus);
+      await reload();
+    } catch (error) {
+      if (error instanceof Error) setErrorMessage(error.message);
+      else setErrorMessage("ไม่สามารถปฏิเสธได้");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -201,7 +217,6 @@ export default function ManageBookingAdmin() {
     setSelectedRow(row);
     setConfirmOpen(true);
   };
-  const handleReject = openRejectModal;
 
   /** กรองข้อมูล */
   const filteredRows = React.useMemo(() => {
@@ -211,7 +226,6 @@ export default function ManageBookingAdmin() {
         val.toLowerCase().includes(q)
       )
     );
-
     if (statusFilter === "all") return filtered;
     return filtered.filter((r) => r.status === statusFilter);
   }, [rows, searchQuery, statusFilter]);
@@ -257,7 +271,7 @@ export default function ManageBookingAdmin() {
       {/* ตาราง */}
       <DataTable<BookingRow>
         data={filteredRows}
-        columns={makeColumns(openApproveModal, handleReject, (id) =>
+        columns={makeColumns(openApproveModal, openRejectModal, (id) =>
           navigate(`/admin/booking/${id}`)
         )}
         getKey={(r: BookingRow) => String(r.id)}
@@ -281,46 +295,57 @@ export default function ManageBookingAdmin() {
       {/* Modal: ยืนยันอนุมัติ */}
       <Modal
         open={confirmOpen}
-        title="ยืนยันการอนุมัติ"
+        title={
+          selectedRow?.status === "REFUND_PENDING"
+            ? "ยืนยันการอนุมัติคำขอคืนเงิน"
+            : "ยืนยันการอนุมัติการจอง"
+        }
         text={
           selectedRow
-            ? `ต้องการอนุมัติการจองของ “${selectedRow.touristName}” ใช่หรือไม่`
-            : "ต้องการอนุมัติการจองนี้หรือไม่"
+            ? selectedRow.status === "REFUND_PENDING"
+              ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่`
+              : `ต้องการอนุมัติการจองของ “${selectedRow.touristName}” ใช่หรือไม่`
+            : "ต้องการดำเนินการนี้หรือไม่"
         }
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={async () => {
           if (!selectedRow) return;
+
+          //  ปิด modal ก่อนเริ่มทำงาน
+          setConfirmOpen(false);
+          const row = selectedRow;
+          setSelectedRow(null);
+
           try {
-            await handleApprove(selectedRow);
-          } finally {
-            setConfirmOpen(false);
-            setSelectedRow(null);
+            await handleApprove(row);
+          } catch (err) {
+            console.error(err);
           }
         }}
-        onCancel={() => {
-          setConfirmOpen(false);
-          setSelectedRow(null);
-        }}
+
       />
 
       {/* Modal: ปฏิเสธ + กรอกเหตุผล */}
       <RejectModal
         open={rejectOpen}
-        title="ปฏิเสธการจอง"
-        text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้จองทราบ"
+        title={
+          selectedRow?.status === "REFUND_PENDING"
+            ? "ปฏิเสธคำขอคืนเงิน"
+            : "ปฏิเสธการจอง"
+        }
+        text={
+          selectedRow?.status === "REFUND_PENDING"
+            ? "กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน เพื่อส่งให้ผู้จองทราบ"
+            : "กรุณากรอกเหตุผลการปฏิเสธการจอง เพื่อส่งให้ผู้จองทราบ"
+        }
         confirmText="ส่ง"
         cancelText="ยกเลิก"
         onConfirm={async (reason) => {
           if (!selectedRow) return;
           try {
-            setIsLoading(true);
-            console.log("ปฏิเสธ booking:", selectedRow.id, "เหตุผล:", reason);
-            await reload();
-          } catch (e: any) {
-            setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");
+            await handleReject(selectedRow, reason);
           } finally {
-            setIsLoading(false);
             setRejectOpen(false);
             setSelectedRow(null);
           }
@@ -330,6 +355,7 @@ export default function ManageBookingAdmin() {
           setSelectedRow(null);
         }}
       />
+
     </div>
   );
 }

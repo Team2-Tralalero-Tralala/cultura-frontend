@@ -1,22 +1,20 @@
 /**
  * Component: UserDetailPage (Super Admin)
  * Description: แสดงรายละเอียดบัญชีผู้ใช้งานตาม ID ที่ได้รับจาก URL
- * สามารถอัปโหลดรูปโปรไฟล์ใหม่ได้ โดยบันทึกเข้า Database ผ่าน route PUT /super/users/profile/:userId
+ * หน้านี้ใช้สำหรับดูข้อมูลเท่านั้น (ไม่สามารถอัปโหลดรูปโปรไฟล์ได้)
  */
 
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { SquarePen } from "lucide-react";
-
 import { fetchUserDetail } from "../../Services/account-services";
 import type { UserDetail } from "@/Types/User";
-import AvatarUploader from "@/Components/AvatarUploader";
 
 /**
  * Component: UserDetailPage
  * วัตถุประสงค์: แสดงรายละเอียดบัญชีผู้ใช้ (SuperAdmin)
  * Input: userId จาก URL parameter
- * Output: หน้ารายละเอียดผู้ใช้ พร้อมรูปโปรไฟล์ที่อัปโหลดได้
+ * Output: หน้ารายละเอียดผู้ใช้แบบ read-only
  */
 export function UserDetailPage() {
   const navigate = useNavigate();
@@ -25,12 +23,7 @@ export function UserDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * ฟังก์ชัน: useEffect
-   * วัตถุประสงค์: โหลดข้อมูลผู้ใช้จาก API ตาม ID ที่ได้รับจาก URL
-   * Input: id (string | undefined)
-   * Output: ข้อมูลผู้ใช้เก็บใน state user
-   */
+  /** โหลดข้อมูลผู้ใช้จาก API */
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -46,63 +39,18 @@ export function UserDetailPage() {
     })();
   }, [id]);
 
-  /**
-   * ฟังก์ชัน: resolveBackendUploadUrl
-   * วัตถุประสงค์: แปลง path ของรูปจาก backend ให้เป็น URL ที่เรียกใช้งานได้ใน frontend
-   * Input: fileName (string | undefined)
-   * Output: URL string หรือ undefined
-   */
+  /** แปลง path รูปจาก backend → URL */
   function resolveBackendUploadUrl(fileName?: string): string | undefined {
     if (!fileName) return undefined;
-
     const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
-    // ถ้า path ไม่มีคำว่า "uploads" ให้เติมเอง
     if (!fileName.startsWith("uploads/")) {
-      const cleaned = fileName.replace(/^\/+/, ""); // ตัด / หน้าไฟล์ออก
+      const cleaned = fileName.replace(/^\/+/, "");
       return `${baseUrl}/uploads/${cleaned}`;
     }
-
     return `${baseUrl}/${fileName}`;
   }
 
-  /**
-   * ฟังก์ชัน: handleAvatarChange
-   * วัตถุประสงค์: เมื่ออัปโหลดรูปใหม่ → ส่งไฟล์ไป backend เพื่ออัปเดต profileImage
-   * Input: file (File | null)
-   * Output: อัปเดตรูปโปรไฟล์ใน state
-   */
-  const handleAvatarChange = async (file: File | null) => {
-    if (!id || !file) return;
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-    try {
-      const formData = new FormData();
-      formData.append("profileImage", file);
-
-      const res = await fetch(`${baseUrl}/api/super/users/profile/${id}`, {
-        method: "PUT",
-        body: formData,
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-
-      setUser((prev) => (prev ? { ...prev, profileImage: data.data.profileImage } : prev));
-
-      alert("อัปโหลดรูปโปรไฟล์สำเร็จ!");
-    } catch (err) {
-      console.error(err);
-      alert("อัปโหลดรูปไม่สำเร็จ");
-    }
-  };
-
-  /**
-   * ฟังก์ชัน: formatPhoneNumber
-   * วัตถุประสงค์: จัดรูปแบบเบอร์โทรศัพท์ให้อยู่ในรูปแบบ ###-###-####
-   * Input: phone (string | null | undefined)
-   * Output: เบอร์โทรศัพท์ที่จัดรูปแบบแล้ว (string)
-   */
+  /** จัดรูปแบบเบอร์โทรศัพท์ ###-###-#### */
   function formatPhoneNumber(phone?: string | null): string {
     if (!phone) return "-";
     const digits = phone.replace(/\D/g, "");
@@ -112,7 +60,7 @@ export function UserDetailPage() {
     return phone;
   }
 
-  // Section: Loading & Error State
+  // Section: Loading & Error
   if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
@@ -121,7 +69,7 @@ export function UserDetailPage() {
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
-        {/* Section: Breadcrumb */}
+        {/* Breadcrumb */}
         <div className="text-base text-gray-600 flex items-center gap-2">
           <Link to="/super/accounts/all" className="text-gray-900 hover:underline text-sm">
             จัดการบัญชี
@@ -130,12 +78,12 @@ export function UserDetailPage() {
           <span>รายละเอียดบัญชี</span>
         </div>
 
-        {/* Section: Header */}
+        {/* Header */}
         <h1 className="text-xl font-semibold text-gray-900 mt-1">รายละเอียดบัญชี</h1>
 
-        {/* Section: Card */}
+        {/* Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
-          {/* ปุ่มแก้ไขข้อมูล */}
+          {/* ปุ่มแก้ไข */}
           <button
             onClick={() => navigate(`/super/account/${user.role.name}/${id}/edit`)}
             className="absolute top-6 right-6 flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-6 py-3 rounded-xl transition text-base font-medium"
@@ -145,18 +93,31 @@ export function UserDetailPage() {
             <span>แก้ไข</span>
           </button>
 
-          {/* Section: Profile Info */}
+          {/* Profile + Info */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-24 mt-12 w-full">
-            {/* รูปโปรไฟล์ */}
+            {/* Profile Image */}
             <div className="flex justify-center flex-1">
-              <AvatarUploader
-                avatarUrl={resolveBackendUploadUrl(user.profileImage)}
-                avatarSize={300}
-                onAvatarChange={handleAvatarChange}
-              />
+              {user.profileImage ? (
+                <img
+                  src={resolveBackendUploadUrl(user.profileImage)}
+                  alt="Profile"
+                  className="rounded-full object-cover w-[300px] h-[300px] border border-gray-300 shadow-sm"
+                />
+              ) : (
+                <div className="w-[300px] h-[300px] rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 shadow-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    className="w-32 h-32 text-gray-400"
+                  >
+                    <path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.9v2.5h19.3v-2.5c0-3.3-6.4-4.9-9.7-4.9z" />
+                  </svg>
+                </div>
+              )}
             </div>
 
-            {/* รายละเอียดบัญชี */}
+            {/* User Info */}
             <div className="flex-1">
               <div className="space-y-3 text-lg text-slate-800 leading-relaxed">
                 <h2 className="text-xl font-semibold mb-3">รายละเอียดบัญชี</h2>

@@ -78,8 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           { username, password },
           { withCredentials: true }
         );
-
-        const { user: u } = res.data.data;
+const { user: u } = res.data.data;
 
         const authUser: AuthUser = {
           id: u.id,

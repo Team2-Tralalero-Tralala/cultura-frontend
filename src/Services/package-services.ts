@@ -58,3 +58,18 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
 //      // สร้าง Date แบบ local (MySQL DATETIME ไม่มี timezone)
 //      return new Date(y, (m - 1), d, hh, mm, ss, 0);
 //  }
+
+
+/*
+  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
+  * Input : page, limit
+  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
+  */
+export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
+  const params = { page, limit };
+  const res = await axios.get(`${apiUrl}/admin/package/histories/all`, {
+    params,
+    withCredentials: true, // ส่ง cookie/token ไปด้วย
+  });
+  return res.data;
+}

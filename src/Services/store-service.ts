@@ -3,7 +3,6 @@
  */
 import axios from "axios";
 import type { StoreData } from "@/Types/Store";
-import api from "@/Libs/api";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export async function getAllStore(communityId: number, page: number, limit: number) {
@@ -86,24 +85,4 @@ export async function createStoreByAdmin(data: StoreData | FormData) {
     },
     withCredentials: true,
   });
-}
-
-/**
- * ฟังก์ชัน : deleteStore
- * คำอธิบาย :
- *   ฟังก์ชันสำหรับเรียก API เพื่อลบร้านค้าออกจากระบบ (Soft Delete)
- *   โดยจะส่งคำขอแบบ DELETE ไปยังเส้นทาง `/shared/store/:storeId/delete`
- *   เพื่อให้ฝั่ง Backend ทำการตั้งค่า `isDeleted = true` และ `deleteAt = new Date()`
- *   ใช้สำหรับผู้ใช้ที่มีสิทธิ์เป็น "superadmin" หรือ "admin" เท่านั้น
- *
- * Input :
- *   - storeId : หมายเลขรหัสร้านค้า (number) ที่ต้องการลบ
- *
- * Output :
- *   - Promise<Response> : ผลลัพธ์จากการเรียก API
- *     • หากสำเร็จ → คืนค่า response ของร้านค้าที่ถูกลบ
- *     • หากล้มเหลว → ขว้าง error ที่ได้จาก backend
- */
-export async function deleteStore(storeId: number) {
-  return api.delete(`/shared/store/${storeId}/delete`);
 }

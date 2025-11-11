@@ -2,12 +2,11 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 9 พฤษจิกายน 2568
+ * Last Modified: 30 ตุลาคม 2568
  */
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import api from "@/Libs/api";
@@ -188,11 +187,12 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
     const isValid = validateField();
     if (!isValid) {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
+      console.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
       return;
     }
+
     if (formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน ❌");
+      console.error("รหัสผ่านไม่ตรงกัน ❌");
       return;
     }
 
@@ -201,7 +201,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       if (role === "Member") roleId = 3;
       if (role === "Tourist") roleId = 4;
 
-      const accountBody: CreateAccountBody = {
+      const requestBody: CreateAccountBody = {
         roleId,
         fname: formData.fname.trim(),
         lname: formData.lname.trim(),
@@ -209,44 +209,25 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         email: formData.email.trim(),
         phone: formData.phone.trim(),
         password: formData.password,
-        profileImage: null,
+        profileImage: formData.profileImage ? formData.profileImage.name : null,
       };
 
       if (role === "Member") {
-        accountBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
+        requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
       } else if (role === "Tourist") {
-        accountBody.gender =
+        requestBody.gender =
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
             ? "FEMALE"
             : "NONE";
-        accountBody.birthDate = roleSpecificData.birthDate || null;
-        accountBody.province = locationData.province;
-        accountBody.district = locationData.district;
-        accountBody.subDistrict = locationData.subdistrict;
-        accountBody.postalCode = String(locationData.postalCode || "");
+        requestBody.birthDate = roleSpecificData.birthDate || null;
+        requestBody.province = locationData.province;
+        requestBody.district = locationData.district;
+        requestBody.subDistrict = locationData.subdistrict;
+        requestBody.postalCode = String(locationData.postalCode || "");
       }
-
-      const response = await api.post(`/super/account/${role.toLowerCase()}`, accountBody);
-
-      const newUserId = response.data?.data?.id;
-
-      if (!newUserId) {
-        toast.success("สร้างบัญชีสำเร็จ (แต่ไม่พบ ID สำหรับอัปโหลดรูป)");
-        return;
-      }
-
-      if (formData.profileImage) {
-        const formDataUpload = new FormData();
-        formDataUpload.append("profileImage", formData.profileImage);
-
-        await api.put(`/super/users/profile/${newUserId}`, formDataUpload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
-
-      toast.success(response.data.message || "สร้างบัญชีและอัปโหลดรูปสำเร็จ ✅");
+      await api.post(`/super/account`, requestBody);
 
       setFormData({
         fname: "",
@@ -266,9 +247,10 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         postalCode: "",
       });
       setShowConfirm(false);
+      navigate("/super/accounts/all");
     } catch (error: any) {
       console.error("❌ Error creating account:", error);
-      toast.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
+      console.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
     }
   };
 

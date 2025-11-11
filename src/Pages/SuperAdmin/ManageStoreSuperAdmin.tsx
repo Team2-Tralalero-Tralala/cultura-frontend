@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * จัดการร้านค้า (Super Admin)
  * - แสดงรายการร้านค้าทั้งหมดในชุมชน
@@ -6,7 +5,7 @@
  * - ใช้งานร่วมกับ Modal ยืนยันและฟอร์มเพิ่ม/แก้ไข
  */
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 // component
@@ -22,12 +21,7 @@ import { getAllStore } from "@/Services/store-service";
 import { getCommunityById } from "@/Services/community-service";
 
 // Types
-import type {
-  Column,
-  DataTableActionsConfig,
-  BulkAction,
-  Pagination,
-} from "@/Components/Tables/Types";
+import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 // Type ของตาราง
 type StoreRow = {
@@ -66,21 +60,19 @@ const columns: Column<StoreRow>[] = [
 
 export default function ManageStores() {
   const { communityId } = useParams<{ communityId: string }>();
+  const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
 
   // state
   const [communityName, setCommunityName] = useState<string>("");
   const [rows, setRows] = useState<StoreRow[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalItems, setTotalItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [pagination, setPagination] = React.useState<Pagination>({
-    currentPage: 1,
-    totalPages: 1,
-    totalCount: 0,
-    limit: 10,
-  });
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+  const [openConfirm, setOpenConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -99,27 +91,24 @@ export default function ManageStores() {
   }, [communityId]);
 
   //โหลดข้อมูลร้านค้า
-  const loadStores = async () => {
+  const loadStores = useCallback(async () => {
     if (!communityId) return;
-
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const currentPage = pagination?.currentPage ?? 1;
-      const limit = pagination?.limit ?? 10;
+      const res = await getAllStore(Number(communityId), currentPage, pageSize);
+      const payload = res.data?.data;
+      const list: StoreFromApi[] = Array.isArray(payload?.data) ? payload.data : [];
 
-      const response = await getAllStore(Number(communityId), currentPage, limit);
+      console.log("Store Payload", res.data);
 
-      const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
-      const resultPagination: Pagination =
-        response?.data?.data?.pagination ?? pagination;
+      //เอาค่า pagination จาก payload
+      const pg = payload?.pagination ?? {};
 
-
-      // แปลงข้อมูลให้เข้ากับตาราง
-      const mapped: StoreRow[] = resultData.map((store) => {
-        const tagNames =
-          store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
+      // map ข้อมูลกับ type ตาราง
+      const mapped: StoreRow[] = list.map((store) => {
+        const tagNames = store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
@@ -129,18 +118,17 @@ export default function ManageStores() {
       });
 
       setRows(mapped);
-      setPagination(resultPagination);
+      setTotalItems(pg?.totalCount ?? mapped.length);
     } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      console.error("โหลดข้อมูลร้านค้าไม่สำเร็จ", e);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [communityId, currentPage, pageSize]);
 
-
-  React.useEffect(() => {
+  useEffect(() => {
     loadStores();
-  }, [Number(communityId), pagination.currentPage, pagination.limit]);
+  }, [loadStores]);
 
   //action แต่ละแถว ลบ แก้ไข
   const rowActions: DataTableActionsConfig<StoreRow> = {
@@ -153,7 +141,7 @@ export default function ManageStores() {
       edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
         setDeleteId(row.id);
-        setIsOpenConfirm(true);
+        setOpenConfirm(true);
       },
     },
   };
@@ -189,6 +177,17 @@ export default function ManageStores() {
     },
   ];
 
+  //คำนวณหน้า
+  const startItem = (currentPage - 1) * pageSize + 1; // index ข้อมูลแรกของหน้า
+  const endItem = Math.min(currentPage * pageSize, totalItems); // index ข้อมูลสุดท้ายของหน้า
+
+  // ปรับ pagination props ตามที่คุณต้องการ:
+  const pagination = {
+    currentPage: startItem,
+    totalPages: endItem,
+    totalCount: totalItems,
+    limit: pageSize,
+  };
 
   return (
     <div className="space-y-4">
@@ -198,20 +197,14 @@ export default function ManageStores() {
           <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
             จัดการชุมชน
           </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
+          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
           <Link
             to={`/super/community/detail/${communityId}`}
             className="text-gray-800 hover:text-dark-green font-medium"
           >
             {communityName || "ชุมชน"}
           </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
+          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
           <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
         </nav>
       </div>
@@ -250,56 +243,20 @@ export default function ManageStores() {
         {/* Table */}
         <DataTable<StoreRow>
           data={filteredRows}
-          getKey={(row) => row.id.toString()}
           columns={columns}
-          selectable={true}
-          pageSizeOptions={[10, 30, 50]}
-          onPageChange={(p) => {
-            setPagination((prev) => ({ ...prev, currentPage: p }));
-          }}
-          onPageSizeChange={(p) => {
-            setPagination((prev) => ({
-              ...prev,
-              currentPage: 1,
-              limit: p,
-            }));
-          }}
-          onSelectedChange={(rows) => {
-            console.log("rows", rows);
-            setSelectedRows(rows);
-          }}
-          pagination={pagination}
-          isLoading={isLoading}
+          getKey={(row) => String(row.id)}
           actions={rowActions}
           bulkActions={bulkActions}
+          selectable
+          isLoading={isLoading}
+          pageSizeOptions={[10, 30, 50]}
+          pagination={pagination}
+          onPageChange={(p) => setCurrentPage(p)}
+          theme="brand"
         />
       </div>
 
       {/* Modal ยืนยันการลบ */}
-      <Modal
-        open={openConfirm}
-        title="ยืนยันการลบร้านค้า"
-        text="คุณต้องการลบร้านค้านี้หรือไม่?"
-        onConfirm={async () => {
-          if (deleteId == null) return;
-          try {
-            await handleDelete(deleteId);
-            await loadStores(); // โหลดใหม่หลังลบสำเร็จ
-          } catch (error: any) {
-            alert(
-              `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error.message}`
-            );
-          } finally {
-            setOpenConfirm(false);
-            setDeleteId(null);
-          }
-        }}
-        onCancel={() => {
-          setOpenConfirm(false);
-          setDeleteId(null);
-        }}
-      />
-{/*
       <Modal
         open={openConfirm}
         title="ยืนยันการลบที่พัก"
@@ -312,21 +269,18 @@ export default function ManageStores() {
           } catch (error: any) {
             console.error(error);
             alert(
-              `ลบไม่สำเร็จ: ${error?.response?.data?.message ??
-              error?.message ??
-              "unknown error"
-              }`
+              `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error?.message ?? "unknown error"}`
             );
           } finally {
-            setIsOpenConfirm(false);
+            setOpenConfirm(false);
             setDeleteId(null);
           }
         }}
         onCancel={() => {
-          setIsOpenConfirm(false);
+          setOpenConfirm(false);
           setDeleteId(null);
         }}
-      /> */}
+      />
     </div>
   );
 }

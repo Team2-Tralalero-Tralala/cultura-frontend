@@ -8,7 +8,7 @@
  * - ใช้ไอคอนจาก Iconify
  */
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -77,7 +77,7 @@ const SidebarAdmin = () => {
     } else if (currentPath === "/booking/refunds") {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
-    } else if (currentPath === "/bookings-histories/done") {
+    } else if (currentPath === "/booking-histories/done") {
       setActiveMenuKey("booking-histories");
       setOpenDropdown("booking");
     } else if (currentPath.startsWith("/booking")) {
@@ -263,7 +263,7 @@ const SidebarAdmin = () => {
               )}
               {menuLink(
                 "ประวัติการจอง",
-                "/bookings-histories/done",
+                "/booking/histories",
                 "mdi:history",
                 "booking-histories",
                 "booking"

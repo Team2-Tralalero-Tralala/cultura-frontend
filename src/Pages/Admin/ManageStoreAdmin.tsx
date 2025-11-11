@@ -16,7 +16,7 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import { getAllStoreAdmin } from "@/Services/store-service";
 
 // Types
-import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 // ประเภทข้อมูลร้านค้าในตาราง
 type StoreRow = {
@@ -55,41 +55,35 @@ export default function ManageStoreAdmin() {
 
   // State
   const [rows, setRows] = useState<StoreRow[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [pagination, setPagination] = React.useState<Pagination>({
-    currentPage: 1,
-    totalPages: 1,
-    totalCount: 0,
-    limit: 10,
-  });
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<StoreRow | null>(null);
+  const [openConfirm, setOpenConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /*
 * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
 */
-  const loadStores = async () => {
+  const loadStores = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const currentPage = pagination?.currentPage ?? 1;
-      const limit = pagination?.limit ?? 10;
+      const res = await getAllStoreAdmin(currentPage, pageSize);
+      // แปลงข้อมูลจาก API เป็นรูปแบบที่ใช้ในตาราง
+      const payload = res.data?.data;
+      // ตรวจสอบว่า payload.data เป็น array หรือไม่
+      const list: StoreFromApi[] = Array.isArray(payload?.data) ? payload.data : [];
+      // ดึงข้อมูล pagination
+      const pg = payload?.pagination ?? {};
 
-      const response = await getAllStoreAdmin(currentPage, limit);
-
-      const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
-      const resultPagination: Pagination =
-        response?.data?.data?.pagination ?? pagination;
-
-
-      // แปลงข้อมูลให้เข้ากับตาราง
-      const mapped: StoreRow[] = resultData.map((store) => {
-        const tagNames =
-          store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
+      // แปลงข้อมูลร้านค้าเป็นรูปแบบ StoreRow
+      const mapped: StoreRow[] = list.map((store) => {
+        const tagNames = store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
@@ -99,17 +93,18 @@ export default function ManageStoreAdmin() {
       });
 
       setRows(mapped);
-      setPagination(resultPagination);
+      setTotalItems(pg?.totalCount ?? mapped.length);
     } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      console.error("โหลดข้อมูลร้านค้าไม่สำเร็จ", e);
+      setErrorMessage(e.message || "ไม่สามารถโหลดข้อมูลได้");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadStores();
-  }, [pagination.currentPage, pagination.limit]);
+  }, [loadStores]);
 
   // Actions ของแต่ละแถว
   const rowActions: DataTableActionsConfig<StoreRow> = {
@@ -122,7 +117,7 @@ export default function ManageStoreAdmin() {
       edit: (row) => navigate(`/admin/community/store/edit/${storeId}/${row.id}`),
       delete: (row) => {
         setDeleteId(row.id);
-        setIsOpenConfirm(true);
+        setOpenConfirm(true);
       },
     },
   };
@@ -169,9 +164,29 @@ export default function ManageStoreAdmin() {
     },
   ];
 
-/*
- * คำอธิบาย : ฟังก์ชันหลักของหน้า manage store admin
- */
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับคำนวณข้อมูล pagination
+  * Input : currentPage, pageSize, totalItems
+  * Output : pagination object
+  */
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
+ /*
+  * คำอธิบาย : ฟังก์ชันสำหรับกำหนดข้อมูล pagination
+  * Input : currentPage, pageSize, totalItems
+  * Output : pagination object
+  */
+  const pagination = {
+    currentPage: startItem,  // ตำแหน่งของข้อมูลแรก
+    totalPages: endItem,     // ตำแหน่งของข้อมูลสุดท้าย
+    totalCount: totalItems,  // จำนวนทั้งหมด
+    limit: pageSize,
+  };
+
+   /*
+  * คำอธิบาย : ฟังก์ชันหลักของหน้า manage store admin
+  */
   return (
     <div className="space-y-4">
       <div className="px-6 pb-1">
@@ -197,46 +212,34 @@ export default function ManageStoreAdmin() {
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<StoreRow>
-          data={filteredRows}
-          getKey={(row) => row.id.toString()}
-          columns={columns}
-          selectable={true}
-          pageSizeOptions={[10, 30, 50]}
-          onPageChange={(p) => {
-            setPagination((prev) => ({ ...prev, currentPage: p }));
-          }}
-          onPageSizeChange={(p) => {
-            setPagination((prev) => ({
-              ...prev,
-              currentPage: 1,
-              limit: p,
-            }));
-          }}
-          onSelectedChange={(rows) => {
-            console.log("rows", rows);
-            setSelectedRows(rows);
-          }}
-          pagination={pagination}
-          isLoading={isLoading}
-          actions={rowActions}
-          bulkActions={bulkActions}
+          data={filteredRows} // ใช้ข้อมูลที่ผ่านการกรอง
+          columns={columns} // กำหนดคอลัมน์
+          getKey={(row) => String(row.id)} // กำหนด key ของแต่ละแถว
+          actions={rowActions} // กำหนด actions ของแต่ละแถว
+          bulkActions={bulkActions} // กำหนด bulk actions
+          selectable // เปิดใช้งานการเลือกหลายแถว
+          isLoading={isLoading} // สถานะการโหลดข้อมูล
+          pageSizeOptions={[10, 30, 50]} //ตัวเลือกขนาดหน้า
+          pagination={pagination} // กำหนดข้อมูล pagination
+          onPageChange={(p) => setCurrentPage(p)} // ฟังก์ชันเปลี่ยนหน้า
+          theme="brand"
         />
       </div>
 
-      {/* Modal สำหรับยืนยันการลบร้านค้า */}
+{/* Modal สำหรับยืนยันการลบร้านค้า */}
       <Modal
-        open={isOpenConfirm}
+        open={openConfirm}
         title="ยืนยันการลบร้านค้า"
         text="คุณต้องการลบร้านค้านี้หรือไม่?"
         onConfirm={async () => {
           if (!deleteId) return;
           await handleDelete(deleteId);
-          setIsOpenConfirm(false);
+          setOpenConfirm(false);
           setDeleteId(null);
           await loadStores();
         }}
         onCancel={() => {
-          setIsOpenConfirm(false);
+          setOpenConfirm(false);
           setDeleteId(null);
         }}
       />

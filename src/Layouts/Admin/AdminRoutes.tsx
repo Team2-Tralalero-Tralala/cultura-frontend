@@ -7,7 +7,6 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
-
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
@@ -29,7 +28,6 @@ import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 export default function AdminRoutes() {
   return (
     <Routes>
-      <Route path="/members" element={<ManageMembers />} />
       <Route path="community/own/edit" element={<EditCommunity />} />
       <Route path="community/store/create" element={<CreateStore />} />
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
@@ -50,6 +48,7 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
+      <Route path="/members" element={<ManageMembers />} />
 
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />

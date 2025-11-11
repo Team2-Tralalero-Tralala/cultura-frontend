@@ -7,6 +7,9 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Feedbackall from '@/Pages/Admin/FeedbackAll';
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
@@ -29,6 +32,11 @@ import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 export default function AdminRoutes() {
   return (
     <Routes>
+      <Route path="/package/feedbacks" element={<Feedbackall />} />
+      
+      {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
+      <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
+      
       <Route path="community/own/edit" element={<EditCommunity />} />
       <Route path="community/store/create" element={<CreateStore />} />
       <Route path="community/store/:storeId/edit" element={<EditStore />} />

@@ -10,8 +10,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Feedbackall from '@/Pages/Admin/FeedbackAll';
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
 import CreateHomestaysPage from "@/Pages/Admin/CreateHomestaysPage";
@@ -29,15 +27,16 @@ import { DashboardPage } from "@/Pages/Admin/DashboardPage";
 import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
+import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 
 export default function AdminRoutes() {
   return (
     <Routes>
       <Route path="/package/feedbacks" element={<Feedbackall />} />
-      
+
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
-      
+
       <Route path="community/own/edit" element={<EditCommunity />} />
       <Route path="community/store/create" element={<CreateStore />} />
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
@@ -71,6 +70,8 @@ export default function AdminRoutes() {
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
 
+      {/* ---------------- แพ็กเกจ ---------------- */}
+      <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
     </Routes>
   );
 }

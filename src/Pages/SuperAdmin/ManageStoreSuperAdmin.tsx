@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * จัดการร้านค้า (Super Admin)
  * - แสดงรายการร้านค้าทั้งหมดในชุมชน
@@ -197,14 +198,20 @@ export default function ManageStores() {
           <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
             จัดการชุมชน
           </Link>
-          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
+          <Icon
+            icon="mdi:chevron-right"
+            className="mx-2 text-gray-400 w-3.5 h-3.5"
+          />
           <Link
             to={`/super/community/detail/${communityId}`}
             className="text-gray-800 hover:text-dark-green font-medium"
           >
             {communityName || "ชุมชน"}
           </Link>
-          <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
+          <Icon
+            icon="mdi:chevron-right"
+            className="mx-2 text-gray-400 w-3.5 h-3.5"
+          />
           <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
         </nav>
       </div>
@@ -270,7 +277,31 @@ export default function ManageStores() {
 
       {/* Modal ยืนยันการลบ */}
       <Modal
-        open={isOpenConfirm}
+        open={openConfirm}
+        title="ยืนยันการลบร้านค้า"
+        text="คุณต้องการลบร้านค้านี้หรือไม่?"
+        onConfirm={async () => {
+          if (deleteId == null) return;
+          try {
+            await handleDelete(deleteId);
+            await loadStores(); // โหลดใหม่หลังลบสำเร็จ
+          } catch (error: any) {
+            alert(
+              `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error.message}`
+            );
+          } finally {
+            setOpenConfirm(false);
+            setDeleteId(null);
+          }
+        }}
+        onCancel={() => {
+          setOpenConfirm(false);
+          setDeleteId(null);
+        }}
+      />
+{/*
+      <Modal
+        open={openConfirm}
         title="ยืนยันการลบที่พัก"
         text="คุณต้องการลบที่พักนี้หรือไม่?"
         onConfirm={async () => {
@@ -295,7 +326,7 @@ export default function ManageStores() {
           setIsOpenConfirm(false);
           setDeleteId(null);
         }}
-      />
+      /> */}
     </div>
   );
 }

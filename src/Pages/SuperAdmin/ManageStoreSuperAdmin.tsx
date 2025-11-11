@@ -6,26 +6,26 @@
  * - ใช้งานร่วมกับ Modal ยืนยันและฟอร์มเพิ่ม/แก้ไข
  */
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 // component
 import Button from "@/Components/Button";
-import DataTable from "@/Components/Tables/Index";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { Modal } from "@/Components/Modal/Modal";
-import { Icon } from "@iconify/react";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { TrashIcon } from "@/Components/Tables/Icon";
+import DataTable from "@/Components/Tables/Index";
+import { Icon } from "@iconify/react";
 
 // service
-import { getAllStore } from "@/Services/store-service";
 import { getCommunityById } from "@/Services/community-service";
+import { getAllStore } from "@/Services/store-service";
 
 // Types
 import type {
+  BulkAction,
   Column,
   DataTableActionsConfig,
-  BulkAction,
   Pagination,
 } from "@/Components/Tables/Types";
 
@@ -174,7 +174,7 @@ export default function ManageStores() {
     console.log("ลบ store : ", storeId);
   };
 
-  const bulkActions: BulkAction<StoreFromApi>[] = [
+  const bulkActions: BulkAction<StoreRow>[] = [
     {
       id: "bulk-delete",
       label: "ลบทั้งหมด",
@@ -277,7 +277,8 @@ export default function ManageStores() {
 
       {/* Modal ยืนยันการลบ */}
       <Modal
-        open={openConfirm}
+        open={isOpenConfirm}
+
         title="ยืนยันการลบร้านค้า"
         text="คุณต้องการลบร้านค้านี้หรือไม่?"
         onConfirm={async () => {
@@ -290,12 +291,13 @@ export default function ManageStores() {
               `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error.message}`
             );
           } finally {
-            setOpenConfirm(false);
+            setIsOpenConfirm(false);
+
             setDeleteId(null);
           }
         }}
         onCancel={() => {
-          setOpenConfirm(false);
+          setIsOpenConfirm(false);
           setDeleteId(null);
         }}
       />

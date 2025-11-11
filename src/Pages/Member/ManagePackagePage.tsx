@@ -222,18 +222,23 @@ export default function ManagePackagePage() {
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<Row>
+        isLoading={isLoading}
         data={filteredRows}
         columns={columns}
-        getRowKey={(r) => r.id}
+        getKey={(r) => String(r.id)}
         actions={rowActions}
         bulkActions={bulkActions}
         selectable
-        striped
         pageSizeOptions={[10, 20, 50]}
-        defaultPageSize={pageSize}
+        pageSize={pageSize}
         onPageChange={(p) => setCurrentPage(p)}
         theme="brand"
-        className="bg-white rounded-lg"
+        pagination={{
+          currentPage,
+          totalPages: Math.ceil(totalItems / pageSize),
+          totalCount: totalItems,
+          limit: pageSize,
+        }}
       />
     </div>
   );

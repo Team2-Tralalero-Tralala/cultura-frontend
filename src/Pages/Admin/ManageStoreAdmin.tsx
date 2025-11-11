@@ -154,7 +154,8 @@ export default function ManageStoreAdmin() {
   * คำอธิบาย : ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
   * Input : rows
   */
-  const bulkActions: BulkAction<StoreFromApi>[] = [
+  const bulkActions: BulkAction<StoreRow>[] = [
+
     {
       id: "bulk-delete",
       label: "ลบทั้งหมด",
@@ -219,7 +220,7 @@ export default function ManageStoreAdmin() {
           pagination={pagination}
           isLoading={isLoading}
           actions={rowActions}
-          bulkActions={bulkActions}
+          bulkActions={bulkActions as BulkAction<StoreRow>[]}
         />
       </div>
 

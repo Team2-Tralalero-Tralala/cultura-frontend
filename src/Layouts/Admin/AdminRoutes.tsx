@@ -9,7 +9,6 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayAdminPage';
 import { MemberDetailPage } from '@/Pages/Admin/MemberDetailPage';
 import Feedbackall from '@/Pages/Admin/FeedbackAll';
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
@@ -34,10 +33,6 @@ import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 export default function AdminRoutes() {
   return (
     <Routes>
-      <Route
-        path="community/homestays"
-        element={<ManageHomestayAdmin />}
-      />
       <Route
         path="member/:userId"
         element={<MemberDetailPage />}

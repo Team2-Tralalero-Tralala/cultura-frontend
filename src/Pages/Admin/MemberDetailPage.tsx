@@ -96,7 +96,7 @@ export function MemberDetailPage() {
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
           {/* ปุ่มแก้ไข */}
           <button
-            onClick={() => navigate(`/admin/member/${user.id}/edit`)}
+            onClick={() => navigate(`/admin/members/${user.id}/edit`)}
             className="absolute top-6 right-6 flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-6 py-3 rounded-xl transition text-base font-medium"
             title="แก้ไขข้อมูล"
           >

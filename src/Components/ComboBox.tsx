@@ -11,17 +11,17 @@ import { CheckIcon } from "lucide-react";
 import * as React from "react";
 
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
 } from "~/Components/ui/command";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "~/Components/ui/popover";
 import { cn } from "~/lib/utils";
 
@@ -66,6 +66,25 @@ export function Combobox({
 
     // State สำหรับเก็บข้อความที่จะแสดงใน input
     const [_label, _setLabel] = React.useState("");
+
+    /*
+     * คำอธิบาย : อัพเดท state _value และ _label เมื่อ value หรือ items เปลี่ยน
+     * Input : ไม่มี
+     * Output : อัพเดท state _value และ _label ตามค่า value ที่รับเข้ามา
+     */
+    React.useEffect(() => {
+        _setValue(value);
+        if (value) {
+            const selectedItem = items.find(item => item.value === value);
+            if (selectedItem) {
+                _setLabel(selectedItem.label);
+            } else {
+                _setLabel("");
+            }
+        } else {
+            _setLabel("");
+        }
+    }, [value, items]);
 
     /*
      * คำอธิบาย : ฟังก์ชัน setOpen

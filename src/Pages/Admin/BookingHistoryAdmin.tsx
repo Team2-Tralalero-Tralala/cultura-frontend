@@ -1,45 +1,39 @@
-/*
- * Page: ประวัติการจอง
- * - ดึงข้อมูลการจองทั้งหมดจาก API
- * - แปลงข้อมูลให้พร้อมแสดงใน DataTable
- * - ค้นหา + กรองตามสถานะ
- */
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/Components/Button";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
-import DataTable from "@/components/Tables/Index";
-import type { Column } from "../../Components/Tables/Types";
+import DataTable from "@/Components/Tables/DataTable";
+import type { Column, Pagination } from "@/Components/Tables/Types";
 import type { BookingHistoryItem } from "../../Types/BookingHistory";
 import { fetchBookingHistoriesByRole } from "../../Services/booking-history-service";
 
 /*
- * คำอธิบาย : ค่าจำนวนรายการต่อหน้าที่ใช้เรียก API
- * ใช้เพื่อกำหนดขนาดเพจในการดึงข้อมูลแบบแบ่งหน้า (pagination) เพราะรอ table จากตะวัน
- * Input : -
- * Output: จำนวนแถวต่อหน้าที่ต้องการ
+ * คำอธิบาย : หน้าแสดง "ประวัติการจอง" สำหรับ Admin/CM
+ * - ดึงข้อมูล paginated จาก service ตามบทบาทผู้ใช้
+ * - รองรับค้นหา (client-side) + กรองตามสถานะ (client-side)
+ * - แสดงผลใน DataTable พร้อมควบคุม pagination/limit
  */
-const PAGE_LIMIT = 50;
 
-/*
- * คำอธิบาย : mapstatus (อังกฤษ) -> ป้ายภาษาไทยสำหรับแสดงผลในตาราง
- * ช่วยให้ UI แสดงภาษาไทยแม้ API ส่งค่าสถานะเป็นอังกฤษ
- * Input : key เป็นสถานะอังกฤษ เช่น "BOOKED"
- * Output: label ภาษาไทย เช่น "จองสำเร็จ"
+/**
+ * ฟังก์ชัน : - (ค่าคงที่)
+ * คำอธิบาย : แมปสถานะจาก API เป็นป้ายภาษาไทยที่อ่านง่าย
+ * Input : -
+ * Output: -
  */
 const STATUS_LABEL_TH: Record<string, string> = {
   BOOKED: "จองสำเร็จ",
   REJECTED: "ปฏิเสธการจอง",
   REFUNDED: "คืนเงินแล้ว",
   REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
-};
+} as const;
 
-/*
- * คำอธิบาย : ตัวเลือกใน dropdown สำหรับกรองสถานะ
+/**
+ * ฟังก์ชัน : - (ค่าคงที่)
+ * คำอธิบาย : ตัวเลือกสถานะสำหรับ FilterDropdown
  * Input : -
- * Output: อ็อบเจ็กต์ {label, value} สำหรับคอมโพเนนต์ FilterDropdown
+ * Output: -
  */
 const STATUS_OPTIONS = [
   { label: "ทั้งหมด", value: "ALL" },
@@ -49,11 +43,7 @@ const STATUS_OPTIONS = [
   { label: "ปฏิเสธการคืนเงิน", value: "REFUND_REJECTED" },
 ] as const;
 
-/*
- * คำอธิบาย : โครงสร้างข้อมูลหนึ่งแถวสำหรับตาราง DataTable
- * Input : -
- * Output: ชนิดข้อมูลที่ตารางจะรับเข้าไปแสดงผล
- */
+/** แถวข้อมูลที่ใช้แสดงใน DataTable (หลัง map จาก API) */
 type BookingRow = {
   customerName: string;
   activityTitle: string;
@@ -63,10 +53,21 @@ type BookingRow = {
   bookedAt: string;
 };
 
-/*
- * คำอธิบาย : คอลัมน์ของ DataTable กำหนดหัวตารางและ key ที่อ่านจาก BookingRow
+/** รูปร่างคำตอบจาก service (เผื่อบางเขตบริการส่งฟิลด์ไม่ครบ) */
+type BookingHistoryResp = {
+  list: BookingHistoryItem[];
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  totalCount?: number;
+  hasNext?: boolean;
+};
+
+/**
+ * ฟังก์ชัน : - (โครงคอลัมน์)
+ * คำอธิบาย : ตั้งค่า columns สำหรับ DataTable
  * Input : -
- * Output: อาร์เรย์คอลัมน์ที่ใช้โดยคอมโพเนนต์ DataTable
+ * Output: Column<BookingRow>[]
  */
 const columns: Column<BookingRow>[] = [
   { key: "customerName", header: "ชื่อผู้จอง", className: "min-w-[180px]" },
@@ -77,35 +78,24 @@ const columns: Column<BookingRow>[] = [
   { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
 ];
 
-/*
+/**
  * ฟังก์ชัน : mapApiToRow
- * คำอธิบาย : แปลงข้อมูลจาก API (BookingHistoryItem) ให้พร้อมแสดงในตาราง (BookingRow)
- * - ฟอร์แมตราคา (THB)
- * - แม็ปสถานะอังกฤษเป็นป้ายไทย
- * - ฟอร์แมตวันเวลาแบบท้องถิ่น (th-TH)
- * Input  : item - ข้อมูลจาก API หนึ่งรายการ
- * Output : อ็อบเจ็กต์ BookingRow สำหรับ DataTable
+ * คำอธิบาย : แปลงวัตถุ BookingHistoryItem จาก API ให้เป็น BookingRow ที่พร้อมแสดงบนตาราง
+ * Input : item: BookingHistoryItem
+ * Output: BookingRow
  */
 const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
   const firstName = item?.tourist?.fname ?? "";
   const lastName = item?.tourist?.lname ?? "";
   const customerName = `${firstName} ${lastName}`.trim() || "-";
-
   const activityTitle = item?.package?.name ?? "-";
-
   const price =
     typeof item?.package?.price === "number"
-      ? item.package.price.toLocaleString("th-TH", {
-          style: "currency",
-          currency: "THB",
-        })
+      ? item.package.price.toLocaleString("th-TH", { style: "currency", currency: "THB" })
       : "-";
-
   const rawStatus = (item?.status ?? "").toUpperCase();
   const status = STATUS_LABEL_TH[rawStatus] ?? "-";
-
   const evidence = item?.transferSlip ?? "-";
-
   const bookedAt = item?.bookingAt
     ? new Date(item.bookingAt).toLocaleString("th-TH", {
         year: "numeric",
@@ -115,83 +105,117 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
         minute: "2-digit",
       })
     : "-";
-
   return { customerName, activityTitle, price, status, evidence, bookedAt };
 };
 
-/*
+/**
  * ฟังก์ชัน : BookingHistoryAdmin
- * คำอธิบาย : คอมโพเนนต์หลักของหน้า "ประวัติการจอง"
- * ทำหน้าที่:
- *  - ดึงข้อมูลทุกหน้าแล้วรวม (ผ่าน loadAllPages)
- *  - จัดการ state การค้นหาและตัวกรองสถานะ
- *  - สร้างข้อมูลที่ผ่านการกรองเพื่อส่งให้ DataTable
- * Input  : -
- * Output : องค์ประกอบ UI ของทั้งหน้า
+ * คำอธิบาย : คอมโพเนนต์หลักสำหรับแสดงและจัดการตารางประวัติการจอง (ค้นหา/กรอง/เปลี่ยนหน้า)
+ * Input : -
+ * Output: React.ReactElement
  */
 export default function BookingHistoryAdmin(): React.ReactElement {
   const navigate = useNavigate();
 
-  // จัดเก็บข้อมูลแถวทั้งหมด, คำค้นหา, และค่ากรองสถานะที่ผู้ใช้เลือก
-  const [rows, setRows] = useState<BookingRow[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  // ตาราง + ควบคุมการแสดงผล
+  const [tableRows, setTableRows] = useState<BookingRow[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
 
-  /*
-   * คำอธิบาย : ดึงข้อมูลการจองจาก API แบบแบ่งหน้าและรวมเป็นก้อนเดียว
-   * ทำซ้ำจนกว่าจะไม่มีหน้าถัดไป (hasNext เป็น false) จากนั้นอัปเดต state ของ rows
-   * Input  : -
-   * Output : -
+  // การแบ่งหน้า
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number | undefined>(undefined);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // สถานะโหลด
+  const [isLoading, setIsLoading] = useState(false);
+
+  /**
+   * ฟังก์ชัน : loadPageData
+   * คำอธิบาย : เรียก service เพื่อโหลดข้อมูลตามหน้า/จำนวนเรคอร์ด และแมปเป็นแถวสำหรับตาราง
+   * Input : p: number (หน้า), l?: number (จำนวนต่อหน้า)
+   * Output: Promise<void>
    */
-  const loadAllPages = useCallback(async () => {
-    const allRows: BookingRow[] = [];
-    let page = 1;
-    while (true) {
-      const { list, hasNext } = await fetchBookingHistoriesByRole(
-        page,
-        PAGE_LIMIT
-      );
-      if (Array.isArray(list) && list.length > 0) {
-        allRows.push(...list.map(mapApiToRow));
-      }
-      if (!hasNext) break;
-      page += 1;
+  const loadPageData = useCallback(async (p: number, l?: number) => {
+    setIsLoading(true);
+    try {
+      const resp: BookingHistoryResp =
+        typeof l === "number" ? await fetchBookingHistoriesByRole(p, l) : await fetchBookingHistoriesByRole(p);
+
+      const mappedRows = (resp.list ?? []).map(mapApiToRow);
+      setTableRows(mappedRows);
+
+      // ตั้งค่า pagination จาก server ถ้ามี ไม่งั้นเดาอย่างปลอดภัย
+      const serverLimit = resp.limit ?? l ?? (mappedRows.length > 0 ? mappedRows.length : 10);
+      const serverPage = resp.page ?? p;
+      const serverTotalPages =
+        resp.totalPages ?? (resp.hasNext !== undefined ? (resp.hasNext ? serverPage + 1 : serverPage) : serverPage);
+      const serverTotalCount =
+        resp.totalCount ??
+        (resp.hasNext !== undefined
+          ? (serverPage - 1) * serverLimit + mappedRows.length + (resp.hasNext ? 1 : 0)
+          : mappedRows.length);
+
+      setLimit(serverLimit);
+      setTotalPages(Math.max(1, serverTotalPages));
+      setTotalCount(Math.max(0, serverTotalCount));
+    } finally {
+      setIsLoading(false);
     }
-    setRows(allRows);
   }, []);
 
-  /*
-   * คำอธิบาย : เรียกโหลดข้อมูลเมื่อคอมโพเนนต์ mount ครั้งแรก
-   * ใช้ useEffect เพื่อให้ loadAllPages ทำงานหนึ่งครั้ง
-   * Input  : -
-   * Output : -
+  /**
+   * ฟังก์ชัน : useEffect(loadOnMountAndPaging)
+   * คำอธิบาย : โหลดข้อมูลเมื่อคอมโพเนนต์เริ่มต้น และเมื่อ page/limit เปลี่ยน
+   * Input : - (อิง state page, limit)
+   * Output: -
    */
   useEffect(() => {
-    void loadAllPages();
-  }, [loadAllPages]);
+    void loadPageData(page, limit);
+  }, [page, limit, loadPageData]);
 
-  /*
-   * คำอธิบาย : สร้างรายการแถวที่ผ่านการ "กรองตามสถานะ" และ "ค้นหาแบบ full-text"
-   * - หาก selectedStatus === "ALL" จะไม่กรองสถานะ
-   * - การค้นหาใช้การรวมค่าของทุก field แล้วแปลงเป็นตัวพิมพ์เล็ก
-   * Input  : rows, searchQuery, selectedStatus (ผ่าน dependency)
-   * Output : อาร์เรย์ BookingRow ที่พร้อมแสดงผล
+  /**
+   * ฟังก์ชัน : filteredRows (useMemo)
+   * คำอธิบาย : กรองแถวตามสถานะที่เลือก และค้นหาด้วยข้อความ (client-side)
+   * Input : - (อิง tableRows, searchQuery, selectedStatus)
+   * Output: BookingRow[]
    */
   const filteredRows = useMemo(() => {
     const q = (searchQuery ?? "").toLowerCase().trim();
-    const statusFiltered =
+
+    const subset =
       selectedStatus === "ALL"
-        ? rows
-        : rows.filter(
-            (r) =>
-              r.status ===
-              STATUS_OPTIONS.find((o) => o.value === selectedStatus)?.label
+        ? tableRows
+        : tableRows.filter(
+            (r) => r.status === STATUS_LABEL_TH[selectedStatus as keyof typeof STATUS_LABEL_TH]
           );
-    if (!q) return statusFiltered;
-    return statusFiltered.filter((r) =>
-      Object.values(r).join(" ").toLowerCase().includes(q)
-    );
-  }, [rows, searchQuery, selectedStatus]);
+
+    if (!q) return subset;
+    return subset.filter((r) => Object.values(r).join(" ").toLowerCase().includes(q));
+  }, [tableRows, searchQuery, selectedStatus]);
+
+  /**
+   * ฟังก์ชัน : getRowKey
+   * คำอธิบาย : สร้างคีย์สตริงที่มีเสถียรภาพต่อแถวสำหรับ DataTable
+   * Input : r: BookingRow
+   * Output: string
+   */
+  const getRowKey = (r: BookingRow) =>
+    `${r.customerName}|${r.activityTitle}|${r.price}|${r.bookedAt}|${r.evidence}`;
+
+  /**
+   * ฟังก์ชัน : pagination (อ็อบเจ็กต์)
+   * คำอธิบาย : กำหนดค่าการแบ่งหน้าให้ DataTable
+   * Input : -
+   * Output: Pagination
+   */
+  const pagination: Pagination = {
+    currentPage: page,
+    totalPages,
+    totalCount,
+    limit: limit ?? 10,
+  };
 
   return (
     <div className="space-y-4">
@@ -200,39 +224,54 @@ export default function BookingHistoryAdmin(): React.ReactElement {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* กล่องค้นหาอัปเดตค่า searchQuery ตามข้อความที่ผู้ใช้พิมพ์ */}
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {/*ตัวกรองสถานะ onChange: อัปเดตค่า selectedStatus ด้วยค่าที่ผู้ใช้เลือก*/}
+            {/*
+             * ฟังก์ชัน : SearchBarTable (component)
+             * คำอธิบาย : กล่องค้นหาแบบ client-side
+             * Input : value: string, onChange: (e) => void
+             * Output: -
+             */}
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+
+            {/*
+             * ฟังก์ชัน : FilterDropdown (component)
+             * คำอธิบาย : ตัวกรองสถานะการจอง
+             * Input : options, selected, onChange
+             * Output: -
+             */}
             <FilterDropdown
-              options={
-                STATUS_OPTIONS as unknown as { label: string; value: string }[]
-              }
+              options={STATUS_OPTIONS as unknown as { label: string; value: string }[]}
               selected={selectedStatus}
-              onChange={setSelectedStatus}
+              onChange={(v) => setSelectedStatus(v)}
             />
           </div>
+
           <div>
-            {/*ปุ่มนำทางไปยังหน้า "คำขอคืนเงิน"onClick: ใช้ useNavigate เปลี่ยนเส้นทางไป /admin/booking/refunds*/}
-            <Button
-              type="confirm-admin"
-              onClick={() => navigate("/admin/booking/refunds")}
-            >
+            <Button type="confirm-admin" onClick={() => navigate("/admin/booking/refunds")}>
               คำขอคืนเงิน
             </Button>
           </div>
         </div>
 
-        {/*ตารางข้อมูลประวัติการจอง*/}
+        {/*
+         * ฟังก์ชัน : DataTable (component)
+         * คำอธิบาย : ตารางหลักสำหรับแสดงข้อมูลการจอง พร้อมควบคุมหน้า/ขนาดหน้า
+         * Input : data, columns, pagination, isLoading, onPageChange, onPageSizeChange, ...
+         * Output: -
+         */}
         <DataTable<BookingRow>
           data={filteredRows}
+          getKey={getRowKey}
           columns={columns}
-          getRowKey={(row, index) => `${row.customerName}-${index}`}
           theme="brand"
-          striped
-          className="bg-white rounded-lg w-full"
+          pagination={pagination}
+          isLoading={isLoading}
+          onPageChange={(p) => setPage(Math.max(1, Math.min(p, totalPages)))}
+          onPageSizeChange={(v) => {
+            setLimit(v);
+            setPage(1);
+          }}
+          pageSizeOptions={[10, 30, 50]}
+          selectable={false}
         />
       </div>
     </div>

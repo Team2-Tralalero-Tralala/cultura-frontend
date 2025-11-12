@@ -117,9 +117,7 @@ export default function AvatarUploader({
    * วัตถุประสงค์: เมื่อผู้ใช้เลือกไฟล์ภาพ → เก็บไฟล์ลง state และเตรียมครอป
    * Input: event (React.ChangeEvent<HTMLInputElement>)
    */
-  const handleAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (
-    event
-  ) => {
+  const handleAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const selectedFile = event.target.files?.[0] ?? null;
     setAvatarFile(selectedFile);
     event.currentTarget.value = "";
@@ -189,9 +187,7 @@ export default function AvatarUploader({
           className={[
             "relative overflow-hidden rounded-full border border-gray-400 bg-gray-300 flex items-center justify-center",
             "shadow-[0_4px_10px_rgba(0,0,0,0.15)]",
-            disabled
-              ? "cursor-not-allowed opacity-60"
-              : "cursor-pointer hover:bg-gray-200",
+            disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-gray-200",
           ].join(" ")}
           style={avatarStyle}
         >
@@ -256,18 +252,21 @@ export default function AvatarUploader({
 
             <div className="flex justify-end gap-2">
               <button
+                type="button"
                 className="px-4 py-2 rounded-lg border"
                 onClick={() => setIsCropping(false)}
               >
                 ยกเลิก
               </button>
               <button
+                type="button"
                 className="px-4 py-2 rounded-lg bg-slate-200"
                 onClick={useOriginal}
               >
                 ใช้รูปเดิม
               </button>
               <button
+                type="button"
                 className="px-4 py-2 rounded-lg bg-emerald-600 text-white"
                 onClick={applyCrop}
               >

@@ -28,11 +28,7 @@ import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 
 import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
 
-<<<<<<< HEAD
-import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 
-
-=======
 import CreateAccountPage from "../../Layouts/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
 
@@ -42,7 +38,6 @@ import EditAccountPage from "../../Layouts/SuperAdmin/EditAccountPage";
  * - สามารถสร้างและแก้ไขบัญชีได้ 3 ประเภท (Admin / Member / Tourist)
  * - เมื่อเปลี่ยน role ในหน้า CreateAccountPage จะเปลี่ยน path อัตโนมัติ
  */
->>>>>>> develop
 
 export default function SuperAdminRoutes() {
   return (
@@ -67,7 +62,6 @@ export default function SuperAdminRoutes() {
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
       <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
 
-<<<<<<< HEAD
       <Route
         path="community/:communityId/stores/all"
         element={<ManageStores />}
@@ -77,7 +71,6 @@ export default function SuperAdminRoutes() {
         element={<ManageHomestaySuperAdmin />}
       />
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />}/>
-=======
       <Route path="community/:communityId/stores/all" element={<ManageStores />} />
       <Route path="community/:communityId/homestay/all" element={<ManageHomestaySuperAdmin />} />
       {/* 🔹 หน้าเพิ่มบัญชีผู้ดูแลระบบ (Admin) */}
@@ -101,7 +94,6 @@ export default function SuperAdminRoutes() {
 
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route path="/tourist/:touristId/edit" element={<EditAccountPage />} />
->>>>>>> develop
     </Routes>
   );
 }

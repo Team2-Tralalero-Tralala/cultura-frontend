@@ -4,17 +4,11 @@
  * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจที่ถูกร้องขอ (Detail Package Request)
  * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
  * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
-<<<<<<< HEAD
  * เพิ่ม: การเปลี่ยนสถานะ อนุมัติ/ปฏิเสธ (ใช้ตัวอย่างแบบหน้า SuperAdmin)
  * และเมื่อกดยืนยันในโมดัล จะ navigate ไป "/super/package-requests"
  */
 
 import { useEffect, useState, useCallback } from "react";
-=======
- */
-
-import { useEffect, useState } from "react";
->>>>>>> develop
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -27,11 +21,8 @@ import { fetchPackageRequestDetail } from "@/Services/package-request-service";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-<<<<<<< HEAD
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-=======
->>>>>>> develop
 
 /*
  * คำอธิบาย : ตั้งค่าไอคอนเริ่มต้นของ Leaflet (Marker)
@@ -46,32 +37,19 @@ L.Icon.Default.mergeOptions({
 });
 
 /*
-<<<<<<< HEAD
  * คำอธิบาย : Base URL
  * - BACKEND_BASE_URL: สำหรับเสิร์ฟไฟล์อัปโหลด (รูปภาพ)
  * - API_BASE_URL: สำหรับเรียก approve/reject (ใช้ fetch ไม่ใช่ axios)
-=======
- * คำอธิบาย : Base URL ของ Backend
- * ใช้ค่าในไฟล์ .env (VITE_BACKEND_URL) และ fallback เป็น localhost หากไม่พบค่า
->>>>>>> develop
  */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-<<<<<<< HEAD
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
-=======
->>>>>>> develop
 
 /**
  * ฟังก์ชัน: resolveBackendUploadUrl
  * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend (มักขึ้นต้นด้วย uploads/) เป็น URL ดาวน์โหลดเต็ม
-<<<<<<< HEAD
-=======
- * Input : fileName - ชื่อไฟล์หรือพาธไฟล์จาก backend
- * Output : string | undefined - URL ที่พร้อมใช้งาน หรือ undefined หากไม่พบค่า
->>>>>>> develop
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -79,16 +57,7 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
   return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
 }
 
-<<<<<<< HEAD
 /** แปลงวันที่เป็นรูปแบบไทย dd/mm/yyyy */
-=======
-/**
- * ฟังก์ชัน: formatDate
- * คำอธิบาย : แปลงวันที่ ISO string ให้เป็นรูปแบบไทย dd/mm/yyyy
- * Input : isoString - วันที่รูปแบบ ISO (เช่น 2025-01-31T12:30:00Z)
- * Output : string - ข้อความวันที่ หรือ "-" เมื่อไม่มีค่า
- */
->>>>>>> develop
 function formatDate(isoString?: string): string {
   if (!isoString) return "-";
   return new Date(isoString).toLocaleDateString("th-TH", {
@@ -98,32 +67,14 @@ function formatDate(isoString?: string): string {
   });
 }
 
-<<<<<<< HEAD
 /** ดึงเวลา HH:mm จาก ISO string */
-=======
-/**
- * ฟังก์ชัน: extractTimeFromISO
- * คำอธิบาย : แยกเวลา (HH:mm) จาก ISO string
- * Input : isoString - วันที่รูปแบบ ISO
- * Output : string - เวลา HH:mm หรือ "-"
- */
->>>>>>> develop
 function extractTimeFromISO(isoString?: string): string {
   if (!isoString) return "-";
   const timePart = isoString.split("T")[1];
   return timePart?.substring(0, 5) ?? "-";
 }
 
-<<<<<<< HEAD
 /** รวมฟิลด์ address เป็นข้อความเดียว */
-=======
-/**
- * ฟังก์ชัน: buildAddressLine
- * คำอธิบาย : รวมข้อมูล address ใน PackageRequestDetail ให้เป็นข้อความที่อ่านง่าย
- * Input : detail - ข้อมูลแพ็กเกจทั้งหมด (ใช้เฉพาะฟิลด์ location)
- * Output : string - ที่อยู่แบบบรรทัดเดียว หรือ "-"
- */
->>>>>>> develop
 function buildAddressLine(detail?: PackageRequestDetail | null): string {
   const text = [
     detail?.location?.houseNumber,
@@ -139,7 +90,6 @@ function buildAddressLine(detail?: PackageRequestDetail | null): string {
   return text || "-";
 }
 
-<<<<<<< HEAD
 /* ---------------------------- Services ---------------------------- */
 // helper: ทำ PATCH แบบรวมศูนย์ด้วย fetch
 async function apiPatch<T = any>(url: string, body?: any): Promise<T> {
@@ -186,12 +136,6 @@ const thaiApproveStatus = (status?: string | null) => {
 };
 
 /* ----------------------------- Page ------------------------------ */
-=======
-/*
- * คำอธิบาย : รายละเอียดแพ็กเกจที่ถูกร้องขอ
- * หน้าที่ : ดึงข้อมูลด้วย requestId จากพารามิเตอร์ และแสดงผลทุกส่วนในหน้าเดียว
- */
->>>>>>> develop
 export default function DetailPackageRequiredPage() {
   /* Navigation & Params */
   const navigate = useNavigate();
@@ -200,7 +144,6 @@ export default function DetailPackageRequiredPage() {
   /* Local State */
   const [packageDetail, setPackageDetail] = useState<PackageRequestDetail | null>(null);
 
-<<<<<<< HEAD
   // สถานะโหลด + error + โมดัล
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -210,29 +153,15 @@ export default function DetailPackageRequiredPage() {
   /* โหลดรายละเอียดครั้งแรก */
   useEffect(() => {
     if (!requestId) return;
-=======
-  /*
-   * คำอธิบาย : โหลดข้อมูลแพ็กเกจเมื่อมี requestId
-   * หมายเหตุ : ป้องกัน setState หลัง unmount ด้วย flag isMounted
-   */
-  useEffect(() => {
-    if (!requestId) return;
-
->>>>>>> develop
     let isMounted = true;
     fetchPackageRequestDetail(requestId).then((res) => {
       if (isMounted) setPackageDetail(res);
     });
-<<<<<<< HEAD
-=======
-
->>>>>>> develop
     return () => {
       isMounted = false;
     };
   }, [requestId]);
 
-<<<<<<< HEAD
   // (เผื่อใช้) reload รายละเอียด
   const reloadDetail = useCallback(async () => {
     if (!requestId) return;
@@ -291,24 +220,12 @@ export default function DetailPackageRequiredPage() {
 
   return (
     <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-6">
-=======
-  /* ค่าศูนย์กลางเริ่มต้นของแผนที่ (fallback: กรุงเทพมหานคร) */
-  const mapCenterLat = packageDetail?.location?.latitude ?? 13.7563;
-  const mapCenterLng = packageDetail?.location?.longitude ?? 100.5018;
-
-  return (
-    <section className="bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-6">
->>>>>>> develop
       {/* Header */}
       <div className="flex items-center justify-between">
         <button
           type="button"
           className="flex items-center gap-2 cursor-pointer select-none"
-<<<<<<< HEAD
           onClick={() => navigate("/super/package-requests")}
-=======
-          onClick={() => navigate("/package-requests")}
->>>>>>> develop
           aria-label="ย้อนกลับไปยังรายการคำร้องแพ็กเกจ"
         >
           <ArrowLeft className="w-5 h-5 text-gray-800" />
@@ -325,7 +242,6 @@ export default function DetailPackageRequiredPage() {
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* Error */}
       {errorMessage && (
         <div className="text-sm text-red-600">{errorMessage}</div>
@@ -339,8 +255,6 @@ export default function DetailPackageRequiredPage() {
         </span>
       </div>
 
-=======
->>>>>>> develop
       {/* ชื่อแพ็กเกจ */}
       <div className="space-y-2">
         <p className="text-base font-semibold text-gray-900">
@@ -528,7 +442,6 @@ export default function DetailPackageRequiredPage() {
           </p>
         </div>
       </div>
-<<<<<<< HEAD
 
       {/* ปุ่มชิดขวา: ปฏิเสธ / อนุมัติ (บรรทัดเดียวกัน) */}
       {!approved && (
@@ -570,8 +483,6 @@ export default function DetailPackageRequiredPage() {
         onConfirm={async (reason) => { await doReject(reason); }}
         onCancel={closeRejectModal}
       />
-=======
->>>>>>> develop
     </section>
   );
 }

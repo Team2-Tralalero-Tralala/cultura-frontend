@@ -1,4 +1,4 @@
-/* 
+/*
  * File: UploadBannerPage.tsx
  * Component: UploadBannerPage (Client)
  * มาตรฐาน: CS v1.1.1 (คอมเมนต์ไทยเท่านั้น ไม่แก้โค้ด)
@@ -18,12 +18,12 @@
  */
 
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { Modal } from "@/Components/Modal/Modal";
+import { Icon } from "@iconify/react";
 import axios from "axios";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /* -------------------- Config & axios --------------------
  * กำหนดค่า Base URL และ Prefix จาก ENV
@@ -34,12 +34,9 @@ import axios from "axios";
  * - interceptor: แนบ Authorization Bearer จาก localStorage
  * - debug: แสดงปลายทางเต็มที่กำลังเรียก
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
-const API_BASE =
-    API_BASE_URL && /^https?:\/\//i.test(API_BASE_URL)
-        ? API_BASE_URL.replace(/\/+$/, "")
-        : "http://localhost:3000";
-const API_PREFIX = (import.meta.env.VITE_API_PREFIX ?? "/api").replace(/\/+$/, "");
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_BASE = apiUrl.replace("/api", "") || "http://localhost:3000";
+const API_PREFIX = "/api";
 
 const apiClient = axios.create({ baseURL: API_BASE, withCredentials: true });
 apiClient.interceptors.request.use((config) => {
@@ -57,7 +54,7 @@ apiClient.interceptors.request.use((config) => {
  * isAbsUrl: ตรวจว่า string เป็น URL แบบ absolute (http/https) หรือไม่
  * bannerPreviewUrl: คืน URL สำหรับพรีวิวรูปจาก item (รองรับกรณี URL แบบ absolute และกรณี path จากเซิร์ฟเวอร์)
  */
-const STATIC_BASE_PATH = (import.meta.env.VITE_STATIC_PREFIX ?? "/uploads").replace(/\/+$/, "") || "/";
+const STATIC_BASE_PATH = "/uploads";
 
 const isAbsUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
 
@@ -444,7 +441,7 @@ export default function UploadBannerPage() {
                         <div className="flex flex-wrap items-start gap-4">
                             {renderPreviewCards(combinedPreviews)}
 
-                            {/* ปุ่ม/การ์ดสำหรับเพิ่มรูป (แสดงเมื่อยังไม่ครบ 5) 
+                            {/* ปุ่ม/การ์ดสำหรับเพิ่มรูป (แสดงเมื่อยังไม่ครบ 5)
                                - UploadCard เป็นคอมโพเนนต์ที่ส่งคืน File[] ผ่าน onChange
                                - ที่นี่ส่งต่อไป handleAddFiles เพื่ออัปโหลดทันที */}
                             {remainBanner > 0 && (

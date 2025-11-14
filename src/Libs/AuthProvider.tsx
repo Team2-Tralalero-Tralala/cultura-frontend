@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
@@ -49,7 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/auth/me", {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.get(`${apiUrl}/auth/me`, {
           withCredentials: true,
         });
         const { id, username, role } = res.data.data;
@@ -73,8 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (username: string, password: string) => {
       console.log('login', 1)
       try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
         const res = await axios.post(
-          "http://localhost:3000/api/auth/login",
+          `${apiUrl}/auth/login`,
           { username, password },
           { withCredentials: true }
         );
@@ -126,7 +128,9 @@ const { user: u } = res.data.data;
    */
   const register = useCallback(async (data: RegisterData) => {
     try {
-      const res = await axios.post(`http://localhost:3000/auth/signup`, data);
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const backendUrl = apiUrl.replace("/api", "");
+      const res = await axios.post(`${backendUrl}/auth/signup`, data);
       return res.status === 201 || res.status === 200;
     } catch {
       return false;
@@ -150,7 +154,8 @@ const { user: u } = res.data.data;
     }
     await new Promise((r) => setTimeout(r, 50));
 
-    await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    await axios.post(`${apiUrl}/auth/logout`, {}, { withCredentials: true });
 
     setUser(null);
 

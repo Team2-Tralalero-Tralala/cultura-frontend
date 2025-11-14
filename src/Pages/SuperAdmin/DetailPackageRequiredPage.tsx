@@ -5,17 +5,17 @@
  * สามารถปลี่ยนสถานะ อนุมัติ/ปฏิเสธ
  */
 
-import { useEffect, useState, useMemo } from "react";
-import { ArrowLeft, SquarePen } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
 import Button from "@/Components/Button";
-import Thumbnails from "@/Components/Thumbnails";
-import type { PackageRequestDetail } from "@/Types/package-request";
-import { fetchPackageRequestDetail } from "@/Services/package-request-service";
 import MapPicker from "@/Components/MapPicker";
-import "leaflet/dist/leaflet.css";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
+import Thumbnails from "@/Components/Thumbnails";
+import { fetchPackageRequestDetail } from "@/Services/package-request-service";
+import type { PackageRequestDetail } from "@/Types/package-request";
+import "leaflet/dist/leaflet.css";
+import { ArrowLeft, SquarePen } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 /**
  * ฟังก์ชัน : - (ค่าคงที่)
@@ -23,11 +23,9 @@ import RejectModal from "@/Components/Modal/ModalReject";
  * Input : -
  * Output: -
  */
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
+const API_BASE_URL = apiUrl;
 
 /* ----------------------------- Utilities ----------------------------- */
 /**

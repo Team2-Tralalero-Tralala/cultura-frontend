@@ -82,7 +82,8 @@ export default function ManageMembers() {
             setIsLoading(true);
             setErrorMessage(null);
 
-            const response = await axios.get(`http://localhost:3000/api/admin/communities/members`, {
+            const apiUrl = apiBaseUrl || import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+            const response = await axios.get(`${apiUrl}/admin/communities/members`, {
                 params: { page: currentPage, limit: pageSize },
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },

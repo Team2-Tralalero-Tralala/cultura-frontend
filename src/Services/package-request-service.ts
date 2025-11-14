@@ -11,8 +11,7 @@ import type { PackageRequestDetail } from "@/Types/package-request"; // (ใช�
 import axios from "axios";
 
 /** ค่าฐาน URL ของ API (ควรลงท้ายโดยไม่มี /) */
-const apiUrl =
-  import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 /**
  * ฟังก์ชัน : buildApiUrl

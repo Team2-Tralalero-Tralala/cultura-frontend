@@ -20,13 +20,9 @@ import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
  * - apiBaseUrl   : โดเมนฐาน (ตัด / ท้ายให้เรียบ)
  * - apiPrefix    : พาธ prefix (เช่น /api)
  */
-const apiBaseRaw = import.meta.env.VITE_API_BASE_URL?.trim();
-const apiBaseUrl =
-    apiBaseRaw && /^https?:\/\//i.test(apiBaseRaw)
-        ? apiBaseRaw.replace(/\/+$/, "")
-        : "http://localhost:4000";
-
-const apiPrefix = (import.meta.env.VITE_API_PREFIX || "http://localhost:3000/api").replace(/\/+$/, "");
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const apiBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+const apiPrefix = apiUrl;
 
 /* Axios instance: เพิ่ม withCredentials และแนบ Bearer token จาก localStorage */
 const apiClient = axios.create({

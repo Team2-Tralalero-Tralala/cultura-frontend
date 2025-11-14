@@ -95,7 +95,9 @@ const schema = z.object({
  * ฟังก์ชัน: urlToFile (เหมือนเดิม)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      credentials: "include",
+    });
     if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
     const blob = await res.blob();
     const fileExtension = filename.split(".").pop() || "jpg";

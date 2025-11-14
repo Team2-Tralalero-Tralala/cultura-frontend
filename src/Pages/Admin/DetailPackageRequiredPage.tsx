@@ -2,24 +2,24 @@
  * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจที่ถูกร้องขอ (Detail Package Request)
  * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
  * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * มีการเปลี่ยนสถานะ อนุมัติ/ปฏิเสธ 
+ * มีการเปลี่ยนสถานะ อนุมัติ/ปฏิเสธ
  */
 
-import { useEffect, useState,} from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
+import { useEffect, useState, } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import Button from "@/Components/Button";
 import Thumbnails from "@/Components/Thumbnails";
 
-import type { PackageRequestDetail } from "@/Types/package-request";
 import { fetchPackageRequestDetailForAdmin } from "@/Services/package-request-service";
+import type { PackageRequestDetail } from "@/Types/package-request";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 /*
  * ฟังก์ชัน : LeafletDefaultIconSetup
@@ -42,11 +42,9 @@ L.Icon.Default.mergeOptions({
  * - BACKEND_BASE_URL: ใช้ประกอบ URL สำหรับไฟล์อัปโหลด (รูปภาพ)
  * - API_BASE_URL: ใช้เรียก approve/reject (ผ่าน fetch)
  */
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
+const API_BASE_URL = apiUrl;
 
 /**
  * ฟังก์ชัน : resolveBackendUploadUrl
@@ -199,7 +197,7 @@ export default function DetailPackageRequiredPage() {
   const mapCenterLatitude = packageRequestDetail?.location?.latitude ?? 13.7563;
   const mapCenterLongitude = packageRequestDetail?.location?.longitude ?? 100.5018;
 
-  
+
   /**
    * ฟังก์ชัน : openApproveModal
    * คำอธิบาย : เปิดโมดัลยืนยันการอนุมัติ

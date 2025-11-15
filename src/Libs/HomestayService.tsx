@@ -21,5 +21,5 @@ const api = axios.create({
  */
 export async function getHomestaysAll(communityId: number) {
   return api.get(`/super/community/${communityId}/homestays`);
-  
 }
+

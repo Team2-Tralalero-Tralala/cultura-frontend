@@ -74,3 +74,24 @@ export async function fetchBookingsByAdmin(page = 1, limit = 10): Promise<{
     },
   };
 }
+
+
+/**
+ * ฟังก์ชัน : updateBookingStatus
+ * คำอธิบาย : อัปเดตสถานะของการจอง (ใช้โดย Admin)
+ * Method : POST
+ * Path : /admin/bookings/:id/status
+ */
+export async function updateBookingStatus(
+  bookingId: number,
+  status: "BOOKED" | "REJECTED" | "REFUNDED" | "REFUND_REJECTED"
+): Promise<void> {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
+  await axios.post(
+    `${apiUrl}/admin/bookings/${bookingId}/status`,
+    { status },
+    { withCredentials: true }
+  );
+}
+

@@ -9,6 +9,7 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { MemberDetailPage } from '@/Pages/Admin/MemberDetailPage';
 import Feedbackall from '@/Pages/Admin/FeedbackAll';
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
@@ -32,6 +33,10 @@ import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 export default function AdminRoutes() {
   return (
     <Routes>
+      <Route
+        path="member/:userId"
+        element={<MemberDetailPage />}
+      />
       <Route path="/package/feedbacks" element={<Feedbackall />} />
 
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />

@@ -303,7 +303,6 @@ export default function DetailPackageRequiredPage() {
         />
       </div>
       {/* การ์ดรายละเอียด */}
-      {/* การ์ดรายละเอียด */}
       <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -341,18 +340,32 @@ export default function DetailPackageRequiredPage() {
 
         {/* ชื่อแพ็กเกจ */}
         <div className="space-y-2">
-          <p className="text-[16px] font-semibold text-gray-900">
-            ชื่อแพ็กเกจ :{" "}
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">ชื่อแพ็กเกจ :</span>{" "}
             <span className="font-normal">
               {packageRequestDetail?.name || "-"}
             </span>
           </p>
         </div>
 
+        {/* สถานะแพ็กเกจ */}
+        <div className="space-y-2">
+          <p className="text-[16px] text-gray-900 flex items-center">
+            <span className="font-semibold">สถานะแพ็กเกจ :</span>
+            {packageRequestDetail?.statusPackage === "UNPUBLISH" ? (
+              <span className="ml-2 px-3 py-1 rounded-full bg-red-100 text-red-500 text-[14px]">
+                ไม่เผยแพร่
+              </span>
+            ) : (
+              <span className="ml-2 text-gray-700 text-[16px]">-</span>
+            )}
+          </p>
+        </div>
+
         {/* คำอธิบาย */}
         <div className="space-y-2">
-          <p className="text-[16px] font-semibold text-gray-900">
-            คำอธิบาย :{" "}
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">คำอธิบาย :</span>{" "}
             <span className="font-normal">
               {packageRequestDetail?.description || "-"}
             </span>
@@ -361,15 +374,15 @@ export default function DetailPackageRequiredPage() {
 
         {/* จำนวนคน & ราคา */}
         <div className="grid grid-cols-2 gap-6">
-          <p className="text-[16px] font-semibold text-gray-900">
-            จำนวนคนที่เปิดรับ :{" "}
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">จำนวนคนที่เปิดรับ :</span>{" "}
             <span className="font-normal">
               {packageRequestDetail?.capacity ?? "-"}{" "}
               {packageRequestDetail?.capacity ? "คน" : ""}
             </span>
           </p>
-          <p className="text-[16px] font-semibold text-gray-900">
-            ราคา :{" "}
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">ราคา :</span>{" "}
             <span className="font-normal">
               {typeof packageRequestDetail?.price === "number"
                 ? packageRequestDetail.price.toLocaleString("th-TH")
@@ -381,7 +394,9 @@ export default function DetailPackageRequiredPage() {
 
         {/* แท็ก */}
         <div className="flex items-center gap-2">
-          <p className="text-[16px] font-semibold text-gray-900">แท็ก :</p>
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">แท็ก :</span>
+          </p>
           <div className="flex flex-wrap gap-2">
             {packageRequestDetail?.tagPackages?.length ? (
               packageRequestDetail.tagPackages.map((tagObj, idx) => (
@@ -416,15 +431,15 @@ export default function DetailPackageRequiredPage() {
 
         {/* ผู้ดูแล & ผู้สร้าง */}
         <div className="grid grid-cols-2 gap-6">
-          <p className="text-[16px] font-semibold text-gray-900">
-            ผู้ดูแล :{" "}
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">ผู้ดูแล :</span>{" "}
             <span className="font-normal">
               {packageRequestDetail?.overseerPackage?.fname}{" "}
               {packageRequestDetail?.overseerPackage?.lname}
             </span>
           </p>
-          <p className="text-[16px] font-semibold text-gray-900">
-            สร้างโดย :{" "}
+          <p className="text-[16px] text-gray-900">
+            <span className="font-semibold">สร้างโดย :</span>{" "}
             <span className="font-normal">
               {packageRequestDetail?.createPackage?.fname}{" "}
               {packageRequestDetail?.createPackage?.lname}
@@ -436,15 +451,19 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-3">
           {/* แถววันที่ */}
           <div className="grid grid-cols-2 gap-6">
-            <p className="text-[16px] font-semibold text-gray-900">
-              วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">
+                วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ :
+              </span>{" "}
               <span className="font-normal">
                 {formatDate(packageRequestDetail?.startDate)} -{" "}
                 {formatDate(packageRequestDetail?.dueDate)}
               </span>
             </p>
-            <p className="text-[16px] font-semibold text-gray-900">
-              วันที่เปิด - วันที่ปิดจอง :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">
+                วันที่เปิด - วันที่ปิดจอง :
+              </span>{" "}
               <span className="font-normal">
                 {formatDate(packageRequestDetail?.bookingOpenDate)} -{" "}
                 {formatDate(packageRequestDetail?.bookingCloseDate)}
@@ -454,15 +473,15 @@ export default function DetailPackageRequiredPage() {
 
           {/* แถวเวลา */}
           <div className="grid grid-cols-2 gap-6">
-            <p className="text-[16px] font-semibold text-gray-900">
-              เวลา :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">เวลา :</span>{" "}
               <span className="font-normal">
                 {extractTimeFromISO(packageRequestDetail?.startDate)} -{" "}
                 {extractTimeFromISO(packageRequestDetail?.dueDate)}
               </span>
             </p>
-            <p className="text-[16px] font-semibold text-gray-900">
-              เวลา :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">เวลา :</span>{" "}
               <span className="font-normal">
                 {extractTimeFromISO(packageRequestDetail?.bookingOpenDate)} -{" "}
                 {extractTimeFromISO(packageRequestDetail?.bookingCloseDate)}
@@ -472,8 +491,8 @@ export default function DetailPackageRequiredPage() {
         </div>
 
         {/* สิ่งอำนวยความสะดวก */}
-        <p className="text-[16px] font-semibold text-gray-900">
-          สิ่งอำนวยความสะดวก :{" "}
+        <p className="text-[16px] text-gray-900">
+          <span className="font-semibold">สิ่งอำนวยความสะดวก :</span>{" "}
           <span className="font-normal">
             {packageRequestDetail?.facility ?? "-"}
           </span>
@@ -481,7 +500,9 @@ export default function DetailPackageRequiredPage() {
 
         {/* แผนที่ & ที่อยู่ */}
         <div className="space-y-6">
-          <p className="text-[16px] font-semibold text-gray-900 mb-2">แผนที่ :</p>
+          <p className="text-[16px] text-gray-900 mb-2">
+            <span className="font-semibold">แผนที่ :</span>
+          </p>
 
           {/* ใช้ MapPicker */}
           <div className="w-full h-full">
@@ -498,14 +519,14 @@ export default function DetailPackageRequiredPage() {
 
           {/* ที่อยู่ & คำอธิบายที่อยู่ */}
           <div className="grid grid-cols-2 gap-6">
-            <p className="text-[16px] font-semibold text-gray-900">
-              ที่อยู่ :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">ที่อยู่ :</span>{" "}
               <span className="font-normal">
                 {buildAddressLine(packageRequestDetail)}
               </span>
             </p>
-            <p className="text-[16px] font-semibold text-gray-900">
-              คำอธิบายที่อยู่ :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">คำอธิบายที่อยู่ :</span>{" "}
               <span className="font-normal">
                 {packageRequestDetail?.location?.detail || "-"}
               </span>
@@ -514,8 +535,8 @@ export default function DetailPackageRequiredPage() {
 
           {/* พิกัด (ละติจูด/ลองจิจูด) */}
           <div>
-            <p className="text-[16px] font-semibold text-gray-900">
-              ละติจูด / ลองจิจูด :{" "}
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">ละติจูด / ลองจิจูด :</span>{" "}
               <span className="font-normal">
                 {packageRequestDetail?.location?.latitude ?? "-"},{" "}
                 {packageRequestDetail?.location?.longitude ?? "-"}
@@ -524,6 +545,7 @@ export default function DetailPackageRequiredPage() {
           </div>
         </div>
       </section>
+
 
 
       {/* ปุ่มอนุมัติ/ปฏิเสธ — ย้ายออกนอกการ์ด */}

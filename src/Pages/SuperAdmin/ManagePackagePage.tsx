@@ -20,6 +20,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal"; // [FIX] Import Modal
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // ====== Config ======
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -107,7 +108,7 @@ export default function ManagePackageSuperAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await axios.get(`${apiUrl}/packages`, {
+      const response = await axios.get(`${apiUrl}/super/packages`, {
         params: { page: currentPage, limit: pageSize },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -281,17 +282,6 @@ export default function ManagePackageSuperAdmin() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
-
-  // const pendingCount = React.useMemo(
-  //   () => tableRows.filter((row) => !row.approved).length,
-  //   [tableRows]
-  // );
-
-  /*
-   * คำอธิบาย : นำทางไปยังหน้าคำขออนุมัติแพ็กเกจ
-   * Input: -
-   * Output : (void)
-   */
   const goToApprovalRequests = () => navigate("/super/package-requests");
 
 
@@ -301,10 +291,23 @@ export default function ManagePackageSuperAdmin() {
     totalCount: totalItems,
     limit: pageSize,
   }), [currentPage, pageSize, totalItems]);
+
+
+
+
+
   return (
+
     <div className="space-y-4">
+
+      {/* Breadcrumb */}
+      <div className="-ml-6">
+        <Breadcrumb items={[{ label: "จัดการแพ็กเกจ" }]} />
+      </div>
+      
+      {/* หัวข้อและช่องค้นหา */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
+        <h1 className="text-xl font-semibold">จัดการแพ็กเกจ</h1>
 
         <div className="flex items-center gap-3">
           <div className="flex-1 max-w-md">
@@ -322,10 +325,7 @@ export default function ManagePackageSuperAdmin() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
-
+      {/* ตาราง */}
       <DataTable<Row>
         data={filteredRows}
         columns={columns}
@@ -341,7 +341,7 @@ export default function ManagePackageSuperAdmin() {
         theme="brand"
       />
 
-      {/* [FIX] เพิ่ม Modal สำหรับยืนยันการลบ */}
+      {/* Modal สำหรับยืนยันการลบ */}
       <Modal
         open={isDeleteModalOpen}
         title="ยืนยันการลบ"

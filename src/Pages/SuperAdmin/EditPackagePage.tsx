@@ -28,6 +28,9 @@ import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
 // =====================================
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
@@ -63,19 +66,20 @@ function toIntOrNull(value: any): number | null {
  */
 function toTimeInput(input?: string | Date | null) {
   if (!input) return "";
+  const dateObject = new Date(input as any);
+    if (!isNaN(dateObject.getTime())) {
+    const hours = String(dateObject.getHours()).padStart(2, "0");
+    const minutes = String(dateObject.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
   if (typeof input === "string") {
-    const matchResult = input.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
-    if (matchResult && matchResult[4] !== undefined && matchResult[5] !== undefined) {
-      const hours = matchResult[4].padStart(2, "0");
-      const minutes = matchResult[5].padStart(2, "0");
-      return `${hours}:${minutes}`;
+    const m = input.match(/^(\d{2}):(\d{2})/);
+    if (m) {
+      return `${m[1].padStart(2, "0")}:${m[2].padStart(2, "0")}`;
     }
   }
-  const dateObject = new Date(input as any);
-  if (isNaN(dateObject.getTime())) return "";
-  const hours = String(dateObject.getHours()).padStart(2, "0");
-  const minutes = String(dateObject.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
+
+  return "";
 }
 
 /*
@@ -167,7 +171,7 @@ async function bestEffortUrlToFile(rawPath: string, filename: string): Promise<F
 type PackageForm = {
   name: string;
   description: string;
-
+  statusPackage: PackageStatus;
   houseNumber: string;
   villageNumber: string;
   province: string;
@@ -200,7 +204,7 @@ type PackageForm = {
 const initialFormState: PackageForm = {
   name: "",
   description: "",
-
+  statusPackage: "DRAFT",
   houseNumber: "",
   villageNumber: "",
   province: "",
@@ -234,6 +238,7 @@ const initialFormState: PackageForm = {
 const packageSchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
   description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
+  statusPackage: z.enum(["DRAFT", "PUBLISH", "UNPUBLISH"]),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
   overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
   capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
@@ -274,6 +279,18 @@ export const EditPackagePage: React.FC = () => {
   // ====== รูปภาพ (เหมือน EditHomestay) ======
   const [coverFiles, setCoverFiles] = useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([])
+
+  // สำหรับ BoxDateInput (เหมือน EditCommunity)
+  const [startDateObj, setStartDateObj] = useState<Date | null>(null);
+  const [endDateObj, setEndDateObj] = useState<Date | null>(null);
+  const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
+  const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
+
+  // วันที่เช็กอิน/เอาต์ ที่พัก (optional)
+  const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
+  const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
+
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -378,6 +395,7 @@ export const EditPackagePage: React.FC = () => {
     const required = [
       formState.name,
       formState.description,
+      formState.statusPackage,
       formState.houseNumber,
       formState.villageNumber,
       formState.province,
@@ -512,8 +530,10 @@ export const EditPackagePage: React.FC = () => {
    */
   const clearHomestay = () => {
     setSelectedHomestay(null);
+    setHsCheckInDateObj(null);
     setHsCheckInDate("");
     setHsCheckInTime("");
+    setHsCheckOutDateObj(null);
     setHsCheckOutDate("");
     setHsCheckOutTime("");
     setHsBookedRoom("1");
@@ -557,9 +577,26 @@ export const EditPackagePage: React.FC = () => {
             ? packageData.homestayHistories[0]
             : null;
 
+        const startDateRaw = packageData.startDate ?? null;
+        const dueDateRaw = packageData.dueDate ?? null;
+        const bookingOpenRaw = packageData.bookingOpenDate ?? null;
+        const bookingCloseRaw = packageData.bookingCloseDate ?? null;
+
+        const startParsed = startDateRaw ? new Date(startDateRaw) : null;
+        const dueParsed = dueDateRaw ? new Date(dueDateRaw) : null;
+        const openParsed = bookingOpenRaw ? new Date(bookingOpenRaw) : null;
+        const closeParsed = bookingCloseRaw ? new Date(bookingCloseRaw) : null;
+
+        setStartDateObj(startParsed && !isNaN(startParsed.getTime()) ? startParsed : null);
+        setEndDateObj(dueParsed && !isNaN(dueParsed.getTime()) ? dueParsed : null);
+        setOpenDateObj(openParsed && !isNaN(openParsed.getTime()) ? openParsed : null);
+        setCloseDateObj(closeParsed && !isNaN(closeParsed.getTime()) ? closeParsed : null);
+
         setFormState({
           name: packageData.name ?? "",
           description: packageData.description ?? "",
+          statusPackage:
+            (packageData.statusPackage as PackageStatus) ?? "DRAFT",
           houseNumber: locationData.houseNumber ?? "",
           villageNumber: locationData.villageNumber != null ? String(locationData.villageNumber) : "",
           province: locationData.province ?? "",
@@ -613,8 +650,46 @@ export const EditPackagePage: React.FC = () => {
               bestEffortUrlToFile(String(image.filePath || image.image || ""), String(image.filePath || "gallery.jpg")),
             ),
         );
+        const videoFetched: File[] = await Promise.all(
+          imagesData
+            .filter((image) => String(image.type).toUpperCase() === "VIDEO")
+            .map(async (image) => {
+              const rawPath = String(image.filePath || image.image || "");
+
+              // ใช้ candidate URL เดิมที่คุณมีอยู่แล้ว
+              const candidates = buildImageCandidates(rawPath);
+
+              let lastError: unknown = null;
+
+              for (const url of candidates) {
+                try {
+                  const response = await fetch(url);
+                  if (!response.ok) {
+                    lastError = new Error(`fetch ${url} -> ${response.status}`);
+                    continue;
+                  }
+
+                  const blob = await response.blob();
+
+                  const fixedBlob =
+                    blob.type && blob.type.startsWith("video/")
+                      ? blob
+                      : new Blob([blob], { type: "video/mp4" });  // 👈 บังคับเป็น video/mp4
+
+                  const filename = rawPath.split("/").pop() || "video.mp4";
+
+                  return new File([fixedBlob], filename, { type: fixedBlob.type });
+                } catch (error) {
+                  lastError = error;
+                }
+              }
+
+              throw lastError || new Error("no video url works");
+            })
+        );
         setCoverFiles(coverFetched);
         setGalleryFiles(galleryFetched);
+        setVideoFiles(videoFetched);
 
         // ตั้ง homestay + เวลา (ถ้ามี)
         if (homestayHistory?.homestay) {
@@ -626,10 +701,14 @@ export const EditPackagePage: React.FC = () => {
           });
         }
         if (homestayHistory?.checkInTime) {
+          const d = new Date(homestayHistory.checkInTime);
+          setHsCheckInDateObj(!isNaN(d.getTime()) ? d : null);
           setHsCheckInDate(toDateOnly(homestayHistory.checkInTime));
           setHsCheckInTime(toTimeInput(homestayHistory.checkInTime));
         }
         if (homestayHistory?.checkOutTime) {
+          const d = new Date(homestayHistory.checkOutTime);
+          setHsCheckOutDateObj(!isNaN(d.getTime()) ? d : null);
           setHsCheckOutDate(toDateOnly(homestayHistory.checkOutTime));
           setHsCheckOutTime(toTimeInput(homestayHistory.checkOutTime));
         }
@@ -683,6 +762,7 @@ export const EditPackagePage: React.FC = () => {
         overseerMemberId: Number(formState.overseerMemberId),
         name: normalizeOrDefault(formState.name),
         description: normalizeOrDefault(formState.description),
+        statusPackage: formState.statusPackage,
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
         warning: normalizeOrDefault(formState.facility),
@@ -728,6 +808,7 @@ export const EditPackagePage: React.FC = () => {
       formData.append("data", JSON.stringify(payload));
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
+      videoFiles.forEach((file: any) => formData.append("video", file));
 
       // NOTE: ให้ตรงกับ BE ที่รับ multipart ของ package
       await axios.put(`${apiUrl}/super/package/${id}`, formData, {
@@ -760,9 +841,6 @@ export const EditPackagePage: React.FC = () => {
     event.preventDefault();
     if (!id || isSaving) return;
 
-    const formElement = event.currentTarget;
-    if (!formElement.reportValidity()) return;
-
     // Validate ข้อมูลก่อนเปิด Modal
     if (!validateAll()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -788,21 +866,21 @@ export const EditPackagePage: React.FC = () => {
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
       {/* Breadcrumb */}
-            <div className="-ml-6">
-              <Breadcrumb items={[{ label: "จัดการแพ็กเกจ", to: "/super/packages/all"},
-                { label: formState.name, to: `/super/package/${id}`},
-                { label: "แก้ไขแพ็กเกจ"}
-              ]} />
-            </div>
-      <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
+      <div className="-ml-6 mb-6">
+        <Breadcrumb items={[{ label: "จัดการแพ็กเกจ", to: "/super/packages/all" },
+        { label: formState.name, to: `/super/package/${id}` },
+        { label: "แก้ไขแพ็กเกจ" }
+        ]} />
+      </div>
+      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
-          onClick={() => navigate("/super/packages/all")}
-          className="inline-flex items-center gap-2 text-xl mb-1 group"
+          onClick={() => navigate(`/super/package/${id}`)}
+          className="inline-flex items-center gap-2 text-xl mb-1 group hover"
           aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
         >
           <Icon icon="lucide:arrow-left" width={22} />
-          <span className="text-xl font-semibold">{loading ? "กำลังโหลด..." : "แก้ไขแพ็กเกจ"}</span>
+          <span className="text-xl font-semibold ">แก้ไขแพ็กเกจ</span>
         </button>
 
         {/* ชื่อ/คำอธิบาย */}
@@ -819,12 +897,16 @@ export const EditPackagePage: React.FC = () => {
           />
 
           {/* สถานะเเพ็กเกจ */}
-          <div>
+          <div className="space-y-2">
             <label className="block text-base font-semibold">
               สถานะเเพ็กเกจ <span className="text-red-600 text-base">*</span>
             </label>
+
+            <PackageStatusDropdown
+              value={formState.statusPackage}
+              onChange={(status) => setFormField("statusPackage", status)}
+            />
           </div>
-          
 
           <div>
             <TextArea
@@ -1032,85 +1114,101 @@ export const EditPackagePage: React.FC = () => {
 
         {/* วันเวลา */}
         <section className="grid md:grid-cols-4 gap-5">
-          <TextField
+          <BoxDateInput
             id="startDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่เริ่ม"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
             required
-            type="date"
-            value={formState.startDate}
-            onChange={(event) => setFormField("startDate", event.target.value)}
-            error={!!formErrors.startDate}
-            helperText={formErrors.startDate}
+            value={startDateObj}
+            onChange={(date) => {
+              setStartDateObj(date);
+              if (date) {
+                setFormField("startDate", date.toISOString().split("T")[0] as any);
+              } else {
+                setFormField("startDate", "" as any);
+              }
+            }}
+            minDate={new Date("1900-01-01")}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.startDate}
           />
-          <TextField
-            id="startTime"
+          <BoxTimeInput
             label="เวลาที่เริ่ม"
-            required
-            type="time"
             value={formState.startTime}
-            onChange={(event) => setFormField("startTime", event.target.value)}
-            error={!!formErrors.startTime}
-            helperText={formErrors.startTime}
+            onChange={(time) => setFormField("startTime", time)}
+            required
+            errorText={formErrors.startTime}
           />
-          <TextField
+          <BoxDateInput
             id="endDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่สิ้นสุด"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุด"
             required
-            type="date"
-            value={formState.endDate}
-            onChange={(event) => setFormField("endDate", event.target.value)}
-            error={!!formErrors.endDate}
-            helperText={formErrors.endDate}
+            value={endDateObj}
+            onChange={(date) => {
+              setEndDateObj(date);
+              if (date) {
+                setFormField("endDate", date.toISOString().split("T")[0] as any);
+              } else {
+                setFormField("endDate", "" as any);
+              }
+            }}
+            minDate={new Date("1900-01-01")}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.endDate}
           />
-          <TextField
-            id="endTime"
+          <BoxTimeInput
             label="เวลาที่สิ้นสุด"
-            required
-            type="time"
             value={formState.endTime}
-            onChange={(event) => setFormField("endTime", event.target.value)}
-            error={!!formErrors.endTime}
-            helperText={formErrors.endTime}
+            onChange={(time) => setFormField("endTime", time)}
+            required
+            errorText={formErrors.endTime}
           />
-          <TextField
+          <BoxDateInput
             id="openDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่เปิดจอง"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่เปิดจอง"
             required
-            type="date"
-            value={formState.openDate}
-            onChange={(event) => setFormField("openDate", event.target.value)}
-            error={!!formErrors.openDate}
-            helperText={formErrors.openDate}
+            value={openDateObj}
+            onChange={(date) => {
+              setOpenDateObj(date);
+              if (date) {
+                setFormField("openDate", date.toISOString().split("T")[0] as any);
+              } else {
+                setFormField("openDate", "" as any);
+              }
+            }}
+            minDate={new Date("1900-01-01")}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.openDate}
           />
-          <TextField
-            id="openTime"
+          <BoxTimeInput
             label="เวลาที่เปิดจอง"
-            required
-            type="time"
             value={formState.openTime}
-            onChange={(event) => setFormField("openTime", event.target.value)}
-            error={!!formErrors.openTime}
-            helperText={formErrors.openTime}
+            onChange={(time) => setFormField("openTime", time)}
+            required
+            errorText={formErrors.openTime}
           />
-          <TextField
+          <BoxDateInput
             id="closeDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่ปิดจอง"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่ปิดจอง"
             required
-            type="date"
-            value={formState.closeDate}
-            onChange={(event) => setFormField("closeDate", event.target.value)}
-            error={!!formErrors.closeDate}
-            helperText={formErrors.closeDate}
+            value={closeDateObj}
+            onChange={(date) => {
+              setCloseDateObj(date);
+              if (date) {
+                setFormField("closeDate", date.toISOString().split("T")[0] as any);
+              } else {
+                setFormField("closeDate", "" as any);
+              }
+            }}
+            minDate={new Date("1900-01-01")}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.closeDate}
           />
-          <TextField
-            id="closeTime"
+          <BoxTimeInput
             label="เวลาที่ปิดจอง"
-            required
-            type="time"
             value={formState.closeTime}
-            onChange={(event) => setFormField("closeTime", event.target.value)}
-            error={!!formErrors.closeTime}
-            helperText={formErrors.closeTime}
+            onChange={(time) => setFormField("closeTime", time)}
+            required
+            errorText={formErrors.closeTime}
           />
         </section>
 
@@ -1140,7 +1238,7 @@ export const EditPackagePage: React.FC = () => {
         <section className="space-y-6">
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              ภาพหน้าปก (COVER) <span className="text-red-600">*</span>
+              อัพโหลดภาพหน้าปก <span className="text-red-600">*</span>
             </label>
             <UploadCard
               max={1}
@@ -1162,7 +1260,7 @@ export const EditPackagePage: React.FC = () => {
 
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              รูปเพิ่มเติม (GALLERY) <span className="text-red-600">*</span>
+              อัพโหลดรูปภาพเพิ่มเติม <span className="text-red-600">*</span>
             </label>
             <UploadCard
               max={5}
@@ -1170,6 +1268,28 @@ export const EditPackagePage: React.FC = () => {
               multiple
               value={galleryFiles}
               onChange={setGalleryFiles}
+              itemW={160}
+              itemH={110}
+              square={false}
+              itemClass="border border-dashed border-black/60 bg-slate-200/60"
+              rounded="rounded-lg"
+              gapCls="gap-4"
+              containerClass="w-full"
+              wrap
+              iconSizeCls="w-10 h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-base font-semibold">
+              อัพโหลดวิดีโอเพิ่มเติม <span className="text-red-600">*</span>
+            </label>
+            <UploadCard
+              max={5}
+              accept="video/*"
+              multiple={false}
+              value={videoFiles}
+              onChange={setVideoFiles}
               itemW={160}
               itemH={110}
               square={false}
@@ -1237,14 +1357,21 @@ export const EditPackagePage: React.FC = () => {
           {selectedHomestay && (
             <>
               <div className="grid md:grid-cols-4 gap-4 mb-3">
-                <TextField
+                <BoxDateInput
                   id="hsCheckInDate"
-                  label="วัน/เดือน/ปี (ค.ศ.) ที่เช็กอินพัก (หากมีที่พัก)"
-                  type="date"
-                  value={hsCheckInDate}
-                  onChange={(event) => setHsCheckInDate(event.target.value)}
-                  error={!!(formErrors as any).hsCheckInDate}
-                  helperText={(formErrors as any).hsCheckInDate}
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กอินพัก (หากมีที่พัก)"
+                  value={hsCheckInDateObj}
+                  onChange={(date) => {
+                    setHsCheckInDateObj(date);
+                    if (date) {
+                      setHsCheckInDate(date.toISOString().split("T")[0]);
+                    } else {
+                      setHsCheckInDate("");
+                    }
+                  }}
+                  minDate={new Date("1900-01-01")}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={(formErrors as any).hsCheckInDate}
                 />
                 <TextField
                   id="hsCheckInTime"
@@ -1255,14 +1382,21 @@ export const EditPackagePage: React.FC = () => {
                   error={!!(formErrors as any).hsCheckInTime}
                   helperText={(formErrors as any).hsCheckInTime}
                 />
-                <TextField
+                <BoxDateInput
                   id="hsCheckOutDate"
-                  label="วัน/เดือน/ปี (ค.ศ.) ที่เช็กเอาท์ (หากมีที่พัก)"
-                  type="date"
-                  value={hsCheckOutDate}
-                  onChange={(event) => setHsCheckOutDate(event.target.value)}
-                  error={!!(formErrors as any).hsCheckOutDate}
-                  helperText={(formErrors as any).hsCheckOutDate}
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กเอาท์ (หากมีที่พัก)"
+                  value={hsCheckOutDateObj}
+                  onChange={(date) => {
+                    setHsCheckOutDateObj(date);
+                    if (date) {
+                      setHsCheckOutDate(date.toISOString().split("T")[0]);
+                    } else {
+                      setHsCheckOutDate("");
+                    }
+                  }}
+                  minDate={new Date("1900-01-01")}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={(formErrors as any).hsCheckOutDate}
                 />
                 <TextField
                   id="hsCheckOutTime"

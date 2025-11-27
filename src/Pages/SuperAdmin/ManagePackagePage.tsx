@@ -301,12 +301,12 @@ export default function ManagePackageSuperAdmin() {
     <div className="space-y-4">
 
       {/* Breadcrumb */}
-      <div className="-ml-6">
+      <div className="-ml-6  mb-6">
         <Breadcrumb items={[{ label: "จัดการแพ็กเกจ" }]} />
       </div>
       
       {/* หัวข้อและช่องค้นหา */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 -mt-3">
         <h1 className="text-xl font-semibold">จัดการแพ็กเกจ</h1>
 
         <div className="flex items-center gap-3">

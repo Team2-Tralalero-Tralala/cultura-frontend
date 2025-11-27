@@ -25,6 +25,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { deleteCommunityMember } from "@/Services/deleate-member-community-service";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL;
 
@@ -214,11 +215,29 @@ export default function ManageMembers() {
     };
 
     return (
-
+        <>
+            {/* <Breadcrumb
+                item={[
+                    { label: "จัดการสมาชิก"}
+                ]}
+            /> */}
+            <div className="text-sm mb-2 text-[#000]">
+                {/* <a
+                    href="/admin/community/own"
+                    className="text-gray-900 hover:underline font-medium"
+                    aria-label="กลับไปหน้าแรก (ชุมชนทั้งหมด)"
+                >
+                    จัดการสมาชิก
+                </a>
+                <span className="mx-1 text-gray-500" aria-hidden>
+                    &gt;
+                </span> */}
+                <span>จัดการสมาชิก</span>
+            </div>
         <div className="space-y-4">
             {/* Header */}
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl">จัดการสมาชิก</h1>
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-[20px] font-bold">จัดการสมาชิก</h1>
 
                 <div className="flex items-center gap-3">
                     <div className="flex-1 max-w-md">
@@ -289,6 +308,6 @@ export default function ManageMembers() {
                 />
             )}
         </div>
-
+        </>
     );
 }

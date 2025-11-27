@@ -241,7 +241,6 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  // ✅ กำหนดค่า Breadcrumb ให้เหมือนในรูป
   const breadcrumbItems = [
     {
       label: "จัดการบัญชี",

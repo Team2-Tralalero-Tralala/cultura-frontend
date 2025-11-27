@@ -2,7 +2,7 @@
  * Component: EditAccountPage
  * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 9 พฤษจิกายน 2568
+ * Last Modified: 27 พฤษจิกายน 2568
  */
 
 import React, { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ import ThailandLocationSelector, {
 } from "../../Components/Selector/ThailandLocationSelector";
 import CommunitySelector from "../../Components/Selector/CommunitySelector";
 import AvatarUploader from "@/Components/AvatarUploader";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -240,8 +241,55 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
+  // ✅ กำหนดค่า Breadcrumb ให้เหมือนในรูป
+  const breadcrumbItems = [
+    {
+      label: "จัดการบัญชี",
+      to: `/super/account/${formData.role.toLowerCase()}`,
+    },
+    {
+      label: "รายละเอียดบัญชี",
+      // ใส่ Link ไปหน้า View (ถ้ายังไม่ได้ทำหน้า View ให้ลบบรรทัด 'to' ออกได้ครับ)
+      to: `/super/account/${formData.role.toLowerCase()}/${userId}`, 
+    },
+    {
+      label: "แก้ไขบัญชี",
+    },
+  ];
+
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
+      {/* 1. Breadcrumb */}
+      <div className="mb-2">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
+
+      {/* 2. Header พร้อมปุ่มย้อนกลับ */}
+      <div className="flex items-center gap-3 mb-6 pl-6">
+        <button
+          onClick={() => navigate(-1)}
+          type="button"
+          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+          title="ย้อนกลับ"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="32" 
+            height="32" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขบัญชี</h1>
+      </div>
+
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
@@ -301,7 +349,7 @@ const EditAccountPage: React.FC = () => {
               onChange={handleChange}
             />
 
-            {/* 🔹 ปุ่มเปลี่ยน Role */}
+            {/* Role Selection */}
             <div>
               <label className="font-semibold text-gray-800 block mb-2">
                 Role <span className="text-red-500">*</span>
@@ -312,10 +360,10 @@ const EditAccountPage: React.FC = () => {
                     key={roleItem}
                     type="button"
                     onClick={() => handleRoleSelect(roleItem)}
-                    className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
+                    className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
                       formData.role === roleItem
-                        ? "bg-green-800 text-white border-green-800"
-                        : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
                     }`}
                   >
                     {roleItem}

@@ -2,7 +2,7 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 9 พฤษจิกายน 2568
+ * Last Modified: 27 พฤษจิกายน 2568
  */
 
 import React, { useState, useEffect } from "react";
@@ -19,6 +19,7 @@ import ThailandLocationSelector, {
 } from "../../Components/Selector/ThailandLocationSelector";
 import CommunitySelector from "../../Components/Selector/CommunitySelector";
 import AvatarUploader from "@/Components/AvatarUploader";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -92,7 +93,7 @@ interface CreateAccountBody {
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  
   // ดึง role จาก path
   const getRoleFromPath = (): RoleType => {
     if (defaultRole) return defaultRole;
@@ -272,8 +273,52 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
+  // ✅ [แก้ไข] ใช้คำว่า "จัดการบัญชี" คำเดียว (ไม่ต้องมี role ต่อท้าย) ตาม Figma
+  const breadcrumbItems = [
+    {
+      label: "จัดการบัญชี", 
+      to: `/super/account/${role.toLowerCase()}`, 
+    },
+    {
+      label: "สร้างบัญชี", 
+    },
+  ];
+
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
+      {/* 1. Breadcrumb */}
+      <div className="mb-2">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
+
+      {/* 2. Header พร้อมปุ่มย้อนกลับ */}
+      <div className="flex items-center gap-3 mb-6 pl-6">
+        <button
+          onClick={() => navigate(-1)}
+          type="button"
+          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+          title="ย้อนกลับ"
+        >
+          {/* SVG รูปไอคอนลูกศรย้อนกลับ */}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="32" 
+            height="32" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 className="text-xl font-bold text-black tracking-tight">สร้างบัญชี</h1>
+      </div>
+
+      {/* 3. Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
@@ -291,8 +336,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <div className="grid grid-cols-2 gap-6">
               <TextField
                 id="fname"
-                label="ชื่อ"
-                placeholder="ชื่อ"
+                label="ชื่อ(ไม่ต้องใส่คำนำหน้า)"
+                placeholder="กรอกชื่อ"
                 required
                 value={formData.fname}
                 onChange={handleChange}
@@ -302,7 +347,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               <TextField
                 id="lname"
                 label="นามสกุล"
-                placeholder="นามสกุล"
+                placeholder="กรอกนามสกุล"
                 required
                 value={formData.lname}
                 onChange={handleChange}
@@ -314,7 +359,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <TextField
               id="username"
               label="ชื่อผู้ใช้"
-              placeholder="ชื่อผู้ใช้"
+              placeholder="กรอกชื่อผู้ใช้"
               required
               value={formData.username}
               onChange={handleChange}
@@ -324,7 +369,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <TextField
               id="email"
               label="อีเมล"
-              placeholder="อีเมล"
+              placeholder="กรอกอีเมล"
               required
               value={formData.email}
               onChange={handleChange}
@@ -334,7 +379,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             <TextField
               id="phone"
               label="โทรศัพท์"
-              placeholder="หมายเลขโทรศัพท์"
+              placeholder="กรอกหมายเลขโทรศัพท์"
               required
               value={formData.phone}
               onChange={handleChange}
@@ -346,7 +391,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               <TextField
                 id="password"
                 label="รหัสผ่าน"
-                placeholder="รหัสผ่าน"
+                placeholder="กรอกรหัสผ่าน"
+                required
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -355,8 +401,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               />
               <TextField
                 id="confirmPassword"
-                label="ยืนยันรหัสผ่าน"
+                label="กรอกยืนยันรหัสผ่าน"
                 placeholder="ยืนยันรหัสผ่าน"
+                required
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -374,10 +421,10 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     key={roleItem}
                     type="button"
                     onClick={() => handleRoleSelect(roleItem)}
-                    className={`px-4 py-1.5 rounded-full border font-medium transition-all ${
+                    className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
                       role === roleItem
-                        ? "bg-green-800 text-white border-green-800"
-                        : "border-gray-300 text-gray-600 hover:border-green-700 hover:text-green-800"
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
                     }`}
                   >
                     {roleItem}

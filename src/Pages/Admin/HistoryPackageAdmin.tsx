@@ -7,6 +7,8 @@ import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type { Column, Pagination, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 import { getHistoriesPackageAdmin } from "@/Services/package-services";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
 type PackageHistoryRow = {
   id: number;
@@ -22,8 +24,8 @@ type PackageHistoryRow = {
  * Input : string
  * Output : string ที่ผ่านการ normalize แล้ว
  */
-const normalizeText = (s: string) =>
-  (s ?? "")
+const normalizeText = (str: string) =>
+  (str ?? "")
     .toString()
     .toLowerCase()
     .normalize("NFC")
@@ -64,7 +66,7 @@ const columns: Column<PackageHistoryRow>[] = [
   {
     key: "dueDate",
     header: "เวลาสิ้นสุด",
-    render: (r) => formatThaiDateTime(r.dueDate),
+    render: (row) => formatThaiDateTime(row.dueDate),
   },
 ];
 
@@ -86,6 +88,7 @@ export default function PackageHistoryAdmin() {
     totalCount: 0,
     limit: 10,
   });
+  const [communityName, setCommunityName] = useState<string>("");
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
@@ -106,13 +109,13 @@ export default function PackageHistoryAdmin() {
       const list = res?.data?.data ?? [];
       const pag = res?.data?.pagination ?? {};
 
-      const mapped = list.map((p: any) => ({
-        id: p.id,
-        name: p.name ?? "-",
-        community: p.community?.name ?? "-",
-        overseer: `${p.overseerPackage?.fname ?? ""} ${p.overseerPackage?.lname ?? ""}`.trim(),
-        status: p.statusPackage === "PUBLISH" ? "จบแล้ว" : p.statusPackage,
-        dueDate: p.dueDate,
+      const mapped = list.map((pkg: any) => ({
+        id: pkg.id,
+        name: pkg.name ?? "-",
+        community: pkg.community?.name ?? "-",
+        overseer: `${pkg.overseerPackage?.fname ?? ""} ${pkg.overseerPackage?.lname ?? ""}`.trim(),
+        status: pkg.statusPackage === "PUBLISH" ? "จบแล้ว" : pkg.statusPackage,
+        dueDate: pkg.dueDate,
       }));
 
       setRows(mapped);
@@ -122,9 +125,9 @@ export default function PackageHistoryAdmin() {
         totalCount: pag.totalCount ?? mapped.length,
         limit: pag.limit ?? pagination.limit,
       });
-    } catch (e: any) {
-      console.error("Failed to fetch packages:", e);
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      console.error("Failed to fetch packages:", error);
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -136,6 +139,19 @@ export default function PackageHistoryAdmin() {
   useEffect(() => {
     fetchData();
   }, [pagination.currentPage, pagination.limit]);
+
+  useEffect(() => {
+    fetchCommunityName();
+  }, []);
+
+  const fetchCommunityName = async () => {
+    try {
+      const res = await getCommunityDetailByAdmin();
+      setCommunityName(res.data?.data?.name || "ชุมชน");
+    } catch (error) {
+      console.error("Failed to fetch community name:", error);
+    }
+  };
 
   /*
    * คำอธิบาย : การตั้งค่า Action สำหรับแต่ละแถว เช่น แก้ไข หรือ ลบ
@@ -161,12 +177,12 @@ export default function PackageHistoryAdmin() {
    * Output : แถวข้อมูลที่ตรงกับคำค้นหา
    */
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
+    const query = normalizeText(searchQuery);
     return rows.filter((row) => {
-      const haystacks = [row.name, row.community, row.overseer, row.dueDate].map((v) =>
-        normalizeText(String(v ?? ""))
+      const haystacks = [row.name, row.community, row.overseer, row.dueDate].map((value) =>
+        normalizeText(String(value ?? ""))
       );
-      return !q || haystacks.some((h) => h.includes(q));
+      return !query || haystacks.some((haystack) => haystack.includes(query));
     });
   }, [rows, searchQuery]);
 
@@ -190,8 +206,8 @@ export default function PackageHistoryAdmin() {
       intent: "neutral",
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        const ids = rows.map((r) => r.id);
-        alert("Bulk delete: " + ids);
+        const packageIds = rows.map((row) => row.id);
+        alert("Bulk delete: " + packageIds);
         await fetchData();
       },
     },
@@ -202,43 +218,50 @@ export default function PackageHistoryAdmin() {
    */
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="px-6 pb-1">
-        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-          <span className="text-gray-800 font-medium">ประวัติแพ็กเกจ</span>
-        </nav>
-      </div>
+      {/* Section: Header */}
+      <div className="flex flex-col gap-2 w-full">
+        {/* Breadcrumb */}
+        <div className="-ml-6 pt-1 pb-1">
+                <Breadcrumb
+                  items={[
+                    { label: "จัดการแพ็กเกจ", to: "/admin/packages" },
+                    { label: "ประวัติแพ็กเกจ" },
+                  ]}
+                />
+              </div>
 
-      {/* Header */}
-      <div className="px-6 py-1 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">ประวัติแพ็กเกจ</h2>
-        <div>
-          <Button onClick={() => navigate("/admin/package/create")} aria-label="สร้างแพ็กเกจ">
-            + สร้างแพ็กเกจ
-          </Button>
+        <h1 className="text-xl font-bold "> ประวัติแพ็กเกจ </h1>
+
+        <div className="flex items-center justify-between w-full ">
+          {/* Section: Search */}
+          <div className="w-[260px]">
+            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+          </div>
+
+          {/* Section: Add Package */}
+          <div>
+            <Button onClick={() => navigate("/admin/package/create")} aria-label="สร้างแพ็กเกจ">
+              <span className="text-lg leading-none">＋</span>
+              <span>สร้างแพ็กเกจ</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="px-6 pb-2">
-        <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-      </div>
-
-      {/* Table */}
-      <div className="px-6 pb-10">
+      <div className="pb-10">
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<PackageHistoryRow>
           data={filteredRows}
-          getKey={(r) => r.id.toString()}
+          getKey={(row) => row.id.toString()}
           columns={columns}
           actions={rowActions}
           bulkActions={bulkActions}
           selectable
           isLoading={isLoading}
           pagination={pagination}
-          onPageChange={(p) =>
-            setPagination((prev) => ({ ...prev, currentPage: p }))
+          onPageChange={(page) =>
+            setPagination((prev) => ({ ...prev, currentPage: page }))
           }
           onPageSizeChange={(limit) =>
             setPagination((prev) => ({ ...prev, currentPage: 1, limit }))

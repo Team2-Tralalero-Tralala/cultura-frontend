@@ -18,7 +18,7 @@ type MenuKey =
   | "community-stores"
   | "community-homestays"
   | "members"
-  | "member-status"
+
   | "packages"
   | "packages-requests"
   | "packages-draft"
@@ -55,12 +55,10 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/community/own")) {
       setActiveMenuKey("community");
       setOpenDropdown("community");
-    } else if (currentPath === "/member/status") {
-      setActiveMenuKey("member-status");
-      setOpenDropdown("members");
+
     } else if (currentPath.startsWith("/members")) {
       setActiveMenuKey("members");
-      setOpenDropdown("members");
+      setOpenDropdown(null);
     } else if (currentPath === "/package/requests") {
     } else if (currentPath === "/package-requests") {
       setActiveMenuKey("packages-requests");
@@ -77,7 +75,7 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/packages")) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (currentPath === "/booking/refunds") {
+    } else if (currentPath === "/booking/refund") {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
     } else if (currentPath === "/bookings-histories/all") {
@@ -167,29 +165,7 @@ const SidebarAdmin = () => {
           )}
 
           {/* === สมาชิก === */}
-          <Link
-            to={`${basePath}/members`}
-            onClick={() => handleClick("members")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("members") ? "bg-[#0D845A]" : ""
-              }`}
-          >
-            <span className="flex items-center gap-3">
-              <Icon icon="mdi:account-cog-outline" className="text-xl" />
-              จัดการสมาชิก
-            </span>
-            <Icon icon={openDropdown === "members" ? "mdi:chevron-up" : "mdi:chevron-down"} />
-          </Link>
-          {openDropdown === "members" && (
-            <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-              {menuLink(
-                "การระงับบัญชี",
-                "/member/status",
-                "mdi:account-cancel-outline",
-                "member-status",
-                "members"
-              )}
-            </div>
-          )}
+          {menuLink("จัดการสมาชิก", "/members", "mdi:account-cog-outline", "members")}
 
           {/* === แพ็กเกจ === */}
           <Link
@@ -254,7 +230,7 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขอคืนเงิน",
-                "/booking/refunds",
+                "/booking/refund",
                 "mdi:cash-refund",
                 "booking-refunds",
                 "booking"

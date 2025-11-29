@@ -45,7 +45,7 @@ const SidebarMember: React.FC = () => {
       }
     }
 
-    if (subPath.startsWith('/community')) {
+    if (subPath.startsWith('/community/own')) {
       setActiveMenuKey('community');
       setOpenDropdown(null);
     } else if (subPath === '/packages/draft') {
@@ -63,7 +63,7 @@ const SidebarMember: React.FC = () => {
     } else if (subPath === '/bookings/refunded-pending') {
       setActiveMenuKey('booking-refunds');
       setOpenDropdown('booking');
-    } else if (subPath === '/bookings-histories/done') {
+    } else if (subPath === '/bookings-histories') {
       setActiveMenuKey('booking-done');
       setOpenDropdown('booking');
     } else if (subPath.startsWith('/bookings/panding')) {
@@ -102,7 +102,7 @@ const SidebarMember: React.FC = () => {
         <nav className="flex flex-col gap-2 text-base-semibold">
           {/* ชุมชนของฉัน */}
           <Link
-            to={`${basePath}/community`}
+            to={`${basePath}/community/own`}
             onClick={() => handleClick('community')}
             className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive('community') ? 'bg-[#0D845A]' : ''
               }`}
@@ -182,7 +182,7 @@ const SidebarMember: React.FC = () => {
                   คำขอคืนเงิน
                 </Link>
                 <Link
-                  to={`${basePath}/bookings-histories/done`}
+                  to={`${basePath}/bookings-histories`}
                   onClick={() => handleClick('booking-done', 'booking')}
                   className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive('booking-done') ? 'bg-[#0D845A]' : ''
                     }`}

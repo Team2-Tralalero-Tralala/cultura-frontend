@@ -29,6 +29,7 @@ import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
+import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -74,6 +75,8 @@ export default function AdminRoutes() {
       <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
+      {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
+      <Route path="stores/:id" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />

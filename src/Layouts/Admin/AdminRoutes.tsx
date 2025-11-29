@@ -30,6 +30,7 @@ import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
+import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
 
 export default function AdminRoutes() {
   return (
@@ -80,6 +81,7 @@ export default function AdminRoutes() {
 
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
+      <Route path="package/draft" element={<PackageDraftAdmin />} />
     </Routes>
   );
 }

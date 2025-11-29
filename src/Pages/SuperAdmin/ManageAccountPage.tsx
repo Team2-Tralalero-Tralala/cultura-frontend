@@ -15,6 +15,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { Modal } from "@/Components/Modal/Modal";
 import Button from "@/Components/Button";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // Types
 import type {
@@ -62,13 +63,13 @@ const columns: Column<AccountRow>[] = [
     key: "fullname",
     header: "ชื่อจริง-นามสกุล",
     className: "min-w-[240px]",
-    render: (r) => (
+    render: (object) => (
       <Link
-        to={`/super/account/${r.id}`}
-        onClick={(e) => e.stopPropagation()}
+        to={`/super/account/${object.id}`}
+        onClick={(event) => event.stopPropagation()}
         className="hover:underline"
       >
-        {`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}
+        {`${object.fname ?? "-"} ${object.lname ?? ""}`.trim() || "-"}
       </Link>
     ),
   },
@@ -76,15 +77,15 @@ const columns: Column<AccountRow>[] = [
     key: "role",
     header: "ประเภท",
     className: "min-w-[160px]",
-    render: (r) => <div>{thaiRoleName(r.role.name)}</div>,
+    render: (object) => <div>{thaiRoleName(object.role.name)}</div>,
   },
   {
     key: "community",
     header: "ชุมชน",
     className: "min-w-[160px]",
-    render: (r) => {
-      const adminName = r.communityAdmin?.[0]?.name ?? null;
-      const memberName = r.communityMembers?.[0]?.Community?.name ?? null;
+    render: (object) => {
+      const adminName = object.communityAdmin?.[0]?.name ?? null;
+      const memberName = object.communityMembers?.[0]?.Community?.name ?? null;
       return <div>{adminName || memberName || "-"}</div>;
     },
   },
@@ -92,7 +93,7 @@ const columns: Column<AccountRow>[] = [
     key: "email",
     header: "อีเมล",
     className: "min-w-[220px]",
-    render: (r) => <div>{r.email ?? "-"}</div>,
+    render: (object) => <div>{object.email ?? "-"}</div>,
   },
 ];
 
@@ -100,8 +101,8 @@ const columns: Column<AccountRow>[] = [
  * ฟังก์ชัน normalizeText
  * ใช้สำหรับทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
  */
-const normalizeText = (s: string) =>
-  (s ?? "")
+const normalizeText = (text: string) =>
+  (text ?? "")
     .toString()
     .toLowerCase()
     .normalize("NFC")
@@ -172,9 +173,9 @@ export function ManageAccountPage() {
       setRows(resultData);
       setPagination(resultPagination);
     } catch (err: unknown) {
-      const e = err as Error;
-      console.error("Fetch failed:", e);
-      setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
+      const error = err as Error;
+      console.error("Fetch failed:", error);
+      setErrorMessage(error.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -197,12 +198,12 @@ export function ManageAccountPage() {
           setPagination(resultPagination);
         }
       } catch (err) {
-        const e = err as Error;
-        if (!isCancelled) setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
+        const error = err as Error;
+        if (!isCancelled) setErrorMessage(error.message || "โหลดข้อมูลไม่สำเร็จ");
       } finally {
         if (!isCancelled) setIsLoading(false);
       }
-    }, 250); // ลด delay ให้ลื่นขึ้น
+    }, 250);
 
     return () => {
       isCancelled = true;
@@ -214,28 +215,28 @@ export function ManageAccountPage() {
    * ส่วนกรองข้อมูลสำหรับ Search + Filter (frontend)
    */
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
+    const query = normalizeText(searchQuery);
     const selectedRole = filterRole.toLowerCase();
 
-    return rows.filter((r) => {
+    return rows.filter((object) => {
       // กรอง role
-      const role = r.role?.name?.toLowerCase() ?? "";
+      const role = object.role?.name?.toLowerCase() ?? "";
       const passRole = selectedRole === "all" || role === selectedRole;
 
       // กรอง search
-      const name = `${r.fname ?? ""} ${r.lname ?? ""}`.trim();
-      const email = r.email ?? "";
+      const name = `${object.fname ?? ""} ${object.lname ?? ""}`.trim();
+      const email = object.email ?? "";
       const community =
-        r.communityAdmin?.[0]?.name ??
-        r.communityMembers?.[0]?.Community?.name ??
+        object.communityAdmin?.[0]?.name ??
+        object.communityMembers?.[0]?.Community?.name ??
         "";
 
       const textMatch =
-        !q ||
-        normalizeText(name).includes(q) ||
-        normalizeText(email).includes(q) ||
-        normalizeText(role).includes(q) ||
-        normalizeText(community).includes(q);
+        !query ||
+        normalizeText(name).includes(query) ||
+        normalizeText(email).includes(query) ||
+        normalizeText(role).includes(query) ||
+        normalizeText(community).includes(query);
 
       return passRole && textMatch;
     });
@@ -251,6 +252,7 @@ export function ManageAccountPage() {
     variant: "icons",
     className: "pr-11",
     items: () => ["block", "edit", "delete"],
+    
     callbacks: {
       block: (row) => {
         openModal(
@@ -318,9 +320,17 @@ export function ManageAccountPage() {
   return (
     <div className="space-y-4">
       {/* Section: Header */}
-      <div className="flex flex-col gap-2 w-full">
-        <h2 className="text-sm text-gray-500">จัดการบัญชี</h2>
-        <h1 className="text-xl font-semibold">จัดการบัญชีผู้ใช้</h1>
+      <div className="flex flex-col w-full">
+        <div className="-ml-6 pt-1 pb-1">
+          <Breadcrumb
+            items={[
+              { label: "จัดการบัญชึ"},
+            ]}
+          />
+        </div>
+        <h1 className="text-[20px] font-bold text-black">
+          จัดการบัญชี
+        </h1>
 
         <div className="flex items-center justify-between w-full mt-2">
           {/* Section: Search + Filter */}

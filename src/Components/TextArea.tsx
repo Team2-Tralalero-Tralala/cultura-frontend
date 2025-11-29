@@ -2,18 +2,6 @@
  * คำอธิบาย : Component สำหรับสร้าง TextField (อินพุตฟอร์ม)
  * ที่รองรับหลายประเภท เช่น ข้อความทั่วไป, รหัสผ่าน (พร้อมปุ่ม toggle แสดง/ซ่อน),
  * และเบอร์โทรศัพท์ (พร้อม prefix +66 และไอคอนธงไทย)
- * ตัวอย่างการใช้งาน 
- * <TextField
-    id="password"
-    label="รหัสผ่าน"
-    required
-    placeholder="ป้อนรหัสผ่าน"
-    type="password"
-    value={password}
-    onChange={handlePasswordChange}
-    error={!!formErrors.password}
-    helperText={formErrors.password}
-    />
  */
 import type { BaseFieldProps } from "../Types/BaseField";
 
@@ -57,10 +45,7 @@ const TextArea: React.FC<BaseFieldProps> = ({
     <div className="space-y-1.5">
       {/* Label + helperText in one row */}
       <div className="flex items-center justify-between">
-        <label
-          htmlFor={id}
-          className="block text-base font-semibold text-gray-800"
-        >
+        <label htmlFor={id} className="block text-base text-black">
           {label}
           {required && <RequiredMark />}
         </label>

@@ -16,7 +16,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import z from "zod";
 import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
+
+import Switch from "@/Components/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 import { getCommunityById, updateCommunity } from "@/Services/community-service";
 import Backdrop from "@mui/material/Backdrop";
@@ -36,6 +37,7 @@ import UploadProfile from "@/Components/calendar/upload/community/UploadProfile"
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -507,7 +509,13 @@ export function EditCommunity() {
 
   return (
     <div>
-      {/* ✅ 3. เพิ่ม Backdrop เพื่อแสดงสถานะ Loading */}
+      <Breadcrumb
+        items={[
+          { label: "จัดการชุมชน", to: "/super/communities/all" },
+          { label: formData.name || "ชื่อชุมชน", to: `/super/community/${communityId}` },
+          { label: "แก่ไขวิสาหกิจชุมชน" },
+        ]}
+      />
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>
@@ -520,25 +528,40 @@ export function EditCommunity() {
           <h1 className="text-xl font-bold">แก้ไขวิสาหกิจชุมชน</h1>
         </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          สถานะชุมชน
+          <p>สถานะชุมชน</p>
           <Switch checked={checked} onChange={handleCheck} />
         </Stack>
       </div>
 
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0 mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
         expanded={expanded === "panel2"}
         onChange={handleChange("panel2")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
-          className="!rounded-t-lg "
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
-          <h1 className="text-xl font-bold">ข้อมูลชุมชน</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <p>แสดงคะแนนชุมชน</p>
+              <Switch checked={checked} onChange={handleCheck} />
+            </Stack>
+          </div>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
           <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
@@ -770,18 +793,28 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0 mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
         expanded={expanded === "panel3"}
         onChange={handleChange("panel3")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <h2 className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</h2>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -853,7 +886,7 @@ export function EditCommunity() {
                 helperText={formErrors.detail}
               />
             </div>
-            <div className="text-xl font-bold">ที่ตั้งชุมชน</div>
+            <div className="text-lg font-bold">ที่ตั้งชุมชน</div>
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
@@ -865,18 +898,29 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!shadow-sm !rounded-lg !border- mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <h2 className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</h2>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+          <h1 className="text-lg font-bold mb-[24px]">ข้อมูลติดต่อวิสาหกิจชุมชน</h1>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField

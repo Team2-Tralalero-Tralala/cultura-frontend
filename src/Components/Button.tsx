@@ -34,7 +34,7 @@ function Button({
         return "bg-light-green hover:bg-emerald-500";
       case "confirm-admin":
       default:
-        return "bg-dark-green hover:bg-green-900";
+        return "bg-[#055035] hover:bg-green-900";
     }
   }
 
@@ -45,7 +45,7 @@ function Button({
         <button
           type={htmlType}
           onClick={onClick}
-          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form text-white text-lg ${getBgColor()}`}
+          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form text-white text-base ${getBgColor()}`}
         >
           {children || "ConfirmAdmin"}
         </button>
@@ -55,7 +55,7 @@ function Button({
         <button
           type={htmlType}
           onClick={onClick}
-          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form  border-black text-black text-lg ${getBgColor()}`}
+          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form  border-black text-black text-base ${getBgColor()}`}
         >
           {children || "Cancel"}
         </button>

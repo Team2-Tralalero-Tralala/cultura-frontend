@@ -58,7 +58,7 @@ export async function fetchAccounts(
  * Output: รายการบัญชีที่ถูกระงับ
  */
 export async function fetchBlockedAccounts(page: number, limit: number, searchName?: string) {
-  const res = await api.get(`/super/accounts/status/BLOCKED`, {
+  const res = await api.get(`/super/accounts/BLOCKED`, {
     params: { page, limit, searchName },
     withCredentials: true,
   });

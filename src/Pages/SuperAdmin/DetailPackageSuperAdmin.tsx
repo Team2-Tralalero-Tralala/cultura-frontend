@@ -311,14 +311,13 @@ export default function DetailPackageSuperAdmin() {
     }
   }
 
-
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb */}
       <div className="-ml-6 pt-1 pb-1">
         <Breadcrumb
           items={[
-            { label: "จัดการชุมชน", to: "/super/packages/all" },
+            { label: "จัดการแพ็กเกจ", to: "/super/packages/all" },
             { label: pkg?.name || "แพ็กเกจ" },
           ]}
         />

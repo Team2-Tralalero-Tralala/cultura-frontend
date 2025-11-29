@@ -21,5 +21,8 @@
         "menubar.selectionForeground": "#C6FF00",
         "editor.findMatchBorder": "#C6FF00",
         "selection.background": "#C6FF0040"
-    }
+    },
+    "cSpell.words": [
+        "homestay"
+    ]
 }

@@ -248,7 +248,6 @@ export function EditStore() {
    * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง
    * และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
    */
-  console.log(location.province);
   const handleSubmit = async () => {
     try {
       const isValid = validateField();

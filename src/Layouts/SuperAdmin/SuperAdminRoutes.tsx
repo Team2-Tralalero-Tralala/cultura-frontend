@@ -35,6 +35,7 @@ import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
+import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperadmin";
 
 /*
  * Module: SuperAdminRoutes
@@ -87,6 +88,8 @@ export default function SuperAdminRoutes() {
       <Route path="setting" element={<SettingHomePage />} />
       <Route path="backups" element={<BackupsPage />} />
       <Route path="toggle-system" element={<ToggleSystemPage />} />
+      {/* หน้าดูรายละเอียดร้านค้าของ Super Admin */}
+      <Route path="store/:id" element={<StoreDetailPage />} />
 
       <Route path="community/:communityId/stores/all" element={<ManageStores />} />
       <Route path="community/:communityId/homestay/all" element={<ManageHomestaySuperAdmin />} />

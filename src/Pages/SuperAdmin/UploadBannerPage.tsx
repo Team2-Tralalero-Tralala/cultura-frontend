@@ -21,6 +21,7 @@ import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import axios from "axios";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /* -------------------- Config & axios --------------------
  * อธิบาย: อ่านค่า ENV → สร้างฐาน URL → ตั้งค่า axios instance
@@ -447,20 +448,12 @@ export default function UploadBannerPage() {
     /* -------------------- Render -------------------- */
     return (
         <>
-            {/* breadcrumb (ลิงก์ย้อนกลับ) */}
-            <div className="text-sm mb-2 text-gray-500">
-                <a
-                    href="/super/setting"
-                    className="text-gray-900 hover:underline font-medium"
-                    aria-label="กลับไปหน้าแรก (ชุมชนทั้งหมด)"
-                >
-                    การตั้งค่า
-                </a>
-                <span className="mx-1 text-gray-500" aria-hidden>
-                    &gt;
-                </span>
-                <span>การเพิ่ม/แก้ไข รูปภาพ</span>
-            </div>
+            <Breadcrumb
+                current={{
+                    label: "การเพิ่ม/แก้ไข รูปภาพ",
+                    to: `/super/banners`,
+                }}
+            />
 
             {/* โครงหน้าหลัก */}
             <main className="min-h-screen bg-white px-8 py-8 rounded-xl">

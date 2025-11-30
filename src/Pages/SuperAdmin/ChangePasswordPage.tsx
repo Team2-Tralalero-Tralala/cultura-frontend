@@ -10,6 +10,7 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
+import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
 /* ===== API instance: แยก BASE_URL กับ PREFIX =====
  * - apiBaseRaw   : จาก ENV
@@ -178,20 +179,12 @@ export default function ChangePasswordPage() {
     /* =============================== Render =============================== */
     return (
         <>
-            {/* Breadcrumb ย่อ + A11y */}
-            <div className="text-sm mb-2 text-gray-500">
-                <a
-                    href="/super/communities/all"
-                    className="text-gray-900 hover:underline font-medium"
-                    aria-label="กลับไปหน้าแรก (ชุมชนทั้งหมด)"
-                >
-                    หน้าแรก
-                </a>
-                <span className="mx-1 text-gray-500" aria-hidden>
-                    &gt;
-                </span>
-                <span>เปลี่ยนรหัสผ่าน</span>
-            </div>
+            <Breadcrumb
+                current={{
+                    label: "เปลี่ยนรหัสผ่าน",
+                    to: `/account/change-password/own`,
+                }}
+            />
 
             <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
                 {/* Header กลับ + ชื่อหน้า (แก้ JSX prop: class → className, SVG props เป็น camelCase) */}

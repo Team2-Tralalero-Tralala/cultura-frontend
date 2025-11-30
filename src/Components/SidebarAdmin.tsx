@@ -230,7 +230,7 @@ const SidebarAdmin = () => {
               )}
               {menuLink(
                 "ข้อเสนอแนะ",
-                "/package/feedbacks",
+                "/packages/feedbacks",
                 "mdi:comment-text-outline",
                 "packages-feedbacks",
                 "packages"

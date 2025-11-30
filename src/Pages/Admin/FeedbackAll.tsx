@@ -370,7 +370,6 @@ export default function FeddbackAll() {
                 current={{
                     label: "ข้อเสนอแนะ",
                     to: `/admin/package/feedbacks`,
-                    fromSidebar: true,
                 }}
             />
         <main className="min-h-screen bg-white py-8 px-6 space-y-6 shadow-md border rounded-xl">

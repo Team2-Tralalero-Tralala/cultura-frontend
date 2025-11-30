@@ -82,7 +82,7 @@ export default function SuperAdminRoutes() {
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="shared/tags" element={<ManageTags />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
-      <Route path="homestay/edit/:homestayId" element={<EditHomestayPage />} />
+      <Route path="community/:communityId/homestay/:homestayId/edit" element={<EditHomestayPage />} />
       <Route path="dashboard" element={<DashboardPage />} />
       <Route path="setting" element={<SettingHomePage />} />
       <Route path="backups" element={<BackupsPage />} />

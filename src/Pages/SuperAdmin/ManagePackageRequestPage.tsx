@@ -1,12 +1,13 @@
-// src/Pages/SuperAdmin/PackageRequestsSuperAdmin.tsx
 /**
- * หน้า "คำขออนุมัติแพ็กเกจ"
- * - ตาราง: ชื่อแพ็กเกจ / ชื่อชุมชน / ผู้ดูแล / สถานะ / จัดการ
- * - ค้นหา (ชิดซ้าย) + ปุ่ม ปฏิเสธ/อนุมัติ (PATCH แล้วรีโหลด)
+ * Component: PackageRequestsSuperAdmin
+ * คำอธิบาย:
+ *  - ใช้สำหรับ Super Admin เพื่อตรวจสอบและจัดการคำขออนุมัติแพ็กเกจจากชุมชน
+ *  - รองรับการค้นหา, pagination, และแสดงข้อมูลผู้ดูแล/ชุมชน
+ *  - สามารถ "อนุมัติ" และ "ปฏิเสธ" แพ็กเกจได้ผ่าน Modal
+ *  - เมื่ออนุมัติ/ปฏิเสธ จะมีการ reload ข้อมูลในตารางทันที
  */
 
-import React from "react";
-
+import React, { useEffect } from "react";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
@@ -16,7 +17,6 @@ import RejectModal from "@/Components/Modal/ModalReject";
 import { Link } from "react-router-dom";
 import { approvePackageRequest, fetchPackageRequests, rejectPackageRequest } from "@/Services/package-request-service";
 
-/** แถวข้อมูลของตาราง */
 export type PackageRequestRow = {
     id: number;
     name: string;
@@ -25,15 +25,12 @@ export type PackageRequestRow = {
     overseer: { id: number; username: string };
 };
 
-/** โครงสร้าง pagination จาก BE */
 export type Pagination = {
     currentPage: number;
     totalPages: number;
     totalCount: number;
     limit: number;
 };
-
-/* ---------------------------- Utils ---------------------------- */
 
 const thaiApproveStatus = (status?: string | null) => {
     switch ((status || "").toUpperCase()) {
@@ -44,9 +41,14 @@ const thaiApproveStatus = (status?: string | null) => {
     }
 };
 
-/* --------------------------- Columns --------------------------- */
-
-const makeColumns = (
+/**
+ * ฟังก์ชัน buildPackageRequestColumns
+ * คำอธิบาย:
+ *  - สร้างชุด Columns สำหรับตารางคำขอแพ็กเกจ
+ *  - รองรับปุ่มอนุมัติ / ปฏิเสธ
+ *  - รับ callback จาก parent เพื่อส่ง event การคลิกในแต่ละแถว
+ */
+const buildPackageRequestColumns = (
     onApprove: (row: PackageRequestRow) => void,
     onReject: (row: PackageRequestRow) => void
 ): Column<PackageRequestRow>[] => [
@@ -113,8 +115,6 @@ const makeColumns = (
         },
     ];
 
-/* -------------------------- Component -------------------------- */
-
 export default function PackageRequestsSuperAdmin() {
     // ตาราง & pagination
     const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
@@ -130,17 +130,21 @@ export default function PackageRequestsSuperAdmin() {
         limit: 10,
     });
 
-    // ค้นหา + errors
     const [searchQuery, setSearchQuery] = React.useState("");
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-
-    // Modal states
-    const [confirmOpen, setConfirmOpen] = React.useState<boolean>(false);
-    const [rejectOpen, setRejectOpen] = React.useState(false);
+    const [isConfirmOpen, setConfirmOpen] = React.useState<boolean>(false);
+    const [isRejectOpen, setRejectOpen] = React.useState(false);
     const [selectedRow, setSelectedRow] =
         React.useState<PackageRequestRow | null>(null);
 
-    /** โหลดข้อมูล */
+    /**
+     * ฟังก์ชัน reload
+     * คำอธิบาย:
+     *  - โหลดข้อมูลคำขอแพ็กเกจจาก API
+     *  - อัปเดตตาราง + pagination
+     *  - ใช้ร่วมกับ useEffect เพื่อโหลดข้อมูลตาม page / pageSize / searchQuery
+     */
+
     const reload = React.useCallback(async () => {
         try {
             setIsLoading(true);
@@ -168,16 +172,31 @@ export default function PackageRequestsSuperAdmin() {
         }
     }, [currentPage, pageSize, searchQuery]);
 
+    /**
+     * useEffect:
+     * คำอธิบาย:
+     *  - เรียก reload() ทุกครั้งที่ currentPage, pageSize หรือ searchQuery เปลี่ยน
+     */
     React.useEffect(() => {
         reload();
     }, [reload, currentPage, pageSize, searchQuery]);
 
-    // เปลี่ยนคำค้น → กลับหน้าแรก
+    /**
+     * useEffect:
+     * คำอธิบาย:
+     *  - เมื่อ searchQuery เปลี่ยน ให้กลับไปหน้าแรกของตาราง
+     */
     React.useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery]);
 
-    /** อนุมัติ */
+    /**
+     * ฟังก์ชัน handleApprove
+     * คำอธิบาย:
+     *  - ส่งคำขออนุมัติไปยัง backend
+     *  - เมื่อสำเร็จ จะ reload ข้อมูลตารางใหม่
+     *  - ถ้าเกิด error จะเก็บข้อความ error ลง state
+     */
     const handleApprove = async (row: PackageRequestRow) => {
         try {
             setIsLoading(true);
@@ -189,25 +208,60 @@ export default function PackageRequestsSuperAdmin() {
         }
     };
 
-    /** เปิด/ปิดโมดัล */
+    /**
+     * ฟังก์ชัน openRejectModal
+     * คำอธิบาย:
+     *  - เปิด Modal ปฏิเสธคำขอ (RejectModal)
+     *  - เซ็ต row ที่ถูกเลือกลงใน selectedRow
+     */
     const openRejectModal = (row: PackageRequestRow) => {
         setSelectedRow(row);
         setRejectOpen(true);
     };
+
+    /**
+     * ฟังก์ชัน openApproveModal
+     * คำอธิบาย:
+     *  - เปิด Modal ยืนยันการอนุมัติแพ็กเกจ
+     *  - เซ็ต row ที่ผู้ใช้เลือกลง selectedRow
+     */
     const openApproveModal = (row: PackageRequestRow) => {
         setSelectedRow(row);
         setConfirmOpen(true);
     };
 
-    /** alias เพื่อส่งให้คอลัมน์ */
+
+    /**
+     * handleReject:
+     * คำอธิบาย:
+     *  - alias ของฟังก์ชัน openRejectModal
+     *  - ใช้ส่งเข้าไปใน column renderer เพื่อเรียกปฏิเสธคำขอ
+     */
     const handleReject = openRejectModal;
+
+    /**
+     * useEffect:
+     * คำอธิบาย:
+     *  - เมื่อ Modal อนุมัติถูกปิด (isConfirmOpen = false)
+     *  - รีเซ็ต selectedRow ให้กลับเป็น null
+     *  - ใช้ setTimeout เพื่อหลีกเลี่ยง state update ระหว่าง render
+     */
+    useEffect(() => {
+        if (!isConfirmOpen) {
+            setTimeout(() => {
+                setSelectedRow(null);
+            }, 0);
+        }
+    }, [isConfirmOpen]);
+
 
     return (
         <div className="space-y-4">
+            {/* breadcrump */}
+            <div>พื้นที่ใส่ breadcrump</div>
             {/* ส่วนหัว + ค้นหา */}
             <div className="flex flex-col gap-2 w-full">
-                <h2 className="text-sm">จัดการแพ็กเกจ</h2>
-                <h1 className="text-xl">คำขออนุมัติแพ็กเกจ</h1>
+                <h1 className="font-bold text-xl">คำขออนุมัติ</h1>
 
                 <div className="flex items-center gap-2 w-full">
                     <div className="w-[260px]">
@@ -219,15 +273,11 @@ export default function PackageRequestsSuperAdmin() {
                 </div>
             </div>
 
-            {/* ข้อความผิดพลาด */}
-            {errorMessage && (
-                <div className="text-sm text-red-600">{errorMessage}</div>
-            )}
 
             {/* ตาราง */}
             <DataTable<PackageRequestRow>
                 data={rows}
-                columns={makeColumns(openApproveModal, handleReject)}
+                columns={buildPackageRequestColumns(openApproveModal, handleReject)}
                 getKey={(r: PackageRequestRow) => String(r.id)}
                 selectable={false}
                 theme="brand"
@@ -242,62 +292,72 @@ export default function PackageRequestsSuperAdmin() {
                 onPageChange={(p) => setCurrentPage(p)}
                 onPageSizeChange={(s) => {
                     setPageSize(s);
-                    setCurrentPage(1); // รีเซ็ตไปหน้าแรกเมื่อเปลี่ยนจำนวนแถว
+                    setCurrentPage(1);
                 }}
             />
 
-            {/* Modal: ยืนยันอนุมัติ */}
-            <Modal
-                open={confirmOpen}
-                title="ยืนยันการอนุมัติ"
-                text={
-                    selectedRow
-                        ? `ต้องการอนุมัติแพ็กเกจ “${selectedRow.name}” ใช่หรือไม่`
-                        : "ต้องการอนุมัติแพ็กเกจนี้หรือไม่"
-                }
-                confirmText="ยืนยัน"
-                cancelText="ยกเลิก"
-                onConfirm={async () => {
-                    if (!selectedRow) return;
-                    try {
-                        await handleApprove(selectedRow);
-                    } finally {
+
+            {/* Modal: ยืนยันการอนุมัติแพ็กเกจ
+                - จะแสดงเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
+                - ใช้ selectedRow แสดงชื่อแพ็กเกจในข้อความยืนยัน
+            */}
+            {isConfirmOpen && (
+                <Modal
+                    open={isConfirmOpen}
+                    title="ยืนยันการอนุมัติ"
+                    text={
+                        selectedRow
+                            ? `ต้องการอนุมัติแพ็กเกจ “${selectedRow.name}” ใช่หรือไม่`
+                            : "ต้องการอนุมัติแพ็กเกจนี้หรือไม่"
+                    }
+                    confirmText="ยืนยัน"
+                    cancelText="ยกเลิก"
+                    onConfirm={async () => {
+                        if (!selectedRow) return;
+                        try {
+                            await handleApprove(selectedRow);
+                        } finally {
+                            setConfirmOpen(false);
+                        }
+                    }}
+                    onCancel={() => {
                         setConfirmOpen(false);
                         setSelectedRow(null);
-                    }
-                }}
-                onCancel={() => {
-                    setConfirmOpen(false);
-                    setSelectedRow(null);
-                }}
-            />
+                    }}
+                />
+            )}
 
-            {/* Modal: ปฏิเสธ + กรอกเหตุผล */}
-            <RejectModal
-                open={rejectOpen}
-                title="ปฏิเสธคำขออนุมัติ"
-                text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
-                confirmText="ส่ง"
-                cancelText="ยกเลิก"
-                onConfirm={async (reason) => {
-                    if (!selectedRow) return;
-                    try {
-                        setIsLoading(true);
-                        await rejectPackageRequest(selectedRow.id, reason);
-                        await reload();
-                    } catch (e: any) {
-                        setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");
-                    } finally {
-                        setIsLoading(false);
+            {/* Modal: ปฏิเสธคำขอ
+                - ให้ผู้ใช้กรอกเหตุผลการปฏิเสธ
+                - เมื่อส่งสำเร็จ จะ reload ข้อมูลใหม่
+            */}
+            {isRejectOpen && (
+                <RejectModal
+                    open={isRejectOpen}
+                    title="ปฏิเสธคำขออนุมัติ"
+                    text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
+                    confirmText="ส่ง"
+                    cancelText="ยกเลิก"
+                    onConfirm={async (reason) => {
+                        if (!selectedRow) return;
+                        try {
+                            setIsLoading(true);
+                            await rejectPackageRequest(selectedRow.id, reason);
+                            await reload();
+                        } catch (e: any) {
+                            setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");
+                        } finally {
+                            setIsLoading(false);
+                            setRejectOpen(false);
+                            setSelectedRow(null);
+                        }
+                    }}
+                    onCancel={() => {
                         setRejectOpen(false);
                         setSelectedRow(null);
-                    }
-                }}
-                onCancel={() => {
-                    setRejectOpen(false);
-                    setSelectedRow(null);
-                }}
-            />
+                    }}
+                />
+            )}
         </div>
     );
 }

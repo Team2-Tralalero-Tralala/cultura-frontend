@@ -302,11 +302,12 @@ export default function ManagePackageSuperAdmin() {
 
       {/* Breadcrumb */}
       <div>
+        พื้นนที่ Breadcrumb
       </div>
       
       {/* หัวข้อและช่องค้นหา */}
       <div className="flex flex-col gap-2 -mt-3">
-        <h1 className="text-xl font-semibold">จัดการแพ็กเกจ</h1>
+        <h1 className="text-xl font-bold">จัดการแพ็กเกจ</h1>
 
         <div className="flex items-center gap-3">
           <div className="flex-1 max-w-md">

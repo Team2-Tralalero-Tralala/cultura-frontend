@@ -256,7 +256,7 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-export const EditPackagePage: React.FC = () => {
+export const EditPackagePage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -473,7 +473,6 @@ export const EditPackagePage: React.FC = () => {
       setHomestayOptions(options);
       setOpenHomestayBox(options.length > 0);
     } catch (error) {
-      console.error("search homestays error:", error);
       setHomestayOptions([]);
       setOpenHomestayBox(false);
     }
@@ -716,7 +715,6 @@ export const EditPackagePage: React.FC = () => {
           setHsBookedRoom(String(homestayHistory.bookedRoom));
         }
       } catch (error: any) {
-        console.error("Load package detail error:", error?.response?.data || error);
         setErrorMessage(error?.response?.data?.message || error?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ");
       } finally {
         if (mounted) setLoading(false);
@@ -817,7 +815,6 @@ export const EditPackagePage: React.FC = () => {
 
       navigate("/super/packages/all");
     } catch (error: any) {
-      console.error("Edit package (superadmin) error:", error?.response?.data);
       setErrorMessage(
         error?.response?.data?.message ||
         error?.response?.data?.error ||
@@ -872,7 +869,7 @@ export const EditPackagePage: React.FC = () => {
       <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
-          onClick={() => navigate(`/super/package/${id}`)}
+          onClick={() => navigate(`/super/packages/all`)}
           className="inline-flex items-center gap-2 text-xl mb-1 group hover"
           aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
         >
@@ -1370,14 +1367,12 @@ export const EditPackagePage: React.FC = () => {
                   maxDate={new Date("2100-12-31")}
                   errorText={(formErrors as any).hsCheckInDate}
                 />
-                <TextField
-                  id="hsCheckInTime"
+                <BoxTimeInput
                   label="เวลาเช็กอิน"
-                  type="time"
                   value={hsCheckInTime}
-                  onChange={(event) => setHsCheckInTime(event.target.value)}
-                  error={!!(formErrors as any).hsCheckInTime}
-                  helperText={(formErrors as any).hsCheckInTime}
+                  onChange={(time) => setHsCheckInTime(time)}
+                  required
+                  errorText={(formErrors as any).hsCheckInTime}
                 />
                 <BoxDateInput
                   id="hsCheckOutDate"
@@ -1395,39 +1390,14 @@ export const EditPackagePage: React.FC = () => {
                   maxDate={new Date("2100-12-31")}
                   errorText={(formErrors as any).hsCheckOutDate}
                 />
-                <TextField
-                  id="hsCheckOutTime"
-                  label="เวลาเช็กเอาท์"
-                  type="time"
-                  value={hsCheckOutTime}
-                  onChange={(event) => setHsCheckOutTime(event.target.value)}
-                  error={!!(formErrors as any).hsCheckOutTime}
-                  helperText={(formErrors as any).hsCheckOutTime}
-                />
-                <BoxDateInput
-                  id="startDate"
-                  label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
-                  required
-                  value={startDateObj}
-                  onChange={(date) => {
-                    setStartDateObj(date);
-                    if (date) {
-                      setFormField("startDate", date.toISOString().split("T")[0] as any);
-                    } else {
-                      setFormField("startDate", "" as any);
-                    }
-                  }}
-                  minDate={new Date("1900-01-01")}
-                  maxDate={new Date("2100-12-31")}
-                  errorText={formErrors.startDate}
-                />
                 <BoxTimeInput
-                  label="เวลาที่เริ่ม"
-                  value={formState.startTime}
-                  onChange={(time) => setFormField("startTime", time)}
+                  label="เวลาเช็กเอาท์"
+                  value={hsCheckOutTime}
+                  onChange={(time) => setHsCheckOutTime(time)}
                   required
-                  errorText={formErrors.startTime}
+                  errorText={(formErrors as any).hsCheckOutTime}
                 />
+
               </div>
 
               <div className="relative rounded-xl border p-4 bg-white shadow-sm">

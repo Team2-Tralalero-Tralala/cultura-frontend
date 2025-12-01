@@ -31,6 +31,9 @@ import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
 import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
+import EditPackagePage from '@/Pages/Admin/EditPackagePage';
+import ManagePackagePage from '@/Pages/Admin/ManagePackagePage';
+import CreatePackagePage from '@/Pages/Admin/CreatePackagePage';
 
 export default function AdminRoutes() {
   return (
@@ -82,6 +85,10 @@ export default function AdminRoutes() {
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
+      <Route path="package/create" element={<CreatePackagePage />} />
+      <Route path="package/:packageId/edit" element={<EditPackagePage />} />
+      
     </Routes>
   );
 }

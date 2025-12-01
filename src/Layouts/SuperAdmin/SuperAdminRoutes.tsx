@@ -79,7 +79,7 @@ export default function SuperAdminRoutes() {
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="banners" element={<UploadBannerPage />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} />
-      <Route path="account/change-password" element={<ChangePasswordPage />} />
+      <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="package-requests" element={<ManagePackageRequestPage />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="shared/tags" element={<ManageTags />} />

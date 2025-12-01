@@ -1,18 +1,6 @@
 /*
  * คำอธิบาย : Component สำหรับสร้าง TextField (อินพุตฟอร์ม)
  * รองรับ text, password (พร้อม toggle), และเบอร์โทรศัพท์ (+66)
- * ตัวอย่างการใช้งาน:
- * <TextField
- *   id="password"
- *   label="รหัสผ่าน"
- *   required
- *   placeholder="ป้อนรหัสผ่าน"
- *   type="password"
- *   value={password}
- *   onChange={handleChange}
- *   error={!!formErrors.password}
- *   helperText={formErrors.password}
- * />
  */
 
 import React, { useState } from "react";
@@ -70,10 +58,7 @@ const TextField: React.FC<BaseFieldProps> = ({
     <div className="space-y-1.5">
       {/* Label + helperText */}
       <div className="flex items-center justify-between">
-        <label
-          htmlFor={id}
-          className="block text-base font-semibold text-gray-800"
-        >
+        <label htmlFor={id} className="block text-base font-semibold text-black">
           {label}
           {required && <RequiredMark />}
         </label>
@@ -99,16 +84,14 @@ const TextField: React.FC<BaseFieldProps> = ({
             onChange={onChange}
             value={value}
             readOnly={readOnly}
-            className={`block w-full rounded-form border-1 
+            className={`block w-full rounded-form border-1
             ${
               error
                 ? "border-red-600 focus:ring-red-600 focus:border-red-600"
                 : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"
             }
-            bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed
-            focus:outline-none focus:ring-1 transition-shadow ${
-              isPassword ? "pr-12" : ""
-            }`}
+            bg-white px-5 py-2 text-black placeholder:text-[#606060] placeholder:font-normal leading-relaxed
+            focus:outline-none focus:ring-1 transition-shadow ${isPassword ? "pr-12" : ""}`}
           />
         )}
 
@@ -131,7 +114,7 @@ const TextField: React.FC<BaseFieldProps> = ({
               onChange={onChange}
               value={value}
               placeholder={placeholder || "หมายเลขโทรศัพท์"}
-              className="block w-full px-5 py-2 text-base text-gray-900 placeholder:text-gray-500
+              className="block w-full px-5 py-2 text-base text-black placeholder:text-[#606060] placeholder:font-normal
                 leading-relaxed focus:outline-none focus:ring-1 transition-shadow"
             />
           </div>

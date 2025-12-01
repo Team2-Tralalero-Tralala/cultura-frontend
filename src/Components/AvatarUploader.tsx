@@ -201,7 +201,6 @@ export default function AvatarUploader({
           ) : (
             <div className="flex flex-col items-center text-gray-700 select-none">
               <Icon icon="mdi:account" className="w-20 h-20" />
-              <span className="text-base font-medium mt-2">เพิ่มรูปโปรไฟล์</span>
             </div>
           )}
         </div>

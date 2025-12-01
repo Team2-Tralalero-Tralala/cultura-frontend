@@ -25,6 +25,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { deleteCommunityMember } from "@/Services/deleate-member-community-service";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL;
 
@@ -214,81 +215,88 @@ export default function ManageMembers() {
     };
 
     return (
+        <>
+            <Breadcrumb
+                current={{
+                    label: "จัดสมาชิก",
+                    to: `/admin/members`,
+                    fromSidebar: true,
+                }}
+            />
+            <div className="space-y-4">
+                {/* Header */}
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-[20px] font-bold">จัดการสมาชิก</h1>
 
-        <div className="space-y-4">
-            {/* Header */}
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl">จัดการสมาชิก</h1>
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 max-w-md">
+                            <SearchBarTable
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex-1 max-w-md">
-                        <SearchBarTable
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="ml-auto">
-                        <Button type="confirm-admin" onClick={handleCreateMember}>
-                            + สร้างสมาชิก
-                        </Button>
+                        <div className="ml-auto">
+                            <Button type="confirm-admin" onClick={handleCreateMember}>
+                                + สร้างสมาชิก
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
+                {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-            {/* Table */}
-            <DataTable<MemberRow>
-                data={filteredRows}
-                getKey={(r) => String(r.id)}
-                columns={columns}
-                actions={actions}
-                selectable
-                bulkActions={bulkActions}
-                theme="brand"
-                pageSize={pageSize}
-                pageSizeOptions={[10, 20, 50]}
-                onPageChange={(p) => setCurrentPage(p)}
-                onPageSizeChange={(s) => {
-                    setPageSize(s);
-                    setCurrentPage(1);
-                }}
-                pagination={pagination}
-                isLoading={isLoading}
-            />
-            {/* Delete Confirmation Modal */}
-            {openDeleteModal && selectedRow && (
-                <Modal
-                    open={openDeleteModal}
-                    title="ยืนยันการลบสมาชิก"
-                    text={`คุณต้องการลบสมาชิก “${selectedRow.displayName}” ใช่หรือไม่?`}
-                    confirmText="ลบ"
-                    cancelText="ยกเลิก"
-                    onConfirm={async () => {
-                        try {
-                            await deleteCommunityMember(selectedRow.id);
-                            await fetchMembers();
-                        } catch (error: any) {
-                            alert(
-                                `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
-                                error?.response?.data?.error ||
-                                error?.message ||
-                                "unknown error"
-                                }`
-                            );
-                        } finally {
+                {/* Table */}
+                <DataTable<MemberRow>
+                    data={filteredRows}
+                    getKey={(r) => String(r.id)}
+                    columns={columns}
+                    actions={actions}
+                    selectable
+                    bulkActions={bulkActions}
+                    theme="brand"
+                    pageSize={pageSize}
+                    pageSizeOptions={[10, 20, 50]}
+                    onPageChange={(p) => setCurrentPage(p)}
+                    onPageSizeChange={(s) => {
+                        setPageSize(s);
+                        setCurrentPage(1);
+                    }}
+                    pagination={pagination}
+                    isLoading={isLoading}
+                />
+                {/* Delete Confirmation Modal */}
+                {openDeleteModal && selectedRow && (
+                    <Modal
+                        open={openDeleteModal}
+                        title="ยืนยันการลบสมาชิก"
+                        text={`คุณต้องการลบสมาชิก “${selectedRow.displayName}” ใช่หรือไม่?`}
+                        confirmText="ลบ"
+                        cancelText="ยกเลิก"
+                        onConfirm={async () => {
+                            try {
+                                await deleteCommunityMember(selectedRow.id);
+                                await fetchMembers();
+                            } catch (error: any) {
+                                alert(
+                                    `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+                                    error?.response?.data?.error ||
+                                    error?.message ||
+                                    "unknown error"
+                                    }`
+                                );
+                            } finally {
+                                setOpenDeleteModal(false);
+                                setSelectedRow(null);
+                            }
+                        }}
+                        onCancel={() => {
                             setOpenDeleteModal(false);
                             setSelectedRow(null);
-                        }
-                    }}
-                    onCancel={() => {
-                        setOpenDeleteModal(false);
-                        setSelectedRow(null);
-                    }}
-                />
-            )}
-        </div>
-
+                        }}
+                    />
+                )}
+            </div>
+        </>
     );
 }

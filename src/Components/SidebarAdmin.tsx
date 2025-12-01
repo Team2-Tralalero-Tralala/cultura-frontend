@@ -11,13 +11,14 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/Libs/useAuth";
 
 type MenuKey =
   | "community"
   | "community-stores"
   | "community-homestays"
   | "members"
-  | "member-status"
+
   | "packages"
   | "packages-requests"
   | "packages-draft"
@@ -34,6 +35,7 @@ type MenuKey =
 const SidebarAdmin = () => {
   const location = useLocation();
   const { pathname } = location;
+  const { logout } = useAuth();
 
   const basePath = "/admin";
   const currentPath = pathname.startsWith(basePath)
@@ -50,37 +52,36 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/community/homestays")) {
       setActiveMenuKey("community-homestays");
       setOpenDropdown("community");
-    } else if (currentPath.startsWith("/community")) {
+    } else if (currentPath.startsWith("/community/own")) {
       setActiveMenuKey("community");
       setOpenDropdown("community");
-    } else if (currentPath === "/member/status") {
-      setActiveMenuKey("member-status");
-      setOpenDropdown("members");
+
     } else if (currentPath.startsWith("/members")) {
       setActiveMenuKey("members");
-      setOpenDropdown("members");
+      setOpenDropdown(null);
     } else if (currentPath === "/package/requests") {
+    } else if (currentPath === "/package-requests") {
       setActiveMenuKey("packages-requests");
       setOpenDropdown("packages");
-    } else if (currentPath === "/package/draft") {
+    } else if (currentPath === "/packages/drafts") {
       setActiveMenuKey("packages-draft");
       setOpenDropdown("packages");
-    } else if (currentPath === "/package/histories") {
+    } else if (currentPath === "/packages/histories") {
       setActiveMenuKey("packages-histories");
       setOpenDropdown("packages");
-    } else if (currentPath === "/package/feedbacks") {
+    } else if (currentPath === "/packages/feedbacks") {
       setActiveMenuKey("packages-feedbacks");
       setOpenDropdown("packages");
     } else if (currentPath.startsWith("/packages")) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (currentPath === "/booking/refunds") {
+    } else if (currentPath === "/booking/refund") {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
-    } else if (currentPath === "/bookings-histories/done") {
+    } else if (currentPath === "/bookings-histories/all") {
       setActiveMenuKey("booking-histories");
       setOpenDropdown("booking");
-    } else if (currentPath.startsWith("/booking")) {
+    } else if (currentPath.startsWith("/bookings")) {
       setActiveMenuKey("booking");
       setOpenDropdown("booking");
     } else if (currentPath === "/dashboard") {
@@ -113,9 +114,8 @@ const SidebarAdmin = () => {
     <Link
       to={`${basePath}${to}`}
       onClick={() => handleClick(key, parentKey)}
-      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-        isActive(key) ? "bg-[#0D845A]" : ""
-      }`}
+      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive(key) ? "bg-[#0D845A]" : ""
+        }`}
     >
       <Icon icon={icon} className="text-xl" />
       {label}
@@ -131,14 +131,13 @@ const SidebarAdmin = () => {
         </div>
 
         {/* เมนู */}
-        <nav className="flex flex-col gap-2 text-sm">
+        <nav className="flex flex-col gap-2 text-base-semibold">
           {/* === ชุมชน === */}
           <Link
             to={`${basePath}/community/own`}
             onClick={() => handleClick("community")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("community") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("community") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="ri:community-line" className="text-xl" />
@@ -166,38 +165,14 @@ const SidebarAdmin = () => {
           )}
 
           {/* === สมาชิก === */}
-          <Link
-            to={`${basePath}/members`}
-            onClick={() => handleClick("members")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("members") ? "bg-[#0D845A]" : ""
-            }`}
-          >
-            <span className="flex items-center gap-3">
-              <Icon icon="mdi:account-cog-outline" className="text-xl" />
-              จัดการสมาชิก
-            </span>
-            <Icon icon={openDropdown === "members" ? "mdi:chevron-up" : "mdi:chevron-down"} />
-          </Link>
-          {openDropdown === "members" && (
-            <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
-              {menuLink(
-                "การระงับบัญชี",
-                "/member/status",
-                "mdi:account-cancel-outline",
-                "member-status",
-                "members"
-              )}
-            </div>
-          )}
+          {menuLink("จัดการสมาชิก", "/members", "mdi:account-cog-outline", "members")}
 
           {/* === แพ็กเกจ === */}
           <Link
             to={`${basePath}/packages`}
             onClick={() => handleClick("packages")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("packages") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -209,28 +184,28 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขออนุมัติ",
-                "/package/requests",
+                "/package-requests",
                 "mdi:file-document-outline",
                 "packages-requests",
                 "packages"
               )}
               {menuLink(
                 "ฉบับร่าง",
-                "/package/draft",
+                "/packages/drafts",
                 "mdi:file-edit-outline",
                 "packages-draft",
                 "packages"
               )}
               {menuLink(
                 "ประวัติแพ็กเกจ",
-                "/package/histories",
+                "/packages/histories",
                 "mdi:history",
                 "packages-histories",
                 "packages"
               )}
               {menuLink(
                 "ข้อเสนอแนะ",
-                "/package/feedbacks",
+                "/packages/feedbacks",
                 "mdi:comment-text-outline",
                 "packages-feedbacks",
                 "packages"
@@ -240,11 +215,10 @@ const SidebarAdmin = () => {
 
           {/* === การจอง === */}
           <Link
-            to={`${basePath}/booking`}
+            to={`${basePath}/bookings`}
             onClick={() => handleClick("booking")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("booking") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -256,14 +230,14 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขอคืนเงิน",
-                "/booking/refunds",
+                "/booking/refund",
                 "mdi:cash-refund",
                 "booking-refunds",
                 "booking"
               )}
               {menuLink(
                 "ประวัติการจอง",
-                "/bookings-histories/done",
+                "/bookings-histories/all",
                 "mdi:history",
                 "booking-histories",
                 "booking"
@@ -278,8 +252,18 @@ const SidebarAdmin = () => {
       </div>
 
       {/* === ออกจากระบบ === */}
-      <div className="flex flex-col gap-2 text-sm">
-        {menuLink("ออกจากระบบ", "/logout", "solar:logout-2-outline", "logout")}
+      <div className="flex flex-col gap-2 text-base-semibold">
+        <button
+          onClick={() => {
+            handleClick("logout");
+            logout();
+          }}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${isActive("logout") ? "bg-[#0D845A]" : ""
+            }`}
+        >
+          <Icon icon="solar:logout-2-outline" className="text-xl" />
+          ออกจากระบบ
+        </button>
       </div>
     </div>
   );

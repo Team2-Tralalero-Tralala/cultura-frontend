@@ -1,4 +1,3 @@
-// File: package-request.tsx
 /*
  * คำอธิบาย : Type definition สำหรับรายละเอียดคำร้องแพ็กเกจ (Package Request)
  * หน้าที่ : กำหนดสัญญาโครงสร้างข้อมูลที่ใช้ทั้งฝั่งหน้าเว็บและบริการเรียกข้อมูล
@@ -9,6 +8,8 @@ export interface PackageRequestDetail {
   id: string;
   /** ชื่อแพ็กเกจ */
   name: string;
+  /** สถานะแพ็กเกจ */
+  statusPackage: String;
   /** คำอธิบายแพ็กเกจ */
   description: string;
   /** จำนวนคนที่เปิดรับ */

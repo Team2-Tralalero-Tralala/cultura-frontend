@@ -6,12 +6,12 @@
  */
 
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
 
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { TrashIcon } from "lucide-react";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 import type {
   Column,
@@ -257,19 +257,19 @@ export function BlockedAccountPage() {
   return (
     <div className="space-y-4">
       {/* Section: Header */}
-      <div className="flex flex-col gap-2">
-        <div className="text-sm text-gray-600">
-          <Link
-            to="/super/accounts"
-            className="text-gray-900 hover:underline font-medium"
-          >
-            จัดการบัญชี
-          </Link>
-          <span className="mx-1 text-gray-500">&gt;</span>
-          <span>การระงับบัญชี</span>
-        </div>
+      <div className="flex flex-col">
+          <div className="-ml-6 pt-1 pb-1">
+            <Breadcrumb
+              items={[
+                { label: "จัดการบัญชึ", to: "/super/accounts/all" },
+                { label: "การระงับบัญชี" },
 
-        <h1 className="text-xl font-semibold text-gray-900">การระงับบัญชี</h1>
+              ]}
+            />
+          </div>
+        <h1 className="text-[20px] font-bold text-black">
+          การระงับบัญชี
+        </h1>
 
         {/* Section: Search bar */}
         <div className="flex items-center justify-between w-full mt-2">

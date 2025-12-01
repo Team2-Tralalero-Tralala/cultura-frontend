@@ -131,7 +131,7 @@ export async function getCommunityDetailByAdmin() {
  * Output : Response ที่ประกอบด้วยข้อมูลของวิสาหกิจชุมชน
  */
 export async function getCommunityOwn() {
-  return await axios.get(`${apiUrl}/admin/community/own`, {
+  return await axios.get(`${apiUrl}/admin/community`, {
     withCredentials: true,
   });
 }

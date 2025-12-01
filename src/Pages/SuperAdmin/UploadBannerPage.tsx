@@ -431,42 +431,69 @@ export default function UploadBannerPage() {
                     to: `/super/banners`,
                 }}
             />
-            <main className="min-h-screen bg-gray-50 py-8 px-6">
-                <div className="max-w-6xl h-full mx-auto bg-white rounded-xl shadow-md p-8">
-                    <div className="flex items-start justify-between mb-8">
-                        <h1 className="text-lg font-medium text-gray-800">การเพิ่ม/แก้ไข รูปภาพ</h1>
-                    </div>
 
-                    {/* เส้น Timeline/หัวข้อย่อย (ตกแต่ง UI) */}
-                    <div
-                        className="relative pl-20 mb-8
-              before:content-[''] before:absolute before:left-6 before:top-0 before:bottom-0 before:w-[1px] before:bg-black
-              after:content-[''] after:absolute after:left-[13px] after:top-2 after:w-6 after:h-6 after:rounded-full after:bg-black
-            "
+            {/* โครงหน้าหลัก */}
+            <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
+                <div className="flex items-center mb-6 ">
+                    <a
+                        className="items-center gap-2 mr-4 text-gray-800 hover:text-dark-green"
+                        href="/super/setting"
+                        data-discover="true"
+                        aria-label="ย้อนกลับ"
                     >
-                        <section>
-                            <h2 className="text-base font-medium text-gray-800 mb-4">รูปภาพในหน้าหลัก</h2>
-                            <div className="flex flex-wrap items-start gap-4">
-                                {renderPreviewCards(combinedPreviews)}
+                        {/* ไอคอน back (inline SVG) */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlnsXlink="http://www.w3.org/1999/xlink"
+                            aria-hidden="true"
+                            role="img"
+                            className="iconify iconify--lucide w-7 h-7"
+                            width="1em"
+                            height="1em"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="m12 19l-7-7l7-7m7 7H5"
+                            />
+                        </svg>
+                    </a>
+                    <h1 className="text-[20px] font-bold">การเพิ่ม/แก้ไข รูปภาพ</h1>
+                </div>
 
-                                {/* ปุ่ม/การ์ดสำหรับเพิ่มรูป (แสดงเมื่อยังไม่ครบ 5) 
-                    - UploadCard เป็นคอมโพเนนต์ที่ส่งคืน File[] ผ่าน onChange
-                    - ที่นี่ส่งต่อไป handleAddFiles เพื่ออัปโหลดทันที */}
-                                {remainingBannerSlots > 0 && (
-                                    <UploadCard
-                                        max={remainingBannerSlots}
-                                        accept="image/*"
-                                        multiple={remainingBannerSlots > 1}
-                                        value={bannerFiles}                 // ใช้เป็น File[] ที่เลือกในเครื่อง
-                                        onChange={(files: File[]) => handleAddFiles(files)}   // ส่งไฟล์ไปอัปโหลด
-                                        itemW={200}
-                                        itemH={120}
-                                        square={false}
-                                    />
-                                )}
-                            </div>
-                        </section>
-                    </div>
+                {/* กลุ่มแสดง/เพิ่มพรีวิวแบนเนอร์ */}
+                <div
+                    className="relative pl-20 mb-8
+                                    before:content-[''] before:absolute before:left-6 before:top-0 before:bottom-0 before:w-[1px] before:bg-black
+                                    after:content-[''] after:absolute after:left-[13px] after:top-2 after:w-6 after:h-6 after:rounded-full after:bg-black
+                                    ml-20 mt-10
+                                "
+                >
+                    <section>
+                        <h2 className="text-base font-medium text-gray-800 mb-4">รูปภาพในหน้าหลัก</h2>
+
+                        <div className="flex flex-wrap items-start gap-4">
+                            {renderPreviewCards(combinedPreviews)}
+
+                            {/* การ์ดเพิ่มรูป (แสดงเมื่อยังไม่ครบ 5) */}
+                            {remainingBannerSlots > 0 && (
+                                <UploadCard
+                                    max={remainingBannerSlots}
+                                    accept="image/*"
+                                    multiple={remainingBannerSlots > 1}
+                                    value={bannerFiles}
+                                    onChange={(files: File[]) => handleAddFiles(files)}
+                                    itemW={200}
+                                    itemH={120}
+                                    square={false}
+                                />
+                            )}
+                        </div>
+                    </section>
                 </div>
 
                 {/* Hidden input สำหรับ flow "แก้ไข" (replace) */}

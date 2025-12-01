@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SearchBarTable";
-import { Plus, Edit, Trash, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash } from "lucide-react";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
-
+import { Modal } from "../../Components/Modal/Modal";
 // เพิ่ม id สำหรับ unique key
 interface Package {
   id: string;
@@ -32,6 +32,14 @@ const PackageDraftAdmin = () => {
     limit: 10,
     totalPages: 1,
     totalCount: 0,
+  });
+
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    pkg: Package | null;
+  }>({
+    open: false,
+    pkg: null,
   });
 
   const fetchPackages = async (search = "", page = 1, limit = 10) => {
@@ -92,11 +100,67 @@ const PackageDraftAdmin = () => {
     debouncedFetch(searchTerm, pagination.currentPage, pagination.limit);
   }, [searchTerm, pagination.currentPage, pagination.limit, debouncedFetch]);
 
-  const handleEdit = (pkg: Package) => alert(`แก้ไขแพ็กเกจ: ${pkg.name}`);
-  const handleDelete = (pkg: Package) => alert(`ลบแพ็กเกจ: ${pkg.name}`);
+  const handleEdit = (pkg: Package) => {
+    window.location.href = `/admin/package/${pkg.id}/edit`;
+  };
+
+  
+  const handleDelete = (pkg: Package) => {
+    setDeleteModal({
+      open: true,
+      pkg,
+    });
+  };
+
+  
+  const confirmDelete = async () => {
+  if (!deleteModal.pkg) return;
+
+  const pkgId = deleteModal.pkg.id;
+
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/admin/package/${pkgId}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    if (!res.ok) {
+      console.error("ลบไม่สำเร็จ");
+      return;
+    }
+
+    // ✅ ลบออกจาก state ให้ UI หายทันที
+    setPackages((prev) => prev.filter((item) => item.id !== pkgId));
+
+    // ✅ โหลดข้อมูลใหม่ sync pagination
+    await fetchPackages(
+      searchTerm,
+      pagination.currentPage,
+      pagination.limit
+    );
+  } catch (err) {
+    console.error("Delete error:", err);
+  } finally {
+    setDeleteModal({ open: false, pkg: null });
+  }
+};
 
   const columns: Column<Package>[] = [
-    { key: "name", header: "ชื่อแพ็กเกจ" },
+    {
+    key: "name",
+    header: "ชื่อแพ็กเกจ",
+    render: (pkg) => (
+      <span
+        className="cursor-pointer"
+        onClick={() => window.location.href = `/admin/package/${pkg.id}`}
+      >
+        {pkg.name}
+      </span>
+    ),
+  },
     { key: "community", header: "ชื่อชุมชน" },
     { key: "overseer", header: "ชื่อผู้ดูแล" },
     { key: "status", header: "สถานะแพ็กเกจ" },
@@ -115,7 +179,7 @@ const PackageDraftAdmin = () => {
             size={20}
             strokeWidth={2.5}
             className="text-gray-500 hover:text-gray-700 cursor-pointer"
-            onClick={() => handleDelete(pkg)}
+            onClick={() => handleDelete(pkg)} // <<<<<< เปิด Modal
           />
         </div>
       ),
@@ -124,12 +188,12 @@ const PackageDraftAdmin = () => {
 
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
-    <Breadcrumb
-      current={{
+      <Breadcrumb
+        current={{
           label: "ฉบับร่าง",
           to: "/admin/packages/draft",
-       }}
-     />
+        }}
+      />
 
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-[20px] font-medium">ฉบับร่าง</h1>
@@ -142,6 +206,7 @@ const PackageDraftAdmin = () => {
             setSearchTerm(e.target.value)
           }
         />
+
         <button
           onClick={() => (window.location.href = "/admin/packages/create")}
           className="flex items-center border text-white px-4 py-2 rounded-md transition h-10"
@@ -169,6 +234,15 @@ const PackageDraftAdmin = () => {
           }))
         }
         isLoading={loading}
+      />
+      <Modal
+        open={deleteModal.open}
+        title="ยืนยันการลบแพ็กเกจ"
+        text={"คุณต้องการยืนยันการลบแพ็กเกจหรือไม่"}
+        confirmText="ลบ"
+        cancelText="ยกเลิก"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModal({ open: false, pkg: null })}
       />
     </div>
   );

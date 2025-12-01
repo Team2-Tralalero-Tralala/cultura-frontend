@@ -75,7 +75,9 @@ interface PackageData {
   openBookingAt: DateTimeField;
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
-  files: { id: number; path: string; type: string }[];
+  files: {
+    [x: string]: any; id: number; path: string; type: string
+}[];
   homestayHistories: HomestayHistory[];
 }
 
@@ -231,10 +233,6 @@ export default function DetailPackageSuperAdmin() {
   // ดึงรูปหลักและรูปเพิ่มเติมจาก type
   const mainImage = pkg.files?.find((img: any) => img.type === "COVER");
   const extraImages = pkg.files?.filter((img: any) => img.type === "GALLERY");
-
-  function resolveBackendUploadUrl(image: any) {
-    throw new Error("Function not implemented.");
-  }
 
   // เตรียม section แสดงที่พักในแพ็กเกจ (ถ้ามี)
   let homestaySection: JSX.Element | null = null;
@@ -409,22 +407,21 @@ export default function DetailPackageSuperAdmin() {
         <div className="grid grid-cols-1 md:grid-cols-[55%_auto] gap-10 items-start">
           {/* ===== รูปหลัก ===== */}
           {mainImage ? (
-            (() => {
-              const url =
-                resolveBackendUploadUrl(mainImage.image) ??
-                "https://placehold.co/600x400?text=No+Image";
-              return (
-                <img
-                  src={url}
-                  alt="homestay-main"
-                  className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
-                />
-              );
-            })()
+            <img
+              src={
+                mainImage.path
+                  ? `${new URL(apiUrl).origin}/uploads/${mainImage.path}`
+                  : "https://placehold.co/600x400?text=No+Image"
+              }
+              alt="homestay-main"
+              className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
+            />
           ) : (
-            <div className="w-full mb-6 h-[400px] bg-gray-100 rounded-xl grid place-items-center text-gray-500">
-              ไม่มีรูปภาพ
-            </div>
+            <img
+              src="https://placehold.co/600x400?text=No+Image"
+              alt="homestay-main"
+              className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
+            />
           )}
         </div>
 

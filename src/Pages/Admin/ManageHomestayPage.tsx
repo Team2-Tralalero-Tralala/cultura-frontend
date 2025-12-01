@@ -157,17 +157,16 @@ export default function ManageHomestayAdmin() {
   return (
     <div className="space-y-4">
       {/* Section: Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
         <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน", to: "/admin/community/own" },
-            { label: "จัดการที่พัก" },
-          ]}
+          current={{
+            label: "จัดการที่พัก",
+            to: "/admin/community/homestays",
+            fromSidebar: true,
+          }}
         />
-      </div>
 
       {/* Section: Header */}
-      <div className="flex flex-col mt-[-8px]">
+      <div className="flex flex-col mt-[-18px]">
         <h1 className="text-[20px] font-bold text-black">
           จัดการที่พัก
         </h1>

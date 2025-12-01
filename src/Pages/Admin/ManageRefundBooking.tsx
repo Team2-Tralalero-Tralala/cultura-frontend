@@ -248,17 +248,16 @@ export function ManageRefundBooking() {
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}
-      <div className="-ml-6">
-        <Breadcrumb
-          items={[
-            { label: "จัดการการจอง", to: "/admin/booking" },
-            { label: "คำขอคืนเงิน" },
-          ]}
-        />
-      </div>
+         <Breadcrumb
+            current={{
+              label: "คำขอคืนเงิน",
+              to: "/admin/booking/refund-requests",
+              fromSidebar: true,
+            }}
+          />
 
       {/* Header + Toolbar */}
-      <div className="flex flex-col mt-[-8px]">
+      <div className="flex flex-col mt-[-18px]">
          <h1 className="text-[20px] font-bold text-black">
           คำขอคืนเงิน
         </h1>

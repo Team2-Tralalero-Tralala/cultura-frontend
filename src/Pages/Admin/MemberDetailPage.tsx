@@ -77,14 +77,13 @@ export function MemberDetailPage() {
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
-        <div className="-ml-6 pt-1 pb-1">
-          <Breadcrumb
-            items={[
-              { label: "จัดการบัญชึ", to: "/super/accounts/all" },
-              { label: "รายละเอียดบัญชี" },
-            ]}
+           <Breadcrumb
+            current={{
+              label: "รายละเอียดบัญชี",
+              to: "/admin/member/${userId}",
+              fromSidebar: true,
+            }}
           />
-        </div>
         <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
           <ArrowLeft 
             className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors" 

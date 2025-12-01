@@ -81,7 +81,7 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-lg w-[591px] h-[277px] shadow-lg flex flex-col items-center justify-center text-center gap-4">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-bold">
           {initialValue ? 'การแก้ไขประเภท' : 'การเพิ่มประเภท'}
         </h2>
 
@@ -96,17 +96,16 @@ const Modal: React.FC<ModalProps> = ({
           {/* ช่อง input สำหรับกรอกชื่อประเภท */}
           <input
             type="text"
-            placeholder="กรอกชื่อประเภทที่ต้องการ"
+            placeholder="กรอกชื่อประเภท"
             value={tagName}
-            onChange={(e) => {
-              setTagName(e.target.value);
+            onChange={(event) => {
+              setTagName(event.target.value);
               setLocalError('');
             }}
-            className={`px-3 w-full h-[50px] rounded-[8px] transition-colors duration-200 ${
-              localError || errorMessage
+            className={`px-3 w-full h-[50px] rounded-[8px] transition-colors duration-200 ${localError || errorMessage
                 ? 'border-red-500 border-[1.5px]'
                 : 'border-black border-[1px]'
-            }`}
+              }`}
           />
         </div>
 

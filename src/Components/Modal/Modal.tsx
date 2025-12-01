@@ -28,6 +28,8 @@ type ModalProps = {
   cancelText?: string;
 };
 
+const sweetAlert = withReactContent(Swal);
+
 export const Modal: React.FC<ModalProps> = ({
   open,
   onConfirm,
@@ -37,8 +39,6 @@ export const Modal: React.FC<ModalProps> = ({
   confirmText = "ยืนยัน",
   cancelText = "ยกเลิก",
 }) => {
-  const sweetAlert = withReactContent(Swal);
-
   useEffect(() => {
     if (!open) return;
 
@@ -46,75 +46,72 @@ export const Modal: React.FC<ModalProps> = ({
     if (!isFired) {
       isFired = true;
 
-      void sweetAlert.fire({
-        iconHtml: (
-          <Icon
-            icon="circum:circle-alert"
-            width={164}
-            height={164}
-            style={{ color: "#000" }}
-          />
-        ),
-        iconColor: "#004D2C",
-        title,
-        text,
-        width: 612,
-        color: "#0f172a",
-        padding: "1.5rem",
-        showCancelButton: true,
-        showConfirmButton: true,
-        confirmButtonText: confirmText,
-        cancelButtonText: cancelText,
-        buttonsStyling: false,
-        allowOutsideClick: false,
-        allowEscapeKey: true,
-        reverseButtons: true,
-        heightAuto: false,
+      void sweetAlert
+        .fire({
+          iconHtml: (
+            <Icon icon="circum:circle-alert" width={164} height={164} style={{ color: "#000" }} />
+          ),
+          iconColor: "#004D2C",
+          title,
+          text,
+          width: 612,
+          color: "#0f172a",
+          padding: "1.5rem",
+          showCancelButton: true,
+          showConfirmButton: true,
+          confirmButtonText: confirmText,
+          cancelButtonText: cancelText,
+          buttonsStyling: false,
+          allowOutsideClick: false,
+          allowEscapeKey: true,
+          reverseButtons: true,
+          heightAuto: false,
 
-        customClass: {
-          popup: "rounded-[32px] h-[380px] px-8 py-6",
-          title: "text-3xl font-semibold text-gray-800 mt-2 mb-2",
-          htmlContainer: "text-lg text-gray-600 mb-6",
-          actions: "mt-4 flex justify-center gap-4",
-          confirmButton:
-            "w-[120px] py-2.5 text-lg rounded-lg bg-[#004D2C] text-white hover:bg-[#003c22] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
-          cancelButton:
-            "w-[120px] py-2.5 text-lg rounded-lg border border-[#000000] bg-white text-[#000000] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
-          icon: "!border-0 !bg-transparent !shadow-none !w-auto !h-auto p-0",
-        },
+          customClass: {
+            popup: "rounded-[32px] h-[380px] px-8 py-6",
+            title: "text-3xl font-semibold text-gray-800 mt-2 mb-2",
+            htmlContainer: "text-lg text-gray-600 mb-6",
+            actions: "mt-4 flex justify-center gap-4",
+            confirmButton:
+              "w-[120px] py-2.5 text-lg rounded-lg bg-[#004D2C] text-white hover:bg-[#003c22] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
+            cancelButton:
+              "w-[120px] py-2.5 text-lg rounded-lg border border-[#000000] bg-white text-[#000000] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
+            icon: "!border-0 !bg-transparent !shadow-none !w-auto !h-auto p-0",
+          },
 
-        didOpen: () => {
-          const fontStack = 'var(--font-sarabun), "Sarabun", sans-serif';
+          didOpen: () => {
+            const fontStack = 'var(--font-sarabun), "Sarabun", sans-serif';
 
-          const popupEl = Swal.getPopup();
-          const titleEl = Swal.getTitle();
-          const htmlContainerEl = Swal.getHtmlContainer();
-          const actionsEl = Swal.getActions();
+            const popupEl = Swal.getPopup();
+            const titleEl = Swal.getTitle();
+            const htmlContainerEl = Swal.getHtmlContainer();
+            const actionsEl = Swal.getActions();
 
-          if (popupEl) popupEl.style.fontFamily = fontStack;
-          if (titleEl) titleEl.style.fontFamily = fontStack;
-          if (htmlContainerEl) htmlContainerEl.style.fontFamily = fontStack;
-          if (actionsEl) actionsEl.style.fontFamily = fontStack;
+            if (popupEl) popupEl.style.fontFamily = fontStack;
+            if (titleEl) titleEl.style.fontFamily = fontStack;
+            if (htmlContainerEl) htmlContainerEl.style.fontFamily = fontStack;
+            if (actionsEl) actionsEl.style.fontFamily = fontStack;
 
-          // จัดเลย์เอาต์ popup + ปรับขนาดไอคอน
-          const iconEl = Swal.getIcon();
-          if (popupEl) {
-            popupEl.style.display = "grid";
-            popupEl.style.gridTemplateRows = "160px 50px 48px 42px";
-            popupEl.style.fontFamily = fontStack;
-            popupEl.style.borderRadius = "20px";
-          }
-          if (iconEl) {
-            iconEl.style.height = "150px";
-            iconEl.style.background = "transparent";
-            iconEl.style.boxShadow = "none";
-          }
-        },
-      }).then((result) => {
-        isFired = false;
-        if (result.isConfirmed) onConfirm();
-        else onCancel?.();
-      });
+            // จัดเลย์เอาต์ popup + ปรับขนาดไอคอน
+            const iconEl = Swal.getIcon();
+            if (popupEl) {
+              popupEl.style.display = "grid";
+              popupEl.style.gridTemplateRows = "160px 50px 48px 42px";
+              popupEl.style.fontFamily = fontStack;
+              popupEl.style.borderRadius = "20px";
+            }
+            if (iconEl) {
+              iconEl.style.height = "150px";
+              iconEl.style.background = "transparent";
+              iconEl.style.boxShadow = "none";
+            }
+          },
+        })
+        .then((result) => {
+          isFired = false;
+          if (result.isConfirmed) onConfirm();
+          else onCancel?.();
+        });
     }
 
     return () => {

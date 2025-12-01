@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SearchBarTable";
-import { Plus, Edit, Trash } from "lucide-react";
-import { ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash, ChevronRight } from "lucide-react";
+import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
 // เพิ่ม id สำหรับ unique key
 interface Package {
@@ -42,9 +42,12 @@ const PackageDraftAdmin = () => {
         page: page.toString(),
         limit: limit.toString(),
       });
-      const res = await fetch(`http://localhost:3000/api/admin/packages/draft?${query}`, {
-        credentials: "include",
-      });
+
+      const res = await fetch(
+        `http://localhost:3000/api/admin/packages/draft?${query}`,
+        { credentials: "include" }
+      );
+
       const result = await res.json();
 
       const formatted: Package[] = Array.isArray(result.data)
@@ -53,7 +56,10 @@ const PackageDraftAdmin = () => {
             name: pkg.name ?? "-",
             community: pkg.community?.name ?? "-",
             overseer: pkg.overseerPackage?.username ?? "-",
-            status: pkg.statusPackage === "DRAFT" ? "ฉบับร่าง" : pkg.statusPackage ?? "-",
+            status:
+              pkg.statusPackage === "DRAFT"
+                ? "ฉบับร่าง"
+                : pkg.statusPackage ?? "-",
           }))
         : [];
 
@@ -70,7 +76,11 @@ const PackageDraftAdmin = () => {
     } catch (err) {
       console.error("Fetch error:", err);
       setPackages([]);
-      setPagination((prev) => ({ ...prev, totalCount: 0, totalPages: 1 }));
+      setPagination((prev) => ({
+        ...prev,
+        totalCount: 0,
+        totalPages: 1,
+      }));
     } finally {
       setLoading(false);
     }
@@ -114,13 +124,12 @@ const PackageDraftAdmin = () => {
 
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
-      <div className="text-[14px] text-black mb-1 flex items-center">
-        <span>จัดการแพ็กเกจ</span>
-        <ChevronRight size={20} className="mx-1 text-black" />
-        <span className="font-medium" style={{ color: "#494949" }}>
-          ฉบับร่าง
-        </span>
-      </div>
+    <Breadcrumb
+      current={{
+          label: "ฉบับร่าง",
+          to: "/admin/packages/draft",
+       }}
+     />
 
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-[20px] font-medium">ฉบับร่าง</h1>
@@ -129,10 +138,12 @@ const PackageDraftAdmin = () => {
       <div className="flex items-center justify-between mb-3 font-sarabun">
         <SearchBarTable
           value={searchTerm}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchTerm(e.target.value)
+          }
         />
         <button
-          onClick={() => window.location.href = "/admin/packages/create"} // redirect
+          onClick={() => (window.location.href = "/admin/packages/create")}
           className="flex items-center border text-white px-4 py-2 rounded-md transition h-10"
           style={{ backgroundColor: "#055035" }}
         >
@@ -144,11 +155,19 @@ const PackageDraftAdmin = () => {
       <DataTable<Package>
         data={packages}
         columns={columns}
-        getKey={(pkg) => pkg.id} // unique
+        getKey={(pkg) => pkg.id}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(newPage) => setPagination((prev) => ({ ...prev, currentPage: newPage }))}
-        onPageSizeChange={(newLimit) => setPagination((prev) => ({ ...prev, limit: newLimit, currentPage: 1 }))}
+        onPageChange={(newPage) =>
+          setPagination((prev) => ({ ...prev, currentPage: newPage }))
+        }
+        onPageSizeChange={(newLimit) =>
+          setPagination((prev) => ({
+            ...prev,
+            limit: newLimit,
+            currentPage: 1,
+          }))
+        }
         isLoading={loading}
       />
     </div>

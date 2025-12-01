@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // ✅ เพิ่ม useNavigate
+import { useParams, useNavigate } from "react-router-dom";
 import { ChevronRight, Edit } from "lucide-react";
+import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
 interface Community {
   id: number;
@@ -107,16 +108,12 @@ const StoreDetailPage = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0] min-h-screen">
 
-      {/* Breadcrumb */}
-      <div className="flex items-center text-[14px] text-black mb-4 font-medium">
-        <span>จัดการชุมชน</span>
-        <ChevronRight size={18} className="mx-1" />
-        <span>{store.community?.name ?? "ไม่พบชื่อชุมชน"}</span>
-        <ChevronRight size={18} className="mx-1" />
-        <span>จัดการร้านค้า</span>
-        <ChevronRight size={18} className="mx-1" />
-        <span className="text-[#494949]">{store.name}</span>
-      </div>
+      <Breadcrumb
+            current={{
+               label: store.name ?? "ไม่พบชื่อชุมชน",                       //ข้อความที่จะแสดงใน breadcrumb (ชื่อชุมชน)
+               to: `/super/stores/${store.id}`,      //ลิงก์ของหน้าปัจจุบัน   //ในหน้า ปกติ “ไม่ต้องใส่ fromSidebar”
+             }}
+           />
 
       {/* Main Section */}
       <div className="bg-white rounded-xl p-6 shadow-sm">

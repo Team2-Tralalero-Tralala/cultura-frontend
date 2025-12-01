@@ -36,6 +36,7 @@ import z from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -166,7 +167,7 @@ export function EditCommunity() {
   const [members, setMembers] = React.useState<Member[]>();
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
+  const [isLoading, setIsLoading] = React.useState(true);
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
@@ -195,7 +196,6 @@ export function EditCommunity() {
   React.useEffect(() => {
     async function fetchData() {
       try {
-        console.log("fetch");
         const delayPromise = new Promise((resolve) => setTimeout(resolve, 400));
 
         const fetchDataPromise = getCommunityOwn();
@@ -408,7 +408,6 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
-   * ✅ อัปเดต:
    * 1. ตรวจสอบ validation แล้วเปิด Accordion ที่มี error แรกให้เอง
    * 2. เพิ่มการแจ้งเตือน (alert) ทั้งกรณีสำเร็จและล้มเหลว
    */
@@ -502,7 +501,12 @@ export function EditCommunity() {
 
   return (
     <div>
-      {/* ✅ 3. เพิ่ม Backdrop เพื่อแสดงสถานะ Loading */}
+      <Breadcrumb
+        items={[
+          { label: "จัดการชุมชน", to: "/super/communities/all" },
+          { label: "แก้ไขวิสาหกิจชุมชน" },
+        ]}
+      />
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>
@@ -515,25 +519,40 @@ export function EditCommunity() {
           <h1 className="text-xl font-bold">แก้ไขวิสาหกิจชุมชน</h1>
         </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          สถานะชุมชน
+          <p>สถานะชุมชน</p>
           <Switch checked={checked} onChange={handleCheck} />
         </Stack>
       </div>
 
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0 mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
         expanded={expanded === "panel2"}
         onChange={handleChange("panel2")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
-          className="!rounded-t-lg "
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
-          <h1 className="text-xl font-bold">ข้อมูลชุมชน</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <p>แสดงคะแนนชุมชน</p>
+              <Switch checked={checked} onChange={handleCheck} />
+            </Stack>
+          </div>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
           <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
@@ -542,7 +561,7 @@ export function EditCommunity() {
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
-              coverUrl={getFilePreview(coverFiles)} // ✅ แปลงเป็น URL
+              coverUrl={getFilePreview(coverFiles)}
               avatarUrl={getFilePreview(logoFile)}
               onCoverChange={setCoverFiles}
               onAvatarChange={setLogoFile}
@@ -764,18 +783,28 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0 mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
         expanded={expanded === "panel3"}
         onChange={handleChange("panel3")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <h2 className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</h2>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -847,7 +876,7 @@ export function EditCommunity() {
                 helperText={formErrors.detail}
               />
             </div>
-            <div className="text-xl font-bold">ที่ตั้งชุมชน</div>
+            <div className="text-lg font-bold">ที่ตั้งชุมชน</div>
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
@@ -859,18 +888,29 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!shadow-sm !rounded-lg !border- mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <h2 className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</h2>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+          <h1 className="text-lg font-bold mb-[24px]">ข้อมูลติดต่อวิสาหกิจชุมชน</h1>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField

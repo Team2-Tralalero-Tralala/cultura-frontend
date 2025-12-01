@@ -15,9 +15,7 @@ import axios from "axios";
  */
 export const api = axios.create({
   baseURL:
-    import.meta.env.VITE_API_BASE ||
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:3000/api",
+    import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
@@ -58,7 +56,7 @@ export async function fetchAccounts(
  * Output: รายการบัญชีที่ถูกระงับ
  */
 export async function fetchBlockedAccounts(page: number, limit: number, searchName?: string) {
-  const res = await api.get(`/super/accounts/status/BLOCKED`, {
+  const res = await api.get(`/super/accounts/BLOCKED`, {
     params: { page, limit, searchName },
     withCredentials: true,
   });
@@ -156,5 +154,26 @@ export async function fetchUserDetail(userId: number) {
  */
 export async function fetchMemberDetail(userId: number) {
   const res = await api.get(`/admin/member/${userId}`);
+  return res.data?.data;
+}
+/**
+ * ฟังก์ชัน: getAccountInCommunity
+ * วัตถุประสงค์: ดึงรายละเอียดของสมาชิกในชุมชน (SuperAdmin)
+ * Input: communityId (หมายเลขชุมชน), page (หน้า), limit (จำนวนต่อหน้า), searchName (ค้นหา)
+ * Output: ข้อมูลรายละเอียดสมาชิกในชุมชน
+ */
+export async function getAccountInCommunity(
+  communityId: number,
+  page: number,
+  limit: number,
+  searchName?: string
+) {
+  const res = await api.get(`/super/community/${communityId}/accounts`, {
+    params: {
+      page,
+      limit,
+      searchName,
+    },
+  });
   return res.data?.data;
 }

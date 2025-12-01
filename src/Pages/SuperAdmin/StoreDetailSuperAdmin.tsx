@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // ✅ เพิ่ม useNavigate
 import { ChevronRight, Edit } from "lucide-react";
+
+interface Community {
+  id: number;
+  name: string;
+}
 
 interface Store {
   id: number;
@@ -8,6 +13,7 @@ interface Store {
   detail: string;
   tags: string[];
   images: string[];
+  community?: Community;
   location?: {
     address: string;
     detail: string;
@@ -17,8 +23,9 @@ interface Store {
 }
 
 const StoreDetailPage = () => {
- const { id } = useParams<{ id: string }>();  
- const [store, setStore] = useState<Store | null>(null);
+  const { id } = useParams<{ id: string }>();  
+  const navigate = useNavigate(); // ✅ ใช้งาน navigate
+  const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStore = async () => {
@@ -30,9 +37,8 @@ const StoreDetailPage = () => {
 
       if (result?.data) {
         const data = result.data;
-        const backendUrl = "http://localhost:3000/uploads"; // prepend path รูปภาพ
+        const backendUrl = "http://localhost:3000/uploads";
 
-        // แปลง path ของรูปให้เป็น URL เต็ม
         const images: string[] =
           data.storeImage?.map((img: any) =>
             img.image
@@ -48,6 +54,12 @@ const StoreDetailPage = () => {
           detail: data.detail ?? "-",
           tags: data.tagStores?.map((t: any) => t.tag?.name) || [],
           images,
+          community: data.community
+            ? {
+                id: data.community.id,
+                name: data.community.name,
+              }
+            : undefined,
           location: data.location
             ? {
                 address: [
@@ -86,13 +98,20 @@ const StoreDetailPage = () => {
 
   const coverImage = store.images[0];
 
+  //ฟังก์ชันเวลาคลิกปุ่มแก้ไข
+  const handleEditClick = () => {
+    if (!id) return;
+    navigate(`/super/community/${store.community?.id}/store/${id}/edit`);
+  };
+
   return (
     <div className="font-sarabun bg-[#F0F0F0] min-h-screen">
+
       {/* Breadcrumb */}
       <div className="flex items-center text-[14px] text-black mb-4 font-medium">
         <span>จัดการชุมชน</span>
         <ChevronRight size={18} className="mx-1" />
-        <span>ชุมชนแสนสุข</span>
+        <span>{store.community?.name ?? "ไม่พบชื่อชุมชน"}</span>
         <ChevronRight size={18} className="mx-1" />
         <span>จัดการร้านค้า</span>
         <ChevronRight size={18} className="mx-1" />
@@ -102,15 +121,17 @@ const StoreDetailPage = () => {
       {/* Main Section */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-[20px] font-medium">รายละเอียดร้านค้า</h1>
-          <button className="flex items-center bg-[#055035] text-white px-4 py-2 rounded-lg hover:bg-green-900 transition">
+          <h1 className="text-[20px] font-bold">รายละเอียดร้านค้า</h1>
+          <button
+            onClick={handleEditClick}
+            className="flex items-center bg-[#055035] text-white px-4 py-2 rounded-lg hover:bg-green-900 transition"
+          >
             <Edit size={18} className="mr-2" />
             แก้ไข
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Cover Image */}
           {coverImage && (
             <div className="mb-6">
               <img
@@ -121,7 +142,6 @@ const StoreDetailPage = () => {
             </div>
           )}
 
-          {/* Right: Store Info */}
           <div>
             <h2 className="text-[20px] font-bold mt-2 mb-2">ข้อมูลร้านค้า</h2>
             <p className="text-[16px] mb-2">
@@ -152,7 +172,7 @@ const StoreDetailPage = () => {
         {/* รูปภาพเพิ่มเติม */}
         {store.images.length > 1 && (
           <div className="mt-6">
-            <h2 className="text-[18px] font-semibold mb-3">รูปภาพเพิ่มเติม</h2>
+            <h2 className="text-[20px] font-bold mb-3">รูปภาพเพิ่มเติม</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {store.images.slice(1).map((img, i) => (
                 <img
@@ -166,8 +186,8 @@ const StoreDetailPage = () => {
           </div>
         )}
 
-        {/* แผนที่ (OpenStreetMap) */}
-        <h2 className="text-[18px] font-semibold mt-10 mb-3">แผนที่</h2>
+        {/* แผนที่ */}
+        <h2 className="text-[20px] font-bold mt-10 mb-3">แผนที่</h2>
         {store.location ? (
           <>
             <div className="w-full h-[300px] rounded-xl overflow-hidden mb-4">
@@ -189,27 +209,28 @@ const StoreDetailPage = () => {
                 </p>
                 <p className="mb-2">
                   <strong>OpenStreetMap URL :</strong>{" "}
-                    <a
-                     href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                    </a>
-                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                  </a>
+                </p>
               </div>
+
               <div className="mt-6">
                 <p className="mb-2">
                   <strong>คำอธิบายที่อยู่ :</strong> {store.location.detail}
                 </p>
               </div>
             </div>
-            
           </>
         ) : (
           <p className="text-gray-500">ไม่มีข้อมูลตำแหน่งร้านค้า</p>
         )}
+
       </div>
     </div>
   );

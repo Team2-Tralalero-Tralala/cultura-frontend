@@ -107,11 +107,11 @@ export type UploadProfileProps = {
 };
 
 /**
- * ยูทิลิตี้: toSize
+ * ยูทิลิตี้: formatSize
  * แปลง number → `${n}px` หรือคืน string เดิม; ไม่มีค่าส่ง fallback
  */
-const toSize = (v?: number | string, fallback?: string) =>
-  v == null ? fallback : typeof v === "number" ? `${v}px` : v;
+const formatSize = (value?: number | string, fallback?: string) =>
+  value == null ? fallback : typeof value === "number" ? `${value}px` : value;
 
 /**
  * คอมโพเนนต์หลัก: UploadProfile
@@ -340,8 +340,8 @@ export default function UploadProfile({
   };
 
   /** ---------- Styles คำนวณจากพร็อพ ---------- */
-  const wrapStyle = useMemo(() => ({ width: toSize(width, "100%") }), [width]);
-  const coverStyle = useMemo(() => ({ height: toSize(coverHeight, "360px") }), [coverHeight]);
+  const wrapStyle = useMemo(() => ({ width: formatSize(width, "100%") }), [width]);
+  const coverStyle = useMemo(() => ({ height: formatSize(coverHeight, "360px") }), [coverHeight]);
   const avatarStyle = useMemo(
     () => ({ width: `${avatarSize}px`, height: `${avatarSize}px` }),
     [avatarSize]

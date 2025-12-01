@@ -80,7 +80,7 @@ type BannerItem = {
  * หมายเหตุ: โครงสร้าง field name ต้องตรงกับฝั่ง server/multer
  */
 async function fetchBanners(): Promise<BannerItem[]> {
-    const response = await apiClient.get(`${apiPrefix}/banner`, { params: { _: Date.now() } });
+    const response = await apiClient.get(`${apiPrefix}/super/banner`, { params: { _: Date.now() } });
     // รองรับรูปแบบห่อผลลัพธ์ที่หลากหลาย (data.data | data.banners | data)
     const rawList = Array.isArray(response.data?.data)
         ? response.data.data
@@ -108,20 +108,20 @@ async function fetchBanners(): Promise<BannerItem[]> {
 async function uploadBanners(files: File[]) {
     const formData = new FormData();
     files.forEach((file) => formData.append("banner", file, file.name));
-    const response = await apiClient.post(`${apiPrefix}/banner`, formData, {
+    const response = await apiClient.post(`${apiPrefix}/super/banner`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
 }
 
 async function deleteBanner(id: number) {
-    await apiClient.delete(`${apiPrefix}/banner/${id}`);
+    await apiClient.delete(`${apiPrefix}/super/banner/${id}`);
 }
 
 async function replaceBanner(id: number, file: File) {
     const formData = new FormData();
     formData.append("banner", file, file.name);
-    const response = await apiClient.put(`${apiPrefix}/banner/${id}`, formData);
+    const response = await apiClient.put(`${apiPrefix}/super/banner/${id}`, formData);
     return response.data;
 }
 

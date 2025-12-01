@@ -9,24 +9,13 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 
-{
-  /* import ของตัวเอง ข้างล่างเป็นตัวอย่าง*/
-}
-//import CommunityMember from '../../Pages/Member/CommunityMember';
-
-const MemberRoutes: React.FC = () => {
+export default function MemberRoutes() {
   return (
     <Routes>
-      {/* 
-      <Route path="community" element={<CommunityMember />} />
-  
-      <Route path="package/create" element={<CreatePackagePage />} />
-      <Route path="packages/all" element={<ManagePackagePage />} />
-      <Route path="package/edit/:id" element={<EditPackagePage />} />
-      */}
+      
+      <Route path="account/change-password/own" element={<ChangePasswordPage />} />
     </Routes>
   );
-};
-
-export default MemberRoutes;
+}

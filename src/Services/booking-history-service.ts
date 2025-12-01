@@ -27,7 +27,7 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
   const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
   const response = await fetch(`${baseURL}/admin/booking/histories/all?page=${page}&limit=${limit}`, {
     method: "GET",
-    credentials: "include", // ส่ง cookie ไป
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },

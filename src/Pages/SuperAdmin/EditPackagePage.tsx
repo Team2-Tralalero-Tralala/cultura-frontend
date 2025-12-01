@@ -67,7 +67,7 @@ function toIntOrNull(value: any): number | null {
 function toTimeInput(input?: string | Date | null) {
   if (!input) return "";
   const dateObject = new Date(input as any);
-    if (!isNaN(dateObject.getTime())) {
+  if (!isNaN(dateObject.getTime())) {
     const hours = String(dateObject.getHours()).padStart(2, "0");
     const minutes = String(dateObject.getMinutes()).padStart(2, "0");
     return `${hours}:${minutes}`;
@@ -866,11 +866,8 @@ export const EditPackagePage: React.FC = () => {
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
       {/* Breadcrumb */}
-      <div className="-ml-6 mb-6">
-        <Breadcrumb items={[{ label: "จัดการแพ็กเกจ", to: "/super/packages/all" },
-        { label: formState.name, to: `/super/package/${id}` },
-        { label: "แก้ไขแพ็กเกจ" }
-        ]} />
+      <div>
+        พื้นที่ใส่ Breadcrumb
       </div>
       <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
@@ -1406,6 +1403,30 @@ export const EditPackagePage: React.FC = () => {
                   onChange={(event) => setHsCheckOutTime(event.target.value)}
                   error={!!(formErrors as any).hsCheckOutTime}
                   helperText={(formErrors as any).hsCheckOutTime}
+                />
+                <BoxDateInput
+                  id="startDate"
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
+                  required
+                  value={startDateObj}
+                  onChange={(date) => {
+                    setStartDateObj(date);
+                    if (date) {
+                      setFormField("startDate", date.toISOString().split("T")[0] as any);
+                    } else {
+                      setFormField("startDate", "" as any);
+                    }
+                  }}
+                  minDate={new Date("1900-01-01")}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={formErrors.startDate}
+                />
+                <BoxTimeInput
+                  label="เวลาที่เริ่ม"
+                  value={formState.startTime}
+                  onChange={(time) => setFormField("startTime", time)}
+                  required
+                  errorText={formErrors.startTime}
                 />
               </div>
 

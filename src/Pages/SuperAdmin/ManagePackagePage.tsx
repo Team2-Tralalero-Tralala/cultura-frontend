@@ -301,8 +301,7 @@ export default function ManagePackageSuperAdmin() {
     <div className="space-y-4">
 
       {/* Breadcrumb */}
-      <div className="-ml-6  mb-6">
-        <Breadcrumb items={[{ label: "จัดการแพ็กเกจ" }]} />
+      <div>
       </div>
       
       {/* หัวข้อและช่องค้นหา */}

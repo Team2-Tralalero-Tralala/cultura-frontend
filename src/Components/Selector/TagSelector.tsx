@@ -4,6 +4,7 @@ import Checkbox from "@mui/material/Checkbox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import React from "react";
+import SearchIcon from "@mui/icons-material/Search";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -127,24 +128,23 @@ export function TagSelector({
           return (
             <div ref={InputRef} className="w-full">
               <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                  <SearchIcon />
+                </div>
                 <input
                   {...inputPropsRest}
                   ref={InputElementRef}
                   id="tag-selector"
                   type="text"
                   placeholder="ค้นหาแท็ก เช่น เดินป่า ทะเล ภูเขา"
-                  className={`block w-full rounded-form border px-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
+                  className={`block w-full rounded-form border pl-10 pr-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
                   ${
                     error
                       ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
                       : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
                   }`}
                 />
-                {InputProps.endAdornment && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    {InputProps.endAdornment}
-                  </div>
-                )}
+                {InputProps.endAdornment && <div className="hidden">{InputProps.endAdornment}</div>}
               </div>
             </div>
           );
@@ -164,9 +164,9 @@ export function TagSelector({
                 <span>{item.name}</span>
                 <button
                   onClick={() => {
-                    const updated = selectedTags.filter((m) => m.id !== item.id);
+                    const updated = selectedTags.filter((tag) => tag.id !== item.id);
                     setSelectedTags(updated);
-                    onChange(updated.map((v) => v.id));
+                    onChange(updated.map((tag) => tag.id));
                   }}
                   className="ml-2 text-gray-500 hover:text-red-500"
                 >

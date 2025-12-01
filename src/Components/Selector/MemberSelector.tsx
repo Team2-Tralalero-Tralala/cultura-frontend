@@ -18,6 +18,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Popper from "@mui/material/Popper";
 import { getUnassignedMembers } from "@/Services/community-service";
+import SearchIcon from "@mui/icons-material/Search";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -164,18 +165,17 @@ export default function MemberSelector({
                   ref={InputElementRef}
                   id="custom-autocomplete"
                   type="text"
-                  placeholder="เลือกสมาชิก"
+                  placeholder="ค้นหาสมาชิก"
                   className="block w-full rounded-form border-1
                   border-gray-400 focus:ring-gray-400 focus:border-gray-500
                   bg-white px-5 py-2 text-base text-gray-900 placeholder:text-gray-500
                   leading-relaxed placeholder:leading-relaxed
-                  focus:outline-none focus:ring-1 transition-shadow"
+                  focus:outline-none focus:ring-1 transition-shadow pr-10"
                 />
-                {InputProps.endAdornment && ( // ✅ render แยกเอง
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    {InputProps.endAdornment}
-                  </div>
-                )}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                  <SearchIcon />
+                </div>
+                {InputProps.endAdornment && <div className="hidden">{InputProps.endAdornment}</div>}
               </div>
             </div>
           );
@@ -198,9 +198,9 @@ export default function MemberSelector({
                 </span>
                 <button
                   onClick={() => {
-                    const updated = selectedMembers.filter((m) => m.id !== item.id);
+                    const updated = selectedMembers.filter((member) => member.id !== item.id);
                     setSelectedMembers(updated);
-                    onChange(updated.map((v) => v.id)); // ✅ sync กลับ parent
+                    onChange(updated.map((member) => member.id));
                   }}
                   className="ml-2 text-gray-500 hover:text-red-500"
                 >

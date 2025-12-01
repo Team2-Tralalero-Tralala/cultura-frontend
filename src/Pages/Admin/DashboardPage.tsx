@@ -151,6 +151,7 @@ export function DashboardPage() {
         </div>
       ) : dashboardData ? (
         <div className="space-y-4">
+          <h1 className="text-2xl font-bold">รายงานและสถิติ</h1>
           <div className="grid grid-cols-2 gap-4">
             {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-4">
@@ -268,7 +269,7 @@ export function DashboardPage() {
               />
             </div>
           </div>
-          <Accordion className="!border-2 !border-gray-200 !rounded-lg shadow-sm p-2">
+          <Accordion className="!shadow-none !border-0 !rounded-lg p-2">
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel1-content"

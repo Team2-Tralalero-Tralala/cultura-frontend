@@ -64,9 +64,9 @@ export async function updateCommunity(id: number, data: CommunityFormData | Form
  * Output :
  *   - Promise<Response> : คำตอบจาก API หลังการลบสำเร็จ
  */
-export async function deleteCommunity(id: number) {
+export async function deleteCommunity(communityId: number) {
   return await axios.patch(
-    `${apiUrl}/super/community/${id}`,
+    `${apiUrl}/super/community/${communityId}`,
     {},
     {
       withCredentials: true,

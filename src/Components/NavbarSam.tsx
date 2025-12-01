@@ -64,7 +64,7 @@ const NavbarSam = () => {
               <li
                 className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base font-medium">
                 <Link
-                  to="/super/account/change-password"
+                  to="/super/account/change-password/own"
                   onClick={closeDropdown}>
                   เปลี่ยนรหัสผ่าน
                 </Link>

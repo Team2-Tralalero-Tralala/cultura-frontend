@@ -91,7 +91,7 @@ function extractDateTime(isoString?: string | null) {
 
 // ================== Main Component ==================
 
-export default function DetailPackageAdmin() {
+export default function DetailPackageHistoryAdmin() {
   const { packageId } = useParams<{ packageId: string }>();
   const navigate = useNavigate();
   const [pkg, setPkg] = useState<PackageData | null>(null);

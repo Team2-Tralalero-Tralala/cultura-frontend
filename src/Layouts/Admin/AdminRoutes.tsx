@@ -29,6 +29,7 @@ import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
+import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayPage';
 
 export default function AdminRoutes() {
   return (
@@ -54,6 +55,8 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
+
+      <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
 
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />

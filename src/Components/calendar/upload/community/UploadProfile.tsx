@@ -1,12 +1,9 @@
 /*
  * File: UploadProfile.tsx
  * Component: UploadProfile (Client)
- * คำอธิบาย (ตามมาตรฐาน CS v1.1.1):
+ * หน้าที่:
  *   - พื้นที่อัปโหลด 2 จุด: Cover (แบนเนอร์) และ Avatar (วงกลม) พร้อมพรีวิว
- *   - รองรับโหมดแก้ไข/ครอปภาพด้วย react-easy-crop (เปิดเมื่อเลือกไฟล์ หรือกดปุ่ม “แก้ไข/ครอป”)
- *   - โครงสร้าง/พฤติกรรมเดิมคงไว้ — เพิ่มเฉพาะคอมเมนต์อธิบายให้ครบถ้วนเท่านั้น
- * Input (Props): UploadProfileProps (ดูรายละเอียดใต้บล็อกชนิดข้อมูล)
- * Output: <section> มีปุ่มอัปโหลด cover และ avatar (overlay), พร้อม modal ครอป
+ *   - โหมดแก้ไข/ครอปภาพผ่าน react-easy-crop (เปิดเมื่อเลือกไฟล์ หรือกด “แก้ไข/ครอป”)
  */
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -15,14 +12,6 @@ import Cropper from "react-easy-crop";
 
 /**
  * ฟังก์ชัน: cropImageToFile
- * คำอธิบาย: ครอปภาพจากไฟล์ต้นฉบับตามพิกเซลที่กำหนด แล้วคืนค่ากลับเป็นไฟล์ใหม่
- * Input:
- *   - file: ไฟล์รูปต้นฉบับ
- *   - area: พื้นที่พิกัดพิกเซล {x, y, width, height} สำหรับครอป
- *   - mime: MIME type เอาท์พุต (ดีฟอลต์ "image/jpeg")
- *   - quality: คุณภาพการบีบอัด (0–1)
- * Output: Promise<File> (ไฟล์ภาพที่ครอปแล้ว)
- * หมายเหตุ: ใช้ Canvas สร้าง Blob แล้วห่อเป็น File; เปลี่ยนชื่อไฟล์เติม "_cropped"
  */
 async function cropImageToFile(
   file: File,
@@ -30,31 +19,46 @@ async function cropImageToFile(
   mime = "image/jpeg",
   quality = 0.95
 ): Promise<File> {
-  const img = await new Promise<HTMLImageElement>((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = URL.createObjectURL(file);
+  // โหลดภาพจากไฟล์เป็น <img> เพื่อวาดลง Canvas
+  const imageEl = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
   });
-  const c = document.createElement("canvas");
-  c.width = Math.max(1, Math.floor(area.width));
-  c.height = Math.max(1, Math.floor(area.height));
-  const ctx = c.getContext("2d")!;
-  ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, c.width, c.height);
-  const blob: Blob = await new Promise((r) => c.toBlob((b) => r(b!), mime, quality));
-  const name = file.name.replace(/\.(\w+)$/, "_cropped.$1");
-  return new File([blob], name, { type: blob.type });
+
+  // เตรียม canvas ตามขนาด area ที่ต้องการครอป
+  const canvasEl = document.createElement("canvas");
+  canvasEl.width = Math.max(1, Math.floor(area.width));
+  canvasEl.height = Math.max(1, Math.floor(area.height));
+
+  // วาดเฉพาะส่วนที่ครอป
+  const canvasCtx = canvasEl.getContext("2d")!;
+  canvasCtx.drawImage(
+    imageEl,
+    area.x,
+    area.y,
+    area.width,
+    area.height,
+    0,
+    0,
+    canvasEl.width,
+    canvasEl.height
+  );
+
+  // ออกเป็น Blob → ห่อเป็น File ใหม่ (ตั้งชื่อเติม _cropped)
+  const blob: Blob = await new Promise((resolve) =>
+    canvasEl.toBlob((b) => resolve(b!), mime, quality)
+  );
+  const outputName = file.name.replace(/\.(\w+)$/, "_cropped.$1");
+  return new File([blob], outputName, { type: blob.type });
 }
 
 /**
  * ชนิดข้อมูล: UploadProfileProps
- * คำอธิบาย:
- *   - Layout/Style: ขนาด, มุมโค้ง, สีพื้นหลัง/เส้นขอบ
- *   - ข้อความ/ไอคอน: ข้อความแนะนำและชื่อไอคอนเมื่อยังไม่เลือกรูป
- *   - พฤติกรรม: จำกัดชนิดไฟล์, ปิดการใช้งาน, โฟกัส avatar อัตโนมัติ
- *   - ค่าภายนอก/อีเวนต์: URL เริ่มต้น + callback เมื่อไฟล์เปลี่ยน
- *   - Action UI: โหมดแสดงปุ่ม (hover/always), ป้ายปุ่ม “เปลี่ยนรูป/แก้ไข”
- *   - autoCropOnPick: เลือกไฟล์แล้วเปิดครอปอัตโนมัติหรือไม่
+ * หมายเหตุการเข้าถึง (a11y):
+ *  - ปุ่ม/อินพุตทุกจุดมี aria-* และ label อ้างอิง id จาก useId()
+ *  - รูปภาพพรีวิวมี alt อธิบายสั้น ๆ
  */
 export type UploadProfileProps = {
   // Layout
@@ -67,11 +71,11 @@ export type UploadProfileProps = {
   roundedCover?: string;
   roundedAvatar?: string;
 
-  // สี/สไตล์ (เผื่ออยากปรับต่อ)
-  coverBgClass?: string; // พื้นหลัง cover
-  coverBorderClass?: string; // เส้นขอบ cover
-  avatarBgClass?: string; // พื้นหลัง avatar
-  avatarBorderClass?: string; // เส้นขอบ avatar
+  // สี/สไตล์
+  coverBgClass?: string;
+  coverBorderClass?: string;
+  avatarBgClass?: string;
+  avatarBorderClass?: string;
 
   // ข้อความ + ไอคอน
   coverLabel?: string;
@@ -103,18 +107,18 @@ export type UploadProfileProps = {
 };
 
 /**
- * ฟังก์ชัน: toSize
- * คำอธิบาย: number → 'Npx', string → ค่าที่ส่งมา, null/undefined → fallback
- * Input : v?: number|string, fallback?: string
- * Output: string | undefined
+ * ยูทิลิตี้: toSize
+ * แปลง number → `${n}px` หรือคืน string เดิม; ไม่มีค่าส่ง fallback
  */
 const toSize = (v?: number | string, fallback?: string) =>
   v == null ? fallback : typeof v === "number" ? `${v}px` : v;
 
 /**
  * คอมโพเนนต์หลัก: UploadProfile
- * คำอธิบาย: เรนเดอร์โซนอัปโหลด Cover และ Avatar พร้อมแถบปุ่ม (เปลี่ยนรูป/แก้ไข) และ modal ครอป
- * หมายเหตุ: ไม่แก้ไขลอจิกเดิม — เพิ่มคอมเมนต์และคำอธิบายให้ครบถ้วนตามมาตรฐานเท่านั้น
+ * โครงสร้าง:
+ *  - ปุ่ม/อินพุตสำหรับ Cover + Avatar (ซ่อน input file ไว้หลังปุ่ม)
+ *  - พรีวิวรูป (ไฟล์ที่ครอป > ไฟล์ต้นฉบับ > URL จากภายนอก)
+ *  - Modal ครอป (react-easy-crop) + ปุ่ม Apply/Cancel
  */
 export default function UploadProfile({
   // layout
@@ -159,43 +163,49 @@ export default function UploadProfile({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const avatarButtonRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
+  const coverButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  /** ---------- State: ไฟล์ที่ผู้ใช้เลือก (เฉพาะรอบนี้) ---------- */
+  /** ---------- State: ไฟล์ต้นฉบับ/ไฟล์ที่ครอปแล้ว ---------- */
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
-  /** ---------- Preview URLs: จากไฟล์ที่เลือก หรือ URL ที่ส่งเข้ามา ---------- */
-  const coverPreview = useObjectUrl(coverFile, coverUrl);
-  const avatarPreview = useObjectUrl(avatarFile, avatarUrl);
+  const [coverCroppedFile, setCoverCroppedFile] = useState<File | null>(null);
+  const [avatarCroppedFile, setAvatarCroppedFile] = useState<File | null>(null);
+
+  /** ---------- Preview URLs (UI/Cropper) ---------- */
+  // สำหรับ UI จริง: ให้ความสำคัญรูปที่ครอปแล้วก่อน
+  const coverPreview = useObjectUrl(coverCroppedFile ?? coverFile, coverUrl);
+  const avatarPreview = useObjectUrl(avatarCroppedFile ?? avatarFile, avatarUrl);
+
+  // สำหรับ Cropper: ใช้ไฟล์ต้นฉบับก่อนเพื่อคุณภาพสูงสุด
+  const coverCropPreview = useObjectUrl(coverFile ?? coverCroppedFile, coverUrl);
+  const avatarCropPreview = useObjectUrl(avatarFile ?? avatarCroppedFile, avatarUrl);
 
   /** ---------- Crop states ---------- */
-  const [cropTarget, setCropTarget] = useState<null | "cover" | "avatar">(null); // เป้าหมายที่จะครอป
-  const [cropZoom, setCropZoom] = useState(1); // ระดับซูม
-  const [cropPos, setCropPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 }); // ตำแหน่งครอปเปอร์
+  const [cropTarget, setCropTarget] = useState<null | "cover" | "avatar">(null);
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropPos, setCropPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [cropPixels, setCropPixels] = useState<{
     x: number;
     y: number;
     width: number;
     height: number;
-  } | null>(null); // พื้นที่จริงพิกเซล
+  } | null>(null);
 
-  /** ---------- แสดง/ซ่อนปุ่ม action ต่อโซน ---------- */
+  /** ---------- การแสดงปุ่ม action ต่อโซน ---------- */
   const [showActions, setShowActions] = useState<null | "cover" | "avatar">(null);
 
-  /** ---------- อ้างอิงรากเพื่อปิด action เมื่อคลิกนอก ---------- */
-  const rootRef = useRef<HTMLElement | null>(null);
+  /** ---------- Aspect cover จากกล่องจริง ---------- */
+  const [coverAspect, setCoverAspect] = useState(16 / 9);
 
   /*
-   * Effect: คลิกนอกคอมโพเนนต์แล้วซ่อนปุ่ม (cover/avatar)
-   * ติดตั้ง listener ตอน mount และลบออกเมื่อ unmount
+   * Effect: คลิกนอกคอมโพเนนต์ → ซ่อนปุ่ม action
    */
   useEffect(() => {
     const handleClickAway = (e: MouseEvent | TouchEvent) => {
       if (!rootRef.current) return;
-      const el = rootRef.current;
-      if (!el.contains(e.target as Node)) {
-        setShowActions(null); // คลิกนอกคอมโพเนนต์ ⇒ ปิดปุ่ม
-      }
+      if (!rootRef.current.contains(e.target as Node)) setShowActions(null);
     };
     document.addEventListener("mousedown", handleClickAway, true);
     document.addEventListener("touchstart", handleClickAway, true);
@@ -205,10 +215,40 @@ export default function UploadProfile({
     };
   }, []);
 
+  /*
+   * Effect: คำนวณ aspect ของ cover จากขนาดกล่องจริง (width / height)
+   */
+  useEffect(() => {
+    if (!coverButtonRef.current) return;
+    const el = coverButtonRef.current;
+
+    const parseCoverHeight = () => {
+      if (typeof coverHeight === "number") return coverHeight;
+      const numeric = parseFloat(String(coverHeight));
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : 360;
+    };
+
+    const updateAspect = () => {
+      const rect = el.getBoundingClientRect();
+      const h = parseCoverHeight();
+      if (rect.width > 0 && h > 0) setCoverAspect(rect.width / h);
+    };
+
+    updateAspect();
+
+    const resizeObserver = new ResizeObserver(() => updateAspect());
+    resizeObserver.observe(el);
+    window.addEventListener("resize", updateAspect);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateAspect);
+    };
+  }, [coverHeight]);
+
   /**
    * Handler: onCropComplete
-   * คำอธิบาย: รับพื้นที่ครอปจริง (พิกเซล) จาก react-easy-crop แล้วจัดเก็บใน state
-   * หมายเหตุ: ใช้ any ตามโค้ดเดิม (ไม่เปลี่ยนลอจิก)
+   * เก็บพื้นที่ครอปจริง (พิกเซล) จาก react-easy-crop
    */
   const onCropComplete = (_: any, areaPixels: any) => {
     setCropPixels({
@@ -221,82 +261,82 @@ export default function UploadProfile({
 
   /**
    * Handler: applyCrop
-   * คำอธิบาย: ประมวลผลครอปกับไฟล์ที่เลือก (cover/avatar) แล้วอัปเดต state + ยิง callback
+   * ครอปจากไฟล์ต้นฉบับ (ถ้ามี) → อัปเดตไฟล์ที่ครอป + ยิง callback ภายนอก
    */
   const applyCrop = async () => {
     if (!cropTarget || !cropPixels) return;
-    const src = cropTarget === "cover" ? coverFile : avatarFile;
-    if (!src) return;
-    const out = await cropImageToFile(src, cropPixels, "image/jpeg", 0.95);
+
+    const sourceFile =
+      cropTarget === "cover" ? coverFile ?? coverCroppedFile : avatarFile ?? avatarCroppedFile;
+    if (!sourceFile) return;
+
+    const croppedOutput = await cropImageToFile(sourceFile, cropPixels, "image/jpeg", 0.95);
+
     if (cropTarget === "cover") {
-      setCoverFile(out);
-      onCoverChange?.(out);
+      setCoverCroppedFile(croppedOutput);
+      onCoverChange?.(croppedOutput);
     } else {
-      setAvatarFile(out);
-      onAvatarChange?.(out);
+      setAvatarCroppedFile(croppedOutput);
+      onAvatarChange?.(croppedOutput);
     }
     setCropTarget(null);
   };
 
   /**
    * Handler: useOriginal
-   * คำอธิบาย: ยืนยันใช้ไฟล์เดิมโดยไม่ครอป (ยิง callback ตามโซน)
+   * ยืนยันใช้ไฟล์เดิมโดยไม่ครอป (ปิด modal อย่างเดียว)
    */
-  const useOriginal = () => {
-    if (cropTarget === "cover") onCoverChange?.(coverFile ?? null);
-    if (cropTarget === "avatar") onAvatarChange?.(avatarFile ?? null);
-    setCropTarget(null);
-  };
+  const useOriginal = () => setCropTarget(null);
 
   /*
-   * Effect: โฟกัสปุ่ม Avatar อัตโนมัติ (ถ้าระบุให้ทำ)
-   * เงื่อนไข: ทำงานเมื่อ autoFocusAvatar เปลี่ยน
+   * Effect: โฟกัสปุ่ม Avatar อัตโนมัติ (ถ้าระบุ)
    */
   useEffect(() => {
     if (autoFocusAvatar) avatarButtonRef.current?.focus();
   }, [autoFocusAvatar]);
 
-  /** ---------- Handlers: เปิด file picker ---------- */
+  /** ---------- เปิด file picker ---------- */
   const pickCover = () => !disabled && coverInputRef.current?.click();
   const pickAvatar = () => !disabled && avatarInputRef.current?.click();
 
   /**
    * Handler: onCoverPicked
-   * คำอธิบาย: เมื่อเลือกไฟล์ cover — เซ็ต state, reset ค่า input, และถ้าตั้ง autoCropOnPick จะเปิด modal ครอปทันที
-   * หมายเหตุ: เมื่อเปิดครอปอัตโนมัติ จะยังไม่ยิง onCoverChange จนกว่าจะกดยืนยันครอป
+   * เซ็ตไฟล์ cover → ล้างผลครอปเดิม → เปิดครอปอัตโนมัติ (ถ้ากำหนด) → call onCoverChange
    */
   const onCoverPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const f = e.target.files?.[0] ?? null;
-    setCoverFile(f);
+    const pickedFile = e.target.files?.[0] ?? null;
+    setCoverFile(pickedFile);
+    setCoverCroppedFile(null);
     e.currentTarget.value = "";
 
-    if (autoCropOnPick && f && f.type.startsWith("image/")) {
-      setCropTarget("cover"); // เปิด modal ครอป
-      setCropZoom(1);
-      setCropPos({ x: 0, y: 0 });
-      setCropPixels(null);
-      return; // อย่าเรียก onCoverChange ที่นี่
-    }
-    onCoverChange?.(f);
-  };
-
-  /**
-   * Handler: onAvatarPicked
-   * คำอธิบาย: เมื่อเลือกไฟล์ avatar — เซ็ต state, reset ค่า input, และเปิดครอปอัตโนมัติถ้ากำหนด
-   */
-  const onAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const f = e.target.files?.[0] ?? null;
-    setAvatarFile(f);
-    e.currentTarget.value = "";
-
-    if (autoCropOnPick && f && f.type.startsWith("image/")) {
-      setCropTarget("avatar"); // เปิด modal ครอป
+    if (autoCropOnPick && pickedFile && pickedFile.type.startsWith("image/")) {
+      setCropTarget("cover");
       setCropZoom(1);
       setCropPos({ x: 0, y: 0 });
       setCropPixels(null);
       return;
     }
-    onAvatarChange?.(f);
+    onCoverChange?.(pickedFile);
+  };
+
+  /**
+   * Handler: onAvatarPicked
+   * เซ็ตไฟล์ avatar → ล้างผลครอปเดิม → เปิดครอปอัตโนมัติ (ถ้ากำหนด) → call onAvatarChange
+   */
+  const onAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const pickedFile = e.target.files?.[0] ?? null;
+    setAvatarFile(pickedFile);
+    setAvatarCroppedFile(null);
+    e.currentTarget.value = "";
+
+    if (autoCropOnPick && pickedFile && pickedFile.type.startsWith("image/")) {
+      setCropTarget("avatar");
+      setCropZoom(1);
+      setCropPos({ x: 0, y: 0 });
+      setCropPixels(null);
+      return;
+    }
+    onAvatarChange?.(pickedFile);
   };
 
   /** ---------- Styles คำนวณจากพร็อพ ---------- */
@@ -315,12 +355,13 @@ export default function UploadProfile({
         className={`relative ${className}`}
         style={wrapStyle}
         aria-label="Upload cover & profile"
-        onClick={() => setShowActions(null)} // คลิกพื้นหลังเพื่อซ่อนปุ่ม action
+        onClick={() => setShowActions(null)}
       >
         {/* โซน Cover: ปุ่มเลือกไฟล์ + พรีวิว/ข้อความแนะนำ */}
         <button
           type="button"
           id={`cover-${uid}`}
+          ref={coverButtonRef}
           onClick={pickCover}
           disabled={disabled}
           className={[
@@ -347,7 +388,8 @@ export default function UploadProfile({
             aria-hidden="true"
             disabled={disabled}
           />
-          {/* ถ้ามีพรีวิวจะแสดงภาพ ครอบเต็มพื้นที่; หากไม่มีก็แสดงคำแนะนำ */}
+
+          {/* พรีวิวภาพหรือคำแนะนำ */}
           {coverPreview ? (
             <div className="absolute inset-0">
               <img
@@ -358,10 +400,10 @@ export default function UploadProfile({
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowActions("cover");
-                }} // คลิกเพื่อโชว์ปุ่ม action
+                }}
               />
 
-              {/* แถบปุ่ม: แสดงเมื่อเลือกโซน cover */}
+              {/* แถบปุ่มของ cover */}
               {showActions === "cover" && (
                 <div
                   className="absolute inset-x-0 bottom-0 p-3 flex gap-2 justify-end bg-gradient-to-t from-black/50 to-transparent"
@@ -391,10 +433,7 @@ export default function UploadProfile({
               )}
             </div>
           ) : (
-            <span
-              id={`cover-hint-${uid}`}
-              className="select-none text-lg font-medium text-slate-800"
-            >
+            <span id={`cover-hint-${uid}`} className="select-none text-lg font-medium text-slate-800">
               {coverLabel}
             </span>
           )}
@@ -415,6 +454,7 @@ export default function UploadProfile({
               "bg-[#D9D9D9]",
               "shadow-[0_6px_20px_rgba(0,0,0,0.15)]",
               "overflow-hidden",
+              // แก้ class ให้เป็นแบบ tailwind ปกติ (คงผลลัพธ์เดิม)
               "flex flex-col items-center justify-center text-center",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
               disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-[#CFCFCF]",
@@ -433,7 +473,7 @@ export default function UploadProfile({
               aria-hidden="true"
               disabled={disabled}
             />
-            {/* แสดงพรีวิวรูปโปรไฟล์ หรือไอคอน/ข้อความแนะนำ */}
+            {/* พรีวิวรูปโปรไฟล์ หรือไอคอน/ข้อความแนะนำ */}
             {avatarPreview ? (
               <img
                 src={avatarPreview}
@@ -446,7 +486,7 @@ export default function UploadProfile({
                 }}
               />
             ) : (
-              <div className="px-6 text-slate-800">
+              <div className="px-6 text-slate-8 00">
                 <div className="mb-3 flex items-center justify-center">
                   {icon ?? <Icon icon={iconName} className="w-10 h-10" />}
                 </div>
@@ -457,12 +497,9 @@ export default function UploadProfile({
             )}
           </button>
 
-          {/* ปุ่ม action สำหรับ avatar (แสดงใต้ภาพเมื่อเลือก) */}
+          {/* ปุ่ม action สำหรับ avatar */}
           {showActions === "avatar" && (
-            <div
-              className="mt-2 flex justify-center gap-2"
-              onClick={(e) => e.stopPropagation()} // กันคลิกแล้วปุ่มหาย
-            >
+            <div className="mt-2 flex justify-center gap-2" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => {
@@ -488,21 +525,17 @@ export default function UploadProfile({
         </div>
       </section>
 
-      {/* Modal ครอปภาพ: โผล่เมื่อมี cropTarget */}
+      {/* Modal ครอปภาพ: แสดงเมื่อมี cropTarget */}
       {cropTarget && (
-        <div
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70" role="dialog" aria-modal="true">
           <div className="bg-white rounded-2xl p-4 w-[90vw] max-w-[640px] h-[80vh] max-h-[720px] flex flex-col gap-3">
             {/* พื้นที่ครอปภาพ */}
             <div className="relative flex-1 rounded-xl overflow-hidden bg-black">
               <Cropper
-                image={cropTarget === "cover" ? coverPreview! : avatarPreview!}
+                image={cropTarget === "cover" ? coverCropPreview! : avatarCropPreview!}
                 crop={cropPos}
                 zoom={cropZoom}
-                aspect={cropTarget === "avatar" ? 1 : 16 / 9}
+                aspect={cropTarget === "avatar" ? 1 : coverAspect}
                 cropShape={cropTarget === "avatar" ? "round" : "rect"}
                 showGrid
                 onCropChange={setCropPos}
@@ -530,10 +563,7 @@ export default function UploadProfile({
               <button className="px-4 py-2 rounded-lg bg-slate-200" onClick={useOriginal}>
                 ใช้รูปเดิม
               </button>
-              <button
-                className="px-4 py-2 rounded-lg bg-emerald-600 text-white"
-                onClick={applyCrop}
-              >
+              <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={applyCrop}>
                 ใช้รูปที่ครอป
               </button>
             </div>
@@ -546,21 +576,21 @@ export default function UploadProfile({
 
 /**
  * ฮุค: useObjectUrl
- * คำอธิบาย: สร้าง URL สำหรับพรีวิวจากไฟล์ที่เลือก (URL.createObjectURL)
- *           และคืนค่า fallbackUrl เมื่อไม่มีไฟล์; ทำความสะอาด URL ใน cleanup เพื่อเลี่ยง memory leak
- * Input : file: File | null, fallbackUrl: string | null
- * Output: string | null (URL สำหรับพรีวิว)
+ * บทบาท: สร้าง/คืนค่า object URL สำหรับพรีวิวจาก File; ไม่มีไฟล์ให้คืน fallbackUrl
+ * ความปลอดภัยหน่วยความจำ: cleanup URL.createObjectURL ใน useEffect return
  */
 function useObjectUrl(file: File | null, fallbackUrl: string | null) {
   const [url, setUrl] = useState<string | null>(fallbackUrl ?? null);
+
   useEffect(() => {
     if (!file) {
       setUrl(fallbackUrl ?? null);
       return;
     }
-    const u = URL.createObjectURL(file);
-    setUrl(u);
-    return () => URL.revokeObjectURL(u);
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
   }, [file, fallbackUrl]);
+
   return url;
 }

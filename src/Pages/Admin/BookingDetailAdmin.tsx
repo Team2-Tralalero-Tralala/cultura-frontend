@@ -9,6 +9,8 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
+import { Modal } from "@/Components/Modal/Modal";
+import ModalReject from "@/Components/Modal/ModalReject";
 
 type ApiBooking = {
   id: number;
@@ -50,6 +52,9 @@ export default function BookingDetailAdmin() {
   const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [openApproveModal, setOpenApproveModal] = useState(false);
+  const [openRejectModal, setOpenRejectModal] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -105,21 +110,23 @@ export default function BookingDetailAdmin() {
    * Output : อัพเดทสถานะการจองเป็น APPROVED
    */
 
-  const handleApprove = async () => {
-    if (!booking || !bookingId) return;
-    try {
-      await axios.patch(
-        `${apiUrl}/admin/booking/${bookingId}`,
-        { status: BOOKING_STATUS.APPROVED },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("อนุมัติเรียบร้อย");
-      setBooking({ ...booking, status: BOOKING_STATUS.APPROVED });
-    } catch (err) {
-      console.error(err);
-      alert("เกิดข้อผิดพลาดในการอนุมัติ");
-    }
-  };
+ const confirmApprove = async () => {
+   if (!booking || !bookingId) return;
+
+   try {
+     await axios.patch(
+       `${apiUrl}/admin/booking/${bookingId}`,
+       { status: BOOKING_STATUS.APPROVED },
+       { headers: { Authorization: `Bearer ${token}` } }
+     );
+
+     setBooking({ ...booking, status: BOOKING_STATUS.APPROVED });
+   } catch (err) {
+     console.error(err);
+   } finally {
+     setOpenApproveModal(false);
+   }
+ };
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับปฏิเสธการจอง
@@ -127,19 +134,21 @@ export default function BookingDetailAdmin() {
    * Output : อัพเดทสถานะการจองเป็น REJECTED
    */
 
-  const handleReject = async () => {
+  const confirmReject = async () => {
     if (!booking || !bookingId) return;
+
     try {
       await axios.patch(
         `${apiUrl}/admin/booking/${bookingId}`,
         { status: BOOKING_STATUS.REJECTED },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("ปฏิเสธเรียบร้อย");
+
       setBooking({ ...booking, status: BOOKING_STATUS.REJECTED });
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาดในการปฏิเสธ");
+    } finally {
+      setOpenRejectModal(false);
     }
   };
 
@@ -206,12 +215,12 @@ export default function BookingDetailAdmin() {
               </div>
               <div className="flex justify-end gap-4 pt-8">
                 <div className="w-40">
-                  <Button type="cancel" onClick={handleReject}>
+                  <Button type="cancel" onClick={() => setOpenRejectModal(true)}>
                     ปฏิเสธการจอง
                   </Button>
                 </div>
                 <div className="w-40">
-                  <Button type="confirm-admin" onClick={handleApprove}>
+                  <Button type="confirm-admin" onClick={() => setOpenApproveModal(true)}>
                     อนุมัติการจอง
                   </Button>
                 </div>
@@ -220,21 +229,42 @@ export default function BookingDetailAdmin() {
           )}
         </div>
       </div>
+
+      <Modal
+        open={openApproveModal}
+        title="อนุมัติการจองนี้หรือไม่?"
+        text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการอนุมัติการจองนี้"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={confirmApprove}
+        onCancel={() => setOpenApproveModal(false)}
+      />
+
+      <ModalReject
+        open={openRejectModal}
+        title="ปฎิเสธคำขอการจอง"
+        text="กรุณากรอกเหตุผลการปฎิเสธ เพื่อส่งให้นักท่องเที่ยว"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        maxLength={100}
+        onConfirm={confirmReject}
+        onCancel={() => setOpenRejectModal(false)}
+      />
     </div>
   );
 }
 
 /**
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงวันที่เป็นรูปแบบภาษาไทย
- * Input : dateStr - วันที่ในรูปแบบ string หรือ null
- * Output : วันที่ในรูปแบบ "วัน เดือน ปี เวลา" หรือ "-" ถ้าไม่มีข้อมูล
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงวันที่ให้เป็นรูปแบบภาษาไทย
+ * Input : inputDate - วันที่ในรูปแบบ string หรือ null
+ * Output : วันที่และเวลาในรูปแบบภาษาไทย หรือ "-" หากไม่มีข้อมูลหรือรูปแบบไม่ถูกต้อง
  */
 
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "-";
-  return d.toLocaleString("th-TH", {
+function formatDate(inputDate?: string | null) {
+  if (!inputDate) return "-";
+  const parsedDate = new Date(inputDate);
+  if (isNaN(parsedDate.getTime())) return "-";
+  return parsedDate.toLocaleString("th-TH", {
     year: "numeric",
     month: "long",
     day: "numeric",

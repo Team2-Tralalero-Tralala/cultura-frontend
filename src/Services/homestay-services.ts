@@ -39,6 +39,16 @@ export async function getHomestaysAllAdmin() {
   return res.data?.data;
 }
 
+export async function HomestayAdminDelete(homestayId: number) {
+  const res = await api.patch(
+    `/admin/community/homestay/${homestayId}`,
+    {},
+    {
+      withCredentials: true,
+    }
+  );
+  return res.data;
+}
 /**
  * ฟังก์ชัน: fetchHomestayDetailByAdmin()
  * Input : homestayId (หมายเลขที่พัก)

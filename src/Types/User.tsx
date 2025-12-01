@@ -1,4 +1,4 @@
-/* 
+/*
  * Type: BlockedAccountRow
  * วัตถุประสงค์: ใช้สำหรับเก็บข้อมูลของผู้ใช้ที่ถูกระงับบัญชี
  * Input: ไม่มี (ใช้ดึงข้อมูลจาก API เท่านั้น)
@@ -22,7 +22,7 @@ export type BlockedAccountRow = {
   }[];
 };
 
-/* 
+/*
  * Type: UserDetail
  * วัตถุประสงค์: ใช้สำหรับเก็บรายละเอียดข้อมูลของผู้ใช้งาน
  * Input: ไม่มี (รับค่าจาก API / Prisma Service)
@@ -48,7 +48,7 @@ export type UserDetail = {
   }[];
 };
 
-/* 
+/*
  * DTO: UserDtoFromApi
  * วัตถุประสงค์: ใช้สำหรับเก็บข้อมูลผู้ใช้งานที่ได้รับจาก API (Prisma Service)
  * Input: ไม่มี (ใช้รับข้อมูลจาก API โดยตรง)
@@ -62,7 +62,7 @@ export type UserDtoFromApi = {
   status: string; // ตัวอย่างเช่น "ACTIVE" หรือ "BLOCKED"
 };
 
-/* 
+/*
  * Type: AccountRow
  * วัตถุประสงค์: ใช้สำหรับเก็บข้อมูลของผู้ใช้งานในหน้าจัดการบัญชี (Manage Account)
  * Input: ไม่มี (รับข้อมูลจาก API)
@@ -86,7 +86,7 @@ export type AccountRow = {
   }[];
 };
 
-/* 
+/*
  * Type: PaginationResponse<T>
  * วัตถุประสงค์: ใช้สำหรับเก็บผลลัพธ์ที่มีการแบ่งหน้า (Pagination)
  * Input: T (Generic Type ที่ระบุชนิดของข้อมูล)
@@ -95,6 +95,23 @@ export type AccountRow = {
 export type PaginationResponse<T> = {
   items: T[];
   total: number;
-  page: number; 
-  limit: number; 
+  page: number;
+  limit: number;
+};
+
+/**
+ * Type: AccountCommunityRow
+ * วัตถุประสงค์: ใช้สำหรับเก็บข้อมูลของผู้ใช้งานในหน้าจัดการสมาชิกในแต่ละชุมชน (Manage Account Community)
+ * Input: ไม่มี (รับข้อมูลจาก API)
+ * Output: ใช้แสดงในตาราง "จัดการสมาชิกในแต่ละชุมชน" พร้อมข้อมูล role
+ */
+export type AccountCommunityRow = {
+  id: number;
+  fname: string;
+  lname: string;
+  email: string;
+  activityRole: string;
+  role: {
+    name: string;
+  };
 };

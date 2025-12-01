@@ -41,7 +41,11 @@ export const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -71,14 +75,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(
     async (username: string, password: string) => {
-      console.log('login', 1)
+      console.log("login", 1);
       try {
         const res = await axios.post(
           "http://localhost:3000/api/auth/login",
           { username, password },
           { withCredentials: true }
         );
-const { user: u } = res.data.data;
+        const { user: u } = res.data.data;
 
         const authUser: AuthUser = {
           id: u.id,
@@ -94,7 +98,7 @@ const { user: u } = res.data.data;
               navigate("super/communities", { replace: true });
               break;
             case "admin":
-              navigate("/admin/home", { replace: true });
+              navigate("/admin/community/own", { replace: true });
               break;
             case "member":
               navigate("/member/home", { replace: true });
@@ -156,7 +160,6 @@ const { user: u } = res.data.data;
 
     // redirect ตาม role
   }, [navigate, user]);
-
 
   if (loading) return null;
 

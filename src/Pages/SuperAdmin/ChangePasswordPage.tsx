@@ -1,24 +1,21 @@
 /*
  * File: ChangePasswordPage.tsx
  * Component: ChangePasswordPage (Client)
- * มาตรฐานที่ใช้ตรวจ: CS v1.1.1 (คอมเมนต์อธิบายส่วนประกอบ/ฟังก์ชัน, a11y, ความปลอดภัย, ความสม่ำเสมอของโค้ด)
- * สรุปหน้าที่:
- *  - แสดงฟอร์มเปลี่ยนรหัสผ่าน (current/new/confirm) พร้อมตรวจความแข็งแรง (PASSWORD_RULE)
- *  - เปิด SweetAlert2 Modal (Confirm) ก่อนยิง API และแจ้งผลผ่าน ResultModal
- * หมายเหตุ: ไม่เปลี่ยนพฤติกรรมเดิม เพิ่มคอมเมนต์และสลับไปใช้ Modal ที่ให้มาเท่านั้น
+ * หน้าที่:
+ *  - ฟอร์มเปลี่ยนรหัสผ่าน (current/new/confirm) + ตรวจความแข็งแรง (passwordRule)
  */
-
 
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
+import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
 /* ===== API instance: แยก BASE_URL กับ PREFIX =====
- * - apiBaseRaw   : ค่าจาก ENV เดิม
- * - apiBaseUrl   : โดเมนฐาน (ตัด / ท้ายให้เรียบ)
- * - apiPrefix    : พาธ prefix (เช่น /api)
+ * - apiBaseRaw   : จาก ENV
+ * - apiBaseUrl   : base URL (ตัด / ท้าย)
+ * - apiPrefix    : พาธ prefix (อาจเป็น path หรือ full URL ตามค่าที่โปรเจกต์ใช้)
  */
 const apiBaseRaw = import.meta.env.VITE_API_BASE_URL?.trim();
 const apiBaseUrl =
@@ -28,7 +25,7 @@ const apiBaseUrl =
 
 const apiPrefix = (import.meta.env.VITE_API_PREFIX || "http://localhost:3000/api").replace(/\/+$/, "");
 
-/* Axios instance: เพิ่ม withCredentials และแนบ Bearer token จาก localStorage */
+/* Axios instance: แนบ withCredentials + Bearer token */
 const apiClient = axios.create({
     baseURL: apiBaseUrl,
     withCredentials: true,
@@ -39,11 +36,11 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
-/* กฎความแข็งแรงของรหัสผ่าน (camelCase) */
+/* กฎความแข็งแรงรหัสผ่าน */
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
 /* ========================= Modal: Result =========================
- * บทบาท: แสดงผลสำเร็จ/ผิดพลาดหลังทำงาน (โครงเดิม, ปรับชื่อแปรเฉพาะในฟังก์ชัน)
+ * แสดงผลลัพธ์สำเร็จ/ผิดพลาดหลังเรียก API
  */
 function ResultModal({
     open,
@@ -60,7 +57,7 @@ function ResultModal({
 
     const headerClass =
         status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800";
-    const iconName = "circum:circle-alert"; // NOTE: ใช้ไอคอนเดียวกับของเดิม
+    const iconName = "circum:circle-alert"; // ใช้ไอคอนเดิม
     const titleText = status === "success" ? "สำเร็จ" : "ไม่สำเร็จ";
 
     return (
@@ -94,7 +91,7 @@ export default function ChangePasswordPage() {
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    /* ---------- state: สถานะการส่งและข้อความรวมด้านบน ---------- */
+    /* ---------- state: สถานะการส่ง + ข้อความด้านบน ---------- */
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -115,9 +112,7 @@ export default function ChangePasswordPage() {
     /* hint ความแข็งแรงของรหัส */
     const strengthHint = useMemo(() => {
         if (!newPassword) return "";
-        if (!passwordRule.test(newPassword)) {
-            return "รหัสต้องยาว ≥ 8 และมี a-z, A-Z, 0-9";
-        }
+        if (!passwordRule.test(newPassword)) return "รหัสต้องยาว ≥ 8 และมี a-z, A-Z, 0-9";
         return "รหัสผ่านแข็งแรง ✓";
     }, [newPassword]);
 
@@ -183,143 +178,181 @@ export default function ChangePasswordPage() {
 
     /* =============================== Render =============================== */
     return (
-        <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
-            <div className="">
-                <h2 className="text-2xl font-normal text-gray-800 mb-6">เปลี่ยนรหัสผ่าน</h2>
+        <>
+            <Breadcrumb
+                current={{
+                    label: "เปลี่ยนรหัสผ่าน",
+                    to: `/account/change-password/own`,
+                }}
+            />
 
-                {/* แถบข้อความสั้นด้านบน */}
-                {message && (
-                    <div
-                        role="status"
-                        className={`mb-4 rounded-lg px-3 py-2 text-sm ${message.type === "success"
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "bg-red-50 text-red-700 border border-red-200"
-                            }`}
+            <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
+                {/* Header กลับ + ชื่อหน้า (แก้ JSX prop: class → className, SVG props เป็น camelCase) */}
+                <div className="flex items-center mb-6">
+                    <a
+                        className="items-center gap-2 mr-4 text-gray-800 hover:text-dark-green"
+                        href="/super/communities/all"
+                        data-discover="true"
+                        aria-label="ย้อนกลับ"
                     >
-                        {message.text}
-                    </div>
-                )}
-
-                {/* ฟอร์มหลัก */}
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Current Password */}
-                    <div className="w-[249px]">
-                        <label className="block text-base font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-                        <div className="relative">
-                            <input
-                                type={showCurrent ? "text" : "password"}
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                placeholder="กรอกรหัสผ่านปัจจุบัน"
-                                className="w-full border border-gray-500 rounded-sm px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
-                                autoComplete="current-password"
-                                required
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlnsXlink="http://www.w3.org/1999/xlink"
+                            aria-hidden="true"
+                            role="img"
+                            className="iconify iconify--lucide w-7 h-7"
+                            width="1em"
+                            height="1em"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="m12 19l-7-7l7-7m7 7H5"
                             />
-                            <button
-                                type="button"
-                                aria-label={showCurrent ? "ซ่อนรหัสผ่านปัจจุบัน" : "แสดงรหัสผ่านปัจจุบัน"}
-                                className="absolute right-3 top-2.5 text-gray-500"
-                                onClick={() => setShowCurrent((prev) => !prev)}
-                            >
-                                <Icon icon={showCurrent ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
+                        </svg>
+                    </a>
+                    <h1 className="text-[20px] font-bold">เปลี่ยนรหัสผ่าน</h1>
+                </div>
 
-                    {/* New Password */}
-                    <div className="w-[249px]">
-                        <label className="block text-base font-medium text-gray-700 mb-1">รหัสผ่านใหม่</label>
-                        <div className="relative">
-                            <input
-                                type={showNew ? "text" : "password"}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="กรอกรหัสผ่านใหม่"
-                                className="w-full border border-gray-500 rounded-sm px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
-                                autoComplete="new-password"
-                                required
-                            />
-                            <button
-                                type="button"
-                                aria-label={showNew ? "ซ่อนรหัสผ่านใหม่" : "แสดงรหัสผ่านใหม่"}
-                                className="absolute right-3 top-2.5 text-gray-500"
-                                onClick={() => setShowNew((prev) => !prev)}
-                            >
-                                <Icon icon={showNew ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
-                            </button>
+                <div>
+                    {/* แถบข้อความสั้นด้านบน */}
+                    {message && (
+                        <div
+                            role="status"
+                            className={`mb-4 rounded-lg px-3 py-2 text-sm ${message.type === "success"
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                    : "bg-red-50 text-red-700 border border-red-200"
+                                }`}
+                        >
+                            {message.text}
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">{strengthHint}</p>
-                    </div>
+                    )}
 
-                    {/* Confirm Password */}
-                    <div className="w-[249px]">
-                        <label className="block text-base font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
-                        <div className="relative">
-                            <input
-                                type={showConfirm ? "text" : "password"}
-                                value={confirmNewPassword}
-                                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                                placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                                className="w-full border border-gray-500 rounded-sm px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
-                                autoComplete="new-password"
-                                required
-                            />
-                            <button
-                                type="button"
-                                aria-label={showConfirm ? "ซ่อนการยืนยันรหัสผ่าน" : "แสดงการยืนยันรหัสผ่าน"}
-                                className="absolute right-3 top-2.5 text-gray-500"
-                                onClick={() => setShowConfirm((prev) => !prev)}
-                            >
-                                <Icon icon={showConfirm ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
-                            </button>
+                    {/* ฟอร์มหลัก */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Current Password */}
+                        <div className="w-[249px]">
+                            <label className="block text-base font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+                            <div className="relative">
+                                <input
+                                    type={showCurrent ? "text" : "password"}
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    placeholder="กรอกรหัสผ่านปัจจุบัน"
+                                    className="w-full border border-gray-500 rounded-sm px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
+                                    autoComplete="current-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    aria-label={showCurrent ? "ซ่อนรหัสผ่านปัจจุบัน" : "แสดงรหัสผ่านปัจจุบัน"}
+                                    className="absolute right-3 top-2.5 text-gray-500"
+                                    onClick={() => setShowCurrent((prev) => !prev)}
+                                >
+                                    <Icon icon={showCurrent ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
-                        {confirmNewPassword && newPassword !== confirmNewPassword && (
-                            <p className="mt-1 text-xs text-red-600">รหัสผ่านใหม่และการยืนยันไม่ตรงกัน</p>
-                        )}
-                    </div>
 
-                    {/* ปุ่มควบคุม */}
-                    <div className="flex gap-3 pt-2">
-                        <div className="w-30">
-                            <Button
-                                type="cancel"
-                                htmlType="button"
-                                onClick={() => {
-                                    if (submitting) return;
-                                    setMessage(null);
-                                    resetForm();
-                                }}
-                            >
-                                ยกเลิก
-                            </Button>
+                        {/* New Password */}
+                        <div className="w-[249px]">
+                            <label className="block text-base font-medium text-gray-700 mb-1">รหัสผ่านใหม่</label>
+                            <div className="relative">
+                                <input
+                                    type={showNew ? "text" : "password"}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="กรอกรหัสผ่านใหม่"
+                                    className="w-full border border-gray-500 rounded-sm px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    aria-label={showNew ? "ซ่อนรหัสผ่านใหม่" : "แสดงรหัสผ่านใหม่"}
+                                    className="absolute right-3 top-2.5 text-gray-500"
+                                    onClick={() => setShowNew((prev) => !prev)}
+                                >
+                                    <Icon icon={showNew ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">{strengthHint}</p>
                         </div>
-                        <div className="w-30">
-                            <Button type="confirm-admin" htmlType="submit">
-                                {submitting ? "กำลังบันทึก..." : "ยืนยัน"}
-                            </Button>
+
+                        {/* Confirm Password */}
+                        <div className="w-[249px]">
+                            <label className="block text-base font-medium text-gray-700 mb-1">ยืนยันรหัสผ่าน</label>
+                            <div className="relative">
+                                <input
+                                    type={showConfirm ? "text" : "password"}
+                                    value={confirmNewPassword}
+                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                    placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+                                    className="w-full border border-gray-500 rounded-sm px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    aria-label={showConfirm ? "ซ่อนการยืนยันรหัสผ่าน" : "แสดงการยืนยันรหัสผ่าน"}
+                                    className="absolute right-3 top-2.5 text-gray-500"
+                                    onClick={() => setShowConfirm((prev) => !prev)}
+                                >
+                                    <Icon icon={showConfirm ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
+                                </button>
+                            </div>
+                            {confirmNewPassword && newPassword !== confirmNewPassword && (
+                                <p className="mt-1 text-xs text-red-600">รหัสผ่านใหม่และการยืนยันไม่ตรงกัน</p>
+                            )}
                         </div>
-                    </div>
-                </form>
-            </div>
 
-            {/* Confirm Modal (ใช้คอมโพเนนต์เดิม, ไม่เปลี่ยน logic) */}
-            <ConfirmModal
-                open={confirmOpen}
-                onConfirm={handleConfirm}
-                onCancel={() => setConfirmOpen(false)}
-                title="ยืนยันการเปลี่ยนรหัสผ่าน"
-                text="คุณต้องการยืนยันการเปลี่ยนรหัสผ่านหรือไม่"
-                confirmText="ยืนยัน"
-                cancelText="ยกเลิก"
-            />
+                        {/* ปุ่มควบคุม */}
+                        <div className="flex gap-3 pt-2">
+                            <div className="w-30">
+                                <Button
+                                    type="cancel"
+                                    htmlType="button"
+                                    onClick={() => {
+                                        if (submitting) return;
+                                        setMessage(null);
+                                        resetForm();
+                                    }}
+                                >
+                                    ยกเลิก
+                                </Button>
+                            </div>
+                            <div className="w-30">
+                                <Button type="confirm-admin" htmlType="submit">
+                                    {submitting ? "กำลังบันทึก..." : "ยืนยัน"}
+                                </Button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
 
-            {/* ผลลัพธ์ */}
-            <ResultModal
-                open={resultOpen}
-                status={resultStatus}
-                message={resultText}
-                onClose={() => setResultOpen(false)}
-            />
-        </main>
+                {/* Confirm Modal (เดิม) */}
+                <ConfirmModal
+                    open={confirmOpen}
+                    onConfirm={handleConfirm}
+                    onCancel={() => setConfirmOpen(false)}
+                    title="ยืนยันการเปลี่ยนรหัสผ่าน"
+                    text="คุณต้องการยืนยันการเปลี่ยนรหัสผ่านหรือไม่"
+                    confirmText="ยืนยัน"
+                    cancelText="ยกเลิก"
+                />
+
+                {/* ผลลัพธ์ */}
+                <ResultModal
+                    open={resultOpen}
+                    status={resultStatus}
+                    message={resultText}
+                    onClose={() => setResultOpen(false)}
+                />
+            </main>
+        </>
     );
 }

@@ -22,7 +22,7 @@ export default function SuperAdminLayout() {
         <NavbarSuperAdmin />
 
         {/* 🔸 พื้นที่เนื้อหา */}
-        <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-4 pr-8 py-8">
+        <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-6 pr-6 py-6">
           <Outlet />
         </main>
 

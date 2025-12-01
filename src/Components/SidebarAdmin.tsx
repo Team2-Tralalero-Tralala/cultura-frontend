@@ -127,7 +127,9 @@ const SidebarAdmin = () => {
       <div>
         {/* โลโก้ */}
         <div className="flex items-center justify-center mb-6">
-          <img src="/logo-white.png" alt="Cultura logo" className="h-10" />
+          <Link to={`${basePath}/community/own`} onClick={() => handleClick("community")}>
+            <img src="/logo-white.png" alt="Cultura logo" className="h-10 cursor-pointer" />
+          </Link>
         </div>
 
         {/* เมนู */}

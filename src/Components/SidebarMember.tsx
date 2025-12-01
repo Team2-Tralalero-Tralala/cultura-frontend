@@ -96,7 +96,9 @@ const SidebarMember: React.FC = () => {
     <div className="h-screen w-60 bg-[#055035] text-white flex flex-col justify-between py-6 px-4">
       <div>
         <div className="flex items-center justify-center mb-6">
-          <img src="/Cultura.png" alt="Cultura logo" className="h-10" />
+          <Link to={`${basePath}/community/own`} onClick={() => handleClick("community")}>
+            <img src="/Cultura.png" alt="Cultura logo" className="h-10 cursor-pointer" />
+          </Link>
         </div>
 
         <nav className="flex flex-col gap-2 text-base-semibold">

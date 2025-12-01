@@ -29,14 +29,12 @@ import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
+import BookingDetailAdmin from "@/Pages/Admin//BookingDetailAdmin";
 
 export default function AdminRoutes() {
   return (
     <Routes>
-      <Route
-        path="member/:userId"
-        element={<MemberDetailPage />}
-      />
+      <Route path="member/:userId" element={<MemberDetailPage />} />
       <Route path="/package/feedbacks" element={<Feedbackall />} />
 
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
@@ -50,11 +48,12 @@ export default function AdminRoutes() {
       <Route path="/bookings-histories/all" element={<BookingHistoryAdmin />} />
       {/*<Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
-      <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
+      <Route path="/booking/:bookingId" element={<BookingDetailAdmin />} />
+      
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
       <Route path="package/requests" element={<PackageRequestsAdmin />} />
@@ -64,13 +63,12 @@ export default function AdminRoutes() {
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
-
       <Route path="/booking/refunds" element={<ManageRefundBooking />} />
       <Route path="/members" element={<ManageMembers />} />
 
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />
-       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
+      {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />

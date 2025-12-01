@@ -6,26 +6,26 @@
  * - ใช้งานร่วมกับ Modal ยืนยันและฟอร์มเพิ่ม/แก้ไข
  */
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 // component
 import Button from "@/Components/Button";
-import DataTable from "@/Components/Tables/Index";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { Modal } from "@/Components/Modal/Modal";
-import { Icon } from "@iconify/react";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { TrashIcon } from "@/Components/Tables/Icon";
+import DataTable from "@/Components/Tables/Index";
+import { Icon } from "@iconify/react";
 
 // service
-import { getAllStore } from "@/Services/store-service";
 import { getCommunityById } from "@/Services/community-service";
+import { getAllStore } from "@/Services/store-service";
 
 // Types
 import type {
+  BulkAction,
   Column,
   DataTableActionsConfig,
-  BulkAction,
   Pagination,
 } from "@/Components/Tables/Types";
 
@@ -50,8 +50,8 @@ type StoreFromApi = {
   }[];
 };
 
-const normalizeText = (s: string) =>
-  (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+const normalizeText = (str: string) =>
+  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 // ตารางจัดการร้านค้า
 const columns: Column<StoreRow>[] = [
@@ -91,8 +91,8 @@ export default function ManageStores() {
         if (!communityId) return;
         const res = await getCommunityById(Number(communityId));
         setCommunityName(res.data?.data?.name || "-");
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     }
     fetchCommunity();
@@ -119,7 +119,7 @@ export default function ManageStores() {
       // แปลงข้อมูลให้เข้ากับตาราง
       const mapped: StoreRow[] = resultData.map((store) => {
         const tagNames =
-          store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
+          store.tagStores?.map((tagStore) => tagStore.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
@@ -130,8 +130,8 @@ export default function ManageStores() {
 
       setRows(mapped);
       setPagination(resultPagination);
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -160,12 +160,12 @@ export default function ManageStores() {
 
   //กรองข้อมูลที่แสดง
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
+    const query = normalizeText(searchQuery);
     return rows.filter((row) => {
-      const haystacks = [row.name, row.detail, row.tagStores].map((v) =>
-        normalizeText(String(v ?? ""))
+      const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
+        normalizeText(String(value ?? ""))
       );
-      const passSearch = !q || haystacks.some((h) => h.includes(q));
+      const passSearch = !query || haystacks.some((haystack) => haystack.includes(query));
       return passSearch;
     });
   }, [rows, searchQuery]);
@@ -174,7 +174,7 @@ export default function ManageStores() {
     console.log("ลบ store : ", storeId);
   };
 
-  const bulkActions: BulkAction<StoreFromApi>[] = [
+  const bulkActions: BulkAction<StoreRow>[] = [
     {
       id: "bulk-delete",
       label: "ลบทั้งหมด",
@@ -182,8 +182,8 @@ export default function ManageStores() {
       intent: "neutral",
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        const ids = rows.map((r) => r.id);
-        alert("bulk delete: " + ids);
+        const storeIds = rows.map((row) => row.id);
+        alert("bulk delete: " + storeIds);
         await loadStores();
       },
     },
@@ -192,8 +192,9 @@ export default function ManageStores() {
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="px-6 pb-1">
+      {/* Section: Header */}
+      <div className="flex flex-col gap-2 w-full">
+        {/* Breadcrumb */}
         <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
           <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
             จัดการชุมชน
@@ -214,37 +215,38 @@ export default function ManageStores() {
           />
           <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
         </nav>
-      </div>
 
-      {/* <-- หัวข้อ */}
-      <div className="px-6 py-1 flex items-center justify-between">
+        {/* <-- หัวข้อ */}
         <Link
           to={`/super/community/detail/${communityId}`}
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
         >
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />
-          <h2 className="text-xl font-semibold">จัดการร้านค้า</h2>
+          <h1 className="text-xl font-bold">จัดการร้านค้า</h1>
         </Link>
-      </div>
-
-      {/* Toolbar: Search + Add */}
-      <div className="px-6 pb-2">
-        <div className="flex items-center gap-3">
-          <div className="max-w-md">
-            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+  
+        <div className="flex items-center justify-between w-full mt-2">
+          {/* Section: Search */}
+          <div className="w-[260px]">
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
           </div>
 
-          <div className="ml-auto">
+          {/* Section: Add Store */}
+          <div className="flex items-center gap-2">
             <Button
               onClick={() => navigate(`/super/community/${communityId}/store/create`)}
               aria-label="เพิ่มร้านค้า"
             >
-              <span>+ เพิ่มร้านค้า</span>
+              <span className="text-lg leading-none">＋</span>
+              <span>เพิ่มร้านค้า</span>
             </Button>
           </div>
         </div>
       </div>
-      <div className="px-6 pb-10">
+      <div className="pb-10">
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         {/* Table */}
@@ -254,14 +256,14 @@ export default function ManageStores() {
           columns={columns}
           selectable={true}
           pageSizeOptions={[10, 30, 50]}
-          onPageChange={(p) => {
-            setPagination((prev) => ({ ...prev, currentPage: p }));
+          onPageChange={(page) => {
+            setPagination((prev) => ({ ...prev, currentPage: page }));
           }}
-          onPageSizeChange={(p) => {
+          onPageSizeChange={(pageSize) => {
             setPagination((prev) => ({
               ...prev,
               currentPage: 1,
-              limit: p,
+              limit: pageSize,
             }));
           }}
           onSelectedChange={(rows) => {
@@ -277,7 +279,8 @@ export default function ManageStores() {
 
       {/* Modal ยืนยันการลบ */}
       <Modal
-        open={openConfirm}
+        open={isOpenConfirm}
+
         title="ยืนยันการลบร้านค้า"
         text="คุณต้องการลบร้านค้านี้หรือไม่?"
         onConfirm={async () => {
@@ -290,35 +293,8 @@ export default function ManageStores() {
               `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error.message}`
             );
           } finally {
-            setOpenConfirm(false);
-            setDeleteId(null);
-          }
-        }}
-        onCancel={() => {
-          setOpenConfirm(false);
-          setDeleteId(null);
-        }}
-      />
-{/*
-      <Modal
-        open={openConfirm}
-        title="ยืนยันการลบที่พัก"
-        text="คุณต้องการลบที่พักนี้หรือไม่?"
-        onConfirm={async () => {
-          if (deleteId == null) return;
-          try {
-            await handleDelete(deleteId);
-            await loadStores();
-          } catch (error: any) {
-            console.error(error);
-            alert(
-              `ลบไม่สำเร็จ: ${error?.response?.data?.message ??
-              error?.message ??
-              "unknown error"
-              }`
-            );
-          } finally {
             setIsOpenConfirm(false);
+
             setDeleteId(null);
           }
         }}
@@ -326,7 +302,7 @@ export default function ManageStores() {
           setIsOpenConfirm(false);
           setDeleteId(null);
         }}
-      /> */}
+      />
     </div>
   );
 }

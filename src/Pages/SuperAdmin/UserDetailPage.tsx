@@ -1,21 +1,11 @@
-/**
- * Component: UserDetailPage (Super Admin)
- * Description: แสดงรายละเอียดบัญชีผู้ใช้งานตาม ID ที่ได้รับจาก URL
- * หน้านี้ใช้สำหรับดูข้อมูลเท่านั้น (ไม่สามารถอัปโหลดรูปโปรไฟล์ได้)
- */
-
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { SquarePen } from "lucide-react";
-import { fetchUserDetail } from "../../Services/account-services";
 import type { UserDetail } from "@/Types/User";
+import { SquarePen, ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { fetchUserDetail } from "../../Services/account-services";
+import Button from "@/Components/Button"; 
 
-/**
- * Component: UserDetailPage
- * วัตถุประสงค์: แสดงรายละเอียดบัญชีผู้ใช้ (SuperAdmin)
- * Input: userId จาก URL parameter
- * Output: หน้ารายละเอียดผู้ใช้แบบ read-only
- */
 export function UserDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -69,29 +59,50 @@ export function UserDetailPage() {
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
-        {/* Breadcrumb */}
-        <div className="text-base text-gray-600 flex items-center gap-2">
-          <Link to="/super/accounts/all" className="text-gray-900 hover:underline text-sm">
-            จัดการบัญชี
-          </Link>
-          <span className="text-gray-400 text-sm">{">"}</span>
-          <span>รายละเอียดบัญชี</span>
+        <div className="-ml-6 pt-1 pb-1">
+          <Breadcrumb
+            items={[
+              { label: "จัดการบัญชึ", to: "/super/accounts/all" },
+              { label: "รายละเอียดบัญชี" },
+            ]}
+          />
         </div>
-
-        {/* Header */}
-        <h1 className="text-xl font-semibold text-gray-900 mt-1">รายละเอียดบัญชี</h1>
+        <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
+          <ArrowLeft 
+            className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors" 
+            onClick={() => navigate(-1)} 
+          />
+          รายละเอียดบัญชี
+        </h1>
 
         {/* Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
-          {/* ปุ่มแก้ไข */}
-          <button
-            onClick={() => navigate(`/super/account/${user.role.name}/${id}/edit`)}
-            className="absolute top-6 right-6 flex items-center gap-3 bg-[#104E41] hover:bg-[#0b3a30] text-white px-6 py-3 rounded-xl transition text-base font-medium"
-            title="แก้ไขข้อมูล"
-          >
-            <SquarePen className="h-5 w-5" strokeWidth={2.1} />
-            <span>แก้ไข</span>
-          </button>
+          
+          {/* ส่วนปุ่มจัดการ */}
+          <div className="absolute top-6 right-6 flex items-center gap-3">
+            {/* ปุ่มตั้งรหัสผ่าน */}
+            <div className="w-32">
+                <Button 
+                    type="cancel" 
+                    onClick={() => navigate(`/super/reset-password/${id}`)}
+                >
+                    <span className="text-base">ตั้งรหัสผ่าน</span>
+                </Button>
+            </div>
+
+            {/* ปุ่มแก้ไข */}
+            <div className="w-32">
+                <Button 
+                    type="confirm-admin" 
+                    onClick={() => navigate(`/super/account/${user.role.name}/${id}/edit`)}
+                >
+                    <div className="flex items-center gap-2">
+                        <SquarePen className="h-5 w-5" strokeWidth={2.1} />
+                        <span className="text-base">แก้ไข</span>
+                    </div>
+                </Button>
+            </div>
+          </div>
 
           {/* Profile + Info */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-24 mt-12 w-full">
@@ -120,26 +131,28 @@ export function UserDetailPage() {
             {/* User Info */}
             <div className="flex-1">
               <div className="space-y-3 text-lg text-slate-800 leading-relaxed">
-                <h2 className="text-xl font-semibold mb-3">รายละเอียดบัญชี</h2>
+                <h2 className="text-[20px] font-bold text-black mb-3">รายละเอียดบัญชี</h2>
 
-                <p>
-                  <span className="font-semibold">ชื่อ - นามสกุล :</span> {user.fname} {user.lname}
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">ชื่อ - นามสกุล :</span> {user.fname} {user.lname}
                 </p>
-                <p>
-                  <span className="font-semibold">ชื่อผู้ใช้ :</span> {user.username}
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">ชื่อผู้ใช้ :</span> {user.username}
                 </p>
-                <p>
-                  <span className="font-semibold">อีเมล :</span> {user.email}
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">อีเมล :</span> {user.email}
                 </p>
-                <p>
-                  <span className="font-semibold">โทรศัพท์ :</span> {formatPhoneNumber(user.phone)}
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">โทรศัพท์ :</span> {formatPhoneNumber(user.phone)}
                 </p>
-                <p>
-                  <span className="font-semibold">Role :</span> {user.role?.name ?? "-"}
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">Role :</span> {user.role?.name ?? "-"}
                 </p>
-                <p>
-                  <span className="font-semibold">ชุมชนวิสาหกิจ :</span>{" "}
-                  {user.communityAdmin?.name || user.communityMembers?.[0]?.Community?.name || "-"}
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">ชุมชนวิสาหกิจ :</span>{" "}
+                  {user.communityAdmin?.[0]?.name ||
+                    user.communityMembers?.[0]?.Community?.name ||
+                    "-"}
                 </p>
               </div>
             </div>

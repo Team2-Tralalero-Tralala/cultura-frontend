@@ -29,12 +29,14 @@ import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
 import BackupsPage from "@/Pages/SuperAdmin/BackupsPage";
 import SettingHomePage from "@/Pages/SuperAdmin/SettingHomePage";
 import ToggleSystemPage from "@/Pages/SuperAdmin/ToggleSystemPage";
-import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage"
+import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
 import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
+import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageAccountCommunity";
+import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperadmin";
 
 /*
  * Module: SuperAdminRoutes
@@ -87,6 +89,8 @@ export default function SuperAdminRoutes() {
       <Route path="setting" element={<SettingHomePage />} />
       <Route path="backups" element={<BackupsPage />} />
       <Route path="toggle-system" element={<ToggleSystemPage />} />
+      {/* หน้าดูรายละเอียดร้านค้าของ Super Admin */}
+      <Route path="store/:id" element={<StoreDetailPage />} />
 
       <Route path="community/:communityId/stores/all" element={<ManageStores />} />
       <Route path="community/:communityId/homestay/all" element={<ManageHomestaySuperAdmin />} />
@@ -111,6 +115,7 @@ export default function SuperAdminRoutes() {
 
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route path="/tourist/:touristId/edit" element={<EditAccountPage />} />
+      <Route path="/account/community/:communityId" element={<ManageAccountCommunity />} />
 
       {/* หน้าตารางของ tag */}
       <Route path="tags" element={<ManageTags />} />

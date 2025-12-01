@@ -245,13 +245,20 @@ export default function ManageCommunitySuperAdmin() {
   return (
     <div className="space-y-4 cursor-default">
       {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
-        <Breadcrumb items={[{ label: "จัดการชุมชน" }]} />
+      <div>
+        <Breadcrumb
+  current={{
+    label: "จัดการชุมชน",
+    to: "/super/communities",
+    fromSidebar: true,
+  }}
+/>
+
       </div>
 
       {/* ส่วนหัวข้อและ Toolbar */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">จัดการชุมชน</h1>
+      <div className="flex flex-col gap-2 -mt-4">
+        <h1 className="text-xl font-bold">จัดการชุมชน</h1>
 
         {/* Toolbar: Search + Filter + Add */}
         <div className="flex items-center gap-3">

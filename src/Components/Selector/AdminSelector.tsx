@@ -22,8 +22,8 @@ export interface Admin {
 }
 
 interface AdminSelectorProps {
-  value?: number; // id ของ admin ที่เลือก
-  admin?: Admin | null; // ✅ admin ปัจจุบันจาก community.admin
+  value?: number;
+  admin?: Admin | null;
   onChange: (value: number | null) => void;
   error?: boolean;
   helperText?: string;
@@ -62,7 +62,6 @@ export function AdminSelector({
         const res = await getUnassignedAdmins();
         const unassigned = res.data.data as Admin[];
 
-        // ✅ รวม admin ปัจจุบัน (ถ้ามี) เข้ากับลิสต์โดยไม่ซ้ำ
         const merged = admin ? [admin, ...unassigned.filter((a) => a.id !== admin.id)] : unassigned;
 
         setAdmins(merged);
@@ -76,7 +75,6 @@ export function AdminSelector({
     loadAdmins();
   }, [admin]);
 
-  // ✅ ค้นหา admin ปัจจุบันจาก options
   const selectedAdmin = admins.find((a) => a.id === value) || admin || null;
 
   /*
@@ -89,7 +87,7 @@ export function AdminSelector({
    * Output :
    *   - JSX element ของ custom input field ที่มี label และสไตล์ตามกำหนด
    */
-  const renderCustomInput = (id: string, label: string, params: any) => {
+  const renderCustomInput = (id: string, label: string, placeholder: string, params: any) => {
     const { InputProps, inputProps } = params;
     return (
       <div ref={InputProps.ref} className="w-full">
@@ -111,7 +109,7 @@ export function AdminSelector({
             {...inputProps}
             id={id}
             type="text"
-            placeholder={label}
+            placeholder={placeholder}
             className={`block w-full rounded-form border px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
         ${
           error
@@ -141,7 +139,9 @@ export function AdminSelector({
       getOptionLabel={(option) => (option ? `${option.fname} ${option.lname}` : "")}
       value={selectedAdmin!}
       onChange={(_, newValue) => onChange(newValue ? newValue.id : null)}
-      renderInput={(params) => renderCustomInput("admin-selector", "ผู้ดูแล", params)}
+      renderInput={(params) =>
+        renderCustomInput("admin-selector", "ผู้ดูแล", "เลือกผู้ดูแล", params)
+      }
       slotProps={{
         popper: {
           sx: {

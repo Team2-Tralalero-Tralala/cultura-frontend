@@ -55,7 +55,6 @@ type HomestayRow = {
 export default function ManageHomestaySuperAdmin() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
-
   const [communityName, setCommunityName] = useState<string>("-");
   const [rows, setRows] = useState<HomestayRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -165,7 +164,7 @@ export default function ManageHomestaySuperAdmin() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/super/homestay/edit/${row.id}`),
+      edit: (row) => navigate(`/super/community/${communityId}/homestay/${row.id}/edit`),
       delete: (row) => {
         setDeleteId(row.id);
         setIsOpenConfirm(true);
@@ -204,22 +203,19 @@ export default function ManageHomestaySuperAdmin() {
   return (
     <div className="space-y-4">
       {/* ===== Breadcrumb ===== */}
-      <div className="-ml-6 pt-1 pb-1">
-        <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน", to: "/super/communities" },
-            {
-              label: communityName,
-              to: `/super/community/${communityId}`,
-            },
-            { label: "จัดการที่พัก" },
-          ]}
+      <div>
+                <Breadcrumb
+          current={{
+            label: "จัดการที่พัก",
+            to: `/super/community/${communityId}/homestay/all`,
+            fromSidebar: true,
+          }}
         />
       </div>
 
       {/* ===== ส่วนหัว + Search ===== */}
-      <div className="flex flex-col gap-2 w-full">
-        <h1 className="text-2xl font-semibold">จัดการที่พัก</h1>
+      <div className="flex flex-col gap-2 -mt-4">
+        <h1 className="text-xl font-bold">จัดการที่พัก</h1>
         <div className="flex items-center justify-between gap-3 w-full">
           <div className="flex-1 max-w-md">
             <SearchBarTable

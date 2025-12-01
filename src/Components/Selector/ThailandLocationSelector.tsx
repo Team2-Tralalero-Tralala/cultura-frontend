@@ -229,6 +229,7 @@ export default function ThailandLocationSelector({
   const renderCustomInput = (
     id: string,
     label: string,
+    placeholder: string,
     params: any,
     error?: boolean,
     helperText?: string
@@ -254,7 +255,7 @@ export default function ThailandLocationSelector({
             {...inputProps}
             id={id}
             type="text"
-            placeholder={label}
+            placeholder={placeholder}
             className={`block w-full rounded-form border px-4 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
         ${
           error
@@ -276,13 +277,20 @@ export default function ThailandLocationSelector({
       <Autocomplete
         id="province"
         disablePortal
-        disableClearable
+        disableClearable={!!value?.province}
         loading={!ready}
         options={provinceOptions}
         value={provinceOptions.find((opt) => opt.label === value?.province) || null}
         onChange={handleProvinceChange}
         renderInput={(params) =>
-          renderCustomInput("province", "จังหวัด", params, error?.province, helperText?.province)
+          renderCustomInput(
+            "province",
+            "จังหวัด",
+            "เลือกจังหวัด",
+            params,
+            error?.province,
+            helperText?.province
+          )
         }
         slotProps={{
           popper: {
@@ -308,13 +316,20 @@ export default function ThailandLocationSelector({
       <Autocomplete
         id="district"
         disablePortal
-        disableClearable
+        disableClearable={!!value?.district}
         loading={!ready}
         options={districtOptions}
         value={districtOptions.find((opt) => opt.label === value?.district) || null}
         onChange={handleDistrictChange}
         renderInput={(params) =>
-          renderCustomInput("district", "อำเภอ", params, error?.district, helperText?.district)
+          renderCustomInput(
+            "district",
+            "อำเภอ / เขต",
+            "เลือกอำเภอ/เขต",
+            params,
+            error?.district,
+            helperText?.district
+          )
         }
         slotProps={{
           popper: {
@@ -341,7 +356,7 @@ export default function ThailandLocationSelector({
       <Autocomplete
         id="subDistrict"
         disablePortal
-        disableClearable
+        disableClearable={!!value?.subdistrict}
         loading={!ready}
         options={subdistrictOptions}
         value={subdistrictOptions.find((opt) => opt.label === value?.subdistrict) || null}
@@ -349,7 +364,8 @@ export default function ThailandLocationSelector({
         renderInput={(params) =>
           renderCustomInput(
             "subDistrict",
-            "ตำบล",
+            "ตำบล/แขวง",
+            "เลือกตำบล/แขวง",
             params,
             error?.subdistrict,
             helperText?.subdistrict

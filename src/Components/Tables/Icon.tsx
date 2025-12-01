@@ -11,7 +11,7 @@ type Props = { className?: string };
 
 export const PencilIcon       = ({ className }: Props) => <Icon icon="mdi:pencil-outline"        className={className} />;
 export const TrashIcon        = ({ className }: Props) => <Icon icon="mdi:trash-can-outline"     className={className} />;
-export const BanIcon          = ({ className }: Props) => <Icon icon="mdi:block-helper"          className={className} />;
+export const BanIcon          = ({ className }: Props) => <Icon icon="tdesign:user-blocked"          className={className} />;
 export const CheckIcon        = ({ className }: Props) => <Icon icon="mdi:check"                 className={className} />;
 export const XIcon            = ({ className }: Props) => <Icon icon="mdi:close"                 className={className} />;
 export const CopyIcon         = ({ className }: Props) => <Icon icon="mdi:content-copy"          className={className} />;

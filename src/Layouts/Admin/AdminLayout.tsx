@@ -10,22 +10,36 @@
 import SidebarAdmin from "../../Components/SidebarAdmin";
 import NavbarAdmin from "../../Components/NavbarSam";
 import { Outlet } from "react-router-dom";
+import { ToastContainer } from "react-toastify"; 
+import "react-toastify/dist/ReactToastify.css";
 
-export default function SuperAdminLayout() {
+export default function AdminLayout() {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <SidebarAdmin />
 
-      {/* พื้นที่หลัก */}
+      {/* 🔹 พื้นที่หลัก */}
       <div className="flex flex-col flex-1 h-full">
         {/* Navbar ด้านบน */}
         <NavbarAdmin />
 
-        {/* เนื้อหาหลัก */}
-        <main className="flex-1 overflow-y-auto p-0 m-5">
+        {/* 🔸 พื้นที่เนื้อหา */}
+        <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-6 pr-6 py-6">
           <Outlet />
         </main>
+
+        {/* ToastContainer สำหรับ popup แจ้งเตือน */}
+        <ToastContainer
+          position="top-right"
+          autoClose={2500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="light"
+        />
       </div>
     </div>
   );

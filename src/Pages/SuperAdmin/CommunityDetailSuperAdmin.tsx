@@ -748,7 +748,7 @@ export default function CommunityDetailSuperAdmin() {
                 <Section
                   title="รายชื่อสมาชิก"
                   count={community.communityMembers?.length || 0}
-                  onManage={() => navigate(`/super/accounts/all`)}
+                  onManage={() => navigate(`/super/account/community/${community.id}`)}
                 >
                   {community.communityMembers?.length ? (
                     <div className="space-y-3">

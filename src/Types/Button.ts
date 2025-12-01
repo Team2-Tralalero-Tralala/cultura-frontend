@@ -18,5 +18,6 @@ export interface BaseButtonProps {
   type?: ButtonType;
   /** ชนิดปุ่มของ HTML: submit | reset | button */
   htmlType?: "button" | "submit" | "reset";
+  className?: string;
   onClick?: () => void;
 }

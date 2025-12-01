@@ -39,7 +39,7 @@ export default function AdminRoutes() {
         path="member/:userId"
         element={<MemberDetailPage />}
       />
-      <Route path="/package/feedbacks" element={<Feedbackall />} />
+      <Route path="/packages/feedbacks" element={<Feedbackall />} />
 
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}

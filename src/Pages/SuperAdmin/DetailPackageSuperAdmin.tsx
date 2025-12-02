@@ -4,6 +4,7 @@ import axios from "axios";
 import Button from "../../Components/Button";
 import { Backward, EditIcon } from "../../Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -198,12 +199,19 @@ export default function DetailPackageSuperAdmin() {
   const coverImage = pkg.files?.find((f) => f.type === "COVER");
 
   return (
-    // ตอนนี้ขาด Navigation page ที่มันบอกว่าหน้านี้อยู่ที่ไหน เช่น จัดการแพ็กเกจ / รายละเอียดแพ็กเกจ
-    // อาจจะเพิ่มทีหลัง
-    // Main container
+<div className="max-w-8xl mx-auto">
+
+    {/* Breadcrumb อยู่นอกกรอบ */}
+    <div className="mb-4 text-sm">
+      <Breadcrumb
+        current={{
+          label: pkg.name,
+          to: `/super/package/${pkg.id}`,
+        }}
+      />
+    </div>
     <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
       {/* Header */}
-
       <div className="flex justify-between items-start mb-3">
         <div className="flex flex-row">
           {/* ปุ่มย้อนกลับ */}
@@ -360,5 +368,7 @@ export default function DetailPackageSuperAdmin() {
         </div>
       )}
     </div>
+        </div>
+
   );
 }

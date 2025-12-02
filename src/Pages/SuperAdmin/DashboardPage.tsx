@@ -6,6 +6,7 @@
  * 3. ข้อมูลสถิติ (stats) - แสดงสถิติตามจังหวัด
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { WeeklyDate } from "@/Components/calendar/WeeklyDate";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
@@ -327,6 +328,15 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 h-full">
+      <div>
+        <Breadcrumb
+          current={{
+            label: "รายงานและสถิติ",
+            to: "/super/dashboard",
+            fromSidebar: true,
+          }}
+        />
+      </div>
       <div className="flex flex-col gap-2 w-full rounded-lg p-4 h-full">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
@@ -394,8 +404,8 @@ export default function DashboardPage() {
                       <span className="text-sm">
                         {dateRange[0] && dateRange[1]
                           ? `${formatDateToString(dateRange[0])} - ${formatDateToString(
-                              dateRange[1]
-                            )}`
+                            dateRange[1]
+                          )}`
                           : "เลือกช่วงวันที่"}
                       </span>
                     </button>
@@ -488,8 +498,8 @@ export default function DashboardPage() {
                         <span className="text-sm">
                           {dateRange[0] && dateRange[1]
                             ? `${formatDateToString(dateRange[0])} - ${formatDateToString(
-                                dateRange[1]
-                              )}`
+                              dateRange[1]
+                            )}`
                             : "เลือกช่วงวันที่"}
                         </span>
                       </button>

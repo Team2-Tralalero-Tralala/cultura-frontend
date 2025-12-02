@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { getPackageFeedbacksByPackageId } from "@/Services/package-feedbacks-service";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /**
  * ฟังก์ชัน : - (ค่าคงที่ BACKEND_BASE_URL)
@@ -160,128 +161,140 @@ export default function PackageFeedbacksPage() {
   ];
 
   return (
-    <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-800">
-          ทั้งหมด : {feedbacks.length} รายการ
-        </p>
+    <div>
 
-        {/* ตัวกรองการเรียงลำดับ (ล่าสุด / เก่าสุด) */}
-        <FilterDropdown
-          options={filterOptions}
-          selected={sortOrder}
-          onChange={(value) => setSortOrder(value as "latest" | "oldest")}
+      <div>
+        <Breadcrumb
+          current={{
+            label: packageName,
+            to: `package/feedback/${packageId}`,
+          }}
         />
       </div>
+      <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-4">
 
-      <div className="w-full rounded-2xl overflow-hidden bg-[#EDEDED]">
-        <div className="bg-[#4E8374] px-6 py-3">
-          <h2 className="text-white text-lg font-semibold">{packageName}</h2>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-gray-800">
+            ทั้งหมด : {feedbacks.length} รายการ
+          </p>
+
+          {/* ตัวกรองการเรียงลำดับ (ล่าสุด / เก่าสุด) */}
+          <FilterDropdown
+            options={filterOptions}
+            selected={sortOrder}
+            onChange={(value) => setSortOrder(value as "latest" | "oldest")}
+          />
         </div>
 
-        <div className="p-6 space-y-6">
-          {isLoading && (
-            <div className="text-gray-500 text-sm">กำลังโหลด...</div>
-          )}
+        <div className="w-full rounded-2xl overflow-hidden bg-[#EDEDED]">
+          <div className="bg-[#4E8374] px-6 py-3">
+            <h2 className="text-white text-lg font-semibold">{packageName}</h2>
+          </div>
 
-          {sortedFeedbacks.map((feedback, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-gray-500 text-sm font-semibold">
-                      {feedback.bookingHistory.tourist.fname?.charAt(0)?.toUpperCase() || "U"}
+          <div className="p-6 space-y-6">
+            {isLoading && (
+              <div className="text-gray-500 text-sm">กำลังโหลด...</div>
+            )}
+
+            {sortedFeedbacks.map((feedback, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-500 text-sm font-semibold">
+                        {feedback.bookingHistory.tourist.fname?.charAt(0)?.toUpperCase() || "U"}
+                      </span>
+                    </div>
+                    {/* ชื่อ-นามสกุล*/}
+                    <span className="font-semibold text-gray-800">
+                      {formatFullName(feedback.bookingHistory.tourist)}
                     </span>
                   </div>
-                  {/* ชื่อ-นามสกุล*/}
-                  <span className="font-semibold text-gray-800">
-                    {formatFullName(feedback.bookingHistory.tourist)}
-                  </span>
-                </div>
-                <div className="text-right">
+                  <div className="text-right">
 
-                  {/* คะแนนรีวิวเป็นดาว */}
-                  <div className="text-sm text-black">
-                    {renderStars(feedback.rating)}
-                  </div>
+                    {/* คะแนนรีวิวเป็นดาว */}
+                    <div className="text-sm text-black">
+                      {renderStars(feedback.rating)}
+                    </div>
 
-                  {/* เวลารีวิว */}
-                  <div className="text-xs text-gray-500">
-                    {formatTimeAgo(feedback.createdAt)}
+                    {/* เวลารีวิว */}
+                    <div className="text-xs text-gray-500">
+                      {formatTimeAgo(feedback.createdAt)}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* ข้อความรีวิว */}
-              <p className="text-gray-800 text-sm leading-relaxed">
-                {feedback.message}
-              </p>
+                {/* ข้อความรีวิว */}
+                <p className="text-gray-800 text-sm leading-relaxed">
+                  {feedback.message}
+                </p>
 
-              {/* รูปภาพ */} 
-              {feedback.feedbackImages?.length > 0 && (
-                <div className="flex flex-wrap gap-3">
-                  {feedback.feedbackImages.map((image, i) => {
-                    const imageUrl = getImageUrl(image.image);
-                    if (!imageUrl) return null;
-                    return (
-                      <div
-                        key={i}
-                        className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={`feedback-${index}-${i}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* รูปภาพ */}
+                {feedback.feedbackImages?.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {feedback.feedbackImages.map((image, i) => {
+                      const imageUrl = getImageUrl(image.image);
+                      if (!imageUrl) return null;
+                      return (
+                        <div
+                          key={i}
+                          className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
+                        >
+                          <img
+                            src={imageUrl}
+                            alt={`feedback-${index}-${i}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
 
-              )}
-              {/* ช่องตอบกลับ */}
-              <div className="pt-2">
-                <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
-                  <input
-                    type="text"
-                    placeholder="ตอบกลับ"
-                    className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                  />
-                  <button
-                    type="button"
-                    className="ml-3 w-8 h-8 bg-[#4E8374] rounded-full flex items-center justify-center hover:bg-[#3b6d60] transition"
-                  >
-                    {/* ไอคอนเครื่องบินกระดาษ */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="white"
-                      className="w-4 h-4"
+                )}
+                {/* ช่องตอบกลับ */}
+                <div className="pt-2">
+                  <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
+                    <input
+                      type="text"
+                      placeholder="ตอบกลับ"
+                      className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                    />
+                    <button
+                      type="button"
+                      className="ml-3 w-8 h-8 bg-[#4E8374] rounded-full flex items-center justify-center hover:bg-[#3b6d60] transition"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 10l18-7-7 18-2-8-8-3z"
-                      />
-                    </svg>
-                  </button>
+                      {/* ไอคอนเครื่องบินกระดาษ */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="white"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 10l18-7-7 18-2-8-8-3z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {!isLoading && feedbacks.length === 0 && (
-            <div className="text-center text-gray-500 text-sm py-8">
-              ยังไม่มีข้อเสนอแนะสำหรับแพ็กเกจนี้
-            </div>
-          )}
+            {!isLoading && feedbacks.length === 0 && (
+              <div className="text-center text-gray-500 text-sm py-8">
+                ยังไม่มีข้อเสนอแนะสำหรับแพ็กเกจนี้
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

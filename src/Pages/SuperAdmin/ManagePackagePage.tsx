@@ -283,16 +283,17 @@ export default function ManagePackageSuperAdmin() {
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div>
-        <Breadcrumb
-          current={{
-            label: "จัดการแพ็กเกจ",
-            to: `/super/packages/all`,
-            fromSidebar: true,
-          }}
-        />
-      </div>
+      <div className="flex flex-col gap-2">
+        <div>
+          <Breadcrumb
+            current={{
+              label: "จัดการแพ็กเเกจ",
+              to: "/super/packages/all",
+              fromSidebar: true,   // << สำคัญ : มาจาก sidebar
+            }}
+          />
+        </div>
+        <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
 
       {/* หัวข้อและช่องค้นหา */}
       <div className="flex flex-col gap-2 -mt-3">

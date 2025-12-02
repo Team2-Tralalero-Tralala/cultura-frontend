@@ -150,14 +150,14 @@ const EditAccountPage: React.FC = () => {
           role === "Admin"
             ? "Admin"
             : role === "Member"
-            ? "Member"
-            : role === "Tourist"
-            ? "Tourist"
-            : user.role?.name === "superadmin"
-            ? "Admin"
-            : user.role?.name === "member"
-            ? "Member"
-            : "Tourist",
+              ? "Member"
+              : role === "Tourist"
+                ? "Tourist"
+                : user.role?.name === "superadmin"
+                  ? "Admin"
+                  : user.role?.name === "member"
+                    ? "Member"
+                    : "Tourist",
         password: "",
         confirmPassword: "",
       }));
@@ -309,8 +309,8 @@ const EditAccountPage: React.FC = () => {
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
-            ? "FEMALE"
-            : "NONE";
+              ? "FEMALE"
+              : "NONE";
         requestBody.birthDate = roleSpecificData.birthDate
           ? new Date(roleSpecificData.birthDate).toISOString().split("T")[0]
           : null;
@@ -342,12 +342,12 @@ const EditAccountPage: React.FC = () => {
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
-      <div className="mb-2">
-        <Breadcrumb 
+      <div>
+        <Breadcrumb
           current={{
             label: "แก้ไขบัญชี",
-            to: location.pathname,
-          }} 
+            to: `/super/account/member/${memberId}/edit`,
+          }}
         />
       </div>
 
@@ -358,15 +358,15 @@ const EditAccountPage: React.FC = () => {
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
           title="ย้อนกลับ"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <path d="M19 12H5" />
@@ -443,11 +443,10 @@ const EditAccountPage: React.FC = () => {
                     key={roleItem}
                     type="button"
                     onClick={() => handleRoleSelect(roleItem)}
-                    className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
-                      formData.role === roleItem
-                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
-                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
-                    }`}
+                    className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${formData.role === roleItem
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]"
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]"
+                      }`}
                   >
                     {roleItem}
                   </button>

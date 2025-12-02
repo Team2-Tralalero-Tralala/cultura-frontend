@@ -376,13 +376,15 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
-      <div className="mb-2">
+      {/* 1. Breadcrumb */}
+      <div>
         <Breadcrumb
-          current={{
-            label: "สร้างบัญชี",
-            to: location.pathname,
-          }}
-        />
+              current={{
+              label: "เพิ่มบัญชี",
+               to: "/super/account/admin/create",
+
+             }}
+            />
       </div>
 
       <div className="flex items-center gap-3 mb-6 pl-6">

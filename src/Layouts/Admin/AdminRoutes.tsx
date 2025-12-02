@@ -51,7 +51,7 @@ export default function AdminRoutes() {
       <Route path="community/store/create" element={<CreateStore />} />
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
-      <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
+      <Route path="/community/homestay/:homestayId/edit" element={<EditHomestayPage />} />
       <Route path="/bookings-histories/all" element={<BookingHistoryAdmin />} />
       {/*<Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
@@ -72,7 +72,8 @@ export default function AdminRoutes() {
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
-      <Route path="/booking/refunds" element={<ManageRefundBooking />} />
+
+      <Route path="/booking/refund" element={<ManageRefundBooking />} />
       <Route path="/members" element={<ManageMembers />} />
 
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
@@ -82,11 +83,12 @@ export default function AdminRoutes() {
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
       {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
-      <Route path="stores/:id" element={<StoreDetailAdmin />} />
+      <Route path="/community/store/:storeId" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
-      <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
+      <Route path="packages/history/:packageId" element={<DetailPackageHistoryAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
+      <Route path="packages/histories" element={<PackageHistoryAdmin />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />

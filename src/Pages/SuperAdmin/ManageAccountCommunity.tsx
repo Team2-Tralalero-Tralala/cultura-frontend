@@ -283,9 +283,14 @@ export function ManageAccountCommunity() {
     <div className="space-y-4">
       {/* Section: Header */}
       <div className="flex flex-col w-full">
-        <div className="">
-          <Breadcrumb items={[{ label: "จัดการสมาชิก" }]} />
-        </div>
+       <div>
+               <Breadcrumb
+                 current={{
+                   label: "จัดการสมาชิก",
+                   to: `/super/account/community/${params}`,
+                 }}
+               />
+             </div>
         <div className="flex justify-between items-center mb-3">
           <Link
             to={`/super/community/${params.communityId}`}

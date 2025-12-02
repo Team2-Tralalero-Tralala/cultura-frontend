@@ -73,13 +73,14 @@ export default function ToggleSystemPage() {
 
   return (
     <div className="space-y-4 h-full">
-      <Breadcrumb
-        current={{
-          label: "การเปิด/ปิด ระบบ",
-          to: "/super/toggle-system",
-        }}
-      />
-      {/* <h2 className="text-sm">การเปิด/ปิด ระบบ</h2> */}
+      <div>
+        <Breadcrumb
+          current={{
+            label: "การเปิด/ปิด ระบบ",
+            to: "/super/toggle-system",
+          }}
+        />
+      </div>
       <div className="flex flex-col gap-2 w-full bg-white rounded-lg p-4 h-full">
         <div className="flex items-center justify-between align-top">
           <h1 className="text-xl font-bold">การเปิด/ปิด ระบบ</h1>

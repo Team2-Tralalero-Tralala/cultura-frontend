@@ -312,7 +312,6 @@ export default function CreateHomestaysPage() {
 
   return (
     <div className="w-full max-w-none px-8">
-      {/* breadcrump */}
       <div>
         <Breadcrumb
           current={{

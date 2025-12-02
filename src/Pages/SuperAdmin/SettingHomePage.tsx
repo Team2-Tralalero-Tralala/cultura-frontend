@@ -51,14 +51,16 @@ export default function SettingHomePage() {
 
   return (
     <div className="space-y-4 h-full">
-      <Breadcrumb
-        current={{
-          label: "การตั้งค่า",
-          to: "/super/setting",
-          fromSidebar: true,
-        }}
-      />
-      <h2 className="text-xl font-bold">การตั้งค่า</h2>
+      <div>
+        <Breadcrumb
+          current={{
+            label: "การตั้งค่า",
+            to: "/super/setting",
+            fromSidebar: true,
+          }}
+        />
+      </div>
+
       <div className="flex flex-col gap-2 w-full bg-white rounded-lg p-4 h-full">
         <div className="flex items-center justify-between align-top">
           <h1 className="text-xl">การตั้งค่า</h1>

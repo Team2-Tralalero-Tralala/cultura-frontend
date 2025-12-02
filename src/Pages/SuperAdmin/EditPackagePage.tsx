@@ -782,16 +782,15 @@ export const EditPackagePage = () => {
 
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
-      {/* Breadcrumb */}
-      <div>
-        <Breadcrumb
-          current={{
-            label: "แก้ไขแพ็กเกจ",
-            to: `/super/package/${id}/edit`,
-          }}
-        />
-      </div>
-      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
+       <div>
+              <Breadcrumb
+                current={{
+                  label: "แก้ไขรายละเอียดแพ็กเกจ",
+                  to: `/super/package/${id}/edit`,
+                }}
+              />
+            </div>
+      <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
           onClick={() => navigate(`/super/packages/all`)}

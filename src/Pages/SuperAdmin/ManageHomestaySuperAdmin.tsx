@@ -204,11 +204,10 @@ export default function ManageHomestaySuperAdmin() {
     <div className="space-y-4">
       {/* ===== Breadcrumb ===== */}
       <div>
-                <Breadcrumb
+        <Breadcrumb
           current={{
             label: "จัดการที่พัก",
             to: `/super/community/${communityId}/homestay/all`,
-            fromSidebar: true,
           }}
         />
       </div>

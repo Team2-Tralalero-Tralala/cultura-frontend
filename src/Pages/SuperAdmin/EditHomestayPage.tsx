@@ -18,7 +18,7 @@ import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import ThailandLocationSelector, {
-    type ThailandLocation,
+  type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
@@ -29,42 +29,42 @@ const API_URL = import.meta.env.VITE_API_URL as string;
 
 /** ฟอร์มข้อมูลที่พัก */
 type HomestayForm = {
-    name: string;
-    type: string;
-    facility: string;
-    guestPerRoom: string;
-    totalRoom: string;
+  name: string;
+  type: string;
+  facility: string;
+  guestPerRoom: string;
+  totalRoom: string;
 
-    houseNumber: string;
-    villageNumber: string;
-    province: string;
-    district: string;
-    subDistrict: string;
-    postalCode: string;
-    addressDetail: string;
+  houseNumber: string;
+  villageNumber: string;
+  province: string;
+  district: string;
+  subDistrict: string;
+  postalCode: string;
+  addressDetail: string;
 
-    latitude: string;
-    longitude: string;
-    placeQuery: string;
+  latitude: string;
+  longitude: string;
+  placeQuery: string;
 };
 
 /** ค่าเริ่มต้นของฟอร์ม */
 const initialForm: HomestayForm = {
-    name: "",
-    type: "",
-    facility: "",
-    guestPerRoom: "",
-    totalRoom: "",
-    houseNumber: "",
-    villageNumber: "",
-    province: "",
-    district: "",
-    subDistrict: "",
-    postalCode: "",
-    addressDetail: "",
-    latitude: "",
-    longitude: "",
-    placeQuery: "",
+  name: "",
+  type: "",
+  facility: "",
+  guestPerRoom: "",
+  totalRoom: "",
+  houseNumber: "",
+  villageNumber: "",
+  province: "",
+  district: "",
+  subDistrict: "",
+  postalCode: "",
+  addressDetail: "",
+  latitude: "",
+  longitude: "",
+  placeQuery: "",
 };
 
 const schema = z.object({
@@ -137,7 +137,29 @@ function buildImageCandidates(rawImagePath: string): string[] {
         candidates.add(`${origin}/${encodeURI(candidatePath)}`);
         candidates.add(`${origin}/api/${encodeURI(candidatePath)}`);
     }
-    return Array.from(candidates);
+  })();
+
+  const cleaned = String(raw).replace(/\\/g, "/").replace(/^\.?\/*/, "");
+
+  const prefixes = [
+    "",
+    "uploads/",
+    "upload/",
+    "images/",
+    "image/",
+    "homestay/",
+    "homestays/",
+    "homestay/uploads/",
+    "homestays/uploads/",
+  ];
+
+  const candidates = new Set<string>();
+  for (const p of prefixes) {
+    const path = cleaned.startsWith(p) ? cleaned : `${p}${cleaned}`;
+    candidates.add(`${origin}/${encodeURI(path)}`);
+    candidates.add(`${origin}/api/${encodeURI(path)}`);
+  }
+  return Array.from(candidates);
 }
 
 /**
@@ -147,8 +169,8 @@ function buildImageCandidates(rawImagePath: string): string[] {
  * Output: File object ที่แปลงสำเร็จ
  */
 async function bestEffortUrlToFile(
-    rawPath: string,
-    filename: string
+  rawPath: string,
+  filename: string
 ): Promise<File> {
     const candidates = buildImageCandidates(rawPath);
     let lastError: unknown = null;

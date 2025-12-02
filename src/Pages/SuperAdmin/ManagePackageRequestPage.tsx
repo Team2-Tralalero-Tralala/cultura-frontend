@@ -19,27 +19,27 @@ import { approvePackageRequest, fetchPackageRequests, rejectPackageRequest } fro
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type PackageRequestRow = {
-    id: number;
-    name: string;
-    statusApprove: "PENDING_SUPER" | string | null;
-    community: { id: number; name: string };
-    overseer: { id: number; username: string };
+  id: number;
+  name: string;
+  statusApprove: "PENDING_SUPER" | string | null;
+  community: { id: number; name: string };
+  overseer: { id: number; username: string };
 };
 
 export type Pagination = {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-    limit: number;
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  limit: number;
 };
 
 const thaiApproveStatus = (status?: string | null) => {
-    switch ((status || "").toUpperCase()) {
-        case "PENDING_SUPER":
-            return "รออนุมัติ";
-        default:
-            return "-";
-    }
+  switch ((status || "").toUpperCase()) {
+    case "PENDING_SUPER":
+      return "รออนุมัติ";
+    default:
+      return "-";
+  }
 };
 
 /**
@@ -53,68 +53,68 @@ const buildPackageRequestColumns = (
     onApprove: (row: PackageRequestRow) => void,
     onReject: (row: PackageRequestRow) => void
 ): Column<PackageRequestRow>[] => [
-        {
-            key: "name",
-            header: "ชื่อแพ็กเกจ",
-            className: "min-w-[220px]",
-            render: (r) => (
-                <Link
-                    to={`/super/package-requests/${r.id}`}
-                    className="font-medium text-dark-green hover:underline focus:underline"
-                >
-                    {r.name}
-                </Link>
-            ),
-        },
-        {
-            key: "community",
-            header: "ชื่อชุมชน",
-            className: "min-w-[220px]",
-            render: (r) => <div>{r.community.name}</div>,
-        },
-        {
-            key: "overseer",
-            header: "ผู้ดูแล",
-            className: "min-w-[160px]",
-            render: (r) => <div>{r.overseer.username}</div>,
-        },
-        {
-            key: "statusApprove",
-            header: "สถานะคำขอ",
-            render: (r) => <div>{thaiApproveStatus(r.statusApprove)}</div>,
-        },
-        {
-            key: "actions",
-            header: "จัดการ",
-            className: "w-[160px] text-left pr-3",
-            render: (r) => {
-                const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
-                return (
-                    <div className="flex items-center justify-end gap-2 pr-2">
-                        {!approved && (
-                            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                                <Button type="cancel" onClick={() => onReject(r)}>
-                                    ปฏิเสธ
-                                </Button>
-                            </div>
-                        )}
-                        {!approved && (
-                            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                                <Button type="confirm-admin" onClick={() => onApprove(r)}>
-                                    อนุมัติ
-                                </Button>
-                            </div>
-                        )}
-                        {approved && (
-                            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                                <Button type="confirm-admin">อนุมัติ</Button>
-                            </div>
-                        )}
-                    </div>
-                );
-            },
-        },
-    ];
+    {
+      key: "name",
+      header: "ชื่อแพ็กเกจ",
+      className: "min-w-[220px]",
+      render: (r) => (
+        <Link
+          to={`/super/package-requests/${r.id}`}
+          className="font-medium text-dark-green hover:underline focus:underline"
+        >
+          {r.name}
+        </Link>
+      ),
+    },
+    {
+      key: "community",
+      header: "ชื่อชุมชน",
+      className: "min-w-[220px]",
+      render: (r) => <div>{r.community.name}</div>,
+    },
+    {
+      key: "overseer",
+      header: "ผู้ดูแล",
+      className: "min-w-[160px]",
+      render: (r) => <div>{r.overseer.username}</div>,
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะคำขอ",
+      render: (r) => <div>{thaiApproveStatus(r.statusApprove)}</div>,
+    },
+    {
+      key: "actions",
+      header: "จัดการ",
+      className: "w-[160px] text-left pr-3",
+      render: (r) => {
+        const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
+        return (
+          <div className="flex items-center justify-end gap-2 pr-2">
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="cancel" onClick={() => onReject(r)}>
+                  ปฏิเสธ
+                </Button>
+              </div>
+            )}
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin" onClick={() => onApprove(r)}>
+                  อนุมัติ
+                </Button>
+              </div>
+            )}
+            {approved && (
+              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin">อนุมัติ</Button>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
 export default function PackageRequestsSuperAdmin() {
     const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
@@ -166,7 +166,13 @@ export default function PackageRequestsSuperAdmin() {
         } finally {
             setIsLoading(false);
         }
-    }, [currentPage, pageSize, searchQuery]);
+      );
+    } catch (e: any) {
+      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, pageSize, searchQuery]);
 
     /**
      * useEffect:
@@ -264,15 +270,15 @@ export default function PackageRequestsSuperAdmin() {
             <div className="flex flex-col gap-2 w-full">
                 <h1 className="font-bold text-xl">คำขออนุมัติ</h1>
 
-                <div className="flex items-center gap-2 w-full">
-                    <div className="w-[260px]">
-                        <SearchBarTable
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </div>
+        <div className="flex items-center gap-2 w-full">
+          <div className="w-[260px]">
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
 
 
             {/* ตาราง */}

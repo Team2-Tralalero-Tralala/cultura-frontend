@@ -311,9 +311,14 @@ export function EditStore() {
 
   return (
     <div>
-      <Breadcrumb
-        items={[{ label: "จัดการชุมชน", to: "/super/communities/all" }, { label: "แก้ไขร้านค้า" }]}
-      />
+      <div>
+        <Breadcrumb
+          current={{
+            label: "แก้ไขรายละเอียดร้านค้า",
+            to: `/admin/community/store/${storeId}/edit`,
+          }}
+        />
+      </div>
       <div className="bg-white p-6 rounded-2xl">
         <div className="flex justify-between items-center mb-3">
           <Link

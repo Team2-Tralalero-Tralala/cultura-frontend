@@ -116,7 +116,7 @@ export function BlockedAccountPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
 
   /**
    * ฟังก์ชัน: openModal
@@ -255,15 +255,17 @@ export function BlockedAccountPage() {
 
   return (
     <div className="space-y-4">
-
+      {/* Section: Header */}
       <div className="flex flex-col">
-        <Breadcrumb
-          current={{
-            label: "การระงับบัญชี",
-            to: "/super/users/blocked",
-            fromSidebar: true,
-          }}
-        />    
+        <div>
+          <Breadcrumb
+            current={{
+              label: "การระงับบัญชี",
+              to: "/super/users/blocked",
+
+            }}
+          />
+        </div>
         <h1 className="text-[20px] font-bold text-black">
           การระงับบัญชี
         </h1>

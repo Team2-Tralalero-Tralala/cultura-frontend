@@ -221,14 +221,14 @@ export default function PackageHistoryAdmin() {
       {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         {/* Breadcrumb */}
-        <div className="-ml-6 pt-1 pb-1">
-                <Breadcrumb
-                  items={[
-                    { label: "จัดการแพ็กเกจ", to: "/admin/packages" },
-                    { label: "ประวัติแพ็กเกจ" },
-                  ]}
-                />
-              </div>
+        <div>
+          <Breadcrumb
+            current={{
+              label: "ประวัติแพ็กเกจ",
+              to: `/admin/packages/histories`,
+            }}
+          />
+        </div>
 
         <h1 className="text-xl font-bold "> ประวัติแพ็กเกจ </h1>
 

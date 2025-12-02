@@ -27,7 +27,7 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
   const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
   const response = await fetch(`${baseURL}/admin/booking/histories/all?page=${page}&limit=${limit}`, {
     method: "GET",
-    credentials: "include", // ส่ง cookie ไป
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -75,7 +75,6 @@ export async function fetchBookingsByAdmin(page = 1, limit = 10): Promise<{
   };
 }
 
-
 /**
  * ฟังก์ชัน : updateBookingStatus
  * คำอธิบาย : อัปเดตสถานะของการจอง (ใช้โดย Admin)
@@ -84,14 +83,32 @@ export async function fetchBookingsByAdmin(page = 1, limit = 10): Promise<{
  */
 export async function updateBookingStatus(
   bookingId: number,
-  status: "BOOKED" | "REJECTED" | "REFUNDED" | "REFUND_REJECTED"
+  status: "BOOKED" | "REJECTED" | "REFUNDED" | "REFUND_REJECTED",
+  rejectReason?: string
 ): Promise<void> {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
+  // ถ้าเป็นสถานะที่ "ปฏิเสธ" ต้องมีเหตุผลด้วย
+  const isRejectStatus =
+    status === "REJECTED" || status === "REFUND_REJECTED";
+
+  if (isRejectStatus && (!rejectReason || !rejectReason.trim())) {
+    // กัน FE ผิดเองก่อน ไม่ต้องรอให้ BE ด่า
+    throw new Error("กรุณากรอกเหตุผลการปฏิเสธ");
+  }
+
+  const body: {
+    status: string;
+    rejectReason?: string;
+  } = { status };
+
+  if (isRejectStatus) {
+    body.rejectReason = rejectReason!.trim();
+  }
+
   await axios.post(
     `${apiUrl}/admin/bookings/${bookingId}/status`,
-    { status },
+    body,
     { withCredentials: true }
   );
 }
-

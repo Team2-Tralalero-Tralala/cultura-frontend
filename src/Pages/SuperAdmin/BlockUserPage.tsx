@@ -253,25 +253,21 @@ export function BlockedAccountPage() {
     },
   ];
 
-  // Section: Render
   return (
     <div className="space-y-4">
-      {/* Section: Header */}
-      <div className="flex flex-col">
-          <div className="-ml-6 pt-1 pb-1">
-            <Breadcrumb
-              items={[
-                { label: "จัดการบัญชึ", to: "/super/accounts/all" },
-                { label: "การระงับบัญชี" },
 
-              ]}
-            />
-          </div>
+      <div className="flex flex-col">
+        <Breadcrumb
+          current={{
+            label: "การระงับบัญชี",
+            to: "/super/users/blocked",
+            fromSidebar: true,
+          }}
+        />    
         <h1 className="text-[20px] font-bold text-black">
           การระงับบัญชี
         </h1>
 
-        {/* Section: Search bar */}
         <div className="flex items-center justify-between w-full mt-2">
           <div className="w-[260px]">
             <SearchBarTable
@@ -282,10 +278,8 @@ export function BlockedAccountPage() {
         </div>
       </div>
 
-      {/* Section: Error */}
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      {/* Section: Table */}
       <DataTable<BlockedAccountRow>
         data={filteredRows}
         getKey={(row) => row.id.toString()}
@@ -305,7 +299,6 @@ export function BlockedAccountPage() {
         bulkActions={bulkActions}
       />
 
-      {/* Section: Modal */}
       <Modal
         open={modalOpen}
         title={modalTitle}

@@ -14,6 +14,7 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import * as TagService from "@/Services/tag-service";
 
 import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
 
@@ -213,11 +214,15 @@ export default function ManageTags() {
             {/* Section: Header */}
             <div className="flex flex-col gap-2 w-full">
                 {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-                    <span className="text-gray-800 font-medium">จัดการประเภท</span>
-                </nav>
+                <Breadcrumb
+                    current={{
+                        label: "จัดการประเภท",        
+                        to: "/super/tags",     
+                        fromSidebar: true,
+                    }}
+                />
 
-                <h2 className="text-xl font-bold ">จัดการประเภท</h2>
+                <h1 className="text-xl font-bold ">จัดการประเภท</h1>
 
                 <div className="flex items-center justify-between w-full ">
                     {/* Section: Search */}

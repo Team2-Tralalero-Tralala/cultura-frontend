@@ -96,7 +96,9 @@ const SidebarSuperAdmin: React.FC = () => {
     <div className="h-screen w-60 bg-[#055035] text-white flex flex-col justify-between py-6 px-4">
       <div>
         <div className="flex items-center justify-center mb-6">
-          <img src="/logo-white.png" alt="Cultura logo" className="h-10" />
+          <Link to={`${basePath}/communities/all`} onClick={() => handleClick("communities")}>
+            <img src="/logo-white.png" alt="Cultura logo" className="h-10 cursor-pointer" />
+          </Link>
         </div>
 
         <nav className="flex flex-col gap-2 text-base-semibold">

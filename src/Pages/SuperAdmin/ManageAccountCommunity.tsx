@@ -1,18 +1,17 @@
 /**
- * Component: ManageAccountPage (Super Admin)
- * Description: หน้าจัดการบัญชีผู้ใช้ (Super Admin)
- * - แสดงตารางบัญชีผู้ใช้
+ * Component: ManageAccountCommunity (Super Admin)
+ * Description: หน้าจัดการสมาชิกในแต่ละชุมชน (Super Admin)
+ * - แสดงตารางสมาชิกในแต่ละชุมชน
  * - มีฟังก์ชันค้นหา / กรอง / เพิ่ม / ระงับ / ลบ / ระงับทั้งหมด / ลบทั้งหมด
  */
 
 import { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { TrashIcon, BanIcon } from "lucide-react";
 
 // Components
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
-import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { Modal } from "@/Components/Modal/Modal";
 import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -24,41 +23,23 @@ import type {
   Pagination,
   BulkAction,
 } from "@/Components/Tables/Types";
-import type { AccountRow } from "@/Types/User";
+import type { AccountCommunityRow } from "@/Types/User";
 
 // Services
 import {
-  fetchAccounts,
   blockAccountById,
   blockMultipleAccounts,
   deleteAccountById,
   deleteMultipleAccounts,
+  getAccountInCommunity,
 } from "@/Services/account-services";
-
-/**
- * ฟังก์ชัน: thaiRoleName
- * วัตถุประสงค์: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
- */
-function thaiRoleName(role: string): string {
-  switch (role) {
-    case "superadmin":
-      return "ผู้ดูแลระบบ";
-    case "admin":
-      return "ผู้ดูแลชุมชน";
-    case "member":
-      return "สมาชิก";
-    case "tourist":
-      return "ผู้ใช้งานทั่วไป";
-    default:
-      return role;
-  }
-}
+import { Icon } from "@iconify/react";
 
 /**
  * ตัวแปร: columns
  * วัตถุประสงค์: กำหนดคอลัมน์ในตารางบัญชีผู้ใช้
  */
-const columns: Column<AccountRow>[] = [
+const columns: Column<AccountCommunityRow>[] = [
   {
     key: "fullname",
     header: "ชื่อจริง-นามสกุล",
@@ -74,25 +55,15 @@ const columns: Column<AccountRow>[] = [
     ),
   },
   {
-    key: "role",
-    header: "ประเภท",
+    key: "activityRole",
+    header: "บทบาท",
     className: "min-w-[160px]",
-    render: (object) => <div>{thaiRoleName(object.role.name)}</div>,
-  },
-  {
-    key: "community",
-    header: "ชุมชน",
-    className: "min-w-[160px]",
-    render: (object) => {
-      const adminName = object.communityAdmin?.[0]?.name ?? null;
-      const memberName = object.communityMembers?.[0]?.Community?.name ?? null;
-      return <div>{adminName || memberName || "-"}</div>;
-    },
+    render: (object) => <div>{object.activityRole || "-"}</div>,
   },
   {
     key: "email",
-    header: "อีเมล",
-    className: "min-w-[220px]",
+    header: "ช่องทางติดต่อ",
+    className: "min-w-[160px]",
     render: (object) => <div>{object.email ?? "-"}</div>,
   },
 ];
@@ -102,22 +73,17 @@ const columns: Column<AccountRow>[] = [
  * ใช้สำหรับทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
  */
 const normalizeText = (text: string) =>
-  (text ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
- * Component: ManageAccountPage
- * วัตถุประสงค์: แสดงตารางบัญชีผู้ใช้ (SuperAdmin)
+ * Component: ManageAccountCommunity
+ * วัตถุประสงค์: แสดงตารางสมาชิกในแต่ละชุมชน (SuperAdmin)
  */
-export function ManageAccountPage() {
+export function ManageAccountCommunity() {
   const navigate = useNavigate();
 
   // Section: State หลัก
-  const [rows, setRows] = useState<AccountRow[]>([]);
+  const [rows, setRows] = useState<AccountCommunityRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
@@ -127,14 +93,15 @@ export function ManageAccountPage() {
     limit: 10,
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
-  const [selectedRows, setSelectedRows] = useState<AccountRow[]>([]);
+  const [selectedRows, setSelectedRows] = useState<AccountCommunityRow[]>([]);
 
   // Section: State สำหรับ Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
+
+  const params = useParams();
 
   /**
    * ฟังก์ชัน: openModal
@@ -166,10 +133,12 @@ export function ManageAccountPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const {
-        data: { data: resultData, pagination: resultPagination },
-      } = await fetchAccounts(pagination.currentPage, pagination.limit);
-
+      const { data: resultData, pagination: resultPagination } = await getAccountInCommunity(
+        Number(params.communityId),
+        pagination.currentPage,
+        pagination.limit,
+        searchQuery
+      );
       setRows(resultData);
       setPagination(resultPagination);
     } catch (err: unknown) {
@@ -189,9 +158,12 @@ export function ManageAccountPage() {
     const delay = setTimeout(async () => {
       try {
         setIsLoading(true);
-        const {
-          data: { data: resultData, pagination: resultPagination },
-        } = await fetchAccounts(pagination.currentPage, pagination.limit);
+        const { data: resultData, pagination: resultPagination } = await getAccountInCommunity(
+          Number(params.communityId),
+          pagination.currentPage,
+          pagination.limit,
+          searchQuery
+        );
 
         if (!isCancelled) {
           setRows(resultData);
@@ -216,43 +188,33 @@ export function ManageAccountPage() {
    */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
-    const selectedRole = filterRole.toLowerCase();
 
     return rows.filter((object) => {
-      // กรอง role
-      const role = object.role?.name?.toLowerCase() ?? "";
-      const passRole = selectedRole === "all" || role === selectedRole;
-
       // กรอง search
       const name = `${object.fname ?? ""} ${object.lname ?? ""}`.trim();
       const email = object.email ?? "";
-      const community =
-        object.communityAdmin?.[0]?.name ??
-        object.communityMembers?.[0]?.Community?.name ??
-        "";
-
+      const activityRole = object.activityRole ?? "";
       const textMatch =
         !query ||
         normalizeText(name).includes(query) ||
         normalizeText(email).includes(query) ||
-        normalizeText(role).includes(query) ||
-        normalizeText(community).includes(query);
+        normalizeText(activityRole).includes(query);
 
-      return passRole && textMatch;
+      return textMatch;
     });
-  }, [rows, searchQuery, filterRole]);
+  }, [rows, searchQuery]);
 
   /**
    * ฟังก์ชัน: rowActions
    */
-  const rowActions: DataTableActionsConfig<AccountRow> = {
+  const rowActions: DataTableActionsConfig<AccountCommunityRow> = {
     header: "จัดการ",
     align: "right",
     width: "180px",
     variant: "icons",
     className: "pr-11",
     items: () => ["block", "edit", "delete"],
-    
+
     callbacks: {
       block: (row) => {
         openModal(
@@ -281,7 +243,7 @@ export function ManageAccountPage() {
   /**
    * ฟังก์ชัน: bulkActions
    */
-  const bulkActions: BulkAction<AccountRow>[] = [
+  const bulkActions: BulkAction<AccountCommunityRow>[] = [
     {
       id: "bulk-block",
       label: "ระงับทั้งหมด",
@@ -321,16 +283,18 @@ export function ManageAccountPage() {
     <div className="space-y-4">
       {/* Section: Header */}
       <div className="flex flex-col w-full">
-          <Breadcrumb
-            current={{
-              label: "จัดการบัญชึ",
-              to: "/super/account/all",
-              fromSidebar: true,
-            }}
-          />
-        <h1 className="text-[20px] font-bold text-black">
-          จัดการบัญชี
-        </h1>
+        <div className="">
+          <Breadcrumb items={[{ label: "จัดการสมาชิก" }]} />
+        </div>
+        <div className="flex justify-between items-center mb-3">
+          <Link
+            to={`/super/community/${params.communityId}`}
+            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+          >
+            <Icon icon="lucide:arrow-left" className="w-5 h-5" />
+            <h1 className="text-xl font-bold">จัดการสมาชิก</h1>
+          </Link>
+        </div>
 
         <div className="flex items-center justify-between w-full mt-2">
           {/* Section: Search + Filter */}
@@ -341,22 +305,6 @@ export function ManageAccountPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-
-            <div className="w-[140px]">
-              <FiltersForCM
-                options={optionsRole}
-                selected={filterRole}
-                onChange={(value) => setFilterRole(value)}
-              />
-            </div>
-          </div>
-
-          {/* Section: Add Account */}
-          <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/super/account/admin/create")}>
-              <span className="text-lg leading-none">＋</span>
-              <span>เพิ่มบัญชี</span>
-            </Button>
           </div>
         </div>
       </div>
@@ -365,19 +313,15 @@ export function ManageAccountPage() {
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       {/* Section: Table */}
-      <DataTable<AccountRow>
+      <DataTable<AccountCommunityRow>
         data={filteredRows}
         getKey={(row) => row.id.toString()}
         columns={columns}
         selectable={true}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(page) =>
-          setPagination((prev) => ({ ...prev, currentPage: page }))
-        }
-        onPageSizeChange={(limit) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
-        }
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+        onPageSizeChange={(limit) => setPagination((prev) => ({ ...prev, currentPage: 1, limit }))}
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}

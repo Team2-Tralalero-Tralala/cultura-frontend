@@ -75,7 +75,7 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/packages")) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (currentPath === "/booking/refund") {
+    } else if (currentPath === "/booking/refund-requests") {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
     } else if (currentPath === "/bookings-histories/all") {
@@ -127,7 +127,9 @@ const SidebarAdmin = () => {
       <div>
         {/* โลโก้ */}
         <div className="flex items-center justify-center mb-6">
-          <img src="/logo-white.png" alt="Cultura logo" className="h-10" />
+          <Link to={`${basePath}/community/own`} onClick={() => handleClick("community")}>
+            <img src="/logo-white.png" alt="Cultura logo" className="h-10 cursor-pointer" />
+          </Link>
         </div>
 
         {/* เมนู */}
@@ -230,7 +232,7 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขอคืนเงิน",
-                "/booking/refund",
+                "/booking/refund-requests",
                 "mdi:cash-refund",
                 "booking-refunds",
                 "booking"

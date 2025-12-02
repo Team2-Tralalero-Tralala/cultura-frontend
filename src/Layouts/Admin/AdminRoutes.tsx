@@ -30,6 +30,9 @@ import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 import BookingDetailAdmin from "@/Pages/Admin//BookingDetailAdmin";
+import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayPage';
+import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
+import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
 
 export default function AdminRoutes() {
   return (
@@ -54,6 +57,8 @@ export default function AdminRoutes() {
 
       <Route path="/booking/:bookingId" element={<BookingDetailAdmin />} />
       
+      <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
+
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
       <Route path="package/requests" element={<PackageRequestsAdmin />} />
@@ -72,9 +77,12 @@ export default function AdminRoutes() {
       <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
+      {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
+      <Route path="stores/:id" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
+      <Route path="package/draft" element={<PackageDraftAdmin />} />
     </Routes>
   );
 }

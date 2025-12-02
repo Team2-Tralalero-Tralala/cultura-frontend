@@ -9,6 +9,7 @@
  */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { MemberDetailPage } from '@/Pages/Admin/MemberDetailPage';
 import Feedbackall from '@/Pages/Admin/FeedbackAll';
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
@@ -28,11 +29,17 @@ import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
+import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
+import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
 
 export default function AdminRoutes() {
   return (
     <Routes>
-      <Route path="/package/feedbacks" element={<Feedbackall />} />
+      <Route
+        path="member/:userId"
+        element={<MemberDetailPage />}
+      />
+      <Route path="/packages/feedbacks" element={<Feedbackall />} />
 
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
@@ -42,7 +49,7 @@ export default function AdminRoutes() {
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
       <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
-      <Route path="/bookings-histories/done" element={<BookingHistoryAdmin />} />
+      <Route path="/bookings-histories/all" element={<BookingHistoryAdmin />} />
       {/*<Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
@@ -69,9 +76,12 @@ export default function AdminRoutes() {
       <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
+      {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
+      <Route path="stores/:id" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
+      <Route path="package/draft" element={<PackageDraftAdmin />} />
     </Routes>
   );
 }

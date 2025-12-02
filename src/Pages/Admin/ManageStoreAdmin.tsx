@@ -3,7 +3,7 @@
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 
 // Components
 import Button from "@/Components/Button";
@@ -11,9 +11,11 @@ import DataTable from "@/Components/Tables/Index";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // Services
 import { getAllStoreAdmin } from "@/Services/store-service";
+import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
 // Types
 import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
@@ -34,8 +36,8 @@ type StoreFromApi = {
   tagStores: { tag: { id: number; name: string } }[];
 };
 
-const normalizeText = (s: string) =>
-  (s ?? "")
+const normalizeText = (str: string) =>
+  (str ?? "")
     .toString()
     .toLowerCase()
     .normalize("NFC")
@@ -44,7 +46,19 @@ const normalizeText = (s: string) =>
 
 // กำหนดคอลัมน์ของตาราง
 const columns: Column<StoreRow>[] = [
-  { key: "name", header: "ชื่อร้านค้า", className: "min-w-[200px]" },
+  {
+    key: "name",
+    header: "ชื่อร้านค้า",
+    className: "min-w-[200px]",
+    render: (row) => (
+      <Link
+        to={`/admin/community/store/${row.id}`}
+        className="hover:text-dark-green hover:underline"
+      >
+        {row.name}
+      </Link>
+    ),
+  },
   { key: "detail", header: "รายละเอียด" },
   { key: "tagStores", header: "ประเภท" },
 ];
@@ -54,6 +68,7 @@ export default function ManageStoreAdmin() {
   const { storeId } = useParams<{ storeId: string }>();
 
   // State
+  const [communityName, setCommunityName] = useState<string>("");
   const [rows, setRows] = useState<StoreRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = React.useState<Pagination>({
@@ -89,7 +104,7 @@ export default function ManageStoreAdmin() {
       // แปลงข้อมูลให้เข้ากับตาราง
       const mapped: StoreRow[] = resultData.map((store) => {
         const tagNames =
-          store.tagStores?.map((t) => t.tag?.name).filter(Boolean) ?? [];
+          store.tagStores?.map((tag) => tag.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
@@ -100,8 +115,8 @@ export default function ManageStoreAdmin() {
 
       setRows(mapped);
       setPagination(resultPagination);
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +126,19 @@ export default function ManageStoreAdmin() {
     loadStores();
   }, [pagination.currentPage, pagination.limit]);
 
+  React.useEffect(() => {
+    fetchCommunityName();
+  }, []);
+
+  const fetchCommunityName = async () => {
+    try {
+      const res = await getCommunityDetailByAdmin();
+      setCommunityName(res.data?.data?.name || "ชุมชน");
+    } catch (error) {
+      console.error("Failed to fetch community name:", error);
+    }
+  };
+
   // Actions ของแต่ละแถว
   const rowActions: DataTableActionsConfig<StoreRow> = {
     header: "จัดการ",
@@ -119,7 +147,7 @@ export default function ManageStoreAdmin() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/admin/community/store/edit/${storeId}/${row.id}`),
+      edit: (row) => navigate(`/admin/community/store/${row.id}/edit/`),
       delete: (row) => {
         setDeleteId(row.id);
         setIsOpenConfirm(true);
@@ -133,12 +161,12 @@ export default function ManageStoreAdmin() {
   * Output : รายการร้านค้าที่ผ่านการกรอง
   */
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
+    const query = normalizeText(searchQuery);
     return rows.filter((row) => {
-      const haystacks = [row.name, row.detail, row.tagStores].map((v) =>
-        normalizeText(String(v ?? ""))
+      const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
+        normalizeText(String(value ?? ""))
       );
-      return !q || haystacks.some((h) => h.includes(q));
+      return !query || haystacks.some((haystack) => haystack.includes(query));
     });
   }, [rows, searchQuery]);
 
@@ -163,38 +191,49 @@ export default function ManageStoreAdmin() {
       intent: "neutral",
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        const ids = rows.map((r) => r.id);
-        alert("bulk delete: " + ids);
+        const storeIds = rows.map((row) => row.id);
+        alert("bulk delete: " + storeIds);
         await loadStores();
       },
     },
   ];
 
-/*
- * คำอธิบาย : ฟังก์ชันหลักของหน้า manage store admin
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันหลักของหน้า manage store admin
+   */
   return (
     <div className="space-y-4">
-      <div className="px-6 pb-1">
-        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-          <span className="text-gray-800 font-medium">จัดการร้านค้า</span>
-        </nav>
-      </div>
+      {/* Section: Header */}
+      <div className="flex flex-col gap-2 w-full">
+        {/* Breadcrumb */}
+        <div className="flex flex-col gap-2 w-full">
+          <Breadcrumb
+            current={{
+              label: "จัดการร้านค้า",
+              to: location.pathname,
+            }}
+          />
+        </div>
 
-      <div className="px-6 py-1 flex items-center justify-between">
-        <h2 className="text-xl font-semibold"> จัดการร้านค้า </h2>
-        <div>
-          <Button onClick={() => navigate("/admin/store/create")} aria-label="เพิ่มร้านค้า">
-            + เพิ่มร้านค้า
-          </Button>
+        <h1 className="text-xl font-bold "> จัดการร้านค้า </h1>
+
+        <div className="flex items-center justify-between w-full ">
+          {/* Section: Search */}
+          <div className="w-[260px]">
+            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+          </div>
+
+          {/* Section: Add Store */}
+          <div>
+            <Button onClick={() => navigate("/admin/community/store/create")} aria-label="เพิ่มร้านค้า">
+              <span className="text-lg leading-none">＋</span>
+              <span>เพิ่มร้านค้า</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="px-6 pb-2">
-        <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-      </div>
-
-      <div className="px-6 pb-10">
+      <div className="pb-10">
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<StoreRow>
@@ -203,14 +242,14 @@ export default function ManageStoreAdmin() {
           columns={columns}
           selectable={true}
           pageSizeOptions={[10, 30, 50]}
-          onPageChange={(p) => {
-            setPagination((prev) => ({ ...prev, currentPage: p }));
+          onPageChange={(page) => {
+            setPagination((prev) => ({ ...prev, currentPage: page }));
           }}
-          onPageSizeChange={(p) => {
+          onPageSizeChange={(pageSize) => {
             setPagination((prev) => ({
               ...prev,
               currentPage: 1,
-              limit: p,
+              limit: pageSize,
             }));
           }}
           onSelectedChange={(rows) => {

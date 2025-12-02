@@ -14,6 +14,7 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import * as TagService from "@/Services/tag-service";
 
 import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
 
@@ -22,8 +23,8 @@ export type TagRow = { id: number; name: string };
 * Input : s (string)
 * Output : string ที่ถูก normalize แล้ว
 */
-const normalizeText = (s: string) =>
-    (s ?? "")
+const normalizeText = (str: string) =>
+    (str ?? "")
         .toString()
         .toLowerCase()
         .normalize("NFC")
@@ -64,7 +65,7 @@ export default function ManageTags() {
              */
             const res = await TagService.fetchTags(1, 1000);
             const data: TagRow[] = Array.isArray(res.data)
-                ? res.data.map((t: any) => ({ id: t.id, name: t.name }))
+                ? res.data.map((tag: any) => ({ id: tag.id, name: tag.name }))
                 : [];
 
             /*
@@ -92,8 +93,8 @@ export default function ManageTags() {
                 totalPages: pages,
                 currentPage: safePage,
             }));
-        } catch (e: any) {
-            setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+        } catch (error: any) {
+            setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
         } finally {
             setIsLoading(false);
         }
@@ -150,8 +151,8 @@ export default function ManageTags() {
             closeInputModal();
             setShowConfirmModal(false);
             await fetchData();
-        } catch (e) {
-            console.error(e);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -199,7 +200,7 @@ export default function ManageTags() {
             intent: "neutral",
             confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
             onClick: async (rows) => {
-                await Promise.all(rows.map((r) => TagService.deleteTag(r.id)));
+                await Promise.all(rows.map((row) => TagService.deleteTag(row.id)));
                 await fetchData();
             },
         },
@@ -210,30 +211,42 @@ export default function ManageTags() {
     */
     return (
         <div className="space-y-4 cursor-default">
-            <div className="px-6 pt-2 pb-1">
-                <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-                    <span className="text-gray-800 font-medium">จัดการประเภท</span>
-                </nav>
-            </div>
+            {/* Section: Header */}
+            <div className="flex flex-col gap-2 w-full">
+                {/* Breadcrumb */}
+                <Breadcrumb
+                    current={{
+                        label: "จัดการประเภท",        
+                        to: "/super/tags",     
+                        fromSidebar: true,
+                    }}
+                />
 
-            <div className="px-6 py-1 flex items-center justify-between">
-                <h2 className="text-xl font-semibold">จัดการประเภท</h2>
-                <div>
-                    <Button onClick={() => openInputModal("create")}>+ เพิ่มประเภท</Button>
+                <h1 className="text-xl font-bold ">จัดการประเภท</h1>
+
+                <div className="flex items-center justify-between w-full ">
+                    {/* Section: Search */}
+                    <div className="w-[260px]">
+                        <SearchBarTable
+                            value={searchQuery}
+                            onChange={(event) => {
+                                setSearchQuery(event.target.value);
+                                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                            }}
+                        />
+                    </div>
+
+                    {/* Section: Add Tag */}
+                    <div>
+                        <Button onClick={() => openInputModal("create")}>
+                            <span className="text-lg leading-none">＋</span>
+                            <span>เพิ่มประเภท</span>
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <div className="px-6 pb-2">
-                <SearchBarTable
-                    value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setPagination((prev) => ({ ...prev, currentPage: 1 }));
-                    }}
-                />
-            </div>
-
-            <div className="px-6 pb-10">
+            <div className="pb-10">
                 {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
                 <DataTable<TagRow>
@@ -246,8 +259,8 @@ export default function ManageTags() {
                     isLoading={isLoading}
                     actions={rowActions}
                     bulkActions={bulkActions}
-                    onPageChange={(p) => setPagination((prev) => ({ ...prev, currentPage: p }))}
-                    onPageSizeChange={(size) => setPagination((prev) => ({ ...prev, currentPage: 1, limit: size }))}
+                    onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+                    onPageSizeChange={(pageSize) => setPagination((prev) => ({ ...prev, currentPage: 1, limit: pageSize }))}
                     pageSizeOptions={[10, 30, 50]}
                     theme="brand"
                 />
@@ -288,7 +301,7 @@ export default function ManageTags() {
                     setShowConfirmModal(true);
                 }}
                 initialValue={modalType === "edit" ? selectedTag?.name : ""}
-                existingTags={rows.map((t) => t.name)}
+                existingTags={rows.map((tag) => tag.name)}
                 errorMessage=""
             />
         </div>

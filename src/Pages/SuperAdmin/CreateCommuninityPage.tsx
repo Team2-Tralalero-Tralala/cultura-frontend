@@ -32,6 +32,7 @@ import * as z from "zod";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
@@ -78,12 +79,20 @@ const communitySchema = z.object({
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
 
   latitude: z
-    .string("กรุณากรอกละติจูด")
-    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
+    .union([z.string(), z.number()])
+    .transform((v) => String(v))
+    .refine(
+      (latitude) => latitude.length > 0 && latitude !== "0",
+      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
+    ),
 
   longitude: z
-    .string("กรุณากรอกลองจิจูด")
-    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
+    .union([z.string(), z.number()])
+    .transform((v) => String(v))
+    .refine(
+      (longitude) => longitude.length > 0 && longitude !== "0",
+      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
+    ),
 
   phone: z
     .string("กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน")
@@ -106,7 +115,7 @@ const communitySchema = z.object({
  * รวมถึง modal ยืนยันและการแจ้งเตือนผลลัพธ์
  */
 export default function CreateCommuninityPage() {
-  const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [expanded, setExpanded] = React.useState<string[]>([]);
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
     status: "CLOSED",
     rating: 0,
@@ -139,8 +148,9 @@ export default function CreateCommuninityPage() {
    * Input : panel (string)
    * Output : อัปเดต state expanded
    */
-  const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
-    setExpanded(isExpanded ? panel : false);
+  const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpanded((prev) => (isExpanded ? [...prev, panel] : prev.filter((p) => p !== panel)));
+  };
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
@@ -197,6 +207,14 @@ export default function CreateCommuninityPage() {
       validateField("subDistrict", location.subdistrict);
     }
   }, [location]);
+
+  React.useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: position[0],
+      longitude: position[1],
+    }));
+  }, [position]);
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -337,6 +355,12 @@ export default function CreateCommuninityPage() {
 
   return (
     <div>
+      {/* <Breadcrumb
+        items={[
+          { label: "จัดการชุมชน", to: "/super/communities/all" },
+          { label: "เพิ่มวิสาหกิจชุมชน" },
+        ]}
+      /> */}
       <div className="flex justify-between items-center">
         <Link
           to="/super/communities/all"
@@ -347,19 +371,28 @@ export default function CreateCommuninityPage() {
         </Link>
       </div>
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0  !bg-white mt-3"
-        expanded={expanded === "panel2"}
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        expanded={expanded.includes("panel2")}
         onChange={handleChange("panel2")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
-          className="!rounded-t-lg "
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <div className="text-xl font-bold">ข้อมูลชุมชน</div>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
           <h1 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h1>
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
@@ -565,19 +598,28 @@ export default function CreateCommuninityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0 mt-3"
-        expanded={expanded === "panel3"}
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        expanded={expanded.includes("panel3")}
         onChange={handleChange("panel3")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
-          className="!rounded-t-lg "
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <div className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</div>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -644,7 +686,7 @@ export default function CreateCommuninityPage() {
                 helperText={formErrors.detail}
               />
             </div>
-            <div className="text-xl font-bold">ที่ตั้งชุมชน</div>
+            <div className="text-lg font-bold">ที่ตั้งชุมชน</div>
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
@@ -661,19 +703,29 @@ export default function CreateCommuninityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!shadow-sm !rounded-lg !border-0 mt-3"
-        expanded={expanded === "panel4"}
+        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        expanded={expanded.includes("panel4")}
         onChange={handleChange("panel4")}
+        sx={{ "&:before": { display: "none" } }}
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
-          className="!rounded-t-lg "
+          className="!bg-white !rounded-lg !shadow-sm"
+          sx={{
+            "&.Mui-expanded": {
+              minHeight: "48px",
+            },
+            "& .MuiAccordionSummary-content.Mui-expanded": {
+              margin: "12px 0",
+            },
+          }}
         >
           <div className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</div>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+          <h1 className="text-lg font-bold mb-[24px]">ข้อมูลติดต่อวิสาหกิจชุมชน</h1>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField

@@ -40,6 +40,26 @@ export async function getHomestaysAllAdmin() {
 }
 
 /**
+ * ฟังก์ชัน: HomestayAdminDelete
+ * วัตถุประสงค์: ลบหรือปิดใช้งานที่พัก (homestay) ของผู้ดูแลชุมชน (Admin)
+ * Mapping: PATCH /admin/community/homestay/{homestayId}
+ * Input:
+ *   - homestayId: number (รหัสของที่พักที่ต้องการลบ)
+ * Output:
+ *   - res.data: ผลลัพธ์จาก API หลังจากลบที่พัก
+ */
+export async function HomestayAdminDelete(homestayId: number) {
+  const res = await api.patch(
+    `/admin/community/homestay/${homestayId}`,
+    {},
+    {
+      withCredentials: true,
+    }
+  );
+  return res.data;
+}
+
+/**
  * ฟังก์ชัน: fetchHomestayDetailByAdmin()
  * Input : homestayId (หมายเลขที่พัก)
  * Output: homestay + ความสัมพันธ์ (community, location, image, tag)

@@ -2,7 +2,7 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 02 ธันวาคม 2568 (Update Activity Role)
+ * Last Modified: 02 ธันวาคม 2568 (Smart Fetch Community)
  */
 
 import React, { useState, useEffect } from "react";
@@ -17,11 +17,20 @@ import SubmitButton from "../../Components/SubmitButton";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "../../Components/Selector/ThailandLocationSelector";
-import CommunitySelector from "../../Components/Selector/CommunitySelector";
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
+// Import สำหรับ Dropdown
+import Autocomplete from "@mui/material/Autocomplete";
+import Popper from "@mui/material/Popper";
+import { Icon } from "@iconify/react";
+
 type RoleType = "Admin" | "Member" | "Tourist";
+
+interface CommunityOption {
+  id: number;
+  name: string;
+}
 
 const accountSchema = z.object({
   fname: z.string().min(1, "กรุณากรอกชื่อ"),
@@ -89,6 +98,25 @@ interface CreateAccountBody {
   postalCode?: string;
 }
 
+function CustomPopper(props: any) {
+  const { anchorEl } = props;
+  return (
+    <Popper
+      {...props}
+      placement="bottom-start"
+      modifiers={[
+        { name: "flip", enabled: false },
+        { name: "preventOverflow", enabled: true },
+      ]}
+      style={{
+        zIndex: 1300,
+        width: anchorEl ? anchorEl.clientWidth : undefined,
+        paddingTop: "4px",
+      }}
+    />
+  );
+}
+
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,11 +156,75 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   });
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
+  const [isCommunityLoading, setIsCommunityLoading] = useState(false);
+
   useEffect(() => {
     setRole(getRoleFromPath());
   }, [location.pathname]);
 
-  // ตรวจสอบความถูกต้องของข้อมูล
+  useEffect(() => {
+    if (role === "Member") {
+      const fetchCommunities = async () => {
+        setIsCommunityLoading(true);
+        try {
+          // 1. ลองดึงแบบ SuperAdmin (เอาทั้งหมด)
+          // ตัด limit=1000 ออกก่อน เผื่อ backend รับ type number แล้ว crash
+          const res = await api.get("/super/communities"); 
+          
+          let data: CommunityOption[] = [];
+          
+          // แกะ Response (รองรับ Pagination)
+          if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
+             data = res.data.data.data;
+          } else if (res.data?.data && Array.isArray(res.data.data)) {
+             data = res.data.data;
+          } else if (Array.isArray(res.data)) {
+             data = res.data;
+          }
+
+          // 2. ถ้าไม่เจอข้อมูล (อาจจะเป็น Admin ธรรมดา) ให้ลองดึงของตัวเอง
+          if (data.length === 0) {
+            console.log("SuperAdmin fetch empty, trying Admin fetch...");
+            try {
+              const resAdmin = await api.get("/admin/community");
+              // Response ของ Admin เป็น Single Object
+              const adminCommunity = resAdmin.data?.data;
+              if (adminCommunity && adminCommunity.id && adminCommunity.name) {
+                data = [{ id: adminCommunity.id, name: adminCommunity.name }];
+                
+                // Auto select ให้เลย ถ้ามีอันเดียว
+                setRoleSpecificData(prev => ({
+                    ...prev,
+                    communityId: String(adminCommunity.id)
+                }));
+              }
+            } catch (errAdmin) {
+              console.warn("Failed to fetch admin community", errAdmin);
+            }
+          }
+
+          setCommunityOptions(data);
+        } catch (error) {
+          console.error("Failed to fetch communities", error);
+          // ถ้า Error หลัก ให้ลอง fetch แบบ Admin เป็น Last Resort
+          try {
+             const resAdmin = await api.get("/admin/community");
+             const adminCommunity = resAdmin.data?.data;
+             if (adminCommunity) {
+                setCommunityOptions([{ id: adminCommunity.id, name: adminCommunity.name }]);
+             }
+          } catch (e) {
+             setCommunityOptions([]);
+          }
+        } finally {
+          setIsCommunityLoading(false);
+        }
+      };
+      fetchCommunities();
+    }
+  }, [role]);
+
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
       const result = accountSchema.safeParse({
@@ -170,9 +262,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
-
     setFormData((prev) => ({ ...prev, profileImage: file }));
-    console.log("📸 ได้ไฟล์ใหม่:", file.name);
   };
 
   const handleRoleSelect = (newRole: RoleType) => {
@@ -197,7 +287,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       return;
     }
 
-    // Validation เพิ่มเติมสำหรับ Member
     if (role === "Member") {
        if (!roleSpecificData.communityId) {
          toast.error("กรุณาเลือกชุมชน ❌");
@@ -243,7 +332,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       }
 
       const response = await api.post(`/super/account/${role.toLowerCase()}`, accountBody);
-
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
@@ -262,7 +350,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
       toast.success(response.data.message || "สร้างบัญชีและอัปโหลดรูปสำเร็จ ✅");
 
-      // Reset Form
       setFormData({
         fname: "",
         lname: "",
@@ -289,7 +376,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
-      {/* 1. Breadcrumb */}
       <div className="mb-2">
         <Breadcrumb
           current={{
@@ -299,7 +385,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         />
       </div>
 
-      {/* 2. Header พร้อมปุ่มย้อนกลับ */}
       <div className="flex items-center gap-3 mb-6 pl-6">
         <button
           onClick={() => navigate(-1)}
@@ -307,7 +392,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
           title="ย้อนกลับ"
         >
-          {/* SVG รูปไอคอนลูกศรย้อนกลับ */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="32"
@@ -326,7 +410,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         <h1 className="text-xl font-bold text-black tracking-tight">สร้างบัญชี</h1>
       </div>
 
-      {/* 3. Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
@@ -334,12 +417,10 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">สร้างบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
-          {/* รูปโปรไฟล์ */}
           <div className="flex flex-col items-center">
             <AvatarUploader avatarUrl={null} onAvatarChange={handleAvatarChange} avatarSize={270} />
           </div>
 
-          {/* ฟอร์มข้อมูล */}
           <div className="w-full space-y-6">
             <div className="grid grid-cols-2 gap-6">
               <TextField
@@ -418,7 +499,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               />
             </div>
 
-            {/* Role Selection */}
             <div>
               <label className="font-semibold text-gray-800 block mb-2">
                 Role <span className="text-red-500">*</span>
@@ -441,20 +521,59 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               </div>
             </div>
 
-            {/* Member extra field */}
             {role === "Member" && (
               <div className="space-y-6"> 
-                {/* 1. Community Selector */}
-                <CommunitySelector
-                  value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
-                  onChange={(communityId) =>
-                    setRoleSpecificData((prevData) => ({
-                      ...prevData,
-                      communityId: communityId ? String(communityId) : "",
-                    }))
-                  }
-                />
+                {/* 1. Community Selector (TextField Style) */}
+                <div className="space-y-1.5 w-full">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-base font-semibold text-black">
+                      ชุมชนวิสาหกิจ <span className="text-red-600"> *</span>
+                    </label>
+                  </div>
+                  <Autocomplete
+                    id="community-selector-custom"
+                    options={communityOptions}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      communityOptions.find(
+                        (c) => String(c.id) === String(roleSpecificData.communityId)
+                      ) || null
+                    }
+                    onChange={(_, newValue) => {
+                      setRoleSpecificData((prev) => ({
+                        ...prev,
+                        communityId: newValue ? String(newValue.id) : "",
+                      }));
+                    }}
+                    loading={isCommunityLoading}
+                    noOptionsText="ไม่พบข้อมูลชุมชน"
+                    loadingText="กำลังโหลด..."
+                    disableClearable={false}
+                    PopperComponent={CustomPopper}
+                    renderInput={(params) => {
+                      const { InputProps, inputProps } = params;
+                      return (
+                        <div ref={InputProps.ref} className="relative w-full">
+                          <input
+                            {...inputProps}
+                            type="text"
+                            placeholder={isCommunityLoading ? "กำลังโหลด..." : "ค้นหาชุมชน"}
+                            className="block w-full rounded-form border-1
+                              border-gray-400 focus:ring-gray-400 focus:border-gray-500
+                              bg-white px-5 py-2 text-black text-base
+                              placeholder:text-[#606060] placeholder:font-normal leading-relaxed
+                              focus:outline-none focus:ring-1 transition-shadow pr-10"
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
+                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
                 
+                {/* 2. Activity Role */}
                 <TextField
                   id="activityRole"
                   label="บทบาทในชุมชน"
@@ -471,7 +590,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               </div>
             )}
 
-            {/* Tourist extra fields */}
             {role === "Tourist" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -523,7 +641,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           </div>
         </div>
 
-        {/* ปุ่มบันทึก / ยกเลิก */}
         <div className="flex justify-end gap-4 pt-4">
           <div className="w-32">
             <Button type="cancel" onClick={() => navigate(-1)}>
@@ -538,7 +655,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         </div>
       </form>
 
-      {/* Popup ยืนยัน */}
       <Modal
         open={showConfirm}
         title="ยืนยันการสร้างบัญชี"

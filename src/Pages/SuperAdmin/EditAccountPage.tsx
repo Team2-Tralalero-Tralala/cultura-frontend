@@ -2,7 +2,7 @@
  * Component: EditAccountPage
  * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 27 พฤษจิกายน 2568
+ * Last Modified: 2 ธันวาคม 2568
  */
 
 import React, { useEffect, useState } from "react";
@@ -32,6 +32,7 @@ interface EditAccountBody {
   password?: string;
   profileImage?: string | null;
   memberOfCommunity?: number | null;
+  communityRole?: string; 
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
   province?: string | null;
@@ -40,13 +41,13 @@ interface EditAccountBody {
   postalCode?: string | null;
 }
 
+
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
-  /** ดึง role จาก path เช่น /super/account/member/:id/edit */
   const getRoleFromPath = (): RoleType => {
     if (location.pathname.includes("member")) return "Member";
     if (location.pathname.includes("tourist")) return "Tourist";
@@ -65,8 +66,10 @@ const EditAccountPage: React.FC = () => {
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  
   const [roleSpecificData, setRoleSpecificData] = useState({
     communityId: "",
+    activityRole: "",
     gender: "",
     birthDate: "",
   });
@@ -80,7 +83,6 @@ const EditAccountPage: React.FC = () => {
 
   const [showConfirm, setShowConfirm] = useState(false);
 
-  /** แปลงชื่อ role เป็น roleId */
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
@@ -94,7 +96,6 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /** โหลดข้อมูลผู้ใช้จาก API */
   const fetchUser = async (role: RoleType) => {
     try {
       let endpoint = "";
@@ -129,8 +130,10 @@ const EditAccountPage: React.FC = () => {
         confirmPassword: "",
       }));
       setAvatarUrl(user.profileImageUrl || null);
+      
       setRoleSpecificData({
         communityId: user.memberOfCommunity?.toString() || "",
+        activityRole: user.activityRole || "", 
         gender: user.gender === "MALE" ? "ชาย" : user.gender === "FEMALE" ? "หญิง" : "ไม่ระบุ",
         birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split("T")[0] : "",
       });
@@ -147,7 +150,6 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /** โหลดข้อมูลเมื่อเปิดหน้า */
   useEffect(() => {
     if (userId && Number(userId) > 0) fetchUser(formData.role);
   }, [userId, formData.role]);
@@ -157,7 +159,6 @@ const EditAccountPage: React.FC = () => {
     setFormData((previousState) => ({ ...previousState, [id]: value }));
   };
 
-  /** เมื่อเปลี่ยน Role */
   const handleRoleSelect = (newRole: RoleType) => {
     if (formData.role !== newRole) {
       setFormData((previousState) => ({ ...previousState, role: newRole }));
@@ -168,7 +169,6 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /** เมื่อกดปุ่มบันทึก */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -176,12 +176,22 @@ const EditAccountPage: React.FC = () => {
       toast.error("รหัสผ่านไม่ตรงกัน");
       return;
     }
+    
+    if (formData.role === "Member") {
+       if (!roleSpecificData.communityId) {
+         toast.error("กรุณาเลือกชุมชน");
+         return;
+       }
+       if (!roleSpecificData.activityRole) {
+         toast.error("กรุณากรอกบทบาทในชุมชน");
+         return;
+       }
+    }
 
     try {
       let imageWasUpdated = false;
       if (profileImage) {
         const formDataUpload = new FormData();
-
         formDataUpload.append("profileImage", profileImage);
 
         await api.put(`/super/users/profile/${userId}`, formDataUpload, {
@@ -205,6 +215,7 @@ const EditAccountPage: React.FC = () => {
 
       if (formData.role === "Member") {
         requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
+        requestBody.communityRole = roleSpecificData.activityRole.trim();
       } else if (formData.role === "Tourist") {
         requestBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -241,26 +252,16 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  const breadcrumbItems = [
-    {
-      label: "จัดการบัญชี",
-      to: `/super/account/${formData.role.toLowerCase()}`,
-    },
-    {
-      label: "รายละเอียดบัญชี",
-      // ใส่ Link ไปหน้า View (ถ้ายังไม่ได้ทำหน้า View ให้ลบบรรทัด 'to' ออกได้ครับ)
-      to: `/super/account/${formData.role.toLowerCase()}/${userId}`, 
-    },
-    {
-      label: "แก้ไขบัญชี",
-    },
-  ];
-
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
       {/* 1. Breadcrumb */}
       <div className="mb-2">
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumb 
+          current={{
+            label: "แก้ไขบัญชี",
+            to: location.pathname,
+          }} 
+        />
       </div>
 
       {/* 2. Header พร้อมปุ่มย้อนกลับ */}
@@ -289,6 +290,7 @@ const EditAccountPage: React.FC = () => {
         <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขบัญชี</h1>
       </div>
 
+      {/* 3. Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
@@ -373,15 +375,33 @@ const EditAccountPage: React.FC = () => {
 
             {/* เฉพาะ Member */}
             {formData.role === "Member" && (
-              <CommunitySelector
-                value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
-                onChange={(communityId) =>
-                  setRoleSpecificData((previousState) => ({
-                    ...previousState,
-                    communityId: communityId ? String(communityId) : "",
-                  }))
-                }
-              />
+              <div className="space-y-6">
+                {/* 1. Community Selector (แสดงชื่อชุมชนปัจจุบันโดยอัตโนมัติจาก value) */}
+                <CommunitySelector
+                  value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
+                  onChange={(communityId) =>
+                    setRoleSpecificData((previousState) => ({
+                      ...previousState,
+                      communityId: communityId ? String(communityId) : "",
+                    }))
+                  }
+                />
+
+                {/* 2. Activity Role (Field บทบาทในชุมชน) */}
+                <TextField
+                  id="activityRole"
+                  label="บทบาทในชุมชน"
+                  placeholder="กรอกบทบาทของผู้ใช้ในชุมชน"
+                  required
+                  value={roleSpecificData.activityRole}
+                  onChange={(e) => 
+                    setRoleSpecificData((prev) => ({
+                      ...prev,
+                      activityRole: e.target.value
+                    }))
+                  }
+                />
+              </div>
             )}
 
             {/* เฉพาะ Tourist */}

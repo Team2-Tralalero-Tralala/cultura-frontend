@@ -2,7 +2,7 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 27 พฤษจิกายน 2568
+ * Last Modified: 02 ธันวาคม 2568 (Update Activity Role)
  */
 
 import React, { useState, useEffect } from "react";
@@ -23,7 +23,6 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
-/* ---------------- Schema ---------------- */
 const accountSchema = z.object({
   fname: z.string().min(1, "กรุณากรอกชื่อ"),
   lname: z.string().min(1, "กรุณากรอกนามสกุล"),
@@ -60,13 +59,13 @@ const accountSchema = z.object({
   postalCode: z.string().min(1, "กรุณาใส่รหัสไปรษณีย์").optional(),
 });
 
-/* ---------------- Interfaces ---------------- */
 interface CreateAccountPageProps {
   defaultRole?: RoleType;
 }
 
 interface RoleSpecificData {
   communityId: string;
+  activityRole: string; 
   gender: string;
   birthDate: string;
 }
@@ -81,6 +80,7 @@ interface CreateAccountBody {
   password?: string;
   profileImage?: string | null;
   memberOfCommunity?: number | null;
+  communityRole?: string; 
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
   province?: string;
@@ -89,12 +89,10 @@ interface CreateAccountBody {
   postalCode?: string;
 }
 
-/* ---------------- Component ---------------- */
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // ดึง role จาก path
+
   const getRoleFromPath = (): RoleType => {
     if (defaultRole) return defaultRole;
     if (location.pathname.includes("member")) return "Member";
@@ -114,11 +112,14 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     profileImage: null as File | null,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+
   const [roleSpecificData, setRoleSpecificData] = useState<RoleSpecificData>({
     communityId: "",
+    activityRole: "", 
     gender: "",
     birthDate: "",
   });
+  
   const [locationData, setLocationData] = useState<ThailandLocation>({
     province: "",
     district: "",
@@ -171,7 +172,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     if (!file) return;
 
     setFormData((prev) => ({ ...prev, profileImage: file }));
-
     console.log("📸 ได้ไฟล์ใหม่:", file.name);
   };
 
@@ -197,6 +197,18 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       return;
     }
 
+    // Validation เพิ่มเติมสำหรับ Member
+    if (role === "Member") {
+       if (!roleSpecificData.communityId) {
+         toast.error("กรุณาเลือกชุมชน ❌");
+         return;
+       }
+       if (!roleSpecificData.activityRole) {
+         toast.error("กรุณากรอกบทบาทในชุมชน ❌");
+         return;
+       }
+    }
+
     try {
       let roleId = 2;
       if (role === "Member") roleId = 3;
@@ -215,6 +227,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
       if (role === "Member") {
         accountBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
+        accountBody.communityRole = roleSpecificData.activityRole.trim(); 
       } else if (role === "Tourist") {
         accountBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -249,6 +262,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
       toast.success(response.data.message || "สร้างบัญชีและอัปโหลดรูปสำเร็จ ✅");
 
+      // Reset Form
       setFormData({
         fname: "",
         lname: "",
@@ -259,7 +273,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         confirmPassword: "",
         profileImage: null,
       });
-      setRoleSpecificData({ communityId: "", gender: "", birthDate: "" });
+      setRoleSpecificData({ communityId: "", activityRole: "", gender: "", birthDate: "" });
       setLocationData({
         province: "",
         district: "",
@@ -273,22 +287,16 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
-  // ✅ [แก้ไข] ใช้คำว่า "จัดการบัญชี" คำเดียว (ไม่ต้องมี role ต่อท้าย) ตาม Figma
-  const breadcrumbItems = [
-    {
-      label: "จัดการบัญชี", 
-      to: `/super/account/${role.toLowerCase()}`, 
-    },
-    {
-      label: "สร้างบัญชี", 
-    },
-  ];
-
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
       {/* 1. Breadcrumb */}
       <div className="mb-2">
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumb
+          current={{
+            label: "สร้างบัญชี",
+            to: location.pathname,
+          }}
+        />
       </div>
 
       {/* 2. Header พร้อมปุ่มย้อนกลับ */}
@@ -300,15 +308,15 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           title="ย้อนกลับ"
         >
           {/* SVG รูปไอคอนลูกศรย้อนกลับ */}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <path d="M19 12H5" />
@@ -423,8 +431,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     onClick={() => handleRoleSelect(roleItem)}
                     className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
                       role === roleItem
-                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
-                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]"
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]"
                     }`}
                   >
                     {roleItem}
@@ -435,15 +443,32 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
             {/* Member extra field */}
             {role === "Member" && (
-              <CommunitySelector
-                value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
-                onChange={(communityId) =>
-                  setRoleSpecificData((prevData) => ({
-                    ...prevData,
-                    communityId: communityId ? String(communityId) : "",
-                  }))
-                }
-              />
+              <div className="space-y-6"> 
+                {/* 1. Community Selector */}
+                <CommunitySelector
+                  value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
+                  onChange={(communityId) =>
+                    setRoleSpecificData((prevData) => ({
+                      ...prevData,
+                      communityId: communityId ? String(communityId) : "",
+                    }))
+                  }
+                />
+                
+                <TextField
+                  id="activityRole"
+                  label="บทบาทในชุมชน"
+                  placeholder="กรอกบทบาทในชุมชน"
+                  required
+                  value={roleSpecificData.activityRole}
+                  onChange={(e) => 
+                    setRoleSpecificData((prev) => ({
+                      ...prev,
+                      activityRole: e.target.value
+                    }))
+                  }
+                />
+              </div>
             )}
 
             {/* Tourist extra fields */}

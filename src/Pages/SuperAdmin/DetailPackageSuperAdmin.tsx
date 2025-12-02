@@ -379,7 +379,7 @@ export default function DetailPackageSuperAdmin() {
 
         {/* จำนวนคน / ราคา */}
         <div className="flex flex-wrap gap-6 mb-6">
-          <div className="flex flex-row mr-100">
+          <div className="flex flex-row mr-143">
             <p className="text-md text-gray-800">
               <strong>จำนวนคนที่เปิดรับ : </strong>
               {pkg.capacity} คน

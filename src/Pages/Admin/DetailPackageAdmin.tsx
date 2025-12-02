@@ -6,7 +6,7 @@ import { EditIcon } from "../../Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
-import type { JSX } from "react/jsx-runtime"; 
+import type { JSX } from "react/jsx-runtime";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -320,7 +320,7 @@ export default function DetailPackageAdmin() {
             {/* ปุ่มย้อนกลับ -> ไปหน้าประวัติแพ็กเกจของ Admin */}
             <div
               className="mt-1 mr-3 cursor-pointer"
-              onClick={() => navigate("/package/histories")} // ✅ แก้จาก /super/packages/all
+              onClick={() => navigate("/package/histories")}
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
@@ -380,7 +380,7 @@ export default function DetailPackageAdmin() {
 
         {/* จำนวนคน / ราคา */}
         <div className="flex flex-wrap gap-6 mb-6">
-          <div className="flex flex-row mr-100">
+          <div className="flex flex-row mr-143">
             <p className="text-md text-gray-800">
               <strong>จำนวนคนที่เปิดรับ : </strong>
               {pkg.capacity} คน

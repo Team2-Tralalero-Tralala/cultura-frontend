@@ -6,8 +6,7 @@
  * Input: -
  * Output: หน้าตารางจัดการแพ็กเกจ
  */
-
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "@/Components/Tables/Index";
 import type {
@@ -19,13 +18,11 @@ import { TrashIcon } from "../../Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
 import Button from "@/Components/Button";
-import { Modal } from "@/Components/Modal/Modal"; // [FIX] Import Modal
+import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-// ====== Config ======
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// ====== Local row type (ไม่พึ่ง PackageRow) ======
 type Row = {
   id: number;
   title: string;
@@ -43,9 +40,8 @@ const bulkActions: BulkAction<Row>[] = [
     intent: "danger",
     confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
     onClick: async (rows) => {
-      const ids = rows.map((row) => row.id);
-      console.log("bulk delete:", ids);
-      // TODO: ถ้ามี endpoint bulk delete ให้เรียกที่นี่
+      const packageIdList = rows.map((row) => row.id);
+      console.log("bulk delete:", packageIdList);
     },
   },
 ];
@@ -56,6 +52,7 @@ export default function ManagePackageSuperAdmin() {
       key: "title",
       header: "ชื่อแพ็กเกจ",
       className: "min-w-[240px]",
+
       /*
        * คำอธิบาย : Render ชื่อแพ็กเกจเป็นปุ่มที่คลิกได้
        * Input: row - ข้อมูลแถว
@@ -86,15 +83,11 @@ export default function ManagePackageSuperAdmin() {
   ];
   const navigate = useNavigate();
 
-  // table state
   const [tableRows, setTableRows] = React.useState<Row[]>([]);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState<number>(10);
   const [totalItems, setTotalItems] = React.useState<number>(0);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-
-  // State สำหรับ Modal การลบ
   const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -106,8 +99,6 @@ export default function ManagePackageSuperAdmin() {
   const reloadPackages = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
-
       const response = await axios.get(`${apiUrl}/super/packages`, {
         params: { page: currentPage, limit: pageSize },
         withCredentials: true,
@@ -123,7 +114,7 @@ export default function ManagePackageSuperAdmin() {
 
       if (!Array.isArray(rawDataList)) {
         console.warn("Expected array but got:", rawDataList);
-        rawDataList = []; // กันพังไว้ก่อน
+        rawDataList = [];
       }
 
       const totalCount =
@@ -159,12 +150,6 @@ export default function ManagePackageSuperAdmin() {
       setTotalItems(Number.isFinite(totalCount) ? Number(totalCount) : mappedRows.length);
     } catch (error: any) {
       console.error("reloadPackages error:", error?.response?.data ?? error);
-      setErrorMessage(
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "โหลดข้อมูลไม่สำเร็จ"
-      );
     } finally {
       setIsLoading(false);
     }
@@ -177,17 +162,11 @@ export default function ManagePackageSuperAdmin() {
    */
   const handleConfirmDelete = useCallback(async () => {
     if (!rowToDelete) return;
-
     const rowId = rowToDelete.id;
     const rowTitle = rowToDelete.title;
-
     setIsDeleteModalOpen(false);
 
     try {
-      // ถ้า backend ของคุณลบด้วย DELETE:
-      // await axios.delete(`${apiUrl}/super/package/${rowId}`, { withCredentials: true });
-
-      // ถ้าเป็น soft-delete ด้วย PATCH (สมมติใช้ path นี้):
       await axios.patch(
         `${apiUrl}/super/package/${rowId}`,
         null,
@@ -205,12 +184,10 @@ export default function ManagePackageSuperAdmin() {
         }`
       );
     } finally {
-      setRowToDelete(null); // ล้างค่าที่เลือกไว้
+      setRowToDelete(null);
     }
   }, [rowToDelete, reloadPackages]);
 
-
-  // การกระทำต่อแถว
   const rowActions: DataTableActionsConfig<Row> = React.useMemo(
     () => ({
       header: "จัดการ",
@@ -221,20 +198,17 @@ export default function ManagePackageSuperAdmin() {
       callbacks: {
         edit: (row) => navigate(`/super/package/${row.id}/edit`),
         delete: (row) => {
-          // [FIX] เปลี่ยนจากการเรียก window.confirm เป็นการเปิด Modal
           setRowToDelete(row);
           setIsDeleteModalOpen(true);
         },
       },
     }),
-    [navigate] // ลบ reloadPackages ออกเพราะย้ายไป handleConfirmDelete
+    [navigate]
   );
 
   React.useEffect(() => {
     reloadPackages();
   }, [reloadPackages]);
-
-  // ค้นหา
   const [searchQuery, setSearchQuery] = useState("");
 
   /*
@@ -282,9 +256,19 @@ export default function ManagePackageSuperAdmin() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าคำขออนุมัติแพ็กเกจของผู้ดูแลระบบ
+  * Input : -
+  * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/super/package-requests"
+  */
   const goToApprovalRequests = () => navigate("/super/package-requests");
 
-
+  /*
+  * คำอธิบาย : กำหนดออบเจกต์การแบ่งหน้า (Pagination) สำหรับส่งให้ Component DataTable
+  * Input : - (ใช้ currentPage, pageSize และ totalItems จาก state ภายใน Component)
+  * Output : ออบเจกต์ pagination ที่ประกอบด้วย currentPage, totalPages, totalCount และ limit
+  */
   const pagination = React.useMemo(() => ({
     currentPage,
     totalPages: Math.max(1, Math.ceil((totalItems || 0) / (pageSize || 10))),
@@ -292,23 +276,22 @@ export default function ManagePackageSuperAdmin() {
     limit: pageSize,
   }), [currentPage, pageSize, totalItems]);
 
-
-
-
-
   return (
-
     <div className="space-y-4">
-
       {/* Breadcrumb */}
       <div>
-        พื้นนที่ Breadcrumb
+        <Breadcrumb
+          current={{
+            label: "จัดการแพ็กเกจ",
+            to: `/super/packages/all`,
+            fromSidebar: true,
+          }}
+        />
       </div>
-      
+
       {/* หัวข้อและช่องค้นหา */}
       <div className="flex flex-col gap-2 -mt-3">
         <h1 className="text-xl font-bold">จัดการแพ็กเกจ</h1>
-
         <div className="flex items-center gap-3">
           <div className="flex-1 max-w-md">
             <SearchBarTable

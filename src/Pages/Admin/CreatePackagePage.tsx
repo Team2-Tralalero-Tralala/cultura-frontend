@@ -1,4 +1,4 @@
-/*
+/**
  * คำอธิบาย : Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
  * - ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ (หน้าตาเหมือนหน้าแก้ไข)
  * - รองรับการอัปโหลดรูปภาพ (Cover/Gallery/Video)
@@ -22,7 +22,6 @@ import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
@@ -32,8 +31,6 @@ import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
-
-/* -------------------- Helpers -------------------- */
 
 /*
  * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
@@ -53,8 +50,6 @@ function toIntOrNull(value: any): number | null {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
-/* ------------------------------------------------------------------------------- */
-
 type PackageForm = {
   name: string;
   description: string;
@@ -69,11 +64,9 @@ type PackageForm = {
   latitude: string;
   longitude: string;
   placeQuery: string;
-
   overseerMemberId: string;
   tagId: string;
   facility: string;
-
   startDate: string;
   startTime: string;
   endDate: string;
@@ -82,16 +75,15 @@ type PackageForm = {
   openTime: string;
   closeDate: string;
   closeTime: string;
-
   capacity: string;
   price: string;
-  addHomestay: boolean;
+  isAddHomestay: boolean;
 };
 
 const initialFormState: PackageForm = {
   name: "",
   description: "",
-  statusPackage: "DRAFT", // ค่าเริ่มต้นเป็น DRAFT
+  statusPackage: "DRAFT",
   houseNumber: "",
   villageNumber: "",
   province: "",
@@ -102,11 +94,9 @@ const initialFormState: PackageForm = {
   latitude: "",
   longitude: "",
   placeQuery: "",
-
   overseerMemberId: "",
   tagId: "",
   facility: "",
-
   startDate: "",
   startTime: "",
   endDate: "",
@@ -115,18 +105,20 @@ const initialFormState: PackageForm = {
   openTime: "",
   closeDate: "",
   closeTime: "",
-
   capacity: "",
   price: "",
-  addHomestay: false,
+  isAddHomestay: false,
 };
 
-// ================== ZOD SCHEMA ==================
 const packageSchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
   description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
   statusPackage: z.enum(["DRAFT", "PUBLISH", "UNPUBLISH"]),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  addressDetail: z.string().min(1, "กรุณากรอกรายละเอียดที่อยู่"),
   overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
   capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
   price: z.string().min(1, "กรุณากรอกราคา"),
@@ -145,38 +137,30 @@ type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
 export const CreatePackagePage = () => {
   const navigate = useNavigate();
-
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
-
   const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(false); // Create ไม่ต้อง load data เริ่มต้น
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
+  const [isLoading, setLoading] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
   const [formErrors, setFormErrors] = useState<PackageErrors>({});
   const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
-
   const [tagIds, setTagIds] = useState<number[]>([]);
-
-  // ====== รูปภาพ ======
   const [coverFiles, setCoverFiles] = useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([])
-
-  // สำหรับ BoxDateInput
   const [startDateObj, setStartDateObj] = useState<Date | null>(null);
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
-
-  // วันที่เช็กอิน/เอาต์ ที่พัก (optional)
   const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
   const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
+   * Input: fieldName (ชื่อ Field), fieldValue (ค่าของ Field), newState (ข้อมูลฟอร์มใหม่)
+   * Output: -
+   */
   const validateField = React.useCallback(
     (field: keyof PackageForm, value: any, newState: PackageForm) => {
       const result = packageSchema.safeParse(newState);
@@ -190,6 +174,11 @@ export const CreatePackagePage = () => {
     []
   );
 
+  /*
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนบันทึก
+   * Input: -
+   * Output: สถานะความถูกต้อง (Boolean)
+   */
   const validateAll = () => {
     let isValid = true;
     const result = packageSchema.safeParse(formState);
@@ -238,7 +227,6 @@ export const CreatePackagePage = () => {
     return isValid;
   };
 
-  // ===== Member picker =====
   type MemberOption = { id: number; fname: string; lname: string };
   const [memberQuery, setMemberQuery] = useState("");
   const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
@@ -263,12 +251,6 @@ export const CreatePackagePage = () => {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const canSubmitForm = useMemo(() => {
-    // Basic check
-    return true;
-  }, [formState]);
-
-  // ===== Homestay picker =====
   type HomestayOption = {
     id: number;
     name: string;
@@ -279,9 +261,8 @@ export const CreatePackagePage = () => {
   const [homestayQuery, setHomestayQuery] = useState("");
   const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
   const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
-
   const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openHomestayBox, setOpenHomestayBox] = useState(false);
+  const [isOpenHomestayBox, setOpenHomestayBox] = useState(false);
 
   React.useEffect(() => {
     const onDown = (event: MouseEvent) => {
@@ -292,20 +273,14 @@ export const CreatePackagePage = () => {
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
-  // CreatePackagePage.tsx
 
   useEffect(() => {
     const fetchMyCommunity = async () => {
       try {
-        // ✅ ใช้ API ที่มีอยู่แล้ว
-        const response = await axios.get(`${apiUrl}/admin/community`, { // หรือ /admin/community/own
+        const response = await axios.get(`${apiUrl}/admin/community`, {
           withCredentials: true
         });
-
-        // แกะเอา ID ออกมา
-        // response.data.data คือ object community
         const myCommId = response.data?.data?.id;
-
         if (myCommId) {
           setCommunityId(Number(myCommId));
         }
@@ -317,14 +292,16 @@ export const CreatePackagePage = () => {
     fetchMyCommunity();
   }, []);
 
-  const MIN_HOMESTAY_QUERY_CHARS = 0; // ให้กดแล้วขึ้นเลยก็ได้ถ้าต้องการ
+  const MIN_HOMESTAY_QUERY_CHARS = 0;
 
+  /*
+   * คำอธิบาย : ฟังก์ชันดึงข้อมูลรายการที่พักจาก Server ตามคำค้นหา
+   * Input: query (คำค้นหา)
+   * Output: -
+   */
   const fetchHomestays = React.useCallback(async (query: string) => {
     const trimmedQuery = query.trim();
-
     try {
-      // NOTE: ใช้ endpoint ของ Member เพื่อดึงที่พักในชุมชนของผู้ใช้งานปัจจุบัน (Admin)
-      // หรือถ้ามี endpoint admin โดยเฉพาะก็เปลี่ยนได้เลย
       const response = await axios.get(`${apiUrl}/admin/list-homestays`, {
         params: { q: trimmedQuery, limit: 8 },
         withCredentials: true,
@@ -347,7 +324,6 @@ export const CreatePackagePage = () => {
 
   React.useEffect(() => {
     const timerId = setTimeout(() => {
-      // ดึงข้อมูลเมื่อมีการพิมพ์ หรือถ้า query ว่าง (อาจจะดึงทั้งหมดมาแสดงตอน focus)
       if (homestayQuery || document.activeElement === homestayBoxRef.current?.querySelector('input')) {
         fetchHomestays(homestayQuery);
       }
@@ -355,6 +331,11 @@ export const CreatePackagePage = () => {
     return () => clearTimeout(timerId);
   }, [homestayQuery, fetchHomestays]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับเลือกที่พักจากรายการค้นหา
+   * Input: homestay (ข้อมูลที่พักที่เลือก)
+   * Output: -
+   */
   const chooseHomestay = (homestay: HomestayOption) => {
     setSelectedHomestay(homestay);
     setHomestayQuery("");
@@ -363,6 +344,11 @@ export const CreatePackagePage = () => {
     setFormField("tagId" as any, formState.tagId);
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าในฟอร์มและตรวจสอบความถูกต้องทันที
+   * Input: fieldName (ชื่อ Field), fieldValue (ค่าใหม่)
+   * Output: -
+   */
   const setFormField = React.useCallback(
     <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
       setFormState((prev) => {
@@ -374,13 +360,17 @@ export const CreatePackagePage = () => {
     [validateField]
   );
 
-  // ====== Homestay check-in/out ======
   const [hsCheckInDate, setHsCheckInDate] = useState("");
   const [hsCheckInTime, setHsCheckInTime] = useState("");
   const [hsCheckOutDate, setHsCheckOutDate] = useState("");
   const [hsCheckOutTime, setHsCheckOutTime] = useState("");
   const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
+   * Input: -
+   * Output: -
+   */
   const clearHomestay = () => {
     setSelectedHomestay(null);
     setHsCheckInDateObj(null);
@@ -392,19 +382,26 @@ export const CreatePackagePage = () => {
     setHsBookedRoom("1");
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
+   * Input: [latitude, longitude] (พิกัดละติจูดและลองจิจูด)
+   * Output: - (อัปเดต state ในฟอร์ม)
+   */
   const handleMapChange = React.useCallback(([latitude, longitude]: [number, number]) => {
     setFormField("latitude", String(latitude));
     setFormField("longitude", String(longitude));
     setPosition([latitude, longitude]);
   }, [setFormField]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
+   * Input: -
+   * Output: -
+   */
   const handleConfirmSave = async () => {
     setIsConfirmModalOpen(false);
     if (isSaving) return;
-
     setIsSaving(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
 
     try {
       const payload = {
@@ -415,30 +412,22 @@ export const CreatePackagePage = () => {
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
         warning: normalizeOrDefault(formState.facility),
-
         startDate: normalizeOrDefault(formState.startDate),
         dueDate: normalizeOrDefault(formState.endDate),
         ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
         ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-
         bookingOpenDate: normalizeOrDefault(formState.openDate),
         bookingCloseDate: normalizeOrDefault(formState.closeDate),
-
         ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-
         ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
         ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
         ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
         ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
         ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-
         facility: normalizeOrDefault(formState.facility),
-
         tagIds,
-
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
-
         location: {
           houseNumber: normalizeOrDefault(formState.houseNumber),
           villageNumber: toIntOrNull(formState.villageNumber),
@@ -457,56 +446,52 @@ export const CreatePackagePage = () => {
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
       videoFiles.forEach((file: any) => formData.append("video", file));
-
-      // NOTE: Endpoint สำหรับ Admin Create
       await axios.post(`${apiUrl}/admin/package`, formData, {
         withCredentials: true,
       });
 
-      // นำทางกลับไปยังหน้ารายการ
       navigate("/admin/packages/all");
     } catch (error: any) {
-      console.error("Create package error:", error?.response?.data);
-      setErrorMessage(
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "สร้างแพ็กเกจไม่สำเร็จ",
-      );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
     }
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
+   * Input: event (เหตุการณ์จากฟอร์ม)
+   * Output: - (เปิด Modal ยืนยัน หรือแสดง Error)
+   */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSaving) return;
-
     if (!validateAll()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
     if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
     setIsConfirmModalOpen(true);
   }
+
 
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
       {/* Breadcrumb */}
       <div>
-        พื้นที่ใส่ Breadcrumb
+        <Breadcrumb
+          current={{
+            label: "เพิ่มแพ็กเกจ",
+            to: `/admin/package/create`,
+          }}
+        />
       </div>
       <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
@@ -554,9 +539,6 @@ export const CreatePackagePage = () => {
               error={!!formErrors?.description}
               helperText={formErrors?.description}
             />
-            {!!formErrors.description && (
-              <div className="text-red-600 text-sm mt-1">{formErrors.description}</div>
-            )}
           </div>
         </section>
 
@@ -583,13 +565,23 @@ export const CreatePackagePage = () => {
               helperText={formErrors.villageNumber}
             />
 
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 relative">
               <ThailandLocationSelector
                 value={{
                   province: formState.province,
                   district: formState.district,
                   subdistrict: formState.subDistrict,
                   postalCode: formState.postalCode,
+                }}
+                error={{
+                  province: !!formErrors.province,
+                  district: !!formErrors.district,
+                  subdistrict: !!formErrors.subDistrict,
+                }}
+                helperText={{
+                  province: formErrors.province,
+                  district: formErrors.district,
+                  subdistrict: formErrors.subDistrict,
                 }}
                 onChange={(location: ThailandLocation) => {
                   setFormState((prev) => {
@@ -598,18 +590,19 @@ export const CreatePackagePage = () => {
                       province: location.province ?? "",
                       district: location.district ?? "",
                       subDistrict: location.subdistrict ?? "",
-                      postalCode: location.postalCode ?? "",
+                      postalCode: location.postalCode ? String(location.postalCode) : "",
                     };
+                    setFormErrors((prevErrors) => ({
+                      ...prevErrors,
+                      province: location.province ? undefined : prevErrors.province,
+                      district: location.district ? undefined : prevErrors.district,
+                      subDistrict: location.subdistrict ? undefined : prevErrors.subDistrict,
+                      postalCode: location.postalCode ? undefined : prevErrors.postalCode,
+                    }));
                     return newState;
                   });
                 }}
               />
-              <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
-                <div>{!!formErrors.province && <div className="text-red-600 text-sm">{formErrors.province}</div>}</div>
-                <div>{!!formErrors.district && <div className="text-red-600 text-sm">{formErrors.district}</div>}</div>
-                <div>{!!formErrors.subDistrict && <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>}</div>
-                <div>{!!formErrors.postalCode && <div className="text-red-600 text-sm">{formErrors.postalCode}</div>}</div>
-              </div>
             </div>
 
             <div className="md:col-span-2">
@@ -626,7 +619,7 @@ export const CreatePackagePage = () => {
             </div>
 
             <div className="md:col-span-2">
-              {!loading && (
+              {!isLoading && (
                 <MapPicker
                   startingPosition={position}
                   startingZoom={13}
@@ -645,7 +638,7 @@ export const CreatePackagePage = () => {
                 communityId={communityId}
                 value={formState.overseerMemberId ? Number(formState.overseerMemberId) : undefined}
                 member={currentOverseer}
-                disabled={loading}
+                disabled={isLoading}
                 error={!!formErrors.overseerMemberId}
                 helperText={formErrors.overseerMemberId}
                 onChange={(newId) => {
@@ -681,9 +674,6 @@ export const CreatePackagePage = () => {
               error={!!formErrors?.facility}
               helperText={formErrors?.facility}
             />
-            {!!formErrors.facility && (
-              <div className="text-red-600 text-sm mt-1">{formErrors.facility}</div>
-            )}
           </div>
         </section>
 
@@ -895,7 +885,7 @@ export const CreatePackagePage = () => {
               />
             </div>
 
-            {openHomestayBox && homestayOptions.length > 0 && (
+            {isOpenHomestayBox && homestayOptions.length > 0 && (
               <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
                 {homestayOptions.map((homestay) => (
                   <button

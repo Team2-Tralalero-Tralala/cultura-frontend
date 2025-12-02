@@ -137,21 +137,31 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
         emitChange("");
     };
 
-    return (
+return (
         <div className={`relative w-full ${className ?? ""}`}>
-            {label && (
-                <label htmlFor={inputId} className="text-base font-semibold pl-0.5">
-                    {label}
-                    {required && <span className="text-red-500 ml-0.5">*</span>}
-                </label>
-            )}
+            {/* ปรับ Label Wrapper เป็น flex เพื่อใส่ Error ด้านขวา */}
+            <div className="flex items-center justify-between mb-1.5">
+                {label && (
+                    <label htmlFor={inputId} className="text-base font-semibold text-gray-800">
+                        {label}
+                        {required && <span className="text-red-600 ml-0.5">*</span>}
+                    </label>
+                )}
+                
+                {/* ส่วนแสดงข้อความ Error */}
+                {hasError && (
+                    <span className="text-xs text-red-600 ml-2 whitespace-nowrap">
+                        {errorText}
+                    </span>
+                )}
+            </div>
 
             <div className="relative mt-1">
-                {/* กล่องหลัก – หน้าตาเหมือนของเดิม */}
+                {/* กล่องหลัก */}
                 <div
                     id={inputId}
                     className={[
-                        "block w-full rounded-form border-1 px-5 py-2 pr-10",
+                        "block w-full rounded-form border px-5 py-2 pr-10",
                         "bg-white font-sarabun text-base leading-relaxed",
                         "flex items-center gap-2",
                         disabled ? "opacity-60 cursor-not-allowed" : "",
@@ -165,7 +175,6 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
                         .join(" ")}
                     style={{ height: resolvedHeight }}
                 >
-                    {/* HH */}
                     <input
                         inputMode="numeric"
                         placeholder="ชม."
@@ -177,7 +186,6 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
 
                     <span className="text-gray-500 select-none">:</span>
 
-                    {/* mm */}
                     <input
                         inputMode="numeric"
                         placeholder="นาที"
@@ -188,16 +196,13 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
                     />
                 </div>
 
-                {/* input type="time" แบบซ่อน ใช้สำหรับเรียก time picker */}
                 <input
                     ref={hiddenTimeRef}
                     type="time"
                     className="sr-only"
                     onChange={handleHiddenTimeChange}
-                    // ถ้าอยากกำหนด step เป็นนาที/วินาที ก็ใส่เพิ่มได้ เช่น step={60}
                 />
 
-                {/* ปุ่มล้างค่า */}
                 {hasValue && !disabled && (
                     <button
                         type="button"
@@ -209,7 +214,6 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
                     </button>
                 )}
 
-                {/* ไอคอนนาฬิกา (ตกแต่ง) */}
                 <button
                     type="button"
                     onClick={handleClockClick}
@@ -220,7 +224,6 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
                     <Icon icon="uil:clock" className="w-[22px] h-[22px]" />
                 </button>
             </div>
-
         </div>
     );
 };

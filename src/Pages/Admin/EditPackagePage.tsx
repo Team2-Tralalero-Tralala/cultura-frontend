@@ -1,4 +1,4 @@
-/*
+/**
  * คำอธิบาย : Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
  * - ดึงข้อมูลแพ็กเกจเดิมมาแสดงในฟอร์ม
  * - รองรับการอัปเดตข้อมูล, รูปภาพ (Cover/Gallery), และที่พักที่เกี่ยวข้อง
@@ -6,7 +6,6 @@
  * Input: (via URL params) id - ID ของแพ็กเกจที่ต้องการแก้ไข
  * Output: หน้าฟอร์มสำหรับแก้ไขข้อมูลแพ็กเกจ
  */
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -22,8 +21,6 @@ import Button from "@/Components/Button";
 import CommunityMemberSelector, {
     type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-
-// ==== เพิ่มให้ตรงกับ EditHomestay ====
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
@@ -31,11 +28,8 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
-// =====================================
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
-
-/* -------------------- Helpers -------------------- */
 
 /*
  * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
@@ -73,9 +67,9 @@ function toTimeInput(input?: string | Date | null) {
         return `${hours}:${minutes}`;
     }
     if (typeof input === "string") {
-        const m = input.match(/^(\d{2}):(\d{2})/);
-        if (m) {
-            return `${m[1].padStart(2, "0")}:${m[2].padStart(2, "0")}`;
+        const timeMatch = input.match(/^(\d{2}):(\d{2})/);
+        if (timeMatch) {
+            return `${timeMatch[1].padStart(2, "0")}:${timeMatch[2].padStart(2, "0")}`;
         }
     }
 
@@ -125,7 +119,6 @@ async function urlToFile(url: string, filename: string): Promise<File> {
 function buildImageCandidates(rawPath: string): string[] {
     if (!rawPath) return [];
     if (/^https?:\/\//i.test(rawPath)) return [rawPath];
-
     const origin = (() => {
         try {
             return new URL(apiUrl).origin;
@@ -133,13 +126,11 @@ function buildImageCandidates(rawPath: string): string[] {
             return window.location.origin;
         }
     })();
-
     const cleanedPath = String(rawPath).replace(/\\/g, "/").replace(/^\.?\/*/, "");
     const prefixes = [
         "",
         "uploads/"
     ];
-
     const candidates = new Set<string>();
     for (const prefix of prefixes) {
         const path = cleanedPath.startsWith(prefix) ? cleanedPath : `${prefix}${cleanedPath}`;
@@ -166,7 +157,6 @@ async function bestEffortUrlToFile(rawPath: string, filename: string): Promise<F
     }
     throw lastError || new Error("no image url works");
 }
-/* ------------------------------------------------------------------------------- */
 
 type PackageForm = {
     name: string;
@@ -182,11 +172,9 @@ type PackageForm = {
     latitude: string;
     longitude: string;
     placeQuery: string;
-
     overseerMemberId: string;
-    tagId: string; // (ไม่ได้ใช้แล้ว แต่คงไว้ให้ safest)
+    tagId: string;
     facility: string;
-
     startDate: string;
     startTime: string;
     endDate: string;
@@ -195,7 +183,6 @@ type PackageForm = {
     openTime: string;
     closeDate: string;
     closeTime: string;
-
     capacity: string;
     price: string;
     addHomestay: boolean;
@@ -215,11 +202,9 @@ const initialFormState: PackageForm = {
     latitude: "",
     longitude: "",
     placeQuery: "",
-
     overseerMemberId: "",
     tagId: "",
     facility: "",
-
     startDate: "",
     startTime: "",
     endDate: "",
@@ -234,7 +219,6 @@ const initialFormState: PackageForm = {
     addHomestay: false,
 };
 
-// ================== ZOD SCHEMA ==================
 const packageSchema = z.object({
     name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
     description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
@@ -259,7 +243,6 @@ type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 export const EditPackagePage = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
-
     const [formState, setFormState] = useState<PackageForm>(initialFormState);
     const [communityId, setCommunityId] = useState<number | undefined>(undefined);
     const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
@@ -267,30 +250,19 @@ export const EditPackagePage = () => {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
     const [formErrors, setFormErrors] = useState<PackageErrors>({});
     const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
-
-    // ====== Tag (ใช้วิธีเดียวกับ EditHomestay) ======
     const [tagIds, setTagIds] = useState<number[]>([]);
-
-    // ====== รูปภาพ (เหมือน EditHomestay) ======
     const [coverFiles, setCoverFiles] = useState<File[]>([]);
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [videoFiles, setVideoFiles] = useState<File[]>([])
-
-    // สำหรับ BoxDateInput (เหมือน EditCommunity)
     const [startDateObj, setStartDateObj] = useState<Date | null>(null);
     const [endDateObj, setEndDateObj] = useState<Date | null>(null);
     const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
     const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
-
-    // วันที่เช็กอิน/เอาต์ ที่พัก (optional)
     const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
     const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
-
 
     /*
      * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -363,7 +335,6 @@ export const EditPackagePage = () => {
         return isValid;
     };
 
-    // ===== Member picker (คงของเดิม) =====
     type MemberOption = { id: number; fname: string; lname: string };
     const [memberQuery, setMemberQuery] = useState("");
     const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
@@ -379,9 +350,8 @@ export const EditPackagePage = () => {
     }, [memberQuery]);
 
     const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
-    const [openTagBox, setOpenTagBox] = useState(false); // ไม่ใช้แล้ว แต่คงตัวแปรไว้ให้ compile
+    const [openTagBox, setOpenTagBox] = useState(false);
 
-    // Effect สำหรับปิดกล่องเมื่อคลิกข้างนอก
     React.useEffect(() => {
         const onDown = (event: MouseEvent) => {
             if (!searchBoxRef.current) return;
@@ -415,7 +385,6 @@ export const EditPackagePage = () => {
         return required.every((value) => String(value ?? "").trim() !== "");
     }, [formState]);
 
-    // ===== Homestay picker (คงของเดิม) =====
     type HomestayOption = {
         id: number;
         name: string;
@@ -426,11 +395,9 @@ export const EditPackagePage = () => {
     const [homestayQuery, setHomestayQuery] = useState("");
     const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
     const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
-
     const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
     const [openHomestayBox, setOpenHomestayBox] = useState(false);
 
-    // Effect สำหรับปิดกล่อง Homestay เมื่อคลิกข้างนอก
     React.useEffect(() => {
         const onDown = (event: MouseEvent) => {
             if (homestayBoxRef.current && !homestayBoxRef.current.contains(event.target as Node)) {
@@ -440,7 +407,6 @@ export const EditPackagePage = () => {
         document.addEventListener("mousedown", onDown);
         return () => document.removeEventListener("mousedown", onDown);
     }, []);
-
 
     const MIN_HOMESTAY_QUERY_CHARS = 2;
 
@@ -478,7 +444,6 @@ export const EditPackagePage = () => {
         }
     }, [id]);
 
-    // Effect สำหรับ Debounce การค้นหาที่พัก
     React.useEffect(() => {
         const timerId = setTimeout(() => {
             fetchHomestays(homestayQuery);
@@ -515,7 +480,6 @@ export const EditPackagePage = () => {
         [validateField]
     );
 
-    // ====== Homestay check-in/out ======
     const [hsCheckInDate, setHsCheckInDate] = useState("");
     const [hsCheckInTime, setHsCheckInTime] = useState("");
     const [hsCheckOutDate, setHsCheckOutDate] = useState("");
@@ -538,7 +502,6 @@ export const EditPackagePage = () => {
         setHsBookedRoom("1");
     };
 
-    // ========= Load package detail =========
     useEffect(() => {
         let mounted = true;
 
@@ -565,22 +528,18 @@ export const EditPackagePage = () => {
                     });
                 }
                 if (!mounted || !packageData) return;
-
                 const locationData = packageData.location ?? {};
                 const latitude = Number(locationData.latitude ?? 13.7563);
                 const longitude = Number(locationData.longitude ?? 100.5018);
                 setPosition([latitude, longitude]);
-
                 const homestayHistory =
                     Array.isArray(packageData.homestayHistories) && packageData.homestayHistories.length > 0
                         ? packageData.homestayHistories[0]
                         : null;
-
                 const startDateRaw = packageData.startDate ?? null;
                 const dueDateRaw = packageData.dueDate ?? null;
                 const bookingOpenRaw = packageData.bookingOpenDate ?? null;
                 const bookingCloseRaw = packageData.bookingCloseDate ?? null;
-
                 const startParsed = startDateRaw ? new Date(startDateRaw) : null;
                 const dueParsed = dueDateRaw ? new Date(dueDateRaw) : null;
                 const openParsed = bookingOpenRaw ? new Date(bookingOpenRaw) : null;
@@ -606,11 +565,9 @@ export const EditPackagePage = () => {
                     latitude: locationData.latitude != null ? String(locationData.latitude) : "",
                     longitude: locationData.longitude != null ? String(locationData.longitude) : "",
                     placeQuery: "",
-
                     overseerMemberId: packageData.overseerMemberId != null ? String(packageData.overseerMemberId) : "",
                     tagId: "",
                     facility: packageData.warning ?? "",
-
                     startDate: toDateOnly(packageData.startDate),
                     startTime: toTimeInput(packageData.startDate),
                     endDate: toDateOnly(packageData.dueDate),
@@ -619,13 +576,11 @@ export const EditPackagePage = () => {
                     openTime: toTimeInput(packageData.bookingOpenDate),
                     closeDate: toDateOnly(packageData.bookingCloseDate),
                     closeTime: toTimeInput(packageData.bookingCloseDate),
-
                     capacity: packageData.capacity != null ? String(packageData.capacity) : "",
                     price: packageData.price != null ? String(packageData.price) : "",
                     addHomestay: !!homestayHistory,
                 });
 
-                // ตั้ง tagIds (เหมือนหน้า homestay)
                 const tagsFromServer: number[] = Array.isArray(packageData?.tagPackages)
                     ? packageData.tagPackages
                         .map((tagPackage: any) => tagPackage?.tag?.id ?? tagPackage?.id)
@@ -633,7 +588,6 @@ export const EditPackagePage = () => {
                     : [];
                 setTagIds(tagsFromServer);
 
-                // โหลดรูปของแพ็กเกจ (เหมือน homestay: cover + gallery)
                 const imagesData: any[] = Array.isArray(packageData?.packageFile) ? packageData.packageFile : [];
                 const coverFetched: File[] = await Promise.all(
                     imagesData
@@ -654,12 +608,8 @@ export const EditPackagePage = () => {
                         .filter((image) => String(image.type).toUpperCase() === "VIDEO")
                         .map(async (image) => {
                             const rawPath = String(image.filePath || image.image || "");
-
-                            // ใช้ candidate URL เดิมที่คุณมีอยู่แล้ว
                             const candidates = buildImageCandidates(rawPath);
-
                             let lastError: unknown = null;
-
                             for (const url of candidates) {
                                 try {
                                     const response = await fetch(url);
@@ -667,30 +617,23 @@ export const EditPackagePage = () => {
                                         lastError = new Error(`fetch ${url} -> ${response.status}`);
                                         continue;
                                     }
-
                                     const blob = await response.blob();
-
                                     const fixedBlob =
                                         blob.type && blob.type.startsWith("video/")
                                             ? blob
-                                            : new Blob([blob], { type: "video/mp4" });  // 👈 บังคับเป็น video/mp4
-
+                                            : new Blob([blob], { type: "video/mp4" });
                                     const filename = rawPath.split("/").pop() || "video.mp4";
-
                                     return new File([fixedBlob], filename, { type: fixedBlob.type });
                                 } catch (error) {
                                     lastError = error;
                                 }
                             }
-
                             throw lastError || new Error("no video url works");
                         })
                 );
                 setCoverFiles(coverFetched);
                 setGalleryFiles(galleryFetched);
                 setVideoFiles(videoFetched);
-
-                // ตั้ง homestay + เวลา (ถ้ามี)
                 if (homestayHistory?.homestay) {
                     setSelectedHomestay({
                         id: Number(homestayHistory.homestay.id),
@@ -700,14 +643,14 @@ export const EditPackagePage = () => {
                     });
                 }
                 if (homestayHistory?.checkInTime) {
-                    const d = new Date(homestayHistory.checkInTime);
-                    setHsCheckInDateObj(!isNaN(d.getTime()) ? d : null);
+                    const checkInDateObject = new Date(homestayHistory.checkInTime);
+                    setHsCheckInDateObj(!isNaN(checkInDateObject.getTime()) ? checkInDateObject : null);
                     setHsCheckInDate(toDateOnly(homestayHistory.checkInTime));
                     setHsCheckInTime(toTimeInput(homestayHistory.checkInTime));
                 }
                 if (homestayHistory?.checkOutTime) {
-                    const d = new Date(homestayHistory.checkOutTime);
-                    setHsCheckOutDateObj(!isNaN(d.getTime()) ? d : null);
+                    const checkOutDateObject = new Date(homestayHistory.checkOutTime);
+                    setHsCheckOutDateObj(!isNaN(checkOutDateObject.getTime()) ? checkOutDateObject : null);
                     setHsCheckOutDate(toDateOnly(homestayHistory.checkOutTime));
                     setHsCheckOutTime(toTimeInput(homestayHistory.checkOutTime));
                 }
@@ -747,7 +690,7 @@ export const EditPackagePage = () => {
      * Output : (void) - (async) นำทางไปยังหน้า list หากสำเร็จ, หรือแสดง error
      */
     const handleConfirmSave = async () => {
-        setIsConfirmModalOpen(false); // ปิด Modal
+        setIsConfirmModalOpen(false);
         if (!id || isSaving) return;
 
         setIsSaving(true);
@@ -755,7 +698,6 @@ export const EditPackagePage = () => {
         setSuccessMessage(null);
 
         try {
-            // payload หลัก (จะถูกใส่ลง fd ใน key "data")
             const payload = {
                 overseerMemberId: Number(formState.overseerMemberId),
                 name: normalizeOrDefault(formState.name),
@@ -764,15 +706,12 @@ export const EditPackagePage = () => {
                 capacity: Math.max(1, Number(formState.capacity || 0)),
                 price: Math.max(0, Number(formState.price || 0)),
                 warning: normalizeOrDefault(formState.facility),
-
                 startDate: normalizeOrDefault(formState.startDate),
                 dueDate: normalizeOrDefault(formState.endDate),
                 ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
                 ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-
                 bookingOpenDate: normalizeOrDefault(formState.openDate),
                 bookingCloseDate: normalizeOrDefault(formState.closeDate),
-
                 ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
                 ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
 
@@ -781,13 +720,9 @@ export const EditPackagePage = () => {
                 ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
                 ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
                 ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-
                 facility: normalizeOrDefault(formState.facility),
-
                 tagIds,
-
                 ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
-
                 location: {
                     houseNumber: normalizeOrDefault(formState.houseNumber),
                     villageNumber: toIntOrNull(formState.villageNumber),
@@ -801,18 +736,14 @@ export const EditPackagePage = () => {
                 },
             };
 
-            // ===== ส่งแบบเดียวกับ EditHomestay =====
             const formData = new FormData();
             formData.append("data", JSON.stringify(payload));
             coverFiles.forEach((file: any) => formData.append("cover", file));
             galleryFiles.forEach((file: any) => formData.append("gallery", file));
             videoFiles.forEach((file: any) => formData.append("video", file));
-
-            // NOTE: ให้ตรงกับ BE ที่รับ multipart ของ package
             await axios.put(`${apiUrl}/admin/package/${id}`, formData, {
                 withCredentials: true,
             });
-
             navigate("/admin/packages/all");
         } catch (error: any) {
             setErrorMessage(
@@ -837,14 +768,10 @@ export const EditPackagePage = () => {
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (!id || isSaving) return;
-
-        // Validate ข้อมูลก่อนเปิด Modal
         if (!validateAll()) {
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
-
-        // Validate เงื่อนไขวัน/เวลา ก่อนเปิด Modal
         if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
             setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -855,8 +782,6 @@ export const EditPackagePage = () => {
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
-
-        // เปิด Modal เพื่อยืนยัน
         setIsConfirmModalOpen(true);
     }
 
@@ -864,7 +789,12 @@ export const EditPackagePage = () => {
         <div className="w-full max-w-none px-0 lg:px-0">
             {/* Breadcrumb */}
             <div>
-                พื้นที่ใส่ Breadcrumb
+                <Breadcrumb
+                    current={{
+                        label: "แก้ไขแพ็กเกจ",
+                        to: `/admin/package/${id}/edit`,
+                    }}
+                />
             </div>
             <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
                 <button
@@ -913,9 +843,6 @@ export const EditPackagePage = () => {
                             error={!!formErrors?.description}
                             helperText={formErrors?.description}
                         />
-                        {!!formErrors.description && (
-                            <div className="text-red-600 text-sm mt-1">{formErrors.description}</div>
-                        )}
                     </div>
                 </section>
 
@@ -988,13 +915,6 @@ export const EditPackagePage = () => {
                                     });
                                 }}
                             />
-                            {/* errors */}
-                            <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
-                                <div>{!!formErrors.province && <div className="text-red-600 text-sm">{formErrors.province}</div>}</div>
-                                <div>{!!formErrors.district && <div className="text-red-600 text-sm">{formErrors.district}</div>}</div>
-                                <div>{!!formErrors.subDistrict && <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>}</div>
-                                <div>{!!formErrors.postalCode && <div className="text-red-600 text-sm">{formErrors.postalCode}</div>}</div>
-                            </div>
                         </div>
 
                         {/* คำอธิบายที่อยู่ */}
@@ -1019,11 +939,6 @@ export const EditPackagePage = () => {
                                     startingZoom={13}
                                     onChange={handleMapChange}
                                 />
-                            )}
-                            {loading && (
-                                <div className="w-full h-[400px] bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
-                                    กำลังโหลดแผนที่...
-                                </div>
                             )}
                             <div className="grid grid-cols-2 gap-3 mt-2">
                                 {!!formErrors.latitude && <div className="text-red-600 text-sm">{formErrors.latitude}</div>}
@@ -1068,9 +983,6 @@ export const EditPackagePage = () => {
                                 </div>
                             )}
                         </div>
-                        {!!formErrors.overseerMemberId && (
-                            <div className="text-red-600 text-sm">{formErrors.overseerMemberId}</div>
-                        )}
                     </div>
 
                     {/* ความจุ */}
@@ -1100,9 +1012,6 @@ export const EditPackagePage = () => {
                             error={!!formErrors?.facility}
                             helperText={formErrors?.facility}
                         />
-                        {!!formErrors.facility && (
-                            <div className="text-red-600 text-sm mt-1">{formErrors.facility}</div>
-                        )}
                     </div>
                 </section>
 
@@ -1206,7 +1115,7 @@ export const EditPackagePage = () => {
                     />
                 </section>
 
-                {/* แท็ก / ราคา (แท็กใช้ TagSelector เหมือน EditHomestay) */}
+                {/* แท็ก / ราคา */}
                 <section className="grid md:grid-cols-2 gap-5">
                     <div className="md:col-span-1">
                         <div ref={searchBoxRef}>
@@ -1228,7 +1137,7 @@ export const EditPackagePage = () => {
                     />
                 </section>
 
-                {/* สื่อแพ็กเกจ: COVER + GALLERY (เหมือน EditHomestay) */}
+                {/* สื่อแพ็กเกจ: COVER + GALLERY */}
                 <section className="space-y-6">
                     <div className="space-y-2">
                         <label className="block text-base font-semibold">
@@ -1426,7 +1335,6 @@ export const EditPackagePage = () => {
 
                                     <div className="col-span-12 sm:col-span-8">
                                         <div className="font-semibold text-lg mb-2">{selectedHomestay.name}</div>
-
                                         {selectedHomestay.facility && (
                                             <div>
                                                 <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>

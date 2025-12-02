@@ -75,7 +75,7 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/packages")) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (currentPath === "/booking/refund") {
+    } else if (currentPath === "/booking/refund-requests") {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
     } else if (currentPath === "/bookings-histories/all") {
@@ -171,7 +171,7 @@ const SidebarAdmin = () => {
 
           {/* === แพ็กเกจ === */}
           <Link
-            to={`${basePath}/packages`}
+            to={`${basePath}/packages/all`}
             onClick={() => handleClick("packages")}
             className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
               }`}
@@ -232,7 +232,7 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขอคืนเงิน",
-                "/booking/refund",
+                "/booking/refund-requests",
                 "mdi:cash-refund",
                 "booking-refunds",
                 "booking"

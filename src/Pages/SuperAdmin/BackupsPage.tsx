@@ -8,9 +8,11 @@
  * 5. แสดงสถานะเซิร์ฟเวอร์ (ออนไลน์/ออฟไลน์)
  * ใช้ร่วมกับ Component ย่อย เช่น DataTable, SearchBarTable, Modal
  */
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { BulkAction, Column, Pagination, RowAction } from "../../Components/Tables/Types";
 
 import { Modal } from "@/Components/Modal/Modal";
@@ -157,6 +159,7 @@ const bulkActions = (onBulkDelete: (filenames: string[]) => void): BulkAction<Ba
  * รวมถึง modal ยืนยันการลบและการแจ้งเตือนผลลัพธ์
  */
 export default function BackupsPage() {
+  const navigate = useNavigate();
   // ====== state ตาราง ======
   const [rows, setRows] = React.useState<BackupRow[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -298,19 +301,23 @@ export default function BackupsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 w-full">
-        <div>
-          <Breadcrumb
-            current={{
-              label: "สำรองข้อมูล",
-              to: "/super/backups",
-            }}
-          />
-        </div>
+        <Breadcrumb
+          current={{
+            label: "สำรองข้อมูล",
+            to: "/super/backups",
+          }}
+        />
         <div className="flex items-center justify-between align-top">
-          <div>
-            <h1 className="text-xl">สำรองข้อมูล</h1>
-            <div className="flex items-center justify-between gap-3 w-full">
-            </div>
+          <div className="flex flex-col gap-2">
+            <h1 className="flex items-center gap-2 text-xl font-bold">
+              <Icon
+                icon="lucide:arrow-left"
+                className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
+                onClick={() => navigate("/super/setting")}
+              />
+              สำรองข้อมูล
+            </h1>
+            <div className="flex items-center justify-between gap-3 w-full"></div>
             <div className="flex-1 max-w-md">
               <SearchBarTable
                 value={searchQuery}

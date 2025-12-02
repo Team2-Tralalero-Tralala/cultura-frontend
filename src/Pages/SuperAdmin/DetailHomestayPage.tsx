@@ -23,10 +23,8 @@ const BACKEND_BASE_URL =
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
 
-  // ตัด / หน้า "uploads" และตัด / ท้ายออก
   const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
 
-  // ถ้าไม่มีคำว่า uploads ใน path ให้เพิ่มเอง
   if (!cleaned.startsWith("uploads/")) {
     return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
   }
@@ -42,7 +40,6 @@ export default function HomestayDetailPage() {
   const { homestayId } = useParams<{ homestayId: string }>();
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
 
-  // โหลดข้อมูลจาก backend
   useEffect(() => {
     if (!homestayId) return;
     fetchHomestayDetail(Number(homestayId))
@@ -59,7 +56,6 @@ export default function HomestayDetailPage() {
   const show = (Value: any) => (Value ? Value : "-");
   const googleMapLink = `https://maps.google.com/?q=${homestay.location?.latitude},${homestay.location?.longitude}`;
 
-  // ดึงรูปหลักและรูปเพิ่มเติมจาก type
   const mainImage = homestay.homestayImage?.find(
     (img: any) => img.type === "COVER"
   );

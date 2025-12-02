@@ -338,10 +338,6 @@ export default function DashboardPage() {
         />
       </div>
       <div className="flex flex-col gap-2 w-full rounded-lg p-4 h-full">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl">รายงาน</h1>
-        </div>
-
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-gray-500">กำลังโหลดข้อมูล...</div>
@@ -397,7 +393,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex flex-col w-full p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-semibold">จำนวนการจองแพ็กเกจทั้งหมด</h3>
+                  <h3 className="text-xl font-bold">จำนวนการจองแพ็กเกจทั้งหมด</h3>
                   <div className="relative" ref={calendarRef}>
                     <button
                       type="button"
@@ -525,7 +521,7 @@ export default function DashboardPage() {
                   {/* Title and Date Range */}
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold">
-                      ข้อมูลจังหวัดทั้งหมดในช่วง {formatDateToString(dateRange[0])} -{" "}
+                      <span className="font-bold">ข้อมูลจังหวัด</span>ทั้งหมดในช่วง {formatDateToString(dateRange[0])} -{" "}
                       {formatDateToString(dateRange[1])}
                     </h3>
                   </div>
@@ -549,7 +545,7 @@ export default function DashboardPage() {
                   {/* Pie Graph Title */}
                   <div className="mb-4 mt-8">
                     <h3 className="text-lg font-semibold">
-                      แผนภูมิวงกลม แสดงข้อมูลของจังหวัด
+                      <span className="font-bold">แผนภูมิ</span>วงกลม แสดงข้อมูลของจังหวัด
                       {selectedProvince ? ` ${selectedProvince}` : "ทั้งหมด"} ในช่วง วันที่{" "}
                       {formatDateToString(dateRange[0])} - {formatDateToString(dateRange[1])}
                     </h3>

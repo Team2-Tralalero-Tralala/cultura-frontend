@@ -329,7 +329,6 @@ export function ManageAccountPage() {
               fromSidebar: true,   // << สำคัญ : มาจาก sidebar
             }}
           />
-        </div>
         <h1 className="text-[20px] font-bold text-black">
           จัดการบัญชี
         </h1>

@@ -1,8 +1,13 @@
 /* 
  * File: DailyDate.tsx
  * Component: DailyDate (Client)
- * คำอธิบาย: ปฏิทินรายวันแบบอินไลน์ (react-datepicker) แสดงเดือนไทย + ปี พ.ศ.
- *            ใช้สไตล์จาก DailyDatePickerContainer และแพตช์ year dropdown เป็น พ.ศ.
+ * มาตรฐาน: CS v1.1.1 (คอมเมนต์ไทย, ชื่อตัวแปร camelCase, ชื่อ Component เป็น PascalCase)
+ * บทบาท:
+ *   - ปฏิทินรายวันแบบอินไลน์ด้วย react-datepicker
+ *   - ใช้ locale ภาษาไทย (เดือน/วัน) และแพตช์ year dropdown ให้แสดงปี พ.ศ.
+ * ขอบเขต/ข้อกำหนด:
+ *   - ไม่แก้ไข logic การทำงานเดิม เพิ่มเฉพาะคอมเมนต์และปรับชื่อให้สื่อความหมาย
+ *   - ไม่มี any ในซิกเนเจอร์สาธารณะ/คอมโพเนนต์
  * Input (Props): -
  * Output: JSX อินไลน์เดตพิกเกอร์ (state ภายใน)
  */
@@ -17,69 +22,90 @@ import {
 import { subYears, addYears } from "date-fns";
 import { th } from "date-fns/locale";
 
+/* ---------- Constants ---------- */
 /*
- * ฟังก์ชัน/คงที่: weekdayShortTH
- * คำอธิบาย : map ย่อชื่อวันให้สั้นแบบไทย
- * Output    : Record<string,string>
+ * คงที่: thaiWeekdayShortMap
+ * คำอธิบาย: แผนที่ชื่อวัน (ไทยแบบเต็ม) → ชื่อย่อไทย สำหรับแสดงหัวคอลัมน์วัน
  */
-const weekdayShortTH: Record<string, string> = {
-    "อาทิตย์": "อา.",
-    "จันทร์": "จ.",
-    "อังคาร": "อ.",
-    "พุธ": "พ.",
-    "พฤหัสบดี": "พฤ.",
-    "ศุกร์": "ศ.",
-    "เสาร์": "ส.",
+const thaiWeekdayShortMap: Record<string, string> = {
+    อาทิตย์: "อา.",
+    จันทร์: "จ.",
+    อังคาร: "อ.",
+    พุธ: "พ.",
+    พฤหัสบดี: "พฤ.",
+    ศุกร์: "ศ.",
+    เสาร์: "ส.",
 };
 
+/* ---------- Component ---------- */
 /*
- * ฟังก์ชัน: DailyDate
- * คำอธิบาย : แสดงปฏิทินรายวัน (inline) พร้อมเดือนไทยและปี พ.ศ.
- * Input  : -
- * Output : JSX ของ react-datepicker (inline)
+ * คอมโพเนนต์: DailyDate
+ * คำอธิบาย: ปฏิทินรายวันอินไลน์ พร้อมเดือนไทยและปี พ.ศ. (ผ่านการแพตช์ dropdown)
  */
 export const DailyDate: React.FC = () => {
+    // วันที่ที่เลือก (ค่าเริ่มต้น: วันนี้)
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-    const today = useMemo(() => new Date(), []);
-    const containerRef = useRef<HTMLDivElement>(null);
 
-    /*
-     * ฟังก์ชัน: patchBEYearDropdown
-     * คำอธิบาย : ปรับข้อความปีใน year dropdown ให้เป็น พ.ศ. (จำกัดขอบเขตใน component ตัวเอง)
-     * Input  : -
+    // อ้างอิง "วันนี้" แบบคงที่ตลอดอายุคอมโพเนนต์
+    const today = useMemo(() => new Date(), []);
+
+    // อ้างอิง DOM ของคอนเทนเนอร์ react-datepicker เพื่อแพตช์ dropdown ปี
+    const datepickerContainerRef = useRef<HTMLDivElement>(null);
+
+    /**
+     * ฟังก์ชัน: patchBuddhistEraYearDropdown
+     * คำอธิบาย: ปรับข้อความปีใน year dropdown ของ react-datepicker เป็นปี พ.ศ. (+543)
+     * ขอบเขต: จำกัดผลเฉพาะภายในคอนเทนเนอร์ของคอมโพเนนต์นี้
      * Output : void
      */
-    const patchBEYearDropdown = () => {
-        const root = containerRef.current;
+    const patchBuddhistEraYearDropdown = (): void => {
+        const root = datepickerContainerRef.current;
         if (!root) return;
-        const selectEl = root.querySelector(".react-datepicker__year-select") as HTMLSelectElement | null;
-        if (!selectEl) return;
-        Array.from(selectEl.options).forEach((opt) => {
-            const y = Number(opt.value);
-            if (!Number.isNaN(y)) opt.textContent = String(y + 543);
+
+        const yearSelect = root.querySelector(
+            ".react-datepicker__year-select"
+        ) as HTMLSelectElement | null;
+
+        if (!yearSelect) return;
+
+        Array.from(yearSelect.options).forEach((opt) => {
+            const gregorian = Number(opt.value);
+            if (!Number.isNaN(gregorian)) {
+                opt.textContent = String(gregorian + 543);
+            }
         });
     };
 
-    // เรียกแพตช์ตอน mount และเมื่อ header ถูก re-render จากการเปลี่ยนเดือน/ปี (selectedDate)
+    /*
+     * Effect: เรียกแพตช์เมื่อ mount และทุกครั้งที่ selectedDate เปลี่ยน
+     * เหตุผล: หัวตารางของ react-datepicker ถูก re-render เมื่อเดือน/ปีเปลี่ยน
+     */
     useEffect(() => {
-        patchBEYearDropdown();
+        patchBuddhistEraYearDropdown();
     }, [selectedDate]);
 
+    /* ---------- Render ---------- */
     return (
         <DailyWrapper>
-            <DailyDatePickerContainer ref={containerRef}>
+            <DailyDatePickerContainer ref={datepickerContainerRef}>
                 <DatePicker
                     inline
                     selected={selectedDate ?? undefined}
-                    onChange={(d: Date | null) => setSelectedDate(d)}
+                    onChange={(nextDate: Date | null) => setSelectedDate(nextDate)}
                     dateFormat="dd/MM/yyyy"
                     isClearable={false}
                     shouldCloseOnSelect={false}
-                    formatWeekDay={(name) => weekdayShortTH[name] ?? name}
-                    locale={th}               /* เดือนไทยจาก locale */
+                    /* แปลงชื่อวันเป็นตัวย่อไทย (fallback เป็นค่าดั้งเดิมหากหาไม่เจอ) */
+                    formatWeekDay={(weekdayName: string) =>
+                        thaiWeekdayShortMap[weekdayName] ?? weekdayName
+                    }
+                    /* เดือนไทย/รูปแบบภาษาด้วย locale TH */
+                    locale={th}
+                    /* แสดง dropdown เดือน/ปี (ปีจะถูกแพตช์เป็น พ.ศ.) */
                     showMonthDropdown
-                    showYearDropdown          /* ปีใน dropdown ถูกแปลงเป็น พ.ศ. ด้วย patch */
+                    showYearDropdown
                     dropdownMode="select"
+                    /* จำกัดช่วงวันที่เลือกได้ (ย้อนหลัง 15 ปี ถึงล่วงหน้า 2 ปี) */
                     minDate={subYears(today, 15)}
                     maxDate={addYears(today, 2)}
                 />

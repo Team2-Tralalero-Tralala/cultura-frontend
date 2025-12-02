@@ -83,7 +83,7 @@ export default function ToggleSystemPage() {
       </div>
       <div className="flex flex-col gap-2 w-full bg-white rounded-lg p-4 h-full">
         <div className="flex items-center justify-between align-top">
-          <h1 className="text-xl">การเปิด/ปิด ระบบ</h1>
+          <h1 className="text-xl font-bold">การเปิด/ปิด ระบบ</h1>
           <div>
             สถานะเซิร์ฟเวอร์
             <div className="flex items-center gap-2 px-2 py-2 rounded-full bg-black text-white">
@@ -113,8 +113,8 @@ export default function ToggleSystemPage() {
               </h2>
             </div>
 
-            <h2 className="text-2xl font-medium flex items-center">
-              <Icon icon="material-symbols:settings" className="w-5 h-5" />
+            <h2 className="text-2xl font-medium flex items-center gap-2">
+              <Icon icon="streamline-pixel:coding-apps-websites-setting-computer" className="w-5 h-5" />
               คลิกปุ่มหากต้องการ{serverStatus ? "ปิด" : "เปิด"}ระบบ
             </h2>
           </div>

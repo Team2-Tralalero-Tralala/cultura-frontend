@@ -253,7 +253,6 @@ export function BlockedAccountPage() {
     },
   ];
 
-  // Section: Render
   return (
     <div className="space-y-4">
       {/* Section: Header */}
@@ -271,7 +270,6 @@ export function BlockedAccountPage() {
           การระงับบัญชี
         </h1>
 
-        {/* Section: Search bar */}
         <div className="flex items-center justify-between w-full mt-2">
           <div className="w-[260px]">
             <SearchBarTable
@@ -282,10 +280,8 @@ export function BlockedAccountPage() {
         </div>
       </div>
 
-      {/* Section: Error */}
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      {/* Section: Table */}
       <DataTable<BlockedAccountRow>
         data={filteredRows}
         getKey={(row) => row.id.toString()}
@@ -305,7 +301,6 @@ export function BlockedAccountPage() {
         bulkActions={bulkActions}
       />
 
-      {/* Section: Modal */}
       <Modal
         open={modalOpen}
         title={modalTitle}

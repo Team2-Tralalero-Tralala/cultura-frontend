@@ -18,6 +18,9 @@ export type AuthUser = {
   id: number;
   username: string;
   role: Role;
+  fname: string;
+  lname: string;
+  email: string;
 };
 
 type AuthContextValue = {
@@ -38,7 +41,7 @@ export const AuthContext = createContext<AuthContextValue>({
     throw new Error("login not implemented");
   },
   register: async () => false,
-  logout: async () => {},
+  logout: async () => { },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -56,11 +59,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const res = await axios.get("http://localhost:3000/api/auth/me", {
           withCredentials: true,
         });
-        const { id, username, role } = res.data.data;
+        const { id, username, role, fname, lname, email } = res.data.data;
         const authUser: AuthUser = {
           id: id,
           username: username,
           role: role,
+          fname: fname,
+          lname: lname,
+          email: email,
         };
         setUser(authUser);
       } catch (err) {
@@ -88,6 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           id: u.id,
           username: u.username,
           role: u.role.toLowerCase(),
+          fname: u.fname,
+          lname: u.lname,
+          email: u.email,
         };
 
         setUser(authUser);

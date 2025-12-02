@@ -251,6 +251,7 @@ export function EditCommunity() {
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([lat, lng]);
         setChecked(data.status === "OPEN" ? true : false);
+        setIsVisibleRating(data.isRatingVisible);
 
         const logoFileFetch: File[] = await Promise.all(
           (data.communityImage || [])
@@ -457,6 +458,7 @@ export function EditCommunity() {
       const payload = {
         ...cleanForm,
         communityMembers: selectedMembers,
+        isRatingVisible: isVisibleRating,
         bankName: formData.bankName,
         registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
         location: {

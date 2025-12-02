@@ -28,6 +28,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // Config
 const API_URL = import.meta.env.VITE_API_URL as string;
@@ -368,6 +369,15 @@ export default function CreateHomestaysPage() {
   // ===== Render =====
   return (
     <div className="w-full max-w-none px-8">
+      <div>
+            <Breadcrumb
+            current={{
+              label: "เพิ่มที่พัก",
+             to: `/super/community/${communityId}/homestay/create`,
+
+           }}
+          />
+          </div>
       {/* Alerts */}
       {errorMessage && (
         <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">

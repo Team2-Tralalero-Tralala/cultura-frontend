@@ -194,19 +194,14 @@ export default function ManageStoreAdmin() {
       {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         {/* Breadcrumb */}
-        <div className="-ml-6 pt-1 pb-1">
-          <Breadcrumb
-            items={[
-              {
-                label: communityName || "ชุมชน",
-                to: "/admin/community/own",
-              },
-              {
-                label: "จัดการร้านค้า",
-              },
-            ]}
-          />
-        </div>
+       <div>
+        <Breadcrumb
+     current={{
+        label: "จัดการร้านค้า",
+        to: "/admin/community/stores",
+      }}
+    />
+       </div>
 
         <h1 className="text-xl font-bold "> จัดการร้านค้า </h1>
 

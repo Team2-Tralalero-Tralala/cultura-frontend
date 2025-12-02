@@ -28,6 +28,7 @@ import type {
   DataTableActionsConfig,
   Pagination,
 } from "@/Components/Tables/Types";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // Type ของตาราง
 type StoreRow = {
@@ -195,26 +196,15 @@ export default function ManageStores() {
       {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         {/* Breadcrumb */}
-        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-          <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
-            จัดการชุมชน
-          </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
-          <Link
-            to={`/super/community/detail/${communityId}`}
-            className="text-gray-800 hover:text-dark-green font-medium"
-          >
-            {communityName || "ชุมชน"}
-          </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
-          <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
-        </nav>
+        <div>
+        <Breadcrumb
+                                      current={{
+                                      label: "จัดการร้านค้า",
+                                       to: `/super/community/${communityId}/stores/all`,
+
+
+                                     }}
+                                    /></div>
 
         {/* <-- หัวข้อ */}
         <Link
@@ -224,7 +214,7 @@ export default function ManageStores() {
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />
           <h1 className="text-xl font-bold">จัดการร้านค้า</h1>
         </Link>
-  
+
         <div className="flex items-center justify-between w-full mt-2">
           {/* Section: Search */}
           <div className="w-[260px]">

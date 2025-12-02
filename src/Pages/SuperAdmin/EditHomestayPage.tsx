@@ -26,6 +26,7 @@ import ThailandLocationSelector, {
 import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // Config Variables (UPPER_SNAKE_CASE ตามมาตรฐาน)
 const API_URL = import.meta.env.VITE_API_URL as string;
@@ -450,6 +451,15 @@ export default function EditHomestayPage() {
     // ===== Render =====
     return (
         <div className="w-full max-w-none px-8">
+          <div>
+                                  <Breadcrumb
+                                        current={{
+                                        label: "แก้ไขที่พัก",
+                                         to: `/super/community/${communityId}/homestay/${homestayId}/edit`,
+
+                                       }}
+                                      />
+                                </div>
             {/* Alerts */}
             {errorMessage && (
                 <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">

@@ -134,7 +134,7 @@ export function ManageAccountPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
 
   /**
    * ฟังก์ชัน: openModal
@@ -252,7 +252,7 @@ export function ManageAccountPage() {
     variant: "icons",
     className: "pr-11",
     items: () => ["block", "edit", "delete"],
-    
+
     callbacks: {
       block: (row) => {
         openModal(
@@ -321,11 +321,13 @@ export function ManageAccountPage() {
     <div className="space-y-4">
       {/* Section: Header */}
       <div className="flex flex-col w-full">
-        <div className="-ml-6 pt-1 pb-1">
+        <div>
           <Breadcrumb
-            items={[
-              { label: "จัดการบัญชึ"},
-            ]}
+            current={{
+              label: "จัดการบัญชี",
+              to: "/super/accounts/all",
+              fromSidebar: true,   // << สำคัญ : มาจาก sidebar
+            }}
           />
         </div>
         <h1 className="text-[20px] font-bold text-black">

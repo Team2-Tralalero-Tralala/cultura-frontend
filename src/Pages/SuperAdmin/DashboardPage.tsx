@@ -6,6 +6,7 @@
  * 3. ข้อมูลสถิติ (stats) - แสดงสถิติตามจังหวัด
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { WeeklyDate } from "@/Components/calendar/WeeklyDate";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
@@ -327,7 +328,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 h-full">
-      <h2 className="text-sm">รายงาน</h2>
+      <div>
+                         <Breadcrumb
+                           current={{
+                             label: "รายงานและสถิติ",
+                             to: "/super/dashboard",
+                             fromSidebar: true,
+
+                           }}
+                         />
+                       </div>
       <div className="flex flex-col gap-2 w-full rounded-lg p-4 h-full">
         <div className="flex items-center justify-between">
           <h1 className="text-xl">รายงาน</h1>

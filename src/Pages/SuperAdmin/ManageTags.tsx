@@ -14,6 +14,7 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import * as TagService from "@/Services/tag-service";
 
 import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
 
@@ -59,8 +60,8 @@ export default function ManageTags() {
             setIsLoading(true);
             setErrorMessage(null);
 
-            /* 
-             * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดจาก Service 
+            /*
+             * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดจาก Service
              */
             const res = await TagService.fetchTags(1, 1000);
             const data: TagRow[] = Array.isArray(res.data)
@@ -68,14 +69,14 @@ export default function ManageTags() {
                 : [];
 
             /*
-            * คำอธิบาย : กรองแท็กตามคำค้นหา 
+            * คำอธิบาย : กรองแท็กตามคำค้นหา
             */
             const filtered = data.filter((tag) =>
                 normalizeText(tag.name).includes(normalizeText(searchQuery))
             );
 
             /*
-            * คำอธิบาย : คำนวณ pagination 
+            * คำอธิบาย : คำนวณ pagination
             */
             const pages = Math.max(1, Math.ceil(filtered.length / pagination.limit));
             const safePage = Math.min(pagination.currentPage, pages);
@@ -83,7 +84,7 @@ export default function ManageTags() {
             const end = start + pagination.limit;
 
             /*
-            * คำอธิบาย : อัปเดต state ของ rows และ pagination 
+            * คำอธิบาย : อัปเดต state ของ rows และ pagination
             */
             setRows(filtered.slice(start, end));
             setPagination((prev) => ({
@@ -100,7 +101,7 @@ export default function ManageTags() {
     }, [pagination.currentPage, pagination.limit, searchQuery]);
 
     /*
-    * คำอธิบาย : โหลดข้อมูลเมื่อ component mount หรือเปลี่ยน dependencies 
+    * คำอธิบาย : โหลดข้อมูลเมื่อ component mount หรือเปลี่ยน dependencies
     */
     useEffect(() => {
         fetchData();
@@ -156,7 +157,7 @@ export default function ManageTags() {
     };
 
     /*
-    * คำอธิบาย : กำหนด columns ของ DataTable 
+    * คำอธิบาย : กำหนด columns ของ DataTable
     */
     const columns: Column<TagRow>[] = [
         {
@@ -174,7 +175,7 @@ export default function ManageTags() {
     ];
 
     /*
-    * คำอธิบาย : กำหนด actions ต่อ row 
+    * คำอธิบาย : กำหนด actions ต่อ row
     */
     const rowActions: DataTableActionsConfig<TagRow> = {
         header: "จัดการ",
@@ -189,7 +190,7 @@ export default function ManageTags() {
     };
 
     /*
-    * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก 
+    * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
     */
     const bulkActions: BulkAction<TagRow>[] = [
         {
@@ -206,16 +207,23 @@ export default function ManageTags() {
     ];
 
     /*
-    * คำอธิบาย : render component 
+    * คำอธิบาย : render component
     */
     return (
         <div className="space-y-4 cursor-default">
             {/* Section: Header */}
             <div className="flex flex-col gap-2 w-full">
                 {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-                    <span className="text-gray-800 font-medium">จัดการประเภท</span>
-                </nav>
+                 <div>
+                        <Breadcrumb
+                              current={{
+                              label: "จัดการประเภท",
+                               to: "/super/tags",
+                               fromSidebar : true,
+
+                             }}
+                            />
+                      </div>
 
                 <h2 className="text-xl font-bold ">จัดการประเภท</h2>
 

@@ -208,7 +208,6 @@ export default function ManageHomestaySuperAdmin() {
           current={{
             label: "จัดการที่พัก",
             to: `/super/community/${communityId}/homestay/all`,
-            fromSidebar: true,
           }}
         />
       </div>

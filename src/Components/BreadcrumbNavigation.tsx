@@ -1,33 +1,29 @@
 /**
  * Component : Breadcrumb (แบบจดจำเส้นทางด้วย sessionStorage)
  * คำอธิบาย :
- *    Component สำหรับแสดงเส้นทาง (Navigation Path) ของหน้าปัจจุบัน
- *    โดยจะจำลำดับการนำทางของผู้ใช้ภายในระบบแบบอัตโนมัติ
- *    ทำให้สามารถสร้าง breadcrumb ที่ “ถูกต้องตามการคลิกจริง” เช่น
- *    “จัดการชุมชน > Green Village”
+ *    - แสดงเส้นทางของหน้าปัจจุบัน
+ *    - จำประวัติการคลิกภายในระบบด้วย sessionStorage
+ *    - ถ้าเป็นหน้าที่มาจาก Sidebar (fromSidebar: true) จะ **รีเซ็ต chain ใหม่** ทันที
  *
  * ตัวอย่าง – หน้ารายการ (มาจาก sidebar) :
  *    <Breadcrumb
  *      current={{
- *        label: "จัดการชุมชน",             //ข้อความที่จะแสดงใน breadcrumb (ชื่อชุมชน)
- *        to: "/super/communities",       //ลิงก์ของหน้าปัจจุบัน ใช้เวลาผู้ใช้กดย้อนจาก breadcrumb
- *        fromSidebar: true,
+ *        label: "จัดการชุมชน",
+ *        to: "/super/communities",
+ *        fromSidebar: true,   // << สำคัญ : มาจาก sidebar
  *      }}
  *    />
  *
  * ตัวอย่าง – หน้าใน (รายละเอียดชุมชน) :
  *    <Breadcrumb
  *      current={{
- *        label: community.name,                       //ข้อความที่จะแสดงใน breadcrumb (ชื่อชุมชน)
- *        to: `/super/community/${community.id}`,      //ลิงก์ของหน้าปัจจุบัน   //ในหน้า ปกติ “ไม่ต้องใส่ fromSidebar”
+ *        label: community.name,
+ *        to: `/super/community/${community.id}`,
  *      }}
  *    />
- *
- *
  */
 
-
-import { Link, useLocation, useNavigationType } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 
@@ -46,54 +42,48 @@ const STORAGE_KEY = "breadcrumb_state_final_v2";
 
 export default function Breadcrumb({ current }: BreadcrumbProps) {
   const location = useLocation();
-  const navigationType = useNavigationType(); // "PUSH" | "POP" | "REPLACE"
   const [items, setItems] = useState<Crumb[]>([]);
 
-  useEffect(() => {
+useEffect(() => {
+  // ป้องกันกรณี current.to ยังไม่พร้อม หรือเป็น /undefined /null
+  const normalizedCurrent: Crumb = {
+    ...current,
+    to:
+      !current.to ||
+      current.to.includes("undefined") ||
+      current.to.includes("null")
+        ? location.pathname
+        : current.to,
+  };
+
   let history: Crumb[] = JSON.parse(
     sessionStorage.getItem(STORAGE_KEY) || "[]"
   );
 
-  const existedIndex = history.findIndex((h) => h.to === current.to);
-
-  if (!history.length) {
-    // ครั้งแรกของ tab นี้ → เริ่มจากหน้าปัจจุบัน
-    history = [current];
-  } else if (navigationType === "PUSH") {
-    // มาจากการกด Link / navigate ภายในระบบ
-
-    if (
-      history.length === 1 &&
-      !history[0].fromSidebar &&  // crumb เดิมไม่ใช่ main จาก sidebar
-      existedIndex === -1
-    ) {
-      // เคสสำคัญ: เข้าหน้า detail ตรง ๆ (history = [detail])
-      // แล้วกด Link กลับไปหน้า list → ให้ reset เหลือแค่ list
-      history = [current];
-    } else if (existedIndex === -1) {
-      // เคสปกติ: list → detail, หรือ detail → หน้าอื่นต่อ
-      history.push(current);
-    } else {
-      // เคสย้อนกลับมาหน้าเดิมใน chain เดิม (กันซ้อนแปลก ๆ)
-      history = history.slice(0, existedIndex + 1);
-      history[existedIndex] = current;
-    }
+  // ✅ ถ้ามาจาก sidebar หลัก → รีเซ็ต chain ใหม่เลย
+  if (normalizedCurrent.fromSidebar) {
+    history = [normalizedCurrent];
   } else {
-    // POP / REPLACE (refresh, back/forward, เปลี่ยน URL ตรง ๆ)
-    if (existedIndex === -1) {
-      // ไม่มี crumb นี้ใน history → ถือว่าเข้าตรง → เริ่มใหม่จาก current
-      history = [current];
+    const existedIndex = history.findIndex(
+      (h) => h.to === normalizedCurrent.to
+    );
+
+    if (!history.length) {
+      // ครั้งแรกของ tab นี้ → เริ่มจากหน้าปัจจุบัน
+      history = [normalizedCurrent];
+    } else if (existedIndex === -1) {
+      // ยังไม่เคยมี path นี้ → ต่อท้าย chain
+      history.push(normalizedCurrent);
     } else {
-      // มีอยู่แล้ว → ตัดให้เหลือถึง crumb นั้น
+      // เคสย้อนกลับมาหน้าเดิมใน chain เดิม
       history = history.slice(0, existedIndex + 1);
-      history[existedIndex] = current;
+      history[existedIndex] = normalizedCurrent;
     }
   }
 
   setItems(history);
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-}, [location.pathname, navigationType, current]);
-
+}, [location.pathname, current.label, current.to, current.fromSidebar]);
 
 
   const handleBack = (index: number) => {
@@ -109,12 +99,11 @@ export default function Breadcrumb({ current }: BreadcrumbProps) {
   return (
     <nav
       aria-label="breadcrumb"
-      className="flex items-center text-[14px] font-medium -pt-2 pb-5" // pt-2 pb-1
+      className="flex items-center text-[14px] font-medium -pt-2 pb-5"
     >
       {items.map((item, index) => {
         const isCurrent = index === lastIndex;
-        const isSingleFromSidebar =
-          items.length === 1 && !!item.fromSidebar;
+        const isSingleFromSidebar = items.length === 1 && !!item.fromSidebar;
 
         // กติกาสี:
         // - หน้าเดียว + fromSidebar: ดำ

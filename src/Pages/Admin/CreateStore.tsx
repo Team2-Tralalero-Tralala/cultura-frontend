@@ -218,8 +218,11 @@ export function CreateStore() {
   return (
     <div>
       <Breadcrumb
-        items={[{ label: "จัดการชุมชน", to: "/admin/communities/all" }, { label: "เพิ่มร้านค้า" }]}
-      />
+     current={{
+        label: "เพิ่มร้านค้า",
+        to: "/admin/community/store/create",
+      }}
+    />
       <div className="bg-white p-6 rounded-2xl">
         <div className="flex justify-between items-center mb-3">
           <Link

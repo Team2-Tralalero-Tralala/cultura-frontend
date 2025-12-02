@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import Button from "@/Components/Button"; 
+import Button from "@/Components/Button";
 
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 
@@ -34,7 +34,7 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
   return `${BACKEND_BASE_URL}/${cleaned}`;
 }
 
-/* 
+/*
  * Component : HomestayDetailPage
 */
 export default function HomestayDetailPage() {
@@ -70,32 +70,31 @@ export default function HomestayDetailPage() {
   return (
     <div className="px-1 space-y-3">
       {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
-        <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน", to: "/super/communities/all" },
-            { label: homestay.community.name, to: `/super/community/${homestay.community.id}` },
-            { label: "จัดการที่พัก", to: `/super/community/${homestay.community.id}/homestay/all` },
-            { label: homestay.name},
-          ]}
-        />
-      </div>
+      <div>
+                               <Breadcrumb
+                                 current={{
+                                   label: homestay.name,
+                                   to: `/super/community/${homestay.community.id}/homestay/${homestayId}`,
+
+                                 }}
+                               />
+                             </div>
 
       {/* การ์ดหลัก */}
       <div className="bg-white rounded-2xl shadow-sm px-10 py-8">
         <div className="flex justify-between items-center mb-5">
           {/* หัวข้อ */}
           <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-            <ArrowLeft 
-              className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors" 
-              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)} 
+            <ArrowLeft
+              className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
+              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)}
             />
               รายละเอียดที่พัก
           </h1>
           {/* ปุ่มแก้ไข */}
           <div className="w-32">
-            <Button 
-              type="confirm-admin" 
+            <Button
+              type="confirm-admin"
               onClick={() => navigate(`/super/homestay/edit/${homestay.id}`)}
             >
               <div className="flex items-center gap-2">
@@ -138,16 +137,16 @@ export default function HomestayDetailPage() {
                 <span className="text-[16px] font-bold text-black">
                     ชื่อที่พัก :
                 </span>
-                <span className="text-[16px] font-normal text-black ml-2"> 
+                <span className="text-[16px] font-normal text-black ml-2">
                     {show(homestay.name)}
                 </span>
               </p>
-              
+
               {/* ประเภทที่พัก */}
               <p className="ml-30 flex items-baseline">
                 <span className="text-[16px] font-bold text-black">
                     ประเภทที่พัก :
-                </span> 
+                </span>
                 <span className="text-[16px] font-normal text-black ml-2">
                     {show(homestay.type)}
                 </span>
@@ -181,12 +180,12 @@ export default function HomestayDetailPage() {
                     {show(homestay.totalRoom)} ห้อง
                 </span>
               </p>
-              
+
               {/* จำนวนผู้เข้าพักต่อห้อง */}
               <p className="mt-3 flex items-baseline">
                 <span className="font-bold">
                     จำนวนผู้เข้าพักต่อห้อง :
-                </span> 
+                </span>
                 <span className="font-normal ml-2">
                     {show(homestay.guestPerRoom)} คน ต่อ ห้อง
                 </span>
@@ -273,7 +272,7 @@ export default function HomestayDetailPage() {
                             {homestay.location.postalCode}
                         </span>
                     </p>
-                    
+
                     {/* ละติจูด / ลองจิจูด */}
                     <p className="flex items-baseline">
                         <span className="font-bold">
@@ -283,7 +282,7 @@ export default function HomestayDetailPage() {
                             {homestay.location.latitude}, {homestay.location.longitude}
                         </span>
                     </p>
-                    
+
                     {/* Google Maps */}
                     <p className="flex items-baseline">
                         <span className="font-bold">

@@ -6,6 +6,7 @@
  * 3. แสดงไอคอนและข้อความสถานะแบบใหญ่
  * ใช้ร่วมกับ Service สำหรับจัดการการเปิด/ปิดระบบ
  */
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { fetchServerStatus } from "@/Services/server-status-service";
 import { disableSystem, enableSystem } from "@/Services/system-toggle-service";
 import { Icon } from "@iconify/react";
@@ -72,7 +73,13 @@ export default function ToggleSystemPage() {
 
   return (
     <div className="space-y-4 h-full">
-      <h2 className="text-sm">การเปิด/ปิด ระบบ</h2>
+      <Breadcrumb
+     current={{
+        label: "การเปิด/ปิด ระบบ",
+        to: "/super/toggle-system",
+      }}
+    />
+
       <div className="flex flex-col gap-2 w-full bg-white rounded-lg p-4 h-full">
         <div className="flex items-center justify-between align-top">
           <h1 className="text-xl">การเปิด/ปิด ระบบ</h1>

@@ -93,7 +93,7 @@ interface CreateAccountBody {
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // ดึง role จาก path
   const getRoleFromPath = (): RoleType => {
     if (defaultRole) return defaultRole;
@@ -276,19 +276,25 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   // ✅ [แก้ไข] ใช้คำว่า "จัดการบัญชี" คำเดียว (ไม่ต้องมี role ต่อท้าย) ตาม Figma
   const breadcrumbItems = [
     {
-      label: "จัดการบัญชี", 
-      to: `/super/account/${role.toLowerCase()}`, 
+      label: "จัดการบัญชี",
+      to: `/super/account/${role.toLowerCase()}`,
     },
     {
-      label: "สร้างบัญชี", 
+      label: "สร้างบัญชี",
     },
   ];
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
       {/* 1. Breadcrumb */}
-      <div className="mb-2">
-        <Breadcrumb items={breadcrumbItems} />
+      <div>
+        <Breadcrumb
+              current={{
+              label: "เพิ่มบัญชี",
+               to: "/super/account/admin/create",
+
+             }}
+            />
       </div>
 
       {/* 2. Header พร้อมปุ่มย้อนกลับ */}
@@ -300,15 +306,15 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           title="ย้อนกลับ"
         >
           {/* SVG รูปไอคอนลูกศรย้อนกลับ */}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <path d="M19 12H5" />
@@ -423,8 +429,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     onClick={() => handleRoleSelect(roleItem)}
                     className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
                       role === roleItem
-                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
-                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]"
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]"
                     }`}
                   >
                     {roleItem}

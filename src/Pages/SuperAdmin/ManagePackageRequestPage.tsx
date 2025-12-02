@@ -16,6 +16,7 @@ import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
 import { Link } from "react-router-dom";
 import { approvePackageRequest, fetchPackageRequests, rejectPackageRequest } from "@/Services/package-request-service";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type PackageRequestRow = {
     id: number;
@@ -116,13 +117,10 @@ const buildPackageRequestColumns = (
     ];
 
 export default function PackageRequestsSuperAdmin() {
-    // ตาราง & pagination
     const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
     const [currentPage, setCurrentPage] = React.useState<number>(1);
-    // const [pageSize, setPageSize] = React.useState<number>(10);
     const [pageSize, setPageSize] = React.useState<number>(10);
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
-
     const [pagination, setPagination] = React.useState<Pagination>({
         currentPage: 1,
         totalPages: 1,
@@ -149,13 +147,11 @@ export default function PackageRequestsSuperAdmin() {
         try {
             setIsLoading(true);
             setErrorMessage(null);
-
             const { data } = await fetchPackageRequests(
                 currentPage,
                 pageSize,
                 searchQuery
             );
-
             setRows(data?.data?.data ?? []);
             setPagination(
                 data?.data?.pagination ?? {
@@ -230,7 +226,6 @@ export default function PackageRequestsSuperAdmin() {
         setConfirmOpen(true);
     };
 
-
     /**
      * handleReject:
      * คำอธิบาย:
@@ -254,11 +249,17 @@ export default function PackageRequestsSuperAdmin() {
         }
     }, [isConfirmOpen]);
 
-
     return (
         <div className="space-y-4">
             {/* breadcrump */}
-            <div>พื้นที่ใส่ breadcrump</div>
+            <div>
+                <Breadcrumb
+                    current={{
+                        label: "คำขออนุมัติ",
+                        to: `/super/package-requests`,
+                    }}
+                />
+            </div>
             {/* ส่วนหัว + ค้นหา */}
             <div className="flex flex-col gap-2 w-full">
                 <h1 className="font-bold text-xl">คำขออนุมัติ</h1>

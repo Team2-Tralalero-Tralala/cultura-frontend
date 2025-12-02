@@ -8,7 +8,6 @@
  * { data: JSON(HomestayDto + tagHomestays), cover[], gallery[] }
  * - เมื่อสำเร็จ กลับไปหน้าแก้ไขชุมชน
  */
-
 import React from "react";
 import * as z from "zod";
 import axios from "axios";
@@ -24,6 +23,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
@@ -213,7 +213,6 @@ export default function CreateHomestaysPage() {
     const lngStr = (form.longitude ?? "").trim();
     const latNum = latStr === "" ? null : Number(latStr);
     const lngNum = lngStr === "" ? null : Number(lngStr);
-
     const singlePayload = {
       base: {
         name: normalizeOrDefault(form.name),
@@ -314,7 +313,14 @@ export default function CreateHomestaysPage() {
   return (
     <div className="w-full max-w-none px-8">
       {/* breadcrump */}
-      <div>พื้นที่ใส่ breadcrump</div>
+      <div>
+        <Breadcrumb
+          current={{
+            label: "เพิ่มที่พัก",
+            to: `/super/community/${communityId}/homestay/create`,
+          }}
+        />
+      </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">

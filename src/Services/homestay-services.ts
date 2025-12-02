@@ -60,6 +60,6 @@ export async function fetchHomestayDetailByAdmin(homestayId: number) {
 
 export async function getHomestaysAll(communityId: number, page = 1, limit = 10) {
   return api.get(`/super/community/${communityId}/homestays`, {
-    params: { page, limit }, // ส่ง page/limit แบบเดียวกับ getCommunities
+    params: { page, limit },
   });
 }

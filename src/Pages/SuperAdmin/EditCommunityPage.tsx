@@ -166,6 +166,7 @@ export function EditCommunity() {
   const [expanded, setExpanded] = React.useState<string | false>(false);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
   const [checked, setChecked] = React.useState(true);
+  const [isVisibleRating, setIsVisibleRating] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
@@ -381,6 +382,15 @@ export function EditCommunity() {
     }));
   };
 
+  const handleCheckRating = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newChecked = event.target.checked;
+    setIsVisibleRating(newChecked);
+    setFormData((prev) => ({
+      ...prev,
+      isRatingVisible: newChecked,
+    }));
+  };
+
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
    * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -413,9 +423,6 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
-   * ✅ อัปเดต:
-   * 1. ตรวจสอบ validation แล้วเปิด Accordion ที่มี error แรกให้เอง
-   * 2. เพิ่มการแจ้งเตือน (alert) ทั้งกรณีสำเร็จและล้มเหลว
    */
 
   const handleSubmit = async () => {
@@ -553,25 +560,29 @@ export function EditCommunity() {
             },
           }}
         >
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <p>แสดงคะแนนชุมชน</p>
-              <Switch checked={checked} onChange={handleCheck} />
-            </Stack>
-          </div>
+          <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
         </AccordionSummary>
         <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
-          <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>
+          <div className="flex justify-between items-center w-full mb-[24px]">
+            <h2 className="text-lg font-bold">ข้อมูลวิสาหกิจชุมชน</h2>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <p>แสดงคะแนนชุมชน</p>
+              <Switch
+                checked={isVisibleRating}
+                onChange={handleCheckRating}
+                labelOn="แสดง"
+                labelOff="ซ่อน"
+              />
+            </Stack>
+          </div>
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
               roundedCover="rounded-[5px]"
-              width={1024}
               coverHeight={360}
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
-              coverUrl={getFilePreview(coverFiles)} // ✅ แปลงเป็น URL
+              coverUrl={getFilePreview(coverFiles)}
               avatarUrl={getFilePreview(logoFile)}
               onCoverChange={setCoverFiles}
               onAvatarChange={setLogoFile}

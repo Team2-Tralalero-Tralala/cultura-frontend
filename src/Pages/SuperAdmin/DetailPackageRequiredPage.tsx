@@ -2,7 +2,7 @@
  * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจที่ถูกร้องขอ (Detail Package Request)
  * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
  * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถปลี่ยนสถานะ อนุมัติ/ปฏิเสธ
+ * สามารถปลี่ยนสถานะ อนุมัติ/ปฏิเสธ (เรียกผ่าน service: package-request-service)
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -11,26 +11,26 @@ import { useNavigate, useParams } from "react-router-dom";
 import Button from "@/Components/Button";
 import Thumbnails from "@/Components/Thumbnails";
 import type { PackageRequestDetail } from "@/Types/package-request";
-import { fetchPackageRequestDetail } from "@/Services/package-request-service";
+import {
+  fetchPackageRequestDetail,
+  approvePackageRequest,
+  rejectPackageRequest,
+} from "@/Services/package-request-service";
 import MapPicker from "@/Components/MapPicker";
 import "leaflet/dist/leaflet.css";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /**
  * ฟังก์ชัน : - (ค่าคงที่)
- * คำอธิบาย : Base URL สำหรับไฟล์อัปโหลด (BACKEND_BASE_URL) และ API (API_BASE_URL)
+ * คำอธิบาย : Base URL สำหรับไฟล์อัปโหลด (BACKEND_BASE_URL)
  * Input : -
  * Output: -
  */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
-
-/* ----------------------------- Utilities ----------------------------- */
 /**
  * ฟังก์ชัน : resolveBackendUploadUrl
  * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend เป็น URL ดาวน์โหลดเต็ม
@@ -92,85 +92,16 @@ function buildAddressLine(detail?: PackageRequestDetail | null): string {
 }
 
 /**
- * ฟังก์ชัน : patchJson
- * คำอธิบาย : helper สำหรับส่งคำขอ PATCH แบบรวมศูนย์ด้วย fetch และรับ/ส่งข้อมูล JSON
- * Input : url: string, body?: unknown
- * Output: Promise<T> (generic ชนิดข้อมูลผลลัพธ์จาก API)
- */
-async function patchJson<T = unknown>(url: string, body?: unknown): Promise<T> {
-  const response = await fetch(url, {
-    method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(text || `Request failed: ${response.status}`);
-  }
-  try {
-    return (await response.json()) as T;
-  } catch {
-    return undefined as unknown as T;
-  }
-}
-
-/**
- * ฟังก์ชัน : approvePackageRequest
- * คำอธิบาย : เรียก API เพื่ออนุมัติคำขอแพ็กเกจด้วย packageId
- * Input : packageId: number
- * Output: Promise<unknown>
- */
-function approvePackageRequest(packageId: number) {
-  return patchJson(`${API_BASE_URL}/super/package-requests/${packageId}/approve`);
-}
-
-/**
- * ฟังก์ชัน : rejectPackageRequest
- * คำอธิบาย : เรียก API เพื่อปฏิเสธคำขอแพ็กเกจ พร้อมเหตุผล
- * Input : packageId: number, reason: string
- * Output: Promise<unknown>
- */
-function rejectPackageRequest(packageId: number, reason: string) {
-  return patchJson(`${API_BASE_URL}/super/package-requests/${packageId}/reject`, { reason });
-}
-
-/**
- * ฟังก์ชัน : getThaiApproveStatus
- * คำอธิบาย : แปลงสถานะการอนุมัติ (อังกฤษ) เป็นคำอธิบายภาษาไทยที่อ่านง่าย
- * Input : status?: string | null
- * Output: string (คำอธิบายสถานะภาษาไทย)
- */
-function getThaiApproveStatus(status?: string | null) {
-  switch ((status || "").toUpperCase()) {
-    case "PENDING_SUPER":
-      return "รออนุมัติ";
-    case "APPROVE":
-    case "APPROVED":
-      return "อนุมัติแล้ว";
-    case "REJECT":
-    case "REJECTED":
-      return "ถูกปฏิเสธ";
-    default:
-      return "-";
-  }
-}
-
-/**
  * ฟังก์ชัน : DetailPackageRequiredPage
  * คำอธิบาย : React Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจ พร้อมปุ่มอนุมัติ/ปฏิเสธ
  * Input : - (ใช้ useParams รับ requestId จาก URL)
  * Output: JSX.Element (UI ของหน้าแสดงรายละเอียดแพ็กเกจ)
  */
 export default function DetailPackageRequiredPage() {
-  /* Navigation & Params */
   const navigate = useNavigate();
   const { requestId } = useParams<{ requestId: string }>();
-
-  /* Local State */
-  const [packageRequestDetail, setPackageRequestDetail] = useState<PackageRequestDetail | null>(null);
-
-  // สถานะโหลด + error + โมดัล
+  const [packageRequestDetail, setPackageRequestDetail] =
+    useState<PackageRequestDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -203,7 +134,10 @@ export default function DetailPackageRequiredPage() {
     const lat = packageRequestDetail?.location?.latitude ?? 13.7563;
     const lng = packageRequestDetail?.location?.longitude ?? 100.5018;
     return [lat, lng];
-  }, [packageRequestDetail?.location?.latitude, packageRequestDetail?.location?.longitude]);
+  }, [
+    packageRequestDetail?.location?.latitude,
+    packageRequestDetail?.location?.longitude,
+  ]);
 
   /**
    * ฟังก์ชัน : mapKey
@@ -213,14 +147,18 @@ export default function DetailPackageRequiredPage() {
    */
   const mapKey = `${mapCenter[0]},${mapCenter[1]}`;
 
-  /** ฟังก์ชัน : openApproveModal — เปิดโมดัลยืนยันการอนุมัติ */
-  function openApproveModal() { setIsApproveModalOpen(true); }
-  /** ฟังก์ชัน : closeApproveModal — ปิดโมดัลยืนยันการอนุมัติ */
-  function closeApproveModal() { setIsApproveModalOpen(false); }
-  /** ฟังก์ชัน : openRejectModal — เปิดโมดัลระบุเหตุผลการปฏิเสธ */
-  function openRejectModal() { setIsRejectModalOpen(true); }
-  /** ฟังก์ชัน : closeRejectModal — ปิดโมดัลระบุเหตุผลการปฏิเสธ */
-  function closeRejectModal() { setIsRejectModalOpen(false); }
+  function openApproveModal() {
+    setIsApproveModalOpen(true);
+  }
+  function closeApproveModal() {
+    setIsApproveModalOpen(false);
+  }
+  function openRejectModal() {
+    setIsRejectModalOpen(true);
+  }
+  function closeRejectModal() {
+    setIsRejectModalOpen(false);
+  }
 
   /**
    * ฟังก์ชัน : approveCurrentRequest
@@ -228,21 +166,35 @@ export default function DetailPackageRequiredPage() {
    * Input : -
    * Output: Promise<void>
    */
+
+  const [approveClicked, setApproveClicked] = useState(false);
+
   async function approveCurrentRequest() {
+    if (approveClicked) return;
+    setApproveClicked(true);
+
     if (!requestId) return;
+
     try {
       setIsLoading(true);
       setErrorMessage(null);
+
       await approvePackageRequest(Number(requestId));
+
+      setIsApproveModalOpen(false);
+
       navigate("/super/package-requests", { replace: true });
+
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "ไม่สามารถอนุมัติได้";
       setErrorMessage(message);
+
     } finally {
       setIsLoading(false);
-      closeApproveModal();
+      setApproveClicked(false);
     }
   }
+
 
   /**
    * ฟังก์ชัน : rejectCurrentRequest
@@ -272,7 +224,9 @@ export default function DetailPackageRequiredPage() {
    * Input : -
    * Output: void
    */
-  function handleApproveClick() { openApproveModal(); }
+  function handleApproveClick() {
+    openApproveModal();
+  }
 
   /**
    * ฟังก์ชัน : handleRejectClick
@@ -280,7 +234,9 @@ export default function DetailPackageRequiredPage() {
    * Input : -
    * Output: void
    */
-  function handleRejectClick() { openRejectModal(); }
+  function handleRejectClick() {
+    openRejectModal();
+  }
 
   /**
    * ฟังก์ชัน : isApproved
@@ -288,23 +244,22 @@ export default function DetailPackageRequiredPage() {
    * Input : -
    * Output: boolean
    */
-  const isApproved =
-    String((packageRequestDetail as any)?.statusApprove || "").toUpperCase().startsWith("APPROVE");
-
+  const isApproved = String(
+    (packageRequestDetail as any)?.statusApprove || ""
+  )
+    .toUpperCase()
+    .startsWith("APPROVE");
 
   return (
     <div className="w-full">
-      <div className="mb-2 text-[14px] font-medium [&_a]:text-black  [&_span:last-child]:text-[#494949] ">
-        <BreadcrumbNavigation
-          items={[
-            { label: "คำขออนุมัติ", to: "/super/package-requests" },
-            { label: packageRequestDetail?.name || "รายละเอียดแพ็กเกจ" },
-          ]}
-        />
-      </div>
-      {/* การ์ดรายละเอียด */}
+      <Breadcrumb
+        current={{
+          label: packageRequestDetail?.name || "-",
+          to: `package-requests/:requestId`,
+        }}
+      />
+
       <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -328,17 +283,6 @@ export default function DetailPackageRequiredPage() {
           </div>
         </div>
 
-        {/* Error */}
-        {errorMessage && (
-          <div className="text-[16px] text-red-600">{errorMessage}</div>
-        )}
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-[16px] text-gray-500">กำลังประมวลผล...</div>
-        )}
-
-        {/* ชื่อแพ็กเกจ */}
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">ชื่อแพ็กเกจ :</span>{" "}
@@ -348,7 +292,6 @@ export default function DetailPackageRequiredPage() {
           </p>
         </div>
 
-        {/* สถานะแพ็กเกจ */}
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900 flex items-center">
             <span className="font-semibold">สถานะแพ็กเกจ :</span>
@@ -362,7 +305,6 @@ export default function DetailPackageRequiredPage() {
           </p>
         </div>
 
-        {/* คำอธิบาย */}
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">คำอธิบาย :</span>{" "}
@@ -372,7 +314,6 @@ export default function DetailPackageRequiredPage() {
           </p>
         </div>
 
-        {/* จำนวนคน & ราคา */}
         <div className="grid grid-cols-2 gap-6">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">จำนวนคนที่เปิดรับ :</span>{" "}
@@ -392,7 +333,6 @@ export default function DetailPackageRequiredPage() {
           </p>
         </div>
 
-        {/* แท็ก */}
         <div className="flex items-center gap-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">แท็ก :</span>
@@ -413,7 +353,6 @@ export default function DetailPackageRequiredPage() {
           </div>
         </div>
 
-        {/* รูปภาพ */}
         <div>
           {packageRequestDetail?.packageFile?.length ? (
             <Thumbnails
@@ -429,7 +368,6 @@ export default function DetailPackageRequiredPage() {
           )}
         </div>
 
-        {/* ผู้ดูแล & ผู้สร้าง */}
         <div className="grid grid-cols-2 gap-6">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">ผู้ดูแล :</span>{" "}
@@ -447,9 +385,7 @@ export default function DetailPackageRequiredPage() {
           </p>
         </div>
 
-        {/* ช่วงวัน-เวลา (แพ็กเกจ / การจอง) */}
         <div className="space-y-3">
-          {/* แถววันที่ */}
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">
@@ -471,7 +407,6 @@ export default function DetailPackageRequiredPage() {
             </p>
           </div>
 
-          {/* แถวเวลา */}
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">เวลา :</span>{" "}
@@ -483,14 +418,18 @@ export default function DetailPackageRequiredPage() {
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">เวลา :</span>{" "}
               <span className="font-normal">
-                {extractTimeFromISO(packageRequestDetail?.bookingOpenDate)} -{" "}
-                {extractTimeFromISO(packageRequestDetail?.bookingCloseDate)}
+                {extractTimeFromISO(
+                  packageRequestDetail?.bookingOpenDate
+                )}{" "}
+                -{" "}
+                {extractTimeFromISO(
+                  packageRequestDetail?.bookingCloseDate
+                )}
               </span>
             </p>
           </div>
         </div>
 
-        {/* สิ่งอำนวยความสะดวก */}
         <p className="text-[16px] text-gray-900">
           <span className="font-semibold">สิ่งอำนวยความสะดวก :</span>{" "}
           <span className="font-normal">
@@ -498,13 +437,11 @@ export default function DetailPackageRequiredPage() {
           </span>
         </p>
 
-        {/* แผนที่ & ที่อยู่ */}
         <div className="space-y-6">
           <p className="text-[16px] text-gray-900 mb-2">
             <span className="font-semibold">แผนที่ :</span>
           </p>
 
-          {/* ใช้ MapPicker */}
           <div className="w-full h-full">
             <MapPicker
               key={mapKey}
@@ -512,12 +449,11 @@ export default function DetailPackageRequiredPage() {
               startingPosition={mapCenter}
               startingZoom={13}
               onChange={(_latlng) => {
-                /* read-only viewer */
+                // view only
               }}
             />
           </div>
 
-          {/* ที่อยู่ & คำอธิบายที่อยู่ */}
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">ที่อยู่ :</span>{" "}
@@ -533,7 +469,6 @@ export default function DetailPackageRequiredPage() {
             </p>
           </div>
 
-          {/* พิกัด (ละติจูด/ลองจิจูด) */}
           <div>
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">ละติจูด / ลองจิจูด :</span>{" "}
@@ -546,9 +481,6 @@ export default function DetailPackageRequiredPage() {
         </div>
       </section>
 
-
-
-      {/* ปุ่มอนุมัติ/ปฏิเสธ — ย้ายออกนอกการ์ด */}
       {!isApproved && (
         <div className="flex justify-end gap-3 mt-4">
           <div className="w-36">
@@ -564,7 +496,6 @@ export default function DetailPackageRequiredPage() {
         </div>
       )}
 
-      {/* โมดัล */}
       <Modal
         open={isApproveModalOpen}
         title="ยืนยันการอนุมัติ"
@@ -575,7 +506,10 @@ export default function DetailPackageRequiredPage() {
         }
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
-        onConfirm={approveCurrentRequest}
+        onConfirm={() => {
+          setIsApproveModalOpen(false);
+          approveCurrentRequest();
+        }}
         onCancel={closeApproveModal}
       />
 
@@ -585,7 +519,9 @@ export default function DetailPackageRequiredPage() {
         text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
         confirmText="ส่ง"
         cancelText="ยกเลิก"
-        onConfirm={async (reason) => { await rejectCurrentRequest(reason); }}
+        onConfirm={async (reason) => {
+          await rejectCurrentRequest(reason);
+        }}
         onCancel={closeRejectModal}
       />
     </div>

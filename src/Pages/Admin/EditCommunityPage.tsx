@@ -29,7 +29,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
+import Switch from "@/Components/Switch";
 import * as React from "react";
 import { Link } from "react-router";
 import z from "zod";
@@ -163,6 +163,7 @@ export function EditCommunity() {
   const [expanded, setExpanded] = React.useState<string | false>(false);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
   const [checked, setChecked] = React.useState(true);
+  const [isVisibleRating, setIsVisibleRating] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
@@ -367,12 +368,21 @@ export function EditCommunity() {
    * Input : event (React.ChangeEvent<HTMLInputElement>)
    * Output : อัปเดตค่า checked และ status ("OPEN" / "CLOSED") ใน formData
    */
+
   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
     setChecked(newChecked);
     setFormData((prev) => ({
       ...prev,
       status: newChecked ? "OPEN" : "CLOSED",
+    }));
+  };
+  const handleCheckRating = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newChecked = event.target.checked;
+    setIsVisibleRating(newChecked);
+    setFormData((prev) => ({
+      ...prev,
+      isRatingVisible: newChecked,
     }));
   };
 
@@ -544,16 +554,21 @@ export function EditCommunity() {
             },
           }}
         >
-          <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <p>แสดงคะแนนชุมชน</p>
-              <Switch checked={checked} onChange={handleCheck} />
-            </Stack>
-          </div>
+          <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
         </AccordionSummary>
         <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
-          <h2 className="text-lg font-bold mb-[24px]">ข้อมูลวิสาหกิจชุมชน</h2>
+          <div className="flex justify-between items-center w-full mb-[24px]">
+            <h2 className="text-lg font-bold">ข้อมูลวิสาหกิจชุมชน</h2>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <p>แสดงคะแนนชุมชน</p>
+              <Switch
+                checked={isVisibleRating}
+                onChange={handleCheckRating}
+                labelOn="แสดง"
+                labelOff="ซ่อน"
+              />
+            </Stack>
+          </div>
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
               roundedCover="rounded-[5px]"

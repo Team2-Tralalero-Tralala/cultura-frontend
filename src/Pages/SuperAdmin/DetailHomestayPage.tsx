@@ -23,10 +23,8 @@ const BACKEND_BASE_URL =
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
 
-  // ตัด / หน้า "uploads" และตัด / ท้ายออก
   const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
 
-  // ถ้าไม่มีคำว่า uploads ใน path ให้เพิ่มเอง
   if (!cleaned.startsWith("uploads/")) {
     return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
   }
@@ -42,7 +40,6 @@ export default function HomestayDetailPage() {
   const { homestayId } = useParams<{ homestayId: string }>();
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
 
-  // โหลดข้อมูลจาก backend
   useEffect(() => {
     if (!homestayId) return;
     fetchHomestayDetail(Number(homestayId))
@@ -59,7 +56,6 @@ export default function HomestayDetailPage() {
   const show = (Value: any) => (Value ? Value : "-");
   const googleMapLink = `https://maps.google.com/?q=${homestay.location?.latitude},${homestay.location?.longitude}`;
 
-  // ดึงรูปหลักและรูปเพิ่มเติมจาก type
   const mainImage = homestay.homestayImage?.find(
     (img: any) => img.type === "COVER"
   );
@@ -69,17 +65,12 @@ export default function HomestayDetailPage() {
 
   return (
     <div className="px-1 space-y-3">
-      {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
-        <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน", to: "/super/communities/all" },
-            { label: homestay.community.name, to: `/super/community/${homestay.community.id}` },
-            { label: "จัดการที่พัก", to: `/super/community/${homestay.community.id}/homestay/all` },
-            { label: homestay.name},
-          ]}
-        />
-      </div>
+      <Breadcrumb
+        current={{
+          label: homestay.name,
+          to: `/super/community/${homestay.community.id}/homestay/${homestay.id}`,
+        }}
+      />
 
       {/* การ์ดหลัก */}
       <div className="bg-white rounded-2xl shadow-sm px-10 py-8">

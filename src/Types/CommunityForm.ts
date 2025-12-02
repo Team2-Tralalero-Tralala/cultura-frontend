@@ -56,4 +56,5 @@ export type CommunityFormData = {
   coordinatorPhone?: string;
   rating: number;
   communityMembers: number[];
+  isRatingVisible: boolean;
 };

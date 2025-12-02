@@ -321,13 +321,13 @@ export function ManageAccountPage() {
     <div className="space-y-4">
       {/* Section: Header */}
       <div className="flex flex-col w-full">
-        <div className="-ml-6 pt-1 pb-1">
           <Breadcrumb
-            items={[
-              { label: "จัดการบัญชึ"},
-            ]}
+            current={{
+              label: "จัดการบัญชึ",
+              to: "/super/account/all",
+              fromSidebar: true,
+            }}
           />
-        </div>
         <h1 className="text-[20px] font-bold text-black">
           จัดการบัญชี
         </h1>

@@ -162,7 +162,12 @@ export default function BookingDetailAdmin() {
            Breadcrumb นำทางหน้า
          -------------------------------------------------------- */}
       <div className="p-2">
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumb
+          current={{
+            label: "รายละเอียดการจอง",
+            to: `/admin/booking/${bookingId}`,
+          }}
+        />
       </div>
 
       <div className="w-full mx-auto">

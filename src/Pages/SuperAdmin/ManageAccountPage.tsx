@@ -324,7 +324,7 @@ export function ManageAccountPage() {
           />
           <h1 className="text-[20px] font-bold text-black">จัดการบัญชี</h1>
 
-          <div className="flex items-center justify-between w-full mt-2">
+          <div className="flex items-center justify-between w-full mt-2 mb-4">
             {/* Section: Search + Filter */}
             <div className="flex items-center gap-2">
               <div className="w-[260px]">

@@ -171,7 +171,7 @@ const SidebarAdmin = () => {
 
           {/* === แพ็กเกจ === */}
           <Link
-            to={`${basePath}/packages`}
+            to={`${basePath}/packages/all`}
             onClick={() => handleClick("packages")}
             className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
               }`}

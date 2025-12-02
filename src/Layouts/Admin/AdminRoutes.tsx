@@ -33,6 +33,9 @@ import BookingDetailAdmin from "@/Pages/Admin//BookingDetailAdmin";
 import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayPage';
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
 import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
+import EditPackagePage from '@/Pages/Admin/EditPackagePage';
+import ManagePackagePage from '@/Pages/Admin/ManagePackagePage';
+import CreatePackagePage from '@/Pages/Admin/CreatePackagePage';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 
 export default function AdminRoutes() {
@@ -84,6 +87,10 @@ export default function AdminRoutes() {
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
+      <Route path="package/create" element={<CreatePackagePage />} />
+      <Route path="package/:id/edit" element={<EditPackagePage />} />
+
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
     </Routes>
   );

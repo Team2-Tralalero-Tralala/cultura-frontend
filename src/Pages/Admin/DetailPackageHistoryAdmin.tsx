@@ -183,14 +183,14 @@ export default function DetailPackageHistoryAdmin() {
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb */}
-            <div className="-ml-6 pt-1 pb-1">
+            {/* <div className="-ml-6 pt-1 pb-1">
               <Breadcrumb
                 items={[
                   { label: "ประวัติแพ็กเกจ", to: "/admin/packages/histories" },
                   { label: pkg?.name || "แพ็กเกจ" },
                 ]}
               />
-            </div>
+            </div> */}
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
 
@@ -226,7 +226,7 @@ export default function DetailPackageHistoryAdmin() {
 
         {/* จำนวนคน / ราคา */}
         <div className="flex flex-wrap gap-6 mb-6">
-          <div className="flex flex-row mr-30">
+          <div className="flex flex-row mr-100">
             <p className="text-md text-gray-800">
               <strong>จำนวนคนที่เปิดรับ : </strong>
               {pkg.capacity} คน

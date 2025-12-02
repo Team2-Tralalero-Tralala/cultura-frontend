@@ -6,6 +6,7 @@ import { EditIcon } from "../../Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
+import type { JSX } from "react/jsx-runtime"; 
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -38,13 +39,15 @@ interface HomestayData {
   detail: string;
   facility?: string;
   images: { id: number; path: string; type: string }[];
-  location?: {
-    subDistrict?: string;
-    district?: string;
-    province?: string;
-    latitude?: number;
-    longitude?: number;
-  } | null;
+  location?:
+    | {
+        subDistrict?: string;
+        district?: string;
+        province?: string;
+        latitude?: number;
+        longitude?: number;
+      }
+    | null;
 }
 
 interface HomestayHistory {
@@ -76,8 +79,11 @@ interface PackageData {
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
   files: {
-    [x: string]: any; id: number; path: string; type: string
-}[];
+    [x: string]: any;
+    id: number;
+    path: string;
+    type: string;
+  }[];
   homestayHistories: HomestayHistory[];
 }
 
@@ -94,14 +100,7 @@ function formatDateTH(dateStr: string | null) {
 }
 
 /*
- * คำอธิบาย : ฟังก์ชันแยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String (เช่น "2025-01-01T08:30:00.000Z")
- * Input  : isoString (ข้อความวันที่-เวลาในรูปแบบ ISO 8601 หรือ null)
- * Output : วัตถุ (Object) ที่ประกอบด้วยวันที่ (date) และเวลา (time) ในรูปแบบที่อ่านง่าย เช่น { date: "2025-01-01", time: "08:30" }
- * การทำงาน :
- *   1. ตรวจสอบว่าค่าที่รับเข้ามามีข้อมูลหรือไม่ (ถ้าไม่มีจะคืนค่า { date: null, time: null })
- *   2. แปลงข้อความ isoString ให้เป็นวัตถุ Date ของ JavaScript
- *   3. แยกส่วนวันที่ (YYYY-MM-DD) และเวลาชั่วโมง-นาที (HH:MM) ออกจากวัตถุ Date
- *   4. คืนค่าผลลัพธ์เป็น Object ที่มี key 'date' และ 'time'
+ * แยกวันที่/เวลา จาก ISO string
  */
 function extractDateTime(isoString?: string | null) {
   if (!isoString) return { date: null, time: null };
@@ -111,7 +110,7 @@ function extractDateTime(isoString?: string | null) {
   return { date, time };
 }
 
-export default function DetailPackageSuperAdmin() {
+export default function DetailPackageAdmin() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [pkg, setPkg] = useState<PackageData | null>(null);
@@ -128,7 +127,6 @@ export default function DetailPackageSuperAdmin() {
 
         const raw = res.data.data;
 
-        // Map โครงสร้างข้อมูลให้ตรงกับ interface
         const mappedData: PackageData = {
           id: raw.id,
           name: raw.name,
@@ -230,11 +228,9 @@ export default function DetailPackageSuperAdmin() {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!pkg) return <div className="p-6 text-gray-500">ไม่พบข้อมูลแพ็กเกจ</div>;
 
-  // ดึงรูปหลักและรูปเพิ่มเติมจาก type
   const mainImage = pkg.files?.find((img: any) => img.type === "COVER");
   const extraImages = pkg.files?.filter((img: any) => img.type === "GALLERY");
 
-  // เตรียม section แสดงที่พักในแพ็กเกจ (ถ้ามี)
   let homestaySection: JSX.Element | null = null;
 
   if (pkg.homestayHistories && pkg.homestayHistories.length > 0) {
@@ -244,10 +240,8 @@ export default function DetailPackageSuperAdmin() {
     if (homestay) {
       const checkIn = extractDateTime(firstHistory.checkInTime);
       const checkOut = extractDateTime(firstHistory.checkOutTime);
-
       const homestayImage = homestay.images?.[0];
 
-      // เตรียมรายการสิ่งอำนวยความสะดวก (ตัดตามแบบหน้า Edit)
       const facilityItems =
         homestay.facility
           ?.split(/[,•\n]/)
@@ -275,7 +269,6 @@ export default function DetailPackageSuperAdmin() {
           </div>
 
           <div className="border rounded-2xl p-6 flex gap-6 bg-white shadow-sm">
-            {/* รูปที่พัก */}
             <div className="w-64 h-40 flex-shrink-0 overflow-hidden rounded-xl border">
               <img
                 className="w-full h-full object-cover"
@@ -288,7 +281,6 @@ export default function DetailPackageSuperAdmin() {
               />
             </div>
 
-            {/* รายละเอียดที่พัก */}
             <div className="flex-1 text-gray-800">
               <div className="font-semibold text-lg mb-2">{homestay.name}</div>
 
@@ -311,35 +303,38 @@ export default function DetailPackageSuperAdmin() {
 
   return (
     <div className="w-full space-y-4">
-      {/* Breadcrumb */}
+      {/* Breadcrumb (ถ้าจะใช้ฝั่ง Admin ค่อยเปลี่ยน path ทีหลัง) */}
       <div className="-ml-6 pt-1 pb-1">
         {/* <Breadcrumb
           items={[
-            { label: "จัดการแพ็กเกจ", to: "/super/packages/all" },
+            { label: "จัดการแพ็กเกจ", to: "/admin/package/histories" },
             { label: pkg?.name || "แพ็กเกจ" },
           ]}
         /> */}
       </div>
+
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
           <div className="flex flex-row">
-            {/* ปุ่มย้อนกลับ */}
+            {/* ปุ่มย้อนกลับ -> ไปหน้าประวัติแพ็กเกจของ Admin */}
             <div
               className="mt-1 mr-3 cursor-pointer"
-              onClick={() => navigate(`/super/packages/all`)}
+              onClick={() => navigate("/package/histories")} // ✅ แก้จาก /super/packages/all
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
           </div>
           <div className="w-60">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
-            <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
-              <EditIcon></EditIcon>แก้ไขรายละเอียดแพ็กเกจ
+            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ สำหรับ Admin */}
+            <Button onClick={() => navigate(`/admin/package/${id}/edit`)}>
+              <EditIcon />
+              แก้ไขรายละเอียดแพ็กเกจ
             </Button>
           </div>
         </div>
+
         {/* ชื่อแพ็กเกจ */}
         <div className="mb-6 flex flex-row">
           <p className="text-md text-gray-800">
@@ -352,14 +347,20 @@ export default function DetailPackageSuperAdmin() {
         <div className="mb-6">
           <div className="flex flex-row items-center gap-2">
             <p className="text-md text-gray-800 font-semibold">สถานะแพ็กเกจ :</p>
-
-            {/* Badge สถานะ */}
             <span
               className={`
-        px-4 py-1 rounded-full text-sm font-semibold
-        ${pkg.statusPackage === "PUBLISH" ? "bg-green-200 text-green-700" : ""}
-        ${pkg.statusPackage === "UNPUBLISH" ? "bg-red-200 text-red-700" : ""}
-        `}
+                px-4 py-1 rounded-full text-sm font-semibold
+                ${
+                  pkg.statusPackage === "PUBLISH"
+                    ? "bg-green-200 text-green-700"
+                    : ""
+                }
+                ${
+                  pkg.statusPackage === "UNPUBLISH"
+                    ? "bg-red-200 text-red-700"
+                    : ""
+                }
+              `}
             >
               {pkg.statusPackage === "PUBLISH" && "เผยแพร่"}
               {pkg.statusPackage === "UNPUBLISH" && "ไม่เผยแพร่"}
@@ -398,14 +399,18 @@ export default function DetailPackageSuperAdmin() {
           <div className="mb-6 flex gap-2 flex-row">
             <strong>แท็ก :</strong>{" "}
             {pkg.tags.map((t, i) => (
-              <Tag key={i} label={t} sizeClass="w-20 h-8" className="text-black bg-white" />
+              <Tag
+                key={i}
+                label={t}
+                sizeClass="w-20 h-8"
+                className="text-black bg-white"
+              />
             ))}
           </div>
         )}
 
-        {/* ===== รูปหลัก + ข้อมูลที่พัก ===== */}
+        {/* รูปหลัก */}
         <div className="grid grid-cols-1 md:grid-cols-[55%_auto] gap-10 items-start">
-          {/* ===== รูปหลัก ===== */}
           {mainImage ? (
             <img
               src={
@@ -425,7 +430,7 @@ export default function DetailPackageSuperAdmin() {
           )}
         </div>
 
-        {/* ข้อมูลผู้ดูแล */}
+        {/* ข้อมูลผู้ดูแล / ช่วงเวลา */}
         <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
           <div>
             <p className="mb-6">
@@ -433,9 +438,11 @@ export default function DetailPackageSuperAdmin() {
             </p>
             <p className="mb-6">
               <strong>วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ : </strong>{" "}
-              {formatDateTH(pkg.startDate?.date)} - {formatDateTH(pkg.dueDate?.date)}
+              {formatDateTH(pkg.startDate?.date)} -{" "}
+              {formatDateTH(pkg.dueDate?.date)}
               <br />
-              <strong>เวลา : </strong> {pkg.startDate?.time || "-"} - {pkg.dueDate?.time || "-"}
+              <strong>เวลา : </strong> {pkg.startDate?.time || "-"} -{" "}
+              {pkg.dueDate?.time || "-"}
             </p>
           </div>
 
@@ -445,7 +452,8 @@ export default function DetailPackageSuperAdmin() {
             </p>
             <p className="mb-6">
               <strong>วันที่เปิด - วันที่ปิดการจอง : </strong>{" "}
-              {formatDateTH(pkg.openBookingAt?.date)} - {formatDateTH(pkg.closeBookingAt?.date)}
+              {formatDateTH(pkg.openBookingAt?.date)} -{" "}
+              {formatDateTH(pkg.closeBookingAt?.date)}
               <br />
               <strong>เวลา : </strong> {pkg.openBookingAt?.time || "-"} -{" "}
               {pkg.closeBookingAt?.time || "-"}
@@ -453,10 +461,11 @@ export default function DetailPackageSuperAdmin() {
           </div>
         </div>
 
-        {/* สิ่งอำนวยความสะดวก */}
+        {/* สิ่งอำนวยความสะดวกแพ็กเกจ */}
         <div className="mb-6">
           <p>
-            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {pkg.facility || "-"}
+            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong>{" "}
+            {pkg.facility || "-"}
           </p>
         </div>
 
@@ -468,20 +477,23 @@ export default function DetailPackageSuperAdmin() {
               title="map"
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${
                 pkg.location.longitude - 0.01
-              },${pkg.location.latitude - 0.01},${pkg.location.longitude + 0.01},${
-                pkg.location.latitude + 0.01
-              }&layer=mapnik&marker=${pkg.location.latitude},${pkg.location.longitude}`}
+              },${pkg.location.latitude - 0.01},${
+                pkg.location.longitude + 0.01
+              },${pkg.location.latitude + 0.01}&layer=mapnik&marker=${
+                pkg.location.latitude
+              },${pkg.location.longitude}`}
               className="w-full h-96 rounded-xl border"
             ></iframe>
             <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
               <div className="mt-6">
                 <p className="mb-4">
-                  <strong>ที่อยู่ :</strong> {pkg.location.address} {pkg.location.subDistrict}{" "}
-                  {pkg.location.district} {pkg.location.province} {pkg.location.postalCode}
+                  <strong>ที่อยู่ :</strong> {pkg.location.address}{" "}
+                  {pkg.location.subDistrict} {pkg.location.district}{" "}
+                  {pkg.location.province} {pkg.location.postalCode}
                 </p>
                 <p>
-                  <strong>ละติจูด / ลองจิจูด : </strong> {pkg.location.latitude},{" "}
-                  {pkg.location.longitude}
+                  <strong>ละติจูด / ลองจิจูด : </strong>{" "}
+                  {pkg.location.latitude}, {pkg.location.longitude}
                 </p>
               </div>
               <div className="mt-6">
@@ -492,7 +504,8 @@ export default function DetailPackageSuperAdmin() {
             </div>
           </div>
         )}
-         {/* ที่พักในแพ็กเกจ (ถ้ามี) */}
+
+        {/* ที่พักในแพ็กเกจ (ถ้ามี) */}
         {homestaySection}
       </div>
     </div>

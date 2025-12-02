@@ -34,6 +34,7 @@ import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayPage';
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
 import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -57,7 +58,7 @@ export default function AdminRoutes() {
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
       <Route path="/booking/:bookingId" element={<BookingDetailAdmin />} />
-      
+
       <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
 
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
@@ -85,6 +86,7 @@ export default function AdminRoutes() {
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="package/:id" element={<DetailPackageAdmin />} />
     </Routes>
   );
 }

@@ -27,6 +27,11 @@ export type BoxTimeInputProps = {
 const toCssSize = (value?: number | string) =>
     value === undefined ? undefined : typeof value === "number" ? `${value}px` : value;
 
+/*
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับแสดงผลกล่องอินพุตเวลา แยกเป็นชั่วโมงและนาที
+ * Input: props (BoxTimeInputProps) - ข้อมูล property ต่างๆ เช่น value (ค่าเวลา), onChange (ฟังก์ชันจัดการการเปลี่ยนค่า), label (ข้อความกำกับ)
+ * Output : JSX.Element (ส่วนแสดงผล UI ของกล่องอินพุตเวลา)
+ */
 export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
     value,
     defaultValue,
@@ -41,11 +46,9 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
 }) => {
     const autoId = useId();
     const inputId = id ?? `time-input-${autoId}`;
-
     const [hour, setHh] = useState("");
     const [minute, setMm] = useState("");
     const hiddenTimeRef = useRef<HTMLInputElement | null>(null);
-
     const handleClockClick = () => {
         if (!hiddenTimeRef.current) return;
         const currentTime =

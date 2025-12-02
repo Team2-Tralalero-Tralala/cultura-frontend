@@ -46,6 +46,11 @@ const bulkActions: BulkAction<Row>[] = [
   },
 ];
 
+/*
+ * คำอธิบาย : ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
+ * Input: -
+ * Output : JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
+ */
 export default function ManagePackageSuperAdmin() {
   const columns: Column<Row>[] = [
     {

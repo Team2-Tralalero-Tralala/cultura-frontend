@@ -242,6 +242,11 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับหน้าแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
+ * Input: -
+ * Output : JSX.Element (หน้าฟอร์มแก้ไขข้อมูลแพ็กเกจ)
+ */
 export const EditPackagePage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();

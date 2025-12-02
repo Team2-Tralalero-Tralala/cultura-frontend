@@ -30,6 +30,11 @@ type Props = {
     disabled?: boolean;
 };
 
+/*
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับแสดงผลและจัดการการเลือกสถานะของแพ็กเกจ
+ * Input: props (Props) - ข้อมูลที่รับเข้ามา ได้แก่ value (สถานะปัจจุบัน), onChange (ฟังก์ชันเปลี่ยนสถานะ), disabled (สถานะการปิดใช้งาน)
+ * Output : JSX.Element (ส่วนแสดงผล Dropdown)
+ */
 export const PackageStatusDropdown: React.FC<Props> = ({
     value,
     onChange,

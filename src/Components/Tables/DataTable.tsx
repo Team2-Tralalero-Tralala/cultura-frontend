@@ -10,7 +10,7 @@ import { resolveActions, getActionButtonClass } from "./TablePresets";
 import { themeHead, borderTone, softBg, containerBorderCls, containerRingCls } from "./Theme";
 import { ChevronLeftIcon, ChevronRightIcon } from "./Icon";
 
-/* 
+/*
    PageSizeDropdown (Custom)
    อธิบาย : ดรอปดาวน์กำหนด “จำนวนแถวต่อหน้า” แบบคัสตอม เพื่อควบคุมสไตล์ hover/active
    พฤติกรรม :
@@ -118,7 +118,7 @@ export function DataTable<T extends Record<string, unknown>>({
 }: DataTableProps<T>) {
 
   const rowCellBase = "h-12 align-middle"; // h-12 ≈ 48px
-  
+
   const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
@@ -144,7 +144,7 @@ export function DataTable<T extends Record<string, unknown>>({
         <table className="min-w-full rounded-xl overflow-hidden">
           {/* ── ส่วนหัวตาราง (thead) ─────────────────────────────────────────── */}
           <thead>
-            <tr className={themeHead[theme]}>
+            <tr className={`${themeHead[theme]} text-lg font-medium text-white`}>
               {selectable && (
                 <th className="w-12 px-3 py-3">
                   {/* กล่องเลือกทั้งหมด (indeterminate = เลือกบางส่วน) */}
@@ -206,7 +206,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 >
                   {/* เช็กบ็อกซ์ต่อแถว */}
                   {selectable && (
-                    <td className={`w-12 px-3 text-center ${rowCellBase}`}>
+                    <td className={`w-12 px-3 text-center text-base text-black font-normal ${rowCellBase}`}>
                       <input
                         type="checkbox"
                         checked={selected.includes(rowKey)}
@@ -220,7 +220,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   {columns.map((column) => (
                     <td
                       key={String(column.key)}
-                      className={`px-4 text-base font-light text-slate-800 ${column.className ?? ""} ${rowCellBase}`}
+                      className={`px-4 text-base text-black font-normal ${column.className ?? ""} ${rowCellBase}`}
                       style={column.width ? { width: column.width } : undefined}
                     >
                       {column.render ? column.render(rowData) : String((rowData as any)[column.key] ?? "")}
@@ -229,7 +229,7 @@ export function DataTable<T extends Record<string, unknown>>({
 
                   {/* ปุ่มจัดการต่อแถว */}
                   {actions?.visible !== false && actions && (
-                    <td className={`px-4 ${actions.align === "left" ? "text-left" : "text-right"} ${rowCellBase}`}>
+                    <td className={`px-4 text-base text-black font-normal ${actions.align === "left" ? "text-left" : "text-right"} ${rowCellBase}`}>
                       <div
                         className={`inline-flex items-center gap-2 ${
                           actions.align === "left" ? "justify-start" : "justify-end"
@@ -353,7 +353,7 @@ export function DataTable<T extends Record<string, unknown>>({
 
           <div className="flex items-center gap-2 text-sm text-slate-700">
             <span>
-              {pagination.currentPage}-{pagination.totalPages} จาก {pagination.totalCount.toLocaleString()}
+              {Math.max((pagination.currentPage-1) * pagination.limit +1, 1)}-{Math.min((pagination.currentPage) * pagination.limit, pagination.totalCount)} จาก {pagination.totalCount.toLocaleString()}
             </span>
             <div className="flex items-center">
               <button

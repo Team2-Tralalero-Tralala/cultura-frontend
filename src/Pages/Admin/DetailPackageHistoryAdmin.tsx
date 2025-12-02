@@ -121,15 +121,15 @@ export default function DetailPackageHistoryAdmin() {
           rejectReason: raw.rejectReason ?? null,
           createdBy: raw.createPackage
             ? {
-                id: raw.createPackage.id,
-                name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
-              }
+              id: raw.createPackage.id,
+              name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
+            }
             : null,
           overseer: raw.overseerPackage
             ? {
-                id: raw.overseerPackage.id,
-                name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
-              }
+              id: raw.overseerPackage.id,
+              name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
+            }
             : null,
           tags: raw.tagPackages ? raw.tagPackages.map((t: any) => t.tag.name) : [],
           startDate: extractDateTime(raw.startDate),
@@ -138,22 +138,22 @@ export default function DetailPackageHistoryAdmin() {
           closeBookingAt: extractDateTime(raw.bookingCloseDate),
           location: raw.location
             ? {
-                address: raw.location.houseNumber ?? "-",
-                detail: raw.location.detail ?? "-",
-                subDistrict: raw.location.subDistrict,
-                district: raw.location.district,
-                province: raw.location.province,
-                postalCode: raw.location.postalCode,
-                latitude: raw.location.latitude,
-                longitude: raw.location.longitude,
-              }
+              address: raw.location.houseNumber ?? "-",
+              detail: raw.location.detail ?? "-",
+              subDistrict: raw.location.subDistrict,
+              district: raw.location.district,
+              province: raw.location.province,
+              postalCode: raw.location.postalCode,
+              latitude: raw.location.latitude,
+              longitude: raw.location.longitude,
+            }
             : null,
           files: raw.packageFile
             ? raw.packageFile.map((f: any) => ({
-                id: f.id,
-                path: f.filePath,
-                type: f.type,
-              }))
+              id: f.id,
+              path: f.filePath,
+              type: f.type,
+            }))
             : [],
         };
 
@@ -177,9 +177,7 @@ export default function DetailPackageHistoryAdmin() {
   const coverImage = pkg.files?.find((f) => f.type === "COVER");
 
   /* ----------------------------- จากตรงนี้ลงไปห้ามแก้ ----------------------------- */
-  // ตอนนี้ขาด Navigation page ที่มันบอกว่าหน้านี้อยู่ที่ไหน เช่น จัดการแพ็กเกจ / รายละเอียดแพ็กเกจ
-  // อาจจะเพิ่มทีหลัง
-  // Main container
+
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb */}

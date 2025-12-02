@@ -287,7 +287,7 @@ export default function ManageBookingAdmin() {
           <div className="ml-auto">
             <Button
               type="confirm-admin"
-              onClick={() => navigate("/admin/refund-requests")}
+              onClick={() => navigate("/admin/booking/refund")}
             >
               คำขอคืนเงิน
             </Button>

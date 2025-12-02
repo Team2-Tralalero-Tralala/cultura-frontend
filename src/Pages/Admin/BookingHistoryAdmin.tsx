@@ -8,6 +8,7 @@ import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
 import type { BookingHistoryItem } from "../../Types/BookingHistory";
 import { fetchBookingHistoriesByRole } from "../../Services/booking-history-service";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : หน้าแสดง "ประวัติการจอง" สำหรับ Admin/CM
@@ -98,12 +99,12 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
   const evidence = item?.transferSlip ?? "-";
   const bookedAt = item?.bookingAt
     ? new Date(item.bookingAt).toLocaleString("th-TH", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "-";
   return { customerName, activityTitle, price, status, evidence, bookedAt };
 };
@@ -188,8 +189,8 @@ export default function BookingHistoryAdmin(): React.ReactElement {
       selectedStatus === "ALL"
         ? tableRows
         : tableRows.filter(
-            (r) => r.status === STATUS_LABEL_TH[selectedStatus as keyof typeof STATUS_LABEL_TH]
-          );
+          (r) => r.status === STATUS_LABEL_TH[selectedStatus as keyof typeof STATUS_LABEL_TH]
+        );
 
     if (!q) return subset;
     return subset.filter((r) => Object.values(r).join(" ").toLowerCase().includes(q));
@@ -220,6 +221,14 @@ export default function BookingHistoryAdmin(): React.ReactElement {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
+        <div>
+          <Breadcrumb
+            current={{
+              label: "ประวัติการจอง",
+              to: `/admin/bookings-histories/all`,
+            }}
+          />
+        </div>
         <h1 className="text-xl font-semibold text-gray-800">ประวัติการจอง</h1>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

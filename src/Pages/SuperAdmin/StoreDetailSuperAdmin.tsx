@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ChevronRight, Edit } from "lucide-react";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 interface Store {
   id: number;
@@ -17,8 +18,8 @@ interface Store {
 }
 
 const StoreDetailPage = () => {
- const { id } = useParams<{ id: string }>();  
- const [store, setStore] = useState<Store | null>(null);
+  const { id } = useParams<{ id: string }>();
+  const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStore = async () => {
@@ -50,21 +51,21 @@ const StoreDetailPage = () => {
           images,
           location: data.location
             ? {
-                address: [
-                  data.location.houseNumber,
-                  data.location.villageNumber ? `หมู่ ${data.location.villageNumber}` : null,
-                  data.location.alley ? `ซอย ${data.location.alley}` : null,
-                  data.location.subDistrict,
-                  data.location.district,
-                  data.location.province,
-                  data.location.postalCode,
-                ]
-                  .filter(Boolean)
-                  .join(" "),
-                detail: data.location.detail ?? "-",
-                latitude: data.location.latitude ?? 0,
-                longitude: data.location.longitude ?? 0,
-              }
+              address: [
+                data.location.houseNumber,
+                data.location.villageNumber ? `หมู่ ${data.location.villageNumber}` : null,
+                data.location.alley ? `ซอย ${data.location.alley}` : null,
+                data.location.subDistrict,
+                data.location.district,
+                data.location.province,
+                data.location.postalCode,
+              ]
+                .filter(Boolean)
+                .join(" "),
+              detail: data.location.detail ?? "-",
+              latitude: data.location.latitude ?? 0,
+              longitude: data.location.longitude ?? 0,
+            }
             : undefined,
         };
 
@@ -89,14 +90,13 @@ const StoreDetailPage = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0] min-h-screen">
       {/* Breadcrumb */}
-      <div className="flex items-center text-[14px] text-black mb-4 font-medium">
-        <span>จัดการชุมชน</span>
-        <ChevronRight size={18} className="mx-1" />
-        <span>ชุมชนแสนสุข</span>
-        <ChevronRight size={18} className="mx-1" />
-        <span>จัดการร้านค้า</span>
-        <ChevronRight size={18} className="mx-1" />
-        <span className="text-[#494949]">{store.name}</span>
+      <div>
+        <Breadcrumb
+          current={{
+            label: store.name,
+            to: `/super/store/${store.id}`,
+          }}
+        />
       </div>
 
       {/* Main Section */}
@@ -189,15 +189,15 @@ const StoreDetailPage = () => {
                 </p>
                 <p className="mb-2">
                   <strong>OpenStreetMap URL :</strong>{" "}
-                    <a
-                     href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
-                    </a>
-                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
+                  </a>
+                </p>
               </div>
               <div className="mt-6">
                 <p className="mb-2">
@@ -205,7 +205,7 @@ const StoreDetailPage = () => {
                 </p>
               </div>
             </div>
-            
+
           </>
         ) : (
           <p className="text-gray-500">ไม่มีข้อมูลตำแหน่งร้านค้า</p>

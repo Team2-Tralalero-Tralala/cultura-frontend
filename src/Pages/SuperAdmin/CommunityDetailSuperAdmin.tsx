@@ -752,30 +752,30 @@ export default function CommunityDetailSuperAdmin() {
                 >
                   {community.communityMembers?.length ? (
                     <div className="space-y-3">
-                      {community.communityMembers.map((cm: any) => {
-                        const m = cm.user;
-                        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
+                      {community.communityMembers.map((communityMember: any) => {
+                        const member = communityMember.user;
+                        const fullName = [member.fname, member.lname].filter(Boolean).join(" ").trim();
 
                         return (
                           <div
-                            key={cm.id}
-                            onClick={() => navigate(`/super/account/${m.id}`)}
+                            key={communityMember.id}
+                            onClick={() => navigate(`/super/account/community/${community.id}`)}
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
                             <AvatarCircle
-                              src={resolveBackendUploadUrl(m.profileImage)}
-                              name={fullName || m.username}
+                              src={resolveBackendUploadUrl(member.profileImage)}
+                              name={fullName || member.username}
                               size={64}
                             />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{fullName || m.username}</div>
-                              {m.activityRole && (
-                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
+                              <div className="font-medium truncate">{fullName || member.username}</div>
+                              {member.activityRole && (
+                                <div className="text-sm text-slate-700">• {member.activityRole}</div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
-                                {m.email || "-"}
+                                {member.email || "-"}
                               </div>
-                              <div className="text-sm text-slate-600">{m.phone || "-"}</div>
+                              <div className="text-sm text-slate-600">{member.phone || "-"}</div>
                             </div>
                           </div>
                         );

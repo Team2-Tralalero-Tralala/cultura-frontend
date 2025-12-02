@@ -15,10 +15,10 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-
-import { getHomestaysAllAdmin } from "@/Services/homestay-services";
+import { TrashIcon } from "@/Components/Tables/Icon";
+import { getHomestaysAllAdmin, HomestayAdminDelete } from "@/Services/homestay-services";
 import type { HomestayRow, HomestayDtoFromApi } from "@/Types/Homestay";
-import type { Column, DataTableActionsConfig } from "@/Components/Tables/Types";
+import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 /**
  * ฟังก์ชัน: normalizeText
@@ -27,12 +27,7 @@ import type { Column, DataTableActionsConfig } from "@/Components/Tables/Types";
  * Output: string ที่ normalize แล้ว
  */
 const normalizeText = (text: string) =>
-  (text ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * Component: ManageHomestayAdmin
@@ -50,6 +45,8 @@ export default function ManageHomestayAdmin() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isOpenConfirm, setIsOpenConfirm] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isOpenBulkConfirm, setIsOpenBulkConfirm] = useState<boolean>(false);
+  const [bulkDeleteIds, setBulkDeleteIds] = useState<number[]>([]);
 
   /**
    * ฟังก์ชัน: reload
@@ -62,9 +59,7 @@ export default function ManageHomestayAdmin() {
       setErrorMessage(null);
 
       const res = await getHomestaysAllAdmin();
-      const homestayList: HomestayDtoFromApi[] = Array.isArray(res.data)
-        ? res.data
-        : [];
+      const homestayList: HomestayDtoFromApi[] = Array.isArray(res.data) ? res.data : [];
 
       const pagination = res.pagination ?? {};
 
@@ -79,8 +74,7 @@ export default function ManageHomestayAdmin() {
       setTotalItems(pagination?.totalCount ?? mappedRows.length);
     } catch (error: unknown) {
       console.error(error);
-      if (error instanceof Error)
-        setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      if (error instanceof Error) setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
       else setErrorMessage("โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
@@ -101,10 +95,7 @@ export default function ManageHomestayAdmin() {
       header: "ชื่อที่พัก",
       className: "min-w-[200px]",
       render: (row) => (
-        <Link
-          to={`/admin/community/homestay/${row.id}`}
-          className="hover:underline"
-        >
+        <Link to={`/admin/community/homestay/${row.id}`} className="hover:underline">
           {row.name}
         </Link>
       ),
@@ -151,33 +142,75 @@ export default function ManageHomestayAdmin() {
   }, [rows, searchQuery]);
 
   /**
+   * ฟังก์ชัน: bulkActions
+   * วัตถุประสงค์: ปุ่มลบแบบเลือกหลายแถว (bulk delete) ใช้ modal ยืนยัน
+   */
+  const bulkActions: BulkAction<HomestayRow>[] = [
+    {
+      id: "bulk-delete",
+      label: "ลบทั้งหมด",
+      icon: TrashIcon,
+      intent: "danger",
+      confirm: (rows) => `ยืนยันลบที่พักจำนวน ${rows.length} รายการหรือไม่?`,
+      onClick: async (rows) => {
+        const ids: number[] = rows.map((r) => r.id);
+        setBulkDeleteIds(ids);
+        setIsOpenBulkConfirm(true);
+      },
+    },
+  ];
+
+  /**
+   * ฟังก์ชัน: handleDelete
+   * วัตถุประสงค์: ลบแถวเดียว
+   */
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    await HomestayAdminDelete(deleteId);
+    setIsOpenConfirm(false);
+    setDeleteId(null);
+
+    await reload();
+  };
+
+  /**
+   * ฟังก์ชัน: handleBulkDelete
+   * วัตถุประสงค์: ลบหลายแถว
+   */
+  const handleBulkDelete = async () => {
+    if (bulkDeleteIds.length === 0) return;
+
+    await Promise.all(bulkDeleteIds.map((id) => HomestayAdminDelete(id)));
+
+    setBulkDeleteIds([]);
+    setIsOpenBulkConfirm(false);
+
+    await reload();
+  };
+
+  /**
    * ส่วน Render:
    * แสดงตารางข้อมูลที่พัก พร้อม Breadcrumb, Toolbar
    */
   return (
     <div className="space-y-4">
       {/* Section: Breadcrumb */}
-        <Breadcrumb
-          current={{
-            label: "จัดการที่พัก",
-            to: "/admin/community/homestays",
-            fromSidebar: true,
-          }}
-        />
+      <Breadcrumb
+        current={{
+          label: "จัดการที่พัก",
+          to: "/admin/community/homestays",
+        }}
+      />
 
       {/* Section: Header */}
       <div className="flex flex-col mt-[-18px]">
-        <h1 className="text-[20px] font-bold text-black">
-          จัดการที่พัก
-        </h1>
+        <h1 className="text-[20px] font-bold text-black">จัดการที่พัก</h1>
 
         {/* Section: Toolbar */}
         <div className="flex items-center gap-3 mt-2">
           <div className="max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           <div className="ml-auto">
@@ -199,6 +232,7 @@ export default function ManageHomestayAdmin() {
           getKey={(row) => String(row.id)}
           actions={rowActions}
           selectable
+          bulkActions={bulkActions}
           theme="brand"
           isLoading={isLoading}
           pageSizeOptions={[10, 30, 50]}
@@ -212,6 +246,24 @@ export default function ManageHomestayAdmin() {
           onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
         />
       </div>
+
+      {/* Modal สำหรับ row delete */}
+      <Modal
+        open={isOpenConfirm}
+        title="ยืนยันการลบที่พัก"
+        text="คุณต้องการลบที่พักนี้หรือไม่?"
+        onConfirm={handleDelete}
+        onCancel={() => setIsOpenConfirm(false)}
+      />
+
+      {/* Modal สำหรับ bulk delete */}
+      <Modal
+        open={isOpenBulkConfirm}
+        title="ยืนยันการลบที่พัก"
+        text={`คุณต้องการลบที่พัก ${bulkDeleteIds.length} รายการหรือไม่?`}
+        onConfirm={handleBulkDelete}
+        onCancel={() => setIsOpenBulkConfirm(false)}
+      />
     </div>
   );
 }

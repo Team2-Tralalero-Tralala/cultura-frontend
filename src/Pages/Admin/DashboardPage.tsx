@@ -109,7 +109,6 @@ export function DashboardPage() {
     setShowCalendar(false);
     setShowCalendar2(false);
   };
-
   /*
    * คำอธิบาย : ปิดปฏิทินเมื่อคลิกภายนอก
    * Input : ไม่มี
@@ -159,7 +158,7 @@ export function DashboardPage() {
                 <p className="text-base mb-2 font-semibold">แพ็กเกจทั้งหมด</p>
                 <div className="flex justify-between w-full items-end gap-2">
                   <p className="text-2xl font-bold">
-                    {dashboardData.summary.totalPackages.toLocaleString()}
+                    {(dashboardData.summary?.totalPackages ?? 0).toLocaleString()}
                   </p>
                   <p className="font-bold text-base">แพ็กเกจ</p>
                 </div>
@@ -168,7 +167,7 @@ export function DashboardPage() {
                 <p className="text-base mb-2 font-semibold">รายได้ทั้งหมด</p>
                 <div className="flex justify-between w-full items-end gap-2">
                   <p className="text-2xl font-bold">
-                    {dashboardData.summary.totalRevenue.toLocaleString()}
+                    {(dashboardData.summary?.totalRevenue ?? 0).toLocaleString()}
                   </p>
                   <p className="font-bold text-base">บาท</p>
                 </div>
@@ -177,7 +176,7 @@ export function DashboardPage() {
                 <p className="text-base mb-2 font-semibold">การจองสำเร็จ</p>
                 <div className="flex justify-between w-full items-end gap-2">
                   <p className="text-2xl font-bold">
-                    {dashboardData.summary.successBookingCount.toLocaleString()}
+                    {(dashboardData.summary?.successBookingCount ?? 0).toLocaleString()}
                   </p>
                   <p className="font-bold text-base">ครั้ง</p>
                 </div>
@@ -186,7 +185,7 @@ export function DashboardPage() {
                 <p className="text-base mb-2 font-semibold">ยกเลิกการจอง</p>
                 <div className="flex justify-between w-full items-end gap-2">
                   <p className="text-2xl font-bold">
-                    {dashboardData.summary.cancelledBookingCount.toLocaleString()}
+                    {(dashboardData.summary?.cancelledBookingCount ?? 0).toLocaleString()}
                   </p>
                   <p className="font-bold text-base">ครั้ง</p>
                 </div>
@@ -225,8 +224,8 @@ export function DashboardPage() {
               </div>
               <LineGraph
                 className="w-full h-64"
-                labels={dashboardData.graph.bookingCountGraph.labels}
-                data={dashboardData.graph.bookingCountGraph.data}
+                labels={dashboardData.graph?.bookingCountGraph?.labels ?? []}
+                data={dashboardData.graph?.bookingCountGraph?.data ?? []}
                 title=""
               />
             </div>
@@ -263,8 +262,8 @@ export function DashboardPage() {
             <div className="pl-10 pr-10">
               <BarChart
                 className="w-full h-64"
-                labels={dashboardData.graph.revenueGraph.labels}
-                data={dashboardData.graph.revenueGraph.data}
+                labels={dashboardData.graph?.revenueGraph?.labels ?? []}
+                data={dashboardData.graph?.revenueGraph?.data ?? []}
                 title=""
               />
             </div>
@@ -289,7 +288,7 @@ export function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData.package.topPackages &&
+                    {dashboardData.package?.topPackages &&
                     dashboardData.package.topPackages.length > 0 ? (
                       dashboardData.package.topPackages.map((pkg, index) => (
                         <tr key={index} className="border-b hover:bg-gray-50 transition-colors">

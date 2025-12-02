@@ -102,12 +102,7 @@ const columns: Column<AccountRow>[] = [
  * ใช้สำหรับทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
  */
 const normalizeText = (text: string) =>
-  (text ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * Component: ManageAccountPage
@@ -227,9 +222,7 @@ export function ManageAccountPage() {
       const name = `${object.fname ?? ""} ${object.lname ?? ""}`.trim();
       const email = object.email ?? "";
       const community =
-        object.communityAdmin?.[0]?.name ??
-        object.communityMembers?.[0]?.Community?.name ??
-        "";
+        object.communityAdmin?.[0]?.name ?? object.communityMembers?.[0]?.Community?.name ?? "";
 
       const textMatch =
         !query ||
@@ -252,7 +245,7 @@ export function ManageAccountPage() {
     variant: "icons",
     className: "pr-11",
     items: () => ["block", "edit", "delete"],
-    
+
     callbacks: {
       block: (row) => {
         openModal(
@@ -321,82 +314,80 @@ export function ManageAccountPage() {
     <div className="space-y-4">
       {/* Section: Header */}
       <div className="flex flex-col w-full">
+        <div>
           <Breadcrumb
             current={{
-              label: "จัดการบัญชึ",
-              to: "/super/account/all",
-              fromSidebar: true,
+              label: "จัดการบัญชี",
+              to: "/super/accounts/all",
+              fromSidebar: true, // << สำคัญ : มาจาก sidebar
             }}
           />
-        <h1 className="text-[20px] font-bold text-black">
-          จัดการบัญชี
-        </h1>
+          <h1 className="text-[20px] font-bold text-black">จัดการบัญชี</h1>
 
-        <div className="flex items-center justify-between w-full mt-2">
-          {/* Section: Search + Filter */}
-          <div className="flex items-center gap-2">
-            <div className="w-[260px]">
-              <SearchBarTable
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+          <div className="flex items-center justify-between w-full mt-2 mb-4">
+            {/* Section: Search + Filter */}
+            <div className="flex items-center gap-2">
+              <div className="w-[260px]">
+                <SearchBarTable
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="w-[140px]">
+                <FiltersForCM
+                  options={optionsRole}
+                  selected={filterRole}
+                  onChange={(value) => setFilterRole(value)}
+                />
+              </div>
             </div>
 
-            <div className="w-[140px]">
-              <FiltersForCM
-                options={optionsRole}
-                selected={filterRole}
-                onChange={(value) => setFilterRole(value)}
-              />
+            {/* Section: Add Account */}
+            <div className="flex items-center gap-2">
+              <Button onClick={() => navigate("/super/account/admin/create")}>
+                <span className="text-lg leading-none">＋</span>
+                <span>เพิ่มบัญชี</span>
+              </Button>
             </div>
-          </div>
-
-          {/* Section: Add Account */}
-          <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/super/account/admin/create")}>
-              <span className="text-lg leading-none">＋</span>
-              <span>เพิ่มบัญชี</span>
-            </Button>
           </div>
         </div>
+
+        {/* Section: Error */}
+        {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
+
+        {/* Section: Table */}
+        <DataTable<AccountRow>
+          data={filteredRows}
+          getKey={(row) => row.id.toString()}
+          columns={columns}
+          selectable={true}
+          pageSizeOptions={[10, 30, 50]}
+          pagination={pagination}
+          onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+          onPageSizeChange={(limit) =>
+            setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
+          }
+          onSelectedChange={(rows) => setSelectedRows(rows)}
+          isLoading={isLoading}
+          actions={rowActions}
+          bulkActions={bulkActions}
+        />
+
+        {/* Section: Modal */}
+        <Modal
+          open={modalOpen}
+          title={modalTitle}
+          text={modalText}
+          confirmText="ยืนยัน"
+          cancelText="ยกเลิก"
+          onConfirm={() => {
+            onConfirmAction();
+            setModalOpen(false);
+          }}
+          onCancel={() => setModalOpen(false)}
+        />
       </div>
-
-      {/* Section: Error */}
-      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
-
-      {/* Section: Table */}
-      <DataTable<AccountRow>
-        data={filteredRows}
-        getKey={(row) => row.id.toString()}
-        columns={columns}
-        selectable={true}
-        pageSizeOptions={[10, 30, 50]}
-        pagination={pagination}
-        onPageChange={(page) =>
-          setPagination((prev) => ({ ...prev, currentPage: page }))
-        }
-        onPageSizeChange={(limit) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
-        }
-        onSelectedChange={(rows) => setSelectedRows(rows)}
-        isLoading={isLoading}
-        actions={rowActions}
-        bulkActions={bulkActions}
-      />
-
-      {/* Section: Modal */}
-      <Modal
-        open={modalOpen}
-        title={modalTitle}
-        text={modalText}
-        confirmText="ยืนยัน"
-        cancelText="ยกเลิก"
-        onConfirm={() => {
-          onConfirmAction();
-          setModalOpen(false);
-        }}
-        onCancel={() => setModalOpen(false)}
-      />
     </div>
   );
 }

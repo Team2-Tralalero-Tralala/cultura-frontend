@@ -251,6 +251,7 @@ export function EditCommunity() {
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([lat, lng]);
         setChecked(data.status === "OPEN" ? true : false);
+        setIsVisibleRating(data.isRatingVisible);
 
         const logoFileFetch: File[] = await Promise.all(
           (data.communityImage || [])
@@ -457,6 +458,7 @@ export function EditCommunity() {
       const payload = {
         ...cleanForm,
         communityMembers: selectedMembers,
+        isRatingVisible: isVisibleRating,
         bankName: formData.bankName,
         registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
         location: {
@@ -516,13 +518,14 @@ export function EditCommunity() {
 
   return (
     <div>
-      <Breadcrumb
-        items={[
-          { label: "จัดการชุมชน", to: "/super/communities/all" },
-          { label: formData.name || "ชื่อชุมชน", to: `/super/community/${communityId}` },
-          { label: "แก่ไขวิสาหกิจชุมชน" },
-        ]}
-      />
+      <div>
+        <Breadcrumb
+          current={{
+            label: "แก้ไขวิสาหกิจชุมชน",
+            to: `/super/community/${communityId}/edit`,
+          }}
+        />
+      </div>
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>

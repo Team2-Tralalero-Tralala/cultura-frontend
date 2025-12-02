@@ -205,12 +205,14 @@ export default function ManageStores() {
       {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         {/* Breadcrumb */}
-        <Breadcrumb
-          current={{
-            label:"จัดการร้านค้า",
-            to: location.pathname,
-          }}
-        />
+        <div>
+          <Breadcrumb
+            current={{
+              label: "จัดการร้านค้า",
+              to: `/super/community/${communityId}/stores/all`,
+            }}
+          />
+        </div>
 
         {/* <-- หัวข้อ */}
         <Link

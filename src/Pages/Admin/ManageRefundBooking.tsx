@@ -24,11 +24,11 @@ import {
 /*
  * ฟังก์ชัน : normalizeText
  * คำอธิบาย : แปลงข้อความให้เป็นตัวพิมพ์เล็ก ลบช่องว่างเกิน และ normalize สำหรับค้นหา
- * Input : s (string)
+ * Input : text
  * Output : string ที่ถูก normalize แล้ว
  */
-const normalizeText = (s: string) =>
-  (s ?? "")
+const normalizeText = (text: string) =>
+  (text ?? "")
     .toString()
     .toLowerCase()
     .normalize("NFC")
@@ -48,7 +48,6 @@ type RefundRow = {
 };
 
 export function ManageRefundBooking() {
-  // State หลัก
   const [rows, setRows] = useState<RefundRow[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
@@ -60,13 +59,11 @@ export function ManageRefundBooking() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Modal ยืนยันอนุมัติ
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
 
-  // Modal ปฏิเสธ (มีเหตุผล)
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedRejectId, setSelectedRejectId] = useState<number | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -139,7 +136,20 @@ export function ManageRefundBooking() {
 
   // คอลัมน์ของ DataTable
   const columns: Column<RefundRow>[] = [
-    { key: "touristName", header: "ชื่อผู้จอง" },
+    { key: "touristName", 
+      header: "ชื่อผู้จอง",
+      render: (row) =>
+        row.id ? (
+          <a
+            href={`/admin/booking/${row.id}`}
+            className="hover:underline"
+          >
+            {row.touristName || "-"}
+          </a>
+        ) : (
+          <div>{row.touristName || "-"}</div>
+        ),
+    },
     { key: "packageName", header: "ชื่อกิจกรรม" },
     { key: "totalPrice", header: "ราคารวม" },
     { key: "status", header: "สถานะ" },
@@ -174,8 +184,8 @@ export function ManageRefundBooking() {
                 setSelectedRejectId(row.id);
                 setRejectModalOpen(true);
               }}
-              className="border border-[#4A816F] text-[#4A816F] bg-white hover:bg-[#E6F0EC]
-                         text-[13px] h-[31px] min-w-[77px] rounded-md px-3 py-[2px]
+              className="border border-[#4A816F] text-[#696969] bg-white hover:bg-[#E6F0EC]
+                         text-[16px] h-[31px] min-w-[77px] rounded-sm px-3 py-[2px]
                          transition-colors duration-200"
             >
               ปฏิเสธ
@@ -200,7 +210,7 @@ export function ManageRefundBooking() {
                 setModalOpen(true);
               }}
               className="bg-[#4A816F] text-white hover:bg-[#3B6D5D]
-                         text-[13px] h-[31px] min-w-[77px] rounded-md px-3 py-[2px]
+                         text-[16px] h-[31px] min-w-[77px] rounded-sm px-3 py-[2px]
                          transition-colors duration-200"
             >
               อนุมัติ
@@ -236,21 +246,22 @@ export function ManageRefundBooking() {
   ];
 
   return (
-    <div className="space-y-4 cursor-default">
+    <div className="space-y-4">
       {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
-        <Breadcrumb
-          items={[
-            { label: "จัดการการจอง", to: "/admin/booking" },
-            { label: "คำขอคืนเงิน" },
-          ]}
-        />
-      </div>
+         <Breadcrumb
+            current={{
+              label: "คำขอคืนเงิน",
+              to: "/admin/booking/refund-requests",
+              fromSidebar: true,
+            }}
+          />
 
       {/* Header + Toolbar */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">คำขอคืนเงิน</h1>
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col mt-[-18px]">
+         <h1 className="text-[20px] font-bold text-black">
+          คำขอคืนเงิน
+        </h1>
+        <div className="flex items-center gap-3 mt-2">
           <div className="max-w-md">
             <SearchBarTable
               value={searchQuery}

@@ -110,23 +110,25 @@ export default function BookingDetailAdmin() {
    * Output : อัพเดทสถานะการจองเป็น APPROVED
    */
 
- const confirmApprove = async () => {
-   if (!booking || !bookingId) return;
+  const confirmApprove = async () => {
+    if (!booking || !bookingId) return;
 
-   try {
-     await axios.patch(
-       `${apiUrl}/admin/booking/${bookingId}`,
-       { status: BOOKING_STATUS.APPROVED },
-       { headers: { Authorization: `Bearer ${token}` } }
-     );
+    try {
+      await axios.post(
+        `${apiUrl}/admin/bookings/${bookingId}/status`,
+        { bookingId, status: "BOOKED" },
+        {
+          withCredentials: true,
+        }
+      );
 
-     setBooking({ ...booking, status: BOOKING_STATUS.APPROVED });
-   } catch (err) {
-     console.error(err);
-   } finally {
-     setOpenApproveModal(false);
-   }
- };
+      setBooking({ ...booking, status: "BOOKED" });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setOpenApproveModal(false);
+    }
+  };
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับปฏิเสธการจอง
@@ -134,17 +136,19 @@ export default function BookingDetailAdmin() {
    * Output : อัพเดทสถานะการจองเป็น REJECTED
    */
 
-  const confirmReject = async () => {
+  const confirmReject = async (reason: string) => {
     if (!booking || !bookingId) return;
 
     try {
-      await axios.patch(
-        `${apiUrl}/admin/booking/${bookingId}`,
-        { status: BOOKING_STATUS.REJECTED },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await axios.post(
+        `${apiUrl}/admin/bookings/${bookingId}/status`,
+        { bookingId, status: "REJECTED", rejectReason: reason },
+        {
+          withCredentials: true,
+        }
       );
 
-      setBooking({ ...booking, status: BOOKING_STATUS.REJECTED });
+      setBooking({ ...booking, status: "REJECTED", rejectReason: reason });
     } catch (err) {
       console.error(err);
     } finally {

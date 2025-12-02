@@ -14,7 +14,6 @@ import type { Column, Pagination } from "../../Components/Tables/Types";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { fetchAuthenticationLog } from "@/Services/authenticationLog-services";
 import type { AuthenticationLogRow } from "@/Types/AuthenticationLog";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const thaiRoleName = (role: string) => {
   switch (role) {
@@ -120,60 +119,23 @@ export default function AuthentionLogSuperAdmin() {
     fetchData();
   }, [pagination.currentPage, pagination.limit, searchQuery, filterRole]);
 
-    return (
-        <div className="space-y-4">
-            <div className="flex flex-col gap-2 w-full">
-                <Breadcrumb
-                    current={{
-                        label: "ประวัติการเข้าใช้งาน",
-                        to: "/super/logs",
-                        fromSidebar: true,
-                    }}
-                />
-                <h1 className="text-xl font-bold">ประวัติการเข้าใช้งาน</h1>
-                <div className="flex items-center justify-between gap-3 w-full">
-                    <div className="flex-1 max-w-md">
-                        <SearchBarTable
-                            value={searchQuery}
-                            onChange={(e) => {
-                              setSearchQuery(e.target.value)
-                              setPagination((prev) => ({ ...prev, currentPage: 1 }));
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <FiltersForCM
-                            options={optionsCM}
-                            selected={filterRole}
-                            onChange={(value) => {
-                              setFilterRole(value)
-                              setPagination((prev) => ({ ...prev, currentPage: 1 }));
-                            }}
-                        />
-                    </div>
-                </div>
-            </div>
-
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 w-full">
-        <div>
-          <Breadcrumb
-            current={{
-              label: "ประวัติการเข้าใช้งาน",
-              to: "/super/logs",
-              fromSidebar: true,
-            }}
-          />
-        </div>
-        <h1 className="text-xl">ประวัติการเข้าใช้งาน</h1>
+        <Breadcrumb
+          current={{
+            label: "ประวัติการเข้าใช้งาน",
+            to: "/super/logs",
+            fromSidebar: true,
+          }}
+        />
+        <h1 className="text-xl font-bold">ประวัติการเข้าใช้งาน</h1>
         <div className="flex items-center justify-between gap-3 w-full">
           <div className="flex-1 max-w-md">
             <SearchBarTable
               value={searchQuery}
               onChange={(e) => {
-                setSearchQuery(e.target.value)
+                setSearchQuery(e.target.value);
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
             />
@@ -183,36 +145,70 @@ export default function AuthentionLogSuperAdmin() {
               options={optionsCM}
               selected={filterRole}
               onChange={(value) => {
-                setFilterRole(value)
+                setFilterRole(value);
                 setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
             />
           </div>
         </div>
       </div>
+      return (
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2 w-full">
+          <div>
+            <Breadcrumb
+              current={{
+                label: "ประวัติการเข้าใช้งาน",
+                to: "/super/logs",
+                fromSidebar: true,
+              }}
+            />
+          </div>
+          <h1 className="text-xl">ประวัติการเข้าใช้งาน</h1>
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex-1 max-w-md">
+              <SearchBarTable
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                }}
+              />
+            </div>
+            <div>
+              <FiltersForCM
+                options={optionsCM}
+                selected={filterRole}
+                onChange={(value) => {
+                  setFilterRole(value);
+                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                }}
+              />
+            </div>
+          </div>
+        </div>
 
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
+        {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-      <DataTable<AuthenticationLogRow>
-        data={rows}
-        getKey={(row) => row.id.toString()}
-        columns={columns}
-        pageSizeOptions={[10, 30, 50]}
-        onPageChange={(p) => {
-          setPagination((prev) => ({ ...prev, currentPage: p }));
-        }}
-        onPageSizeChange={(p) => {
-          setPagination((prev) => ({
-            ...prev,
-            currentPage: 1,
-            limit: p,
-          }));
-        }}
-        pagination={pagination}
-        isLoading={isLoading}
-      />
+        <DataTable<AuthenticationLogRow>
+          data={rows}
+          getKey={(row) => row.id.toString()}
+          columns={columns}
+          pageSizeOptions={[10, 30, 50]}
+          onPageChange={(p) => {
+            setPagination((prev) => ({ ...prev, currentPage: p }));
+          }}
+          onPageSizeChange={(p) => {
+            setPagination((prev) => ({
+              ...prev,
+              currentPage: 1,
+              limit: p,
+            }));
+          }}
+          pagination={pagination}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

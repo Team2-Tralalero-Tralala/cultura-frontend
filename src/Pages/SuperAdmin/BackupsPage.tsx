@@ -26,7 +26,6 @@ import {
 import { fetchServerStatus } from "@/Services/server-status-service";
 import type { BackupRow } from "@/Types/Backup";
 import { Icon } from "@iconify/react";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : แปลงสถานะไฟล์สำรองข้อมูลจากภาษาอังกฤษเป็นภาษาไทย

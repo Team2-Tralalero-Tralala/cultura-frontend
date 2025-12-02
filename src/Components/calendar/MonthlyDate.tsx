@@ -17,10 +17,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {
-  MonthlyWrapper,
-  MonthlyDatePickerContainer,
-} from "./styled/MonthlyDate.Styled";
+import { MonthlyWrapper, MonthlyDatePickerContainer } from "./styled/MonthlyDate.Styled";
 import { th } from "date-fns/locale";
 import { subYears, addYears, isSameMonth, isSameYear } from "date-fns";
 
@@ -36,10 +33,7 @@ interface MonthlyDateProps {
 const toBuddhistEraYear = (y: number) => y + 543;
 
 /* ---------- Component ---------- */
-export const MonthlyDate: React.FC<MonthlyDateProps> = ({
-  onDateChange,
-  defaultSelected = []
-}) => {
+export const MonthlyDate: React.FC<MonthlyDateProps> = ({ onDateChange, defaultSelected = [] }) => {
   /** State: เก็บรายการเดือนที่ถูกเลือก (Array) */
   const [selectedMonths, setSelectedMonths] = useState<Date[]>(defaultSelected);
 
@@ -47,27 +41,30 @@ export const MonthlyDate: React.FC<MonthlyDateProps> = ({
    * Handler: handleMonthClick
    * คำอธิบาย: ระบบ Toggle (เลือก/ยกเลิก) เดือนที่คลิก
    */
-  const handleMonthClick = useCallback((date: Date | null) => {
-    if (!date) return;
+  const handleMonthClick = useCallback(
+    (date: Date | null) => {
+      if (!date) return;
 
-    setSelectedMonths((prev) => {
-      // เช็คว่าเดือนนี้ถูกเลือกไปหรือยัง?
-      const exists = prev.some((d) => isSameMonth(d, date) && isSameYear(d, date));
+      setSelectedMonths((prev) => {
+        // เช็คว่าเดือนนี้ถูกเลือกไปหรือยัง?
+        const exists = prev.some((d) => isSameMonth(d, date) && isSameYear(d, date));
 
-      let newSelection: Date[];
-      if (exists) {
-        // ถ้ามีอยู่แล้ว -> เอาออก (Filter out)
-        newSelection = prev.filter((d) => !(isSameMonth(d, date) && isSameYear(d, date)));
-      } else {
-        // ถ้ายังไม่มี -> เพิ่มเข้าไป
-        newSelection = [...prev, date];
-      }
+        let newSelection: Date[];
+        if (exists) {
+          // ถ้ามีอยู่แล้ว -> เอาออก (Filter out)
+          newSelection = prev.filter((d) => !(isSameMonth(d, date) && isSameYear(d, date)));
+        } else {
+          // ถ้ายังไม่มี -> เพิ่มเข้าไป
+          newSelection = [...prev, date];
+        }
 
-      // ส่งค่าออก
-      onDateChange?.(newSelection);
-      return newSelection;
-    });
-  }, [onDateChange]);
+        // ส่งค่าออก
+        onDateChange?.(newSelection);
+        return newSelection;
+      });
+    },
+    [onDateChange]
+  );
 
   /** Helper: เช็คสถานะเพื่อใส่ Class ให้ตรงกับ Styled Component เดิม */
   const getMonthClassName = (date: Date) => {
@@ -99,15 +96,12 @@ export const MonthlyDate: React.FC<MonthlyDateProps> = ({
           selected={undefined}
           onChange={handleMonthClick}
           shouldCloseOnSelect={false}
-
           /* Custom Class Logic: เพื่อให้สีเขียวขึ้นตามเดือนที่เลือก */
-          monthClassName={getMonthClassName}
-
+          monthClassName={getMonthClassName as any}
           locale={th}
           dateFormat="MMMM yyyy"
           minDate={minDate}
           maxDate={maxDate}
-
           /* Header เดิม: ปุ่มเลื่อนปี + dropdown ปี พ.ศ. */
           renderCustomHeader={({
             date,

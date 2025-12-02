@@ -5,6 +5,7 @@
  * - ค้นหา, เลือกหลายแถว, ลบทั้งหมด
  * - ปุ่มแก้ไข/ลบ ต่อแถว
  */
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import React, { useState } from "react";
@@ -123,8 +124,14 @@ export default function AuthentionLogSuperAdmin() {
     return (
         <div className="space-y-4">
             <div className="flex flex-col gap-2 w-full">
-                <h2 className="text-sm">ประวัติการเข้าใช้งาน</h2>
-                <h1 className="text-xl">ประวัติการเข้าใช้งาน</h1>
+                <Breadcrumb
+                    current={{
+                        label: "ประวัติการเข้าใช้งาน",
+                        to: "/super/logs",
+                        fromSidebar: true,
+                    }}
+                />
+                <h1 className="text-xl font-bold">ประวัติการเข้าใช้งาน</h1>
                 <div className="flex items-center justify-between gap-3 w-full">
                     <div className="flex-1 max-w-md">
                         <SearchBarTable

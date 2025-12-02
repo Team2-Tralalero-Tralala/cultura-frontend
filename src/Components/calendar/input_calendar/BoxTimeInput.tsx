@@ -1,38 +1,31 @@
-/*
- * File: BoxTimeInput.tsx
- * Component: BoxTimeInput (Client)
- *
- * Responsibility:
- *  - กล่องอินพุตเวลาแบบ 2 ช่อง (ชั่วโมง/นาที) รูปแบบ HH:mm
- *  - สไตล์เหมือน BoxDateInput (border, rounded, padding, font)
- *  - โค้ดให้เรียบง่าย ไม่ overengineer
+/**
+ * คำอธิบาย : Component สำหรับกล่องอินพุตเวลาแบบ 2 ช่อง (ชั่วโมงและนาที) ในรูปแบบ HH:mm
  */
-
 "use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 
 export type BoxTimeInputProps = {
-    /** รูปแบบ "HH:mm" หรือ "" */
     value?: string;
     defaultValue?: string;
     onChange?: (time: string) => void;
-
     label?: React.ReactNode;
     required?: boolean;
     id?: string;
     disabled?: boolean;
-
-    height?: number | string; // default: 44
+    height?: number | string;
     className?: string;
-
-    /** ถ้ามี = ใช้แสดงและเปลี่ยน border เป็นแดง */
     errorText?: string;
 };
 
-const toCssSize = (v?: number | string) =>
-    v === undefined ? undefined : typeof v === "number" ? `${v}px` : v;
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงค่าตัวเลขหรือข้อความให้เป็นรูปแบบขนาดของ CSS (เช่น เติม px ต่อท้ายตัวเลข)
+ * Input: value (number | string) - ค่าขนาดที่ต้องการแปลง
+ * Output : ค่าขนาดที่ถูกต้องตามรูปแบบ CSS (string) หรือ undefined
+ */
+const toCssSize = (value?: number | string) =>
+    value === undefined ? undefined : typeof value === "number" ? `${value}px` : value;
 
 export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
     value,
@@ -49,50 +42,43 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
     const autoId = useId();
     const inputId = id ?? `time-input-${autoId}`;
 
-    // สองช่อง ชม./นาที
-    const [hh, setHh] = useState("");
-    const [mm, setMm] = useState("");
+    const [hour, setHh] = useState("");
+    const [minute, setMm] = useState("");
     const hiddenTimeRef = useRef<HTMLInputElement | null>(null);
 
     const handleClockClick = () => {
         if (!hiddenTimeRef.current) return;
-
-        // sync ค่าปัจจุบันจาก hh:mm ให้เป็น value "HH:mm"
         const currentTime =
-            hh.length === 2 && mm.length === 2 ? `${hh}:${mm}` : "";
-
+            hour.length === 2 && minute.length === 2 ? `${hour}:${minute}` : "";
         hiddenTimeRef.current.value = currentTime;
-
-        // ถ้า browser รองรับ showPicker (Chrome/Edge ใหม่ ๆ)
         if (hiddenTimeRef.current.showPicker) {
             hiddenTimeRef.current.showPicker();
         } else {
-            // fallback อย่างน้อยก็โฟกัสไปที่มัน
             hiddenTimeRef.current.focus();
             hiddenTimeRef.current.click();
         }
     };
 
-    const handleHiddenTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value; // "HH:mm" หรือ ""
-        if (!val) {
+    /* * คำอธิบาย: ฟังก์ชันสำหรับจัดการเมื่อมีการเปลี่ยนแปลงค่าจาก input type="time" ที่ซ่อนอยู่
+     * Input: event (React.ChangeEvent<HTMLInputElement>)
+     * Output: - (void)
+     */
+    const handleHiddenTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        if (!value) {
             setHh("");
             setMm("");
             emitChange("");
             return;
         }
-        const [h, m] = val.split(":");
-        setHh(h ?? "");
-        setMm(m ?? "");
-        emitChange(val);
+        const [hour, minute] = value.split(":");
+        setHh(hour ?? "");
+        setMm(minute ?? "");
+        emitChange(value);
     };
-
-
     const hasError = Boolean(errorText);
-    const hasValue = Boolean(hh || mm);
+    const hasValue = Boolean(hour || minute);
     const resolvedHeight = toCssSize(height) ?? "44px";
-
-    // ดึงค่าจาก value/defaultValue → แยกเป็น hh:mm
     useEffect(() => {
         const time = (value ?? defaultValue ?? "") as string;
         if (!time) {
@@ -100,32 +86,43 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
             setMm("");
             return;
         }
-        const [h, m] = time.split(":");
-        setHh(h ?? "");
-        setMm(m ?? "");
+        const [splitHour, splitMinute] = time.split(":");
+        setHh(splitHour ?? "");
+        setMm(splitMinute ?? "");
     }, [value, defaultValue]);
 
     const emitChange = (next: string) => {
         onChange?.(next);
     };
+    /* * คำอธิบาย: ฟังก์ชันสำหรับกรองค่าให้เหลือเพียงตัวเลข 2 หลัก
+     * Input: value (string) - ค่าที่ต้องการกรอง
+     * Output: string - ค่าตัวเลข 2 หลัก
+     */
+    const cleanDigits = (value: string) => value.replace(/\D+/g, "").slice(0, 2);
 
-    const cleanDigits = (v: string) => v.replace(/\D+/g, "").slice(0, 2);
-
+    /* * คำอธิบาย: ฟังก์ชันสำหรับจัดการเมื่อมีการพิมพ์เปลี่ยนค่าชั่วโมง
+     * Input: rawValue (string) - ค่าดิบที่ผู้ใช้พิมพ์
+     * Output: - (void)
+     */
     const handleHourChange = (raw: string) => {
         const digits = cleanDigits(raw);
         setHh(digits);
-        if (digits.length === 2 && mm.length === 2) {
-            emitChange(`${digits}:${mm}`);
+        if (digits.length === 2 && minute.length === 2) {
+            emitChange(`${digits}:${minute}`);
         } else {
             emitChange("");
         }
     };
 
+    /* * คำอธิบาย: ฟังก์ชันสำหรับจัดการเมื่อมีการพิมพ์เปลี่ยนค่านาที
+     * Input: rawValue (string) - ค่าดิบที่ผู้ใช้พิมพ์
+     * Output: - (void)
+     */
     const handleMinuteChange = (raw: string) => {
         const digits = cleanDigits(raw);
         setMm(digits);
-        if (hh.length === 2 && digits.length === 2) {
-            emitChange(`${hh}:${digits}`);
+        if (hour.length === 2 && digits.length === 2) {
+            emitChange(`${hour}:${digits}`);
         } else {
             emitChange("");
         }
@@ -178,31 +175,27 @@ return (
                     <input
                         inputMode="numeric"
                         placeholder="ชม."
-                        value={hh}
+                        value={hour}
                         disabled={disabled}
                         onChange={(e) => handleHourChange(e.target.value)}
                         className="w-10 text-center outline-none"
                     />
-
                     <span className="text-gray-500 select-none">:</span>
-
                     <input
                         inputMode="numeric"
                         placeholder="นาที"
-                        value={mm}
+                        value={minute}
                         disabled={disabled}
                         onChange={(e) => handleMinuteChange(e.target.value)}
                         className="w-10 text-center outline-none"
                     />
                 </div>
-
                 <input
                     ref={hiddenTimeRef}
                     type="time"
                     className="sr-only"
                     onChange={handleHiddenTimeChange}
                 />
-
                 {hasValue && !disabled && (
                     <button
                         type="button"
@@ -213,7 +206,6 @@ return (
                         <Icon icon="material-symbols:close" className="w-[20px] h-[20px]" />
                     </button>
                 )}
-
                 <button
                     type="button"
                     onClick={handleClockClick}

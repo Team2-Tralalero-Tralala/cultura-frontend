@@ -1,4 +1,6 @@
-// src/Components/PackageStatusDropdown.tsx
+/**
+ * คำอธิบาย : Component สำหรับ Dropdown เลือกสถานะของ Package (Draft, Publish, Unpublish)
+ */
 import React from "react";
 import { Icon } from "@iconify/react";
 
@@ -33,10 +35,13 @@ export const PackageStatusDropdown: React.FC<Props> = ({
     onChange,
     disabled = false,
 }) => {
-    const [open, setOpen] = React.useState(false);
+    const [isOpen, setOpen] = React.useState(false);
+    const currentStatusConfig = STATUS_CONFIG[value];
 
-    const current = STATUS_CONFIG[value];
-
+    /* * คำอธิบาย : ฟังก์ชันสำหรับเลือกสถานะและปิด Dropdown
+     * Input: status (PackageStatus) - สถานะที่ผู้ใช้เลือก
+     * Output: -
+     */
     const handleSelect = (status: PackageStatus) => {
         if (disabled) return;
         onChange(status);
@@ -54,18 +59,18 @@ export const PackageStatusDropdown: React.FC<Props> = ({
                 onClick={() => !disabled && setOpen((prev) => !prev)}
             >
                 <span className="flex items-center gap-2">
-                    <Icon icon={current.icon} width={22} />
-                    <span className="text-base font-medium">{current.label}</span>
+                    <Icon icon={currentStatusConfig.icon} width={22} />
+                    <span className="text-base font-medium">{currentStatusConfig.label}</span>
                 </span>
 
                 <Icon
-                    icon={open ? "mdi:chevron-up" : "mdi:chevron-down"}
+                    icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"}
                     width={20}
                 />
             </button>
 
             {/* เมนู */}
-            {open && !disabled && (
+            {isOpen && !disabled && (
                 <div className="absolute z-30 mt-1 w-[140px] rounded-md border border-gray-300 bg-white shadow-lg overflow-hidden">
                     {(["DRAFT", "PUBLISH", "UNPUBLISH"] as PackageStatus[]).map(
                         (status) => {

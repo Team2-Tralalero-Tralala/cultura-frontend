@@ -60,13 +60,13 @@ export default function DetailHomestayAdmin() {
 
   return (
     <div className="px-1 space-y-3">
-            <div>
-       <Breadcrumb
-  current={{
-    label: homestay?.name || "รายละเอียดที่พัก",
-    to: `/admin/community/homestay/${homestayId}`,
-  }}
-/>
+      <div>
+        <Breadcrumb
+          current={{
+            label: homestay?.name || "รายละเอียดที่พัก",
+            to: `/admin/community/homestay/${homestayId}`,
+          }}
+        />
       </div>
 
       {/* การ์ดหลัก */}
@@ -95,14 +95,15 @@ export default function DetailHomestayAdmin() {
               </div>
             </Button>
           </div> */}
+          
           {/* ปุ่มแก้ไข */}
-<Link
-  to={`/admin/community/homestay/${homestay.id}/edit`}
-  className="flex items-center gap-2 bg-[#055035] hover:bg-[#155849] text-white px-6 py-2.5 rounded-lg transition text-sm font-medium shadow-sm"
->
-  <SquarePen size={18} />
-  <span>แก้ไข</span>
-</Link>
+          <Link
+            to={`/admin/community/homestay/${homestay.id}/edit`}
+            className="flex items-center gap-2 bg-[#055035] hover:bg-[#155849] text-white px-6 py-2.5 rounded-lg transition text-sm font-medium shadow-sm"
+          >
+            <SquarePen size={18} />
+            <span>แก้ไข</span>
+          </Link>
 
         </div>
 
@@ -245,15 +246,11 @@ export default function DetailHomestayAdmin() {
               width="100%"
               height="400"
               className="border border-gray-200"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-                homestay.location.longitude - 0.01
-              }%2C${homestay.location.latitude - 0.01}%2C${
-                homestay.location.longitude + 0.01
-              }%2C${
-                homestay.location.latitude + 0.01
-              }&layer=mapnik&marker=${homestay.location.latitude}%2C${
-                homestay.location.longitude
-              }`}
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${homestay.location.longitude - 0.01
+                }%2C${homestay.location.latitude - 0.01}%2C${homestay.location.longitude + 0.01
+                }%2C${homestay.location.latitude + 0.01
+                }&layer=mapnik&marker=${homestay.location.latitude}%2C${homestay.location.longitude
+                }`}
             ></iframe>
 
             <div className="text-[16px] leading-relaxed text-gray-700 grid md:grid-cols-2 gap-x-8">

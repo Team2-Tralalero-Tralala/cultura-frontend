@@ -501,12 +501,14 @@ export function EditCommunity() {
 
   return (
     <div>
-      <Breadcrumb
-        items={[
-          { label: "จัดการชุมชน", to: "/super/communities/all" },
-          { label: "แก้ไขวิสาหกิจชุมชน" },
-        ]}
-      />
+      <div>
+        <Breadcrumb
+          current={{
+            label: "แก้ไขวิสาหกิจชุมชน",
+            to: `/admin/community/own/edit`,
+          }}
+        />
+      </div>
       <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
         <CircularProgress color="inherit" />
       </Backdrop>

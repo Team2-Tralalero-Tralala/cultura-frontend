@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { fetchUserDetail } from "../../Services/account-services";
-import Button from "@/Components/Button"; 
+import Button from "@/Components/Button";
 
 export function UserDetailPage() {
   const navigate = useNavigate();
@@ -59,48 +59,49 @@ export function UserDetailPage() {
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
-        <div className="-ml-6 pt-1 pb-1">
+        <div>
           <Breadcrumb
-            items={[
-              { label: "จัดการบัญชึ", to: "/super/accounts/all" },
-              { label: "รายละเอียดบัญชี" },
-            ]}
+            current={{
+              label: "รายละเอียดบัญชี",
+              to: `/super/account/${id}`,
+            }}
           />
         </div>
+
         <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-          <ArrowLeft 
-            className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors" 
-            onClick={() => navigate(-1)} 
+          <ArrowLeft
+            className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
+            onClick={() => navigate(-1)}
           />
           รายละเอียดบัญชี
         </h1>
 
         {/* Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
-          
+
           {/* ส่วนปุ่มจัดการ */}
           <div className="absolute top-6 right-6 flex items-center gap-3">
             {/* ปุ่มตั้งรหัสผ่าน */}
             <div className="w-32">
-                <Button 
-                    type="cancel" 
-                    onClick={() => navigate(`/super/reset-password/${id}`)}
-                >
-                    <span className="text-base">ตั้งรหัสผ่าน</span>
-                </Button>
+              <Button
+                type="cancel"
+                onClick={() => navigate(`/super/reset-password/${id}`)}
+              >
+                <span className="text-base">ตั้งรหัสผ่าน</span>
+              </Button>
             </div>
 
             {/* ปุ่มแก้ไข */}
             <div className="w-32">
-                <Button 
-                    type="confirm-admin" 
-                    onClick={() => navigate(`/super/account/${user.role.name}/${id}/edit`)}
-                >
-                    <div className="flex items-center gap-2">
-                        <SquarePen className="h-5 w-5" strokeWidth={2.1} />
-                        <span className="text-base">แก้ไข</span>
-                    </div>
-                </Button>
+              <Button
+                type="confirm-admin"
+                onClick={() => navigate(`/super/account/${user.role.name}/${id}/edit`)}
+              >
+                <div className="flex items-center gap-2">
+                  <SquarePen className="h-5 w-5" strokeWidth={2.1} />
+                  <span className="text-base">แก้ไข</span>
+                </div>
+              </Button>
             </div>
           </div>
 

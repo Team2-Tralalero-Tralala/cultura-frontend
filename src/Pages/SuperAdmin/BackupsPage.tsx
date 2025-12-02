@@ -24,6 +24,7 @@ import {
 import { fetchServerStatus } from "@/Services/server-status-service";
 import type { BackupRow } from "@/Types/Backup";
 import { Icon } from "@iconify/react";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : แปลงสถานะไฟล์สำรองข้อมูลจากภาษาอังกฤษเป็นภาษาไทย
@@ -297,12 +298,19 @@ export default function BackupsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 w-full">
-        <h2 className="text-sm">การตั้งค่า</h2>
+        <div>
+          <Breadcrumb
+            current={{
+              label: "สำรองข้อมูล",
+              to: "/super/backups",
+            }}
+          />
+        </div>
         <div className="flex items-center justify-between align-top">
           <div>
-          <h1 className="text-xl">สำรองข้อมูล</h1>
-          <div className="flex items-center justify-between gap-3 w-full">
-          </div>
+            <h1 className="text-xl">สำรองข้อมูล</h1>
+            <div className="flex items-center justify-between gap-3 w-full">
+            </div>
             <div className="flex-1 max-w-md">
               <SearchBarTable
                 value={searchQuery}

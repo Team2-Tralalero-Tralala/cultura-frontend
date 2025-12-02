@@ -210,7 +210,7 @@ export default function ManageStoreAdmin() {
           <Breadcrumb
             current={{
               label: "จัดการร้านค้า",
-              to: location.pathname,
+              to: "/admin/community/stores",
             }}
           />
         </div>

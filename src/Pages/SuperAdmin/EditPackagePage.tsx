@@ -27,6 +27,7 @@ import CommunityMemberSelector, {
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 // =====================================
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
@@ -790,7 +791,14 @@ export const EditPackagePage: React.FC = () => {
       {successMessage && (
         <div className="text-emerald-700 text-sm">{successMessage}</div>
       )} */}
-
+       <div>
+              <Breadcrumb
+                current={{
+                  label: "แก้ไขรายละเอียดแพ็กเกจ",
+                  to: `/super/package/${id}/edit`,
+                }}
+              />
+            </div>
       <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"

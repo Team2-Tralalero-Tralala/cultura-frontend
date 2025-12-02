@@ -28,6 +28,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // Config
 const API_URL = import.meta.env.VITE_API_URL as string;
@@ -344,9 +345,9 @@ export default function CreateHomestaysPage() {
       console.error("Create homestays error:", error?.response?.data || error);
       setErrorMessage(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "บันทึกที่พักไม่สำเร็จ"
+        error?.response?.data?.error ||
+        error?.message ||
+        "บันทึกที่พักไม่สำเร็จ"
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -368,6 +369,14 @@ export default function CreateHomestaysPage() {
   // ===== Render =====
   return (
     <div className="w-full max-w-none px-8">
+      <div>
+        <Breadcrumb
+          current={{
+            label: "เพิ่มที่พัก",
+            to: `/super/community/${communityId}/homestay/create`,
+          }}
+        />
+      </div>
       {/* Alerts */}
       {errorMessage && (
         <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">
@@ -645,9 +654,8 @@ export default function CreateHomestaysPage() {
       <Modal
         open={isConfirmOpen} // เปลี่ยนชื่อตัวแปร
         title="ยืนยันการบันทึกที่พัก"
-        text={`คุณต้องการบันทึกที่พักจำนวน ${
-          pendingPayloads?.length ?? 0
-        } รายการหรือไม่`}
+        text={`คุณต้องการบันทึกที่พักจำนวน ${pendingPayloads?.length ?? 0
+          } รายการหรือไม่`}
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={onConfirmSave}

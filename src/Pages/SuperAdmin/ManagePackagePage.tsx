@@ -20,6 +20,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal"; // [FIX] Import Modal
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // ====== Config ======
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -304,6 +305,15 @@ export default function ManagePackageSuperAdmin() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2">
+        <div>
+          <Breadcrumb
+            current={{
+              label: "จัดการแพ็กเเกจ",
+              to: "/super/packages/all",
+              fromSidebar: true,   // << สำคัญ : มาจาก sidebar
+            }}
+          />
+        </div>
         <h1 className="text-2xl">จัดการแพ็กเกจ</h1>
 
         <div className="flex items-center gap-3">

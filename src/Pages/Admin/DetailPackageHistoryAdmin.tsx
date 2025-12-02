@@ -17,6 +17,7 @@ import axios from "axios";
 import Button from "../../Components/Button";
 import { Backward, EditIcon } from "../../Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -120,15 +121,15 @@ export default function DetailPackageAdmin() {
           rejectReason: raw.rejectReason ?? null,
           createdBy: raw.createPackage
             ? {
-                id: raw.createPackage.id,
-                name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
-              }
+              id: raw.createPackage.id,
+              name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
+            }
             : null,
           overseer: raw.overseerPackage
             ? {
-                id: raw.overseerPackage.id,
-                name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
-              }
+              id: raw.overseerPackage.id,
+              name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
+            }
             : null,
           tags: raw.tagPackages ? raw.tagPackages.map((t: any) => t.tag.name) : [],
           startDate: extractDateTime(raw.startDate),
@@ -137,22 +138,22 @@ export default function DetailPackageAdmin() {
           closeBookingAt: extractDateTime(raw.bookingCloseDate),
           location: raw.location
             ? {
-                address: raw.location.houseNumber ?? "-",
-                detail: raw.location.detail ?? "-",
-                subDistrict: raw.location.subDistrict,
-                district: raw.location.district,
-                province: raw.location.province,
-                postalCode: raw.location.postalCode,
-                latitude: raw.location.latitude,
-                longitude: raw.location.longitude,
-              }
+              address: raw.location.houseNumber ?? "-",
+              detail: raw.location.detail ?? "-",
+              subDistrict: raw.location.subDistrict,
+              district: raw.location.district,
+              province: raw.location.province,
+              postalCode: raw.location.postalCode,
+              latitude: raw.location.latitude,
+              longitude: raw.location.longitude,
+            }
             : null,
           files: raw.packageFile
             ? raw.packageFile.map((f: any) => ({
-                id: f.id,
-                path: f.filePath,
-                type: f.type,
-              }))
+              id: f.id,
+              path: f.filePath,
+              type: f.type,
+            }))
             : [],
         };
 
@@ -177,158 +178,167 @@ export default function DetailPackageAdmin() {
   const coverImage = pkg.files?.find((f) => f.type === "COVER");
 
   /* ----------------------------- จากตรงนี้ลงไปห้ามแก้ ----------------------------- */
-  // ตอนนี้ขาด Navigation page ที่มันบอกว่าหน้านี้อยู่ที่ไหน เช่น จัดการแพ็กเกจ / รายละเอียดแพ็กเกจ
-  // อาจจะเพิ่มทีหลัง
-  // Main container
+
   return (
+    <div>
+ {/* Breadcrumb */}
+        <div>
+          <Breadcrumb
+            current={{
+              label: pkg.name,
+              to: `/admin/packages/history/${pkg.id}`,
+            }}
+          />
+        </div>
+
     <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
       {/* Header */}
 
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex flex-row">
-          {/* ปุ่มย้อนกลับ */}
-          <div
-            className="mt-1 mr-3 cursor-pointer"
-            onClick={() => navigate(`/admin/packages/histories`)}
-          >
-            <Backward></Backward>
+
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex flex-row">
+            {/* ปุ่มย้อนกลับ */}
+            <div
+              className="mt-1 mr-3 cursor-pointer"
+              onClick={() => navigate(`/admin/packages/histories`)}
+            >
+              <Backward></Backward>
+            </div>
+            <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
           </div>
-          <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
         </div>
-      </div>
-      {/* ชื่อแพ็กเกจ */}
-      <div className="mb-6 flex flex-row">
-        <p className="text-md text-gray-800">
-          <strong>ชื่อแพ็กเกจ : </strong>
-          {pkg.name}
-        </p>
-      </div>
-
-      {/* คำอธิบาย */}
-      <div className="mb-6">
-        <div className="flex flex-row">
+        {/* ชื่อแพ็กเกจ */}
+        <div className="mb-6 flex flex-row">
           <p className="text-md text-gray-800">
-            <strong>คำอธิบาย : </strong>
-            {pkg.description}
+            <strong>ชื่อแพ็กเกจ : </strong>
+            {pkg.name}
           </p>
         </div>
-      </div>
 
-      {/* จำนวนคน / ราคา */}
-      <div className="flex flex-wrap gap-6 mb-6">
-        <div className="flex flex-row mr-30">
-          <p className="text-md text-gray-800">
-            <strong>จำนวนคนที่เปิดรับ : </strong>
-            {pkg.capacity} คน
-          </p>
-        </div>
-        <div className="flex flex-row">
-          <p className="text-md ml-5 text-gray-800">
-            <strong>ราคา : </strong>
-            {pkg.price.toLocaleString()} บาท
-          </p>
-        </div>
-      </div>
-
-      {/* แท็ก */}
-      {pkg.tags?.length > 0 && (
-        <p className="mb-6 flex gap-2 flex-row">
-          <strong>แท็ก :</strong>{" "}
-          {pkg.tags.map((t, i) => (
-            <Tag
-              key={i}
-              label={t}
-              sizeClass="w-20 h-8"
-              className="text-black bg-white"
-            />
-          ))}
-        </p>
-      )}
-
-      {/* ภาพหลัก */}
-      {coverImage && (
+        {/* คำอธิบาย */}
         <div className="mb-6">
-          <img
-            src={`${apiUrl}/files/${coverImage.path}`}
-            alt="package cover"
-            className="w-160 h-90 object-cover rounded-xl rounded-lg border-gray-400 border-2"
-          />
-        </div>
-      )}
-
-      {/* ข้อมูลผู้ดูแล */}
-      <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
-        <div>
-          <p className="mb-6">
-            <strong>ผู้ดูแล : </strong> {pkg.overseer?.name || "-"}
-          </p>
-          <p className="mb-6">
-            <strong>วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ : </strong>{" "}
-            {formatDateTH(pkg.startDate?.date)} -{" "}
-            {formatDateTH(pkg.dueDate?.date)}
-            <br />
-            <strong>เวลา : </strong> {pkg.startDate?.time || "-"} -{" "}
-            {pkg.dueDate?.time || "-"}
-          </p>
-        </div>
-
-        <div>
-          <p className="mb-6">
-            <strong>สร้างโดย : </strong> {pkg.createdBy?.name || "-"}
-          </p>
-          <p className="mb-6">
-            <strong>วันที่เปิด - วันที่ปิดการจอง : </strong>{" "}
-            {formatDateTH(pkg.openBookingAt?.date)} -{" "}
-            {formatDateTH(pkg.closeBookingAt?.date)}
-            <br />
-            <strong>เวลา : </strong> {pkg.openBookingAt?.time || "-"} -{" "}
-            {pkg.closeBookingAt?.time || "-"}
-          </p>
-        </div>
-      </div>
-
-      {/* สิ่งอำนวยความสะดวก */}
-      <div className="mb-6">
-        <p>
-          <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {pkg.facility || "-"}
-        </p>
-      </div>
-
-      {/* แผนที่ */}
-      {pkg.location && (
-        <div className="mt-8">
-          <h2 className="font-semibold text-lg mb-6">แผนที่</h2>
-          <iframe
-            title="map"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-              pkg.location.longitude - 0.01
-            },${pkg.location.latitude - 0.01},${
-              pkg.location.longitude + 0.01
-            },${pkg.location.latitude + 0.01}&layer=mapnik&marker=${
-              pkg.location.latitude
-            },${pkg.location.longitude}`}
-            className="w-full h-96 rounded-xl border"
-          ></iframe>
-          <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
-            <div className="mt-6">
-              <p className="mb-4">
-                <strong>ที่อยู่ :</strong> {pkg.location.address}{" "}
-                {pkg.location.subDistrict} {pkg.location.district}{" "}
-                {pkg.location.province} {pkg.location.postalCode}
-              </p>
-              <p>
-                <strong>ละติจูด / ลองจิจูด : </strong> {pkg.location.latitude},{" "}
-                {pkg.location.longitude}
-              </p>
-            </div>
-            <div className="mt-6">
-              <p className="mb-4">
-                <strong>คำอธิบายที่อยู่ :</strong> {pkg.location.detail}
-              </p>
-            </div>
+          <div className="flex flex-row">
+            <p className="text-md text-gray-800">
+              <strong>คำอธิบาย : </strong>
+              {pkg.description}
+            </p>
           </div>
         </div>
-      )}
-    </div>
-  );
+
+        {/* จำนวนคน / ราคา */}
+        <div className="flex flex-wrap gap-6 mb-6">
+          <div className="flex flex-row mr-30">
+            <p className="text-md text-gray-800">
+              <strong>จำนวนคนที่เปิดรับ : </strong>
+              {pkg.capacity} คน
+            </p>
+          </div>
+          <div className="flex flex-row">
+            <p className="text-md ml-5 text-gray-800">
+              <strong>ราคา : </strong>
+              {pkg.price.toLocaleString()} บาท
+            </p>
+          </div>
+        </div>
+
+        {/* แท็ก */}
+        {pkg.tags?.length > 0 && (
+          <p className="mb-6 flex gap-2 flex-row">
+            <strong>แท็ก :</strong>{" "}
+            {pkg.tags.map((t, i) => (
+              <Tag
+                key={i}
+                label={t}
+                sizeClass="w-20 h-8"
+                className="text-black bg-white"
+              />
+            ))}
+          </p>
+        )}
+
+        {/* ภาพหลัก */}
+        {coverImage && (
+          <div className="mb-6">
+            <img
+              src={`${apiUrl}/files/${coverImage.path}`}
+              alt="package cover"
+              className="w-160 h-90 object-cover rounded-xl rounded-lg border-gray-400 border-2"
+            />
+          </div>
+        )}
+
+        {/* ข้อมูลผู้ดูแล */}
+        <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
+          <div>
+            <p className="mb-6">
+              <strong>ผู้ดูแล : </strong> {pkg.overseer?.name || "-"}
+            </p>
+            <p className="mb-6">
+              <strong>วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ : </strong>{" "}
+              {formatDateTH(pkg.startDate?.date)} -{" "}
+              {formatDateTH(pkg.dueDate?.date)}
+              <br />
+              <strong>เวลา : </strong> {pkg.startDate?.time || "-"} -{" "}
+              {pkg.dueDate?.time || "-"}
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-6">
+              <strong>สร้างโดย : </strong> {pkg.createdBy?.name || "-"}
+            </p>
+            <p className="mb-6">
+              <strong>วันที่เปิด - วันที่ปิดการจอง : </strong>{" "}
+              {formatDateTH(pkg.openBookingAt?.date)} -{" "}
+              {formatDateTH(pkg.closeBookingAt?.date)}
+              <br />
+              <strong>เวลา : </strong> {pkg.openBookingAt?.time || "-"} -{" "}
+              {pkg.closeBookingAt?.time || "-"}
+            </p>
+          </div>
+        </div>
+
+        {/* สิ่งอำนวยความสะดวก */}
+        <div className="mb-6">
+          <p>
+            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {pkg.facility || "-"}
+          </p>
+        </div>
+
+        {/* แผนที่ */}
+        {pkg.location && (
+          <div className="mt-8">
+            <h2 className="font-semibold text-lg mb-6">แผนที่</h2>
+            <iframe
+              title="map"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${pkg.location.longitude - 0.01
+                },${pkg.location.latitude - 0.01},${pkg.location.longitude + 0.01
+                },${pkg.location.latitude + 0.01}&layer=mapnik&marker=${pkg.location.latitude
+                },${pkg.location.longitude}`}
+              className="w-full h-96 rounded-xl border"
+            ></iframe>
+            <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
+              <div className="mt-6">
+                <p className="mb-4">
+                  <strong>ที่อยู่ :</strong> {pkg.location.address}{" "}
+                  {pkg.location.subDistrict} {pkg.location.district}{" "}
+                  {pkg.location.province} {pkg.location.postalCode}
+                </p>
+                <p>
+                  <strong>ละติจูด / ลองจิจูด : </strong> {pkg.location.latitude},{" "}
+                  {pkg.location.longitude}
+                </p>
+              </div>
+              <div className="mt-6">
+                <p className="mb-4">
+                  <strong>คำอธิบายที่อยู่ :</strong> {pkg.location.detail}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      </div>
+
+      );
 }

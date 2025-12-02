@@ -87,8 +87,8 @@ export default function AdminRoutes() {
       <Route path="package/draft" element={<PackageDraftAdmin />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />
-      <Route path="package/:packageId/edit" element={<EditPackagePage />} />
-      
+      <Route path="package/:id/edit" element={<EditPackagePage />} />
+
     </Routes>
   );
 }

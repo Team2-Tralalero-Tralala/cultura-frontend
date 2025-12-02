@@ -459,7 +459,7 @@ export const EditPackagePage = () => {
         }
 
         try {
-            const response = await axios.get(`${apiUrl}/admin/homestay-select/${id}`, {
+            const response = await axios.get(`${apiUrl}/admin/list-homestays`, {
                 params: { q: trimmedQuery, limit: 8 },
                 withCredentials: true,
             });

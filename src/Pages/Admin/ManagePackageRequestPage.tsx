@@ -15,9 +15,9 @@ import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
 import { Link } from "react-router-dom";
 import {
-  approvePackageRequest,
+  approvePackageRequestForAdmin,
   fetchPackageRequests,
-  rejectPackageRequest,
+  rejectPackageRequestForAdmin,
 } from "@/Services/package-request-service";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
@@ -152,7 +152,8 @@ export default function PackageRequestsAdminPage() {
       const { data } = await fetchPackageRequests(
         currentPage,
         pageSize,
-        searchQuery
+        searchQuery,
+        "PENDING"
       );
       setRows(data?.data?.data ?? []);
       setPagination(
@@ -198,7 +199,7 @@ export default function PackageRequestsAdminPage() {
   const handleApprove = async (row: PackageRequestRow) => {
     try {
       setIsLoading(true);
-      await approvePackageRequest(row.id);
+      await approvePackageRequestForAdmin(row.id);
       await reload();
     } catch (e: any) {
       setErrorMessage(e?.message ?? "ไม่สามารถอนุมัติได้");
@@ -337,7 +338,7 @@ export default function PackageRequestsAdminPage() {
             if (!selectedRow) return;
             try {
               setIsLoading(true);
-              await rejectPackageRequest(selectedRow.id, reason);
+              await rejectPackageRequestForAdmin(selectedRow.id, reason);
               await reload();
             } catch (e: any) {
               setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");

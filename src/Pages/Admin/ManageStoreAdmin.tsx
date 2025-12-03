@@ -3,7 +3,7 @@
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 
 // Components
 import Button from "@/Components/Button";
@@ -46,7 +46,19 @@ const normalizeText = (str: string) =>
 
 // กำหนดคอลัมน์ของตาราง
 const columns: Column<StoreRow>[] = [
-  { key: "name", header: "ชื่อร้านค้า", className: "min-w-[200px]" },
+  {
+    key: "name",
+    header: "ชื่อร้านค้า",
+    className: "min-w-[200px]",
+    render: (row) => (
+      <Link
+        to={`/admin/community/store/${row.id}`}
+        className="hover:text-dark-green hover:underline"
+      >
+        {row.name}
+      </Link>
+    ),
+  },
   { key: "detail", header: "รายละเอียด" },
   { key: "tagStores", header: "ประเภท" },
 ];
@@ -135,7 +147,7 @@ export default function ManageStoreAdmin() {
     variant: "icons",
     items: () => ["edit", "delete"],
     callbacks: {
-      edit: (row) => navigate(`/admin/community/store/edit/${storeId}/${row.id}`),
+      edit: (row) => navigate(`/admin/community/store/${row.id}/edit/`),
       delete: (row) => {
         setDeleteId(row.id);
         setIsOpenConfirm(true);
@@ -194,17 +206,12 @@ export default function ManageStoreAdmin() {
       {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         {/* Breadcrumb */}
-        <div className="-ml-6 pt-1 pb-1">
+        <div className="flex flex-col gap-2 w-full">
           <Breadcrumb
-            items={[
-              {
-                label: communityName || "ชุมชน",
-                to: "/admin/community/own",
-              },
-              {
-                label: "จัดการร้านค้า",
-              },
-            ]}
+            current={{
+              label: "จัดการร้านค้า",
+              to: "/admin/community/stores",
+            }}
           />
         </div>
 
@@ -218,7 +225,7 @@ export default function ManageStoreAdmin() {
 
           {/* Section: Add Store */}
           <div>
-            <Button onClick={() => navigate("/admin/store/create")} aria-label="เพิ่มร้านค้า">
+            <Button onClick={() => navigate("/admin/community/store/create")} aria-label="เพิ่มร้านค้า">
               <span className="text-lg leading-none">＋</span>
               <span>เพิ่มร้านค้า</span>
             </Button>

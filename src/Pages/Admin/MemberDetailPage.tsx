@@ -10,6 +10,7 @@ import { SquarePen } from "lucide-react";
 
 import { fetchMemberDetail } from "@/Services/account-services";
 import type { UserDetail } from "@/Types/User";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /**
  * Component: MemberDetailPage
@@ -76,15 +77,13 @@ export function MemberDetailPage() {
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">
         {/* Breadcrumb */}
-        <div className="text-base text-gray-600 flex items-center gap-2">
-          <Link
-            to="/admin/members"
-            className="text-gray-900 hover:underline text-sm"
-          >
-            จัดการบัญชี
-          </Link>
-          <span className="text-gray-400 text-sm">{">"}</span>
-          <span>รายละเอียดบัญชี</span>
+        <div>
+          <Breadcrumb
+            current={{
+              label: "รายละเอียดบัญชี",
+              to: `/admin/member/${userId}`,
+            }}
+          />
         </div>
 
         {/* Header */}

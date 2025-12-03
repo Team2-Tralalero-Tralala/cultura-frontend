@@ -1,24 +1,18 @@
-// src/Pages/Admin/CreateHomestayPage.tsx
-
 /**
- * หน้าที่: หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Admin (เจ้าของชุมชน)
+ * หน้าที่: หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Admin
  * คุณสมบัติ:
  * - ตรวจความถูกต้องด้วย zod
  * - ยืนยันก่อนบันทึกผ่าน Modal
  * - แนบไฟล์รูป (cover / gallery)
  * - ส่งข้อมูลแบบ multipart/form-data:
  * { data: JSON(HomestayDto + tagHomestays), cover[], gallery[] }
- * - Backend จะดึง communityId จาก user ที่ล็อกอินอยู่เอง
- * - เมื่อสำเร็จ กลับไปหน้า list
+ * - เมื่อสำเร็จ กลับไปหน้าแก้ไขชุมชน (ฝั่ง Admin)
  */
-
 import React from "react";
 import * as z from "zod";
 import axios from "axios";
 import { Icon } from "@iconify/react";
-import { useNavigate } from "react-router-dom"; // ลบ useParams
-
-// Components
+import { useNavigate, useParams } from "react-router-dom";
 import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
@@ -29,9 +23,9 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-// Config
-const apiUrl = import.meta.env.VITE_API_URL as string;
+const API_URL = import.meta.env.VITE_API_URL as string;
 
 /** ประเภทไฟล์ที่แนบมากับฟอร์ม */
 type FileLike = File;
@@ -83,21 +77,22 @@ const homestaySchema = z.object({
         .string()
         .min(1)
         .refine(
-            (v) => Number(v) >= 1 && Number.isInteger(Number(v)),
+            (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
             "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
         ),
     totalRoom: z
         .string()
         .min(1)
         .refine(
-            (v) => Number(v) >= 1 && Number.isInteger(Number(v)),
+            (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
             "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
         ),
     houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
+    // villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
     subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
-    postalCode: z.any(),
+    postalCode: z.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
     addressDetail: z.string().optional().default(""),
     placeQuery: z.string().optional().default(""),
 });
@@ -112,41 +107,67 @@ function normalizeOrDefault(value: string, fallback = "") {
 }
 
 /**
- * Component: CreateHomestayPageAdmin
+ * Interceptor เฉพาะกรณี endpoint /shared/tags
+ * เหตุผล: บาง BE ส่ง shape เป็น { data: { data: [...] } } จึง flatten ให้เสมอกัน
+ */
+declare global {
+    interface Window {
+        __tagsInterceptorAdded?: boolean;
+    }
+}
+if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
+    window.__tagsInterceptorAdded = true;
+    axios.interceptors.response.use(
+        (response) => {
+            try {
+                const url = response?.config?.url ?? "";
+                if (typeof url === "string" && url.includes("/shared/tags")) {
+                    const tagList = (response as any)?.data?.data;
+                    if (!Array.isArray(tagList) && tagList && Array.isArray(tagList.data)) {
+                        (response as any).data.data = tagList.data;
+                    }
+                    if (!Array.isArray((response as any).data?.data)) {
+                        (response as any).data.data = Array.isArray(tagList) ? tagList : [];
+                    }
+                }
+            } catch {
+            }
+            return response;
+        },
+        (error) => Promise.reject(error)
+    );
+}
+
+/**
+ * Component: CreateHomestaysAdminPage
  * หน้าที่:
  * - จัดการ state ของฟอร์มที่พัก 1 ชุด
  * - ตรวจสอบข้อมูล
- * - รวม payload และส่งขึ้น API (สำหรับ Admin)
+ * - รวม payload และส่งขึ้น API ตาม communityId (ฝั่ง Admin)
  */
-export default function CreateHomestayPageAdmin() {
-    // const { communityId } = useParams(); // (Admin ไม่จำเป็นต้องใช้)
+export default function CreateHomestaysAdminPage() {
+    const { communityId } = useParams();
     const navigate = useNavigate();
-
-    // State หลักของหน้า (สำหรับฟอร์มเดียว)
     const [form, setForm] = React.useState<HomestayForm>(initialHomestay);
     const [errors, setErrors] = React.useState<HSFormErrors>({});
     const [coverFiles, setCoverFiles] = React.useState<FileLike[]>([]);
     const [galleryFiles, setGalleryFiles] = React.useState<FileLike[]>([]);
     const [tagIds, setTagIds] = React.useState<number[]>([]);
-
-    // State สำหรับการยืนยันและการส่ง
     const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
     const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(
         null
     );
     const [isSaving, setIsSaving] = React.useState(false);
-    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = React.useState<string | null>(
-        null
-    );
 
     /**
      * คำอธิบาย: อัปเดตฟิลด์ในฟอร์ม และ validate ฟิลด์นั้นทันที
-     * (เหมือนเดิม)
+     * Input: key ของฟอร์ม, value ใหม่
+     * Output: -
      */
     function setField(key: keyof HomestayForm, value: any) {
         setForm((prevForm) => {
             if (prevForm[key] === value) return prevForm;
+
             const nextForm = { ...prevForm, [key]: value };
             const parsed = homestaySchema.safeParse(nextForm);
             setErrors((prevErrors) => {
@@ -154,7 +175,9 @@ export default function CreateHomestayPageAdmin() {
                 if (parsed.success) {
                     delete nextErrors[key];
                 } else {
-                    const found = parsed.error.issues.find((i) => i.path[0] === key);
+                    const found = parsed.error.issues.find(
+                        (issue) => issue.path[0] === key
+                    );
                     if (found) nextErrors[key] = found.message;
                     else delete nextErrors[key];
                 }
@@ -166,16 +189,17 @@ export default function CreateHomestayPageAdmin() {
 
     /**
      * คำอธิบาย: ตรวจสอบข้อมูลฟอร์มทั้งหมด
-     * (เหมือนเดิม)
+     * Input: -
+     * Output: boolean (true หากผ่าน, false หากไม่ผ่าน)
      */
     function validateAll(): boolean {
         const result = homestaySchema.safeParse(form);
         if (!result.success) {
-            const errs: HSFormErrors = {};
+            const validationErrors: HSFormErrors = {};
             for (const issue of result.error.issues) {
-                errs[issue.path[0] as keyof HomestayForm] = issue.message;
+                validationErrors[issue.path[0] as keyof HomestayForm] = issue.message;
             }
-            setErrors(errs);
+            setErrors(validationErrors);
             return false;
         }
         setErrors({});
@@ -183,15 +207,14 @@ export default function CreateHomestayPageAdmin() {
     }
 
     /**
-     * คำอธิบาย: เมื่อกดบันทึก (Submit)
-     * (เหมือนเดิม)
+     * จัดการ submit ฟอร์มเพิ่มที่พัก
+     * - ป้องกันการ reload หน้า
+     * - ตรวจสอบค่า (validateAll)
+     * - แสดง error หรือเปิด modal ยืนยันตามผลลัพธ์
      */
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
+    function handleSubmit(event: React.FormEvent) {
+        event.preventDefault();
         if (isSaving) return;
-
-        setErrorMessage(null);
-        setSuccessMessage(null);
 
         if (!validateAll()) {
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -202,7 +225,6 @@ export default function CreateHomestayPageAdmin() {
         const lngStr = (form.longitude ?? "").trim();
         const latNum = latStr === "" ? null : Number(latStr);
         const lngNum = lngStr === "" ? null : Number(lngStr);
-
         const singlePayload = {
             base: {
                 name: normalizeOrDefault(form.name),
@@ -233,117 +255,129 @@ export default function CreateHomestayPageAdmin() {
 
     /**
      * คำอธิบาย: handler สำหรับ MapPicker
-     * (เหมือนเดิม)
+     * - อัปเดต latitude/longitude ในฟอร์ม (ไม่ validate ทันที)
      */
-    const onMapChange = React.useCallback(
-        (pos: [number, number]) => {
-            const [lat, lng] = pos;
-            setForm((prev) => ({
-                ...prev,
-                latitude: String(lat),
-                longitude: String(lng),
-            }));
-        },
-        []
-    );
+    const onMapChange = React.useCallback((position: [number, number]) => {
+        const [lat, lng] = position;
+        setForm((prev) => ({
+            ...prev,
+            latitude: String(lat),
+            longitude: String(lng),
+        }));
+    }, []);
 
     /**
-     * คำอธิบาย: เมื่อยืนยันบันทึกใน Modal (ปรับปรุง API Endpoint)
+     * ฟังก์ชันยืนยันการบันทึก
+     * - ส่งข้อมูลฟอร์มไปยัง API (ฝั่ง Admin)
+     * - อัปโหลดรูปภาพตาม payload ที่ค้างอยู่
+     * - แสดงผลลัพธ์สำเร็จ/ล้มเหลวและนำผู้ใช้กลับไปหน้ารายการที่พักของ Admin
      */
     const onConfirmSave = async () => {
-        setIsConfirmOpen(false);
-        if (!pendingPayloads || pendingPayloads.length === 0) return;
+  setIsConfirmOpen(false);
+  console.log("[CreateHomestayAdmin] Enter onConfirmSave");
 
-        try {
-            setIsSaving(true);
-            setErrorMessage(null);
-            setSuccessMessage(null);
+  // ✅ ป้องกันเคสไม่มี payload จริง ๆ
+  if (!pendingPayloads || pendingPayloads.length === 0) {
+    console.warn("[CreateHomestayAdmin] ไม่มี pendingPayloads");
+    return;
+  }
 
-            // (Admin ไม่จำเป็นต้องใช้ communityId จาก param)
-            // const cid = Number(communityId);
-            // if (!cid) throw new Error("communityId ไม่ถูกต้อง");
+  try {
+    setIsSaving(true);
 
-            for (const pendingPayload of pendingPayloads) {
-                const dataPayload = { ...pendingPayload.base };
-                const formData = new FormData();
-                formData.append("data", JSON.stringify(dataPayload));
+    // ✅ แค่ log ดูเฉย ๆ ว่า route รับอะไรมา แต่ไม่เอาไปใช้บังคับใน URL
+    const communityIdNumber = communityId ? Number(communityId) : null;
+    console.log(
+      "[CreateHomestayAdmin] communityId param =",
+      communityId,
+      "=>",
+      communityIdNumber
+    );
 
-                if (pendingPayload.coverFiles?.length) {
-                    formData.append("cover", pendingPayload.coverFiles[0]);
-                }
-                if (Array.isArray(pendingPayload.galleryFiles)) {
-                    for (const gf of pendingPayload.galleryFiles) {
-                        formData.append("gallery", gf);
-                    }
-                }
+    for (const pendingPayload of pendingPayloads) {
+      const dataPayload = {
+        ...pendingPayload.base,
+      };
 
-                // *** เปลี่ยน Endpoint เป็นของ Admin (ไม่ต้องระบุ communityId) ***
-                await axios.post(`${apiUrl}/admin/community/homestay`, formData, {
-                    withCredentials: true,
-                });
-            }
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(dataPayload));
 
-            setSuccessMessage("บันทึกที่พักสำเร็จ");
-            // *** เปลี่ยนเส้นทางกลับไปหน้า List ของ Admin ***
-            navigate(`/admin/homestays/all`);
+      if (pendingPayload.coverFiles?.length) {
+        formData.append("cover", pendingPayload.coverFiles[0]);
+      }
 
-        } catch (error: any) {
-            console.error("Create homestays error:", error?.response?.data || error);
-            setErrorMessage(
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error?.message ||
-                "บันทึกที่พักไม่สำเร็จ"
-            );
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        } finally {
-            setIsSaving(false);
-            setPendingPayloads(null);
+      if (Array.isArray(pendingPayload.galleryFiles)) {
+        for (const gf of pendingPayload.galleryFiles) {
+          formData.append("gallery", gf);
         }
-    };
+      }
 
-    // Memoize ค่าสำหรับ MapPicker (เหมือนเดิม)
+      console.log(
+        "[CreateHomestayAdmin] ก่อน axios.post ไปที่",
+        `${API_URL}/admin/community/homestay`
+      );
+
+      await axios.post(`${API_URL}/admin/community/homestay`, formData, {
+        withCredentials: true,
+      });
+
+      console.log("[CreateHomestayAdmin] หลัง axios.post (สำเร็จ 1 รายการ)");
+    }
+
+    navigate("/admin/community/homestays");
+} catch (error: any) {
+    console.error("[CreateHomestayAdmin] FULL ERROR:", {
+        message: error?.message,
+        responseData: error?.response?.data,
+        status: error?.response?.status,
+        headers: error?.response?.headers,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+} finally {
+    setIsSaving(false);
+    setPendingPayloads(null);
+  }
+};
+
+
     const startingPosition = React.useMemo<[number, number]>(() => {
-        const numberLat = Number(form.latitude);
-        const numberLng = Number(form.longitude);
+        const nlat = Number(form.latitude);
+        const nlng = Number(form.longitude);
         return [
-            !Number.isNaN(numberLat) && form.latitude !== "" ? numberLat : 13.7563,
-            !Number.isNaN(numberLng) && form.longitude !== "" ? numberLng : 100.5018,
+            !Number.isNaN(nlat) && form.latitude !== "" ? nlat : 13.7563,
+            !Number.isNaN(nlng) && form.longitude !== "" ? nlng : 100.5018,
         ];
     }, [form.latitude, form.longitude]);
 
-    // ===== Render (ปรับปรุง Header/Back button) =====
     return (
         <div className="w-full max-w-none px-8">
-            {/* Alerts (เหมือนเดิม) */}
-            {errorMessage && (
-                <div className="mb-3 rounded-md bg-red-50 text-red-700 px-4 py-2 border border-red-200">
-                    {errorMessage}
-                </div>
-            )}
-            {successMessage && (
-                <div className="mb-3 rounded-md bg-emerald-50 text-emerald-700 px-4 py-2 border border-emerald-200">
-                    {successMessage}
-                </div>
-            )}
-
-            {/* Header (ปรับปรุง Back button) */}
-            <div className="flex items-center justify-between mb-3">
-                <div
-                    className="flex items-center gap-2 text-xl cursor-pointer"
-                    // *** เปลี่ยนเส้นทางกลับไปหน้า List ของ Admin ***
-                    onClick={() => navigate(`/admin/homestays/all`)}
-                >
-                    <Icon icon="mingcute:arrow-left-line" width={22} />
-                    <span>เพิ่มที่พัก</span>
-                </div>
+            {/* breadcrump */}
+            <div>
+                <Breadcrumb
+                    current={{
+                        label: "เพิ่มที่พัก",
+                        // to: `/admin/community/${communityId}/homestay/create`,
+                        to: `/admin/community/homestay/create`,
+                    }}
+                />
             </div>
 
-            {/* Form (เหมือนเดิม) */}
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
                 <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border">
-                    <h2 className="text-lg font-semibold mb-4">ข้อมูลที่พัก</h2>
-                    <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <div
+                            className="flex items-center gap-2 text-xl cursor-pointer"
+                            onClick={() =>
+                                navigate(`/admin/community/homestays`)
+                            }
+                        >
+                            <Icon icon="mingcute:arrow-left-line" width={22} />
+                            <span className="font-bold text-xl">เพิ่มที่พัก</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 md:col-span-2 border border-gray-300 rounded-md p-3">
                         {/* ชื่อ/ประเภท/สิ่งอำนวยความสะดวก */}
                         <div className="grid md:grid-cols-2 gap-5">
                             <TextField
@@ -352,7 +386,7 @@ export default function CreateHomestayPageAdmin() {
                                 required
                                 placeholder="พิมพ์ชื่อที่พัก"
                                 value={form.name}
-                                onChange={(e) => setField("name", e.target.value)}
+                                onChange={(event) => setField("name", event.target.value)}
                                 error={!!errors.name}
                                 helperText={errors.name}
                             />
@@ -362,7 +396,7 @@ export default function CreateHomestayPageAdmin() {
                                 required
                                 placeholder="พิมพ์ประเภทของที่พัก"
                                 value={form.type}
-                                onChange={(e) => setField("type", e.target.value)}
+                                onChange={(event) => setField("type", event.target.value)}
                                 error={!!errors.type}
                                 helperText={errors.type}
                             />
@@ -373,7 +407,7 @@ export default function CreateHomestayPageAdmin() {
                                     required
                                     placeholder="ใส่รายละเอียดความสะดวกสบายของที่พัก"
                                     value={form.facility}
-                                    onChange={(e) => setField("facility", e.target.value)}
+                                    onChange={(event) => setField("facility", event.target.value)}
                                     error={!!errors.facility}
                                     helperText={errors.facility}
                                 />
@@ -389,7 +423,7 @@ export default function CreateHomestayPageAdmin() {
                                 type="number"
                                 placeholder="กรอกจำนวนห้องทั้งหมด"
                                 value={form.totalRoom}
-                                onChange={(e) => setField("totalRoom", e.target.value)}
+                                onChange={(event) => setField("totalRoom", event.target.value)}
                                 error={!!errors.totalRoom}
                                 helperText={errors.totalRoom}
                             />
@@ -400,7 +434,7 @@ export default function CreateHomestayPageAdmin() {
                                 type="number"
                                 placeholder="กรอกจำนวนผู้เข้าพักต่อห้อง"
                                 value={form.guestPerRoom}
-                                onChange={(e) => setField("guestPerRoom", e.target.value)}
+                                onChange={(event) => setField("guestPerRoom", event.target.value)}
                                 error={!!errors.guestPerRoom}
                                 helperText={errors.guestPerRoom}
                             />
@@ -414,19 +448,23 @@ export default function CreateHomestayPageAdmin() {
                                 required
                                 placeholder="บ้านเลขที่"
                                 value={form.houseNumber}
-                                onChange={(e) => setField("houseNumber", e.target.value)}
+                                onChange={(event) => setField("houseNumber", event.target.value)}
                                 error={!!errors.houseNumber}
                                 helperText={errors.houseNumber}
                             />
+
                             <TextField
                                 id="villageNumber"
                                 label="หมู่ที่"
                                 placeholder="หมู่ที่"
                                 value={form.villageNumber}
-                                onChange={(e) => setField("villageNumber", e.target.value)}
+                                onChange={(event) =>
+                                    setField("villageNumber", event.target.value)
+                                }
                                 error={!!errors.villageNumber}
                                 helperText={errors.villageNumber}
                             />
+
                             <div className="md:col-span-2">
                                 <ThailandLocationSelector
                                     value={{
@@ -439,50 +477,30 @@ export default function CreateHomestayPageAdmin() {
                                         setField("province", loc.province ?? "");
                                         setField("district", loc.district ?? "");
                                         setField("subDistrict", loc.subdistrict ?? "");
-                                        setField(
-                                            "postalCode",
-                                            (loc.postalCode ?? "").toString()
-                                        );
+                                        setField("postalCode", (loc.postalCode ?? "").toString());
+                                    }}
+                                    error={{
+                                        province: !!errors.province,
+                                        district: !!errors.district,
+                                        subdistrict: !!errors.subDistrict,
+                                    }}
+                                    helperText={{
+                                        province: errors.province,
+                                        district: errors.district,
+                                        subdistrict: errors.subDistrict,
                                     }}
                                 />
-                                <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
-                                    <div>
-                                        {!!errors.province && (
-                                            <div className="text-red-600 text-sm">
-                                                {errors.province}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        {!!errors.district && (
-                                            <div className="text-red-600 text-sm">
-                                                {errors.district}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        {!!errors.subDistrict && (
-                                            <div className="text-red-600 text-sm">
-                                                {errors.subDistrict}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        {!!errors.postalCode && (
-                                            <div className="text-red-600 text-sm">
-                                                {errors.postalCode}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
                             </div>
+
                             <div className="md:col-span-2">
                                 <TextArea
                                     id="addressDetail"
                                     label="คำอธิบายที่อยู่"
                                     placeholder="คำอธิบายที่อยู่"
                                     value={form.addressDetail}
-                                    onChange={(e) => setField("addressDetail", e.target.value)}
+                                    onChange={(event) =>
+                                        setField("addressDetail", event.target.value)
+                                    }
                                     error={!!errors.addressDetail}
                                     helperText={errors.addressDetail}
                                 />
@@ -512,10 +530,7 @@ export default function CreateHomestayPageAdmin() {
 
                         {/* แท็ก */}
                         <div className="md:col-span-2">
-                            <TagSelector
-                                value={tagIds}
-                                onChange={setTagIds}
-                            />
+                            <TagSelector value={tagIds} onChange={setTagIds} />
                         </div>
 
                         {/* อัปโหลดรูป */}
@@ -541,6 +556,7 @@ export default function CreateHomestayPageAdmin() {
                                     iconSizeCls="w-10 h-10"
                                 />
                             </div>
+
                             <div className="space-y-2">
                                 <label className="block text-base font-semibold">
                                     อัปโหลดรูปภาพเพิ่มเติม{" "}
@@ -565,25 +581,30 @@ export default function CreateHomestayPageAdmin() {
                             </div>
                         </div>
                     </div>
-                </section>
 
-                {/* Action Buttons (ปรับปรุง Cancel button) */}
-                <div className="flex justify-end gap-2 pt-2">
-                    <div className="w-36">
-                        {/* *** เปลี่ยนเป็น navigate ไปหน้า list ของ Admin *** */}
-                        <Button type="cancel" onClick={() => navigate('/admin/homestays/all')}>
-                            ยกเลิก
-                        </Button>
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-2 pt-2 mt-6">
+                        <div className="w-36">
+                            <Button
+                                type="cancel"
+                                onClick={() =>
+                                    navigate(`/admin/community/homestays`)
+                                    // navigate(`/admin/community/${communityId}/homestay/all`)
+                                }
+                            >
+                                ยกเลิก
+                            </Button>
+                        </div>
+                        <div className="w-36">
+                            <Button type="confirm-admin" htmlType="submit">
+                                {isSaving ? "กำลังบันทึก..." : "บันทึก"}
+                            </Button>
+                        </div>
                     </div>
-                    <div className="w-36">
-                        <Button type="confirm-admin" htmlType="submit">
-                            {isSaving ? "กำลังบันทึก..." : "บันทึก"}
-                        </Button>
-                    </div>
-                </div>
+                </section>
             </form>
 
-            {/* Modal ยืนยัน (เหมือนเดิม) */}
+            {/* Modal ยืนยัน */}
             <Modal
                 open={isConfirmOpen}
                 title="ยืนยันการบันทึกที่พัก"

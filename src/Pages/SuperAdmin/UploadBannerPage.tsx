@@ -1,20 +1,8 @@
 /* 
  * File: UploadBannerPage.tsx
  * Component: UploadBannerPage (Client)
- * มาตรฐาน: CS v1.1.1 (คอมเมนต์ไทยเท่านั้น ไม่แก้โค้ด)
  * หน้าที่:
  *   - จัดการรูป Banner หน้าแรก (สูงสุด 5 รูป)
- *   - โหลดรายการแบนเนอร์จาก API, อัปโหลดใหม่, แทนที่ (edit/replace), ลบ
- *   - แสดงพรีวิวรูปทั้งจากเซิร์ฟเวอร์และไฟล์ที่เลือกในเครื่อง
- *   - ใช้ axios พร้อม Bearer token ผ่าน interceptor
- * โครงสร้างหลัก:
- *   - Config & axios (กำหนด base URL, prefix, และ interceptor)
- *   - Utils (ตรวจ URL, สร้างพรีวิว URL, แปลงผลลัพธ์ API)
- *   - API helpers (fetchBanners/uploadBanners/deleteBanner/replaceBanner)
- *   - ResultModal (แจ้งผลสำเร็จ/ล้มเหลว)
- *   - UploadBannerPage (ตัวหน้าเพจหลัก + handlers + UI flow)
- * หมายเหตุ:
- *   - โค้ดคอมเมนต์เท่านั้น ไม่มีการแก้ไข logic, import, หรือ signature ใด ๆ
  */
 
 "use client";
@@ -24,48 +12,46 @@ import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import axios from "axios";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /* -------------------- Config & axios --------------------
  * กำหนดค่า Base URL และ Prefix จาก ENV
- * - API_BASE: โดเมนฐาน (ไม่มี /api ต่อท้าย)
- * - API_PREFIX: พาธ prefix (เช่น /api)
+ * - apiBaseEnv: ค่าดิบจาก ENV
+ * - apiBase   : โดเมนฐาน (ตัด / ท้าย)
+ * - apiPrefix : พาธ prefix (เช่น /api)
  * ตั้งค่า axios instance:
  * - withCredentials: true (แนบคุกกี้ถ้ามี)
  * - interceptor: แนบ Authorization Bearer จาก localStorage
- * - debug: แสดงปลายทางเต็มที่กำลังเรียก
+ * - debug: แสดงปลายทางเต็มที่กำลังเรียก (ควรปิดใน production)
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
-const API_BASE =
-    API_BASE_URL && /^https?:\/\//i.test(API_BASE_URL)
-        ? API_BASE_URL.replace(/\/+$/, "")
+const apiBaseEnv = import.meta.env.VITE_API_BASE_URL?.trim();
+const apiBase =
+    apiBaseEnv && /^https?:\/\//i.test(apiBaseEnv)
+        ? apiBaseEnv.replace(/\/+$/, "")
         : "http://localhost:3000";
-const API_PREFIX = (import.meta.env.VITE_API_PREFIX ?? "/api").replace(/\/+$/, "");
+const apiPrefix = (import.meta.env.VITE_API_PREFIX ?? "/api").replace(/\/+$/, "");
 
-const apiClient = axios.create({ baseURL: API_BASE, withCredentials: true });
+const apiClient = axios.create({ baseURL: apiBase, withCredentials: true });
 apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem("access_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
-    // debug: ดูปลายทางจริงที่กำลังจะยิง (method + URL ที่ resolve แล้ว)
-    const fullUrl = apiClient.getUri({ url: config.url!, params: config.params });
-    console.debug("[API] →", config.method?.toUpperCase(), fullUrl);
+    // debug: ดูปลายทางจริงที่กำลังจะยิง — ควรปิดเมื่อ import.meta.env.PROD === true
+    const resolvedUrl = apiClient.getUri({ url: config.url!, params: config.params });
+    console.debug("[API] →", config.method?.toUpperCase(), resolvedUrl);
     return config;
 });
 
-
 /* -------------------- Utils --------------------
- * STATIC_PREFIX: พาธฐานของไฟล์ static (เผื่อใช้ในอนาคต—ยังไม่ได้อ้างอิง)
- * isAbsUrl: ตรวจว่า string เป็น URL แบบ absolute (http/https) หรือไม่
+ * isAbsoluteUrl: ตรวจว่า string เป็น URL แบบ absolute (http/https) หรือไม่
  * bannerPreviewUrl: คืน URL สำหรับพรีวิวรูปจาก item (รองรับกรณี URL แบบ absolute และกรณี path จากเซิร์ฟเวอร์)
  */
-const STATIC_BASE_PATH = (import.meta.env.VITE_STATIC_PREFIX ?? "/uploads").replace(/\/+$/, "") || "/";
-
-const isAbsUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
+const isAbsoluteUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
 
 const bannerPreviewUrl = (item: { path: string; url?: string }) => {
-    if (isAbsUrl(item.url)) return item.url as string;
+    if (isAbsoluteUrl(item.url)) return item.url as string;
     const rawPath = item.path || "";
     const leadingPath = "/" + rawPath.replace(/^\/+/, "");
-    return `${API_BASE}${leadingPath}`;
+    return `${apiBase}${leadingPath}`;
 };
 
 /* ---------- Types ----------
@@ -94,24 +80,27 @@ type BannerItem = {
  * หมายเหตุ: โครงสร้าง field name ต้องตรงกับฝั่ง server/multer
  */
 async function fetchBanners(): Promise<BannerItem[]> {
-    const resp = await apiClient.get(`${API_PREFIX}/banner`, { params: { _: Date.now() } });
+    const response = await apiClient.get(`${apiPrefix}/super/banner`, { params: { _: Date.now() } });
     // รองรับรูปแบบห่อผลลัพธ์ที่หลากหลาย (data.data | data.banners | data)
-    const rawArr = Array.isArray(resp.data?.data) ? resp.data.data
-        : Array.isArray(resp.data?.banners) ? resp.data.banners
-            : Array.isArray(resp.data) ? resp.data
+    const rawList = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data?.banners)
+            ? response.data.banners
+            : Array.isArray(response.data)
+                ? response.data
                 : [];
 
     // map → BannerItem (กำหนด order fallback ด้วย index+1)
-    return (rawArr as RawBannerItem[]).map((raw, index) => {
+    return (rawList as RawBannerItem[]).map((raw, index) => {
         const bannerItem: BannerItem = {
             id: raw.id,
             path: raw.image,
-            order: raw.order ?? (index + 1),
+            order: raw.order ?? index + 1,
         };
 
         return {
             ...bannerItem,
-            url: bannerItem.url ?? bannerPreviewUrl(bannerItem) // สร้าง URL สำหรับพรีวิว
+            url: bannerItem.url ?? bannerPreviewUrl(bannerItem), // สร้าง URL สำหรับพรีวิว
         };
     });
 }
@@ -119,21 +108,21 @@ async function fetchBanners(): Promise<BannerItem[]> {
 async function uploadBanners(files: File[]) {
     const formData = new FormData();
     files.forEach((file) => formData.append("banner", file, file.name));
-    const resp = await apiClient.post(`${API_PREFIX}/banner`, formData, {
+    const response = await apiClient.post(`${apiPrefix}/super/banner`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
-    return resp.data;
+    return response.data;
 }
 
 async function deleteBanner(id: number) {
-    await apiClient.delete(`${API_PREFIX}/banner/${id}`);
+    await apiClient.delete(`${apiPrefix}/super/banner/${id}`);
 }
 
 async function replaceBanner(id: number, file: File) {
     const formData = new FormData();
     formData.append("banner", file, file.name);
-    const resp = await apiClient.put(`${API_PREFIX}/banner/${id}`, formData);
-    return resp.data;
+    const response = await apiClient.put(`${apiPrefix}/super/banner/${id}`, formData);
+    return response.data;
 }
 
 /* -------------------- Result Modal --------------------
@@ -186,7 +175,7 @@ function ResultModal({
  *  - bannerFiles   : ไฟล์ที่เลือกในเครื่อง (ยังไม่ส่ง/หรือส่งแล้วแต่คงไว้เป็น local state)
  *  - localPreviews : object URLs สำหรับพรีวิวไฟล์ที่เลือกในเครื่อง
  *  - combinedPreviews: รวมพรีวิว server + local (เรียงตามที่แสดง)
- *  - remainBanner  : จำนวนช่องที่เหลือให้อัปโหลด (สูงสุด 5)
+ *  - remainingBannerSlots: จำนวนช่องที่เหลือให้อัปโหลด (สูงสุด 5)
  *  - confirm/result modals: คุมการยืนยันและข้อความผลลัพธ์
  *  - pendingIndex/pendingAction/tempFile: จัดคิวงาน edit/delete และไฟล์ใหม่ชั่วคราว
  */
@@ -213,12 +202,12 @@ export default function UploadBannerPage() {
     );
 
     // Limits (เหลือช่องว่างให้อัปโหลดอีกเท่าไร จาก limit 5)
-    const remainBanner = Math.max(0, 5 - (serverCount + bannerFiles.length));
+    const remainingBannerSlots = Math.max(0, 5 - (serverCount + bannerFiles.length));
 
     // Confirm/Result modals & states
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [confirmTitle, setConfirmTitle] = useState("");
-    const [confirmDesc, setConfirmDesc] = useState("");
+    const [confirmDescription, setConfirmDescription] = useState("");
     const [pendingIndex, setPendingIndex] = useState<number | null>(null);
     const [pendingAction, setPendingAction] = useState<"edit" | "delete" | null>(null);
     const [tempFile, setTempFile] = useState<File | null>(null);
@@ -256,12 +245,12 @@ export default function UploadBannerPage() {
 
     /**
      * handleAddFiles: เมื่อเลือกไฟล์ใหม่จาก UploadCard
-     * - ตัดให้ไม่เกิน remainBanner
+     * - ตัดให้ไม่เกิน remainingBannerSlots
      * - อัปโหลดทันที แล้ว refresh หน้ารายการ
      * - แจ้งผลด้วย ResultModal
      */
     const handleAddFiles = async (files: File[]) => {
-        const filesToUpload = files.slice(0, remainBanner);
+        const filesToUpload = files.slice(0, remainingBannerSlots);
         if (!filesToUpload.length) return;
 
         try {
@@ -301,7 +290,7 @@ export default function UploadBannerPage() {
         if (!pickedFiles.length) return;
         setTempFile(pickedFiles[0]);
         setConfirmTitle("ยืนยันการแก้ไขรูปภาพหรือไม่");
-        setConfirmDesc("คุณจะไม่สามารถย้อนกลับได้");
+        setConfirmDescription("คุณจะไม่สามารถย้อนกลับได้");
         setConfirmOpen(true);
         event.target.value = "";
     };
@@ -314,7 +303,7 @@ export default function UploadBannerPage() {
         setPendingIndex(index);
         setPendingAction("delete");
         setConfirmTitle("ยืนยันการลบรูปภาพหรือไม่");
-        setConfirmDesc("คุณจะไม่สามารถย้อนกลับได้");
+        setConfirmDescription("คุณจะไม่สามารถย้อนกลับได้");
         setConfirmOpen(true);
     };
 
@@ -404,21 +393,28 @@ export default function UploadBannerPage() {
                 className="relative shrink-0 overflow-hidden rounded-xl shadow border border-gray-200"
                 style={{ width: 200, height: 120 }}
             >
-                <img src={preview.url} alt={`preview-banner-${index}`} className="w-full h-full object-cover" draggable={false} />
+                <img
+                    src={preview.url}
+                    alt={`preview-banner-${index}`}
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                />
                 <div className="absolute bottom-2 right-2 z-20 flex space-x-2">
                     <button
                         type="button"
                         onClick={() => onEditClick(index)}
-                        className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                        aria-label={`แก้ไขรูปที่ ${index + 1}`}
                         title="แก้ไขรูป"
+                        className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                     >
                         <Icon icon="mdi:pencil" className="w-4 h-4 text-gray-700" />
                     </button>
                     <button
                         type="button"
                         onClick={() => onDeleteClick(index)}
-                        className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                        aria-label={`ลบรูปที่ ${index + 1}`}
                         title="ลบรูป"
+                        className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 flex items-center justify-center hover:bg-gray-100"
                     >
                         <Icon icon="mdi:delete" className="w-4 h-4 text-gray-700" />
                     </button>
@@ -428,32 +424,69 @@ export default function UploadBannerPage() {
 
     /* ---------- Render หลักของหน้า ---------- */
     return (
-        <main className="min-h-screen bg-gray-50 py-8 px-6">
-            <div className="max-w-6xl h-full mx-auto bg-white rounded-xl shadow-md p-8">
-                <div className="flex items-start justify-between mb-8">
-                    <h1 className="text-lg font-medium text-gray-800">การเพิ่ม/แก้ไข รูปภาพ</h1>
+        <>
+            <Breadcrumb
+                current={{
+                    label: "การเพิ่ม/แก้ไข รูปภาพ",
+                    to: `/super/banners`,
+                }}
+            />
+
+            {/* โครงหน้าหลัก */}
+            <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
+                <div className="flex items-center mb-6 ">
+                    <a
+                        className="items-center gap-2 mr-4 text-gray-800 hover:text-dark-green"
+                        href="/super/setting"
+                        data-discover="true"
+                        aria-label="ย้อนกลับ"
+                    >
+                        {/* ไอคอน back (inline SVG) */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlnsXlink="http://www.w3.org/1999/xlink"
+                            aria-hidden="true"
+                            role="img"
+                            className="iconify iconify--lucide w-7 h-7"
+                            width="1em"
+                            height="1em"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="m12 19l-7-7l7-7m7 7H5"
+                            />
+                        </svg>
+                    </a>
+                    <h1 className="text-[20px] font-bold">การเพิ่ม/แก้ไข รูปภาพ</h1>
                 </div>
 
-                {/* เส้น Timeline/หัวข้อย่อย (ตกแต่ง UI) */}
-                <div className="relative pl-20 mb-8
+                {/* กลุ่มแสดง/เพิ่มพรีวิวแบนเนอร์ */}
+                <div
+                    className="relative pl-20 mb-8
                                     before:content-[''] before:absolute before:left-6 before:top-0 before:bottom-0 before:w-[1px] before:bg-black
                                     after:content-[''] after:absolute after:left-[13px] after:top-2 after:w-6 after:h-6 after:rounded-full after:bg-black
-                                ">
+                                    ml-20 mt-10
+                                "
+                >
                     <section>
                         <h2 className="text-base font-medium text-gray-800 mb-4">รูปภาพในหน้าหลัก</h2>
+
                         <div className="flex flex-wrap items-start gap-4">
                             {renderPreviewCards(combinedPreviews)}
 
-                            {/* ปุ่ม/การ์ดสำหรับเพิ่มรูป (แสดงเมื่อยังไม่ครบ 5) 
-                               - UploadCard เป็นคอมโพเนนต์ที่ส่งคืน File[] ผ่าน onChange
-                               - ที่นี่ส่งต่อไป handleAddFiles เพื่ออัปโหลดทันที */}
-                            {remainBanner > 0 && (
+                            {/* การ์ดเพิ่มรูป (แสดงเมื่อยังไม่ครบ 5) */}
+                            {remainingBannerSlots > 0 && (
                                 <UploadCard
-                                    max={remainBanner}
+                                    max={remainingBannerSlots}
                                     accept="image/*"
-                                    multiple={remainBanner > 1}
-                                    value={bannerFiles}                 // ใช้เป็น File[] ที่เลือกในเครื่อง
-                                    onChange={(files: File[]) => handleAddFiles(files)}   // ส่งไฟล์ไปอัปโหลด
+                                    multiple={remainingBannerSlots > 1}
+                                    value={bannerFiles}
+                                    onChange={(files: File[]) => handleAddFiles(files)}
                                     itemW={200}
                                     itemH={120}
                                     square={false}
@@ -462,24 +495,35 @@ export default function UploadBannerPage() {
                         </div>
                     </section>
                 </div>
-            </div>
 
-            {/* Hidden input สำหรับ flow "แก้ไข" (replace) */}
-            <input type="file" accept="image/*" ref={editInputRef} className="hidden" onChange={handleEditFileChange} />
+                {/* Hidden input สำหรับ flow "แก้ไข" (replace) */}
+                <input
+                    type="file"
+                    accept="image/*"
+                    ref={editInputRef}
+                    className="hidden"
+                    onChange={handleEditFileChange}
+                />
 
-            {/* โมดัลยืนยัน */}
-            <Modal
-                open={confirmOpen}
-                title={confirmTitle}
-                text={confirmDesc}
-                onCancel={handleCancelConfirm}
-                onConfirm={handleConfirmAction}
-                confirmText="ยืนยัน"
-                cancelText="ยกเลิก"
-            />
+                {/* โมดัลยืนยัน */}
+                <Modal
+                    open={confirmOpen}
+                    title={confirmTitle}
+                    text={confirmDescription}
+                    onCancel={handleCancelConfirm}
+                    onConfirm={handleConfirmAction}
+                    confirmText="ยืนยัน"
+                    cancelText="ยกเลิก"
+                />
 
-            {/* โมดัลผลลัพธ์ (สำเร็จ/ผิดพลาด) */}
-            <ResultModal open={resultOpen} status={resultStatus} message={resultMessage} onClose={() => setResultOpen(false)} />
-        </main>
+                {/* โมดัลผลลัพธ์ (สำเร็จ/ผิดพลาด) */}
+                <ResultModal
+                    open={resultOpen}
+                    status={resultStatus}
+                    message={resultMessage}
+                    onClose={() => setResultOpen(false)}
+                />
+            </main>
+        </>
     );
 }

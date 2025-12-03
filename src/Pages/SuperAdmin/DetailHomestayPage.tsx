@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import Button from "@/Components/Button"; 
+import Button from "@/Components/Button";
 
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 
@@ -23,10 +23,8 @@ const BACKEND_BASE_URL =
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
 
-  // ตัด / หน้า "uploads" และตัด / ท้ายออก
   const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
 
-  // ถ้าไม่มีคำว่า uploads ใน path ให้เพิ่มเอง
   if (!cleaned.startsWith("uploads/")) {
     return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
   }
@@ -34,7 +32,7 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
   return `${BACKEND_BASE_URL}/${cleaned}`;
 }
 
-/* 
+/*
  * Component : HomestayDetailPage
 */
 export default function HomestayDetailPage() {
@@ -42,7 +40,6 @@ export default function HomestayDetailPage() {
   const { homestayId } = useParams<{ homestayId: string }>();
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
 
-  // โหลดข้อมูลจาก backend
   useEffect(() => {
     if (!homestayId) return;
     fetchHomestayDetail(Number(homestayId))
@@ -59,7 +56,6 @@ export default function HomestayDetailPage() {
   const show = (Value: any) => (Value ? Value : "-");
   const googleMapLink = `https://maps.google.com/?q=${homestay.location?.latitude},${homestay.location?.longitude}`;
 
-  // ดึงรูปหลักและรูปเพิ่มเติมจาก type
   const mainImage = homestay.homestayImage?.find(
     (img: any) => img.type === "COVER"
   );
@@ -70,14 +66,12 @@ export default function HomestayDetailPage() {
   return (
     <div className="px-1 space-y-3">
       {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
+      <div>
         <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน", to: "/super/communities/all" },
-            { label: homestay.community.name, to: `/super/community/${homestay.community.id}` },
-            { label: "จัดการที่พัก", to: `/super/community/${homestay.community.id}/homestay/all` },
-            { label: homestay.name},
-          ]}
+          current={{
+            label: homestay.name,
+            to: `/super/community/${homestay.community.id}/homestay/${homestayId}`,
+          }}
         />
       </div>
 
@@ -86,21 +80,21 @@ export default function HomestayDetailPage() {
         <div className="flex justify-between items-center mb-5">
           {/* หัวข้อ */}
           <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-            <ArrowLeft 
-              className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors" 
-              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)} 
+            <ArrowLeft
+              className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
+              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)}
             />
-              รายละเอียดที่พัก
+            รายละเอียดที่พัก
           </h1>
           {/* ปุ่มแก้ไข */}
           <div className="w-32">
-            <Button 
-              type="confirm-admin" 
+            <Button
+              type="confirm-admin"
               onClick={() => navigate(`/super/homestay/edit/${homestay.id}`)}
             >
               <div className="flex items-center gap-2">
                 <SquarePen className="h-5 w-5" strokeWidth={2.1} />
-                  <span className="text-base">แก้ไข</span>
+                <span className="text-base">แก้ไข</span>
               </div>
             </Button>
           </div>
@@ -136,20 +130,20 @@ export default function HomestayDetailPage() {
               {/* ชื่อที่พัก */}
               <p className="mr-10 flex items-baseline">
                 <span className="text-[16px] font-bold text-black">
-                    ชื่อที่พัก :
+                  ชื่อที่พัก :
                 </span>
-                <span className="text-[16px] font-normal text-black ml-2"> 
-                    {show(homestay.name)}
+                <span className="text-[16px] font-normal text-black ml-2">
+                  {show(homestay.name)}
                 </span>
               </p>
-              
+
               {/* ประเภทที่พัก */}
               <p className="ml-30 flex items-baseline">
                 <span className="text-[16px] font-bold text-black">
-                    ประเภทที่พัก :
-                </span> 
+                  ประเภทที่พัก :
+                </span>
                 <span className="text-[16px] font-normal text-black ml-2">
-                    {show(homestay.type)}
+                  {show(homestay.type)}
                 </span>
               </p>
             </div>
@@ -175,20 +169,20 @@ export default function HomestayDetailPage() {
               {/* จำนวนห้องพักทั้งหมด */}
               <p className="flex items-baseline">
                 <span className="font-bold">
-                    จำนวนห้องพักทั้งหมด :
+                  จำนวนห้องพักทั้งหมด :
                 </span>
                 <span className="font-normal ml-2">
-                    {show(homestay.totalRoom)} ห้อง
+                  {show(homestay.totalRoom)} ห้อง
                 </span>
               </p>
-              
+
               {/* จำนวนผู้เข้าพักต่อห้อง */}
               <p className="mt-3 flex items-baseline">
                 <span className="font-bold">
-                    จำนวนผู้เข้าพักต่อห้อง :
-                </span> 
+                  จำนวนผู้เข้าพักต่อห้อง :
+                </span>
                 <span className="font-normal ml-2">
-                    {show(homestay.guestPerRoom)} คน ต่อ ห้อง
+                  {show(homestay.guestPerRoom)} คน ต่อ ห้อง
                 </span>
               </p>
             </div>
@@ -214,7 +208,7 @@ export default function HomestayDetailPage() {
           </div>
         </div>
 
-       {/* รูปภาพเพิ่มเติม */}
+        {/* รูปภาพเพิ่มเติม */}
         <div className="mt-10">
           <h3 className="text-[20px] font-bold text-black mb-3">รูปภาพเพิ่มเติม</h3>
           {extraImages?.length > 0 ? (
@@ -248,70 +242,67 @@ export default function HomestayDetailPage() {
               width="100%"
               height="400"
               className="border border-gray-200"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-                  homestay.location.longitude - 0.01
-              }%2C${homestay.location.latitude - 0.01}%2C${
-                  homestay.location.longitude + 0.01
-              }%2C${
-                  homestay.location.latitude + 0.01
-              }&layer=mapnik&marker=${homestay.location.latitude}%2C${homestay.location.longitude}`}
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${homestay.location.longitude - 0.01
+                }%2C${homestay.location.latitude - 0.01}%2C${homestay.location.longitude + 0.01
+                }%2C${homestay.location.latitude + 0.01
+                }&layer=mapnik&marker=${homestay.location.latitude}%2C${homestay.location.longitude}`}
             ></iframe>
 
             <div className="text-[16px] leading-relaxed text-gray-700 grid md:grid-cols-2 gap-x-8">
-                <div className="space-y-3">
-                    {/* ที่อยู่ */}
-                    <p className="flex items-baseline">
-                        <span className="font-bold">
-                            ที่อยู่ :
-                        </span>
-                        <span className="font-normal ml-2">
-                            {homestay.location.houseNumber}{" "}
-                            {homestay.location.villageNumber}{" "}
-                            {homestay.location.subDistrict}{" "}
-                            {homestay.location.district}{" "}
-                            {homestay.location.province}{" "}
-                            {homestay.location.postalCode}
-                        </span>
-                    </p>
-                    
-                    {/* ละติจูด / ลองจิจูด */}
-                    <p className="flex items-baseline">
-                        <span className="font-bold">
-                            ละติจูด / ลองจิจูด :
-                        </span>
-                        <span className="font-normal ml-2">
-                            {homestay.location.latitude}, {homestay.location.longitude}
-                        </span>
-                    </p>
-                    
-                    {/* Google Maps */}
-                    <p className="flex items-baseline">
-                        <span className="font-bold">
-                            Google Maps :
-                        </span>
-                        <span className="font-normal ml-2">
-                            <a
-                                href={googleMapLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {googleMapLink}
-                            </a>
-                        </span>
-                    </p>
-                </div>
+              <div className="space-y-3">
+                {/* ที่อยู่ */}
+                <p className="flex items-baseline">
+                  <span className="font-bold">
+                    ที่อยู่ :
+                  </span>
+                  <span className="font-normal ml-2">
+                    {homestay.location.houseNumber}{" "}
+                    {homestay.location.villageNumber}{" "}
+                    {homestay.location.subDistrict}{" "}
+                    {homestay.location.district}{" "}
+                    {homestay.location.province}{" "}
+                    {homestay.location.postalCode}
+                  </span>
+                </p>
 
-                <div className="space-y-3">
-                    {/* คำอธิบายที่อยู่ */}
-                    <p className="flex items-baseline">
-                        <span className="font-bold">
-                            คำอธิบายที่อยู่ :
-                        </span>
-                        <span className="font-normal ml-2">
-                            {show(homestay.location.detail || "-")}
-                        </span>
-                    </p>
-                </div>
+                {/* ละติจูด / ลองจิจูด */}
+                <p className="flex items-baseline">
+                  <span className="font-bold">
+                    ละติจูด / ลองจิจูด :
+                  </span>
+                  <span className="font-normal ml-2">
+                    {homestay.location.latitude}, {homestay.location.longitude}
+                  </span>
+                </p>
+
+                {/* Google Maps */}
+                <p className="flex items-baseline">
+                  <span className="font-bold">
+                    Google Maps :
+                  </span>
+                  <span className="font-normal ml-2">
+                    <a
+                      href={googleMapLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {googleMapLink}
+                    </a>
+                  </span>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {/* คำอธิบายที่อยู่ */}
+                <p className="flex items-baseline">
+                  <span className="font-bold">
+                    คำอธิบายที่อยู่ :
+                  </span>
+                  <span className="font-normal ml-2">
+                    {show(homestay.location.detail || "-")}
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         )}

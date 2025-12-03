@@ -198,7 +198,6 @@ const StoreDetailPage = () => {
               <span className="font-bold">รายละเอียดร้านค้า :</span> {store.detail}
             </p>
 
-            {/* Tags */}
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="font-bold text-[16px]">แท็ก :</span>
               {store.tags.length > 0 ? (

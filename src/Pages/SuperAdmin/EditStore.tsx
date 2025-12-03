@@ -248,7 +248,6 @@ export function EditStore() {
    * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง
    * และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
    */
-  console.log(location.province);
   const handleSubmit = async () => {
     try {
       const isValid = validateField();
@@ -261,6 +260,8 @@ export function EditStore() {
         return;
       }
       const {
+        id,
+        communityId,
         houseNumber,
         longitude,
         latitude,
@@ -292,7 +293,6 @@ export function EditStore() {
       const formDataToSend = new FormData();
       formDataToSend.append("data", JSON.stringify(payload));
 
-      // ✅ แน่ใจว่าไม่อัปโหลดซ้ำไฟล์จาก server
       coverFiles.forEach((file: any) => {
         formDataToSend.append("cover", file);
       });
@@ -323,14 +323,14 @@ export function EditStore() {
   };
   return (
     <div>
-      <Breadcrumb
-        items={[
-          { label: "จัดการชุมชน", to: "/super/communities/all" },
-          { label: formData.name || "ชื่อชุมชน", to: `/super/community/${communityId}` },
-          { label: "จัดการร้านค้า", to: `/super/community/${communityId}/stores/all` },
-          { label: "แก้ไขร้านค้า" },
-        ]}
-      />
+      <div>
+        <Breadcrumb
+          current={{
+            label: "แก้ไขร้านค้า",
+            to: `/super/community/${communityId}/store/${storeId}/edit`,
+          }}
+        />
+      </div>
       <div className="bg-white p-6 rounded-2xl">
         <div className="flex justify-between items-center mb-3">
           <Link

@@ -18,6 +18,9 @@ export type AuthUser = {
   id: number;
   username: string;
   role: Role;
+  fname: string;
+  lname: string;
+  email: string;
 };
 
 type AuthContextValue = {
@@ -38,10 +41,14 @@ export const AuthContext = createContext<AuthContextValue>({
     throw new Error("login not implemented");
   },
   register: async () => false,
-  logout: async () => {},
+  logout: async () => { },
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -52,11 +59,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const res = await axios.get("http://localhost:3000/api/auth/me", {
           withCredentials: true,
         });
-        const { id, username, role } = res.data.data;
+        const { id, username, role, fname, lname, email } = res.data.data;
         const authUser: AuthUser = {
           id: id,
           username: username,
           role: role,
+          fname: fname,
+          lname: lname,
+          email: email,
         };
         setUser(authUser);
       } catch (err) {
@@ -71,19 +81,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(
     async (username: string, password: string) => {
-      console.log('login', 1)
+      console.log("login", 1);
       try {
         const res = await axios.post(
           "http://localhost:3000/api/auth/login",
           { username, password },
           { withCredentials: true }
         );
-const { user: u } = res.data.data;
+        const { user: u } = res.data.data;
 
         const authUser: AuthUser = {
           id: u.id,
           username: u.username,
           role: u.role.toLowerCase(),
+          fname: u.fname,
+          lname: u.lname,
+          email: u.email,
         };
 
         setUser(authUser);
@@ -94,7 +107,7 @@ const { user: u } = res.data.data;
               navigate("super/communities", { replace: true });
               break;
             case "admin":
-              navigate("/admin/home", { replace: true });
+              navigate("/admin/community/own", { replace: true });
               break;
             case "member":
               navigate("/member/home", { replace: true });
@@ -156,7 +169,6 @@ const { user: u } = res.data.data;
 
     // redirect ตาม role
   }, [navigate, user]);
-
 
   if (loading) return null;
 

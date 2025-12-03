@@ -1,76 +1,81 @@
-/* 
+/*
+ * File: CalendarPopover.tsx
  * Component: CalendarPopover (Client)
- * คำอธิบาย: แสดงปฏิทินแบบ Daily / Weekly / Monthly เป็น popover ที่ยึดตำแหน่งสัมพันธ์กับ trigger
- *            ปรับ UI ตาม props และรองรับการปรับคลาสตำแหน่ง/คอนเทนเนอร์จากภายนอก
- * Input (Props): ดู CalendarPopoverProps ด้านล่าง
- * Output: JSX ของปฏิทินตามโหมดที่เลือก (แยกเรนเดอร์ตาม type)
- * หมายเหตุ: เขียนคอมเมนต์ไฟล์/ฟังก์ชันก่อนประกาศตามมาตรฐาน CS (ไทย/อังกฤษได้)
+ * มาตรฐานตรวจ: CS v1.1.1
+ * หน้าที่:
+ *   - แสดงปฏิทินแบบ Weekly / Monthly / Yearly ผ่าน popover (ไม่รวม Daily)
+ *   - เลือกเรนเดอร์คอมโพเนนต์ย่อยตามค่า prop 'type'
  */
 
 import React, { useMemo } from "react";
-import { DailyDate } from "../../DailyDate";
 import { WeeklyDate } from "../../WeeklyDate";
 import { MonthlyDate } from "../../MonthlyDate";
+import { YearlyDate } from "../../YearlyDate";
 
 /** ---------- Types & Props ---------- */
 /*
- * ฟังก์ชัน/ชนิด: CalendarMode
- * คำอธิบาย : โหมดของปฏิทินที่รองรับ
- * Output    : ลิสต์ literal type 'daily' | 'weekly' | 'monthly'
+ * ชนิด: CalendarMode
+ * คำอธิบาย: โหมดปฏิทินที่รองรับ
  */
-type CalendarMode = "daily" | "weekly" | "monthly";
+export type CalendarMode = "weekly" | "monthly" | "yearly";
 
+/*
+ * ชนิด: CalendarPopoverProps
+ * คำอธิบาย: พารามิเตอร์ควบคุมการเรนเดอร์และลักษณะตำแหน่งของ popover
+ */
 export type CalendarPopoverProps = {
-  /** กำหนดประเภทของปฏิทินที่จะแสดง */
+  /** โหมดของปฏิทินที่จะแสดง (weekly/monthly/yearly) */
   type: CalendarMode;
-  /** เพื่อการจัดวาง: คลาสของคอนเทนเนอร์ภายนอก (เช่น ตำแหน่ง/กว้าง/เงา) */
+  /** คลาสเพิ่มเติมของคอนเทนเนอร์ popover */
   className?: string;
-  /** ปรับคลาสตำแหน่ง (ดีฟอลต์: absolute top-full left-0 mt-2 z-50) */
+  /** คลาสควบคุมตำแหน่ง (เช่น absolute/mt/left/z-index) */
   positionClassName?: string;
-  /** ป้ายบอกหน้าจอผู้อ่าน (screen reader); ถ้าไม่กำหนดจะสร้างให้อัตโนมัติจาก type */
+  /** ป้ายสำหรับผู้อ่านหน้าจอ ถ้าไม่ระบุจะสร้างตามโหมด */
   ariaLabel?: string;
 };
 
 /** ---------- Component ---------- */
-/*
- * ฟังก์ชัน: CalendarPopover
- * คำอธิบาย : เรนเดอร์ปฏิทินตรงตามโหมด พร้อมระบุบทบาท A11y แบบ dialog ที่ไม่บล็อกพื้นหลัง
- * Input  : props { type, className?, positionClassName?, ariaLabel? }
- * Output : <div role="dialog"> ที่ห่อคอมโพเนนต์ปฏิทิน (Daily/Weekly/Monthly)
- */
 export const CalendarPopover: React.FC<CalendarPopoverProps> = ({
   type,
   className,
   positionClassName,
   ariaLabel,
 }) => {
-  // ป้ายสำหรับ screen reader ตามโหมด (เมื่อไม่ส่ง ariaLabel มา)
+  /**
+   * ตัวแปร: computedAriaLabel
+   * คำอธิบาย: เลือกข้อความ ariaLabel อัตโนมัติตามโหมด หากไม่ได้ส่งมา
+   */
   const computedAriaLabel = useMemo(() => {
     if (ariaLabel) return ariaLabel;
     switch (type) {
-      case "daily":
-        return "ปฏิทินรายวัน";
       case "weekly":
         return "ปฏิทินรายสัปดาห์";
       case "monthly":
         return "ปฏิทินรายเดือน";
+      case "yearly":
+        return "ปฏิทินรายปี";
       default:
         return "ปฏิทิน";
     }
   }, [ariaLabel, type]);
 
-  const pos = positionClassName ?? "absolute top-full left-0 mt-2 z-50";
+  /**
+   * ตัวแปร: positionClass
+   * คำอธิบาย: คลาสตำแหน่งที่ใช้จริง (มีค่าเริ่มต้นเพื่อให้ popover โผล่ใต้ trigger)
+   */
+  const positionClass = positionClassName ?? "absolute top-full left-0 mt-2 z-50";
 
   return (
     <div
-      className={`${pos} ${className ?? ""}`}
+      className={`${positionClass} ${className ?? ""}`}
       role="dialog"
       aria-modal={false}
       aria-label={computedAriaLabel}
     >
-      {type === "daily" && <DailyDate />}
+      {/* เรนเดอร์คอมโพเนนต์ปฏิทินตามโหมดที่กำหนด */}
       {type === "weekly" && <WeeklyDate />}
       {type === "monthly" && <MonthlyDate />}
+      {type === "yearly" && <YearlyDate />}
     </div>
   );
 };

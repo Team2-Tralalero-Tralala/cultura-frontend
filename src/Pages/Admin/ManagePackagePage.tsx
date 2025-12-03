@@ -1,5 +1,5 @@
 /*
- * คำอธิบาย : Component หน้าสำหรับจัดการแพ็กเกจ (สำหรับ Superadmin)
+ * คำอธิบาย : Component หน้าสำหรับจัดการแพ็กเกจ (สำหรับ admin)
  * - แสดงรายการแพ็กเกจทั้งหมดในรูปแบบตาราง
  * - รองรับการค้นหา, การแบ่งหน้า (Pagination)
  * - รองรับการลบ (เดี่ยว/กลุ่ม) และการแก้ไข
@@ -9,7 +9,11 @@
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "@/Components/Tables/Index";
-import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
+import type {
+  Column,
+  DataTableActionsConfig,
+  BulkAction,
+} from "../../Components/Tables/Types";
 import { TrashIcon } from "../../Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
@@ -63,7 +67,7 @@ export default function ManagePackageSuperAdmin() {
         <button
           type="button"
           className="hover:underline text-left"
-          onClick={() => navigate(`/super/package/${row.id}`)}
+          onClick={() => navigate(`/admin/package/${row.id}`)}
         >
           {row.title}
         </button>
@@ -100,14 +104,18 @@ export default function ManagePackageSuperAdmin() {
   const reloadPackages = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${apiUrl}/super/packages`, {
+      const response = await axios.get(`${apiUrl}/admin/packages`, {
         params: { page: currentPage, limit: pageSize },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
       });
       const payload = response?.data;
       let rawDataList: any =
-        payload?.data?.data ?? payload?.data ?? payload?.items ?? payload?.rows ?? payload;
+        payload?.data?.data ??
+        payload?.data ??
+        payload?.items ??
+        payload?.rows ??
+        payload;
 
       if (!Array.isArray(rawDataList)) {
         console.warn("Expected array but got:", rawDataList);
@@ -127,11 +135,10 @@ export default function ManagePackageSuperAdmin() {
           title: packageItem?.name ?? packageItem?.title ?? "-",
           community: packageItem?.community?.name ?? packageItem?.communityName ?? "-",
           owner: packageItem?.overseerPackage
-            ? `${packageItem.overseerPackage.fname ?? ""} ${
-                packageItem.overseerPackage.lname ?? ""
+            ? `${packageItem.overseerPackage.fname ?? ""} ${packageItem.overseerPackage.lname ?? ""
               }`.trim() ||
-              packageItem.overseerPackage.username ||
-              "-"
+            packageItem.overseerPackage.username ||
+            "-"
             : packageItem?.ownerName ?? "-",
           published:
             packageItem?.statusPackage === "PUBLISH" ||
@@ -165,17 +172,20 @@ export default function ManagePackageSuperAdmin() {
     setIsDeleteModalOpen(false);
 
     try {
-      await axios.patch(`${apiUrl}/super/package/${rowId}`, null, { withCredentials: true });
+      await axios.patch(
+        `${apiUrl}/admin/package/${rowId}`,
+        null,
+        { withCredentials: true }
+      );
 
       await reloadPackages();
     } catch (error: any) {
       console.error("delete failed:", error?.response?.data ?? error);
       alert(
-        `ลบไม่สำเร็จ (${rowTitle}): ${
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "unknown error"
+        `ลบไม่สำเร็จ (${rowTitle}): ${error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "unknown error"
         }`
       );
     } finally {
@@ -191,7 +201,7 @@ export default function ManagePackageSuperAdmin() {
       variant: "icons",
       items: () => ["edit", "delete"],
       callbacks: {
-        edit: (row) => navigate(`/super/package/${row.id}/edit`),
+        edit: (row) => navigate(`/admin/package/${row.id}/edit`),
         delete: (row) => {
           setRowToDelete(row);
           setIsDeleteModalOpen(true);
@@ -212,7 +222,12 @@ export default function ManagePackageSuperAdmin() {
    * Output : สตริงที่แปลงแล้ว
    */
   const normalizeText = (text: string) =>
-    (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+    (text ?? "")
+      .toString()
+      .toLowerCase()
+      .normalize("NFC")
+      .replace(/\s+/g, " ")
+      .trim();
 
   /*
    * คำอธิบาย : แปลง boolean 'published' เป็นข้อความ
@@ -248,26 +263,30 @@ export default function ManagePackageSuperAdmin() {
   }, [searchQuery]);
 
   /*
-   * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าคำขออนุมัติแพ็กเกจของผู้ดูแลระบบ
-   * Input : -
-   * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/super/package-requests"
-   */
-  const goToApprovalRequests = () => navigate("/super/package-requests");
+  * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าคำขออนุมัติแพ็กเกจของผู้ดูแลระบบ
+  * Input : -
+  * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/super/package-requests"
+  */
+  const goToApprovalRequests = () => navigate("/admin/package-requests");
 
   /*
-   * คำอธิบาย : กำหนดออบเจกต์การแบ่งหน้า (Pagination) สำหรับส่งให้ Component DataTable
-   * Input : - (ใช้ currentPage, pageSize และ totalItems จาก state ภายใน Component)
-   * Output : ออบเจกต์ pagination ที่ประกอบด้วย currentPage, totalPages, totalCount และ limit
-   */
-  const pagination = React.useMemo(
-    () => ({
-      currentPage,
-      totalPages: Math.max(1, Math.ceil((totalItems || 0) / (pageSize || 10))),
-      totalCount: totalItems,
-      limit: pageSize,
-    }),
-    [currentPage, pageSize, totalItems]
-  );
+  * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าสร้างแพ็กเกจของผู้ดูแลระบบ
+  * Input : -
+  * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/admin/package/create"
+  */
+  const goToCreatePackage = () => navigate("/admin/package/create");
+
+  /*
+  * คำอธิบาย : กำหนดออบเจกต์การแบ่งหน้า (Pagination) สำหรับส่งให้ Component DataTable
+  * Input : - (ใช้ currentPage, pageSize และ totalItems จาก state ภายใน Component)
+  * Output : ออบเจกต์ pagination ที่ประกอบด้วย currentPage, totalPages, totalCount และ limit
+  */
+  const pagination = React.useMemo(() => ({
+    currentPage,
+    totalPages: Math.max(1, Math.ceil((totalItems || 0) / (pageSize || 10))),
+    totalCount: totalItems,
+    limit: pageSize,
+  }), [currentPage, pageSize, totalItems]);
 
   return (
     <div className="space-y-4">
@@ -276,7 +295,7 @@ export default function ManagePackageSuperAdmin() {
         <Breadcrumb
           current={{
             label: "จัดการแพ็กเกจ",
-            to: `/super/packages/all`,
+            to: `/admin/packages/all`,
             fromSidebar: true,
           }}
         />
@@ -297,6 +316,9 @@ export default function ManagePackageSuperAdmin() {
             <Button type="confirm-admin" onClick={goToApprovalRequests}>
               คำขออนุมัติ
             </Button>
+            <Button type="confirm-admin" onClick={goToCreatePackage}>
+              <span className="whitespace-nowrap">สร้างแพ็กเกจ</span>
+            </Button>
           </div>
         </div>
       </div>
@@ -312,10 +334,7 @@ export default function ManagePackageSuperAdmin() {
         pagination={pagination}
         pageSizeOptions={[10, 20, 50]}
         onPageChange={(page) => setCurrentPage(page)}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setCurrentPage(1);
-        }}
+        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
         isLoading={isLoading}
         theme="brand"
       />

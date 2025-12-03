@@ -7,7 +7,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 
 // component
 import Button from "@/Components/Button";
@@ -16,6 +16,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import DataTable from "@/Components/Tables/Index";
 import { Icon } from "@iconify/react";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 // service
 import { getCommunityById } from "@/Services/community-service";
@@ -59,6 +60,14 @@ const columns: Column<StoreRow>[] = [
     key: "name",
     header: "ชื่อร้านค้า",
     className: "min-w-[200px]",
+    render: (row) => (
+      <Link
+        to={`/super/store/${row.id}`}
+        className="hover:text-dark-green hover:underline"
+      >
+        {row.name}
+      </Link>
+    ),
   },
   { key: "detail", header: "รายละเอียด" },
   { key: "tagStores", header: "ประเภท" },
@@ -67,6 +76,7 @@ const columns: Column<StoreRow>[] = [
 export default function ManageStores() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // state
   const [communityName, setCommunityName] = useState<string>("");
@@ -195,26 +205,14 @@ export default function ManageStores() {
       {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
         {/* Breadcrumb */}
-        <nav aria-label="breadcrumb" className="flex items-center text-gray-700 text-sm">
-          <Link to="/super/communities" className="text-gray-800 hover:text-dark-green font-medium">
-            จัดการชุมชน
-          </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
+        <div>
+          <Breadcrumb
+            current={{
+              label: "จัดการร้านค้า",
+              to: `/super/community/${communityId}/stores/all`,
+            }}
           />
-          <Link
-            to={`/super/community/detail/${communityId}`}
-            className="text-gray-800 hover:text-dark-green font-medium"
-          >
-            {communityName || "ชุมชน"}
-          </Link>
-          <Icon
-            icon="mdi:chevron-right"
-            className="mx-2 text-gray-400 w-3.5 h-3.5"
-          />
-          <span className="text-gray-500 font-medium">จัดการร้านค้า</span>
-        </nav>
+        </div>
 
         {/* <-- หัวข้อ */}
         <Link
@@ -224,7 +222,7 @@ export default function ManageStores() {
           <Icon icon="lucide:arrow-left" className="w-5 h-5" />
           <h1 className="text-xl font-bold">จัดการร้านค้า</h1>
         </Link>
-  
+
         <div className="flex items-center justify-between w-full mt-2">
           {/* Section: Search */}
           <div className="w-[260px]">

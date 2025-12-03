@@ -1,11 +1,3 @@
-/**
- * Component: PackageDraftAdmin (Admin)
- * Description: แสดงรายการแพ็กเกจที่อยู่ในสถานะ "ฉบับร่าง" (DRAFT)
- * หน้านี้ใช้สำหรับค้นหา, แสดงรายการ, และจัดการ (แก้ไข/ลบ)
- * Input: searchTerm, pagination (จาก UI)
- * Output: ตารางรายการแพ็กเกจ พร้อมฟังก์ชันจัดการแต่ละรายการ
- */
-
 import { useEffect, useState, useCallback } from "react";
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SearchBarTable";
@@ -17,6 +9,9 @@ import { Modal } from "../../Components/Modal/Modal";
  * Interface: Package
  * อธิบายโครงสร้างข้อมูลแพ็กเกจที่ใช้ในตาราง
  */
+import { ChevronRight } from "lucide-react";
+
+// เพิ่ม id สำหรับ unique key
 interface Package {
   id: string;
   name: string;
@@ -41,16 +36,9 @@ function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
 }
 
 const PackageDraftAdmin = () => {
-  /** State: รายการแพ็กเกจ */
   const [packages, setPackages] = useState<Package[]>([]);
-
-  /** State: คำค้นหา */
   const [searchTerm, setSearchTerm] = useState("");
-
-  /** State: โหลดข้อมูลหรือไม่ */
   const [loading, setLoading] = useState(false);
-
-  /** State: การแบ่งหน้า (Pagination) */
   const [pagination, setPagination] = useState({
     currentPage: 1,
     limit: 10,

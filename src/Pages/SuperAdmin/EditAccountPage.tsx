@@ -2,7 +2,7 @@
  * Component: EditAccountPage
  * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 27 พฤษจิกายน 2568
+ * Last Modified: 03 ธันวาคม 2568 (Added Reset Password Link)
  */
 
 import React, { useEffect, useState } from "react";
@@ -16,9 +16,13 @@ import SubmitButton from "../../Components/SubmitButton";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "../../Components/Selector/ThailandLocationSelector";
-import CommunitySelector from "../../Components/Selector/CommunitySelector";
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+
+// Import สำหรับ Dropdown และ Icon
+import Autocomplete from "@mui/material/Autocomplete";
+import Popper from "@mui/material/Popper";
+import { Icon } from "@iconify/react";
 
 type RoleType = "Admin" | "Member" | "Tourist";
 
@@ -29,9 +33,9 @@ interface EditAccountBody {
   email: string;
   phone: string;
   roleId: number;
-  password?: string;
   profileImage?: string | null;
   memberOfCommunity?: number | null;
+  communityRole?: string;
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
   province?: string | null;
@@ -40,13 +44,37 @@ interface EditAccountBody {
   postalCode?: string | null;
 }
 
+interface CommunityOption {
+  id: number;
+  name: string;
+}
+
+// Custom Popper จัดตำแหน่ง Dropdown
+function CustomPopper(props: any) {
+  const { anchorEl } = props;
+  return (
+    <Popper
+      {...props}
+      placement="bottom-start"
+      modifiers={[
+        { name: "flip", enabled: false },
+        { name: "preventOverflow", enabled: true },
+      ]}
+      style={{
+        zIndex: 1300,
+        width: anchorEl ? anchorEl.clientWidth : undefined,
+        paddingTop: "4px",
+      }}
+    />
+  );
+}
+
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
-  /** ดึง role จาก path เช่น /super/account/member/:id/edit */
   const getRoleFromPath = (): RoleType => {
     if (location.pathname.includes("member")) return "Member";
     if (location.pathname.includes("tourist")) return "Tourist";
@@ -59,14 +87,14 @@ const EditAccountPage: React.FC = () => {
     username: "",
     email: "",
     phone: "",
-    password: "",
-    confirmPassword: "",
     role: getRoleFromPath() as RoleType,
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   const [roleSpecificData, setRoleSpecificData] = useState({
     communityId: "",
+    activityRole: "",
     gender: "",
     birthDate: "",
   });
@@ -80,7 +108,9 @@ const EditAccountPage: React.FC = () => {
 
   const [showConfirm, setShowConfirm] = useState(false);
 
-  /** แปลงชื่อ role เป็น roleId */
+  const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
+  const [isCommunityLoading, setIsCommunityLoading] = useState(false);
+
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
@@ -94,7 +124,6 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /** โหลดข้อมูลผู้ใช้จาก API */
   const fetchUser = async (role: RoleType) => {
     try {
       let endpoint = "";
@@ -125,12 +154,12 @@ const EditAccountPage: React.FC = () => {
             : user.role?.name === "member"
             ? "Member"
             : "Tourist",
-        password: "",
-        confirmPassword: "",
       }));
       setAvatarUrl(user.profileImageUrl || null);
+
       setRoleSpecificData({
-        communityId: user.memberOfCommunity?.toString() || "",
+        communityId: user.memberOfCommunity ? String(user.memberOfCommunity) : "",
+        activityRole: user.activityRole || "",
         gender: user.gender === "MALE" ? "ชาย" : user.gender === "FEMALE" ? "หญิง" : "ไม่ระบุ",
         birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split("T")[0] : "",
       });
@@ -147,17 +176,69 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /** โหลดข้อมูลเมื่อเปิดหน้า */
   useEffect(() => {
     if (userId && Number(userId) > 0) fetchUser(formData.role);
   }, [userId, formData.role]);
+
+  useEffect(() => {
+    if (formData.role === "Member") {
+      const fetchCommunities = async () => {
+        setIsCommunityLoading(true);
+        try {
+          const res = await api.get("/super/communities?limit=1000");
+
+          let data: CommunityOption[] = [];
+          if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
+            data = res.data.data.data;
+          } else if (res.data?.data && Array.isArray(res.data.data)) {
+            data = res.data.data;
+          } else if (Array.isArray(res.data)) {
+            data = res.data;
+          }
+
+          if (data.length === 0) {
+            try {
+              const resAdmin = await api.get("/admin/community");
+              const adminCommunity = resAdmin.data?.data;
+              if (adminCommunity && adminCommunity.id && adminCommunity.name) {
+                data = [{ id: adminCommunity.id, name: adminCommunity.name }];
+
+                if (!roleSpecificData.communityId) {
+                  setRoleSpecificData((prev) => ({
+                    ...prev,
+                    communityId: String(adminCommunity.id),
+                  }));
+                }
+              }
+            } catch (errAdmin) {
+              console.warn("Failed to fetch admin community");
+            }
+          }
+
+          setCommunityOptions(data);
+        } catch (error) {
+          console.error("Failed to fetch communities", error);
+          try {
+            const resAdmin = await api.get("/admin/community");
+            if (resAdmin.data?.data) {
+              setCommunityOptions([{ id: resAdmin.data.data.id, name: resAdmin.data.data.name }]);
+            }
+          } catch (e) {
+            setCommunityOptions([]);
+          }
+        } finally {
+          setIsCommunityLoading(false);
+        }
+      };
+      fetchCommunities();
+    }
+  }, [formData.role]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
   };
 
-  /** เมื่อเปลี่ยน Role */
   const handleRoleSelect = (newRole: RoleType) => {
     if (formData.role !== newRole) {
       setFormData((previousState) => ({ ...previousState, role: newRole }));
@@ -168,20 +249,24 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /** เมื่อกดปุ่มบันทึก */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน");
-      return;
+    if (formData.role === "Member") {
+      if (!roleSpecificData.communityId) {
+        toast.error("กรุณาเลือกชุมชน");
+        return;
+      }
+      if (!roleSpecificData.activityRole) {
+        toast.error("กรุณากรอกบทบาทในชุมชน");
+        return;
+      }
     }
 
     try {
       let imageWasUpdated = false;
       if (profileImage) {
         const formDataUpload = new FormData();
-
         formDataUpload.append("profileImage", profileImage);
 
         await api.put(`/super/users/profile/${userId}`, formDataUpload, {
@@ -199,12 +284,9 @@ const EditAccountPage: React.FC = () => {
         roleId: mapRoleToId(formData.role),
       };
 
-      if (formData.password) {
-        requestBody.password = formData.password;
-      }
-
       if (formData.role === "Member") {
         requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
+        requestBody.communityRole = roleSpecificData.activityRole.trim();
       } else if (formData.role === "Tourist") {
         requestBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -241,29 +323,17 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  const breadcrumbItems = [
-    {
-      label: "จัดการบัญชี",
-      to: `/super/account/${formData.role.toLowerCase()}`,
-    },
-    {
-      label: "รายละเอียดบัญชี",
-      // ใส่ Link ไปหน้า View (ถ้ายังไม่ได้ทำหน้า View ให้ลบบรรทัด 'to' ออกได้ครับ)
-      to: `/super/account/${formData.role.toLowerCase()}/${userId}`, 
-    },
-    {
-      label: "แก้ไขบัญชี",
-    },
-  ];
-
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
-      {/* 1. Breadcrumb */}
       <div className="mb-2">
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumb
+          current={{
+            label: "แก้ไขบัญชี",
+            to: location.pathname,
+          }}
+        />
       </div>
 
-      {/* 2. Header พร้อมปุ่มย้อนกลับ */}
       <div className="flex items-center gap-3 mb-6 pl-6">
         <button
           onClick={() => navigate(-1)}
@@ -271,15 +341,15 @@ const EditAccountPage: React.FC = () => {
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
           title="ย้อนกลับ"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <path d="M19 12H5" />
@@ -296,7 +366,6 @@ const EditAccountPage: React.FC = () => {
         <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">แก้ไขบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
-          {/* รูปโปรไฟล์ */}
           <div className="flex flex-col items-center">
             <AvatarUploader
               avatarUrl={avatarUrl}
@@ -307,7 +376,6 @@ const EditAccountPage: React.FC = () => {
             />
           </div>
 
-          {/* ฟอร์มข้อมูล */}
           <div className="w-full space-y-6">
             <div className="grid grid-cols-2 gap-6">
               <TextField
@@ -348,11 +416,22 @@ const EditAccountPage: React.FC = () => {
               onChange={handleChange}
             />
 
-            {/* Role Selection */}
             <div>
-              <label className="font-semibold text-gray-800 block mb-2">
-                Role <span className="text-red-500">*</span>
-              </label>
+              <div className="flex justify-between items-end mb-2">
+                <label className="font-semibold text-gray-800 block">
+                  Role <span className="text-red-500">*</span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => navigate(`/super/account/reset-password/${userId}`)}
+                  className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
+                >
+                  <Icon icon="mdi:lock-reset" className="w-4 h-4" />
+                  เปลี่ยนรหัสผ่าน
+                </button>
+              </div>
+
               <div className="flex gap-4">
                 {(["Admin", "Member", "Tourist"] as RoleType[]).map((roleItem) => (
                   <button
@@ -361,8 +440,8 @@ const EditAccountPage: React.FC = () => {
                     onClick={() => handleRoleSelect(roleItem)}
                     className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
                       formData.role === roleItem
-                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
-                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]"
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]"
                     }`}
                   >
                     {roleItem}
@@ -371,20 +450,73 @@ const EditAccountPage: React.FC = () => {
               </div>
             </div>
 
-            {/* เฉพาะ Member */}
             {formData.role === "Member" && (
-              <CommunitySelector
-                value={roleSpecificData.communityId ? Number(roleSpecificData.communityId) : null}
-                onChange={(communityId) =>
-                  setRoleSpecificData((previousState) => ({
-                    ...previousState,
-                    communityId: communityId ? String(communityId) : "",
-                  }))
-                }
-              />
+              <div className="space-y-6">
+                <div className="space-y-1.5 w-full">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-base font-semibold text-black">
+                      ชุมชนวิสาหกิจ <span className="text-red-600"> *</span>
+                    </label>
+                  </div>
+                  <Autocomplete
+                    id="community-selector-custom"
+                    options={communityOptions}
+                    getOptionLabel={(option) => option.name}
+                    value={
+                      communityOptions.find(
+                        (c) => String(c.id) === String(roleSpecificData.communityId)
+                      ) || null
+                    }
+                    onChange={(_, newValue) => {
+                      setRoleSpecificData((prev) => ({
+                        ...prev,
+                        communityId: newValue ? String(newValue.id) : "",
+                      }));
+                    }}
+                    loading={isCommunityLoading}
+                    noOptionsText={isCommunityLoading ? "กำลังโหลด..." : "ไม่พบข้อมูลชุมชน"}
+                    loadingText="กำลังโหลด..."
+                    disableClearable={false}
+                    PopperComponent={CustomPopper}
+                    renderInput={(params) => {
+                      const { InputProps, inputProps } = params;
+                      return (
+                        <div ref={InputProps.ref} className="relative w-full">
+                          <input
+                            {...inputProps}
+                            type="text"
+                            placeholder={isCommunityLoading ? "กำลังโหลด..." : "ค้นหาชุมชน"}
+                            className="block w-full rounded-form border-1
+                              border-gray-400 focus:ring-gray-400 focus:border-gray-500
+                              bg-white px-5 py-2 text-black text-base
+                              placeholder:text-[#606060] placeholder:font-normal leading-relaxed
+                              focus:outline-none focus:ring-1 transition-shadow pr-10"
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
+                            <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
+
+                <TextField
+                  id="activityRole"
+                  label="บทบาทในชุมชน"
+                  placeholder="กรอกบทบาทในชุมชน"
+                  required
+                  value={roleSpecificData.activityRole}
+                  onChange={(e) =>
+                    setRoleSpecificData((prev) => ({
+                      ...prev,
+                      activityRole: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             )}
 
-            {/* เฉพาะ Tourist */}
             {formData.role === "Tourist" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -405,12 +537,13 @@ const EditAccountPage: React.FC = () => {
                     <label className="font-semibold text-gray-800 block mb-1">เพศ</label>
                     <div className="flex gap-4">
                       {["ชาย", "หญิง", "ไม่ระบุ"].map((genderLabel) => (
-                        <label key={genderLabel} className="flex items-center gap-2">
+                        <label key={genderLabel} className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="gender"
                             value={genderLabel}
                             checked={roleSpecificData.gender === genderLabel}
+                            className="accent-[#0A4B32] w-4 h-4 cursor-pointer"
                             onChange={(event) =>
                               setRoleSpecificData((previousState) => ({
                                 ...previousState,
@@ -431,7 +564,6 @@ const EditAccountPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ปุ่มบันทึก / ยกเลิก */}
         <div className="flex justify-end gap-4 pt-4">
           <div className="w-32">
             <Button type="cancel" onClick={() => navigate(-1)}>
@@ -446,7 +578,6 @@ const EditAccountPage: React.FC = () => {
         </div>
       </form>
 
-      {/* Popup ยืนยัน */}
       <Modal
         open={showConfirm}
         title="ยืนยันการบันทึกข้อมูล"

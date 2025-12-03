@@ -247,7 +247,6 @@ const StoreDetailPage = () => {
                 loading="lazy"
               ></iframe>
             </div>
-
             {/* Location Info */}
             <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6 mt-4">
               <div className="mt-6">
@@ -269,13 +268,13 @@ const StoreDetailPage = () => {
                   </a>
                 </p>
               </div>
-
               <div className="mt-6">
                 <p className="mb-2">
                   <strong>คำอธิบายที่อยู่ :</strong> {store.location.detail}
                 </p>
               </div>
             </div>
+
           </>
         ) : (
           <p className="text-gray-500">ไม่มีข้อมูลตำแหน่งร้านค้า</p>

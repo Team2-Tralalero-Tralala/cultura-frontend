@@ -355,12 +355,15 @@ export default function CreateCommuninityPage() {
 
   return (
     <div>
-      <Breadcrumb
-        items={[
-          { label: "จัดการชุมชน", to: "/super/communities/all" },
-          { label: "เพิ่มวิสาหกิจชุมชน" },
-        ]}
-      />
+      <div>
+        <Breadcrumb
+          current={{
+            label: "เพิ่มวิสาหกิจชุมชน",
+            to: "/super/community/create",
+
+          }}
+        />
+      </div>
       <div className="flex justify-between items-center">
         <Link
           to="/super/communities/all"

@@ -29,17 +29,20 @@ import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
 import ManageMembers from '@/Pages/Admin/ManageMembers';
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
+import BookingDetailAdmin from "@/Pages/Admin//BookingDetailAdmin";
+import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayPage';
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
 import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
+import EditPackagePage from '@/Pages/Admin/EditPackagePage';
+import ManagePackagePage from '@/Pages/Admin/ManagePackagePage';
+import CreatePackagePage from '@/Pages/Admin/CreatePackagePage';
+import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 
 export default function AdminRoutes() {
   return (
     <Routes>
-      <Route
-        path="member/:userId"
-        element={<MemberDetailPage />}
-      />
-      <Route path="/package/feedbacks" element={<Feedbackall />} />
+      <Route path="member/:userId" element={<MemberDetailPage />} />
+      <Route path="/packages/feedbacks" element={<Feedbackall />} />
 
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
@@ -48,18 +51,21 @@ export default function AdminRoutes() {
       <Route path="community/store/create" element={<CreateStore />} />
       <Route path="community/store/:storeId/edit" element={<EditStore />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
-      <Route path="/community/homestay/edit/:homestayId" element={<EditHomestayPage />} />
-      <Route path="/bookings-histories/done" element={<BookingHistoryAdmin />} />
+      <Route path="/community/homestay/:homestayId/edit" element={<EditHomestayPage />} />
+      <Route path="/bookings-histories/all" element={<BookingHistoryAdmin />} />
       {/*<Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
-      <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
 
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
+      <Route path="/booking/:bookingId" element={<BookingDetailAdmin />} />
+
+      <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
+
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
-      <Route path="package/requests" element={<PackageRequestsAdmin />} />
+      <Route path="package-requests" element={<PackageRequestsAdmin />} />
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
       <Route path="/dashboard" element={<DashboardPage />} />
 
@@ -72,16 +78,22 @@ export default function AdminRoutes() {
 
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />
-       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
-      <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
+      {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
+      <Route path="packages/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
       {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
-      <Route path="community/stores/:id" element={<StoreDetailAdmin />} />
+      <Route path="/community/store/:storeId" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
-      <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />
+      <Route path="packages/history/:packageId" element={<DetailPackageHistoryAdmin />} />
       <Route path="package/draft" element={<PackageDraftAdmin />} />
+      <Route path="packages/histories" element={<PackageHistoryAdmin />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
+      <Route path="package/create" element={<CreatePackagePage />} />
+      <Route path="package/:id/edit" element={<EditPackagePage />} />
+
+      <Route path="account/change-password/own" element={<ChangePasswordPage />} />
     </Routes>
   );
 }

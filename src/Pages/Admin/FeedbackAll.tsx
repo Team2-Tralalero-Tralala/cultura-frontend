@@ -8,6 +8,7 @@
 import React from "react";
 import axios from "axios";
 import { Icon } from "@iconify/react";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /** ENV: API Base URL */
 const apiBaseUrl = import.meta.env.VITE_API_URL;
@@ -290,7 +291,6 @@ export default function FeddbackAll() {
                 `${apiBaseUrl}/api/packages/admin/package/feedbacks/all`,
                 { withCredentials: true }
             );
-
             const communityData = response.data?.data;
             const packageList: ApiPackage[] = communityData?.packages ?? [];
 
@@ -365,21 +365,15 @@ export default function FeddbackAll() {
 
     /* ============================= Render ============================== */
     return (
+        <>
+            <Breadcrumb
+                current={{
+                    label: "ข้อเสนอแนะ",
+                    to: `/admin/package/feedbacks`,
+                }}
+            />
         <main className="min-h-screen bg-white py-8 px-6 space-y-6 shadow-md border rounded-xl">
             <div className="mx-auto bg-white rounded-xl">
-                {/* Breadcrumb (ปิดไว้ หากต้องการให้เปิดในอนาคต) */}
-                {/* <header className="flex items-center gap-2 text-sm text-slate-500">
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 text-slate-600 hover:text-emerald-700"
-          >
-            <Icon icon="mdi:chevron-left" width={18} height={18} />
-            <span>จัดการแพ็กเกจ</span>
-          </button>
-          <span className="text-slate-400">/</span>
-          <span className="font-medium text-slate-800">ข้อเสนอแนะทั้งหมด</span>
-        </header> */}
-
                 <TopControls
                     totalItems={totalItems}
                     totalPackages={totalPackages}
@@ -400,6 +394,7 @@ export default function FeddbackAll() {
                     <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>
                 )}
             </div>
-        </main>
+            </main>
+        </>
     );
 }

@@ -64,7 +64,7 @@ export function ManageRefundBooking() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
 
   // Modal ปฏิเสธ (มีเหตุผล)
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -96,10 +96,10 @@ export function ManageRefundBooking() {
           r.status === "REFUND_PENDING"
             ? "รอคืนเงิน"
             : r.status === "REFUNDED"
-            ? "อนุมัติแล้ว"
-            : r.status === "REFUND_REJECTED"
-            ? "ปฏิเสธแล้ว"
-            : "-",
+              ? "อนุมัติแล้ว"
+              : r.status === "REFUND_REJECTED"
+                ? "ปฏิเสธแล้ว"
+                : "-",
         transferSlip: r.transferSlip
           ? `${import.meta.env.VITE_API_URL}/${r.transferSlip}`
           : "-",
@@ -238,12 +238,12 @@ export function ManageRefundBooking() {
   return (
     <div className="space-y-4 cursor-default">
       {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
+      <div>
         <Breadcrumb
-          items={[
-            { label: "จัดการการจอง", to: "/admin/booking" },
-            { label: "คำขอคืนเงิน" },
-          ]}
+          current={{
+            label: "คำขอคืนเงิน",
+            to: `/admin/booking/refund`,
+          }}
         />
       </div>
 

@@ -98,9 +98,9 @@ function listImagesByType(community: any, type: string): string[] {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
-      <div className="font-semibold text-gray-900 text-base">{label}</div>
-      <div className="text-gray-400 text-base">:</div>
-      <div className="text-gray-700 font-normal break-words text-base">{children ?? "-"}</div>
+      <div className="font-bold text-black text-base">{label}</div>
+      <div className="text-black font-regular text-base">:</div>
+      <div className="text-black font-regular break-words text-base">{children ?? "-"}</div>
     </div>
   );
 }
@@ -171,7 +171,7 @@ function CoverRect({ src, height = 320 }: any) {
  * Icon : Pin (หมุดพิกัด)
  */
 const Pin = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" width="18" height="18" {...props}>
+  <svg viewBox="0 0 24 24" width="20" height="20" {...props}>
     <path
       d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"
       fill="currentColor"
@@ -203,7 +203,7 @@ function Section({
         onClick={() => setIsOpen((v) => !v)}
         className="w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left hover:bg-slate-50 text-base font-semibold"
       >
-        <span className="font-medium">{title}</span>
+        <span className="font-semibold">{title}</span>
         <div className="flex items-center gap-3 text-sm text-slate-600">
           {typeof count === "number" && (
             <span>
@@ -320,12 +320,12 @@ export default function CommunityDetailSuperAdmin() {
       {/* --------------------------------------------------------
         Breadcrumb นำทางหน้า
       -------------------------------------------------------- */}
-      <div className="-ml-6 pt-1 pb-1">
+      <div>
         <Breadcrumb
-          items={[
-            { label: "จัดการชุมชน", to: "/super/communities" },
-            { label: community?.name || "ชุมชน" },
-          ]}
+          current={{
+            label: community?.name || "ชุมชน",
+            to: `/super/community/${id}`, // ใส่ path ของหน้าปัจจุบัน
+          }}
         />
       </div>
 
@@ -340,7 +340,7 @@ export default function CommunityDetailSuperAdmin() {
             className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
           >
             <Icon icon="lucide:arrow-left" className="w-5 h-5" />
-            <h2 className="text-lg font-semibold text-xl">รายละเอียดของชุมชน</h2>
+            <h2 className="font-bold text-xl text-black">รายละเอียดของชุมชน</h2>
           </Link>
 
           <Link
@@ -373,10 +373,12 @@ export default function CommunityDetailSuperAdmin() {
                   </div>
 
                   <div style={{ paddingLeft: LOGO + 24 }}>
+                    {/* Title + Status */}
                     <div className="flex items-center gap-3">
                       <h1 className="text-[22px] font-bold leading-tight">
                         {show(community.name)}
                       </h1>
+
                       {!!community.status && (
                         <span
                           className={`px-2.5 py-0.5 text-sm rounded-full ${
@@ -390,8 +392,23 @@ export default function CommunityDetailSuperAdmin() {
                       )}
                     </div>
 
-                    <div className="mt-2 flex items-start gap-2 text-slate-700">
-                      <Pin className="mt-0.5 shrink-0" />
+                    {/* Rating */}
+                    {(community.isRatingVisible || community.ct_is_rating_visible === 1) &&
+                      community.rating && (
+                        <div className="mt-3 flex items-center gap-2 text-black">
+                          <Icon
+                            icon="material-symbols:star-rounded"
+                            className="text-[22px] text-black"
+                          />
+                          <span className="text-[16px] font-regular">
+                            {Number(community.rating).toFixed(1)} คะแนน
+                          </span>
+                        </div>
+                      )}
+
+                    {/* Location */}
+                    <div className="mt-3 flex items-start gap-2 text-black">
+                      <Pin className="mt-1.5 shrink-0" />
                       <span className="leading-relaxed">
                         {show(community.location?.detail)} {show(community.location?.subDistrict)}{" "}
                         {show(community.location?.district)} {show(community.location?.province)}{" "}
@@ -399,9 +416,14 @@ export default function CommunityDetailSuperAdmin() {
                       </span>
                     </div>
 
-                    <p className="mt-3 text-slate-700 leading-relaxed max-w-4xl">
-                      {show(community.description)}
-                    </p>
+                    {/* Description */}
+                    <div className="mt-3 flex items-start gap-2 text-black max-w-4xl">
+                      {/* <Icon
+      icon="famicons:book"
+      className="text-[17px] text-black mt-1.5"
+    /> */}
+                      <p className="leading-relaxed">{show(community.description)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -480,7 +502,7 @@ export default function CommunityDetailSuperAdmin() {
            ช่องทางการติดต่ออื่น ๆ
          -------------------------------------------------------- */}
         <div className="px-6 sm:px-8 mt-8">
-          <h2 className="text-base font-semibold">ช่องทางการติดต่ออื่นๆ</h2>
+          <h2 className="text-xl font-semibold">ช่องทางการติดต่ออื่นๆ</h2>
           <div className="mt-3 space-y-1 text-sm">
             <Row label="Facebook">
               {community.urlFacebook ? (
@@ -727,34 +749,41 @@ export default function CommunityDetailSuperAdmin() {
                 <Section
                   title="รายชื่อสมาชิก"
                   count={community.communityMembers?.length || 0}
-                  onManage={() => navigate(`/super/accounts/all`)}
+                  onManage={() => navigate(`/super/account/community/${community.id}`)}
                 >
                   {community.communityMembers?.length ? (
                     <div className="space-y-3">
-                      {community.communityMembers.map((cm: any) => {
-                        const m = cm.user;
-                        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
+                      {community.communityMembers.map((communityMember: any) => {
+                        const member = communityMember.user;
+                        const fullName = [member.fname, member.lname]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim();
 
                         return (
                           <div
-                            key={cm.id}
-                            onClick={() => navigate(`/super/account/${m.id}`)}
+                            key={communityMember.id}
+                            onClick={() => navigate(`/super/account/community/${community.id}`)}
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
                             <AvatarCircle
-                              src={resolveBackendUploadUrl(m.profileImage)}
-                              name={fullName || m.username}
+                              src={resolveBackendUploadUrl(member.profileImage)}
+                              name={fullName || member.username}
                               size={64}
                             />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{fullName || m.username}</div>
-                              {m.activityRole && (
-                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
+                              <div className="font-medium truncate">
+                                {fullName || member.username}
+                              </div>
+                              {member.activityRole && (
+                                <div className="text-sm text-slate-700">
+                                  • {member.activityRole}
+                                </div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
-                                {m.email || "-"}
+                                {member.email || "-"}
                               </div>
-                              <div className="text-sm text-slate-600">{m.phone || "-"}</div>
+                              <div className="text-sm text-slate-600">{member.phone || "-"}</div>
                             </div>
                           </div>
                         );

@@ -192,8 +192,8 @@ export function CreateStore() {
 
       await createStore(Number(communityId), formDataToSend);
       setAlertType("success");
-      setAlertTitle("สร้างวิสาหกิจชุมชนสำเร็จ");
-      setAlertMessage("ข้อมูลวิสหากิจชุมชนถูกบันทึก");
+      setAlertTitle("สร้างร้านค้าสำเร็จ");
+      setAlertMessage("ข้อมูลร้านค้าถูกบันทึก");
       setAlertOpen(true);
       navigate(`/super/community/${communityId}/stores/all`);
     } catch (error: any) {
@@ -213,14 +213,14 @@ export function CreateStore() {
 
   return (
     <div>
-      <Breadcrumb
-        items={[
-          { label: "จัดการชุมชน", to: "/super/communities/all" },
-          { label: formData.name || "ชื่อชุมชน", to: `/super/community/${communityId}` },
-          { label: "จัดการร้านค้า", to: `/super/community/${communityId}/stores/all` },
-          { label: "เพิ่มร้านค้า" },
-        ]}
-      />
+      <div>
+        <Breadcrumb
+          current={{
+            label: "เพิ่มร้านค้า",
+            to: `/super/community/${communityId}/store/create`,
+          }}
+        />
+      </div>
       <div className="bg-white p-6 rounded-2xl">
         <div className="flex justify-between items-center mb-3">
           <Link

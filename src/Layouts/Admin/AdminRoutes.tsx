@@ -73,7 +73,7 @@ export default function AdminRoutes() {
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
 
-      <Route path="/booking/refund" element={<ManageRefundBooking />} />
+      <Route path="/booking/refunds" element={<ManageRefundBooking />} />
       <Route path="/members" element={<ManageMembers />} />
 
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}

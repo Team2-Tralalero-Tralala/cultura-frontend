@@ -10,12 +10,15 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import Feedback from '../../Pages/Member/Feedback';
+
 
 export default function MemberRoutes() {
   return (
     <Routes>
       
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="/feedbacks" element={<Feedback />} />
     </Routes>
   );
 }

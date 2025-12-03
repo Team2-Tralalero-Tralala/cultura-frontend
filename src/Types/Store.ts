@@ -18,6 +18,8 @@ export type StoreData = {
   };
   tagStores: number[];
   storeImage: Image[];
+  id?: number;
+  communityId: number;
 };
 export type ImageType = "GALLERY" | "VIDEO" | "COVER";
 

@@ -45,7 +45,7 @@ const TextArea: React.FC<BaseFieldProps> = ({
     <div className="space-y-1.5">
       {/* Label + helperText in one row */}
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-base text-black">
+        <label htmlFor={id} className="block text-base text-black font-bold">
           {label}
           {required && <RequiredMark />}
         </label>

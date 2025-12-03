@@ -249,6 +249,8 @@ export function EditStore() {
         return;
       }
       const {
+        id,
+        communityId,
         houseNumber,
         longitude,
         latitude,
@@ -263,7 +265,7 @@ export function EditStore() {
 
       const payload = {
         ...cleanForm,
-        tagStores: selectedTagIds, // ✅ เพิ่ม tagStores กลับเข้า payload
+        tagStores: selectedTagIds,
         location: {
           houseNumber: formData.houseNumber,
           villageNumber: Number(formData.villageNumber),
@@ -280,7 +282,6 @@ export function EditStore() {
       const formDataToSend = new FormData();
       formDataToSend.append("data", JSON.stringify(payload));
 
-      // ✅ แน่ใจว่าไม่อัปโหลดซ้ำไฟล์จาก server
       coverFiles.forEach((file: any) => {
         formDataToSend.append("cover", file);
       });

@@ -327,7 +327,6 @@ export default function CommunityDetailSuperAdmin() {
             to: `/super/community/${id}`, // ใส่ path ของหน้าปัจจุบัน
           }}
         />
-
       </div>
 
       {/* --------------------------------------------------------
@@ -382,10 +381,11 @@ export default function CommunityDetailSuperAdmin() {
 
                       {!!community.status && (
                         <span
-                          className={`px-2.5 py-0.5 text-sm rounded-full ${isOpen
+                          className={`px-2.5 py-0.5 text-sm rounded-full ${
+                            isOpen
                               ? "bg-emerald-100 text-emerald-700"
                               : "bg-slate-100 text-slate-700"
-                            }`}
+                          }`}
                         >
                           {isOpen ? "เปิด" : "ปิด"}
                         </span>
@@ -393,17 +393,18 @@ export default function CommunityDetailSuperAdmin() {
                     </div>
 
                     {/* Rating */}
-                    {!!community.rating && (
-                      <div className="mt-3 flex items-center gap-2 text-black">
-                        <Icon
-                          icon="material-symbols:star-rounded"
-                          className="text-[22px] text-black"
-                        />
-                        <span className="text-[16px] font-regular">
-                          {Number(community.rating).toFixed(1)} คะแนน
-                        </span>
-                      </div>
-                    )}
+                    {(community.isRatingVisible || community.ct_is_rating_visible === 1) &&
+                      community.rating && (
+                        <div className="mt-3 flex items-center gap-2 text-black">
+                          <Icon
+                            icon="material-symbols:star-rounded"
+                            className="text-[22px] text-black"
+                          />
+                          <span className="text-[16px] font-regular">
+                            {Number(community.rating).toFixed(1)} คะแนน
+                          </span>
+                        </div>
+                      )}
 
                     {/* Location */}
                     <div className="mt-3 flex items-start gap-2 text-black">
@@ -421,12 +422,9 @@ export default function CommunityDetailSuperAdmin() {
       icon="famicons:book"
       className="text-[17px] text-black mt-1.5"
     /> */}
-                      <p className="leading-relaxed">
-                        {show(community.description)}
-                      </p>
+                      <p className="leading-relaxed">{show(community.description)}</p>
                     </div>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -452,8 +450,9 @@ export default function CommunityDetailSuperAdmin() {
               <span className="whitespace-pre-line break-words">
                 {`${show(community.location?.detail)} ${show(
                   community.location?.subDistrict
-                )} ${show(community.location?.district)} ${show(community.location?.province)} ${community.location?.postalCode ? `(${community.location.postalCode})` : ""
-                  }`}
+                )} ${show(community.location?.district)} ${show(community.location?.province)} ${
+                  community.location?.postalCode ? `(${community.location.postalCode})` : ""
+                }`}
               </span>
             </Row>
 
@@ -612,9 +611,11 @@ export default function CommunityDetailSuperAdmin() {
                 const lat = community.location.latitude;
                 const lng = community.location.longitude;
                 const zoomDelta = 0.0025;
-                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - zoomDelta
-                  }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${lat + zoomDelta
-                  }&layer=mapnik&marker=${lat}%2C${lng}`;
+                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
+                  lng - zoomDelta
+                }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${
+                  lat + zoomDelta
+                }&layer=mapnik&marker=${lat}%2C${lng}`;
                 return (
                   <iframe
                     width="100%"
@@ -754,7 +755,10 @@ export default function CommunityDetailSuperAdmin() {
                     <div className="space-y-3">
                       {community.communityMembers.map((communityMember: any) => {
                         const member = communityMember.user;
-                        const fullName = [member.fname, member.lname].filter(Boolean).join(" ").trim();
+                        const fullName = [member.fname, member.lname]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim();
 
                         return (
                           <div
@@ -768,9 +772,13 @@ export default function CommunityDetailSuperAdmin() {
                               size={64}
                             />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{fullName || member.username}</div>
+                              <div className="font-medium truncate">
+                                {fullName || member.username}
+                              </div>
                               {member.activityRole && (
-                                <div className="text-sm text-slate-700">• {member.activityRole}</div>
+                                <div className="text-sm text-slate-700">
+                                  • {member.activityRole}
+                                </div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
                                 {member.email || "-"}

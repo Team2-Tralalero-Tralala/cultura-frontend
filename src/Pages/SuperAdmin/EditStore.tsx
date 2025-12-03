@@ -260,6 +260,8 @@ export function EditStore() {
         return;
       }
       const {
+        id,
+        communityId,
         houseNumber,
         longitude,
         latitude,

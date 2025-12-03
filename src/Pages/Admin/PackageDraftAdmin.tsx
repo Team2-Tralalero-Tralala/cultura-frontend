@@ -2,6 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SearchBarTable";
 import { Plus, Edit, Trash } from "lucide-react";
+import Breadcrumb from "../../Components/BreadcrumbNavigation";
+import { Modal } from "../../Components/Modal/Modal";
+
+/**
+ * Interface: Package
+ * อธิบายโครงสร้างข้อมูลแพ็กเกจที่ใช้ในตาราง
+ */
 import { ChevronRight } from "lucide-react";
 
 // เพิ่ม id สำหรับ unique key
@@ -14,7 +21,12 @@ interface Package {
   [key: string]: unknown;
 }
 
-// debounce function
+/**
+ * Helper Function: debounce
+ * วัตถุประสงค์: ลดจำนวนครั้งที่เรียก API เมื่อผู้ใช้พิมพ์ค้นหา
+ * Input: function, wait(ms)
+ * Output: function ที่ถูก delay
+ */
 function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<F>) => {
@@ -34,30 +46,55 @@ const PackageDraftAdmin = () => {
     totalCount: 0,
   });
 
+  /** State: Modal สำหรับยืนยันการลบ */
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean;
+    pkg: Package | null;
+  }>({
+    open: false,
+    pkg: null,
+  });
+
+  /**
+   * Function: fetchPackages
+   * วัตถุประสงค์: โหลดรายการแพ็กเกจจาก API
+   * Input: searchTerm, page, limit
+   * Output: อัปเดต packages + pagination
+   */
   const fetchPackages = async (search = "", page = 1, limit = 10) => {
     try {
       setLoading(true);
+
       const query = new URLSearchParams({
         search,
         page: page.toString(),
         limit: limit.toString(),
       });
-      const res = await fetch(`http://localhost:3000/api/admin/packages/draft?${query}`, {
-        credentials: "include",
-      });
+
+      const res = await fetch(
+        `http://localhost:3000/api/admin/packages/draft?${query}`,
+        { credentials: "include" }
+      );
+
       const result = await res.json();
 
+      /** แปลงข้อมูลจาก backend → รูปแบบที่ UI ใช้ */
       const formatted: Package[] = Array.isArray(result.data)
         ? result.data.map((pkg: any) => ({
             id: pkg.id ?? pkg.name,
             name: pkg.name ?? "-",
             community: pkg.community?.name ?? "-",
             overseer: pkg.overseerPackage?.username ?? "-",
-            status: pkg.statusPackage === "DRAFT" ? "ฉบับร่าง" : pkg.statusPackage ?? "-",
+            status:
+              pkg.statusPackage === "DRAFT"
+                ? "ฉบับร่าง"
+                : pkg.statusPackage ?? "-",
           }))
         : [];
 
       setPackages(formatted);
+
+      /** อัปเดตข้อมูล pagination */
       setPagination((prev) => ({
         ...prev,
         totalCount: result.totalCount ?? formatted.length,
@@ -69,24 +106,104 @@ const PackageDraftAdmin = () => {
       }));
     } catch (err) {
       console.error("Fetch error:", err);
+
       setPackages([]);
-      setPagination((prev) => ({ ...prev, totalCount: 0, totalPages: 1 }));
+      setPagination((prev) => ({
+        ...prev,
+        totalCount: 0,
+        totalPages: 1,
+      }));
     } finally {
       setLoading(false);
     }
   };
 
+  /** Debounce: ป้องกันการเรียก API ถี่เกินไปตอนค้นหา */
   const debouncedFetch = useCallback(debounce(fetchPackages, 300), []);
 
+  /**
+   * Effect: โหลดข้อมูลแพ็กเกจทุกครั้งที่มีการค้นหา หรือเปลี่ยนหน้า
+   */
   useEffect(() => {
     debouncedFetch(searchTerm, pagination.currentPage, pagination.limit);
   }, [searchTerm, pagination.currentPage, pagination.limit, debouncedFetch]);
 
-  const handleEdit = (pkg: Package) => alert(`แก้ไขแพ็กเกจ: ${pkg.name}`);
-  const handleDelete = (pkg: Package) => alert(`ลบแพ็กเกจ: ${pkg.name}`);
+  /**
+   * Function: handleEdit
+   * วัตถุประสงค์: ไปหน้าแก้ไขแพ็กเกจ
+   */
+  const handleEdit = (pkg: Package) => {
+    window.location.href = `/admin/package/${pkg.id}/edit`;
+  };
 
+  /**
+   * Function: handleDelete
+   * วัตถุประสงค์: เปิด Modal เพื่อยืนยันการลบ
+   */
+  const handleDelete = (pkg: Package) => {
+    setDeleteModal({
+      open: true,
+      pkg,
+    });
+  };
+
+  /**
+   * Function: confirmDelete
+   * วัตถุประสงค์: ลบแพ็กเกจออกจากระบบ + อัปเดต UI
+   */
+  const confirmDelete = async () => {
+    if (!deleteModal.pkg) return;
+
+    const pkgId = deleteModal.pkg.id;
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/admin/package/${pkgId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        console.error("ลบไม่สำเร็จ");
+        return;
+      }
+
+      /** ลบจาก state เพื่อให้ UI อัปเดตทันที */
+      setPackages((prev) => prev.filter((item) => item.id !== pkgId));
+
+      /** โหลดข้อมูลใหม่เพื่อ sync pagination */
+      await fetchPackages(
+        searchTerm,
+        pagination.currentPage,
+        pagination.limit
+      );
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      setDeleteModal({ open: false, pkg: null });
+    }
+  };
+
+  /**
+   * Table Columns: กำหนดคอลัมน์ของ DataTable
+   */
   const columns: Column<Package>[] = [
-    { key: "name", header: "ชื่อแพ็กเกจ" },
+    {
+      key: "name",
+      header: "ชื่อแพ็กเกจ",
+      render: (pkg) => (
+        <span
+          className="cursor-pointer"
+          onClick={() =>
+            (window.location.href = `/admin/package/${pkg.id}`)
+          }
+        >
+          {pkg.name}
+        </span>
+      ),
+    },
     { key: "community", header: "ชื่อชุมชน" },
     { key: "overseer", header: "ชื่อผู้ดูแล" },
     { key: "status", header: "สถานะแพ็กเกจ" },
@@ -112,27 +229,36 @@ const PackageDraftAdmin = () => {
     },
   ];
 
+  /**
+   * Section: Render UI Layout
+   * ประกอบด้วย Breadcrumb, SearchBar, Button, Table, Modal
+   */
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
-      <div className="text-[14px] text-black mb-1 flex items-center">
-        <span>จัดการแพ็กเกจ</span>
-        <ChevronRight size={20} className="mx-1 text-black" />
-        <span className="font-medium" style={{ color: "#494949" }}>
-          ฉบับร่าง
-        </span>
-      </div>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        current={{
+          label: "ฉบับร่าง",
+          to: "/admin/packages/draft",
+        }}
+      />
 
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-[20px] font-medium">ฉบับร่าง</h1>
       </div>
 
+      {/* Search Bar + Add Button */}
       <div className="flex items-center justify-between mb-3 font-sarabun">
         <SearchBarTable
           value={searchTerm}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchTerm(e.target.value)
+          }
         />
+
         <button
-          onClick={() => window.location.href = "/admin/packages/create"} // redirect
+          onClick={() => (window.location.href = "/admin/packages/create")}
           className="flex items-center border text-white px-4 py-2 rounded-md transition h-10"
           style={{ backgroundColor: "#055035" }}
         >
@@ -141,15 +267,35 @@ const PackageDraftAdmin = () => {
         </button>
       </div>
 
+      {/* Data Table */}
       <DataTable<Package>
         data={packages}
         columns={columns}
-        getKey={(pkg) => pkg.id} // unique
+        getKey={(pkg) => pkg.id}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(newPage) => setPagination((prev) => ({ ...prev, currentPage: newPage }))}
-        onPageSizeChange={(newLimit) => setPagination((prev) => ({ ...prev, limit: newLimit, currentPage: 1 }))}
+        onPageChange={(newPage) =>
+          setPagination((prev) => ({ ...prev, currentPage: newPage }))
+        }
+        onPageSizeChange={(newLimit) =>
+          setPagination((prev) => ({
+            ...prev,
+            limit: newLimit,
+            currentPage: 1,
+          }))
+        }
         isLoading={loading}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={deleteModal.open}
+        title="ยืนยันการลบแพ็กเกจ"
+        text={"คุณต้องการยืนยันการลบแพ็กเกจหรือไม่"}
+        confirmText="ลบ"
+        cancelText="ยกเลิก"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModal({ open: false, pkg: null })}
       />
     </div>
   );

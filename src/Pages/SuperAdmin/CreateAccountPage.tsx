@@ -620,6 +620,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                             name="gender"
                             value={genderLabel}
                             checked={roleSpecificData.gender === genderLabel}
+                            className="accent-[#0A4B32] w-4 h-4 cursor-pointer"
                             onChange={() =>
                               setRoleSpecificData((prevData) => ({
                                 ...prevData,

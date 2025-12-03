@@ -42,12 +42,11 @@ const NavbarSam = () => {
       <nav className="flex items-center justify-between px-12 h-16">
         <div className="relative ml-auto">
           {/* ปุ่มโปรไฟล์ */}
-          <button
-            onClick={toggleDropdown}
-            className="flex items-center justify-between gap-3 p-2"
-          >
+          <button onClick={toggleDropdown} className="flex items-center justify-between gap-3 p-2">
             <img src={imgUser} className="w-9 h-9 rounded-full" />
-            <span className="font-medium text-base">{user?.fname} {user?.lname}</span>
+            <span className="font-medium text-base">
+              {user?.fname} {user?.lname}
+            </span>
           </button>
 
           {/* Dropdown */}
@@ -58,14 +57,14 @@ const NavbarSam = () => {
                 <img src={imgUser} className="w-10 h-10 rounded-full" />
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-medium">{user?.fname} {user?.lname}</span>
+                    <span className="text-base font-medium">
+                      {user?.fname} {user?.lname}
+                    </span>
                     <span className="border-blue-400 border-1.8 text-xs bg-blue-100 text-blue-500 font-bold px-2 py-0.5 rounded-md">
                       {formatRole(user?.role)}
                     </span>
                   </div>
-                  <span className="text-gray-500 text-sm">
-                    {user?.email}
-                  </span>
+                  <span className="text-gray-500 text-sm">{user?.email}</span>
                 </div>
               </div>
 
@@ -74,7 +73,7 @@ const NavbarSam = () => {
               {/* เมนูใน dropdown */}
               <li>
                 <Link
-                  to="/shared/"
+                  to="/profile/edit"
                   onClick={closeDropdown}
                   className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold"
                 >

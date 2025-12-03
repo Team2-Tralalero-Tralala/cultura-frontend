@@ -232,7 +232,7 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขอคืนเงิน",
-                "/booking/refund-requests",
+                "/booking/refunds",
                 "mdi:cash-refund",
                 "booking-refunds",
                 "booking"

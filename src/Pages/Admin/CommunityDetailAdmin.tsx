@@ -44,8 +44,7 @@ const toThaiDate = (iso?: string | null) => {
  * ใช้ค่าใน .env (VITE_BACKEND_URL) และ fallback เป็น localhost หากไม่พบค่า
  * ===========================================================
  */
-const backendBaseUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 /**
  * Input : fileName - ชื่อไฟล์หรือพาธไฟล์จาก backend
@@ -97,20 +96,12 @@ function listImagesByType(community: any, type: string): string[] {
  * Component : Row
  * แสดงแถวข้อมูลแบบ Label : Value
  */
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-bold text-black text-base">{label}</div>
       <div className="text-black font-regular text-base">:</div>
-      <div className="text-black font-regular break-words text-base">
-        {children ?? "-"}
-      </div>
+      <div className="text-black font-regular break-words text-base">{children ?? "-"}</div>
     </div>
   );
 }
@@ -125,14 +116,7 @@ function AvatarCircle({ src, name, size = 64 }: any) {
   const style = { width: size, height: size };
 
   if (src)
-    return (
-      <img
-        src={src}
-        alt="avatar"
-        style={style}
-        className={`${base} object-cover bg-white`}
-      />
-    );
+    return <img src={src} alt="avatar" style={style} className={`${base} object-cover bg-white`} />;
 
   const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
@@ -157,21 +141,11 @@ function LogoCircle({ src, name, size = 120 }: any) {
   const style = { width: size, height: size };
 
   if (src)
-    return (
-      <img
-        src={src}
-        alt="Logo"
-        style={style}
-        className={`${base} object-cover bg-white`}
-      />
-    );
+    return <img src={src} alt="Logo" style={style} className={`${base} object-cover bg-white`} />;
 
   const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
-    <div
-      style={style}
-      className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600`}
-    >
+    <div style={style} className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600`}>
       <span className="text-white font-bold" style={{ fontSize: size * 0.45 }}>
         {initial}
       </span>
@@ -184,20 +158,9 @@ function LogoCircle({ src, name, size = 120 }: any) {
  * แสดงภาพปก (แนวนอนสี่เหลี่ยม)
  */
 function CoverRect({ src, height = 320 }: any) {
-  if (src)
-    return (
-      <img
-        src={src}
-        alt="Cover"
-        style={{ height }}
-        className="w-full object-cover"
-      />
-    );
+  if (src) return <img src={src} alt="Cover" style={{ height }} className="w-full object-cover" />;
   return (
-    <div
-      style={{ height }}
-      className="w-full bg-gray-100 grid place-items-center"
-    >
+    <div style={{ height }} className="w-full bg-gray-100 grid place-items-center">
       <div className="w-[92%] h-[70%] border-2 border-dashed border-gray-300 rounded-xl grid place-items-center">
         <span className="text-gray-500">ไม่มีภาพปก</span>
       </div>
@@ -248,10 +211,7 @@ function Section({
               จำนวน {count} {title}
             </span>
           )}
-          <Icon
-            icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"}
-            width={18}
-          />
+          <Icon icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"} width={18} />
         </div>
       </button>
 
@@ -293,9 +253,7 @@ function ItemCard({ image, title, children }: any) {
       </div>
       <div className="min-w-0">
         <div className="font-semibold">{title}</div>
-        {children && (
-          <div className="mt-2 text-sm text-slate-700">{children}</div>
-        )}
+        {children && <div className="mt-2 text-sm text-slate-700">{children}</div>}
       </div>
     </div>
   );
@@ -411,15 +369,8 @@ export default function CommunityDetailAdmin() {
               <div className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
                 <CoverRect src={coverImage} height={COVER_H} />
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
-                  <div
-                    className="absolute left-6 md:left-8 -translate-y-1/2"
-                    style={{ top: 0 }}
-                  >
-                    <LogoCircle
-                      src={logoImage}
-                      name={community?.name}
-                      size={LOGO}
-                    />
+                  <div className="absolute left-6 md:left-8 -translate-y-1/2" style={{ top: 0 }}>
+                    <LogoCircle src={logoImage} name={community?.name} size={LOGO} />
                   </div>
 
                   <div style={{ paddingLeft: LOGO + 24 }}>
@@ -443,37 +394,32 @@ export default function CommunityDetailAdmin() {
                     </div>
 
                     {/* Rating (ถ้ามีค่า) */}
-                    {!!community.rating && (
-                      <div className="mt-3 flex items-center gap-2 text-black">
-                        <Icon
-                          icon="material-symbols:star-rounded"
-                          className="text-[22px] text-black"
-                        />
-                        <span className="text-[16px] font-regular">
-                          {Number(community.rating).toFixed(1)} คะแนน
-                        </span>
-                      </div>
-                    )}
+                    {(community.isRatingVisible || community.ct_is_rating_visible === 1) &&
+                      community.rating && (
+                        <div className="mt-3 flex items-center gap-2 text-black">
+                          <Icon
+                            icon="material-symbols:star-rounded"
+                            className="text-[22px] text-black"
+                          />
+                          <span className="text-[16px] font-regular">
+                            {Number(community.rating).toFixed(1)} คะแนน
+                          </span>
+                        </div>
+                      )}
 
                     {/* Location */}
                     <div className="mt-3 flex items-start gap-2 text-black">
                       <Pin className="mt-1.5 shrink-0" />
                       <span className="leading-relaxed">
-                        {show(community.location?.detail)}{" "}
-                        {show(community.location?.subDistrict)}{" "}
-                        {show(community.location?.district)}{" "}
-                        {show(community.location?.province)}{" "}
-                        {community.location?.postalCode
-                          ? `(${community.location.postalCode})`
-                          : ""}
+                        {show(community.location?.detail)} {show(community.location?.subDistrict)}{" "}
+                        {show(community.location?.district)} {show(community.location?.province)}{" "}
+                        {community.location?.postalCode ? `(${community.location.postalCode})` : ""}
                       </span>
                     </div>
 
                     {/* Description */}
                     <div className="mt-3 flex items-start gap-2 text-black max-w-4xl">
-                      <p className="leading-relaxed">
-                        {show(community.description)}
-                      </p>
+                      <p className="leading-relaxed">{show(community.description)}</p>
                     </div>
                   </div>
                 </div>
@@ -493,9 +439,7 @@ export default function CommunityDetailAdmin() {
             <Row label="ประเภทวิสาหกิจชุมชน">{show(community.type)}</Row>
             <Row label="เลขทะเบียน">{show(community.registerNumber)}</Row>
 
-            <Row label="วันที่จดทะเบียน">
-              {toThaiDate(community.registerDate)}
-            </Row>
+            <Row label="วันที่จดทะเบียน">{toThaiDate(community.registerDate)}</Row>
             <Row label="เบอร์โทร">{show(community.phone)}</Row>
 
             <Row label="อีเมล">{show(community.email)}</Row>
@@ -503,32 +447,21 @@ export default function CommunityDetailAdmin() {
               <span className="whitespace-pre-line break-words">
                 {`${show(community.location?.detail)} ${show(
                   community.location?.subDistrict
-                )} ${show(community.location?.district)} ${show(
-                  community.location?.province
-                )} ${
-                  community.location?.postalCode
-                    ? `(${community.location.postalCode})`
-                    : ""
+                )} ${show(community.location?.district)} ${show(community.location?.province)} ${
+                  community.location?.postalCode ? `(${community.location.postalCode})` : ""
                 }`}
               </span>
             </Row>
 
             <Row label="ละติจูด / ลองจิจูด">
-              {community.location?.latitude &&
-              community.location?.longitude
+              {community.location?.latitude && community.location?.longitude
                 ? `${community.location.latitude}, ${community.location.longitude}`
                 : "-"}
             </Row>
-            <Row label="คำอธิบายที่อยู่">
-              {show(community.location?.detailMore)}
-            </Row>
+            <Row label="คำอธิบายที่อยู่">{show(community.location?.detailMore)}</Row>
 
-            <Row label="ชื่อกิจกรรมหลัก">
-              {show(community.mainActivityName)}
-            </Row>
-            <Row label="รายละเอียดกิจกรรมหลัก">
-              {show(community.mainActivityDescription)}
-            </Row>
+            <Row label="ชื่อกิจกรรมหลัก">{show(community.mainActivityName)}</Row>
+            <Row label="รายละเอียดกิจกรรมหลัก">{show(community.mainActivityDescription)}</Row>
 
             <Row label="เว็บไซต์">
               {community.urlWebsite ? (
@@ -544,19 +477,13 @@ export default function CommunityDetailAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="จำนวนสมาชิก">
-              {show(community.communityMembers?.length || 0)} คน
-            </Row>
+            <Row label="จำนวนสมาชิก">{show(community.communityMembers?.length || 0)} คน</Row>
 
             <Row label="ชื่อผู้ดูแลหลัก">{show(community.mainAdmin)}</Row>
-            <Row label="เบอร์โทรผู้ดูแลหลัก">
-              {show(community.mainAdminPhone)}
-            </Row>
+            <Row label="เบอร์โทรผู้ดูแลหลัก">{show(community.mainAdminPhone)}</Row>
 
             <Row label="ผู้ประสานงาน">{show(community.coordinatorName)}</Row>
-            <Row label="เบอร์โทรผู้ประสานงาน">
-              {show(community.coordinatorPhone)}
-            </Row>
+            <Row label="เบอร์โทรผู้ประสานงาน">{show(community.coordinatorPhone)}</Row>
 
             <Row label="ผู้ดูแล">{show(community.mainAdmin)}</Row>
             <div />
@@ -734,8 +661,7 @@ export default function CommunityDetailAdmin() {
                           key={p.id}
                           image={resolveBackendUploadUrl(
                             p?.packageFile?.find(
-                              (f: any) =>
-                                String(f.type).toUpperCase() === "COVER"
+                              (f: any) => String(f.type).toUpperCase() === "COVER"
                             )?.filePath
                           )}
                           title={p.name}
@@ -745,19 +671,13 @@ export default function CommunityDetailAdmin() {
                               - ความจุ {p.capacity} คน • ราคา{" "}
                               {p.price?.toLocaleString?.() ?? p.price} บาท
                             </div>
-                            {p.description && (
-                              <div className="line-clamp-3">
-                                {p.description}
-                              </div>
-                            )}
+                            {p.description && <div className="line-clamp-3">{p.description}</div>}
                           </div>
                         </ItemCard>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">
-                      ยังไม่มีแพ็กเกจ
-                    </div>
+                    <div className="text-slate-500 text-sm">ยังไม่มีแพ็กเกจ</div>
                   )}
                 </Section>
 
@@ -774,8 +694,7 @@ export default function CommunityDetailAdmin() {
                           key={s.id}
                           image={resolveBackendUploadUrl(
                             s?.storeImage?.find(
-                              (f: any) =>
-                                String(f.type).toUpperCase() === "COVER"
+                              (f: any) => String(f.type).toUpperCase() === "COVER"
                             )?.image
                           )}
                           title={s.name}
@@ -785,9 +704,7 @@ export default function CommunityDetailAdmin() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-sm">
-                      ยังไม่มีร้านค้า
-                    </div>
+                    <div className="text-slate-500 text-sm">ยังไม่มีร้านค้า</div>
                   )}
                 </Section>
 
@@ -804,21 +721,17 @@ export default function CommunityDetailAdmin() {
                           key={h.id}
                           image={resolveBackendUploadUrl(
                             h?.homestayImage?.find(
-                              (f: any) =>
-                                String(f.type).toUpperCase() === "COVER"
+                              (f: any) => String(f.type).toUpperCase() === "COVER"
                             )?.image
                           )}
                           title={h.name}
                         >
                           <div className="space-y-1">
                             <div>
-                              - ประเภท {show(h.type)} • รองรับ{" "}
-                              {show(h.guestPerRoom)} คน/ห้อง • ทั้งหมด{" "}
-                              {show(h.totalRoom)} ห้อง
+                              - ประเภท {show(h.type)} • รองรับ {show(h.guestPerRoom)} คน/ห้อง •
+                              ทั้งหมด {show(h.totalRoom)} ห้อง
                             </div>
-                            <div className="line-clamp-3">
-                              {show(h.facility)}
-                            </div>
+                            <div className="line-clamp-3">{show(h.facility)}</div>
                           </div>
                         </ItemCard>
                       ))}
@@ -829,54 +742,46 @@ export default function CommunityDetailAdmin() {
                 </Section>
 
                 {/* ส่วนแสดงข้อมูลสมาชิก */}
-               <Section
-  title="รายชื่อสมาชิก"
-  count={community.communityMembers?.length || 0}
-  onManage={() => navigate(`/admin/members`)}
->
-  {community.communityMembers?.length ? (
-    <div className="space-y-3">
-      {community.communityMembers.map((cm: any) => {
-        const m = cm.user;
-        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
+                <Section
+                  title="รายชื่อสมาชิก"
+                  count={community.communityMembers?.length || 0}
+                  onManage={() => navigate(`/admin/members`)}
+                >
+                  {community.communityMembers?.length ? (
+                    <div className="space-y-3">
+                      {community.communityMembers.map((cm: any) => {
+                        const m = cm.user;
+                        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
 
-        return (
-          <div
-            key={cm.id}
-            onClick={() => navigate(`/admin/account/${m.id}`)} // ชี้ไปหน้ารายละเอียดสมาชิกฝั่ง Admin
-            className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
-          >
-            <AvatarCircle
-              src={resolveBackendUploadUrl(m.profileImage)}
-              name={fullName || m.username}
-              size={64}
-            />
-            <div className="min-w-0">
-              <div className="font-medium truncate">
-                {fullName || m.username}
-              </div>
-              {m.activityRole && (
-                <div className="text-sm text-slate-700">
-                  • {m.activityRole}
-                </div>
-              )}
-              <div className="mt-1 text-sm text-slate-600 truncate">
-                {m.email || "-"}
-              </div>
-              <div className="text-sm text-slate-600">
-                {m.phone || "-"}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  ) : (
-    <div className="text-slate-500 text-sm">ยังไม่มีสมาชิก</div>
-  )}
-</Section>
-
-
+                        return (
+                          <div
+                            key={cm.id}
+                            onClick={() => navigate(`/admin/account/${m.id}`)} // ชี้ไปหน้ารายละเอียดสมาชิกฝั่ง Admin
+                            className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
+                          >
+                            <AvatarCircle
+                              src={resolveBackendUploadUrl(m.profileImage)}
+                              name={fullName || m.username}
+                              size={64}
+                            />
+                            <div className="min-w-0">
+                              <div className="font-medium truncate">{fullName || m.username}</div>
+                              {m.activityRole && (
+                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
+                              )}
+                              <div className="mt-1 text-sm text-slate-600 truncate">
+                                {m.email || "-"}
+                              </div>
+                              <div className="text-sm text-slate-600">{m.phone || "-"}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-slate-500 text-sm">ยังไม่มีสมาชิก</div>
+                  )}
+                </Section>
               </>
             );
           })()}

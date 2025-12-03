@@ -216,7 +216,7 @@ export default function ManageHomestayAdmin() {
           <div className="ml-auto">
             <Button
               type="confirm-admin"
-              onClick={() => navigate(`/admin/community/homestay/create`)}
+              onClick={() => navigate(`/admin/community/homestay`)}
             >
               <span>+ เพิ่มที่พัก</span>
             </Button>

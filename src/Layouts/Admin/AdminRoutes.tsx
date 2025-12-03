@@ -43,7 +43,7 @@ export default function AdminRoutes() {
   return (
     <Routes>
       <Route path="member/:userId" element={<MemberDetailPage />} />
-      <Route path="/package/feedbacks" element={<Feedbackall />} />
+      <Route path="/packages/feedbacks" element={<Feedbackall />} />
 
       {/* <Route path="booking-histories/done" element={<BookingHistoryAdmin />} />
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
@@ -66,7 +66,7 @@ export default function AdminRoutes() {
 
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
-      <Route path="package/requests" element={<PackageRequestsAdmin />} />
+      <Route path="package-requests" element={<PackageRequestsAdmin />} />
       <Route path="community/homestay/:homestayId" element={<DetailHomestayAdmin />} />
       <Route path="/dashboard" element={<DashboardPage />} />
 
@@ -74,13 +74,13 @@ export default function AdminRoutes() {
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
 
-      <Route path="/booking/refund" element={<ManageRefundBooking />} />
+      <Route path="/booking/refunds" element={<ManageRefundBooking />} />
       <Route path="/members" element={<ManageMembers />} />
 
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
-      <Route path="package/feedback/:packageId" element={<PackageFeedbacksPage />} />
+      <Route path="packages/feedback/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
       {/* หน้าดูรายละเอียดร้านค้าของ Admin */}

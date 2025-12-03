@@ -2,7 +2,7 @@
  * Component: EditAccountPage
  * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 02 ธันวาคม 2568 (Fix Community Fetch & Style)
+ * Last Modified: 03 ธันวาคม 2568 (Added Reset Password Link)
  */
 
 import React, { useEffect, useState } from "react";
@@ -19,7 +19,7 @@ import ThailandLocationSelector, {
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-// Import สำหรับ Dropdown
+// Import สำหรับ Dropdown และ Icon
 import Autocomplete from "@mui/material/Autocomplete";
 import Popper from "@mui/material/Popper";
 import { Icon } from "@iconify/react";
@@ -33,7 +33,6 @@ interface EditAccountBody {
   email: string;
   phone: string;
   roleId: number;
-  password?: string;
   profileImage?: string | null;
   memberOfCommunity?: number | null;
   communityRole?: string; 
@@ -88,8 +87,6 @@ const EditAccountPage: React.FC = () => {
     username: "",
     email: "",
     phone: "",
-    password: "",
-    confirmPassword: "",
     role: getRoleFromPath() as RoleType,
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -111,7 +108,6 @@ const EditAccountPage: React.FC = () => {
 
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // State สำหรับเก็บรายชื่อชุมชน
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
@@ -150,16 +146,14 @@ const EditAccountPage: React.FC = () => {
           role === "Admin"
             ? "Admin"
             : role === "Member"
-              ? "Member"
-              : role === "Tourist"
-                ? "Tourist"
-                : user.role?.name === "superadmin"
-                  ? "Admin"
-                  : user.role?.name === "member"
-                    ? "Member"
-                    : "Tourist",
-        password: "",
-        confirmPassword: "",
+            ? "Member"
+            : role === "Tourist"
+            ? "Tourist"
+            : user.role?.name === "superadmin"
+            ? "Admin"
+            : user.role?.name === "member"
+            ? "Member"
+            : "Tourist",
       }));
       setAvatarUrl(user.profileImageUrl || null);
       
@@ -191,7 +185,6 @@ const EditAccountPage: React.FC = () => {
       const fetchCommunities = async () => {
         setIsCommunityLoading(true);
         try {
-          // A. ลองดึงแบบ SuperAdmin
           const res = await api.get("/super/communities?limit=1000"); 
           
           let data: CommunityOption[] = [];
@@ -203,7 +196,6 @@ const EditAccountPage: React.FC = () => {
              data = res.data;
           }
 
-          // B. ถ้าไม่เจอ ให้ลองดึงของตัวเอง (Admin)
           if (data.length === 0) {
             try {
               const resAdmin = await api.get("/admin/community");
@@ -211,7 +203,6 @@ const EditAccountPage: React.FC = () => {
               if (adminCommunity && adminCommunity.id && adminCommunity.name) {
                 data = [{ id: adminCommunity.id, name: adminCommunity.name }];
                 
-                // ถ้ายังไม่มีค่า communityId เดิม ให้เลือกอันนี้เลย
                 if (!roleSpecificData.communityId) {
                     setRoleSpecificData(prev => ({
                         ...prev,
@@ -227,7 +218,6 @@ const EditAccountPage: React.FC = () => {
           setCommunityOptions(data);
         } catch (error) {
           console.error("Failed to fetch communities", error);
-          // Fallback
           try {
              const resAdmin = await api.get("/admin/community");
              if (resAdmin.data?.data) {
@@ -240,7 +230,7 @@ const EditAccountPage: React.FC = () => {
       };
       fetchCommunities();
     }
-  }, [formData.role]); // Run เมื่อ role เปลี่ยน (หรือโหลดเสร็จ)
+  }, [formData.role]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
@@ -259,11 +249,6 @@ const EditAccountPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน");
-      return;
-    }
     
     if (formData.role === "Member") {
        if (!roleSpecificData.communityId) {
@@ -297,10 +282,6 @@ const EditAccountPage: React.FC = () => {
         roleId: mapRoleToId(formData.role),
       };
 
-      if (formData.password) {
-        requestBody.password = formData.password;
-      }
-
       if (formData.role === "Member") {
         requestBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
         requestBody.communityRole = roleSpecificData.activityRole.trim();
@@ -309,8 +290,8 @@ const EditAccountPage: React.FC = () => {
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
-              ? "FEMALE"
-              : "NONE";
+            ? "FEMALE"
+            : "NONE";
         requestBody.birthDate = roleSpecificData.birthDate
           ? new Date(roleSpecificData.birthDate).toISOString().split("T")[0]
           : null;
@@ -342,12 +323,12 @@ const EditAccountPage: React.FC = () => {
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
-      <div>
-        <Breadcrumb
+      <div className="mb-2">
+        <Breadcrumb 
           current={{
             label: "แก้ไขบัญชี",
-            to: `/super/account/member/${memberId}/edit`,
-          }}
+            to: location.pathname,
+          }} 
         />
       </div>
 
@@ -358,15 +339,15 @@ const EditAccountPage: React.FC = () => {
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
           title="ย้อนกลับ"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="32" 
+            height="32" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
             strokeLinejoin="round"
           >
             <path d="M19 12H5" />
@@ -434,19 +415,32 @@ const EditAccountPage: React.FC = () => {
             />
 
             <div>
-              <label className="font-semibold text-gray-800 block mb-2">
-                Role <span className="text-red-500">*</span>
-              </label>
+              <div className="flex justify-between items-end mb-2">
+                <label className="font-semibold text-gray-800 block">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                
+                <button
+                  type="button"
+                  onClick={() => navigate(`/super/account/reset-password/${userId}`)} 
+                  className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
+                >
+                  <Icon icon="mdi:lock-reset" className="w-4 h-4" />
+                  เปลี่ยนรหัสผ่าน
+                </button>
+              </div>
+
               <div className="flex gap-4">
                 {(["Admin", "Member", "Tourist"] as RoleType[]).map((roleItem) => (
                   <button
                     key={roleItem}
                     type="button"
                     onClick={() => handleRoleSelect(roleItem)}
-                    className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${formData.role === roleItem
-                        ? "bg-[#0A4B32] text-white border-[#0A4B32]"
-                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]"
-                      }`}
+                    className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
+                      formData.role === roleItem
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
+                    }`}
                   >
                     {roleItem}
                   </button>
@@ -456,7 +450,6 @@ const EditAccountPage: React.FC = () => {
 
             {formData.role === "Member" && (
               <div className="space-y-6">
-                {/* 1. Custom Community Selector (Style corrected & Pre-filled) */}
                 <div className="space-y-1.5 w-full">
                   <div className="flex items-center justify-between">
                     <label className="block text-base font-semibold text-black">
@@ -506,7 +499,6 @@ const EditAccountPage: React.FC = () => {
                   />
                 </div>
 
-                {/* 2. Activity Role */}
                 <TextField
                   id="activityRole"
                   label="บทบาทในชุมชน"

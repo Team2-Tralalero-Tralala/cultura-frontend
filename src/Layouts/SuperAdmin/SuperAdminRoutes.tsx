@@ -68,6 +68,9 @@ export default function SuperAdminRoutes() {
       <Route path="account/member/:memberId/edit" element={<EditAccountPage />} />
       <Route path="account/tourist/:touristId/edit" element={<EditAccountPage />} />
 
+      {/* 🔹 หน้า Reset Password */}
+      <Route path="account/reset-password/:userId" element={<ResetPassword />} />
+
       {/* ---------------- Log ---------------- */}
       <Route path="communities" element={<ManageCommunitySuperAdmin />} />
       <Route path="community/:id" element={<CommunityDetailSuperAdmin />} />

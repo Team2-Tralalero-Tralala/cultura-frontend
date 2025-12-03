@@ -31,7 +31,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Switch from "@/Components/Switch";
 import * as React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import z from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { BankSelector } from "@/Components/Selector/BankSelector";
@@ -179,6 +179,7 @@ export function EditCommunity() {
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
+  const navigate = useNavigate();
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
@@ -495,6 +496,7 @@ export function EditCommunity() {
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
       setAlertOpen(true);
+      navigate("/admin/community/own");
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";

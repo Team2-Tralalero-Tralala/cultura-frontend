@@ -56,6 +56,12 @@ interface HomestayHistory {
   homestay?: HomestayData | null;
 }
 
+interface PackageFile {
+  id: number;
+  path: string;
+  type: string;
+}
+
 interface PackageData {
   id: number;
   name: string;
@@ -75,9 +81,7 @@ interface PackageData {
   openBookingAt: DateTimeField;
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
-  files: {
-    [x: string]: any; id: number; path: string; type: string
-}[];
+  files: PackageFile[];
   homestayHistories: HomestayHistory[];
 }
 
@@ -171,9 +175,9 @@ export default function DetailPackageSuperAdmin() {
             : null,
           files: raw.packageFile
             ? raw.packageFile.map((f: any) => ({
-                id: f.id,
-                path: f.filePath,
-                type: f.type,
+                id: f.pf_id ?? f.id,
+                path: f.pf_image,
+                type: f.pf_type,
               }))
             : [],
           homestayHistories: raw.homestayHistories
@@ -262,15 +266,11 @@ export default function DetailPackageSuperAdmin() {
           <div className="flex justify-between text-md text-gray-700 mb-4">
             <p>
               <strong>เช็กอิน :</strong>{" "}
-              {checkIn.date
-                ? `${formatDateTH(checkIn.date)} เวลา ${checkIn.time ?? "-"}`
-                : "-"}
+              {checkIn.date ? `${formatDateTH(checkIn.date)} เวลา ${checkIn.time ?? "-"}` : "-"}
             </p>
             <p>
               <strong>เช็กเอาท์ :</strong>{" "}
-              {checkOut.date
-                ? `${formatDateTH(checkOut.date)} เวลา ${checkOut.time ?? "-"}`
-                : "-"}
+              {checkOut.date ? `${formatDateTH(checkOut.date)} เวลา ${checkOut.time ?? "-"}` : "-"}
             </p>
           </div>
 
@@ -355,13 +355,14 @@ export default function DetailPackageSuperAdmin() {
 
             {/* Badge สถานะ */}
             <span
-              className={`
-        px-4 py-1 rounded-full text-sm font-semibold
+              className={`px-4 py-1 rounded-full text-sm font-semibold
         ${pkg.statusPackage === "PUBLISH" ? "bg-green-200 text-green-700" : ""}
+        ${pkg.statusPackage === "DRAFT" ? "bg-yellow-200 text-yellow-700" : ""}
         ${pkg.statusPackage === "UNPUBLISH" ? "bg-red-200 text-red-700" : ""}
         `}
             >
               {pkg.statusPackage === "PUBLISH" && "เผยแพร่"}
+              {pkg.statusPackage === "DRAFT" && "ฉบับร่าง"}
               {pkg.statusPackage === "UNPUBLISH" && "ไม่เผยแพร่"}
             </span>
           </div>
@@ -403,23 +404,18 @@ export default function DetailPackageSuperAdmin() {
           </div>
         )}
 
-        {/* ===== รูปหลัก + ข้อมูลที่พัก ===== */}
+        {/* ===== รูปหลัก ===== */}
         <div className="grid grid-cols-1 md:grid-cols-[55%_auto] gap-10 items-start">
-          {/* ===== รูปหลัก ===== */}
           {mainImage ? (
             <img
-              src={
-                mainImage.path
-                  ? `${new URL(apiUrl).origin}/uploads/${mainImage.path}`
-                  : "https://placehold.co/600x400?text=No+Image"
-              }
-              alt="homestay-main"
+              src={`${apiUrl}/uploads${mainImage.path}`}
+              alt="package-main"
               className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
             />
           ) : (
             <img
               src="https://placehold.co/600x400?text=No+Image"
-              alt="homestay-main"
+              alt="package-main"
               className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
             />
           )}
@@ -492,7 +488,7 @@ export default function DetailPackageSuperAdmin() {
             </div>
           </div>
         )}
-         {/* ที่พักในแพ็กเกจ (ถ้ามี) */}
+        {/* ที่พักในแพ็กเกจ (ถ้ามี) */}
         {homestaySection}
       </div>
     </div>

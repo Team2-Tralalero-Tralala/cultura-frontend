@@ -59,6 +59,12 @@ interface HomestayHistory {
   homestay?: HomestayData | null;
 }
 
+interface PackageFile {
+  id: number;
+  path: string;
+  type: string;
+}
+
 interface PackageData {
   id: number;
   name: string;
@@ -78,12 +84,7 @@ interface PackageData {
   openBookingAt: DateTimeField;
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
-  files: {
-    [x: string]: any;
-    id: number;
-    path: string;
-    type: string;
-  }[];
+  files: PackageFile[];
   homestayHistories: HomestayHistory[];
 }
 
@@ -169,9 +170,9 @@ export default function DetailPackageAdmin() {
             : null,
           files: raw.packageFile
             ? raw.packageFile.map((f: any) => ({
-                id: f.id,
-                path: f.filePath,
-                type: f.type,
+                id: f.pf_id ?? f.id,
+                path: f.pf_image,
+                type: f.pf_type,
               }))
             : [],
           homestayHistories: raw.homestayHistories
@@ -320,7 +321,7 @@ export default function DetailPackageAdmin() {
             {/* ปุ่มย้อนกลับ -> ไปหน้าประวัติแพ็กเกจของ Admin */}
             <div
               className="mt-1 mr-3 cursor-pointer"
-              onClick={() => navigate("/package/histories")}
+              onClick={() => navigate("/admin/packages/all")}
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
@@ -347,22 +348,17 @@ export default function DetailPackageAdmin() {
         <div className="mb-6">
           <div className="flex flex-row items-center gap-2">
             <p className="text-md text-gray-800 font-semibold">สถานะแพ็กเกจ :</p>
+
+            {/* Badge สถานะ */}
             <span
-              className={`
-                px-4 py-1 rounded-full text-sm font-semibold
-                ${
-                  pkg.statusPackage === "PUBLISH"
-                    ? "bg-green-200 text-green-700"
-                    : ""
-                }
-                ${
-                  pkg.statusPackage === "UNPUBLISH"
-                    ? "bg-red-200 text-red-700"
-                    : ""
-                }
-              `}
+              className={`px-4 py-1 rounded-full text-sm font-semibold
+        ${pkg.statusPackage === "PUBLISH" ? "bg-green-200 text-green-700" : ""}
+        ${pkg.statusPackage === "DRAFT" ? "bg-yellow-200 text-yellow-700" : ""}
+        ${pkg.statusPackage === "UNPUBLISH" ? "bg-red-200 text-red-700" : ""}
+        `}
             >
               {pkg.statusPackage === "PUBLISH" && "เผยแพร่"}
+              {pkg.statusPackage === "DRAFT" && "ฉบับร่าง"}
               {pkg.statusPackage === "UNPUBLISH" && "ไม่เผยแพร่"}
             </span>
           </div>
@@ -409,22 +405,18 @@ export default function DetailPackageAdmin() {
           </div>
         )}
 
-        {/* รูปหลัก */}
+        {/* ===== รูปหลัก ===== */}
         <div className="grid grid-cols-1 md:grid-cols-[55%_auto] gap-10 items-start">
           {mainImage ? (
             <img
-              src={
-                mainImage.path
-                  ? `${new URL(apiUrl).origin}/uploads/${mainImage.path}`
-                  : "https://placehold.co/600x400?text=No+Image"
-              }
-              alt="homestay-main"
+              src={`${apiUrl}/uploads${mainImage.path}`}
+              alt="package-main"
               className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
             />
           ) : (
             <img
               src="https://placehold.co/600x400?text=No+Image"
-              alt="homestay-main"
+              alt="package-main"
               className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
             />
           )}

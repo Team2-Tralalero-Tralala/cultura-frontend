@@ -19,6 +19,7 @@ import { Backward, EditIcon } from "../../Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
+import type { JSX } from "react/jsx-runtime";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -45,6 +46,20 @@ interface LocationData {
   longitude: number;
 }
 
+interface HomestayHistory {
+  id: number;
+  guestAmount: number;
+  checkInTime: string;
+  checkOutTime: string;
+  bookedRoom?: number;
+  homestay?: HomestayData | null;
+}
+interface PackageFile {
+  id: number;
+  path: string;
+  type: string;
+}
+
 interface PackageData {
   id: number;
   name: string;
@@ -64,7 +79,8 @@ interface PackageData {
   openBookingAt: DateTimeField;
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
-  files: { id: number; path: string; type: string }[];
+  files: PackageFile[];
+  homestayHistories: HomestayHistory[];
 }
 
 // ================== Helper Functions ==================
@@ -121,15 +137,15 @@ export default function DetailPackageHistoryAdmin() {
           rejectReason: raw.rejectReason ?? null,
           createdBy: raw.createPackage
             ? {
-              id: raw.createPackage.id,
-              name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
-            }
+                id: raw.createPackage.id,
+                name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
+              }
             : null,
           overseer: raw.overseerPackage
             ? {
-              id: raw.overseerPackage.id,
-              name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
-            }
+                id: raw.overseerPackage.id,
+                name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
+              }
             : null,
           tags: raw.tagPackages ? raw.tagPackages.map((t: any) => t.tag.name) : [],
           startDate: extractDateTime(raw.startDate),
@@ -138,22 +154,57 @@ export default function DetailPackageHistoryAdmin() {
           closeBookingAt: extractDateTime(raw.bookingCloseDate),
           location: raw.location
             ? {
-              address: raw.location.houseNumber ?? "-",
-              detail: raw.location.detail ?? "-",
-              subDistrict: raw.location.subDistrict,
-              district: raw.location.district,
-              province: raw.location.province,
-              postalCode: raw.location.postalCode,
-              latitude: raw.location.latitude,
-              longitude: raw.location.longitude,
-            }
+                address: raw.location.houseNumber ?? "-",
+                detail: raw.location.detail ?? "-",
+                subDistrict: raw.location.subDistrict,
+                district: raw.location.district,
+                province: raw.location.province,
+                postalCode: raw.location.postalCode,
+                latitude: raw.location.latitude,
+                longitude: raw.location.longitude,
+              }
             : null,
           files: raw.packageFile
             ? raw.packageFile.map((f: any) => ({
-              id: f.id,
-              path: f.filePath,
-              type: f.type,
-            }))
+                id: f.pf_id ?? f.id,
+                path: f.pf_image,
+                type: f.pf_type,
+              }))
+            : [],
+          homestayHistories: raw.homestayHistories
+            ? raw.homestayHistories.map((h: any) => ({
+                id: h.id,
+                guestAmount: h.guestAmount ?? 0,
+                checkInTime: h.checkInTime ?? "",
+                checkOutTime: h.checkOutTime ?? "",
+                bookedRoom: h.bookedRoom ?? undefined,
+                homestay: h.homestay
+                  ? {
+                      id: h.homestay.id,
+                      name: h.homestay.name ?? "",
+                      roomType: h.homestay.roomType ?? "",
+                      capacity: h.homestay.capacity ?? 0,
+                      detail: h.homestay.description ?? h.homestay.detail ?? "-",
+                      facility: h.homestay.facility ?? "",
+                      images: (h.homestay.homestayImage ?? h.homestay.images ?? []).map(
+                        (img: any, idx: number) => ({
+                          id: img.id ?? idx,
+                          path: img.image ?? img.filePath ?? img.path ?? "",
+                          type: img.type ?? "GALLERY",
+                        })
+                      ),
+                      location: h.homestay.location
+                        ? {
+                            subDistrict: h.homestay.location.subDistrict,
+                            district: h.homestay.location.district,
+                            province: h.homestay.location.province,
+                            latitude: h.homestay.location.latitude,
+                            longitude: h.homestay.location.longitude,
+                          }
+                        : null,
+                    }
+                  : null,
+              }))
             : [],
         };
 
@@ -174,14 +225,82 @@ export default function DetailPackageHistoryAdmin() {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!pkg) return <div className="p-6 text-gray-500">ไม่พบข้อมูลแพ็กเกจ</div>;
 
-  const coverImage = pkg.files?.find((f) => f.type === "COVER");
+  const mainImage = pkg.files?.find((img: any) => img.type === "COVER");
+  const extraImages = pkg.files?.filter((img: any) => img.type === "GALLERY");
+
+
+  let homestaySection: JSX.Element | null = null;
+
+  if (pkg.homestayHistories && pkg.homestayHistories.length > 0) {
+    const firstHistory = pkg.homestayHistories[0];
+    const homestay = firstHistory.homestay;
+
+    if (homestay) {
+      const checkIn = extractDateTime(firstHistory.checkInTime);
+      const checkOut = extractDateTime(firstHistory.checkOutTime);
+      const homestayImage = homestay.images?.[0];
+
+      const facilityItems =
+        homestay.facility
+          ?.split(/[,•\n]/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .slice(0, 12) ?? [];
+
+      homestaySection = (
+        <div className="mt-8">
+          <h2 className="font-semibold text-lg mb-2">ที่พักในแพ็กเกจ</h2>
+
+          <div className="flex justify-between text-md text-gray-700 mb-4">
+            <p>
+              <strong>เช็กอิน :</strong>{" "}
+              {checkIn.date ? `${formatDateTH(checkIn.date)} เวลา ${checkIn.time ?? "-"}` : "-"}
+            </p>
+            <p>
+              <strong>เช็กเอาท์ :</strong>{" "}
+              {checkOut.date ? `${formatDateTH(checkOut.date)} เวลา ${checkOut.time ?? "-"}` : "-"}
+            </p>
+          </div>
+
+          <div className="border rounded-2xl p-6 flex gap-6 bg-white shadow-sm">
+            <div className="w-64 h-40 flex-shrink-0 overflow-hidden rounded-xl border">
+              <img
+                className="w-full h-full object-cover"
+                src={
+                  homestayImage?.path
+                    ? `${new URL(apiUrl).origin}/uploads/${homestayImage.path}`
+                    : "https://placehold.co/640x480?text=Homestay"
+                }
+                alt={homestay.name}
+              />
+            </div>
+
+            <div className="flex-1 text-gray-800">
+              <div className="font-semibold text-lg mb-2">{homestay.name}</div>
+
+              {facilityItems.length > 0 && (
+                <div>
+                  <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    {facilityItems.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
 
   /* ----------------------------- จากตรงนี้ลงไปห้ามแก้ ----------------------------- */
 
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb */}
-            {/* <div className="-ml-6 pt-1 pb-1">
+      {/* <div className="-ml-6 pt-1 pb-1">
               <Breadcrumb
                 items={[
                   { label: "ประวัติแพ็กเกจ", to: "/admin/packages/histories" },
@@ -210,6 +329,26 @@ export default function DetailPackageHistoryAdmin() {
             <strong>ชื่อแพ็กเกจ : </strong>
             {pkg.name}
           </p>
+        </div>
+
+        {/* สถานะแพ็กเกจ */}
+        <div className="mb-6">
+          <div className="flex flex-row items-center gap-2">
+            <p className="text-md text-gray-800 font-semibold">สถานะแพ็กเกจ :</p>
+
+            {/* Badge สถานะ */}
+            <span
+              className={`px-4 py-1 rounded-full text-sm font-semibold
+        ${pkg.statusPackage === "PUBLISH" ? "bg-green-200 text-green-700" : ""}
+        ${pkg.statusPackage === "DRAFT" ? "bg-yellow-200 text-yellow-700" : ""}
+        ${pkg.statusPackage === "UNPUBLISH" ? "bg-red-200 text-red-700" : ""}
+        `}
+            >
+              {pkg.statusPackage === "PUBLISH" && "เผยแพร่"}
+              {pkg.statusPackage === "DRAFT" && "ฉบับร่าง"}
+              {pkg.statusPackage === "UNPUBLISH" && "ไม่เผยแพร่"}
+            </span>
+          </div>
         </div>
 
         {/* คำอธิบาย */}
@@ -248,16 +387,22 @@ export default function DetailPackageHistoryAdmin() {
           </p>
         )}
 
-        {/* ภาพหลัก */}
-        {coverImage && (
-          <div className="mb-6">
+        {/* ===== รูปหลัก ===== */}
+        <div className="grid grid-cols-1 md:grid-cols-[55%_auto] gap-10 items-start">
+          {mainImage ? (
             <img
-              src={`${apiUrl}/files/${coverImage.path}`}
-              alt="package cover"
-              className="w-160 h-90 object-cover rounded-xl rounded-lg border-gray-400 border-2"
+              src={`${apiUrl}/uploads${mainImage.path}`}
+              alt="package-main"
+              className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
             />
-          </div>
-        )}
+          ) : (
+            <img
+              src="https://placehold.co/600x400?text=No+Image"
+              alt="package-main"
+              className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
+            />
+          )}
+        </div>
 
         {/* ข้อมูลผู้ดูแล */}
         <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
@@ -326,6 +471,8 @@ export default function DetailPackageHistoryAdmin() {
             </div>
           </div>
         )}
+        {/* ที่พักในแพ็กเกจ (ถ้ามี) */}
+        {homestaySection}
       </div>
     </div>
   );

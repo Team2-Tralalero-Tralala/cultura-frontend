@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronRight, Edit } from "lucide-react";
+import { ChevronRight, Edit, ArrowLeft } from "lucide-react";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
 /**
@@ -157,7 +157,11 @@ const StoreDetailPage = () => {
       {/* Main Section */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-[20px] font-bold">รายละเอียดร้านค้า</h1>
+          {/* Back Button Section */}
+          <div className="mt-1 mr-3 cursor-pointer flex items-center gap-2" onClick={() => navigate("/super/community/:communityId/stores/all")}>
+            <ArrowLeft className="w-5 h-5" />
+            <h1 className="text-[20px] font-bold">รายละเอียดร้านค้า</h1>
+          </div>
 
           {/* ปุ่มแก้ไข */}
           <button

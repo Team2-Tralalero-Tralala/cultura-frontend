@@ -77,7 +77,7 @@ export default function AdminRoutes() {
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
       {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
-      <Route path="stores/:id" element={<StoreDetailAdmin />} />
+      <Route path="community/stores/:id" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:packageId" element={<DetailPackageHistoryAdmin />} />

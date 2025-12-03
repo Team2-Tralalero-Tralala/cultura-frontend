@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronRight, Edit } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
 /**
@@ -145,6 +145,8 @@ const StoreDetailPage = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0] min-h-screen">
 
+      
+
       {/* Breadcrumb Navigation */}
       <Breadcrumb
         current={{
@@ -156,8 +158,13 @@ const StoreDetailPage = () => {
       {/* Main Section */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         {/* Header + ปุ่มแก้ไข */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-[20px] font-bold">รายละเอียดร้านค้า</h1>
+        <div className="flex justify-between items-start mb-3">
+         {/* Back Button Section */}
+          <div className="mt-1 mr-3 cursor-pointer flex items-center gap-2" onClick={() => navigate("/admin/community/stores")}>
+            <ArrowLeft className="w-5 h-5" />
+            <h1 className="text-[20px] font-bold">รายละเอียดร้านค้า</h1>
+          </div>
+
           <button
             onClick={handleEditClick}
             className="flex items-center bg-[#055035] text-white px-4 py-2 rounded-lg hover:bg-green-900 transition"

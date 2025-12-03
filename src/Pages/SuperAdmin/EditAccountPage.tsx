@@ -35,7 +35,7 @@ interface EditAccountBody {
   roleId: number;
   profileImage?: string | null;
   memberOfCommunity?: number | null;
-  communityRole?: string; 
+  communityRole?: string;
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
   province?: string | null;
@@ -91,7 +91,7 @@ const EditAccountPage: React.FC = () => {
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  
+
   const [roleSpecificData, setRoleSpecificData] = useState({
     communityId: "",
     activityRole: "",
@@ -156,10 +156,10 @@ const EditAccountPage: React.FC = () => {
             : "Tourist",
       }));
       setAvatarUrl(user.profileImageUrl || null);
-      
+
       setRoleSpecificData({
         communityId: user.memberOfCommunity ? String(user.memberOfCommunity) : "",
-        activityRole: user.activityRole || "", 
+        activityRole: user.activityRole || "",
         gender: user.gender === "MALE" ? "ชาย" : user.gender === "FEMALE" ? "หญิง" : "ไม่ระบุ",
         birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split("T")[0] : "",
       });
@@ -185,15 +185,15 @@ const EditAccountPage: React.FC = () => {
       const fetchCommunities = async () => {
         setIsCommunityLoading(true);
         try {
-          const res = await api.get("/super/communities?limit=1000"); 
-          
+          const res = await api.get("/super/communities?limit=1000");
+
           let data: CommunityOption[] = [];
           if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-             data = res.data.data.data;
+            data = res.data.data.data;
           } else if (res.data?.data && Array.isArray(res.data.data)) {
-             data = res.data.data;
+            data = res.data.data;
           } else if (Array.isArray(res.data)) {
-             data = res.data;
+            data = res.data;
           }
 
           if (data.length === 0) {
@@ -202,12 +202,12 @@ const EditAccountPage: React.FC = () => {
               const adminCommunity = resAdmin.data?.data;
               if (adminCommunity && adminCommunity.id && adminCommunity.name) {
                 data = [{ id: adminCommunity.id, name: adminCommunity.name }];
-                
+
                 if (!roleSpecificData.communityId) {
-                    setRoleSpecificData(prev => ({
-                        ...prev,
-                        communityId: String(adminCommunity.id)
-                    }));
+                  setRoleSpecificData((prev) => ({
+                    ...prev,
+                    communityId: String(adminCommunity.id),
+                  }));
                 }
               }
             } catch (errAdmin) {
@@ -219,11 +219,13 @@ const EditAccountPage: React.FC = () => {
         } catch (error) {
           console.error("Failed to fetch communities", error);
           try {
-             const resAdmin = await api.get("/admin/community");
-             if (resAdmin.data?.data) {
-                setCommunityOptions([{ id: resAdmin.data.data.id, name: resAdmin.data.data.name }]);
-             }
-          } catch(e) { setCommunityOptions([]); }
+            const resAdmin = await api.get("/admin/community");
+            if (resAdmin.data?.data) {
+              setCommunityOptions([{ id: resAdmin.data.data.id, name: resAdmin.data.data.name }]);
+            }
+          } catch (e) {
+            setCommunityOptions([]);
+          }
         } finally {
           setIsCommunityLoading(false);
         }
@@ -249,16 +251,16 @@ const EditAccountPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (formData.role === "Member") {
-       if (!roleSpecificData.communityId) {
-         toast.error("กรุณาเลือกชุมชน");
-         return;
-       }
-       if (!roleSpecificData.activityRole) {
-         toast.error("กรุณากรอกบทบาทในชุมชน");
-         return;
-       }
+      if (!roleSpecificData.communityId) {
+        toast.error("กรุณาเลือกชุมชน");
+        return;
+      }
+      if (!roleSpecificData.activityRole) {
+        toast.error("กรุณากรอกบทบาทในชุมชน");
+        return;
+      }
     }
 
     try {
@@ -324,11 +326,11 @@ const EditAccountPage: React.FC = () => {
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
       <div className="mb-2">
-        <Breadcrumb 
+        <Breadcrumb
           current={{
             label: "แก้ไขบัญชี",
             to: location.pathname,
-          }} 
+          }}
         />
       </div>
 
@@ -339,15 +341,15 @@ const EditAccountPage: React.FC = () => {
           className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
           title="ย้อนกลับ"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <path d="M19 12H5" />
@@ -419,10 +421,10 @@ const EditAccountPage: React.FC = () => {
                 <label className="font-semibold text-gray-800 block">
                   Role <span className="text-red-500">*</span>
                 </label>
-                
+
                 <button
                   type="button"
-                  onClick={() => navigate(`/super/account/reset-password/${userId}`)} 
+                  onClick={() => navigate(`/super/account/reset-password/${userId}`)}
                   className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
                 >
                   <Icon icon="mdi:lock-reset" className="w-4 h-4" />
@@ -438,8 +440,8 @@ const EditAccountPage: React.FC = () => {
                     onClick={() => handleRoleSelect(roleItem)}
                     className={`min-w-[100px] px-6 py-2 rounded-lg border font-medium transition-all ${
                       formData.role === roleItem
-                        ? "bg-[#0A4B32] text-white border-[#0A4B32]" 
-                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]" 
+                        ? "bg-[#0A4B32] text-white border-[#0A4B32]"
+                        : "bg-white border-gray-300 text-gray-600 hover:border-[#0A4B32] hover:text-[#0A4B32]"
                     }`}
                   >
                     {roleItem}
@@ -491,7 +493,7 @@ const EditAccountPage: React.FC = () => {
                               focus:outline-none focus:ring-1 transition-shadow pr-10"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
-                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
+                            <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
                         </div>
                       );
@@ -505,10 +507,10 @@ const EditAccountPage: React.FC = () => {
                   placeholder="กรอกบทบาทในชุมชน"
                   required
                   value={roleSpecificData.activityRole}
-                  onChange={(e) => 
+                  onChange={(e) =>
                     setRoleSpecificData((prev) => ({
                       ...prev,
-                      activityRole: e.target.value
+                      activityRole: e.target.value,
                     }))
                   }
                 />
@@ -535,12 +537,13 @@ const EditAccountPage: React.FC = () => {
                     <label className="font-semibold text-gray-800 block mb-1">เพศ</label>
                     <div className="flex gap-4">
                       {["ชาย", "หญิง", "ไม่ระบุ"].map((genderLabel) => (
-                        <label key={genderLabel} className="flex items-center gap-2">
+                        <label key={genderLabel} className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="gender"
                             value={genderLabel}
                             checked={roleSpecificData.gender === genderLabel}
+                            className="accent-[#0A4B32] w-4 h-4 cursor-pointer"
                             onChange={(event) =>
                               setRoleSpecificData((previousState) => ({
                                 ...previousState,

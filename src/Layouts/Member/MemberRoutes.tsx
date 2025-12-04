@@ -10,12 +10,14 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import PackageDraftMember from '@/Pages/Member/PackageDraftMember';
 
 export default function MemberRoutes() {
   return (
     <Routes>
       
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="packages/draft" element={<PackageDraftMember />} />
     </Routes>
   );
 }

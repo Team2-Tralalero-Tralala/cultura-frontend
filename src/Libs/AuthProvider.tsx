@@ -20,6 +20,7 @@ export type AuthUser = {
   role: Role;
 };
 
+
 type AuthContextValue = {
   user: AuthUser | null;
   accessToken: string | null;

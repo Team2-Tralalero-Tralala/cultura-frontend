@@ -288,7 +288,7 @@ export default function FeddbackAll() {
             setErrorMessage(null);
 
             const response = await axios.get<ApiResponse>(
-                `${apiBaseUrl}/api/packages/admin/package/feedbacks/all`,
+                `${apiBaseUrl}/packages/admin/package/feedbacks/all`,
                 { withCredentials: true }
             );
             const communityData = response.data?.data;
@@ -359,7 +359,7 @@ export default function FeddbackAll() {
             })
             .filter((g) =>
                 g.feedbacks.length > 0 ||
-                g.title.toLowerCase().includes(q) 
+                g.title.toLowerCase().includes(q)
             );
     }, [packageGroups, searchQuery]);
 

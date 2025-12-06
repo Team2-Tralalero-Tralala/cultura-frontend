@@ -652,7 +652,7 @@ export default function CommunityDetailAdmin() {
                 <Section
                   title="แพ็กเกจ"
                   count={pkgs.length}
-                  onManage={() => navigate(`/admin/packages`)}
+                  onManage={() => navigate(`/admin/packages/all`)}
                 >
                   {pkgs.length ? (
                     <div className="space-y-4">

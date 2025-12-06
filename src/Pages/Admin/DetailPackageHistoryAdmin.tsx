@@ -21,6 +21,12 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 
+/**
+ * ค่าคงที่ : apiUrl
+ * คำอธิบาย : ใช้เก็บ base URL ของ API ที่ดึงมาจาก environment variable
+ * Input  : -
+ * Output : string | undefined (ค่าของ VITE_API_URL)
+ */
 const apiUrl = import.meta.env.VITE_API_URL;
 
 // ================== Helper Interfaces ==================
@@ -46,6 +52,25 @@ interface LocationData {
   longitude: number;
 }
 
+interface HomestayData {
+  id: number;
+  name: string;
+  roomType: string;
+  capacity: number;
+  detail: string;
+  facility?: string;
+  images: { id: number; path: string; type: string }[];
+  location?:
+    | {
+        subDistrict?: string;
+        district?: string;
+        province?: string;
+        latitude?: number;
+        longitude?: number;
+      }
+    | null;
+}
+
 interface HomestayHistory {
   id: number;
   guestAmount: number;
@@ -54,6 +79,7 @@ interface HomestayHistory {
   bookedRoom?: number;
   homestay?: HomestayData | null;
 }
+
 interface PackageFile {
   id: number;
   path: string;
@@ -85,23 +111,32 @@ interface PackageData {
 
 // ================== Helper Functions ==================
 
-function formatDateTH(dateStr: string | null) {
+/**
+ * ฟังก์ชัน : formatDateTH
+ * คำอธิบาย : แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
+ * Input  : dateStr: string | null (ข้อความวันที่ในรูปแบบ ISO หรือ null)
+ * Output : string (วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล)
+ */
+function formatDateTH(dateStr: string | null): string {
   if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
+  const dateObject = new Date(dateStr);
+  const day = String(dateObject.getDate()).padStart(2, "0");
+  const month = String(dateObject.getMonth() + 1).padStart(2, "0");
+  const year = dateObject.getFullYear();
   return `${day}/${month}/${year}`;
 }
 
 /**
- * แยกวันที่และเวลาออกจาก ISO string
+ * ฟังก์ชัน : extractDateTime
+ * คำอธิบาย : แยกวันที่และเวลาออกจาก ISO string (เช่น "2025-01-01T08:30:00.000Z")
+ * Input  : isoString?: string | null (ข้อความวันที่-เวลาในรูปแบบ ISO หรือ null)
+ * Output : วัตถุที่ประกอบด้วยวันที่ (date) และเวลา (time) เช่น { date: "2025-01-01", time: "08:30" }
  */
-function extractDateTime(isoString?: string | null) {
+function extractDateTime(isoString?: string | null): DateTimeField {
   if (!isoString) return { date: null, time: null };
-  const d = new Date(isoString);
-  const date = d.toISOString().split("T")[0];
-  const time = d.toTimeString().split(" ")[0].slice(0, 5);
+  const dateObject = new Date(isoString);
+  const date = dateObject.toISOString().split("T")[0];
+  const time = dateObject.toTimeString().split(" ")[0].slice(0, 5);
   return { date, time };
 }
 
@@ -118,97 +153,122 @@ export default function DetailPackageHistoryAdmin() {
     async function fetchPackage() {
       try {
         setLoading(true);
-        const res = await axios.get(`${apiUrl}/admin/package/${id}`, {
+        const response = await axios.get(`${apiUrl}/admin/package/${id}`, {
           withCredentials: true,
         });
 
-        const raw = res.data.data;
+        const packageRawData = response.data.data;
 
-        const mapped: PackageData = {
-          id: raw.id,
-          name: raw.name,
-          description: raw.description ?? "-",
-          capacity: raw.capacity ?? 0,
-          price: raw.price ?? 0,
-          facility: raw.facility ?? "-",
-          warning: raw.warning ?? "-",
-          statusPackage: raw.statusPackage ?? "-",
-          statusApprove: raw.statusApprove ?? null,
-          rejectReason: raw.rejectReason ?? null,
-          createdBy: raw.createPackage
+        const mappedPackageDetail: PackageData = {
+          id: packageRawData.id,
+          name: packageRawData.name,
+          description: packageRawData.description ?? "-",
+          capacity: packageRawData.capacity ?? 0,
+          price: packageRawData.price ?? 0,
+          facility: packageRawData.facility ?? "-",
+          warning: packageRawData.warning ?? "-",
+          statusPackage: packageRawData.statusPackage ?? "-",
+          statusApprove: packageRawData.statusApprove ?? null,
+          rejectReason: packageRawData.rejectReason ?? null,
+          createdBy: packageRawData.createPackage
             ? {
-                id: raw.createPackage.id,
-                name: `${raw.createPackage.fname} ${raw.createPackage.lname}`,
+                id: packageRawData.createPackage.id,
+                name: `${packageRawData.createPackage.fname} ${packageRawData.createPackage.lname}`,
               }
             : null,
-          overseer: raw.overseerPackage
+          overseer: packageRawData.overseerPackage
             ? {
-                id: raw.overseerPackage.id,
-                name: `${raw.overseerPackage.fname} ${raw.overseerPackage.lname}`,
+                id: packageRawData.overseerPackage.id,
+                name: `${packageRawData.overseerPackage.fname} ${packageRawData.overseerPackage.lname}`,
               }
             : null,
-          tags: raw.tagPackages ? raw.tagPackages.map((t: any) => t.tag.name) : [],
-          startDate: extractDateTime(raw.startDate),
-          dueDate: extractDateTime(raw.dueDate),
-          openBookingAt: extractDateTime(raw.bookingOpenDate),
-          closeBookingAt: extractDateTime(raw.bookingCloseDate),
-          location: raw.location
-            ? {
-                address: raw.location.houseNumber ?? "-",
-                detail: raw.location.detail ?? "-",
-                subDistrict: raw.location.subDistrict,
-                district: raw.location.district,
-                province: raw.location.province,
-                postalCode: raw.location.postalCode,
-                latitude: raw.location.latitude,
-                longitude: raw.location.longitude,
-              }
-            : null,
-          files: raw.packageFile
-            ? raw.packageFile.map((f: any) => ({
-                id: f.pf_id ?? f.id,
-                path: f.pf_image,
-                type: f.pf_type,
-              }))
+          tags: packageRawData.tagPackages
+            ? packageRawData.tagPackages.map(
+                (tagItem: any) => tagItem.tag.name
+              )
             : [],
-          homestayHistories: raw.homestayHistories
-            ? raw.homestayHistories.map((h: any) => ({
-                id: h.id,
-                guestAmount: h.guestAmount ?? 0,
-                checkInTime: h.checkInTime ?? "",
-                checkOutTime: h.checkOutTime ?? "",
-                bookedRoom: h.bookedRoom ?? undefined,
-                homestay: h.homestay
-                  ? {
-                      id: h.homestay.id,
-                      name: h.homestay.name ?? "",
-                      roomType: h.homestay.roomType ?? "",
-                      capacity: h.homestay.capacity ?? 0,
-                      detail: h.homestay.description ?? h.homestay.detail ?? "-",
-                      facility: h.homestay.facility ?? "",
-                      images: (h.homestay.homestayImage ?? h.homestay.images ?? []).map(
-                        (img: any, idx: number) => ({
-                          id: img.id ?? idx,
-                          path: img.image ?? img.filePath ?? img.path ?? "",
-                          type: img.type ?? "GALLERY",
-                        })
-                      ),
-                      location: h.homestay.location
-                        ? {
-                            subDistrict: h.homestay.location.subDistrict,
-                            district: h.homestay.location.district,
-                            province: h.homestay.location.province,
-                            latitude: h.homestay.location.latitude,
-                            longitude: h.homestay.location.longitude,
-                          }
-                        : null,
-                    }
-                  : null,
-              }))
+          startDate: extractDateTime(packageRawData.startDate),
+          dueDate: extractDateTime(packageRawData.dueDate),
+          openBookingAt: extractDateTime(packageRawData.bookingOpenDate),
+          closeBookingAt: extractDateTime(packageRawData.bookingCloseDate),
+          location: packageRawData.location
+            ? {
+                address: packageRawData.location.houseNumber ?? "-",
+                detail: packageRawData.location.detail ?? "-",
+                subDistrict: packageRawData.location.subDistrict,
+                district: packageRawData.location.district,
+                province: packageRawData.location.province,
+                postalCode: packageRawData.location.postalCode,
+                latitude: packageRawData.location.latitude,
+                longitude: packageRawData.location.longitude,
+              }
+            : null,
+          files: packageRawData.packageFile
+            ? packageRawData.packageFile.map(
+                (fileItem: any): PackageFile => ({
+                  id: fileItem.pf_id ?? fileItem.id,
+                  path: fileItem.pf_image,
+                  type: fileItem.pf_type,
+                })
+              )
+            : [],
+          homestayHistories: packageRawData.homestayHistories
+            ? packageRawData.homestayHistories.map(
+                (homestayHistoryItem: any): HomestayHistory => ({
+                  id: homestayHistoryItem.id,
+                  guestAmount: homestayHistoryItem.guestAmount ?? 0,
+                  checkInTime: homestayHistoryItem.checkInTime ?? "",
+                  checkOutTime: homestayHistoryItem.checkOutTime ?? "",
+                  bookedRoom: homestayHistoryItem.bookedRoom ?? undefined,
+                  homestay: homestayHistoryItem.homestay
+                    ? {
+                        id: homestayHistoryItem.homestay.id,
+                        name: homestayHistoryItem.homestay.name ?? "",
+                        roomType: homestayHistoryItem.homestay.roomType ?? "",
+                        capacity: homestayHistoryItem.homestay.capacity ?? 0,
+                        detail:
+                          homestayHistoryItem.homestay.description ??
+                          homestayHistoryItem.homestay.detail ??
+                          "-",
+                        facility: homestayHistoryItem.homestay.facility ?? "",
+                        images: (
+                          homestayHistoryItem.homestay.homestayImage ??
+                          homestayHistoryItem.homestay.images ??
+                          []
+                        ).map(
+                          (imageItem: any, imageIndex: number) => ({
+                            id: imageItem.id ?? imageIndex,
+                            path:
+                              imageItem.image ??
+                              imageItem.filePath ??
+                              imageItem.path ??
+                              "",
+                            type: imageItem.type ?? "GALLERY",
+                          })
+                        ),
+                        location: homestayHistoryItem.homestay.location
+                          ? {
+                              subDistrict:
+                                homestayHistoryItem.homestay.location
+                                  .subDistrict,
+                              district:
+                                homestayHistoryItem.homestay.location.district,
+                              province:
+                                homestayHistoryItem.homestay.location.province,
+                              latitude:
+                                homestayHistoryItem.homestay.location.latitude,
+                              longitude:
+                                homestayHistoryItem.homestay.location.longitude,
+                            }
+                          : null,
+                      }
+                    : null,
+                })
+              )
             : [],
         };
 
-        setPkg(mapped);
+        setPkg(mappedPackageDetail);
       } catch (err) {
         console.error("Error fetching package:", err);
         setError("ไม่สามารถโหลดข้อมูลแพ็กเกจได้");

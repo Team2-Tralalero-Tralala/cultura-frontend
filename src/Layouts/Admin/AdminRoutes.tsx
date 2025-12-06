@@ -37,6 +37,7 @@ import EditPackagePage from "@/Pages/Admin/EditPackagePage";
 import ManagePackagePage from "@/Pages/Admin/ManagePackagePage";
 import CreatePackagePage from "@/Pages/Admin/CreatePackagePage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -91,8 +92,8 @@ export default function AdminRoutes() {
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />
-
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="package/:id" element={<DetailPackageAdmin />} />
     </Routes>
   );
 }

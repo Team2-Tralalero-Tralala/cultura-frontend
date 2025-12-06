@@ -112,3 +112,77 @@ export async function updateBookingStatus(
     { withCredentials: true }
   );
 }
+
+/*
+ * ฟังก์ชัน : fetchBookingsByMember
+ * คำอธิบาย : ดึงรายการการจองของแพ็กเกจที่ Member คนนั้นเป็นผู้ดูแล (overseerMember)
+ * Method : GET
+ * Path   : /member/booking-histories
+ * Query  :
+ *   - page   : หน้า (default 1)
+ *   - limit  : จำนวนต่อหน้า (default 10)
+ *   - status : (optional) ใช้กรองสถานะ เช่น PENDING, REFUND_PENDING, BOOKED, ...
+ */
+export async function fetchBookingsByMember(
+  page = 1,
+  limit = 10,
+  status?: string
+): Promise<{
+  data: BookingAdminDtoFromApi[]; // ใช้โครงเดียวกับ admin ได้เลย
+  pagination: Pagination;
+}> {
+  const res = await axios.get(`${apiUrl}/member/booking-histories`, {
+    params: { page, limit, status },
+    withCredentials: true,
+  });
+
+  const payload = res.data?.data ?? {};
+  return {
+    data: (payload.data ?? []) as BookingAdminDtoFromApi[],
+    pagination: (payload.pagination ?? {
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0,
+      limit,
+    }) as Pagination,
+  };
+}
+
+/**
+ * ฟังก์ชัน : updateBookingStatusByMember
+ * คำอธิบาย : อัปเดตสถานะของการจอง (ใช้โดย Member – overseer ของแพ็กเกจนั้น)
+ * Method : POST
+ * Path   : /member/bookings/:id/status
+ */
+export async function updateBookingStatusByMember(
+  bookingId: number,
+  status: "BOOKED" | "REJECTED" | "REFUNDED" | "REFUND_REJECTED",
+  rejectReason?: string
+): Promise<void> {
+  const isRejectStatus =
+    status === "REJECTED" || status === "REFUND_REJECTED";
+
+  // เตรียม reason ที่ trim แล้ว (ถ้าไม่มีจะเป็น undefined)
+  const trimmedReason = rejectReason?.trim();
+
+  // ถ้าเป็นสถานะปฏิเสธ แต่ไม่มีเหตุผล → error ทันที
+  if (isRejectStatus && !trimmedReason) {
+    throw new Error("กรุณากรอกเหตุผลการปฏิเสธ");
+  }
+
+  const body: {
+    status: string;
+    rejectReason?: string;
+  } = { status };
+
+  // เพิ่ม rejectReason เฉพาะตอนเป็นสถานะปฏิเสธ และมีค่าแน่นอนแล้ว
+  if (isRejectStatus && trimmedReason) {
+    body.rejectReason = trimmedReason;
+  }
+
+  await axios.post(
+    `${apiUrl}/member/bookings/${bookingId}/status`,
+    body,
+    { withCredentials: true }
+  );
+}

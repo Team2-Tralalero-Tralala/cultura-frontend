@@ -32,7 +32,8 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 const makeColumns = (
   onApprove: (row: BookingRow) => void,
   onReject: (row: BookingRow) => void,
-  onNavigate: (id: number) => void
+  onNavigate: (id: number) => void,
+  onOpenSlip: (url: string) => void
 ): Column<BookingRow>[] => [
   {
     key: "touristName",
@@ -83,12 +84,42 @@ const makeColumns = (
       return <div>{map[status ?? ""] ?? "-"}</div>;
     },
   },
-  {
-    key: "transferSlip",
-    header: "หลักฐาน",
-    className: "min-w-[180px]",
-    render: (r) => <div>{r.transferSlip ?? "-"}</div>,
+   {
+  key: "transferSlip",
+  header: "หลักฐาน",
+  className: "min-w-[180px]",
+  render: (r) => {
+    const slip = r.transferSlip ?? "-";
+
+    if (!slip || slip === "-") {
+      return <div>-</div>;
+    }
+
+    // ดึงชื่อไฟล์
+    const fileName = slip.split("/").pop() ?? slip;
+
+    return (
+      <button
+        type="button"
+        onClick={() => onOpenSlip(slip)}   // ✅ ใช้ path เต็ม เปิดรูป
+        title={fileName}                  // ✅ hover ดูชื่อเต็ม
+        className="
+          text-[#4A816F]
+          underline underline-offset-2
+          hover:text-[#2f5b49]
+          max-w-[180px]
+          truncate
+          block
+          text-left
+        "
+      >
+        {fileName}
+      </button>
+    );
   },
+},
+
+
   {
     key: "actions",
     header: (
@@ -98,21 +129,47 @@ const makeColumns = (
     ),
     className: "w-[200px] text-center pr-2",
     render: (r) => (
-      <div className="flex justify-center items-center gap-3">
-        <div className="w-[76px] [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-          {/* เปิด Modal ปฏิเสธ */}
-          <Button type="cancel" onClick={() => onReject(r)}>
-            ปฏิเสธ
-          </Button>
-        </div>
-        <div className="w-[76px] [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-          {/* เปิด Modal อนุมัติ */}
-          <Button type="confirm-admin" onClick={() => onApprove(r)}>
-            อนุมัติ
-          </Button>
-        </div>
-      </div>
-    ),
+  <div className="flex justify-center items-center gap-3">
+    {/* ปุ่มปฏิเสธ */}
+    <button
+      onClick={() => onReject(r)}
+      className="
+        w-[77px]
+        h-[31px]
+        text-[16px]
+        rounded-md
+        border border-[#4A816F]
+        bg-white
+        text-[#4A816F]
+        hover:bg-[#E6F0EC]
+        transition-colors
+        duration-200
+      "
+    >
+      ปฏิเสธ
+    </button>
+
+    {/* ปุ่มอนุมัติ */}
+    <button
+      onClick={() => onApprove(r)}
+      className="
+        w-[77px]
+        h-[31px]
+        text-[16px]
+        rounded-md
+        bg-[#4A816F]
+        text-white
+        hover:bg-[#3B6D5D]
+        transition-colors
+        duration-200
+      "
+    >
+      อนุมัติ
+    </button>
+  </div>
+),
+
+
   },
 ];
 
@@ -140,6 +197,22 @@ export default function ManageBookingAdmin() {
   const [rejectOpen, setRejectOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<BookingRow | null>(null);
 
+    // Modal ดูรูปหลักฐานการโอน
+  const [slipOpen, setSlipOpen] = React.useState(false);
+  const [slipUrl, setSlipUrl] = React.useState<string | null>(null);
+
+  const openSlipModal = (url: string) => {
+    // กันกรณีเป็น "-" หรือค่าว่าง
+    if (!url || url === "-") return;
+    setSlipUrl(url);
+    setSlipOpen(true);
+  };
+
+  const closeSlipModal = () => {
+    setSlipOpen(false);
+    setSlipUrl(null);
+  };
+
   // ตัวเลือกสถานะใน filter
   const statusOptions = [
     { label: "ทั้งหมด", value: "all" },
@@ -159,14 +232,28 @@ export default function ManageBookingAdmin() {
       }: PaginationResponse<BookingAdminDtoFromApi> =
         await fetchBookingsByAdmin(currentPage, pageSize);
 
-      const mapped: BookingRow[] = data.map((b) => ({
-        id: b.id ?? b.bh_id,
-        touristName: `${b.tourist?.fname ?? ""} ${b.tourist?.lname ?? ""}`.trim(),
-        packageName: b.package?.name ?? "-",
-        totalPrice: `฿${(b.totalPrice ?? 0).toLocaleString()}`,
-        status: b.status ?? "-",
-        transferSlip: b.transferSlip ?? "-",
-      }));
+      const mapped: BookingRow[] = data.map((b) => {
+  const rawSlip = b.transferSlip ?? "";
+
+  // 1) แก้ \ ให้เป็น / (จาก windows path → url path)
+  let normalizedPath = rawSlip.replace(/\\/g, "/");
+
+  // 2) ถ้าไม่ใช่ URL เต็ม (ไม่มี http) ให้เติมโดเมนจาก .env
+  if (normalizedPath && !normalizedPath.startsWith("http")) {
+    normalizedPath = `${import.meta.env.VITE_FILE_URL}/${normalizedPath}`;
+
+  }
+
+  return {
+    id: b.id ?? b.bh_id,
+    touristName: `${b.tourist?.fname ?? ""} ${b.tourist?.lname ?? ""}`.trim(),
+    packageName: b.package?.name ?? "-",
+    totalPrice: `฿${(b.totalPrice ?? 0).toLocaleString()}`,
+    status: b.status ?? "-",
+    transferSlip: normalizedPath || "-",   // ใช้ path ที่จัดการแล้ว
+  };
+});
+
 
       setRows(mapped);
       setPagination(pg);
@@ -306,7 +393,8 @@ export default function ManageBookingAdmin() {
         columns={makeColumns(
           openApproveModal,
           openRejectModal,
-          (id) => navigate(`/admin/booking/${id}`)
+          (id) => navigate(`/admin/booking/${id}`),
+          openSlipModal
         )}
         getKey={(r: BookingRow) => String(r.id)}
         selectable
@@ -396,6 +484,34 @@ export default function ManageBookingAdmin() {
           setSelectedRow(null);
         }}
       />
+            {/* Modal: แสดงรูปหลักฐานการโอน (แบบเต็มจอ) */}
+      {slipOpen && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40">
+          {/* กล่องเทาอ่อนตรงกลาง */}
+          <div className="relative bg-[#E5E5E5] rounded-[24px] shadow-lg max-w-5xl w-[90%]">
+            {/* ปุ่มปิดมุมขวาบน */}
+            <button
+              type="button"
+              onClick={closeSlipModal}
+              className="absolute right-4 top-3 text-2xl leading-none text-gray-700 hover:text-black"
+            >
+              ×
+            </button>
+
+            {/* เนื้อหา: รูปสลิป */}
+            <div className="p-6 flex justify-center">
+              {slipUrl && (
+                <img
+                  src={slipUrl}
+                  alt="หลักฐานการโอน"
+                  className="max-h-[80vh] max-w-full rounded-[16px]"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

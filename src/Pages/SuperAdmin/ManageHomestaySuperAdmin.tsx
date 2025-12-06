@@ -178,7 +178,7 @@ export default function ManageHomestaySuperAdmin() {
       id: "bulk-delete",
       label: "ลบทั้งหมด",
       icon: TrashIcon,
-      intent: "danger",
+      intent: "neutral",
       confirm: (rows) => `ยืนยันลบที่พักจำนวน ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         const ids = rows.map((r) => r.id);

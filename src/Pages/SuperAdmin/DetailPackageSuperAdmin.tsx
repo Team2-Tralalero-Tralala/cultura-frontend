@@ -312,13 +312,13 @@ export default function DetailPackageSuperAdmin() {
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb */}
-      <div className="-ml-6 pt-1 pb-1">
-        {/* <Breadcrumb
-          items={[
-            { label: "จัดการแพ็กเกจ", to: "/super/packages/all" },
-            { label: pkg?.name || "แพ็กเกจ" },
-          ]}
-        /> */}
+      <div>
+        <Breadcrumb
+          current={{
+            label: "รายละเอียดแพ็กเกจ",
+            to: `/super/package/${id}`,
+          }}
+        />
       </div>
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}

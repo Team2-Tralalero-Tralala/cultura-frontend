@@ -6,7 +6,7 @@
  *   สามารถกดแก้ไขข้อมูลได้ และแสดงข้อมูลผู้สร้าง, ผู้ดูแล, วันที่เปิด-ปิดจอง,
  *   สิ่งอำนวยความสะดวก, และแผนที่ตำแหน่งสถานที่จากข้อมูลใน backend
  * Input :
- *   - packageId : หมายเลขรหัสแพ็กเกจ (จาก useParams)
+ *   - id : หมายเลขรหัสแพ็กเกจ (จาก useParams)
  * Output :
  *   - แสดงหน้า UI รายละเอียดแพ็กเกจ หรือข้อความ error หากไม่พบข้อมูล
  */
@@ -108,7 +108,7 @@ function extractDateTime(isoString?: string | null) {
 // ================== Main Component ==================
 
 export default function DetailPackageHistoryAdmin() {
-  const { packageId } = useParams<{ packageId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [pkg, setPkg] = useState<PackageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +118,7 @@ export default function DetailPackageHistoryAdmin() {
     async function fetchPackage() {
       try {
         setLoading(true);
-        const res = await axios.get(`${apiUrl}/admin/package/${packageId}`, {
+        const res = await axios.get(`${apiUrl}/admin/package/${id}`, {
           withCredentials: true,
         });
 
@@ -218,7 +218,7 @@ export default function DetailPackageHistoryAdmin() {
     }
 
     fetchPackage();
-  }, [packageId]);
+  }, [id]);
 
   // ================== Loading / Error ==================
   if (loading) return <div className="p-6 text-gray-500">กำลังโหลดข้อมูล...</div>;
@@ -227,7 +227,6 @@ export default function DetailPackageHistoryAdmin() {
 
   const mainImage = pkg.files?.find((img: any) => img.type === "COVER");
   const extraImages = pkg.files?.filter((img: any) => img.type === "GALLERY");
-
 
   let homestaySection: JSX.Element | null = null;
 
@@ -300,14 +299,14 @@ export default function DetailPackageHistoryAdmin() {
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb */}
-      {/* <div className="-ml-6 pt-1 pb-1">
-              <Breadcrumb
-                items={[
-                  { label: "ประวัติแพ็กเกจ", to: "/admin/packages/histories" },
-                  { label: pkg?.name || "แพ็กเกจ" },
-                ]}
-              />
-            </div> */}
+      <div>
+        <Breadcrumb
+          current={{
+            label: "รายละเอียดแพ็กเกจ",
+            to: `/admin/packages/history/${id}`,
+          }}
+        />
+      </div>
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
 

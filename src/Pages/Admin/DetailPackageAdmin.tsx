@@ -39,15 +39,13 @@ interface HomestayData {
   detail: string;
   facility?: string;
   images: { id: number; path: string; type: string }[];
-  location?:
-    | {
-        subDistrict?: string;
-        district?: string;
-        province?: string;
-        latitude?: number;
-        longitude?: number;
-      }
-    | null;
+  location?: {
+    subDistrict?: string;
+    district?: string;
+    province?: string;
+    latitude?: number;
+    longitude?: number;
+  } | null;
 }
 
 interface HomestayHistory {
@@ -257,15 +255,11 @@ export default function DetailPackageAdmin() {
           <div className="flex justify-between text-md text-gray-700 mb-4">
             <p>
               <strong>เช็กอิน :</strong>{" "}
-              {checkIn.date
-                ? `${formatDateTH(checkIn.date)} เวลา ${checkIn.time ?? "-"}`
-                : "-"}
+              {checkIn.date ? `${formatDateTH(checkIn.date)} เวลา ${checkIn.time ?? "-"}` : "-"}
             </p>
             <p>
               <strong>เช็กเอาท์ :</strong>{" "}
-              {checkOut.date
-                ? `${formatDateTH(checkOut.date)} เวลา ${checkOut.time ?? "-"}`
-                : "-"}
+              {checkOut.date ? `${formatDateTH(checkOut.date)} เวลา ${checkOut.time ?? "-"}` : "-"}
             </p>
           </div>
 
@@ -304,16 +298,15 @@ export default function DetailPackageAdmin() {
 
   return (
     <div className="w-full space-y-4">
-      {/* Breadcrumb (ถ้าจะใช้ฝั่ง Admin ค่อยเปลี่ยน path ทีหลัง) */}
-      <div className="-ml-6 pt-1 pb-1">
-        {/* <Breadcrumb
-          items={[
-            { label: "จัดการแพ็กเกจ", to: "/admin/package/histories" },
-            { label: pkg?.name || "แพ็กเกจ" },
-          ]}
-        /> */}
+      {/* Breadcrumb */}
+      <div>
+        <Breadcrumb
+          current={{
+            label: "รายละเอียดแพ็กเกจ",
+            to: `/admin/package/${id}`,
+          }}
+        />
       </div>
-
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
@@ -390,18 +383,12 @@ export default function DetailPackageAdmin() {
           </div>
         </div>
 
-
         {/* แท็ก */}
         {pkg.tags?.length > 0 && (
           <div className="mb-6 flex gap-2 flex-row">
             <strong>แท็ก :</strong>{" "}
             {pkg.tags.map((t, i) => (
-              <Tag
-                key={i}
-                label={t}
-                sizeClass="w-20 h-8"
-                className="text-black bg-white"
-              />
+              <Tag key={i} label={t} sizeClass="w-20 h-8" className="text-black bg-white" />
             ))}
           </div>
         )}
@@ -431,11 +418,9 @@ export default function DetailPackageAdmin() {
             </p>
             <p className="mb-6">
               <strong>วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ : </strong>{" "}
-              {formatDateTH(pkg.startDate?.date)} -{" "}
-              {formatDateTH(pkg.dueDate?.date)}
+              {formatDateTH(pkg.startDate?.date)} - {formatDateTH(pkg.dueDate?.date)}
               <br />
-              <strong>เวลา : </strong> {pkg.startDate?.time || "-"} -{" "}
-              {pkg.dueDate?.time || "-"}
+              <strong>เวลา : </strong> {pkg.startDate?.time || "-"} - {pkg.dueDate?.time || "-"}
             </p>
           </div>
 
@@ -445,8 +430,7 @@ export default function DetailPackageAdmin() {
             </p>
             <p className="mb-6">
               <strong>วันที่เปิด - วันที่ปิดการจอง : </strong>{" "}
-              {formatDateTH(pkg.openBookingAt?.date)} -{" "}
-              {formatDateTH(pkg.closeBookingAt?.date)}
+              {formatDateTH(pkg.openBookingAt?.date)} - {formatDateTH(pkg.closeBookingAt?.date)}
               <br />
               <strong>เวลา : </strong> {pkg.openBookingAt?.time || "-"} -{" "}
               {pkg.closeBookingAt?.time || "-"}
@@ -457,8 +441,7 @@ export default function DetailPackageAdmin() {
         {/* สิ่งอำนวยความสะดวกแพ็กเกจ */}
         <div className="mb-6">
           <p>
-            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong>{" "}
-            {pkg.facility || "-"}
+            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {pkg.facility || "-"}
           </p>
         </div>
 
@@ -470,23 +453,20 @@ export default function DetailPackageAdmin() {
               title="map"
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${
                 pkg.location.longitude - 0.01
-              },${pkg.location.latitude - 0.01},${
-                pkg.location.longitude + 0.01
-              },${pkg.location.latitude + 0.01}&layer=mapnik&marker=${
-                pkg.location.latitude
-              },${pkg.location.longitude}`}
+              },${pkg.location.latitude - 0.01},${pkg.location.longitude + 0.01},${
+                pkg.location.latitude + 0.01
+              }&layer=mapnik&marker=${pkg.location.latitude},${pkg.location.longitude}`}
               className="w-full h-96 rounded-xl border"
             ></iframe>
             <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
               <div className="mt-6">
                 <p className="mb-4">
-                  <strong>ที่อยู่ :</strong> {pkg.location.address}{" "}
-                  {pkg.location.subDistrict} {pkg.location.district}{" "}
-                  {pkg.location.province} {pkg.location.postalCode}
+                  <strong>ที่อยู่ :</strong> {pkg.location.address} {pkg.location.subDistrict}{" "}
+                  {pkg.location.district} {pkg.location.province} {pkg.location.postalCode}
                 </p>
                 <p>
-                  <strong>ละติจูด / ลองจิจูด : </strong>{" "}
-                  {pkg.location.latitude}, {pkg.location.longitude}
+                  <strong>ละติจูด / ลองจิจูด : </strong> {pkg.location.latitude},{" "}
+                  {pkg.location.longitude}
                 </p>
               </div>
               <div className="mt-6">

@@ -7,15 +7,16 @@
  * - รวมทุกหน้าในหมวดหมู่ "สมาชิก"
  * - ระบุ path และ component ที่ควรแสดงเมื่อเข้าหน้านั้น
  */
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import { DashboardPage } from "@/Pages/Member/DashboardPage";
 
 export default function MemberRoutes() {
   return (
     <Routes>
-      
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
     </Routes>
   );
 }

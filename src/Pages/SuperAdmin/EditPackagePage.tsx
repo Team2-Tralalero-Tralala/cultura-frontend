@@ -101,7 +101,9 @@ function toDateOnly(input?: string | Date | null) {
  * Output : Promise<File>
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    credentials: "include",
+  });
   if (!response.ok) throw new Error(`fetch ${url} -> ${response.status}`);
   const blob = await response.blob();
   const extension = filename.split(".").pop() || "jpg";

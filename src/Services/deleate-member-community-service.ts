@@ -1,11 +1,15 @@
 /*
- * คำอธิบาย : Service สำหรับ "ลบสมาชิก" ผ่าน Backend API
+ * คำอธิบาย : Service สำหรับจัดการข้อมูลสมาชิกชุมชน (Community Members)
+ * ฟังก์ชัน deleteCommunityMember() ใช้สำหรับ "ลบสมาชิก" ผ่าน Backend API
+ * หมายเหตุ:
+ *  - ใช้ฐาน URL จาก .env: VITE_API_URL (fallback localhost)
+ *  - ใช้ axios และแนบ credentials
  */
 
 import axios from "axios";
 
-const apiUrl =
-  import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+/** ค่าฐาน URL ของ API (ควรลงท้ายโดยไม่มี /) */
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 /**
  * ฟังก์ชัน : deleteCommunityMember
@@ -15,10 +19,10 @@ const apiUrl =
  */
 export async function deleteCommunityMember(memberId: number) {
   const res = await axios.patch(
-  `${apiUrl}/admin/member/${memberId}`,
-  {},
-  { withCredentials: true }
-);
+    `${apiUrl}/admin/member/${memberId}`,
+    {},
+    { withCredentials: true }
+  );
 
   return res.data;
 }

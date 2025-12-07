@@ -32,7 +32,8 @@ export default function CommunitySelector({ value = null, onChange }: CommunityS
     const fetchCommunities = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:3000/api/super/communities", {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.get(`${apiUrl}/super/communities`, {
           params: { search: inputValue },
           withCredentials: true,
         });

@@ -1,14 +1,15 @@
 /*
- * Component: EditAccountPage
- * Description: หน้าสำหรับแก้ไขข้อมูลบัญชีผู้ใช้เดิม (Admin / Member / Tourist)
+ * Component: CreateAccountPage
+ * Description: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 03 ธันวาคม 2568 (Added Reset Password Link)
+ * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
  */
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/api";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
@@ -19,7 +20,6 @@ import ThailandLocationSelector, {
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-// Import สำหรับ Dropdown และ Icon
 import Autocomplete from "@mui/material/Autocomplete";
 import Popper from "@mui/material/Popper";
 import { Icon } from "@iconify/react";
@@ -49,7 +49,6 @@ interface CommunityOption {
   name: string;
 }
 
-// Custom Popper จัดตำแหน่ง Dropdown
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -107,6 +106,7 @@ const EditAccountPage: React.FC = () => {
   });
 
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false); 
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
@@ -308,10 +308,10 @@ const EditAccountPage: React.FC = () => {
       else if (formData.role === "Member") endpoint = `/super/account/member/${userId}`;
       else endpoint = `/super/account/tourist/${userId}`;
 
-      const response = await api.put(endpoint, requestBody);
+      await api.put(endpoint, requestBody);
 
-      toast.success(response.data.message || "บันทึกการแก้ไขสำเร็จ ✅");
       setShowConfirm(false);
+      setShowSuccessModal(true);
 
       if (imageWasUpdated) {
         fetchUser(formData.role);
@@ -589,6 +589,17 @@ const EditAccountPage: React.FC = () => {
           handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
         onCancel={() => setShowConfirm(false)}
+      />
+
+      <ModalAlert
+        open={showSuccessModal}
+        type="success"
+        title="แก้ไขบัญชีสำเร็จ"
+        message="ข้อมูลบัญชีผู้ใช้ถูกแก้ไขเรียบร้อยแล้ว"
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate("/super/accounts/all");
+        }}
       />
     </div>
   );

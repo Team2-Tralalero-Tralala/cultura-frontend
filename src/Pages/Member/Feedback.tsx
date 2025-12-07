@@ -1,19 +1,20 @@
 /**
+ * Component: MemberFeedbacks (Client)
  * Responsibility:
- *  - แสดง “ข้อเสนอแนะทั้งหมด” ของแพ็กเกจที่ตนเอง(Member)สร้าง
- *  - มีแถบสรุปจำนวน, ช่องค้นหา (ฝั่ง client), ปุ่มตัวกรอง (placeholder), และปุ่ม refresh
- *  - การ์ดแต่ละใบแสดงชื่อผู้ใช้ (mask), คะแนน, เวลา (ชั่วโมงที่แล้ว), ข้อความ และรูปภาพแนบ
+ * - แสดงข้อเสนอแนะทั้งหมดของแพ็กเกจที่สมาชิกเป็นเจ้าของ
  */
-
 import React from "react";
 import axios from "axios";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/** ENV: API Base URL */
-const apiBaseUrl = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
-/* ============================== Types (API) =============================== */
+/**
+ * Types (API)
+ * คำอธิบาย: ประเภทข้อมูลที่คาดว่าจะได้รับจาก backend สำหรับโครงสร้างข้อมูลแพ็กเกจและข้อเสนอแนะ
+ */
 type ApiFeedbackImage = { id: number; feedbackId: number; image: string };
 type ApiFeedback = {
     id: number;
@@ -39,19 +40,18 @@ type ApiPackage = {
     name: string;
     bookingHistories: ApiBookingHistory[];
 };
-type ApiCommunity = {
-    id: number;
-    name: string;
+
+type ApiDataWrapper = {
     packages: ApiPackage[];
 };
+
 type ApiResponse = {
     status: number;
     error: boolean;
     message: string;
-    data: ApiCommunity;
+    data: ApiDataWrapper;
 };
 
-/* ============================== Types (UI) ================================ */
 type FeedbackCard = {
     id: number;
     userName: string;
@@ -68,27 +68,34 @@ type PackageGroup = {
     feedbacks: FeedbackCard[];
 };
 
-/* ============================== Helpers ================================== */
-/** แปลง id ให้ดูเป็นชื่อผู้ใช้แบบปิดบัง */
-const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว (id จริง)
+ */
+const maskUserIdAsDisplayName = (userId: number) =>
+    `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
 
-/** แปลง ISO → “N ชั่วโมง” (อย่างน้อย 1 ชั่วโมง) */
-const hoursSinceIso = (iso: string) => {
-    const date = new Date(iso);
-    const diffMs = Date.now() - date.getTime();
-    const hours = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60)));
-    return `${hours} ชั่วโมง`;
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
+ */
+const formatDateThai = (isoDateString: string) => {
+    const date = new Date(isoDateString);
+    return date.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
 };
 
-/* ============================== UI Bits ================================== */
-/** ดาวแสดงคะแนน (0-5) */
+/**
+ * คำอธิบาย: Component สำหรับแสดงไอคอนดาวตามคะแนน (Rating) ที่ได้รับ
+ */
 const Stars: React.FC<{ rating: number }> = ({ rating }) => (
     <div className="flex items-center gap-0.5">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, index) => (
             <Icon
-                key={i}
+                key={index}
                 icon="ic:twotone-star"
-                className={i < rating ? "text-black" : "text-slate-300"}
+                className={index < rating ? "text-black" : "text-slate-300"}
                 width={18}
                 height={18}
             />
@@ -96,7 +103,9 @@ const Stars: React.FC<{ rating: number }> = ({ rating }) => (
     </div>
 );
 
-/** แถบควบคุมด้านบน: จำนวน/ค้นหา/กรอง/รีเฟรช */
+/**
+ * คำอธิบาย: Component ส่วนควบคุมด้านบน แสดงสรุปจำนวนรายการ ช่องค้นหา ปุ่มตัวกรอง และปุ่มรีเฟรชข้อมูล
+ */
 const TopControls: React.FC<{
     totalItems: number;
     totalPackages: number;
@@ -112,21 +121,18 @@ const TopControls: React.FC<{
     onSearchChange,
     onFilterClick,
     onRefreshClick,
-    isLoading,
+    isLoading = false,
 }) => {
         return (
-            <section className="rounded-xl bg-white border-slate-200 mb-5">
+            <section className="rounded-xl bg-white border-slate-200 mb-5 p-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    {/* Summary */}
                     <div className="text-black">
                         <span className="font-semibold">ทั้งหมด</span> :{" "}
                         <span className="text-base">{totalItems}</span> รายการ จาก{" "}
                         <span className="text-base">{totalPackages}</span> แพ็กเกจ
                     </div>
 
-                    {/* Actions: search + filter + refresh */}
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        {/* Search */}
                         <div className="relative flex-1">
                             <Icon
                                 icon="mdi:magnify"
@@ -136,13 +142,12 @@ const TopControls: React.FC<{
                             />
                             <input
                                 value={searchQuery}
-                                onChange={(e) => onSearchChange(e.target.value)}
+                                onChange={(event) => onSearchChange(event.target.value)}
                                 placeholder="ค้นหา"
                                 className="w-[269px] h-[51px] rounded-lg border border-slate-300 bg-white pl-10 pr-4 text-sm outline-none focus:border-emerald-600 transition"
                             />
                         </div>
 
-                        {/* Filter (placeholder) */}
                         <button
                             type="button"
                             onClick={onFilterClick}
@@ -152,22 +157,34 @@ const TopControls: React.FC<{
                             <Icon icon="hugeicons:filter" width={18} height={18} />
                             ตัวกรอง
                         </button>
+
+                        <button
+                            type="button"
+                            onClick={onRefreshClick}
+                            disabled={isLoading}
+                            className="inline-flex items-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                            aria-label="รีเฟรช"
+                        >
+                            <Icon icon="mdi:refresh" width={18} height={18} />
+                            รีเฟรช
+                        </button>
                     </div>
                 </div>
             </section>
         );
     };
 
-/** การ์ดแสดง feedback เดี่ยว */
+/**
+ * คำอธิบาย: Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ รวมถึงรูปภาพประกอบ
+ */
 const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) => {
-    const thumbnails = feedback.images.slice(0, 4);
-    const overflowCount = Math.max(0, feedback.images.length - 4);
+    const displayImages = feedback.images.slice(0, 3);
+    const extraCount = feedback.images.length - 3;
 
     return (
         <div className="px-[30px]">
-            <div className="bg-white rounded-xl border border-[#C9C9C9] p-5 flex flex-col gap-3 w-full min-h-[395px]">
-                {/* Header: user + rating + time */}
-                <div className="flex items-start justify-between">
+            <div className="bg-white rounded-xl border border-[#C9C9C9] p-5 flex flex-col gap-3 w-full w-[500px] h-[350px]">
+                <div className="flex items-start justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
                             <Icon icon="mdi:account" className="text-slate-500" />
@@ -176,83 +193,66 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                     </div>
                     <div className="flex flex-col gap-1 text-sm items-end text-slate-500">
                         <Stars rating={feedback.rating} />
-                        <span>{hoursSinceIso(feedback.createdAt)}</span>
+                        <span>{formatDateThai(feedback.createdAt)}</span>
                     </div>
                 </div>
 
-                {/* Body: message + images */}
-                <div className="flex-1 space-y-3">
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                <div className="h-[130px] overflow-hidden">
+                    <p className="text-base text-slate-700 leading-relaxed whitespace-pre-line line-clamp-5">
                         {feedback.message || "-"}
                     </p>
-
-                    {thumbnails.length > 0 && (
-                        <div className="flex items-center gap-2">
-                            {thumbnails.map((src, idx) => (
-                                <div
-                                    key={idx}
-                                    className="w-[151px] h-[96px] rounded-lg overflow-hidden border border-slate-200"
-                                >
-                                    <img src={src} alt="" className="w-full h-full object-cover" />
-                                </div>
-                            ))}
-                            {overflowCount > 0 && (
-                                <div className="w-[151px] h-[96px] rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600">
-                                    +{overflowCount}
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
 
-                {/* Reply box (UI only; ไม่เปลี่ยนพฤติกรรม) */}
-                <div className="mt-auto pt-3 border-slate-200">
-                    <div className="relative h-10">
-                        <input
-                            placeholder="ตอบกลับ"
-                            className="absolute inset-0 w-full rounded-full border border-slate-300 bg-[#E6E6E6] px-3 pr-12 text-sm outline-none focus:border-emerald-600 transition"
-                        />
-                        <button
-                            type="button"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#4A816F] text-white flex items-center justify-center hover:bg-emerald-800"
-                            title="ส่ง"
-                            aria-label="ส่งคำตอบกลับ"
-                        >
-                            <Icon icon="mdi:send" width={16} height={16} className="block" />
-                        </button>
-                    </div>
+                <div className="mt-auto grid grid-cols-3 gap-2">
+                    {displayImages.map((imageSource, index) => {
+                        const isLastSlot = index === 2;
+                        const hasOverlay = isLastSlot && extraCount > 0;
+
+                        return (
+                            <div
+                                key={index}
+                                className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200"
+                            >
+                                <img src={imageSource} alt={`feedback-image-${index}`} className="w-full h-full object-cover" />
+                                {hasOverlay && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <span className="text-white text-xl font-bold">+{extraCount}</span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
     );
 };
 
-/** กล่อง group รายแพ็กเกจ */
+/**
+ * คำอธิบาย: Component แสดงกลุ่มข้อเสนอแนะแยกตามแพ็กเกจ พร้อมส่วนหัวและรายการภายในการ์ด
+ */
 const PackageGroupSection: React.FC<{
     group: PackageGroup;
     onViewAllClick?: (group: PackageGroup) => void;
 }> = ({ group, onViewAllClick }) => {
     return (
-        <section className="rounded-xl bg-white shadow-md border border-slate-200 overflow-hidden">
-            {/* Header (green) */}
-            <div className="bg-[#4A816F] h-[74px] text-white px-5 py-3 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold">{group.title}</h2>
+        <section className="rounded-xl bg-white shadow-md border border-slate-200 overflow-hidden mb-4">
+            <div className="bg-[#4A816F] h-[72px] text-white px-5 py-3 flex items-center justify-between">
+                <h2 className="text-[20px] font-semibold">{group.title}</h2>
                 <div className="flex items-center gap-3">
                     <span className="text-lg opacity-90">{group.totalInGroup} ข้อเสนอแนะ</span>
                 </div>
             </div>
 
-            {/* Body */}
             <div className="px-5 pt-5 bg-[#E7E7E7]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                    {group.feedbacks.map((f) => (
-                        <FeedbackCardView key={f.id} feedback={f} />
+                    {group.feedbacks.map((feedback) => (
+                        <FeedbackCardView key={feedback.id} feedback={feedback} />
                     ))}
                 </div>
             </div>
 
-            {/* Footer: ดูทั้งหมด */}
-            <div className="px-5 py-5 flex justify-end bg-[#E7E7E7]">
+            <div className="px-5 py-3 flex justify-end bg-[#E7E7E7]">
                 <button
                     type="button"
                     onClick={() => onViewAllClick?.(group)}
@@ -266,38 +266,37 @@ const PackageGroupSection: React.FC<{
     );
 };
 
-/* ============================== Page =============================== */
-export default function Feedback() {
-    /** State: data groups & summaries */
+export function MemberFeedbacks() {
     const [packageGroups, setPackageGroups] = React.useState<PackageGroup[]>([]);
     const [totalItems, setTotalItems] = React.useState<number>(0);
     const [totalPackages, setTotalPackages] = React.useState<number>(0);
 
-    /** State: ui status */
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = React.useState("");
+    const [searchQuery, setSearchQuery] = React.useState<string>("");
+
+    const navigate = useNavigate();
 
     /**
-     * ดึงข้อมูลทั้งหมด: community → packages → bookingHistories → feedbacks
-     * mapping → PackageGroup[]
+     * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะทั้งหมดจาก Server แปลงโครงสร้างข้อมูล และอัปเดต State เพื่อแสดงผล
      */
     const fetchAllFeedbacks = React.useCallback(async () => {
         try {
             setIsLoading(true);
             setErrorMessage(null);
 
-            const response = await axios.get<ApiResponse>(
-                `${apiBaseUrl}/api/member/feedbacks/all`,
-                { withCredentials: true }
-            );
-            const communityData = response.data?.data;
-            const packageList: ApiPackage[] = communityData?.packages ?? [];
+            const response = await axios.get<ApiResponse>(`${API_BASE_URL}/member/feedbacks/all`, {
+                withCredentials: true,
+            });
 
-            const nextGroups: PackageGroup[] = packageList.map((pkg) => {
+            // Backend returns { data: { packages: [...] } }
+            const responseData = response.data?.data;
+            const packageList: ApiPackage[] = responseData?.packages ?? [];
+
+            const nextGroups: PackageGroup[] = packageList.map((apiPackage) => {
                 const groupFeedbacks: FeedbackCard[] = [];
 
-                (pkg.bookingHistories ?? []).forEach((bookingHistory) => {
+                (apiPackage.bookingHistories ?? []).forEach((bookingHistory) => {
                     (bookingHistory.feedbacks ?? []).forEach((feedback) => {
                         groupFeedbacks.push({
                             id: feedback.id,
@@ -305,7 +304,7 @@ export default function Feedback() {
                             rating: feedback.rating ?? 0,
                             createdAt: feedback.createdAt,
                             message: feedback.message ?? "",
-                            images: (feedback.feedbackImages ?? []).map((imageItem) => imageItem.image),
+                            images: (feedback.feedbackImages ?? []).map((feedbackImage) => feedbackImage.image),
                             replied: feedback.replyMessage
                                 ? { at: feedback.replyAt ?? "", message: feedback.replyMessage }
                                 : null,
@@ -314,18 +313,19 @@ export default function Feedback() {
                 });
 
                 return {
-                    id: pkg.id,
-                    title: pkg.name,
+                    id: apiPackage.id,
+                    title: apiPackage.name,
                     totalInGroup: groupFeedbacks.length,
                     feedbacks: groupFeedbacks,
                 };
             });
 
             setPackageGroups(nextGroups);
-            setTotalItems(nextGroups.reduce((sum, g) => sum + g.totalInGroup, 0));
+            setTotalItems(nextGroups.reduce((sum, packageGroup) => sum + packageGroup.totalInGroup, 0));
             setTotalPackages(nextGroups.length);
-        } catch (err: any) {
-            setErrorMessage(err?.response?.data?.message || err?.message || "โหลดข้อมูลไม่สำเร็จ");
+        } catch (error: any) {
+            console.error(error);
+            setErrorMessage(error?.response?.data?.message || error?.message || "โหลดข้อมูลไม่สำเร็จ");
         } finally {
             setIsLoading(false);
         }
@@ -335,35 +335,27 @@ export default function Feedback() {
         fetchAllFeedbacks();
     }, [fetchAllFeedbacks]);
 
-    /**
-     * Filter (ฝั่ง client) ตาม searchQuery
-     * - ค้นหาใน userName และ message
-     */
     const filteredGroups = React.useMemo(() => {
-        const q = searchQuery.trim().toLowerCase();
-        if (!q) return packageGroups;
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) return packageGroups;
 
         return packageGroups
-            .map((g) => {
-                const filteredFeedbacks = g.feedbacks.filter(
-                    (f) =>
-                        f.userName.toLowerCase().includes(q) ||
-                        f.message.toLowerCase().includes(q) ||
-                        g.title.toLowerCase().includes(q)
+            .map((packageGroup) => {
+                const filteredFeedbacks = packageGroup.feedbacks.filter(
+                    (feedback) =>
+                        feedback.userName.toLowerCase().includes(query) ||
+                        feedback.message.toLowerCase().includes(query) ||
+                        packageGroup.title.toLowerCase().includes(query)
                 );
                 return {
-                    ...g,
+                    ...packageGroup,
                     feedbacks: filteredFeedbacks,
                     totalInGroup: filteredFeedbacks.length,
                 };
             })
-            .filter((g) =>
-                g.feedbacks.length > 0 ||
-                g.title.toLowerCase().includes(q)
-            );
+            .filter((packageGroup) => packageGroup.feedbacks.length > 0 || packageGroup.title.toLowerCase().includes(query));
     }, [packageGroups, searchQuery]);
 
-    /* ============================= Render ============================== */
     return (
         <>
             <Breadcrumb
@@ -386,13 +378,19 @@ export default function Feedback() {
 
                     {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-                    {filteredGroups.map((group) => (
-                        <PackageGroupSection key={group.id} group={group} onViewAllClick={() => { }} />
+                    {filteredGroups.length === 0 && !isLoading && !errorMessage && (
+                        <div className="text-center text-slate-500 py-10">ไม่พบข้อมูลข้อเสนอแนะ</div>
+                    )}
+
+                    {filteredGroups.map((packageGroup) => (
+                        <PackageGroupSection
+                            key={packageGroup.id}
+                            group={packageGroup}
+                            onViewAllClick={(group) => navigate(`/member/feedbacks/${group.id}`)}
+                        />
                     ))}
 
-                    {isLoading && (
-                        <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>
-                    )}
+                    {isLoading && <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>}
                 </div>
             </main>
         </>

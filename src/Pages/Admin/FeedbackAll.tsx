@@ -8,6 +8,7 @@
 import React from "react";
 import axios from "axios";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /** ENV: API Base URL */
@@ -72,12 +73,31 @@ type PackageGroup = {
 /** แปลง id ให้ดูเป็นชื่อผู้ใช้แบบปิดบัง */
 const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
 
-/** แปลง ISO → “N ชั่วโมง” (อย่างน้อย 1 ชั่วโมง) */
-const hoursSinceIso = (iso: string) => {
+const formatDateThai = (iso: string) => {
+    const date = new Date(iso);
+
+    // 'th-TH' จะแปลงเป็นพุทธศักราชให้อัตโนมัติ
+    return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+};
+
+const timeSinceIso = (iso: string) => {
     const date = new Date(iso);
     const diffMs = Date.now() - date.getTime();
-    const hours = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60)));
-    return `${hours} ชั่วโมง`;
+
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    if (hours < 24) {
+        // ถ้าไม่ถึง 24 ชม. ให้แสดงเป็นชั่วโมง (ขั้นต่ำ 1 ชม.)
+        return `${Math.max(1, hours)} ชั่วโมง`;
+    }
+
+    // ถ้าเกิน 24 ชม. ให้คำนวณเป็นวัน
+    const days = Math.floor(hours / 24);
+    return `${days} วัน`;
 };
 
 /* ============================== UI Bits ================================== */
@@ -163,11 +183,18 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
     const thumbnails = feedback.images.slice(0, 4);
     const overflowCount = Math.max(0, feedback.images.length - 4);
 
+    // ดึงมาแสดงสูงสุดแค่ 3 รูป
+    const displayImages = feedback.images.slice(0, 3);
+    // คำนวณรูปส่วนเกิน (เช่น มี 5 รูป, โชว์ 3, เหลือเศษ 2)
+    const extraCount = feedback.images.length - 3;
+
     return (
         <div className="px-[30px]">
-            <div className="bg-white rounded-xl border border-[#C9C9C9] p-5 flex flex-col gap-3 w-full min-h-[395px]">
+            {/* ปรับ h-auto หรือกำหนด height ตายตัวถ้าต้องการให้การ์ดเท่ากันเป๊ะๆ ในทุกแถว */}
+            <div className="bg-white rounded-xl border border-[#C9C9C9] p-5 flex flex-col gap-3 w-full w-[500px] h-[350px]">
+
                 {/* Header: user + rating + time */}
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
                             <Icon icon="mdi:account" className="text-slate-500" />
@@ -176,51 +203,45 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                     </div>
                     <div className="flex flex-col gap-1 text-sm items-end text-slate-500">
                         <Stars rating={feedback.rating} />
-                        <span>{hoursSinceIso(feedback.createdAt)}</span>
+                        <span>{formatDateThai(feedback.createdAt)}</span>
                     </div>
                 </div>
 
-                {/* Body: message + images */}
-                <div className="flex-1 space-y-3">
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                {/* Body: message (Fix Height & Line Clamp) */}
+                {/* h-[72px] คือความสูงที่จองไว้ประมาณ 3-4 บรรทัด แม้ข้อความสั้นก็จะกินพื้นที่เท่านี้ */}
+                <div className="h-[130px] overflow-hidden">
+                    <p className="text-base text-slate-700 leading-relaxed whitespace-pre-line line-clamp-5">
                         {feedback.message || "-"}
                     </p>
-
-                    {thumbnails.length > 0 && (
-                        <div className="flex items-center gap-2">
-                            {thumbnails.map((src, idx) => (
-                                <div
-                                    key={idx}
-                                    className="w-[151px] h-[96px] rounded-lg overflow-hidden border border-slate-200"
-                                >
-                                    <img src={src} alt="" className="w-full h-full object-cover" />
-                                </div>
-                            ))}
-                            {overflowCount > 0 && (
-                                <div className="w-[151px] h-[96px] rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600">
-                                    +{overflowCount}
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
 
-                {/* Reply box (UI only; ไม่เปลี่ยนพฤติกรรม) */}
-                <div className="mt-auto pt-3 border-slate-200">
-                    <div className="relative h-10">
-                        <input
-                            placeholder="ตอบกลับ"
-                            className="absolute inset-0 w-full rounded-full border border-slate-300 bg-[#E6E6E6] px-3 pr-12 text-sm outline-none focus:border-emerald-600 transition"
-                        />
-                        <button
-                            type="button"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#4A816F] text-white flex items-center justify-center hover:bg-emerald-800"
-                            title="ส่ง"
-                            aria-label="ส่งคำตอบกลับ"
-                        >
-                            <Icon icon="mdi:send" width={16} height={16} className="block" />
-                        </button>
-                    </div>
+                {/* Images: Grid 3 (Bottom) */}
+                <div className="mt-auto grid grid-cols-3 gap-2">
+                    {displayImages.map((src, idx) => {
+                        // เช็คว่าเป็นรููปช่องที่ 3 และยังมีรูปเหลืออีกไหม
+                        const isLastSlot = idx === 2;
+                        const hasOverlay = isLastSlot && extraCount > 0;
+
+                        return (
+                            <div
+                                key={idx}
+                                className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200"
+                            >
+                                <img src={src} alt="" className="w-full h-full object-cover" />
+
+                                {/* Overlay ถ้ามีรูปเกิน 3 รูป */}
+                                {hasOverlay && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <span className="text-white text-xl font-bold">+{extraCount}</span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+
+                    {/* กรณีไม่มีรูปเลย หรือรูปไม่ครบ 3 อาจจะปล่อยว่างไว้ หรือใส่ placeholder ก็ได้ 
+                        แต่ code นี้จะปล่อยว่างตาม flex/grid
+                    */}
                 </div>
             </div>
         </div>
@@ -233,10 +254,10 @@ const PackageGroupSection: React.FC<{
     onViewAllClick?: (group: PackageGroup) => void;
 }> = ({ group, onViewAllClick }) => {
     return (
-        <section className="rounded-xl bg-white shadow-md border border-slate-200 overflow-hidden">
+        <section className="rounded-xl bg-white shadow-md border border-slate-200 overflow-hidden mb-4">
             {/* Header (green) */}
-            <div className="bg-[#4A816F] h-[74px] text-white px-5 py-3 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold">{group.title}</h2>
+            <div className="bg-[#4A816F] h-[72px] text-white px-5 py-3 flex items-center justify-between">
+                <h2 className="text-[20px] font-semibold">{group.title}</h2>
                 <div className="flex items-center gap-3">
                     <span className="text-lg opacity-90">{group.totalInGroup} ข้อเสนอแนะ</span>
                 </div>
@@ -252,7 +273,7 @@ const PackageGroupSection: React.FC<{
             </div>
 
             {/* Footer: ดูทั้งหมด */}
-            <div className="px-5 py-5 flex justify-end bg-[#E7E7E7]">
+            <div className="px-5 py-3 flex justify-end bg-[#E7E7E7]">
                 <button
                     type="button"
                     onClick={() => onViewAllClick?.(group)}
@@ -278,6 +299,8 @@ export default function FeddbackAll() {
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [searchQuery, setSearchQuery] = React.useState("");
 
+    const navigate = useNavigate();
+
     /**
      * ดึงข้อมูลทั้งหมด: community → packages → bookingHistories → feedbacks
      * mapping → PackageGroup[]
@@ -288,7 +311,7 @@ export default function FeddbackAll() {
             setErrorMessage(null);
 
             const response = await axios.get<ApiResponse>(
-                `${apiBaseUrl}/api/packages/admin/package/feedbacks/all`,
+                `${apiBaseUrl}/packages/admin/package/feedbacks/all`,
                 { withCredentials: true }
             );
             const communityData = response.data?.data;
@@ -359,7 +382,7 @@ export default function FeddbackAll() {
             })
             .filter((g) =>
                 g.feedbacks.length > 0 ||
-                g.title.toLowerCase().includes(q) 
+                g.title.toLowerCase().includes(q)
             );
     }, [packageGroups, searchQuery]);
 
@@ -369,31 +392,32 @@ export default function FeddbackAll() {
             <Breadcrumb
                 current={{
                     label: "ข้อเสนอแนะ",
-                    to: `/admin/package/feedbacks`,
+                    to: `/admin/packages/feedbacks`,
                 }}
             />
-        <main className="min-h-screen bg-white py-8 px-6 space-y-6 shadow-md border rounded-xl">
-            <div className="mx-auto bg-white rounded-xl">
-                <TopControls
-                    totalItems={totalItems}
-                    totalPackages={totalPackages}
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
-                    onFilterClick={() => { }}
-                    onRefreshClick={fetchAllFeedbacks}
-                    isLoading={isLoading}
-                />
+            <main className="min-h-screen bg-white py-8 px-6 space-y-6 shadow-md border rounded-xl">
+                <div className="mx-auto bg-white rounded-xl">
+                    <TopControls
+                        totalItems={totalItems}
+                        totalPackages={totalPackages}
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        onFilterClick={() => { }}
+                        onRefreshClick={fetchAllFeedbacks}
+                        isLoading={isLoading}
+                    />
 
-                {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
+                    {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-                {filteredGroups.map((group) => (
-                    <PackageGroupSection key={group.id} group={group} onViewAllClick={() => { }} />
-                ))}
+                    {filteredGroups.map((group) => (
+                        <PackageGroupSection key={group.id} group={group}
+                            onViewAllClick={(g) => navigate(`/admin/package/feedbacks/${g.id}`)} />
+                    ))}
 
-                {isLoading && (
-                    <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>
-                )}
-            </div>
+                    {isLoading && (
+                        <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>
+                    )}
+                </div>
             </main>
         </>
     );

@@ -18,7 +18,7 @@ export default function MemberRoutes() {
     <Routes>
       
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
-      <Route path="/feedbacks" element={<Feedback />} />
+      <Route path="feedbacks" element={<Feedback />} />
     </Routes>
   );
 }

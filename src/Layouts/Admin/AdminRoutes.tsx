@@ -78,7 +78,7 @@ export default function AdminRoutes() {
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
-      <Route path="packages/feedback/:packageId" element={<PackageFeedbacksPage />} />
+      <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
       {/* หน้าดูรายละเอียดร้านค้าของ Admin */}

@@ -23,6 +23,8 @@ export const getPackageFeedbacksByPackageId = async (packageId: number) => {
   return response.data;
 };
 
+export default getPackageFeedbacksByPackageId;
+
 /**
  * ฟังก์ชัน : getPackageFeedbacksByPackageIdMember
  * คำอธิบาย : ดึงรายการ Feedback ของแพ็กเกจตามรหัสแพ็กเกจ (เฉพาะ Member)
@@ -36,5 +38,37 @@ export const getPackageFeedbacksByPackageIdMember = async (packageId: number) =>
 
   return response.data;
 };
+/**
+ * พารามิเตอร์สำหรับการตอบกลับ Feedback
+ * ต้องตรงกับ ReplyFeedbackDto ที่ backend ใช้ validate
+ */
+export interface ReplyFeedbackPayload {
+  replyMessage: string;
+}
 
-export default getPackageFeedbacksByPackageId;
+/**
+ * ฟังก์ชัน : replyPackageFeedback
+ * คำอธิบาย : เรียก API เพื่อตอบกลับข้อความรีวิวของสมาชิก
+ * Route : POST /member/feedback/:feedbackId/reply
+ *
+ * Input :
+ *   - feedbackId : หมายเลข Feedback ที่ต้องการตอบกลับ
+ *   - payload : { replyMessage: string } ข้อความตอบกลับรีวิว
+ *
+ * Output :
+ *   - ข้อมูล Feedback ที่ถูกอัปเดตแล้ว (ส่วนของการตอบกลับ)
+ */
+export const replyPackageFeedback = async (
+  feedbackId: number,
+  payload: ReplyFeedbackPayload
+) => {
+  const response = await axios.post(
+    `${apiUrl}/member/feedback/${feedbackId}/reply`,
+    payload,
+    {
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};

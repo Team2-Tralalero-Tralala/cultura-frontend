@@ -1,0 +1,407 @@
+import React from "react";
+import { useParams } from "react-router-dom";
+import {
+  getPackageFeedbacksByPackageIdMember,
+  replyPackageFeedback,
+} from "@/Services/package-feedbacks-service";
+import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Modal } from "@/Components/Modal/Modal";
+
+/**
+ * ฟังก์ชัน : BACKEND_BASE_URL
+ * คำอธิบาย : Base URL สำหรับประกอบลิงก์รูปภาพที่เสิร์ฟจาก Backend
+ * Input  : -
+ * Output : string (URL ฐานของ Backend)
+ */
+const BACKEND_BASE_URL =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+/**
+ * ฟังก์ชัน : getImageUrl
+ * คำอธิบาย : แปลงชื่อไฟล์/พาธจาก Backend ให้เป็น URL ที่พร้อมนำไปใช้ใน <img>
+ * Input  : fileName?: string - ชื่อไฟล์หรือพาธ (อาจขึ้นต้นด้วย uploads/)
+ * Output : string | undefined - URL สำหรับรูปภาพ หรือ undefined ถ้าไม่มีชื่อไฟล์
+ */
+function getImageUrl(fileName?: string): string | undefined {
+  if (!fileName) return undefined;
+  const cleanPath = fileName.replace(/^\/?uploads\//, "");
+  return `${BACKEND_BASE_URL}/uploads/${cleanPath}`;
+}
+
+
+type FeedbackImage = { image: string };
+type Tourist = { fname: string; lname: string };
+type PackageInfo = { name: string };
+type BookingHistory = { tourist: Tourist; package: PackageInfo };
+
+type Feedback = {
+  id: number;
+  createdAt: string;
+  rating: number;
+  message: string;
+  feedbackImages: FeedbackImage[];
+  bookingHistory: BookingHistory;
+};
+
+/**
+ * ฟังก์ชัน : formatTimeAgo
+ * คำอธิบาย : แปลงวันที่/เวลา createdAt ให้เป็นข้อความบอกเวลาแบบคร่าว ๆ
+ *           (เช่น 3 นาที, 2 ชั่วโมง, 1 วัน)
+ * Input  : createdAt: string - วันที่/เวลาที่สร้าง Feedback
+ * Output : string - ข้อความบอกระยะเวลาที่ผ่านไปเป็นภาษาไทย
+ */
+function formatTimeAgo(createdAt: string): string {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diff = now.getTime() - created.getTime();
+
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (minutes < 1) return "เมื่อสักครู่";
+  if (minutes < 60) return `${minutes} นาที`;
+  if (hours < 24) return `${hours} ชั่วโมง`;
+  if (days < 30) return `${days} วัน`;
+  if (months < 12) return `${months} เดือน`;
+  return `${years} ปี`;
+}
+
+/**
+ * ฟังก์ชัน : formatFullName
+ * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask
+ *           (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
+ * Input  : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
+ * Output : string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
+ */
+function formatFullName(tourist: Tourist): string {
+  const mask = (text: string) =>
+    text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
+  return `${mask(tourist.fname)} ${mask(tourist.lname)}`.trim();
+}
+
+/**
+ * ฟังก์ชัน : renderStars
+ * คำอธิบาย : แปลงคะแนน rating (1-5) ให้เป็นสตริงรูปดาว ★/☆ รวม 5 ดวง
+ * Input  : rating: number - คะแนนรีวิว
+ * Output : string - ข้อความดาว 5 ตัว (เช่น "★★★☆☆")
+ */
+function renderStars(rating: number): string {
+  return Array.from({ length: 5 })
+    .map((_, starIndex) => (starIndex < rating ? "★" : "☆"))
+    .join("");
+}
+
+/**
+ * Component : PackageFeedbacksPage
+ * คำอธิบาย : หน้าแสดงรายการ Feedback ของแพ็กเกจ
+ *   - ดึงข้อมูล Feedback จาก API ตาม packageId
+ *   - สามารถเรียงลำดับรีวิว (ล่าสุด / เก่าสุด)
+ *   - พิมพ์ตอบกลับรีวิวแต่ละรายการ และยืนยันผ่าน Modal
+ * Input  : ใช้ packageId จาก URL params ภายใน Component
+ * Output : JSX.Element ส่วน UI ของหน้าจอแสดง Feedback
+ */
+export default function PackageFeedbacksPage() {
+  const { packageId } = useParams<{ packageId: string }>();
+
+  const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const [sortOrder, setSortOrder] =
+    React.useState<"latest" | "oldest">("latest");
+
+  const [replyTexts, setReplyTexts] = React.useState<Record<number, string>>(
+    {}
+  );
+
+  const [isReplyModalOpen, setIsReplyModalOpen] = React.useState(false);
+  const [selectedFeedbackId, setSelectedFeedbackId] =
+    React.useState<number | null>(null);
+
+  const packageIdNumber = Number(packageId);
+
+  /**
+   * ฟังก์ชัน : useEffect(loadFeedbacks)
+   * คำอธิบาย : โหลดรายการ Feedback เมื่อได้ packageIdNumber ที่ถูกต้อง
+   * Input  : - (ใช้ค่า packageIdNumber จาก URL)
+   * Output : - (อัปเดต state feedbackLists, isLoading)
+   */
+  React.useEffect(() => {
+    if (!packageIdNumber) return;
+
+    setIsLoading(true);
+
+    getPackageFeedbacksByPackageIdMember(packageIdNumber).then(
+      (response) => {
+        const typedResponse = response as { data?: Feedback[] } | Feedback[];
+        const feedbackResponseLists = Array.isArray(typedResponse)
+          ? typedResponse
+          : typedResponse.data ?? [];
+
+        setFeedbackLists(feedbackResponseLists);
+        setIsLoading(false);
+      }
+    );
+  }, [packageIdNumber]);
+
+  /**
+   * ฟังก์ชัน : sortedFeedbackLists (useMemo)
+   * คำอธิบาย : คืนลิสต์ Feedback ที่ถูกเรียงตาม sortOrder (ล่าสุด/เก่าสุด)
+   * Input  : - (อิง state feedbackLists, sortOrder)
+   * Output : Feedback[] - ลิสต์ที่ถูกเรียงใหม่แล้ว
+   */
+  const sortedFeedbackLists = React.useMemo(() => {
+    const clonedFeedbackLists = [...feedbackLists];
+
+    if (sortOrder === "latest") {
+      return clonedFeedbackLists.sort(
+        (feedbackA, feedbackB) =>
+          new Date(feedbackB.createdAt).getTime() -
+          new Date(feedbackA.createdAt).getTime()
+      );
+    }
+
+    return clonedFeedbackLists.sort(
+      (feedbackA, feedbackB) =>
+        new Date(feedbackA.createdAt).getTime() -
+        new Date(feedbackB.createdAt).getTime()
+    );
+  }, [feedbackLists, sortOrder]);
+
+  /**
+   * ฟังก์ชัน : packageName
+   * คำอธิบาย : ชื่อแพ็กเกจจาก Feedback แรก หากไม่มีข้อมูลจะใช้คำว่า "ชื่อแพ็กเกจ" แทน
+   * Input  : -
+   * Output : string - ชื่อแพ็กเกจ
+   */
+  const packageName =
+    feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
+
+  /**
+   * ฟังก์ชัน : filterOptions
+   * คำอธิบาย : ตัวเลือกสำหรับ dropdown การเรียงลำดับ Feedback
+   * Input  : -
+   * Output : { label: string; value: string }[]
+   */
+  const filterOptions = [
+    { label: "ล่าสุด", value: "latest" },
+    { label: "เก่าสุด", value: "oldest" },
+  ];
+
+  /**
+   * ฟังก์ชัน : handleChangeReplyText
+   * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId
+   * Input  : feedbackId: number, value: string
+   * Output : void
+   */
+  const handleChangeReplyText = (feedbackId: number, value: string): void => {
+    setReplyTexts((previousReplyTexts) => ({
+      ...previousReplyTexts,
+      [feedbackId]: value,
+    }));
+  };
+
+  /**
+   * ฟังก์ชัน : handleOpenReplyModal
+   * คำอธิบาย : เปิด Modal ยืนยันการตอบกลับสำหรับ feedback ที่เลือก
+   * Input  : feedbackId: number
+   * Output : void
+   */
+  const handleOpenReplyModal = (feedbackId: number): void => {
+    const replyMessage = replyTexts[feedbackId]?.trim();
+    if (!replyMessage) return;
+
+    setSelectedFeedbackId(feedbackId);
+    setIsReplyModalOpen(true);
+  };
+
+  /**
+   * ฟังก์ชัน : handleCloseReplyModal
+   * คำอธิบาย : ปิด Modal ยืนยันการตอบกลับ และรีเซ็ต feedback ที่เลือก
+   * Input  : -
+   * Output : void
+   */
+  const handleCloseReplyModal = (): void => {
+    setIsReplyModalOpen(false);
+    setSelectedFeedbackId(null);
+  };
+
+  /**
+   * ฟังก์ชัน : sendReply
+   * คำอธิบาย : ยิง API เพื่อส่งข้อความตอบกลับรีวิว และเคลียร์ช่องตอบกลับ
+   * Input  : feedbackId: number - รหัสของ feedback ที่ต้องการตอบกลับ
+   * Output : Promise<void> - ส่งคำตอบสำเร็จหรือไม่ผ่าน async/await
+   */
+  const sendReply = async (feedbackId: number): Promise<void> => {
+    const replyMessage = replyTexts[feedbackId]?.trim();
+    if (!replyMessage) return;
+      await replyPackageFeedback(feedbackId, { replyMessage });
+      setReplyTexts((previousReplyTexts) => ({
+        ...previousReplyTexts,
+        [feedbackId]: "",
+      }));
+
+  };
+
+  return (
+    <div>
+      <Breadcrumb
+        current={{
+          label: packageName,
+          to: `package/feedback/${packageId}`,
+        }}
+      />
+
+      <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-gray-800">
+            ทั้งหมด : {feedbackLists.length} รายการ
+          </p>
+
+          <FilterDropdown
+            options={filterOptions}
+            selected={sortOrder}
+            onChange={(value) => setSortOrder(value as "latest" | "oldest")}
+          />
+        </div>
+
+        <div className="w-full rounded-2xl overflow-hidden bg-[#EDEDED]">
+          <div className="bg-[#4E8374] px-6 py-3">
+            <h2 className="text-white text-lg font-semibold">{packageName}</h2>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {isLoading && (
+              <div className="text-gray-500 text-sm">กำลังโหลด...</div>
+            )}
+
+            {sortedFeedbackLists.map((feedbackItem) => (
+              <div
+                key={feedbackItem.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-500 text-sm font-semibold">
+                        {feedbackItem.bookingHistory.tourist.fname
+                          ?.charAt(0)
+                          ?.toUpperCase() || "U"}
+                      </span>
+                    </div>
+
+                    <span className="font-semibold text-gray-800">
+                      {formatFullName(feedbackItem.bookingHistory.tourist)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+         
+                    <div className="text-sm text-black">
+                      {renderStars(feedbackItem.rating)}
+                    </div>
+          
+                    <div className="text-xs text-gray-500">
+                      {formatTimeAgo(feedbackItem.createdAt)}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-gray-800 text-sm leading-relaxed">
+                  {feedbackItem.message}
+                </p>
+
+                {feedbackItem.feedbackImages?.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {feedbackItem.feedbackImages.map(
+                      (feedbackImage, imageIndex) => {
+                        const imageUrl = getImageUrl(feedbackImage.image);
+                        if (!imageUrl) return null;
+
+                        return (
+                          <div
+                            key={imageIndex}
+                            className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
+                          >
+                            <img
+                              src={imageUrl}
+                              alt={`feedback-${feedbackItem.id}-${imageIndex}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
+                    <input
+                      type="text"
+                      placeholder="ตอบกลับ"
+                      className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                      value={replyTexts[feedbackItem.id] ?? ""}
+                      onChange={(event) =>
+                        handleChangeReplyText(
+                          feedbackItem.id,
+                          event.target.value
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="ml-3 w-8 h-8 bg-[#4E8374] rounded-full flex items-center justify-center hover:bg-[#3b6d60] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      onClick={() => handleOpenReplyModal(feedbackItem.id)}
+                      disabled={!replyTexts[feedbackItem.id]?.trim()}
+                      aria-label="ยืนยันการตอบกลับรีวิว"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="white"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 10l18-7-7 18-2-8-8-3z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {!isLoading && feedbackLists.length === 0 && (
+              <div className="text-center text-gray-500 text-sm py-8">
+                ยังไม่มีข้อเสนอแนะสำหรับแพ็กเกจนี้
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <Modal
+        open={isReplyModalOpen}
+        title="ยืนยันการตอบกลับรีวิวหรือไม่"
+        text="คุณจะไม่สามารถย้อนกลับได้"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          if (selectedFeedbackId !== null) {
+            void sendReply(selectedFeedbackId);
+          }
+          setIsReplyModalOpen(false);
+          setSelectedFeedbackId(null);
+        }}
+        onCancel={handleCloseReplyModal}
+      />
+    </div>
+  );
+}

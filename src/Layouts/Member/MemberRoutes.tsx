@@ -11,6 +11,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
+import PackageFeedbacksPage from '@/Pages/Member/PackageFeedbacksPage';
 
 export default function MemberRoutes() {
   return (
@@ -18,6 +19,8 @@ export default function MemberRoutes() {
       
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
+      {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
+      <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
     </Routes>
   );
 }

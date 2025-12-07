@@ -104,7 +104,7 @@ const Stars: React.FC<{ rating: number }> = ({ rating }) => (
 );
 
 /**
- * คำอธิบาย: Component ส่วนควบคุมด้านบน แสดงสรุปจำนวนรายการ ช่องค้นหา ปุ่มตัวกรอง และปุ่มรีเฟรชข้อมูล
+ * คำอธิบาย: Component ส่วนควบคุมด้านบน แสดงสรุปจำนวนรายการ ช่องค้นหา ปุ่มตัวกรอง
  */
 const TopControls: React.FC<{
     totalItems: number;
@@ -156,17 +156,6 @@ const TopControls: React.FC<{
                         >
                             <Icon icon="hugeicons:filter" width={18} height={18} />
                             ตัวกรอง
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={onRefreshClick}
-                            disabled={isLoading}
-                            className="inline-flex items-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                            aria-label="รีเฟรช"
-                        >
-                            <Icon icon="mdi:refresh" width={18} height={18} />
-                            รีเฟรช
                         </button>
                     </div>
                 </div>

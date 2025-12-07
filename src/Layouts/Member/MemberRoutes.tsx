@@ -11,13 +11,17 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
+import DetailPackageMember from '@/Pages/Member/DetailPackageMember';
 
 export default function MemberRoutes() {
   return (
     <Routes>
-      
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+
+      {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="packages/done" element={<PackageHistoryMember />} />
+      <Route path="package/:id" element={<DetailPackageMember/>} />
+
     </Routes>
   );
 }

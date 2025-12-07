@@ -11,15 +11,23 @@ import { Icon } from "@iconify/react";
 import { getCommunityDetailByMember } from "@/Services/community-service";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/**
- * ฟังก์ชัน : show
- * ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล
+/*
+ * ฟังก์ชัน : displayText
+ * คำอธิบาย : แปลงค่าข้อความสำหรับแสดงผล หากไม่มีข้อมูลหรือเป็นค่าว่างจะแสดง "-"
+ * Input :
+ *   - value (string | null | undefined) : ข้อความที่ต้องการนำมาแสดง
+ * Output :
+ *   - string : ข้อความเดิม หรือ "-" หากไม่มีข้อมูล
  */
-const show = (v?: string | null) => (v && String(v).trim() ? v : "-");
+const displayText = (value?: string | null) => (value && String(value).trim() ? value : "-");
 
 /**
  * ฟังก์ชัน : toThaiDate
- * แปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
+ * คำอธิบาย : แปลงวันที่จากรูปแบบ ISO string เป็นวันที่รูปแบบไทย (dd/mm/yyyy)
+ * Input :
+ *   - iso (string | null | undefined) : วันที่ในรูปแบบ ISO
+ * Output :
+ *   - string : วันที่รูปแบบ dd/mm/yyyy หรือ "-" หากข้อมูลไม่ถูกต้อง
  */
 const toThaiDate = (iso?: string | null) => {
   if (!iso) return "-";
@@ -53,7 +61,11 @@ function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
 
 /**
  * ฟังก์ชัน : pickImagePath
- * ดึง path รูปภาพจาก object โดยตรวจสอบ field ที่อาจมีชื่อแตกต่างกัน
+ * คำอธิบาย : ดึง path รูปภาพจาก object โดยรองรับชื่อ field ที่แตกต่างกัน
+ * Input :
+ *   - img (any) : object ของรูปภาพ
+ * Output :
+ *   - string | null : path รูปภาพ หรือ null หากไม่พบ
  */
 function pickImagePath(img: any): string | null {
   return img?.url ?? img?.image ?? img?.ci_image ?? img?.filePath ?? null;
@@ -61,30 +73,40 @@ function pickImagePath(img: any): string | null {
 
 /**
  * ฟังก์ชัน : findImage
- * ค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
+ * คำอธิบาย : ค้นหารูปภาพของชุมชนตามประเภทที่กำหนด
+ * Input :
+ *   - community (any) : ข้อมูลชุมชน
+ *   - type (string) : ประเภทรูปภาพ (เช่น LOGO, COVER)
+ * Output :
+ *   - string | null : path รูปภาพ หรือ null หากไม่พบ
  */
 function findImage(community: any, type: string): string | null {
   const item = community?.communityImage?.find(
-    (x: any) => String(x.type).toUpperCase() === type.toUpperCase()
+    (image: any) => String(image.type).toUpperCase() === type.toUpperCase()
   );
   return pickImagePath(item);
 }
 
 /**
  * ฟังก์ชัน : listImagesByType
- * คืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
+ * คำอธิบาย : ดึงรายการ path รูปภาพของชุมชนตามประเภทที่กำหนด
+ * Input :
+ *   - community (any) : ข้อมูลชุมชน
+ *   - type (string) : ประเภทรูปภาพ (เช่น GALLERY, VIDEO)
+ * Output :
+ *   - string[] : รายการ path รูปภาพ
  */
 function listImagesByType(community: any, type: string): string[] {
-  const arr = (community?.communityImage || []).filter(
-    (x: any) => String(x.type).toUpperCase() === type.toUpperCase()
+  const images = (community?.communityImage || []).filter(
+    (image: any) => String(image.type).toUpperCase() === type.toUpperCase()
   );
-  return arr.map(pickImagePath).filter(Boolean) as string[];
+  return images.map(pickImagePath).filter(Boolean) as string[];
 }
 
 // Components ย่อยที่ใช้ภายในหน้า
 
 /**
- * Component : Row
+ * ฟังก์ชัน : Row
  * แสดงแถวข้อมูลแบบ Label : Value
  */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -98,7 +120,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /**
- * Component : AvatarCircle
+ * ฟังก์ชัน : AvatarCircle
  * แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
  */
 function AvatarCircle({ src, name, size = 64 }: any) {
@@ -123,7 +145,7 @@ function AvatarCircle({ src, name, size = 64 }: any) {
 }
 
 /**
- * Component : LogoCircle
+ * ฟังก์ชัน : LogoCircle
  * แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
  */
 function LogoCircle({ src, name, size = 120 }: any) {
@@ -145,7 +167,7 @@ function LogoCircle({ src, name, size = 120 }: any) {
 }
 
 /**
- * Component : CoverRect
+ * ฟังก์ชัน : CoverRect
  * แสดงภาพปก (แนวนอนสี่เหลี่ยม)
  */
 function CoverRect({ src, height = 320 }: any) {
@@ -172,7 +194,7 @@ const Pin = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 /**
- * Component : Section
+ * ฟังก์ชัน : Section
  * Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
  */
 function Section({
@@ -227,7 +249,7 @@ function Section({
 }
 
 /**
- * Component : ItemCard
+ * ฟังก์ชัน : ItemCard
  * การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / ที่พัก)
  */
 function ItemCard({ image, title, children }: any) {
@@ -341,7 +363,7 @@ export default function CommunityDetailAdmin() {
                     {/* Title + Status */}
                     <div className="flex items-center gap-3">
                       <h1 className="text-[22px] font-bold leading-tight">
-                        {show(community.name)}
+                        {displayText(community.name)}
                       </h1>
 
                       {!!community.status && (
@@ -375,15 +397,15 @@ export default function CommunityDetailAdmin() {
                     <div className="mt-3 flex items-start gap-2 text-black">
                       <Pin className="mt-1.5 shrink-0" />
                       <span className="leading-relaxed">
-                        {show(community.location?.detail)} {show(community.location?.subDistrict)}{" "}
-                        {show(community.location?.district)} {show(community.location?.province)}{" "}
+                        {displayText(community.location?.detail)} {displayText(community.location?.subDistrict)}{" "}
+                        {displayText(community.location?.district)} {displayText(community.location?.province)}{" "}
                         {community.location?.postalCode ? `(${community.location.postalCode})` : ""}
                       </span>
                     </div>
 
                     {/* Description */}
                     <div className="mt-3 flex items-start gap-2 text-black max-w-4xl">
-                      <p className="leading-relaxed">{show(community.description)}</p>
+                      <p className="leading-relaxed">{displayText(community.description)}</p>
                     </div>
                   </div>
                 </div>
@@ -395,21 +417,21 @@ export default function CommunityDetailAdmin() {
         {/* รายละเอียดข้อมูลชุมชน (แสดงแบบสองคอลัมน์) */}
           <div className="px-6 sm:px-8 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 text-sm leading-relaxed">
-            <Row label="ชื่อวิสาหกิจชุมชน">{show(community.name)}</Row>
-            <Row label="ชื่อย่อ">{show(community.alias)}</Row>
+            <Row label="ชื่อวิสาหกิจชุมชน">{displayText(community.name)}</Row>
+            <Row label="ชื่อย่อ">{displayText(community.alias)}</Row>
 
-            <Row label="ประเภทวิสาหกิจชุมชน">{show(community.type)}</Row>
-            <Row label="เลขทะเบียน">{show(community.registerNumber)}</Row>
+            <Row label="ประเภทวิสาหกิจชุมชน">{displayText(community.type)}</Row>
+            <Row label="เลขทะเบียน">{displayText(community.registerNumber)}</Row>
 
             <Row label="วันที่จดทะเบียน">{toThaiDate(community.registerDate)}</Row>
-            <Row label="เบอร์โทร">{show(community.phone)}</Row>
+            <Row label="เบอร์โทร">{displayText(community.phone)}</Row>
 
-            <Row label="อีเมล">{show(community.email)}</Row>
+            <Row label="อีเมล">{displayText(community.email)}</Row>
             <Row label="ที่อยู่">
               <span className="whitespace-pre-line break-words">
-                {`${show(community.location?.detail)} ${show(
+                {`${displayText(community.location?.detail)} ${displayText(
                   community.location?.subDistrict
-                )} ${show(community.location?.district)} ${show(community.location?.province)} ${
+                )} ${displayText(community.location?.district)} ${displayText(community.location?.province)} ${
                   community.location?.postalCode ? `(${community.location.postalCode})` : ""
                 }`}
               </span>
@@ -420,10 +442,10 @@ export default function CommunityDetailAdmin() {
                 ? `${community.location.latitude}, ${community.location.longitude}`
                 : "-"}
             </Row>
-            <Row label="คำอธิบายที่อยู่">{show(community.location?.detailMore)}</Row>
+            <Row label="คำอธิบายที่อยู่">{displayText(community.location?.detailMore)}</Row>
 
-            <Row label="ชื่อกิจกรรมหลัก">{show(community.mainActivityName)}</Row>
-            <Row label="รายละเอียดกิจกรรมหลัก">{show(community.mainActivityDescription)}</Row>
+            <Row label="ชื่อกิจกรรมหลัก">{displayText(community.mainActivityName)}</Row>
+            <Row label="รายละเอียดกิจกรรมหลัก">{displayText(community.mainActivityDescription)}</Row>
 
             <Row label="เว็บไซต์">
               {community.urlWebsite ? (
@@ -439,21 +461,21 @@ export default function CommunityDetailAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="จำนวนสมาชิก">{show(community.communityMembers?.length || 0)} คน</Row>
+            <Row label="จำนวนสมาชิก">{displayText(community.communityMembers?.length || 0)} คน</Row>
 
-            <Row label="ชื่อผู้ดูแลหลัก">{show(community.mainAdmin)}</Row>
-            <Row label="เบอร์โทรผู้ดูแลหลัก">{show(community.mainAdminPhone)}</Row>
+            <Row label="ชื่อผู้ดูแลหลัก">{displayText(community.mainAdmin)}</Row>
+            <Row label="เบอร์โทรผู้ดูแลหลัก">{displayText(community.mainAdminPhone)}</Row>
 
-            <Row label="ผู้ประสานงาน">{show(community.coordinatorName)}</Row>
-            <Row label="เบอร์โทรผู้ประสานงาน">{show(community.coordinatorPhone)}</Row>
+            <Row label="ผู้ประสานงาน">{displayText(community.coordinatorName)}</Row>
+            <Row label="เบอร์โทรผู้ประสานงาน">{displayText(community.coordinatorPhone)}</Row>
 
-            <Row label="ผู้ดูแล">{show(community.mainAdmin)}</Row>
+            <Row label="ผู้ดูแล">{displayText(community.mainAdmin)}</Row>
             <div />
 
-            <Row label="ชื่อธนาคาร">{show(community.bankName)}</Row>
-            <Row label="เลขบัญชี">{show(community.accountNumber)}</Row>
+            <Row label="ชื่อธนาคาร">{displayText(community.bankName)}</Row>
+            <Row label="เลขบัญชี">{displayText(community.accountNumber)}</Row>
 
-            <Row label="ชื่อบัญชีธนาคาร">{show(community.accountName)}</Row>
+            <Row label="ชื่อบัญชีธนาคาร">{displayText(community.accountName)}</Row>
           </div>
         </div>
 
@@ -503,14 +525,14 @@ export default function CommunityDetailAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="อื่นๆ">{show(community.urlOther)}</Row>
+            <Row label="อื่นๆ">{displayText(community.urlOther)}</Row>
           </div>
         </div>
 
         {/* ประวัติชุมชน */}
         <div className="px-6 sm:px-8 mt-10">
           <h2 className="text-xl font-semibold">ประวัติชุมชน</h2>
-          <p className="mt-2 leading-relaxed">{show(community.description)}</p>
+          <p className="mt-2 leading-relaxed">{displayText(community.description)}</p>
         </div>
 
         {/* แกลเลอรีรูปภาพเพิ่มเติม */}
@@ -587,10 +609,10 @@ export default function CommunityDetailAdmin() {
         <div className="px-6 sm:px-8 mt-6 pb-8">
           {(() => {
             const stores = (community.stores || []).filter(
-              (x: any) => x.communityId === community.id
+              (store: any) => store.communityId === community.id
             );
             const homestays = (community.homestays || []).filter(
-              (x: any) => x.communityId === community.id
+              (homestay: any) => homestay.communityId === community.id
             );
 
             return (
@@ -603,17 +625,17 @@ export default function CommunityDetailAdmin() {
                 >
                   {stores.length ? (
                     <div className="space-y-4">
-                      {stores.map((s: any) => (
+                      {stores.map((store: any) => (
                         <ItemCard
-                          key={s.id}
+                          key={store.id}
                           image={resolveBackendUploadUrl(
-                            s?.storeImage?.find(
-                              (f: any) => String(f.type).toUpperCase() === "COVER"
+                            store?.storeImage?.find(
+                              (imageFile: any) => String(imageFile.type).toUpperCase() === "COVER"
                             )?.image
                           )}
-                          title={s.name}
+                          title={store.name}
                         >
-                          <div className="line-clamp-3">{s.detail || "-"}</div>
+                          <div className="line-clamp-3">{store.detail || "-"}</div>
                         </ItemCard>
                       ))}
                     </div>
@@ -630,22 +652,22 @@ export default function CommunityDetailAdmin() {
                 >
                   {homestays.length ? (
                     <div className="space-y-4">
-                      {homestays.map((h: any) => (
+                      {homestays.map((homestay: any) => (
                         <ItemCard
-                          key={h.id}
+                          key={homestay.id}
                           image={resolveBackendUploadUrl(
-                            h?.homestayImage?.find(
-                              (f: any) => String(f.type).toUpperCase() === "COVER"
+                            homestay?.homestayImage?.find(
+                              (imageFile: any) => String(imageFile.type).toUpperCase() === "COVER"
                             )?.image
                           )}
-                          title={h.name}
+                          title={homestay.name}
                         >
                           <div className="space-y-1">
                             <div>
-                              - ประเภท {show(h.type)} • รองรับ {show(h.guestPerRoom)} คน/ห้อง •
-                              ทั้งหมด {show(h.totalRoom)} ห้อง
+                              - ประเภท {displayText(homestay.type)} • รองรับ {displayText(homestay.guestPerRoom)} คน/ห้อง •
+                              ทั้งหมด {displayText(homestay.totalRoom)} ห้อง
                             </div>
-                            <div className="line-clamp-3">{show(h.facility)}</div>
+                            <div className="line-clamp-3">{displayText(homestay.facility)}</div>
                           </div>
                         </ItemCard>
                       ))}
@@ -663,30 +685,30 @@ export default function CommunityDetailAdmin() {
                 >
                   {community.communityMembers?.length ? (
                     <div className="space-y-3">
-                      {community.communityMembers.map((cm: any) => {
-                        const m = cm.user;
-                        const fullName = [m.fname, m.lname].filter(Boolean).join(" ").trim();
+                      {community.communityMembers.map((communityMember: any) => {
+                        const member = communityMember.user;
+                        const fullName = [member.fname, member.lname].filter(Boolean).join(" ").trim();
 
                         return (
                           <div
-                            key={cm.id}
-                            onClick={() => navigate(`/admin/account/${m.id}`)} // ชี้ไปหน้ารายละเอียดสมาชิกฝั่ง Admin
+                            key={communityMember.id}
+                            onClick={() => navigate(`/admin/account/${member.id}`)} // ชี้ไปหน้ารายละเอียดสมาชิกฝั่ง Admin
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
                             <AvatarCircle
-                              src={resolveBackendUploadUrl(m.profileImage)}
-                              name={fullName || m.username}
+                              src={resolveBackendUploadUrl(member.profileImage)}
+                              name={fullName || member.username}
                               size={64}
                             />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{fullName || m.username}</div>
-                              {m.activityRole && (
-                                <div className="text-sm text-slate-700">• {m.activityRole}</div>
+                              <div className="font-medium truncate">{fullName || member.username}</div>
+                              {member.activityRole && (
+                                <div className="text-sm text-slate-700">• {member.activityRole}</div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
-                                {m.email || "-"}
+                                {member.email || "-"}
                               </div>
-                              <div className="text-sm text-slate-600">{m.phone || "-"}</div>
+                              <div className="text-sm text-slate-600">{member.phone || "-"}</div>
                             </div>
                           </div>
                         );

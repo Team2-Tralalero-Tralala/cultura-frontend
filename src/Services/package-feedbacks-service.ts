@@ -23,4 +23,18 @@ export const getPackageFeedbacksByPackageId = async (packageId: number) => {
   return response.data;
 };
 
+/**
+ * ฟังก์ชัน : getPackageFeedbacksByPackageIdMember
+ * คำอธิบาย : ดึงรายการ Feedback ของแพ็กเกจตามรหัสแพ็กเกจ (เฉพาะ Member)
+ * Input : packageId: number 
+ * Output : Promise<any[]> - รายการ Feedback ทั้งหมดของแพ็กเกจนั้น
+ */
+export const getPackageFeedbacksByPackageIdMember = async (packageId: number) => {
+  const response = await axios.get(`${apiUrl}/member/package/feedbacks/${packageId}`, {
+    withCredentials: true,
+  });
+
+  return response.data;
+};
+
 export default getPackageFeedbacksByPackageId;

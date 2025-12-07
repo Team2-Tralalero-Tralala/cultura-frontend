@@ -266,7 +266,7 @@ const PackageGroupSection: React.FC<{
     );
 };
 
-export function MemberFeedbacks() {
+export default function Feedback() {
     const [packageGroups, setPackageGroups] = React.useState<PackageGroup[]>([]);
     const [totalItems, setTotalItems] = React.useState<number>(0);
     const [totalPackages, setTotalPackages] = React.useState<number>(0);

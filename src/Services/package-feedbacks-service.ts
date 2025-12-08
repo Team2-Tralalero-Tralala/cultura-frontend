@@ -15,7 +15,7 @@ const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
  * Output : Promise<any[]> - รายการ Feedback ทั้งหมดของแพ็กเกจนั้น
  */
 export const getPackageFeedbacksByPackageId = async (packageId: number) => {
-  const response = await axios.get(`${apiUrl}/admin/package/feedback/${packageId}`, {
+  const response = await axios.get(`${apiUrl}/admin/package/feedbacks/${packageId}`, {
     withCredentials: true,
   });
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+
 import {
   getPackageFeedbacksByPackageIdMember,
   replyPackageFeedback,
@@ -8,27 +9,33 @@ import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 
-/**
- * Base URL สำหรับรูปจาก Backend
+/*
+ * ค่าคงที่   : BACKEND_BASE_URL
+ * คำอธิบาย : Base URL สำหรับประกอบลิงก์รูปภาพที่เสิร์ฟจาก Backend
+ * Input    : -
+ * Output   : string - URL พื้นฐานของ backend
  */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-/**
- * แปลง path รูปให้เป็น URL
- */
-function getImageUrl(fileName?: string): string | undefined {
-  if (!fileName) return undefined;
-  const cleanPath = fileName.replace(/^\/?uploads\//, "");
-  return `${BACKEND_BASE_URL}/uploads/${cleanPath}`;
-}
+type FeedbackImage = {
+  image: string;
+};
 
-type FeedbackImage = { image: string };
-type Tourist = { fname: string; lname: string };
-type PackageInfo = { name: string };
-type BookingHistory = { tourist: Tourist; package: PackageInfo };
+type Tourist = {
+  fname: string;
+  lname: string;
+};
 
-// ✅ ชื่อผู้ตอบกลับจากหลังบ้าน (select fname, lname)
+type PackageInfo = {
+  name: string;
+};
+
+type BookingHistory = {
+  tourist: Tourist;
+  package: PackageInfo;
+};
+
 type Responder = {
   fname: string;
   lname: string;
@@ -41,21 +48,40 @@ type Feedback = {
   message: string;
   feedbackImages: FeedbackImage[];
   bookingHistory: BookingHistory;
-
-  /** ข้อความตอบกลับจากผู้ดูแล (ถ้ามี) */
   replyMessage?: string | null;
-  /** เวลา reply (ใช้ formatTimeAgo โชว์เป็น "x ชั่วโมง") */
   replyAt?: string | null;
-  /** ผู้ตอบกลับที่ backend select มา */
   responder?: Responder | null;
 };
 
-/**
- * แปลงวันที่/เวลาเป็นข้อความประมาณเวลา (xx นาที / xx ชั่วโมง / xx วัน ...)
+/*
+ * ฟังก์ชัน : getImageUrl
+ * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
+ * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
+ * Output   : string | undefined - URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
+ */
+function getImageUrl(fileName?: string): string | undefined {
+  if (!fileName) {
+    return undefined;
+  }
+
+  const cleanedPath = fileName.replace(/^\/?uploads\//, "");
+  return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+}
+
+/*
+ * ฟังก์ชัน : formatTimeAgo
+ * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไป เช่น "2 ชั่วโมงที่แล้ว"
+ * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
+ * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
  */
 function formatTimeAgo(createdAt: string): string {
   const now = new Date();
   const created = new Date(createdAt);
+
+  if (Number.isNaN(created.getTime())) {
+    return "";
+  }
+
   const diff = now.getTime() - created.getTime();
 
   const minutes = Math.floor(diff / (1000 * 60));
@@ -65,24 +91,41 @@ function formatTimeAgo(createdAt: string): string {
   const years = Math.floor(days / 365);
 
   if (minutes < 1) return "เมื่อสักครู่";
-  if (minutes < 60) return `${minutes} นาที`;
-  if (hours < 24) return `${hours} ชั่วโมง`;
-  if (days < 30) return `${days} วัน`;
-  if (months < 12) return `${months} เดือน`;
-  return `${years} ปี`;
+  if (minutes < 60) return `${minutes} นาทีที่แล้ว`;
+  if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`;
+  if (days < 30) return `${days} วันที่แล้ว`;
+  if (months < 12) return `${months} เดือนที่แล้ว`;
+  return `${years} ปีที่แล้ว`;
 }
 
-/**
- * แสดงชื่อแบบ mask ตัวแรกจริง ที่เหลือเป็น *
+/*
+ * ฟังก์ชัน : formatMaskedFullName
+ * คำอธิบาย : แปลงชื่อจริงให้เป็นรูปแบบปกปิดบางส่วน (เฉพาะตัวแรกที่แสดง ช่วงที่เหลือเป็น *)
+ * Input    : tourist (Tourist) - ข้อมูลนักท่องเที่ยว
+ * Output   : string - ชื่อที่ถูก mask แล้ว
  */
-function formatFullName(tourist: Tourist): string {
-  const mask = (text: string) =>
-    text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
-  return `${mask(tourist.fname)} ${mask(tourist.lname)}`.trim();
+function formatMaskedFullName(tourist: Tourist): string {
+  const getMaskedText = (text: string): string => {
+    if (!text) {
+      return "";
+    }
+
+    const firstCharacter = text[0];
+    const maskedCharacters = "*".repeat(Math.max(1, text.length - 1));
+    return firstCharacter + maskedCharacters;
+  };
+
+  const maskedFirstName = getMaskedText(tourist.fname);
+  const maskedLastName = getMaskedText(tourist.lname);
+
+  return `${maskedFirstName} ${maskedLastName}`.trim();
 }
 
-/**
- * แสดงดาวคะแนนรีวิว 1–5 เป็น ★/☆
+/*
+ * ฟังก์ชัน : renderStars
+ * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
+ * Input    : rating (number) - คะแนนระหว่าง 1–5
+ * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
  */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
@@ -90,14 +133,17 @@ function renderStars(rating: number): string {
     .join("");
 }
 
-/**
- * หน้าแสดง feedback + การตอบกลับ
+/*
+ * ฟังก์ชัน : PackageFeedbacksPage
+ * คำอธิบาย   : แสดงรายการ Feedback ของแพ็กเกจ พร้อมความสามารถในการตอบกลับแต่ละรายการ
+ * Input      : ไม่มี (ใช้ useParams ดึง packageId จาก URL)
+ * Output     : JSX ของหน้าแสดงผล Feedback
  */
 export default function PackageFeedbacksPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const [sortOrder, setSortOrder] =
     React.useState<"latest" | "oldest">("latest");
@@ -106,17 +152,18 @@ export default function PackageFeedbacksPage() {
     {}
   );
 
-  const [isReplyModalOpen, setIsReplyModalOpen] = React.useState(false);
-  const [selectedFeedbackId, setSelectedFeedbackId] =
-    React.useState<number | null>(null);
+  const [isReplyModalOpen, setIsReplyModalOpen] =
+    React.useState<boolean>(false);
+  const [selectedFeedbackId, setSelectedFeedbackId] = React.useState<
+    number | null
+  >(null);
 
   const packageIdNumber = Number(packageId);
 
-  /**
-   * โหลด feedback ตาม packageId
-   */
   React.useEffect(() => {
-    if (!packageIdNumber) return;
+    if (!packageIdNumber) {
+      return;
+    }
 
     setIsLoading(true);
 
@@ -133,9 +180,6 @@ export default function PackageFeedbacksPage() {
     );
   }, [packageIdNumber]);
 
-  /**
-   * เรียง feedback ตามเวลา
-   */
   const sortedFeedbackLists = React.useMemo(() => {
     const clonedFeedbackLists = [...feedbackLists];
 
@@ -162,54 +206,79 @@ export default function PackageFeedbacksPage() {
     { label: "เก่าสุด", value: "oldest" },
   ];
 
-  /**
-   * เก็บข้อความในช่องตอบกลับ
+  /*
+   * ฟังก์ชัน : handleChangeReplyText
+   * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId ที่กำหนด
+   * Input    : feedbackId (number) - รหัสของ feedback
+   *            value (string) - ข้อความที่ผู้ใช้พิมพ์
+   * Output   : void
    */
-  const handleChangeReplyText = (feedbackId: number, value: string): void => {
+  function handleChangeReplyText(feedbackId: number, value: string): void {
     setReplyTexts((previousReplyTexts) => ({
       ...previousReplyTexts,
       [feedbackId]: value,
     }));
-  };
+  }
 
-  /**
-   * เปิด modal ยืนยันส่งตอบกลับ
+  /*
+   * ฟังก์ชัน : handleOpenReplyModal
+   * คำอธิบาย : เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
+   * Input    : feedbackId (number) - รหัสของ feedback ที่ต้องการตอบ
+   * Output   : void
    */
-  const handleOpenReplyModal = (feedbackId: number): void => {
+  function handleOpenReplyModal(feedbackId: number): void {
     const replyMessage = replyTexts[feedbackId]?.trim();
-    if (!replyMessage) return;
+
+    if (!replyMessage) {
+      return;
+    }
 
     setSelectedFeedbackId(feedbackId);
     setIsReplyModalOpen(true);
-  };
+  }
 
-  const handleCloseReplyModal = (): void => {
+  /*
+   * ฟังก์ชัน : handleCloseReplyModal
+   * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
+   * Input    : -
+   * Output   : void
+   */
+  function handleCloseReplyModal(): void {
     setIsReplyModalOpen(false);
     setSelectedFeedbackId(null);
-  };
+  }
 
-  /**
-   * ส่งตอบกลับไป backend แล้วอัปเดต state
+  /*
+   * ฟังก์ชัน : sendReply
+   * คำอธิบาย : ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
+   * Input    : feedbackId (number) - รหัส feedback ที่ต้องการตอบกลับ
+   * Output   : Promise<void>
    */
-  const sendReply = async (feedbackId: number): Promise<void> => {
+  async function sendReply(feedbackId: number): Promise<void> {
     const replyMessage = replyTexts[feedbackId]?.trim();
-    if (!replyMessage) return;
+
+    if (!replyMessage) {
+      return;
+    }
 
     await replyPackageFeedback(feedbackId, { replyMessage });
 
-    // อัปเดตให้ feedback นั้นมี replyMessage ทันที (responder จะมาจาก fetch รอบถัดไป)
     setFeedbackLists((previousFeedbacks) =>
-      previousFeedbacks.map((feedback) =>
-        feedback.id === feedbackId ? { ...feedback, replyMessage } : feedback
+      previousFeedbacks.map((feedbackItem) =>
+        feedbackItem.id === feedbackId
+          ? {
+              ...feedbackItem,
+              replyMessage,
+            }
+          : feedbackItem
       )
     );
 
-    // ล้างช่อง input ของ feedback นั้น
     setReplyTexts((previousReplyTexts) => ({
       ...previousReplyTexts,
       [feedbackId]: "",
     }));
-  };
+  }
 
   return (
     <div>
@@ -248,7 +317,8 @@ export default function PackageFeedbacksPage() {
                 !!feedbackItem.replyMessage &&
                 feedbackItem.replyMessage.trim() !== "";
 
-              // ✅ เอาชื่อจาก responder มาแสดง
+              const feedbackTimeLabel = formatTimeAgo(feedbackItem.createdAt);
+
               const replyName = feedbackItem.responder
                 ? `${feedbackItem.responder.fname} ${feedbackItem.responder.lname}`
                 : "ผู้ดูแลแพ็กเกจ";
@@ -257,15 +327,16 @@ export default function PackageFeedbacksPage() {
                 feedbackItem.responder?.fname?.charAt(0).toUpperCase() ||
                 replyName.charAt(0).toUpperCase();
 
-              const replyTimeText =
-                feedbackItem.replyAt && formatTimeAgo(feedbackItem.replyAt);
+              const replyTimeLabel = feedbackItem.replyAt
+                ? formatTimeAgo(feedbackItem.replyAt)
+                : "";
 
               return (
                 <div
                   key={feedbackItem.id}
                   className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
                 >
-                  {/* Header รีวิวหลัก */}
+
                   <div className="flex justify-between items-start">
                     <div className="flex items-center space-x-3">
                       <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
@@ -277,7 +348,9 @@ export default function PackageFeedbacksPage() {
                       </div>
 
                       <span className="font-semibold text-gray-800">
-                        {formatFullName(feedbackItem.bookingHistory.tourist)}
+                        {formatMaskedFullName(
+                          feedbackItem.bookingHistory.tourist
+                        )}
                       </span>
                     </div>
 
@@ -285,24 +358,27 @@ export default function PackageFeedbacksPage() {
                       <div className="text-sm text-black">
                         {renderStars(feedbackItem.rating)}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {formatTimeAgo(feedbackItem.createdAt)}
-                      </div>
+                      {feedbackTimeLabel && (
+                        <div className="text-xs text-gray-500">
+                          {feedbackTimeLabel}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* ข้อความรีวิวหลัก */}
                   <p className="text-gray-800 text-sm leading-relaxed">
                     {feedbackItem.message}
                   </p>
 
-                  {/* รูปภาพใน feedback */}
                   {feedbackItem.feedbackImages?.length > 0 && (
                     <div className="flex flex-wrap gap-3">
                       {feedbackItem.feedbackImages.map(
                         (feedbackImage, imageIndex) => {
                           const imageUrl = getImageUrl(feedbackImage.image);
-                          if (!imageUrl) return null;
+
+                          if (!imageUrl) {
+                            return null;
+                          }
 
                           return (
                             <div
@@ -321,7 +397,6 @@ export default function PackageFeedbacksPage() {
                     </div>
                   )}
 
-                  {/* การ์ดตอบกลับ (เทา) ตามรูปตัวอย่าง + ใช้ชื่อ responder */}
                   {hasReply && (
                     <div className="mt-4 bg-[#EDEDED] rounded-2xl px-4 py-3">
                       <div className="flex items-start justify-between">
@@ -331,14 +406,15 @@ export default function PackageFeedbacksPage() {
                               {replyAvatarLetter}
                             </span>
                           </div>
+
                           <span className="font-semibold text-gray-800 text-sm">
                             {replyName}
                           </span>
                         </div>
 
-                        {replyTimeText && (
+                        {replyTimeLabel && (
                           <span className="text-xs text-gray-500 whitespace-nowrap">
-                            {replyTimeText}
+                            {replyTimeLabel}
                           </span>
                         )}
                       </div>
@@ -349,7 +425,6 @@ export default function PackageFeedbacksPage() {
                     </div>
                   )}
 
-                  {/* ถ้ายังไม่มีการตอบกลับ → แสดงช่องพิมพ์ตอบกลับ */}
                   {!hasReply && (
                     <div className="pt-2">
                       <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
@@ -413,6 +488,7 @@ export default function PackageFeedbacksPage() {
           if (selectedFeedbackId !== null) {
             void sendReply(selectedFeedbackId);
           }
+
           setIsReplyModalOpen(false);
           setSelectedFeedbackId(null);
         }}

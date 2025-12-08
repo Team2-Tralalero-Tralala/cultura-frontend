@@ -16,7 +16,7 @@ import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
 export default function MemberRoutes() {
   return (
     <Routes>
-
+      <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />

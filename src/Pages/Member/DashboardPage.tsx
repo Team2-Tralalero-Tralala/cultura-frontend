@@ -199,16 +199,21 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-4 h-full">
-      {isLoading ? (
+      {!dashboardData && isLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">กำลังโหลดข้อมูล...</div>
         </div>
-      ) : errorMessage ? (
+      ) : !dashboardData && errorMessage ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-red-600">{errorMessage}</div>
         </div>
       ) : dashboardData ? (
-        <div>
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center rounded-lg pointer-events-none">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 opacity-50"></div>
+            </div>
+          )}
           <h1 className="font-bold text-xl mb-4">รายงานและสถิติ</h1>
           <div>
             <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">

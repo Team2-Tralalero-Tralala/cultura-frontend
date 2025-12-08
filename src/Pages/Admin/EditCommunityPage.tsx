@@ -114,7 +114,9 @@ const communitySchema = z.object({
  *   - เพิ่ม property isFromServer = true เพื่อระบุว่าไฟล์นี้มาจาก server (ไม่ใช่ไฟล์ใหม่ที่ผู้ใช้อัปโหลด)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    credentials: "include",
+  });
   const blob = await res.blob();
   const ext = filename.split(".").pop() || "jpg";
   const type = blob.type || `image/${ext}`;
@@ -249,11 +251,13 @@ export function EditCommunity() {
         setChecked(data.status === "OPEN" ? true : false);
         setIsVisibleRating(data.isRatingVisible);
 
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
         const logoFileFetch: File[] = await Promise.all(
           (data.communityImage || [])
             .filter((img: any) => img.type === "LOGO")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -261,7 +265,7 @@ export function EditCommunity() {
           (data.communityImage || [])
             .filter((img: any) => img.type === "COVER")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -269,7 +273,7 @@ export function EditCommunity() {
           (data.communityImage || [])
             .filter((img: any) => img.type === "GALLERY")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -277,8 +281,10 @@ export function EditCommunity() {
           (data.communityImage || [])
             .filter((img: any) => img.type === "VIDEO")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
-              const response = await fetch(fullUrl);
+              const fullUrl = `${backendUrl}/${img.image}`;
+              const response = await fetch(fullUrl, {
+                credentials: "include",
+              });
               const blob = await response.blob();
               const fixedBlob =
                 blob.type && blob.type.startsWith("video/")

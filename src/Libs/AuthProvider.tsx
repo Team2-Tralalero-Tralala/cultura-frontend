@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
@@ -22,6 +22,7 @@ export type AuthUser = {
   lname: string;
   email: string;
 };
+
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -55,9 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const fetchUser = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/auth/me", {
-        withCredentials: true,
-      });
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.get(`${apiUrl}/auth/me`, {
+          withCredentials: true,
+        });
       const { id, username, role, fname, lname, email } = res.data.data;
       const authUser: AuthUser = {
         id: id,
@@ -86,8 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     async (username: string, password: string) => {
       console.log("login", 1);
       try {
-        await axios.post(
-          "http://localhost:3000/api/auth/login",
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.post(
+          `${apiUrl}/auth/login`,
           { username, password },
           { withCredentials: true }
         );
@@ -136,7 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const register = useCallback(async (data: RegisterData) => {
     try {
-      const res = await axios.post(`http://localhost:3000/auth/signup`, data);
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const backendUrl = apiUrl.replace("/api", "");
+      const res = await axios.post(`${backendUrl}/auth/signup`, data);
       return res.status === 201 || res.status === 200;
     } catch {
       return false;
@@ -160,7 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     await new Promise((r) => setTimeout(r, 50));
 
-    await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    await axios.post(`${apiUrl}/auth/logout`, {}, { withCredentials: true });
 
     setUser(null);
 

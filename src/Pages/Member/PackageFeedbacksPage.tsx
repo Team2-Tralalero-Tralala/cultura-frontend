@@ -1,10 +1,3 @@
-/**
- * คอมโพเนนต์ : PackageFeedbacksPage
- * คำอธิบาย  : หน้าแสดงรายการ Feedback ของแพ็กเกจ พร้อมฟังก์ชันตอบกลับสำหรับผู้ดูแล
- * Input      : -
- * Output     : JSX ของหน้าแสดงผล Feedback
- */
-
 import React from "react";
 import { useParams } from "react-router-dom";
 
@@ -19,13 +12,9 @@ import { Modal } from "@/Components/Modal/Modal";
 /**
  * ค่าคงที่   : BACKEND_BASE_URL
  * คำอธิบาย : Base URL สำหรับประกอบลิงก์รูปภาพที่เสิร์ฟจาก Backend
- * Input    : -
- * Output   : string - URL พื้นฐานของ backend
  */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
-/* ---------- Type Definitions ---------- */
 
 type FeedbackImage = {
   image: string;
@@ -61,8 +50,6 @@ type Feedback = {
   replyAt?: string | null;
   responder?: Responder | null;
 };
-
-/* ---------- Utility Functions ---------- */
 
 /**
  * ฟังก์ชัน : getImageUrl
@@ -144,8 +131,6 @@ function renderStars(rating: number): string {
     .join("");
 }
 
-/* ---------- Main Component ---------- */
-
 /**
  * คอมโพเนนต์ : PackageFeedbacksPage
  * คำอธิบาย   : แสดงรายการ Feedback ของแพ็กเกจ พร้อมความสามารถในการตอบกลับแต่ละรายการ
@@ -216,12 +201,12 @@ export default function PackageFeedbacksPage() {
           createdAtTime: new Date(feedbackItem.createdAt).getTime(),
         };
       })
-      .sort((a, b) => {
-        if (a.isPrimaryGroup !== b.isPrimaryGroup) {
-          return a.isPrimaryGroup ? -1 : 1;
+      .sort((current, next) => {
+        if (current.isPrimaryGroup !== next.isPrimaryGroup) {
+          return current.isPrimaryGroup ? -1 : 1;
         }
 
-        return b.createdAtTime - a.createdAtTime;
+        return next.createdAtTime - current.createdAtTime;
       })
       .map((item) => item.feedbackItem);
   }, [feedbackLists, sortOrder]);
@@ -268,8 +253,6 @@ export default function PackageFeedbacksPage() {
   /**
    * ฟังก์ชัน : handleCloseReplyModal
    * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
-   * Input    : -
-   * Output   : void
    */
   function handleCloseReplyModal(): void {
     setIsReplyModalOpen(false);

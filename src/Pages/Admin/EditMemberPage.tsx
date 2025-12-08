@@ -1,3 +1,9 @@
+/*
+ * Component: EditMemberPage (Admin)
+ * Description: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
+ * Author: Team 2 (Cultura)
+ * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+ */
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -12,6 +18,9 @@ import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 
+/*
+ * คำอธิบาย : Interface สำหรับกำหนดโครงสร้างข้อมูลที่ใช้ในการแก้ไขข้อมูลสมาชิก
+ */
 interface EditMemberBody {
   fname: string;
   lname: string;
@@ -22,12 +31,18 @@ interface EditMemberBody {
   communityRole: string;
 }
 
+/*
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลสมาชิกโดย Admin
+ */
 const EditMemberPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userId } = useParams();
 
-
+  
+  /*
+   * คำอธิบาย : State สำหรับเก็บค่าฟอร์มข้อมูลสมาชิก
+   */
   const [formData, setFormData] = useState({
     fname: "",
     lname: "",
@@ -37,12 +52,31 @@ const EditMemberPage: React.FC = () => {
     communityRole: "",
   });
   
+  /*
+   * คำอธิบาย : State สำหรับเก็บไฟล์รูปโปรไฟล์ที่อัปโหลดใหม่
+   */
   const [profileImage, setProfileImage] = useState<File | null>(null);
+
+  /*
+   * คำอธิบาย : State สำหรับเก็บ URL รูปโปรไฟล์ที่โหลดจากระบบ
+   */
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  
+
+  /*
+   * คำอธิบาย : State สำหรับควบคุม Modal ยืนยันการบันทึกข้อมูล
+   */
   const [showConfirm, setShowConfirm] = useState(false);
+
+  /*
+   * คำอธิบาย : State สำหรับควบคุม Modal แสดงผลเมื่อแก้ไขสำเร็จ
+   */
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
+   * Input : -
+   * Output : -
+   */
   const fetchMemberData = async () => {
     try {
 
@@ -69,17 +103,30 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
+  /*
+   * คำอธิบาย : Hook สำหรับโหลดข้อมูลสมาชิกเมื่อมี userId
+   */
   useEffect(() => {
     if (userId) {
       fetchMemberData();
     }
   }, [userId]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการการเปลี่ยนแปลงค่าของ Input
+   * Input : event
+   * Output : -
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับบันทึกข้อมูลการแก้ไขสมาชิก
+   * Input : event
+   * Output : -
+   */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 

@@ -18,6 +18,9 @@ import SubmitButton from "../../Components/SubmitButton";
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation"; 
 
+/*
+ * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
+ */
 const memberSchema = z.object({
   fname: z.string().min(1, "กรุณากรอกชื่อ"),
   lname: z.string().min(1, "กรุณากรอกนามสกุล"),
@@ -29,9 +32,15 @@ const memberSchema = z.object({
   communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
 });
 
+/*
+ * คำอธิบาย : Component สำหรับสร้างบัญชีสมาชิกโดย Admin
+ */
 const CreateMemberPage: React.FC = () => {
   const navigate = useNavigate();
 
+ /*
+   * คำอธิบาย : State สำหรับเก็บค่าข้อมูลจากฟอร์ม
+   */
   const [formData, setFormData] = useState({
     fname: "",
     lname: "",
@@ -44,11 +53,26 @@ const CreateMemberPage: React.FC = () => {
     profileImage: null as File | null,
   });
 
+  /*
+   * คำอธิบาย : State สำหรับเก็บข้อความ Error ของแต่ละฟิลด์
+   */
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+
+   /*
+   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal ยืนยันการสร้างบัญชี
+   */
   const [showConfirm, setShowConfirm] = useState(false);
-  
+
+   /*
+   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal เมื่อสร้างบัญชีสำเร็จ
+   */
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+   /*
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input : fieldName, fieldValue
+   * Output : boolean
+   */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
       const result = memberSchema.safeParse({
@@ -77,6 +101,11 @@ const CreateMemberPage: React.FC = () => {
     }
   };
 
+   /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
+   * Input : event
+   * Output : -
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => {
@@ -86,11 +115,21 @@ const CreateMemberPage: React.FC = () => {
     });
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
+   * Input : file
+   * Output : -
+   */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
+   * Input : event
+   * Output : -
+   */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 

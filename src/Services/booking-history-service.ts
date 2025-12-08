@@ -115,13 +115,16 @@ export async function updateBookingStatus(
 
 /*
  * ฟังก์ชัน : fetchBookingsByMember
- * คำอธิบาย : ดึงรายการการจองของแพ็กเกจที่ Member คนนั้นเป็นผู้ดูแล (overseerMember)
+ * คำอธิบาย : ดึงรายการการจองของแพ็กเกจที่ Member เป็นผู้ดูแล (overseerMember)
  * Method : GET
  * Path   : /member/booking-histories
- * Query  :
- *   - page   : หน้า (default 1)
- *   - limit  : จำนวนต่อหน้า (default 10)
- *   - status : (optional) ใช้กรองสถานะ เช่น PENDING, REFUND_PENDING, BOOKED, ...
+ * Input :
+ *   - page (number)   : หน้าที่ต้องการดึงข้อมูล (default 1)
+ *   - limit (number)  : จำนวนรายการต่อหน้า (default 10)
+ *   - status (string, optional) : ใช้กรองสถานะการจอง เช่น PENDING, REFUND_PENDING, BOOKED
+ * Output :
+ *   - data : รายการข้อมูลการจองของ Member
+ *   - pagination : ข้อมูลการแบ่งหน้า (currentPage, totalPages, totalCount, limit)
  */
 export async function fetchBookingsByMember(
   page = 1,
@@ -150,9 +153,15 @@ export async function fetchBookingsByMember(
 
 /**
  * ฟังก์ชัน : updateBookingStatusByMember
- * คำอธิบาย : อัปเดตสถานะของการจอง (ใช้โดย Member – overseer ของแพ็กเกจนั้น)
+ * คำอธิบาย : อัปเดตสถานะของการจอง โดย Member ผู้ดูแลแพ็กเกจนั้น
  * Method : POST
  * Path   : /member/bookings/:id/status
+ * Input :
+ *   - bookingId (number) : รหัสการจองที่ต้องการอัปเดต
+ *   - status (string) : สถานะที่ต้องการอัปเดต (BOOKED, REJECTED, REFUNDED, REFUND_REJECTED)
+ *   - rejectReason (string, optional) : เหตุผลการปฏิเสธ (จำเป็นเมื่อ status เป็น REJECTED หรือ REFUND_REJECTED)
+ * Output :
+ *   - void : ไม่มีข้อมูลส่งกลับ หากอัปเดตสำเร็จ
  */
 export async function updateBookingStatusByMember(
   bookingId: number,
@@ -181,7 +190,7 @@ export async function updateBookingStatusByMember(
   }
 
   await axios.post(
-    `${apiUrl}/member/bookings/${bookingId}/status`,
+    `${apiUrl}/member/booking/${bookingId}/status`,
     body,
     { withCredentials: true }
   );

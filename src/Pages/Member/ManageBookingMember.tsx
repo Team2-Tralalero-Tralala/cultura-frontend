@@ -26,79 +26,88 @@ import type {
 import type { PaginationResponse } from "@/Types/Community";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/* --------------------------- Columns --------------------------- */
+/*
+ * คำอธิบาย : สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
+ * Input :
+ *   - onApprove (BookingRow => void) : callback เมื่อคลิกปุ่ม "อนุมัติ"
+ *   - onReject (BookingRow => void)  : callback เมื่อคลิกปุ่ม "ปฏิเสธ"
+ *   - onNavigate (number => void)    : callback เมื่อคลิกชื่อผู้จอง / ชื่อกิจกรรม เพื่อไปหน้ารายละเอียด
+ *   - onOpenSlip (string => void)    : callback เมื่อคลิกเปิดสลิปโอนเงิน
+ * Output :
+ *   - Column<BookingRow>[] : รายการคอลัมน์ที่ใช้กับ DataTable
+ */
 const makeColumns = (
   onApprove: (row: BookingRow) => void,
   onReject: (row: BookingRow) => void,
   onNavigate: (id: number) => void,
   onOpenSlip: (url: string) => void
 ): Column<BookingRow>[] => [
-  {
-    key: "touristName",
-    header: "ชื่อผู้จอง",
-    className: "min-w-[220px]",
-    render: (row) => (
-      <div
-        onClick={() => onNavigate(row.id)}
-        className="cursor-pointer text-dark-green hover:underline"
-      >
-        {row.touristName}
-      </div>
-    ),
-  },
-  {
-    key: "packageName",
-    header: "ชื่อกิจกรรม",
-    className: "min-w-[220px]",
-    render: (row) => (
-      <div
-        onClick={() => onNavigate(row.id)}
-        className="cursor-pointer text-dark-green hover:underline"
-      >
-        {row.packageName}
-      </div>
-    ),
-  },
-  {
-    key: "totalPrice",
-    header: "ราคา",
-    className: "min-w-[120px] text-left pl-4",
-    render: (row) => <div className="text-left">{row.totalPrice}</div>,
-  },
-  {
-    key: "status",
-    header: "สถานะ",
-    className: "min-w-[140px]",
-    render: (row) => {
-      const statusTextMap: Record<string, string> = {
-        PENDING: "รอตรวจสอบ",
-        REFUND_PENDING: "รอคืนเงิน",
-        BOOKED: "จองสำเร็จ",
-        REJECTED: "ปฏิเสธจอง",
-        REFUNDED: "คืนเงินแล้ว",
-        REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
-      };
-      return <div>{statusTextMap[row.status] ?? "-"}</div>;
+    {
+      key: "touristName",
+      header: "ชื่อผู้จอง",
+      className: "min-w-[220px]",
+      render: (row) => (
+        <div
+          onClick={() => onNavigate(row.id)}
+          className="cursor-pointer text-dark-green hover:underline"
+        >
+          {row.touristName}
+        </div>
+      ),
     },
-  },
-  {
-    key: "transferSlip",
-    header: "หลักฐาน",
-    className: "min-w-[180px]",
-    render: (row) => {
-      const slipUrl = row.transferSlip ?? "-";
-      if (!slipUrl || slipUrl === "-") {
-        return <div>-</div>;
-      }
+    {
+      key: "packageName",
+      header: "ชื่อกิจกรรม",
+      className: "min-w-[220px]",
+      render: (row) => (
+        <div
+          onClick={() => onNavigate(row.id)}
+          className="cursor-pointer text-dark-green hover:underline"
+        >
+          {row.packageName}
+        </div>
+      ),
+    },
+    {
+      key: "totalPrice",
+      header: "ราคา",
+      className: "min-w-[120px] text-left pl-4",
+      render: (row) => <div className="text-left">{row.totalPrice}</div>,
+    },
+    {
+      key: "status",
+      header: "สถานะ",
+      className: "min-w-[140px]",
+      render: (row) => {
+        const statusTextMap: Record<string, string> = {
+          PENDING: "รอตรวจสอบ",
+          REFUND_PENDING: "รอคืนเงิน",
+          BOOKED: "จองสำเร็จ",
+          REJECTED: "ปฏิเสธจอง",
+          REFUNDED: "คืนเงินแล้ว",
+          REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
+        };
+        return <div>{statusTextMap[row.status] ?? "-"}</div>;
+      },
+    },
+    {
+      key: "transferSlip",
+      header: "หลักฐาน",
+      className: "min-w-[180px]",
+      render: (row) => {
+        const slipUrl = row.transferSlip ?? "-";
+        if (!slipUrl || slipUrl === "-") {
+          return <div>-</div>;
+        }
 
-      const fileName = slipUrl.split("/").pop() ?? slipUrl;
+        const fileName = slipUrl.split("/").pop() ?? slipUrl;
 
-      return (
-        <button
-          type="button"
-          onClick={() => onOpenSlip(slipUrl)}
-          title={fileName}
-          className="
+        return (
+          <button
+            type="button"
+            onClick={() => onOpenSlip(slipUrl)}
+            title={fileName}
+            className="
             text-[#4A816F]
             underline underline-offset-2
             hover:text-[#2f5b49]
@@ -107,21 +116,21 @@ const makeColumns = (
             block
             text-left
           "
-        >
-          {fileName}
-        </button>
-      );
+          >
+            {fileName}
+          </button>
+        );
+      },
     },
-  },
-  {
-    key: "actions",
-    header: <div className="text-center w-full">จัดการ</div>,
-    className: "w-[200px] text-center pr-2",
-    render: (row) => (
-      <div className="flex justify-center items-center gap-3">
-        <button
-          onClick={() => onReject(row)}
-          className="
+    {
+      key: "actions",
+      header: <div className="text-center w-full">จัดการ</div>,
+      className: "w-[200px] text-center pr-2",
+      render: (row) => (
+        <div className="flex justify-center items-center gap-3">
+          <button
+            onClick={() => onReject(row)}
+            className="
             w-[77px]
             h-[31px]
             text-[16px]
@@ -131,13 +140,13 @@ const makeColumns = (
             text-[#4A816F]
             hover:bg-[#E6F0EC]
           "
-        >
-          ปฏิเสธ
-        </button>
+          >
+            ปฏิเสธ
+          </button>
 
-        <button
-          onClick={() => onApprove(row)}
-          className="
+          <button
+            onClick={() => onApprove(row)}
+            className="
             w-[77px]
             h-[31px]
             text-[16px]
@@ -146,16 +155,22 @@ const makeColumns = (
             text-white
             hover:bg-[#3B6D5D]
           "
-        >
-          อนุมัติ
-        </button>
-      </div>
-    ),
-  },
-];
+          >
+            อนุมัติ
+          </button>
+        </div>
+      ),
+    },
+  ];
 
-/* -------------------------- Component -------------------------- */
-
+/*
+ * ฟังก์ชัน : ManageBookingMember
+ * คำอธิบาย : หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
+ * การทำงาน :
+ *   - แสดงรายการการจองในรูปแบบตาราง
+ *   - รองรับค้นหา, กรองสถานะ, แบ่งหน้า
+ *   - สามารถอนุมัติ / ปฏิเสธการจอง และคำขอคืนเงิน
+ */
 export default function ManageBookingMember() {
   const navigate = useNavigate();
 
@@ -174,19 +189,32 @@ export default function ManageBookingMember() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [statusFilter, setStatusFilter] = React.useState("all");
 
+  // Modal ยืนยันการอนุมัติ/ปฏิเสธ
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [rejectOpen, setRejectOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<BookingRow | null>(null);
 
+  // Modal แสดงสลิปโอนเงิน
   const [slipOpen, setSlipOpen] = React.useState(false);
   const [slipUrl, setSlipUrl] = React.useState<string | null>(null);
 
+  /*
+   * ตัวเลือกสถานะที่ใช้สำหรับ FilterDropdown
+   * ใช้กรองรายการการจองตามสถานะ
+   */
   const statusOptions = [
     { label: "ทั้งหมด", value: "all" },
     { label: "รอตรวจสอบ", value: "PENDING" },
     { label: "รอคืนเงิน", value: "REFUND_PENDING" },
   ];
 
+  /*
+   * คำอธิบาย : ดึงรายการการจองจาก API ตามหน้า, จำนวนต่อหน้า และสถานะ แล้ว map เป็น BookingRow
+   * Input :
+   *   - (ใช้ค่าจาก state ภายใน component : currentPage, pageSize, statusFilter)
+   * Output :
+   *   - Promise<void> : เมื่อสำเร็จจะอัปเดต state ของ rows และ pagination ให้เป็นข้อมูลล่าสุด
+   */
   const reload = React.useCallback(async () => {
     try {
       setIsLoading(true);
@@ -241,22 +269,64 @@ export default function ManageBookingMember() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
 
+  /*
+   * คำอธิบาย : อนุมัติการจอง หรืออนุมัติคำขอคืนเงิน แล้วเรียก API และรีโหลดข้อมูล
+   * Input :
+   *   - row (BookingRow) : แถวรายการการจองที่ต้องการอนุมัติ
+   * Output :
+   *   - Promise<void> : อัปเดตสถานะใน backend สำเร็จ และรีเฟรชข้อมูลในตาราง
+   */
   const handleApprove = async (row: BookingRow) => {
-    const newStatus =
-      row.status === "REFUND_PENDING" ? "REFUNDED" : "BOOKED";
-    await updateBookingStatusByMember(row.id, newStatus);
-    await reload();
+    try {
+      setIsLoading(true);
+
+      const currentStatus = row.status?.toUpperCase();
+      const newStatus: "BOOKED" | "REFUNDED" =
+        currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
+
+      await updateBookingStatusByMember(row.id, newStatus);
+      await reload();
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("ไม่สามารถอนุมัติได้");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+
+  /*
+   * คำอธิบาย : ปฏิเสธการจอง หรือปฏิเสธคำขอคืนเงิน พร้อมเหตุผล แล้วเรียก API และรีโหลดข้อมูล
+   * Input :
+   *   - row (BookingRow)          : แถวรายการการจองที่ต้องการปฏิเสธ
+   *   - reason (string | undefined) : เหตุผลการปฏิเสธ (จำเป็นในมุม business แต่เช็คใน Modal แล้ว)
+   * Output :
+   *   - Promise<void> : อัปเดตสถานะใน backend สำเร็จ และรีเฟรชข้อมูลในตาราง
+   */
   const handleReject = async (row: BookingRow, reason?: string) => {
-    const newStatus =
-      row.status === "REFUND_PENDING"
-        ? "REFUND_REJECTED"
-        : "REJECTED";
+    try {
+      setIsLoading(true);
 
-    await updateBookingStatusByMember(row.id, newStatus, reason);
-    await reload();
+      const currentStatus = row.status?.toUpperCase();
+      const newStatus: "REJECTED" | "REFUND_REJECTED" =
+        currentStatus === "PENDING" ? "REJECTED" : "REFUND_REJECTED";
+
+      await updateBookingStatusByMember(row.id, newStatus, reason);
+      await reload();
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("ไม่สามารถปฏิเสธได้");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   const filteredRows = React.useMemo(() => {
     const keyword = searchQuery.toLowerCase();
@@ -276,7 +346,7 @@ export default function ManageBookingMember() {
       <Breadcrumb
         current={{
           label: "จัดการการจอง",
-          to: "/member/bookings",
+          to: "/member/bookings/all",
           fromSidebar: true,
         }}
       />
@@ -298,7 +368,7 @@ export default function ManageBookingMember() {
             onChange={setStatusFilter}
           />
 
-          {/* ✅ ปุ่มคำขอคืนเงิน (ยังอยู่ครบ) */}
+          {/* ปุ่มคำขอคืนเงิน (ยังอยู่ครบ) */}
           <div className="ml-auto">
             <Button
               type="confirm-admin"
@@ -343,7 +413,6 @@ export default function ManageBookingMember() {
           setCurrentPage(1);
         }}
       />
-
       {/* Modal: ยืนยันอนุมัติ */}
       <Modal
         open={confirmOpen}
@@ -362,11 +431,19 @@ export default function ManageBookingMember() {
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={async () => {
-          if (selectedRow) {
-            await handleApprove(selectedRow);
-          }
+          if (!selectedRow) return;
+
+          const row = selectedRow;
+
+          // ปิด modal + เคลียร์ state ก่อน
           setConfirmOpen(false);
           setSelectedRow(null);
+
+          try {
+            await handleApprove(row);
+          } catch (error) {
+            console.error(error);
+          }
         }}
         onCancel={() => {
           setConfirmOpen(false);
@@ -374,46 +451,98 @@ export default function ManageBookingMember() {
         }}
       />
 
-      {/* Modal: ปฏิเสธ */}
+      {/* Modal: ปฏิเสธ + กรอกเหตุผล */}
       <RejectModal
         open={rejectOpen}
+        title={
+          selectedRow?.status?.toUpperCase() === "REFUND_PENDING"
+            ? "ปฏิเสธคำขอคืนเงิน"
+            : "ปฏิเสธการจอง"
+        }
+        text={
+          selectedRow?.status?.toUpperCase() === "REFUND_PENDING"
+            ? "กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน เพื่อส่งให้ผู้จองทราบ"
+            : "กรุณากรอกเหตุผลการปฏิเสธการจอง เพื่อส่งให้ผู้จองทราบ"
+        }
+        confirmText="ส่ง"
+        cancelText="ยกเลิก"
         onConfirm={async (reason) => {
-          if (selectedRow) {
-            await handleReject(selectedRow, reason);
-          }
+          if (!selectedRow) return;
+
+          const row = selectedRow;
+
+          // ปิด modal + เคลียร์ state ก่อน
           setRejectOpen(false);
           setSelectedRow(null);
+
+          try {
+            await handleReject(row, reason);
+          } catch (error) {
+            console.error(error);
+          }
         }}
         onCancel={() => {
           setRejectOpen(false);
           setSelectedRow(null);
         }}
       />
-      {/* Modal: รูปสลิป */}
+
+      {/* Modal: แสดงรูปหลักฐานการโอน (แบบเต็มจอ) */}
       {slipOpen && slipUrl && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40">
-          <div className="relative bg-[#E5E5E5] rounded-[24px] shadow-lg max-w-5xl w-[90%]">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+          {/* กล่อง modal ขนาดคงที่ */}
+          <div
+            className="
+        relative
+        bg-[#E5E5E5]
+        rounded-[24px]
+        shadow-lg
+        w-[650px]
+        h-[650px]
+        max-w-[95vw]
+        max-h-[90vh]
+        flex
+        items-center
+        justify-center
+      "
+          >
+            {/* ปุ่มปิด */}
             <button
               type="button"
               onClick={() => {
                 setSlipOpen(false);
                 setSlipUrl(null);
               }}
-              className="absolute right-4 top-3 text-2xl"
+              className="
+          absolute
+          right-4
+          top-3
+          text-2xl
+          text-gray-700
+          hover:text-black
+        "
             >
               ×
             </button>
 
-            <div className="p-6 flex justify-center">
+            {/* โซนรูป */}
+            <div className="w-full h-full p-6 flex items-center justify-center">
               <img
                 src={slipUrl}
                 alt="หลักฐานการโอน"
-                className="max-h-[80vh] max-w-full rounded-[16px]"
+                className="
+            max-w-full
+            max-h-full
+            object-contain
+            rounded-[16px]
+            bg-white
+          "
               />
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

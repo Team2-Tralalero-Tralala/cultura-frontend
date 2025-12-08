@@ -68,6 +68,8 @@ type PackageGroup = {
     feedbacks: FeedbackCard[];
 };
 
+type SortOrder = 'newest' | 'oldest'; // เพิ่ม Type สำหรับสถานะการเรียงลำดับ
+
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว (id จริง)
  */
@@ -111,6 +113,7 @@ const TopControls: React.FC<{
     totalPackages: number;
     searchQuery: string;
     onSearchChange: (value: string) => void;
+    currentSort: SortOrder; // เพิ่ม prop สำหรับสถานะการเรียงลำดับ
     onFilterClick: () => void;
     onRefreshClick: () => void;
     isLoading?: boolean;
@@ -119,12 +122,14 @@ const TopControls: React.FC<{
     totalPackages,
     searchQuery,
     onSearchChange,
+    currentSort, // รับค่าสถานะการเรียงลำดับ
     onFilterClick,
     onRefreshClick,
     isLoading = false,
 }) => {
+        const sortDisplay = currentSort === 'newest' ? 'ล่าสุด' : 'เก่าสุด'; // ใช้เพื่อแสดงผลบนปุ่ม
         return (
-            <section className="rounded-xl bg-white border-slate-200 mb-5 p-4">
+            <section className="rounded-xl bg-white border-slate-200 mb-5">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="text-black">
                         <span className="font-semibold">ทั้งหมด</span> :{" "}
@@ -151,11 +156,13 @@ const TopControls: React.FC<{
                         <button
                             type="button"
                             onClick={onFilterClick}
-                            className="inline-flex w-[127px] items-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                            aria-label="ตัวกรอง"
+                            className="inline-flex w-[150px] items-center justify-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                            // เปลี่ยนข้อความบนปุ่ม
+                            aria-label={`เรียงตาม: ${sortDisplay} (เปิดตัวเลือก)`}
                         >
                             <Icon icon="hugeicons:filter" width={18} height={18} />
-                            ตัวกรอง
+                            {/* แสดงสถานะการเรียงลำดับปัจจุบัน */}
+                            {sortDisplay}
                         </button>
                     </div>
                 </div>
@@ -255,6 +262,40 @@ const PackageGroupSection: React.FC<{
     );
 };
 
+// Component สำหรับ Modal ตัวกรอง/เรียงลำดับ
+const SortFilterModal: React.FC<{
+    sortOrder: SortOrder;
+    onSortChange: (newSort: SortOrder) => void;
+    onClose: () => void;
+}> = ({ sortOrder, onSortChange, onClose }) => (
+    <div className="absolute top-15 right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 ">
+        <button
+            className={`w-full text-left p-2 rounded-md transition duration-150 ease-in-out
+                ${sortOrder === 'newest'
+                    ? 'bg-emerald-100 font-medium text-emerald-700'
+                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                }`}
+            onClick={() => { onSortChange('newest'); onClose(); }}
+
+        >
+            <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2" />
+            ล่าสุด
+        </button>
+        <button
+            className={`w-full text-left p-2 rounded-md transition duration-150 ease-in-out
+                ${sortOrder === 'oldest'
+                    ? 'bg-emerald-100 font-medium text-emerald-700'
+                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                }`}
+            onClick={() => { onSortChange('oldest'); onClose(); }}
+        >
+            <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2 transform rotate-180" />
+            เก่าสุด
+        </button>
+    </div>
+);
+
+
 export default function Feedback() {
     const [packageGroups, setPackageGroups] = React.useState<PackageGroup[]>([]);
     const [totalItems, setTotalItems] = React.useState<number>(0);
@@ -263,6 +304,9 @@ export default function Feedback() {
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [searchQuery, setSearchQuery] = React.useState<string>("");
+
+    const [sortOrder, setSortOrder] = React.useState<SortOrder>('newest'); // เพิ่ม State สำหรับการเรียงลำดับ
+    const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false); // เพิ่ม State สำหรับ Modal
 
     const navigate = useNavigate();
 
@@ -324,11 +368,14 @@ export default function Feedback() {
         fetchAllFeedbacks();
     }, [fetchAllFeedbacks]);
 
+    /**
+     * คำอธิบาย: กรองและเรียงลำดับกลุ่มข้อเสนอแนะ
+     */
     const filteredGroups = React.useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
-        if (!query) return packageGroups;
 
-        return packageGroups
+        // 1. กรองตามคำค้นหาและเรียง Feedback ภายในกลุ่ม
+        let groups = packageGroups
             .map((packageGroup) => {
                 const filteredFeedbacks = packageGroup.feedbacks.filter(
                     (feedback) =>
@@ -336,14 +383,49 @@ export default function Feedback() {
                         feedback.message.toLowerCase().includes(query) ||
                         packageGroup.title.toLowerCase().includes(query)
                 );
+
+                // เรียง Feedback ภายในกลุ่มจากใหม่สุดไปเก่าสุดเสมอ (เหมือนต้นฉบับ Admin)
+                const sortedFeedbacks = [...filteredFeedbacks].sort((a, b) => {
+                    const dateA = new Date(a.createdAt).getTime();
+                    const dateB = new Date(b.createdAt).getTime();
+                    return dateB - dateA; // ใหม่สุดมาก่อน
+                });
+
                 return {
                     ...packageGroup,
-                    feedbacks: filteredFeedbacks,
-                    totalInGroup: filteredFeedbacks.length,
+                    feedbacks: sortedFeedbacks,
+                    totalInGroup: sortedFeedbacks.length,
                 };
             })
             .filter((packageGroup) => packageGroup.feedbacks.length > 0 || packageGroup.title.toLowerCase().includes(query));
-    }, [packageGroups, searchQuery]);
+
+        // 2. เรียงลำดับกลุ่มแพ็กเกจ (ใช้ Feedback ล่าสุดในกลุ่มเป็นเกณฑ์)
+        const sortedPackageGroups = groups.sort((a, b) => {
+            // ดึงวันที่ของ Feedback ที่ใหม่ที่สุดในแต่ละกลุ่มมาใช้ในการเรียง
+            const dateA = a.feedbacks.length > 0
+                ? new Date(a.feedbacks[0].createdAt).getTime()
+                : 0;
+
+            const dateB = b.feedbacks.length > 0
+                ? new Date(b.feedbacks[0].createdAt).getTime()
+                : 0;
+
+            // เรียงตามสถานะ sortOrder
+            //return sortOrder === 'newest' ? dateB - dateA : dateA - dateB; // ล่าสุด: dateB - dateA, เก่าสุด: dateA - dateB
+            return sortOrder === 'newest' ? dateA - dateB : dateB - dateA;
+        });
+
+
+        return sortedPackageGroups;
+    }, [packageGroups, searchQuery, sortOrder]);
+
+
+    // ฟังก์ชันจัดการการเปลี่ยนสถานะการเรียงลำดับ
+    const handleSortChange = (newSort: SortOrder) => {
+        setSortOrder(newSort);
+        setIsFilterModalOpen(false); // ปิด Modal หลังจากเลือก
+    };
+
 
     return (
         <>
@@ -355,15 +437,28 @@ export default function Feedback() {
             />
             <main className="min-h-screen bg-white py-8 px-6 space-y-6 shadow-md border rounded-xl">
                 <div className="mx-auto bg-white rounded-xl">
-                    <TopControls
-                        totalItems={totalItems}
-                        totalPackages={totalPackages}
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        onFilterClick={() => { }}
-                        onRefreshClick={fetchAllFeedbacks}
-                        isLoading={isLoading}
-                    />
+                    <div className="relative"> {/* เพิ่ม div relative เพื่อวาง Modal */}
+                        <TopControls
+                            totalItems={totalItems}
+                            totalPackages={totalPackages}
+                            searchQuery={searchQuery}
+                            onSearchChange={setSearchQuery}
+                            currentSort={sortOrder} // ส่งสถานะปัจจุบัน
+                            onFilterClick={() => setIsFilterModalOpen(!isFilterModalOpen)} // สลับเปิด/ปิด Modal
+                            onRefreshClick={fetchAllFeedbacks}
+                            isLoading={isLoading}
+                        />
+
+                        {/* แสดง Modal เมื่อ isFilterModalOpen เป็น true */}
+                        {isFilterModalOpen && (
+                            <SortFilterModal
+                                sortOrder={sortOrder}
+                                onSortChange={handleSortChange}
+                                onClose={() => setIsFilterModalOpen(false)}
+                            />
+                        )}
+                    </div>
+
 
                     {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 

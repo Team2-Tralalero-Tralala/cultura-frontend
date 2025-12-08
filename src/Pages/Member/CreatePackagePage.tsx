@@ -303,7 +303,7 @@ export const CreatePackagePage = () => {
     const trimmedQuery = query.trim();
     try {
       const response = await axios.get(`${apiUrl}/member/list-homestays`, {
-        params: { q: trimmedQuery, limit: 8 },
+        params: { query: trimmedQuery, limit: 8 },
         withCredentials: true,
       });
       const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];

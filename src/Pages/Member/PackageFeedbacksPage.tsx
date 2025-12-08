@@ -9,19 +9,13 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 
 /**
- * ฟังก์ชัน : BACKEND_BASE_URL
- * คำอธิบาย : Base URL สำหรับประกอบลิงก์รูปภาพที่เสิร์ฟจาก Backend
- * Input  : -
- * Output : string (URL ฐานของ Backend)
+ * Base URL สำหรับรูปจาก Backend
  */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 /**
- * ฟังก์ชัน : getImageUrl
- * คำอธิบาย : แปลงชื่อไฟล์/พาธจาก Backend ให้เป็น URL ที่พร้อมนำไปใช้ใน <img>
- * Input  : fileName?: string - ชื่อไฟล์หรือพาธ (อาจขึ้นต้นด้วย uploads/)
- * Output : string | undefined - URL สำหรับรูปภาพ หรือ undefined ถ้าไม่มีชื่อไฟล์
+ * แปลง path รูปให้เป็น URL
  */
 function getImageUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -29,11 +23,16 @@ function getImageUrl(fileName?: string): string | undefined {
   return `${BACKEND_BASE_URL}/uploads/${cleanPath}`;
 }
 
-
 type FeedbackImage = { image: string };
 type Tourist = { fname: string; lname: string };
 type PackageInfo = { name: string };
 type BookingHistory = { tourist: Tourist; package: PackageInfo };
+
+// ✅ ชื่อผู้ตอบกลับจากหลังบ้าน (select fname, lname)
+type Responder = {
+  fname: string;
+  lname: string;
+};
 
 type Feedback = {
   id: number;
@@ -42,14 +41,17 @@ type Feedback = {
   message: string;
   feedbackImages: FeedbackImage[];
   bookingHistory: BookingHistory;
+
+  /** ข้อความตอบกลับจากผู้ดูแล (ถ้ามี) */
+  replyMessage?: string | null;
+  /** เวลา reply (ใช้ formatTimeAgo โชว์เป็น "x ชั่วโมง") */
+  replyAt?: string | null;
+  /** ผู้ตอบกลับที่ backend select มา */
+  responder?: Responder | null;
 };
 
 /**
- * ฟังก์ชัน : formatTimeAgo
- * คำอธิบาย : แปลงวันที่/เวลา createdAt ให้เป็นข้อความบอกเวลาแบบคร่าว ๆ
- *           (เช่น 3 นาที, 2 ชั่วโมง, 1 วัน)
- * Input  : createdAt: string - วันที่/เวลาที่สร้าง Feedback
- * Output : string - ข้อความบอกระยะเวลาที่ผ่านไปเป็นภาษาไทย
+ * แปลงวันที่/เวลาเป็นข้อความประมาณเวลา (xx นาที / xx ชั่วโมง / xx วัน ...)
  */
 function formatTimeAgo(createdAt: string): string {
   const now = new Date();
@@ -71,11 +73,7 @@ function formatTimeAgo(createdAt: string): string {
 }
 
 /**
- * ฟังก์ชัน : formatFullName
- * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask
- *           (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
- * Input  : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
- * Output : string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
+ * แสดงชื่อแบบ mask ตัวแรกจริง ที่เหลือเป็น *
  */
 function formatFullName(tourist: Tourist): string {
   const mask = (text: string) =>
@@ -84,10 +82,7 @@ function formatFullName(tourist: Tourist): string {
 }
 
 /**
- * ฟังก์ชัน : renderStars
- * คำอธิบาย : แปลงคะแนน rating (1-5) ให้เป็นสตริงรูปดาว ★/☆ รวม 5 ดวง
- * Input  : rating: number - คะแนนรีวิว
- * Output : string - ข้อความดาว 5 ตัว (เช่น "★★★☆☆")
+ * แสดงดาวคะแนนรีวิว 1–5 เป็น ★/☆
  */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
@@ -96,13 +91,7 @@ function renderStars(rating: number): string {
 }
 
 /**
- * Component : PackageFeedbacksPage
- * คำอธิบาย : หน้าแสดงรายการ Feedback ของแพ็กเกจ
- *   - ดึงข้อมูล Feedback จาก API ตาม packageId
- *   - สามารถเรียงลำดับรีวิว (ล่าสุด / เก่าสุด)
- *   - พิมพ์ตอบกลับรีวิวแต่ละรายการ และยืนยันผ่าน Modal
- * Input  : ใช้ packageId จาก URL params ภายใน Component
- * Output : JSX.Element ส่วน UI ของหน้าจอแสดง Feedback
+ * หน้าแสดง feedback + การตอบกลับ
  */
 export default function PackageFeedbacksPage() {
   const { packageId } = useParams<{ packageId: string }>();
@@ -124,10 +113,7 @@ export default function PackageFeedbacksPage() {
   const packageIdNumber = Number(packageId);
 
   /**
-   * ฟังก์ชัน : useEffect(loadFeedbacks)
-   * คำอธิบาย : โหลดรายการ Feedback เมื่อได้ packageIdNumber ที่ถูกต้อง
-   * Input  : - (ใช้ค่า packageIdNumber จาก URL)
-   * Output : - (อัปเดต state feedbackLists, isLoading)
+   * โหลด feedback ตาม packageId
    */
   React.useEffect(() => {
     if (!packageIdNumber) return;
@@ -148,10 +134,7 @@ export default function PackageFeedbacksPage() {
   }, [packageIdNumber]);
 
   /**
-   * ฟังก์ชัน : sortedFeedbackLists (useMemo)
-   * คำอธิบาย : คืนลิสต์ Feedback ที่ถูกเรียงตาม sortOrder (ล่าสุด/เก่าสุด)
-   * Input  : - (อิง state feedbackLists, sortOrder)
-   * Output : Feedback[] - ลิสต์ที่ถูกเรียงใหม่แล้ว
+   * เรียง feedback ตามเวลา
    */
   const sortedFeedbackLists = React.useMemo(() => {
     const clonedFeedbackLists = [...feedbackLists];
@@ -171,31 +154,16 @@ export default function PackageFeedbacksPage() {
     );
   }, [feedbackLists, sortOrder]);
 
-  /**
-   * ฟังก์ชัน : packageName
-   * คำอธิบาย : ชื่อแพ็กเกจจาก Feedback แรก หากไม่มีข้อมูลจะใช้คำว่า "ชื่อแพ็กเกจ" แทน
-   * Input  : -
-   * Output : string - ชื่อแพ็กเกจ
-   */
   const packageName =
     feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
 
-  /**
-   * ฟังก์ชัน : filterOptions
-   * คำอธิบาย : ตัวเลือกสำหรับ dropdown การเรียงลำดับ Feedback
-   * Input  : -
-   * Output : { label: string; value: string }[]
-   */
   const filterOptions = [
     { label: "ล่าสุด", value: "latest" },
     { label: "เก่าสุด", value: "oldest" },
   ];
 
   /**
-   * ฟังก์ชัน : handleChangeReplyText
-   * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId
-   * Input  : feedbackId: number, value: string
-   * Output : void
+   * เก็บข้อความในช่องตอบกลับ
    */
   const handleChangeReplyText = (feedbackId: number, value: string): void => {
     setReplyTexts((previousReplyTexts) => ({
@@ -205,10 +173,7 @@ export default function PackageFeedbacksPage() {
   };
 
   /**
-   * ฟังก์ชัน : handleOpenReplyModal
-   * คำอธิบาย : เปิด Modal ยืนยันการตอบกลับสำหรับ feedback ที่เลือก
-   * Input  : feedbackId: number
-   * Output : void
+   * เปิด modal ยืนยันส่งตอบกลับ
    */
   const handleOpenReplyModal = (feedbackId: number): void => {
     const replyMessage = replyTexts[feedbackId]?.trim();
@@ -218,32 +183,32 @@ export default function PackageFeedbacksPage() {
     setIsReplyModalOpen(true);
   };
 
-  /**
-   * ฟังก์ชัน : handleCloseReplyModal
-   * คำอธิบาย : ปิด Modal ยืนยันการตอบกลับ และรีเซ็ต feedback ที่เลือก
-   * Input  : -
-   * Output : void
-   */
   const handleCloseReplyModal = (): void => {
     setIsReplyModalOpen(false);
     setSelectedFeedbackId(null);
   };
 
   /**
-   * ฟังก์ชัน : sendReply
-   * คำอธิบาย : ยิง API เพื่อส่งข้อความตอบกลับรีวิว และเคลียร์ช่องตอบกลับ
-   * Input  : feedbackId: number - รหัสของ feedback ที่ต้องการตอบกลับ
-   * Output : Promise<void> - ส่งคำตอบสำเร็จหรือไม่ผ่าน async/await
+   * ส่งตอบกลับไป backend แล้วอัปเดต state
    */
   const sendReply = async (feedbackId: number): Promise<void> => {
     const replyMessage = replyTexts[feedbackId]?.trim();
     if (!replyMessage) return;
-      await replyPackageFeedback(feedbackId, { replyMessage });
-      setReplyTexts((previousReplyTexts) => ({
-        ...previousReplyTexts,
-        [feedbackId]: "",
-      }));
 
+    await replyPackageFeedback(feedbackId, { replyMessage });
+
+    // อัปเดตให้ feedback นั้นมี replyMessage ทันที (responder จะมาจาก fetch รอบถัดไป)
+    setFeedbackLists((previousFeedbacks) =>
+      previousFeedbacks.map((feedback) =>
+        feedback.id === feedbackId ? { ...feedback, replyMessage } : feedback
+      )
+    );
+
+    // ล้างช่อง input ของ feedback นั้น
+    setReplyTexts((previousReplyTexts) => ({
+      ...previousReplyTexts,
+      [feedbackId]: "",
+    }));
   };
 
   return (
@@ -278,105 +243,156 @@ export default function PackageFeedbacksPage() {
               <div className="text-gray-500 text-sm">กำลังโหลด...</div>
             )}
 
-            {sortedFeedbackLists.map((feedbackItem) => (
-              <div
-                key={feedbackItem.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-gray-500 text-sm font-semibold">
-                        {feedbackItem.bookingHistory.tourist.fname
-                          ?.charAt(0)
-                          ?.toUpperCase() || "U"}
+            {sortedFeedbackLists.map((feedbackItem) => {
+              const hasReply =
+                !!feedbackItem.replyMessage &&
+                feedbackItem.replyMessage.trim() !== "";
+
+              // ✅ เอาชื่อจาก responder มาแสดง
+              const replyName = feedbackItem.responder
+                ? `${feedbackItem.responder.fname} ${feedbackItem.responder.lname}`
+                : "ผู้ดูแลแพ็กเกจ";
+
+              const replyAvatarLetter =
+                feedbackItem.responder?.fname?.charAt(0).toUpperCase() ||
+                replyName.charAt(0).toUpperCase();
+
+              const replyTimeText =
+                feedbackItem.replyAt && formatTimeAgo(feedbackItem.replyAt);
+
+              return (
+                <div
+                  key={feedbackItem.id}
+                  className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
+                >
+                  {/* Header รีวิวหลัก */}
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-gray-500 text-sm font-semibold">
+                          {feedbackItem.bookingHistory.tourist.fname
+                            ?.charAt(0)
+                            ?.toUpperCase() || "U"}
+                        </span>
+                      </div>
+
+                      <span className="font-semibold text-gray-800">
+                        {formatFullName(feedbackItem.bookingHistory.tourist)}
                       </span>
                     </div>
 
-                    <span className="font-semibold text-gray-800">
-                      {formatFullName(feedbackItem.bookingHistory.tourist)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-         
-                    <div className="text-sm text-black">
-                      {renderStars(feedbackItem.rating)}
-                    </div>
-          
-                    <div className="text-xs text-gray-500">
-                      {formatTimeAgo(feedbackItem.createdAt)}
+                    <div className="text-right">
+                      <div className="text-sm text-black">
+                        {renderStars(feedbackItem.rating)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {formatTimeAgo(feedbackItem.createdAt)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <p className="text-gray-800 text-sm leading-relaxed">
-                  {feedbackItem.message}
-                </p>
+                  {/* ข้อความรีวิวหลัก */}
+                  <p className="text-gray-800 text-sm leading-relaxed">
+                    {feedbackItem.message}
+                  </p>
 
-                {feedbackItem.feedbackImages?.length > 0 && (
-                  <div className="flex flex-wrap gap-3">
-                    {feedbackItem.feedbackImages.map(
-                      (feedbackImage, imageIndex) => {
-                        const imageUrl = getImageUrl(feedbackImage.image);
-                        if (!imageUrl) return null;
+                  {/* รูปภาพใน feedback */}
+                  {feedbackItem.feedbackImages?.length > 0 && (
+                    <div className="flex flex-wrap gap-3">
+                      {feedbackItem.feedbackImages.map(
+                        (feedbackImage, imageIndex) => {
+                          const imageUrl = getImageUrl(feedbackImage.image);
+                          if (!imageUrl) return null;
 
-                        return (
-                          <div
-                            key={imageIndex}
-                            className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
-                          >
-                            <img
-                              src={imageUrl}
-                              alt={`feedback-${feedbackItem.id}-${imageIndex}`}
-                              className="w-full h-full object-cover"
-                            />
+                          return (
+                            <div
+                              key={imageIndex}
+                              className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={`feedback-${feedbackItem.id}-${imageIndex}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
+
+                  {/* การ์ดตอบกลับ (เทา) ตามรูปตัวอย่าง + ใช้ชื่อ responder */}
+                  {hasReply && (
+                    <div className="mt-4 bg-[#EDEDED] rounded-2xl px-4 py-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-gray-500 text-sm font-semibold">
+                              {replyAvatarLetter}
+                            </span>
                           </div>
-                        );
-                      }
-                    )}
-                  </div>
-                )}
+                          <span className="font-semibold text-gray-800 text-sm">
+                            {replyName}
+                          </span>
+                        </div>
 
-                <div className="pt-2">
-                  <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
-                    <input
-                      type="text"
-                      placeholder="ตอบกลับ"
-                      className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                      value={replyTexts[feedbackItem.id] ?? ""}
-                      onChange={(event) =>
-                        handleChangeReplyText(
-                          feedbackItem.id,
-                          event.target.value
-                        )
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="ml-3 w-8 h-8 bg-[#4E8374] rounded-full flex items-center justify-center hover:bg-[#3b6d60] transition disabled:opacity-60 disabled:cursor-not-allowed"
-                      onClick={() => handleOpenReplyModal(feedbackItem.id)}
-                      disabled={!replyTexts[feedbackItem.id]?.trim()}
-                      aria-label="ยืนยันการตอบกลับรีวิว"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="white"
-                        className="w-4 h-4"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M3 10l18-7-7 18-2-8-8-3z"
+                        {replyTimeText && (
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            {replyTimeText}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mt-2 text-sm text-gray-800 leading-relaxed">
+                        {feedbackItem.replyMessage}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ถ้ายังไม่มีการตอบกลับ → แสดงช่องพิมพ์ตอบกลับ */}
+                  {!hasReply && (
+                    <div className="pt-2">
+                      <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
+                        <input
+                          type="text"
+                          placeholder="ตอบกลับ"
+                          className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                          value={replyTexts[feedbackItem.id] ?? ""}
+                          onChange={(event) =>
+                            handleChangeReplyText(
+                              feedbackItem.id,
+                              event.target.value
+                            )
+                          }
                         />
-                      </svg>
-                    </button>
-                  </div>
+                        <button
+                          type="button"
+                          className="ml-3 w-8 h-8 bg-[#4E8374] rounded-full flex items-center justify-center hover:bg-[#3b6d60] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                          onClick={() => handleOpenReplyModal(feedbackItem.id)}
+                          disabled={!replyTexts[feedbackItem.id]?.trim()}
+                          aria-label="ยืนยันการตอบกลับรีวิว"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="white"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3 10l18-7-7 18-2-8-8-3z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {!isLoading && feedbackLists.length === 0 && (
               <div className="text-center text-gray-500 text-sm py-8">

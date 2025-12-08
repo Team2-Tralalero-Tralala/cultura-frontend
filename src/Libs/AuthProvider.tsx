@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 export type Role = "superadmin" | "admin" | "member" | "tourist";
@@ -22,6 +22,7 @@ export type AuthUser = {
   lname: string;
   email: string;
 };
+
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -53,53 +54,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get("http://localhost:3000/api/auth/me", {
+  const fetchUser = useCallback(async () => {
+    try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const res = await axios.get(`${apiUrl}/auth/me`, {
           withCredentials: true,
         });
-        const { id, username, role, fname, lname, email } = res.data.data;
-        const authUser: AuthUser = {
-          id: id,
-          username: username,
-          role: role,
-          fname: fname,
-          lname: lname,
-          email: email,
-        };
-        setUser(authUser);
-      } catch (err) {
-        setUser(null);
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
+      const { id, username, role, fname, lname, email } = res.data.data;
+      const authUser: AuthUser = {
+        id: id,
+        username: username,
+        role: role,
+        fname: fname,
+        lname: lname,
+        email: email,
+      };
+      setUser(authUser);
+      return authUser;
+    } catch (err) {
+      setUser(null);
+      console.error(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const login = useCallback(
     async (username: string, password: string) => {
       console.log("login", 1);
       try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
         const res = await axios.post(
-          "http://localhost:3000/api/auth/login",
+          `${apiUrl}/auth/login`,
           { username, password },
           { withCredentials: true }
         );
-        const { user: u } = res.data.data;
 
-        const authUser: AuthUser = {
-          id: u.id,
-          username: u.username,
-          role: u.role.toLowerCase(),
-          fname: u.fname,
-          lname: u.lname,
-          email: u.email,
-        };
+        const authUser = await fetchUser();
 
-        setUser(authUser);
+        if (!authUser) {
+          throw new Error("Failed to retrieve user info after login");
+        }
 
         const navigateToFirstPage = () => {
           switch (authUser.role) {
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw error;
       }
     },
-    [navigate]
+    [navigate, fetchUser]
   );
 
   /*
@@ -139,7 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const register = useCallback(async (data: RegisterData) => {
     try {
-      const res = await axios.post(`http://localhost:3000/auth/signup`, data);
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const backendUrl = apiUrl.replace("/api", "");
+      const res = await axios.post(`${backendUrl}/auth/signup`, data);
       return res.status === 201 || res.status === 200;
     } catch {
       return false;
@@ -163,7 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     await new Promise((r) => setTimeout(r, 50));
 
-    await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    await axios.post(`${apiUrl}/auth/logout`, {}, { withCredentials: true });
 
     setUser(null);
 

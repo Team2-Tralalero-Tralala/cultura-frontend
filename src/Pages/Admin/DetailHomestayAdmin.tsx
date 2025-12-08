@@ -15,8 +15,8 @@ import Button from "@/Components/Button";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 import { fetchHomestayDetailByAdmin } from "@/Services/homestay-services";
 
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /**
  * ฟังก์ชัน: resolveBackendUploadUrl

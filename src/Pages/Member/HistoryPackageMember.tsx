@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type { Column, Pagination, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
-import { getHistoriesPackageAdmin } from "@/Services/package-services";
+import { getHistoriesPackageMember } from "@/Services/package-services";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
 type PackageHistoryRow = {
   id: number;
@@ -59,14 +58,19 @@ const formatThaiDateTime = (iso: string) => {
  * คำอธิบาย : คอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
  */
 const columns: Column<PackageHistoryRow>[] = [
-  { key: "name", header: "ชื่อแพ็กเกจ", className: "min-w-[220px]" , render: (row) => (
+  {
+    key: "name",
+    header: "ชื่อแพ็กเกจ",
+    className: "min-w-[220px]",
+    render: (row) => (
       <Link
-        to={`/admin/packages/history/${row.id}`}
-        className="hover:text-dark-green hover:underline"
+        to={`/member/package/${row.id}`}
+        className="hover:underline"
       >
         {row.name}
       </Link>
-    ),},
+    ),
+  },
   { key: "community", header: "ชื่อชุมชน", className: "min-w-[200px]" },
   { key: "overseer", header: "ผู้ดูแล", className: "min-w-[140px]" },
   { key: "status", header: "สถานะแพ็กเกจ", className: "min-w-[160px]" },
@@ -80,7 +84,7 @@ const columns: Column<PackageHistoryRow>[] = [
 /*
  * คำอธิบาย : Component หลักสำหรับหน้า “ประวัติแพ็กเกจ” ของแอดมิน
  */
-export default function PackageHistoryAdmin() {
+export default function PackageHistoryMember() {
   const navigate = useNavigate();
 
   const [rows, setRows] = useState<PackageHistoryRow[]>([]);
@@ -106,7 +110,7 @@ export default function PackageHistoryAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const res = await getHistoriesPackageAdmin(
+      const res = await getHistoriesPackageMember(
         pagination.currentPage,
         pagination.limit
       );
@@ -121,9 +125,13 @@ export default function PackageHistoryAdmin() {
         name: pkg.name ?? "-",
         community: pkg.community?.name ?? "-",
         overseer: `${pkg.overseerPackage?.fname ?? ""} ${pkg.overseerPackage?.lname ?? ""}`.trim(),
-        status: pkg.statusPackage === "PUBLISH" ? "จบแล้ว" : pkg.statusPackage,
+        status: (pkg.statusPackage === "PUBLISH" || pkg.statusPackage === "UNPUBLISH") ? "จบแล้ว" : pkg.statusPackage,
         dueDate: pkg.dueDate,
       }));
+
+      if (list.length > 0) {
+        setCommunityName(list[0].community?.name || "ชุมชน");
+      }
 
       setRows(mapped);
       setPagination({
@@ -147,19 +155,6 @@ export default function PackageHistoryAdmin() {
     fetchData();
   }, [pagination.currentPage, pagination.limit]);
 
-  useEffect(() => {
-    fetchCommunityName();
-  }, []);
-
-  const fetchCommunityName = async () => {
-    try {
-      const res = await getCommunityDetailByAdmin();
-      setCommunityName(res.data?.data?.name || "ชุมชน");
-    } catch (error) {
-      console.error("Failed to fetch community name:", error);
-    }
-  };
-
   /*
    * คำอธิบาย : การตั้งค่า Action สำหรับแต่ละแถว เช่น แก้ไข หรือ ลบ
    */
@@ -169,7 +164,6 @@ export default function PackageHistoryAdmin() {
     width: "150px",
     variant: "icons",
     items: () => ["copy", "delete"],
-
     callbacks: {
       copy: (row) => navigate(``), //ตะวันแก้
       delete: (row) => {
@@ -177,7 +171,6 @@ export default function PackageHistoryAdmin() {
         setOpenConfirm(true);
       },
     },
-
   };
 
   /*
@@ -234,7 +227,7 @@ export default function PackageHistoryAdmin() {
           <Breadcrumb
             current={{
               label: "ประวัติแพ็กเกจ",
-              to: `/admin/packages/histories`,
+              to: `/member/packages/done`,
             }}
           />
         </div>
@@ -249,7 +242,7 @@ export default function PackageHistoryAdmin() {
 
           {/* Section: Add Package */}
           <div>
-            <Button onClick={() => navigate("/admin/package/create")} aria-label="สร้างแพ็กเกจ">
+            <Button onClick={() => navigate("/member/package/create")} aria-label="สร้างแพ็กเกจ">
               <span className="text-lg leading-none">＋</span>
               <span>สร้างแพ็กเกจ</span>
             </Button>

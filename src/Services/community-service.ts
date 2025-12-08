@@ -152,3 +152,11 @@ export async function updateCommunityOwn(data: CommunityFormData | FormData) {
     withCredentials: true,
   });
 }
+
+/**
+ * ดึงรายละเอียดชุมชนของแอดมินปัจจุบัน
+ * Mapping: GET /member/community
+ */
+export async function getCommunityDetailByMember() {
+  return api.get(`/member/community`);
+}

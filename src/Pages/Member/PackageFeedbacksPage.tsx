@@ -1,3 +1,10 @@
+/**
+ * คอมโพเนนต์ : PackageFeedbacksPage
+ * คำอธิบาย  : หน้าแสดงรายการ Feedback ของแพ็กเกจ พร้อมฟังก์ชันตอบกลับสำหรับผู้ดูแล
+ * Input      : -
+ * Output     : JSX ของหน้าแสดงผล Feedback
+ */
+
 import React from "react";
 import { useParams } from "react-router-dom";
 
@@ -9,7 +16,7 @@ import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 
-/*
+/**
  * ค่าคงที่   : BACKEND_BASE_URL
  * คำอธิบาย : Base URL สำหรับประกอบลิงก์รูปภาพที่เสิร์ฟจาก Backend
  * Input    : -
@@ -17,6 +24,8 @@ import { Modal } from "@/Components/Modal/Modal";
  */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+/* ---------- Type Definitions ---------- */
 
 type FeedbackImage = {
   image: string;
@@ -53,7 +62,9 @@ type Feedback = {
   responder?: Responder | null;
 };
 
-/*
+/* ---------- Utility Functions ---------- */
+
+/**
  * ฟังก์ชัน : getImageUrl
  * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
  * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
@@ -68,7 +79,7 @@ function getImageUrl(fileName?: string): string | undefined {
   return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
 }
 
-/*
+/**
  * ฟังก์ชัน : formatTimeAgo
  * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไป เช่น "2 ชั่วโมงที่แล้ว"
  * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
@@ -98,7 +109,7 @@ function formatTimeAgo(createdAt: string): string {
   return `${years} ปีที่แล้ว`;
 }
 
-/*
+/**
  * ฟังก์ชัน : formatMaskedFullName
  * คำอธิบาย : แปลงชื่อจริงให้เป็นรูปแบบปกปิดบางส่วน (เฉพาะตัวแรกที่แสดง ช่วงที่เหลือเป็น *)
  * Input    : tourist (Tourist) - ข้อมูลนักท่องเที่ยว
@@ -121,7 +132,7 @@ function formatMaskedFullName(tourist: Tourist): string {
   return `${maskedFirstName} ${maskedLastName}`.trim();
 }
 
-/*
+/**
  * ฟังก์ชัน : renderStars
  * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
  * Input    : rating (number) - คะแนนระหว่าง 1–5
@@ -133,8 +144,10 @@ function renderStars(rating: number): string {
     .join("");
 }
 
-/*
- * ฟังก์ชัน : PackageFeedbacksPage
+/* ---------- Main Component ---------- */
+
+/**
+ * คอมโพเนนต์ : PackageFeedbacksPage
  * คำอธิบาย   : แสดงรายการ Feedback ของแพ็กเกจ พร้อมความสามารถในการตอบกลับแต่ละรายการ
  * Input      : ไม่มี (ใช้ useParams ดึง packageId จาก URL)
  * Output     : JSX ของหน้าแสดงผล Feedback
@@ -146,7 +159,7 @@ export default function PackageFeedbacksPage() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const [sortOrder, setSortOrder] =
-    React.useState<"latest" | "oldest">("latest");
+    React.useState<"unreplied" | "replied">("unreplied");
 
   const [replyTexts, setReplyTexts] = React.useState<Record<number, string>>(
     {}
@@ -180,33 +193,48 @@ export default function PackageFeedbacksPage() {
     );
   }, [packageIdNumber]);
 
+  /**
+   * ฟังก์ชัน : getSortedFeedbackLists
+   * คำอธิบาย : เรียงลำดับรายการ feedback ให้กลุ่มที่เลือกอยู่ด้านบน แต่ยังคงแสดงทุกรายการ
+   * Input    : feedbackLists (Feedback[]) - รายการ feedback ทั้งหมด
+   *            sortOrder ("unreplied" | "replied") - ตัวเลือกเรียงลำดับ
+   * Output   : Feedback[] - รายการที่ผ่านการจัดลำดับแล้ว
+   */
   const sortedFeedbackLists = React.useMemo(() => {
-    const clonedFeedbackLists = [...feedbackLists];
+    return [...feedbackLists]
+      .map((feedbackItem) => {
+        const hasReply =
+          !!feedbackItem.replyMessage &&
+          feedbackItem.replyMessage.trim() !== "";
 
-    if (sortOrder === "latest") {
-      return clonedFeedbackLists.sort(
-        (feedbackA, feedbackB) =>
-          new Date(feedbackB.createdAt).getTime() -
-          new Date(feedbackA.createdAt).getTime()
-      );
-    }
+        const isPrimaryGroup =
+          sortOrder === "replied" ? hasReply : !hasReply;
 
-    return clonedFeedbackLists.sort(
-      (feedbackA, feedbackB) =>
-        new Date(feedbackA.createdAt).getTime() -
-        new Date(feedbackB.createdAt).getTime()
-    );
+        return {
+          feedbackItem,
+          isPrimaryGroup,
+          createdAtTime: new Date(feedbackItem.createdAt).getTime(),
+        };
+      })
+      .sort((a, b) => {
+        if (a.isPrimaryGroup !== b.isPrimaryGroup) {
+          return a.isPrimaryGroup ? -1 : 1;
+        }
+
+        return b.createdAtTime - a.createdAtTime;
+      })
+      .map((item) => item.feedbackItem);
   }, [feedbackLists, sortOrder]);
 
   const packageName =
     feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
 
   const filterOptions = [
-    { label: "ล่าสุด", value: "latest" },
-    { label: "เก่าสุด", value: "oldest" },
+    { label: "ยังไม่ได้ตอบกลับ", value: "unreplied" },
+    { label: "ตอบกลับแล้ว", value: "replied" },
   ];
 
-  /*
+  /**
    * ฟังก์ชัน : handleChangeReplyText
    * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId ที่กำหนด
    * Input    : feedbackId (number) - รหัสของ feedback
@@ -220,7 +248,7 @@ export default function PackageFeedbacksPage() {
     }));
   }
 
-  /*
+  /**
    * ฟังก์ชัน : handleOpenReplyModal
    * คำอธิบาย : เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
    * Input    : feedbackId (number) - รหัสของ feedback ที่ต้องการตอบ
@@ -237,7 +265,7 @@ export default function PackageFeedbacksPage() {
     setIsReplyModalOpen(true);
   }
 
-  /*
+  /**
    * ฟังก์ชัน : handleCloseReplyModal
    * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
    * Input    : -
@@ -248,7 +276,7 @@ export default function PackageFeedbacksPage() {
     setSelectedFeedbackId(null);
   }
 
-  /*
+  /**
    * ฟังก์ชัน : sendReply
    * คำอธิบาย : ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
    * Input    : feedbackId (number) - รหัส feedback ที่ต้องการตอบกลับ
@@ -295,11 +323,16 @@ export default function PackageFeedbacksPage() {
             ทั้งหมด : {feedbackLists.length} รายการ
           </p>
 
-          <FilterDropdown
-            options={filterOptions}
-            selected={sortOrder}
-            onChange={(value) => setSortOrder(value as "latest" | "oldest")}
-          />
+          {/* ซ่อนไอคอนตัวกรอง (svg ตัวแรก) แต่คงลูกศรสามเหลี่ยมไว้ และบังคับฟอนต์ 16px */}
+          <div className="[&_svg:first-of-type]:hidden [&_*]:text-base">
+            <FilterDropdown
+              options={filterOptions}
+              selected={sortOrder}
+              onChange={(value) =>
+                setSortOrder(value as "unreplied" | "replied")
+              }
+            />
+          </div>
         </div>
 
         <div className="w-full rounded-2xl overflow-hidden bg-[#EDEDED]">
@@ -336,7 +369,6 @@ export default function PackageFeedbacksPage() {
                   key={feedbackItem.id}
                   className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 space-y-4"
                 >
-
                   <div className="flex justify-between items-start">
                     <div className="flex items-center space-x-3">
                       <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">

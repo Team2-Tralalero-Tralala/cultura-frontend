@@ -511,7 +511,7 @@ export default function ManageBookingAdmin() {
           <div
             className="
         relative
-        bg-[#E5E5E5]
+        bg-[#E5E5E5]/70
         rounded-[24px]
         shadow-lg
         w-[650px]

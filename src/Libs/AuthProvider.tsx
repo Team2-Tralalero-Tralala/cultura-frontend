@@ -54,32 +54,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
+  const fetchUser = useCallback(async () => {
+    try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
         const res = await axios.get(`${apiUrl}/auth/me`, {
           withCredentials: true,
         });
-        const { id, username, role, fname, lname, email } = res.data.data;
-        const authUser: AuthUser = {
-          id: id,
-          username: username,
-          role: role,
-          fname: fname,
-          lname: lname,
-          email: email,
-        };
-        setUser(authUser);
-      } catch (err) {
-        setUser(null);
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
+      const { id, username, role, fname, lname, email } = res.data.data;
+      const authUser: AuthUser = {
+        id: id,
+        username: username,
+        role: role,
+        fname: fname,
+        lname: lname,
+        email: email,
+      };
+      setUser(authUser);
+      return authUser;
+    } catch (err) {
+      setUser(null);
+      console.error(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const login = useCallback(
     async (username: string, password: string) => {
@@ -91,18 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           { username, password },
           { withCredentials: true }
         );
-        const { user: u } = res.data.data;
 
-        const authUser: AuthUser = {
-          id: u.id,
-          username: u.username,
-          role: u.role.toLowerCase(),
-          fname: u.fname,
-          lname: u.lname,
-          email: u.email,
-        };
+        const authUser = await fetchUser();
 
-        setUser(authUser);
+        if (!authUser) {
+          throw new Error("Failed to retrieve user info after login");
+        }
 
         const navigateToFirstPage = () => {
           switch (authUser.role) {
@@ -133,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw error;
       }
     },
-    [navigate]
+    [navigate, fetchUser]
   );
 
   /*

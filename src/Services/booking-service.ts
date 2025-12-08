@@ -42,3 +42,31 @@ export async function approveRefund(id: number) {
 export async function rejectRefund(id: number, reason: string) {
   return api.patch(`/admin/booking/refunds/${id}/reject`, { reason });
 }
+
+
+/*
+ * คำอธิบาย : ฟังก์ชันดึงรายการคำขอคืนเงินทั้งหมด
+ * Mapping : GET /member/booking-history/refunds
+ * Output : PaginationResponse<Refund>
+ */
+export async function fetchRefundRequestsMember(page = 1, limit = 10) {
+  return api.get(`/member/booking-history`, { params: { page, limit } });
+}
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับอนุมัติคำขอคืนเงิน
+ * Mapping : PATCH /member/booking-history/:id/approve-refund
+ */
+export async function approveRefundMember(id: number) {
+  return api.patch(`/member/booking-history/${id}/approve-refund`);
+}
+
+/*
+ * ฟังก์ชัน : rejectRefund
+ * อธิบาย : ปฏิเสธคำขอคืนเงิน พร้อมเหตุผล
+ * Mapping : PATCH /member/booking-history/:id/reject-refund
+ * Input : reason (string)
+ */
+export async function rejectRefundMember(id: number, reason: string) {
+  return api.patch(`/member/booking-history/${id}/reject-refund`, { reason });
+}

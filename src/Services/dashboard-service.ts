@@ -174,3 +174,60 @@ export async function fetchAdminDashboardData(
 
   return res.data.data;
 }
+/*
+ * คำอธิบาย : Type definition สำหรับพารามิเตอร์การกรองข้อมูล Dashboard
+ */
+type PeriodType = "weekly" | "monthly" | "yearly";
+/*
+ * คำอธิบาย : Interface สำหรับพารามิเตอร์การกรองข้อมูล Dashboard
+ */
+export interface MemberDashboardFilters {
+  bookingPeriodType: PeriodType;
+  bookingDates: string[];
+  revenuePeriodType: PeriodType;
+  revenueDates: string[];
+  packagePeriodType: PeriodType;
+  packageDates: string[];
+}
+/*
+ * ฟังก์ชัน : fetchMemberDashboardData
+ * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
+ * Input :
+ *   - filters (MemberDashboardFilters) : พารามิเตอร์สำหรับดึงข้อมูลและกรองผลลัพธ์
+ * Output :
+ *    - คืนค่า Promise ของ AdminDashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ package
+ */
+export async function fetchMemberDashboardData(
+  filters: MemberDashboardFilters
+): Promise<AdminDashboardResponse> {
+  const {
+    bookingPeriodType,
+    bookingDates,
+    revenuePeriodType,
+    revenueDates,
+    packagePeriodType,
+    packageDates,
+  } = filters;
+
+  const params = new URLSearchParams();
+  if (Array.isArray(bookingDates)) {
+    bookingDates.forEach((date) => params.append("bookingDates", date));
+  }
+  if (Array.isArray(revenueDates)) {
+    revenueDates.forEach((date) => params.append("revenueDates", date));
+  }
+  if (Array.isArray(packageDates)) {
+    packageDates.forEach((date) => params.append("packageDates", date));
+  }
+  params.append("bookingPeriodType", bookingPeriodType);
+  params.append("revenuePeriodType", revenuePeriodType);
+  params.append("packagePeriodType", packagePeriodType);
+
+  const url = `/member/dashboard?${params.toString()}`;
+
+  const res = await api.get(url, {
+    withCredentials: true,
+  });
+
+  return res.data.data;
+}

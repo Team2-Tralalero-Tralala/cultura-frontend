@@ -7,9 +7,10 @@
  * - รวมทุกหน้าในหมวดหมู่ "สมาชิก"
  * - ระบุ path และ component ที่ควรแสดงเมื่อเข้าหน้านั้น
  */
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import { DashboardPage } from "@/Pages/Member/DashboardPage";
 import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
 import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
 import PackageFeedbacksPage from '@/Pages/Member/PackageFeedbacksPage';
@@ -17,8 +18,9 @@ import PackageFeedbacksPage from '@/Pages/Member/PackageFeedbacksPage';
 export default function MemberRoutes() {
   return (
     <Routes>
-      <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}

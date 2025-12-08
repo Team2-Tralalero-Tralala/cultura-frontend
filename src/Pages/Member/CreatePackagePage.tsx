@@ -119,7 +119,7 @@ const packageSchema = z.object({
   district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
   subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
   addressDetail: z.string().min(1, "กรุณากรอกรายละเอียดที่อยู่"),
-  overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
+  // overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
   capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
   price: z.string().min(1, "กรุณากรอกราคา"),
   startDate: z.string().min(1, "กรุณาเลือกวันที่เริ่ม"),
@@ -405,7 +405,7 @@ export const CreatePackagePage = () => {
 
     try {
       const payload = {
-        overseerMemberId: Number(formState.overseerMemberId),
+        ...(formState.overseerMemberId ? { overseerMemberId: Number(formState.overseerMemberId) } : {}),
         name: normalizeOrDefault(formState.name),
         description: normalizeOrDefault(formState.description),
         statusPackage: formState.statusPackage,
@@ -631,24 +631,7 @@ export const CreatePackagePage = () => {
         </section>
 
         {/* ผู้ดูแล + ความจุ */}
-        <section className="grid md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <div className="relative">
-              <CommunityMemberSelector
-                communityId={communityId}
-                value={formState.overseerMemberId ? Number(formState.overseerMemberId) : undefined}
-                member={currentOverseer}
-                disabled={isLoading}
-                error={!!formErrors.overseerMemberId}
-                helperText={formErrors.overseerMemberId}
-                onChange={(newId) => {
-                  setFormField("overseerMemberId", newId ? String(newId) : "");
-                  setCurrentOverseer(null);
-                }}
-              />
-            </div>
-          </div>
-
+        <section className="w-full">
           <TextField
             id="capacity"
             label="เปิดรับจำนวน"

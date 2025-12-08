@@ -949,42 +949,7 @@ export const EditPackagePage = () => {
                 </section>
 
                 {/* ผู้ดูแล + ความจุ */}
-                <section className="grid md:grid-cols-2 gap-5">
-                    {/* เลือกผู้ดูแล */}
-                    <div className="space-y-2">
-                        <div className="relative">
-                            <CommunityMemberSelector
-                                communityId={communityId}
-                                value={formState.overseerMemberId ? Number(formState.overseerMemberId) : undefined}
-                                member={currentOverseer}
-                                disabled={!communityId || loading}
-                                error={!!formErrors.overseerMemberId}
-                                helperText={formErrors.overseerMemberId}
-                                onChange={(newId) => {
-                                    setFormField("overseerMemberId", newId ? String(newId) : "");
-                                    setCurrentOverseer(null);
-                                }}
-                            />
-                            {showMemberBox && (
-                                <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
-                                    {memberOptions.map((member) => (
-                                        <button
-                                            key={member.id}
-                                            type="button"
-                                            className="w-full text-left px-4 py-2 hover:bg-green-50"
-                                            onClick={() => {
-                                                setFormField("overseerMemberId", String(member.id));
-                                                setMemberQuery(`${member.fname} ${member.lname}`);
-                                            }}
-                                        >
-                                            {member.fname} {member.lname}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
+                <section className="w-full">
                     {/* ความจุ */}
                     <TextField
                         id="capacity"

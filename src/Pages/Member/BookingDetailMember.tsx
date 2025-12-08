@@ -1,6 +1,5 @@
 /**
  * Component: BookingDetailAdmin
- * --------------------------------------------------------------
  * คำอธิบาย:
  *  - สำหรับแสดงรายละเอียดการจอง (Booking) ของสมาชิก (member)
  *  - ใช้สำหรับอนุมัติหรือปฏิเสธการจอง
@@ -63,7 +62,6 @@ export default function BookingDetailAdmin() {
   const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [openApproveModal, setOpenApproveModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
 
@@ -71,7 +69,6 @@ export default function BookingDetailAdmin() {
 
   /**
    * ฟังก์ชัน: fetchBooking
-   * --------------------------------------------------------------
    * คำอธิบาย:
    *  - ดึงข้อมูลรายละเอียดการจองจาก API
    *  - ใช้ bookingId จาก URL
@@ -117,7 +114,6 @@ export default function BookingDetailAdmin() {
 
   /**
    * ฟังก์ชัน: confirmApprove
-   * --------------------------------------------------------------
    * คำอธิบาย:
    *  - สำหรับอนุมัติการจอง
    *  - เรียก API: POST /member/bookings/:bookingId/status
@@ -148,7 +144,6 @@ export default function BookingDetailAdmin() {
 
   /**
    * ฟังก์ชัน: confirmReject
-   * --------------------------------------------------------------
    * คำอธิบาย:
    *  - สำหรับปฏิเสธการจอง พร้อมเหตุผล
    *  - เรียก API: POST /member/bookings/:bookingId/status
@@ -182,9 +177,6 @@ export default function BookingDetailAdmin() {
 
   return (
     <div className="w-full mx-auto space-y-2">
-      {/* --------------------------------------------------------
-                 Breadcrumb นำทางหน้า
-               -------------------------------------------------------- */}
       <div className="p-2">
         <Breadcrumb
           current={{

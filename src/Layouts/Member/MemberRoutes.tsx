@@ -10,13 +10,16 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
-import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
+import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
+import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
 
 export default function MemberRoutes() {
   return (
     <Routes>
       <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="/community/own" element={<CommunityDetailMember />} />
+      <Route path="packages/done" element={<PackageHistoryMember />} />
     </Routes>
   );
 }

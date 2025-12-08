@@ -37,6 +37,7 @@ import EditPackagePage from "@/Pages/Admin/EditPackagePage";
 import ManagePackagePage from "@/Pages/Admin/ManagePackagePage";
 import CreatePackagePage from "@/Pages/Admin/CreatePackagePage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -78,21 +79,21 @@ export default function AdminRoutes() {
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
-      <Route path="packages/feedback/:packageId" element={<PackageFeedbacksPage />} />
+      <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
       <Route path="/bookings" element={<ManageBooking />} />
       {/* หน้าดูรายละเอียดร้านค้าของ Admin */}
       <Route path="/community/store/:storeId" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
-      <Route path="packages/history/:packageId" element={<DetailPackageHistoryAdmin />} />
+      <Route path="packages/history/:id" element={<DetailPackageHistoryAdmin />} />
       <Route path="packages/drafts" element={<PackageDraftAdmin />} />
       <Route path="packages/histories" element={<PackageHistoryAdmin />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />
-
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="package/:id" element={<DetailPackageAdmin />} />
     </Routes>
   );
 }

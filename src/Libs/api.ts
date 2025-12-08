@@ -3,7 +3,7 @@ import axios from "axios";
 
 // สร้าง instance กลางของ axios
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   withCredentials: true, // ถ้า backend ใช้ cookie
 });
 

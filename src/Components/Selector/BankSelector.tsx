@@ -46,7 +46,8 @@ export function BankSelector({
    */
   useEffect(() => {
     async function loadBank() {
-      const response = await axios.get("http://localhost:3000/api/super/banks", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const response = await axios.get(`${apiUrl}/super/banks`, {
         withCredentials: true,
       });
       const data = response.data.data;

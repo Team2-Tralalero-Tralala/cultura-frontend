@@ -24,7 +24,7 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
   limit: number;
   hasNext: boolean;
 }> {
-  const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+  const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const response = await fetch(`${baseURL}/admin/booking/histories/all?page=${page}&limit=${limit}`, {
     method: "GET",
     credentials: "include",

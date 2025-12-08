@@ -104,6 +104,12 @@ export function DashboardPage() {
     try {
       setIsLoading(true);
 
+      /**
+       * ฟังก์ชัน: getFormattedDates
+       * คำอธิบาย: แปลงวันที่เป็น format yyyy-MM-dd และเรียงลำดับ
+       * Input: dates (Date[]) - รายการวันที่
+       * Output: Array<string> - รายการวันที่ที่ถูก format และเรียงลำดับ
+       */
       const getFormattedDates = (dates: Date[]) => {
         const uniqueDates = Array.from(new Set(dates.map((d) => format(d, "yyyy-MM-dd"))));
         return uniqueDates.sort();
@@ -320,12 +326,14 @@ export function DashboardPage() {
                 <tbody>
                   {dashboardData.package?.topPackages &&
                   dashboardData.package.topPackages.length > 0 ? (
-                    dashboardData.package.topPackages.map((pkg, index) => (
+                    dashboardData.package.topPackages.map((packages, index) => (
                       <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                        <td className="py-2 px-4 pl-8">{pkg.rank}</td>
-                        <td className="py-2 px-4 text-gray-800 font-medium">{pkg.name || "-"}</td>
+                        <td className="py-2 px-4 pl-8">{packages.rank}</td>
+                        <td className="py-2 px-4 text-gray-800 font-medium">
+                          {packages.name || "-"}
+                        </td>
                         <td className="py-2 px-4 text-gray-700 text-center">
-                          {pkg.bookingCount?.toLocaleString() ?? 0} ครั้ง
+                          {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
                         </td>
                       </tr>
                     ))

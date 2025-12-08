@@ -7,15 +7,6 @@
  * อินพุต: -
  * เอาต์พุต:
  *   - กลุ่มปุ่ม + Popover ปฏิทิน (ไม่บล็อกโฟกัสทั้งหน้า)
-/*
- * File: CalendarTrigger.tsx
- * Component: CalendarTrigger (Client)
- * หน้าที่:
- *   - ปุ่ม Trigger เปิด/ปิดปฏิทิน และปุ่มเลือกโหมด (รายสัปดาห์/รายเดือน/รายปี)
- *   - ปรับตำแหน่ง Popover อัตโนมัติ (Smart Positioning) ให้ไม่ล้นขอบขวา
- * อินพุต: -
- * เอาต์พุต:
- *   - กลุ่มปุ่ม + Popover ปฏิทิน (ไม่บล็อกโฟกัสทั้งหน้า)
  */
 
 import React, { useEffect, useLayoutEffect, useId, useRef, useState } from "react";
@@ -24,7 +15,6 @@ import { CalendarPopover } from "./CalendarPopover";
 
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, min, max } from "date-fns";
 
-/** ---------- Types ---------- */
 /*
  * ชนิด: CalendarMode
  * คำอธิบาย: โหมดปฏิทินที่รองรับ (คงรูปแบบให้สอดคล้องกับ CalendarPopover)
@@ -52,7 +42,6 @@ export type CalendarTriggerProps = {
   }) => void;
 };
 
-/** ---------- Component ---------- */
 export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
   mode,
   dateRange,
@@ -60,19 +49,14 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
   onModeChange,
   onChange,
 }) => {
-  /* ========== UI State ========== */
   /** สถานะเปิด/ปิด Popover ปฏิทิน */
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   /** สถานะเปิด/ปิด Dropdown เลือกโหมด */
   const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
 
-  /* ========== Alignment State ========== */
   /** ตำแหน่งยึดของ Popover (ชิดซ้าย/ขวา) */
   const [popoverAlign, setPopoverAlign] = useState<"left" | "right">("left");
 
-  /* ========== Selection State (Deleted internal calendarMode) ========== */
-
-  /* ========== Refs & IDs ========== */
   /** ครอบองค์ประกอบทั้งหมดสำหรับตรวจคลิกนอก */
   const wrapperRef = useRef<HTMLDivElement>(null);
   /** ไอดีสุ่มสำหรับผูก aria-* */
@@ -81,7 +65,6 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
   const triggerButtonId = `calendar-trigger-btn-${autoId}`;
   const modeButtonId = `calendar-mode-btn-${autoId}`;
 
-  /* ========== Smart Positioning Logic ========== */
   /*
    * คำอธิบาย:
    *   - เมื่อเปิด Popover จะตรวจพื้นที่ด้านขวาของปุ่ม
@@ -99,11 +82,13 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
       else setPopoverAlign("left");
     }
   }, [isPopoverOpen]);
-
-  /* ========== Outside Click ========== */
+  /**
+   * คำอธิบาย:
+   *   - ตรวจคลิกนอกเพื่อปิด Popover
+   */
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsPopoverOpen(false);
         setIsModeDropdownOpen(false);
       }
@@ -112,10 +97,13 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ========== Escape Close ========== */
+  /**
+   * คำอธิบาย:
+   *   - ตรวจปุ่ม ESC เพื่อปิด Popover
+   */
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setIsPopoverOpen(false);
         setIsModeDropdownOpen(false);
       }
@@ -124,7 +112,12 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  /* ========== Handlers ========== */
+  /**
+   * คำอธิบาย:
+   *   - สำหรับ Weekly: dates = [start, end]
+   * input: range: [Date | null, Date | null]
+   * output: { start, end, dates: [start, end], mode: "weekly" }
+   */
   const handleWeeklyChange = (range: [Date | null, Date | null]) => {
     const [start, end] = range;
     if (start && end) {
@@ -132,10 +125,15 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
       onChange?.({ start, end, dates: [start, end], mode: "weekly" });
     }
   };
-
+  /**
+   * คำอธิบาย:
+   *   - สำหรับ Monthly: dates = selected
+   * input: dates: Date[]
+   * output: { start, end, dates: [start, end], mode: "monthly" }
+   */
   const handleMonthlyChange = (dates: Date[]) => {
     if (dates.length === 0) return;
-    const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
+    const sortedDates = dates.sort((start, end) => start.getTime() - end.getTime());
     const startDate = startOfMonth(sortedDates[0]);
     const endDate = endOfMonth(sortedDates[sortedDates.length - 1]);
 
@@ -143,16 +141,21 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
     onChange?.({ start: startDate, end: endDate, dates: sortedDates, mode: "monthly" });
   };
 
+  /**
+   * คำอธิบาย:
+   *   - สำหรับ Yearly: dates = selected
+   * input: dates: Date[]
+   * output: { start, end, dates: [start, end], mode: "yearly" }
+   */
   const handleYearlyChange = (dates: Date[]) => {
     if (dates.length === 0) return;
-    const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
+    const sortedDates = dates.sort((start, end) => start.getTime() - end.getTime());
     const startDate = startOfYear(sortedDates[0]);
     const endDate = endOfYear(sortedDates[sortedDates.length - 1]);
 
     onChange?.({ start: startDate, end: endDate, dates: sortedDates, mode: "yearly" });
   };
 
-  /* ========== Label Map (ตามโหมด) ========== */
   const modeLabelMap: Record<CalendarMode, string> = {
     weekly: "รายสัปดาห์",
     monthly: "รายเดือน",
@@ -165,7 +168,7 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
       <button
         id={triggerButtonId}
         type="button"
-        onClick={() => setIsPopoverOpen((v) => !v)}
+        onClick={() => setIsPopoverOpen((popoverOpen) => !popoverOpen)}
         className="w-[34px] h-[39px] flex items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-md hover:border-green-400 transition"
         aria-label="เปิดปฏิทิน"
         aria-expanded={isPopoverOpen}
@@ -179,7 +182,7 @@ export const CalendarTrigger: React.FC<CalendarTriggerProps> = ({
         <button
           id={modeButtonId}
           type="button"
-          onClick={() => setIsModeDropdownOpen((v) => !v)}
+          onClick={() => setIsModeDropdownOpen((modeDropdownOpen) => !modeDropdownOpen)}
           className={`inline-flex w-[130px] h-[39px] items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition
             ${
               isModeDropdownOpen

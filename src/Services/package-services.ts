@@ -61,13 +61,27 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
 
 
 /*
-  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
+  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
   * Input : page, limit
-  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
+  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
   */
 export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
   const params = { page, limit };
   const res = await axios.get(`${apiUrl}/admin/package/histories/all`, {
+    params,
+    withCredentials: true, // ส่ง cookie/token ไปด้วย
+  });
+  return res.data;
+}
+
+/*
+  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ member
+  * Input : page, limit
+  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
+  */
+export async function getHistoriesPackageMember(page = 1, limit = 50) {
+  const params = { page, limit };
+  const res = await axios.get(`${apiUrl}/member/packages/histories/all`, {
     params,
     withCredentials: true, // ส่ง cookie/token ไปด้วย
   });

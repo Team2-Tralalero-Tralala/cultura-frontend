@@ -7,10 +7,10 @@
  * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
  * - แสดง Component ที่ตรงกับแต่ละ path
  */
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { MemberDetailPage } from '@/Pages/Admin/MemberDetailPage';
-import Feedbackall from '@/Pages/Admin/FeedbackAll';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { MemberDetailPage } from "@/Pages/Admin/MemberDetailPage";
+import Feedbackall from "@/Pages/Admin/FeedbackAll";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStoreAdmin";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayAdmin";
 import CreateHomestaysPage from "@/Pages/Admin/CreateHomestaysPage";
@@ -21,22 +21,23 @@ import { EditCommunity } from "@/Pages/Admin/EditCommunityPage";
 import { EditStore } from "@/Pages/Admin/EditStore";
 import CommunityDetailAdmin from "@/Pages/Admin/CommunityDetailAdmin";
 import PackageRequestsAdmin from "@/Pages/Admin/ManagePackageRequestPage";
-import {ManageRefundBooking} from "@/Pages/Admin/ManageRefundBooking"
+import { ManageRefundBooking } from "@/Pages/Admin/ManageRefundBooking";
 import PackageHistoryAdmin from "@/Pages/Admin/HistoryPackageAdmin";
 import PackageFeedbacksPage from "@/Pages/Admin/PackageFeedbacksPage";
 import { DashboardPage } from "@/Pages/Admin/DashboardPage";
 import ManageBooking from "@/Pages/Admin/ManageBookingAdmin";
-import ManageMembers from '@/Pages/Admin/ManageMembers';
+import ManageMembers from "@/Pages/Admin/ManageMembers";
 import BookingHistoryAdmin from "@/Pages/Admin/BookingHistoryAdmin";
 import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryAdmin";
 import BookingDetailAdmin from "@/Pages/Admin//BookingDetailAdmin";
-import ManageHomestayAdmin from '@/Pages/Admin/ManageHomestayPage';
+import ManageHomestayAdmin from "@/Pages/Admin/ManageHomestayPage";
 import StoreDetailAdmin from "@/Pages/Admin/StoreDetailAdmin";
-import PackageDraftAdmin from '@/Pages/Admin/PackageDraftAdmin';
-import EditPackagePage from '@/Pages/Admin/EditPackagePage';
-import ManagePackagePage from '@/Pages/Admin/ManagePackagePage';
-import CreatePackagePage from '@/Pages/Admin/CreatePackagePage';
+import PackageDraftAdmin from "@/Pages/Admin/PackageDraftAdmin";
+import EditPackagePage from "@/Pages/Admin/EditPackagePage";
+import ManagePackagePage from "@/Pages/Admin/ManagePackagePage";
+import CreatePackagePage from "@/Pages/Admin/CreatePackagePage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -72,7 +73,6 @@ export default function AdminRoutes() {
       {/* หน้าตารางร้านค้าทั้งหมดของในชุมชนของ Admin */}
       <Route path="/community/stores" element={<ManageStoreAdmin />} />
 
-
       <Route path="/booking/refunds" element={<ManageRefundBooking />} />
       <Route path="/members" element={<ManageMembers />} />
 
@@ -86,14 +86,14 @@ export default function AdminRoutes() {
       <Route path="/community/store/:storeId" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
-      <Route path="packages/history/:packageId" element={<DetailPackageHistoryAdmin />} />
-      <Route path="package/draft" element={<PackageDraftAdmin />} />
+      <Route path="packages/history/:id" element={<DetailPackageHistoryAdmin />} />
+      <Route path="packages/drafts" element={<PackageDraftAdmin />} />
       <Route path="packages/histories" element={<PackageHistoryAdmin />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />
-
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="package/:id" element={<DetailPackageAdmin />} />
     </Routes>
   );
 }

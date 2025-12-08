@@ -41,10 +41,11 @@ const toThaiDate = (iso?: string | null) => {
  * -----------------------------------------------------------
  * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend (มักขึ้นต้นด้วย uploads/)
  * ให้เป็น URL ดาวน์โหลดเต็มที่พร้อมใช้งานบน frontend
- * ใช้ค่าใน .env (VITE_BACKEND_URL) และ fallback เป็น localhost หากไม่พบค่า
+ * ใช้ค่าใน .env (VITE_API_URL) และ fallback เป็น localhost หากไม่พบค่า
  * ===========================================================
  */
-const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /**
  * Input : fileName - ชื่อไฟล์หรือพาธไฟล์จาก backend
@@ -652,7 +653,7 @@ export default function CommunityDetailAdmin() {
                 <Section
                   title="แพ็กเกจ"
                   count={pkgs.length}
-                  onManage={() => navigate(`/admin/packages`)}
+                  onManage={() => navigate(`/admin/packages/all`)}
                 >
                   {pkgs.length ? (
                     <div className="space-y-4">

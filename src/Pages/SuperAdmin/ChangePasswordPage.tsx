@@ -17,13 +17,9 @@ import Breadcrumb from "../../Components/BreadcrumbNavigation";
  * - apiBaseUrl   : base URL (ตัด / ท้าย)
  * - apiPrefix    : พาธ prefix (อาจเป็น path หรือ full URL ตามค่าที่โปรเจกต์ใช้)
  */
-const apiBaseRaw = import.meta.env.VITE_API_BASE_URL?.trim();
-const apiBaseUrl =
-    apiBaseRaw && /^https?:\/\//i.test(apiBaseRaw)
-        ? apiBaseRaw.replace(/\/+$/, "")
-        : "http://localhost:4000";
-
-const apiPrefix = (import.meta.env.VITE_API_PREFIX || "http://localhost:3000/api").replace(/\/+$/, "");
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const apiBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+const apiPrefix = apiUrl;
 
 /* Axios instance: แนบ withCredentials + Bearer token */
 const apiClient = axios.create({

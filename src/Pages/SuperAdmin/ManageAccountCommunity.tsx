@@ -119,7 +119,8 @@ export function ManageAccountCommunity() {
    */
   const optionsRole = [
     { label: "ทั้งหมด", value: "all" },
-    { label: "ผู้ดูแลระบบ", value: "admin" },
+    { label: "ผู้ดูแลระบบ", value: "superadmin" },
+    { label: "ผู้ดูแลชุมชน", value: "admin" },
     { label: "สมาชิก", value: "member" },
     { label: "ผู้ใช้งานทั่วไป", value: "tourist" },
   ];
@@ -283,14 +284,14 @@ export function ManageAccountCommunity() {
     <div className="space-y-4">
       {/* Section: Header */}
       <div className="flex flex-col w-full">
-       <div>
-               <Breadcrumb
-                 current={{
-                   label: "จัดการสมาชิก",
-                   to: `/super/account/community/${params}`,
-                 }}
-               />
-             </div>
+        <div>
+          <Breadcrumb
+            current={{
+              label: "จัดการสมาชิก",
+              to: `/super/account/community/${params}`,
+            }}
+          />
+        </div>
         <div className="flex justify-between items-center mb-3">
           <Link
             to={`/super/community/${params.communityId}`}

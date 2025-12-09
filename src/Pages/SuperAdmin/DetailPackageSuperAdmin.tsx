@@ -14,6 +14,7 @@ import { Tag } from "../../Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
+import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
 /**
  * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
@@ -52,15 +53,13 @@ interface HomestayData {
   detail: string;
   facility?: string;
   images: { id: number; path: string; type: string }[];
-  location?:
-    | {
-        subDistrict?: string;
-        district?: string;
-        province?: string;
-        latitude?: number;
-        longitude?: number;
-      }
-    | null;
+  location?: {
+    subDistrict?: string;
+    district?: string;
+    province?: string;
+    latitude?: number;
+    longitude?: number;
+  } | null;
 }
 
 interface HomestayHistory {
@@ -72,7 +71,7 @@ interface HomestayHistory {
   homestay?: HomestayData | null;
 }
 
-interface PackageFile {
+interface PackageMedia {
   id: number;
   path: string;
   type: string;
@@ -97,7 +96,7 @@ interface PackageData {
   openBookingAt: DateTimeField;
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
-  files: PackageFile[];
+  files: PackageMedia[];
   homestayHistories: HomestayHistory[];
 }
 
@@ -204,9 +203,9 @@ export default function DetailPackageSuperAdmin() {
             : null,
           files: packageRawData.packageFile
             ? packageRawData.packageFile.map((fileItem: any) => ({
-                id: fileItem.pf_id ?? fileItem.id,
-                path: fileItem.pf_image,
-                type: fileItem.pf_type,
+                id: fileItem.id,
+                path: fileItem.filePath,
+                type: fileItem.type,
               }))
             : [],
           homestayHistories: packageRawData.homestayHistories
@@ -232,30 +231,18 @@ export default function DetailPackageSuperAdmin() {
                           homestayHistoryItem.homestay.homestayImage ??
                           homestayHistoryItem.homestay.images ??
                           []
-                        ).map(
-                          (imageItem: any, imageIndex: number) => ({
-                            id: imageItem.id ?? imageIndex,
-                            path:
-                              imageItem.image ??
-                              imageItem.filePath ??
-                              imageItem.path ??
-                              "",
-                            type: imageItem.type ?? "GALLERY",
-                          })
-                        ),
+                        ).map((imageItem: any, imageIndex: number) => ({
+                          id: imageItem.id ?? imageIndex,
+                          path: imageItem.image ?? imageItem.filePath ?? imageItem.path ?? "",
+                          type: imageItem.type ?? "GALLERY",
+                        })),
                         location: homestayHistoryItem.homestay.location
                           ? {
-                              subDistrict:
-                                homestayHistoryItem.homestay.location
-                                  .subDistrict,
-                              district:
-                                homestayHistoryItem.homestay.location.district,
-                              province:
-                                homestayHistoryItem.homestay.location.province,
-                              latitude:
-                                homestayHistoryItem.homestay.location.latitude,
-                              longitude:
-                                homestayHistoryItem.homestay.location.longitude,
+                              subDistrict: homestayHistoryItem.homestay.location.subDistrict,
+                              district: homestayHistoryItem.homestay.location.district,
+                              province: homestayHistoryItem.homestay.location.province,
+                              latitude: homestayHistoryItem.homestay.location.latitude,
+                              longitude: homestayHistoryItem.homestay.location.longitude,
                             }
                           : null,
                       }
@@ -289,9 +276,13 @@ export default function DetailPackageSuperAdmin() {
   }
 
   // ดึงรูปหลักและรูปเพิ่มเติมจาก type
-  const coverImageFile = packageDetail.files?.find(
-    (imageFile: PackageFile) => imageFile.type === "COVER"
-  );
+  // พยายามหา COVER ก่อน ถ้าไม่มีค่อย fallback เป็น GALLERY หรือรูปแรก
+  const coverImageFile =
+    packageDetail.files?.find((file) => file.type === "COVER") ||
+    packageDetail.files?.find((file) => file.type === "GALLERY") ||
+    packageDetail.files?.[0] ||
+    null;
+
   const galleryImageFiles = packageDetail.files?.filter(
     (imageFile: PackageFile) => imageFile.type === "GALLERY"
   );
@@ -300,18 +291,13 @@ export default function DetailPackageSuperAdmin() {
   // เตรียม section แสดงที่พักในแพ็กเกจ (ถ้ามี)
   let homestaySection: JSX.Element | null = null;
 
-  if (
-    packageDetail.homestayHistories &&
-    packageDetail.homestayHistories.length > 0
-  ) {
+  if (packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0) {
     const firstHomestayHistory = packageDetail.homestayHistories[0];
     const homestayDetail = firstHomestayHistory.homestay;
 
     if (homestayDetail) {
       const checkInDateTime = extractDateTime(firstHomestayHistory.checkInTime);
-      const checkOutDateTime = extractDateTime(
-        firstHomestayHistory.checkOutTime
-      );
+      const checkOutDateTime = extractDateTime(firstHomestayHistory.checkOutTime);
 
       const homestayMainImage = homestayDetail.images?.[0];
 
@@ -327,21 +313,17 @@ export default function DetailPackageSuperAdmin() {
         <div className="mt-8">
           <h2 className="font-semibold text-lg mb-2">ที่พักในแพ็กเกจ</h2>
 
-          <div className="flex justify-between text-md text-gray-700 mb-4">
+          <div className="flex justify-between text-md text-black mb-4">
             <p>
               <strong>เช็กอิน :</strong>{" "}
               {checkInDateTime.date
-                ? `${formatDateTH(checkInDateTime.date)} เวลา ${
-                    checkInDateTime.time ?? "-"
-                  }`
+                ? `${formatDateTH(checkInDateTime.date)} เวลา ${checkInDateTime.time ?? "-"}`
                 : "-"}
             </p>
             <p>
               <strong>เช็กเอาท์ :</strong>{" "}
               {checkOutDateTime.date
-                ? `${formatDateTH(checkOutDateTime.date)} เวลา ${
-                    checkOutDateTime.time ?? "-"
-                  }`
+                ? `${formatDateTH(checkOutDateTime.date)} เวลา ${checkOutDateTime.time ?? "-"}`
                 : "-"}
             </p>
           </div>
@@ -353,9 +335,7 @@ export default function DetailPackageSuperAdmin() {
                 className="w-full h-full object-cover"
                 src={
                   homestayMainImage?.path
-                    ? `${new URL(API_BASE_URL).origin}/uploads/${
-                        homestayMainImage.path
-                      }`
+                    ? `${new URL(API_BASE_URL).origin}/uploads/${homestayMainImage.path}`
                     : "https://placehold.co/640x480?text=Homestay"
                 }
                 alt={homestayDetail.name}
@@ -363,16 +343,12 @@ export default function DetailPackageSuperAdmin() {
             </div>
 
             {/* รายละเอียดที่พัก */}
-            <div className="flex-1 text-gray-800">
-              <div className="font-semibold text-lg mb-2">
-                {homestayDetail.name}
-              </div>
+            <div className="flex-1 text-black">
+              <div className="font-semibold text-lg mb-2">{homestayDetail.name}</div>
 
               {homestayFacilityItems.length > 0 && (
                 <div>
-                  <div className="font-semibold mb-1">
-                    สิ่งอำนวยความสะดวกที่พัก
-                  </div>
+                  <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
                     {homestayFacilityItems.map((facilityItem, index) => (
                       <li key={index}>{facilityItem}</li>
@@ -423,7 +399,7 @@ export default function DetailPackageSuperAdmin() {
 
         {/* ชื่อแพ็กเกจ */}
         <div className="mb-6 flex flex-row">
-          <p className="text-md text-gray-800">
+          <p className="text-md text-black">
             <strong>ชื่อแพ็กเกจ : </strong>
             {packageDetail.name}
           </p>
@@ -431,29 +407,16 @@ export default function DetailPackageSuperAdmin() {
 
         {/* สถานะแพ็กเกจ */}
         <div className="mb-6">
-          <div className="flex flex-row items-center gap-2">
-            <p className="text-md text-gray-800 font-semibold">
-              สถานะแพ็กเกจ :
+          <div className="flex flex-row gap-5">
+            <p className="text-md text-black">
+              <strong>สถานะแพ็กเกจ :</strong>
             </p>
-
             {/* Badge สถานะ */}
             <span
               className={`px-4 py-1 rounded-full text-sm font-semibold
-        ${
-          packageDetail.statusPackage === "PUBLISH"
-            ? "bg-green-200 text-green-700"
-            : ""
-        }
-        ${
-          packageDetail.statusPackage === "DRAFT"
-            ? "bg-yellow-200 text-yellow-700"
-            : ""
-        }
-        ${
-          packageDetail.statusPackage === "UNPUBLISH"
-            ? "bg-red-200 text-red-700"
-            : ""
-        }
+        ${packageDetail.statusPackage === "PUBLISH" ? "bg-green-200 text-green-700" : ""}
+        ${packageDetail.statusPackage === "DRAFT" ? "bg-yellow-200 text-yellow-700" : ""}
+        ${packageDetail.statusPackage === "UNPUBLISH" ? "bg-red-200 text-red-700" : ""}
         `}
             >
               {packageDetail.statusPackage === "PUBLISH" && "เผยแพร่"}
@@ -466,7 +429,7 @@ export default function DetailPackageSuperAdmin() {
         {/* คำอธิบาย */}
         <div className="mb-6">
           <div className="flex flex-row">
-            <p className="text-md text-gray-800">
+            <p className="text-md text-black">
               <strong>คำอธิบาย : </strong>
               {packageDetail.description}
             </p>
@@ -474,7 +437,7 @@ export default function DetailPackageSuperAdmin() {
         </div>
 
         {/* จำนวนคน / ราคา */}
-        <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
+        <div className="grid md:grid-cols-2 gap-6 text-black text-md mb-6">
           <div>
             <p>
               <strong>จำนวนคนที่เปิดรับ : </strong>
@@ -491,38 +454,26 @@ export default function DetailPackageSuperAdmin() {
 
         {/* แท็ก */}
         {packageDetail.tags?.length > 0 && (
-          <div className="mb-6 flex gap-2 flex-row">
+          <div className="mb-6 flex gap-2 flex-row text-md text-black items-center">
             <strong>แท็ก :</strong>{" "}
             {packageDetail.tags.map((tagLabel, index) => (
               <Tag
                 key={index}
                 label={tagLabel}
-                sizeClass="w-20 h-8"
-                className="text-black bg-white"
+                sizeClass="h-8 px-4"
+                className="text-black bg-white whitespace-nowrap"
               />
             ))}
           </div>
         )}
 
         {/* ===== รูปหลัก ===== */}
-        <div className="grid grid-cols-1 md:grid-cols-[55%_auto] gap-10 items-start">
-          {coverImageFile ? (
-            <img
-              src={`${API_BASE_URL}/uploads${coverImageFile.path}`}
-              alt="package-main"
-              className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
-            />
-          ) : (
-            <img
-              src="https://placehold.co/600x400?text=No+Image"
-              alt="package-main"
-              className="w-full h-[400px] object-cover rounded-xl shadow mb-6"
-            />
-          )}
+        <div className="grid grid-cols-1 mb-6 md:grid-cols-[55%_auto] gap-10 items-start">
+          <DetailPackageGallery packageDetail={packageDetail} />
         </div>
 
         {/* ข้อมูลผู้ดูแล */}
-        <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
+        <div className="grid md:grid-cols-2 gap-6 text-black text-md mb-6">
           <div>
             <p className="mb-6">
               <strong>ผู้ดูแล : </strong> {packageDetail.overseer?.name || "-"}
@@ -532,23 +483,21 @@ export default function DetailPackageSuperAdmin() {
               {formatDateTH(packageDetail.startDate?.date)} -{" "}
               {formatDateTH(packageDetail.dueDate?.date)}
               <br />
-              <strong>เวลา : </strong> {packageDetail.startDate?.time || "-"}{" "}
-              - {packageDetail.dueDate?.time || "-"}
+              <strong>เวลา : </strong> {packageDetail.startDate?.time || "-"} -{" "}
+              {packageDetail.dueDate?.time || "-"}
             </p>
           </div>
 
           <div>
             <p className="mb-6">
-              <strong>สร้างโดย : </strong>{" "}
-              {packageDetail.createdBy?.name || "-"}
+              <strong>สร้างโดย : </strong> {packageDetail.createdBy?.name || "-"}
             </p>
             <p className="mb-6">
               <strong>วันที่เปิด - วันที่ปิดการจอง : </strong>{" "}
               {formatDateTH(packageDetail.openBookingAt?.date)} -{" "}
               {formatDateTH(packageDetail.closeBookingAt?.date)}
               <br />
-              <strong>เวลา : </strong>{" "}
-              {packageDetail.openBookingAt?.time || "-"} -{" "}
+              <strong>เวลา : </strong> {packageDetail.openBookingAt?.time || "-"} -{" "}
               {packageDetail.closeBookingAt?.time || "-"}
             </p>
           </div>
@@ -556,48 +505,41 @@ export default function DetailPackageSuperAdmin() {
 
         {/* สิ่งอำนวยความสะดวก */}
         <div className="mb-6">
-          <p>
-            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong>{" "}
-            {packageDetail.facility || "-"}
+          <p className="text-black text-md">
+            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {packageDetail.facility || "-"}
           </p>
         </div>
 
         {/* แผนที่ */}
         {packageDetail.location && (
           <div className="mt-8">
-            <h2 className="font-semibold text-lg mb-6">แผนที่</h2>
+            <h2 className="font-bold text-xl mb-6">แผนที่</h2>
             <iframe
               title="map"
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${
                 packageDetail.location.longitude - 0.01
               },${packageDetail.location.latitude - 0.01},${
                 packageDetail.location.longitude + 0.01
-              },${
-                packageDetail.location.latitude + 0.01
-              }&layer=mapnik&marker=${packageDetail.location.latitude},${
-                packageDetail.location.longitude
-              }`}
+              },${packageDetail.location.latitude + 0.01}&layer=mapnik&marker=${
+                packageDetail.location.latitude
+              },${packageDetail.location.longitude}`}
               className="w-full h-96 rounded-xl border"
             ></iframe>
-            <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6">
+            <div className="grid md:grid-cols-2 gap-6 text-black text-md mb-6">
               <div className="mt-6">
                 <p className="mb-4">
                   <strong>ที่อยู่ :</strong> {packageDetail.location.address}{" "}
-                  {packageDetail.location.subDistrict}{" "}
-                  {packageDetail.location.district}{" "}
-                  {packageDetail.location.province}{" "}
-                  {packageDetail.location.postalCode}
+                  {packageDetail.location.subDistrict} {packageDetail.location.district}{" "}
+                  {packageDetail.location.province} {packageDetail.location.postalCode}
                 </p>
                 <p>
-                  <strong>ละติจูด / ลองจิจูด : </strong>{" "}
-                  {packageDetail.location.latitude},{" "}
+                  <strong>ละติจูด / ลองจิจูด : </strong> {packageDetail.location.latitude},{" "}
                   {packageDetail.location.longitude}
                 </p>
               </div>
               <div className="mt-6">
                 <p className="mb-4">
-                  <strong>คำอธิบายที่อยู่ :</strong>{" "}
-                  {packageDetail.location.detail}
+                  <strong>คำอธิบายที่อยู่ :</strong> {packageDetail.location.detail}
                 </p>
               </div>
             </div>

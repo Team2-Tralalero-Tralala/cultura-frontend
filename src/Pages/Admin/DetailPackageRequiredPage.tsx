@@ -1,10 +1,3 @@
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจที่ถูกร้องขอ (Detail Package Request)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
- * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถปลี่ยนสถานะ อนุมัติ/ปฏิเสธ (เรียกผ่าน service: package-request-service)
- */
-
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -23,7 +16,6 @@ import RejectModal from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 /**
  * ฟังก์ชัน : - (ค่าคงที่)
@@ -73,6 +65,66 @@ function formatDate(isoString?: string): string {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+/**
+ * ฟังก์ชัน : formatThaiDate
+ * คำอธิบาย : แปลงวันที่ ISO เป็นรูปแบบไทย dd/mm/yyyy
+ * Input : isoString?: string
+ * Output: วันที่ในรูปแบบไทย วันพุธที่ 1 ตุลาคม พ.ศ. 2568  เวลา 14:00   
+ */
+export function formatThaiDate(dateString: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  const days = [
+    "วันอาทิตย์",
+    "วันจันทร์",
+    "วันอังคาร",
+    "วันพุธ",
+    "วันพฤหัสบดี",
+    "วันศุกร์",
+    "วันเสาร์",
+  ];
+
+  const months = [
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
+  ];
+
+  const dayName = days[date.getDay()];
+  const day = date.getDate();
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear() + 543;
+
+  return `${dayName} ที่ ${day} ${monthName} พ.ศ. ${year}`;
+}
+
+/**
+ * ฟังก์ชัน : parseFacilityText
+ * คำอธิบาย : แปลงข้อความสิ่งอำนวยความสะดวกจากรูปแบบ string ให้เป็นรายการ array
+ *             รองรับการคั่นด้วย \n, comma (,), หรือสัญลักษณ์ bullet (•)
+ * Input : text?: string (ข้อความสิ่งอำนวยความสะดวกจาก backend)
+ * Output: string[] (รายการสิ่งอำนวยความสะดวกแต่ละบรรทัด)
+ */
+function parseFacilityText(text?: string): string[] {
+  if (!text) return [];
+
+  return text
+    .split(/\r?\n|,|•/g)
+    .map(item => item.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -445,7 +497,6 @@ export default function DetailPackageRequiredPage() {
               startingPosition={mapCenter}
               startingZoom={13}
               onChange={(_latlng) => {
-                // view only
               }}
             />
           </div>
@@ -471,7 +522,71 @@ export default function DetailPackageRequiredPage() {
             </p>
           </div>
         </div>
+        <p className="text-[16px] text-gray-900">
+          <span className="font-semibold">ที่พักในแพ็กเกจ</span>{" "}
+        </p>
+
+        {packageRequestDetail?.homestayHistories?.length ? (
+          <div className="grid grid-cols-2 gap-6">
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">เช็คอิน :</span>{" "}
+              <span className="font-normal">
+                {formatThaiDate(
+                  packageRequestDetail.homestayHistories[0].checkInTime
+                )} เวลา {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkInTime)}
+              </span>
+            </p>
+
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">เช็คเอาท์ :</span>{" "}
+              <span className="font-normal">
+                {formatThaiDate(
+                  packageRequestDetail.homestayHistories[0].checkOutTime
+                )} เวลา {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkOutTime)}
+              </span>
+            </p>
+
+            <div className="col-span-2 w-full min-h-[200px] border border-gray-300 rounded-xl p-4 shadow-sm bg-white mt-2 flex items-start gap-16">
+
+              {packageRequestDetail?.homestayHistories?.[0]?.homestay?.homestayImage?.length ? (
+                <img
+                  src={resolveBackendUploadUrl(
+                    packageRequestDetail.homestayHistories[0].homestay.homestayImage[0].image
+                  )}
+                  alt="homestay"
+                  className="w-[356px] h-[183px] object-cover rounded-lg"
+                />
+              ) : (
+                <div className="w-[356px] h-[183px] bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+                  ไม่มีรูปภาพ
+                </div>
+              )}
+
+              <div className="flex-1">
+
+                <p className="text-[16px] font-semibold text-gray-900">
+                  {packageRequestDetail?.homestayHistories?.[0]?.homestay?.name ?? "-"}
+                </p>
+
+                <p className="text-[16px] font-semibold mt-2">
+                  สิ่งอำนวยความสะดวก
+                </p>
+
+                <ul className="list-disc ml-6 text-[16px] text-gray-800 mt-1">
+                  {parseFacilityText(
+                    packageRequestDetail?.homestayHistories?.[0]?.homestay?.facility
+                  ).map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+
+              </div>
+            </div>
+          </div>
+        ) : null}
+
       </section>
+
 
       {!isApproved && (
         <div className="flex justify-end gap-3 mt-4">

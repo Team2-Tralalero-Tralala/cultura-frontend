@@ -10,6 +10,9 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import ManagePackagePage from '@/Pages/Member/ManagePackagePage';
+import { EditPackagePage } from '@/Pages/Member/EditPackagePage';
+import CreatePackagePage from '@/Pages/Member/CreatePackagePage';
 import { ManageRefundBookingMember } from '@/Pages/Member/ManageRefundBookingPage';
 
 import ManageBookingMember from '@/Pages/Member/ManageBookingMember';
@@ -27,6 +30,9 @@ export default function MemberRoutes() {
 
 
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="packages/all" element={<ManagePackagePage />} />
+      <Route path="package/:id/edit" element={<EditPackagePage />} />
+      <Route path="package/create" element={<CreatePackagePage />} />
 
       {/* แพ็กเกจ */}
       <Route path="package/:id" element={<DetailPackageMember/>} />

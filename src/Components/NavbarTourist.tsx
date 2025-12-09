@@ -2,21 +2,31 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ ผู้ใช้ทั่วไป (Tourist)
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขข้อมูลส่วนตัว, ประวัติการจอง, เปลี่ยนรหัสผ่าน, ดูรายงาน และออกจากระบบ
  */
+import { useAuth } from "@/Libs/useAuth";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SearchBar from "./Search/SearchBar";
 
 const NavbarTourist = () => {
-  // State สำหรับจัดการการเข้าสู่ระบบ
-  const [isAuthen, setIsAuthen] = useState(false);
+  // ดึงข้อมูล authentication จาก AuthContext
+  const { user, logout: logoutAuth } = useAuth();
   // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
 
+  const navigate = useNavigate();
+
   // ฟังก์ชันสำหรับเข้าสู่ระบบและออกจากระบบ
   const login = () => {
-    setIsAuthen(true);
+    navigate("/guest/login");
   };
+  /*
+   * ฟังก์ชัน : logout
+   * คำอธิบาย : ออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
+   * Input : ไม่มี
+   * Output : void
+   */
   const logout = async () => {
-    setIsAuthen(false);
+    await logoutAuth();
     setIsOpen(false); // ปิด dropdown ตอน logout
   };
 
@@ -45,7 +55,7 @@ const NavbarTourist = () => {
         </div>
 
         <div className="ml-auto flex flex-col items-center gap-6 lg:flex-row lg:gap-6">
-          {isAuthen ? (
+          {user ? (
             <div className="relative">
               {/* ปุ่มโปรไฟล์ */}
               <button

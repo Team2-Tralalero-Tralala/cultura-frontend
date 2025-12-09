@@ -18,8 +18,10 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Home />} />
+      <Route path="/" element={<Home />} />
         <Route path="/tourist/packages" element={<PackagesPage />} />
+        <Route path="/tourist/home" element={<Home />} />
+
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />
           <Route path="partner/login" element={<LoginAdmin />} />

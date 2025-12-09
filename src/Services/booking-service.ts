@@ -24,20 +24,20 @@ export async function fetchRefundRequests(page = 1, limit = 10) {
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับอนุมัติคำขอคืนเงิน
- * Mapping : PATCH /admin/booking/refunds/:id/approve
+ * Mapping : PATCH /admin/booking/refunds/:bookingId/approve
  */
-export async function approveRefund(id: number) {
-  return api.patch(`/admin/booking/refunds/${id}/approve`);
+export async function approveRefund(bookingId: number) {
+  return api.patch(`/admin/booking/refunds/${bookingId}/approve`);
 }
 
 /*
  * ฟังก์ชัน : rejectRefund
  * อธิบาย : ปฏิเสธคำขอคืนเงิน พร้อมเหตุผล
- * Mapping : PATCH /admin/refunds/:id/reject
+ * Mapping : PATCH /admin/refunds/:bookingId/reject
  * Input : reason (string)
  */
-export async function rejectRefund(id: number, reason: string) {
-  return api.patch(`/admin/booking/refunds/${id}/reject`, { reason });
+export async function rejectRefund(bookingId: number, reason: string) {
+  return api.patch(`/admin/booking/refunds/${bookingId}/reject`, { reason });
 }
 
 
@@ -52,18 +52,18 @@ export async function fetchRefundRequestsMember(page = 1, limit = 10) {
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับอนุมัติคำขอคืนเงิน
- * Mapping : PATCH /member/booking-history/:id/approve-refund
+ * Mapping : PATCH /member/booking-history/:bookingId/approve-refund
  */
-export async function approveRefundMember(id: number) {
-  return api.patch(`/member/booking-history/${id}/approve-refund`);
+export async function approveRefundMember(bookingId: number) {
+  return api.patch(`/member/booking-history/${bookingId}/approve-refund`);
 }
 
 /*
  * ฟังก์ชัน : rejectRefund
  * อธิบาย : ปฏิเสธคำขอคืนเงิน พร้อมเหตุผล
- * Mapping : PATCH /member/booking-history/:id/reject-refund
+ * Mapping : PATCH /member/booking-history/:bookingId/reject-refund
  * Input : reason (string)
  */
-export async function rejectRefundMember(id: number, reason: string) {
-  return api.patch(`/member/booking-history/${id}/reject-refund`, { reason });
+export async function rejectRefundMember(bookingId: number, reason: string) {
+  return api.patch(`/member/booking-history/${bookingId}/reject-refund`, { reason });
 }

@@ -34,17 +34,19 @@ type RefundRow = {
 /**
  * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
  * รองรับทั้งแบบ Full URL และ Relative Path
+ * Input : path (string | null) - ที่อยู่ของไฟล์รูปภาพ (เช่น "uploads/slip.jpg" หรือ "http://...")
+ * Output : string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
  */
 const getSlipImageUrl = (path: string | null): string | null => {
   if (!path || path === "-") return null;
-  
+
   let cleanPath = path.replace(/\\/g, "/");
   if (cleanPath.startsWith("http")) return cleanPath;
   if (cleanPath.startsWith("/")) cleanPath = cleanPath.substring(1);
-  
+
   const fileBaseUrl = import.meta.env.VITE_FILE_URL;
   const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-  
+
   if (fileBaseUrl) return `${fileBaseUrl}/${cleanPath}`;
   const prefix = cleanPath.startsWith("uploads") ? "" : "uploads/";
   return `${apiBaseUrl}/${prefix}${cleanPath}`;
@@ -173,11 +175,11 @@ export function ManageRefundBookingMember() {
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [isRejectOpen, setRejectOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RefundRow | null>(null);
 
-  const [slipOpen, setSlipOpen] = useState(false);
+  const [isSlipOpen, setSlipOpen] = useState(false);
   const [slipUrl, setSlipUrl] = useState<string | null>(null);
 
   /**
@@ -188,12 +190,18 @@ export function ManageRefundBookingMember() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const res = await fetchRefundRequestsMember(currentPage, pageSize);
-      const payload = res.data?.data || res.data; 
-      const list = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
-      const pg = payload?.pagination || res.data?.pagination || res.pagination || {};
+      // เรียก API Admin
+      const response = await fetchRefundRequestsMember(currentPage, pageSize);
+      // responseBody = ส่วนข้อมูลหลักที่ได้จาก response
+      const responseBody = response.data?.data || response.data;
+      // refundRequests = รายการคำขอคืนเงินที่เป็น Array
+      const refundRequests = Array.isArray(responseBody?.data) 
+        ? responseBody.data 
+        : (Array.isArray(responseBody) ? responseBody : []);
+      // paginationInfo = ข้อมูลเกี่ยวกับการแบ่งหน้า
+      const paginationInfo = responseBody?.pagination || response.data?.pagination || response.pagination || {};
 
-      const mappedRows: RefundRow[] = list.map((item: any) => ({
+      const mappedRows: RefundRow[] = refundRequests.map((item: any) => ({
         id: item.id,
         touristName: `${item.tourist?.fname ?? ""} ${item.tourist?.lname ?? ""}`.trim(),
         packageName: item.package?.name ?? "-",
@@ -204,10 +212,10 @@ export function ManageRefundBookingMember() {
 
       setRows(mappedRows);
       setPagination({
-          currentPage: pg.currentPage ?? currentPage,
-          totalPages: pg.totalPages ?? 1,
-          totalCount: pg.totalCount ?? list.length,
-          limit: pg.limit ?? pageSize
+          currentPage: paginationInfo.currentPage ?? currentPage,
+          totalPages: paginationInfo.totalPages ?? 1,
+          totalCount: paginationInfo.totalCount ?? refundRequests.length,
+          limit: paginationInfo.limit ?? pageSize
       });
 
     } catch (error: any) {
@@ -275,12 +283,11 @@ export function ManageRefundBookingMember() {
         current={{
           label: "คำขอคืนเงิน",
           to: "/member/bookings/refunded-pending",
-          fromSidebar: true, 
         }}
       />
 
       <div className="flex flex-col gap-2 -mt-4">
-        <h1 className="text-xl font-bold">คำขอคืนเงิน</h1>
+        <h1 className="text-[20px] font-bold text-black">คำขอคืนเงิน</h1>
         <div className="flex items-center gap-2 w-full">
           <div className="w-[260px]">
             <SearchBarTable
@@ -312,7 +319,7 @@ export function ManageRefundBookingMember() {
 
       {/* Modal ยืนยันการอนุมัติ */}
       <Modal
-        open={confirmOpen}
+        open={isConfirmOpen}
         title="ยืนยันการอนุมัติคำขอคืนเงิน"
         text={selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""}
         confirmText="ยืนยัน"
@@ -329,7 +336,7 @@ export function ManageRefundBookingMember() {
 
       {/* Modal ปฏิเสธคำขอ */}
       <RejectModal
-        open={rejectOpen}
+        open={isRejectOpen}
         title="ปฏิเสธคำขอคืนเงิน"
         text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
         confirmText="ส่ง"
@@ -345,7 +352,7 @@ export function ManageRefundBookingMember() {
       />
 
       {/* Modal แสดงรูปภาพสลิป */}
-      {slipOpen && slipUrl && (
+      {isSlipOpen && slipUrl && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
           {/* กล่อง modal ขนาดคงที่ */}
           <div

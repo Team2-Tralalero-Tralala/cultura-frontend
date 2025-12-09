@@ -20,6 +20,7 @@ import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Icon } from "@iconify/react";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -317,7 +318,15 @@ export default function ManagePackageSuperAdmin() {
               คำขออนุมัติ
             </Button>
             <Button type="confirm-admin" onClick={goToCreatePackage}>
-              <span className="whitespace-nowrap">สร้างแพ็กเกจ</span>
+              <div className="flex items-center justify-center gap-2 px-1">
+                <Icon
+                  icon="material-symbols:add-rounded"
+                  className="text-2xl" // ปรับขนาดไอคอนประมาณ 24px
+                />
+                <span className="whitespace-nowrap font-medium text-lg pb-0.5">
+                  เพิ่มแพ็กเกจ
+                </span>
+              </div>
             </Button>
           </div>
         </div>

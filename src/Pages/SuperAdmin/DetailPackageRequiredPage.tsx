@@ -28,9 +28,11 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
  * Input : -
  * Output: -
  */
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
+const API_BASE_URL = apiUrl;
 
+/* ----------------------------- Utilities ----------------------------- */
 /**
  * ฟังก์ชัน : resolveBackendUploadUrl
  * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend เป็น URL ดาวน์โหลดเต็ม
@@ -100,8 +102,9 @@ function buildAddressLine(detail?: PackageRequestDetail | null): string {
 export default function DetailPackageRequiredPage() {
   const navigate = useNavigate();
   const { requestId } = useParams<{ requestId: string }>();
-  const [packageRequestDetail, setPackageRequestDetail] =
-    useState<PackageRequestDetail | null>(null);
+  const [packageRequestDetail, setPackageRequestDetail] = useState<PackageRequestDetail | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -134,10 +137,7 @@ export default function DetailPackageRequiredPage() {
     const lat = packageRequestDetail?.location?.latitude ?? 13.7563;
     const lng = packageRequestDetail?.location?.longitude ?? 100.5018;
     return [lat, lng];
-  }, [
-    packageRequestDetail?.location?.latitude,
-    packageRequestDetail?.location?.longitude,
-  ]);
+  }, [packageRequestDetail?.location?.latitude, packageRequestDetail?.location?.longitude]);
 
   /**
    * ฟังก์ชัน : mapKey
@@ -184,17 +184,14 @@ export default function DetailPackageRequiredPage() {
       setIsApproveModalOpen(false);
 
       navigate("/super/package-requests", { replace: true });
-
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "ไม่สามารถอนุมัติได้";
       setErrorMessage(message);
-
     } finally {
       setIsLoading(false);
       setApproveClicked(false);
     }
   }
-
 
   /**
    * ฟังก์ชัน : rejectCurrentRequest
@@ -244,9 +241,7 @@ export default function DetailPackageRequiredPage() {
    * Input : -
    * Output: boolean
    */
-  const isApproved = String(
-    (packageRequestDetail as any)?.statusApprove || ""
-  )
+  const isApproved = String((packageRequestDetail as any)?.statusApprove || "")
     .toUpperCase()
     .startsWith("APPROVE");
 
@@ -268,9 +263,7 @@ export default function DetailPackageRequiredPage() {
             aria-label="ย้อนกลับไปยังรายการคำร้องแพ็กเกจ"
           >
             <ArrowLeft className="w-5 h-5 text-gray-800" />
-            <h1 className="text-[20px] font-bold text-gray-800">
-              รายละเอียดแพ็กเกจ
-            </h1>
+            <h1 className="text-[20px] font-bold text-gray-800">รายละเอียดแพ็กเกจ</h1>
           </button>
 
           <div>
@@ -286,9 +279,7 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">ชื่อแพ็กเกจ :</span>{" "}
-            <span className="font-normal">
-              {packageRequestDetail?.name || "-"}
-            </span>
+            <span className="font-normal">{packageRequestDetail?.name || "-"}</span>
           </p>
         </div>
 
@@ -308,9 +299,7 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">คำอธิบาย :</span>{" "}
-            <span className="font-normal">
-              {packageRequestDetail?.description || "-"}
-            </span>
+            <span className="font-normal">{packageRequestDetail?.description || "-"}</span>
           </p>
         </div>
 
@@ -318,8 +307,7 @@ export default function DetailPackageRequiredPage() {
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">จำนวนคนที่เปิดรับ :</span>{" "}
             <span className="font-normal">
-              {packageRequestDetail?.capacity ?? "-"}{" "}
-              {packageRequestDetail?.capacity ? "คน" : ""}
+              {packageRequestDetail?.capacity ?? "-"} {packageRequestDetail?.capacity ? "คน" : ""}
             </span>
           </p>
           <p className="text-[16px] text-gray-900">
@@ -388,18 +376,14 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
-              <span className="font-semibold">
-                วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ :
-              </span>{" "}
+              <span className="font-semibold">วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ :</span>{" "}
               <span className="font-normal">
                 {formatDate(packageRequestDetail?.startDate)} -{" "}
                 {formatDate(packageRequestDetail?.dueDate)}
               </span>
             </p>
             <p className="text-[16px] text-gray-900">
-              <span className="font-semibold">
-                วันที่เปิด - วันที่ปิดจอง :
-              </span>{" "}
+              <span className="font-semibold">วันที่เปิด - วันที่ปิดจอง :</span>{" "}
               <span className="font-normal">
                 {formatDate(packageRequestDetail?.bookingOpenDate)} -{" "}
                 {formatDate(packageRequestDetail?.bookingCloseDate)}
@@ -418,13 +402,8 @@ export default function DetailPackageRequiredPage() {
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">เวลา :</span>{" "}
               <span className="font-normal">
-                {extractTimeFromISO(
-                  packageRequestDetail?.bookingOpenDate
-                )}{" "}
-                -{" "}
-                {extractTimeFromISO(
-                  packageRequestDetail?.bookingCloseDate
-                )}
+                {extractTimeFromISO(packageRequestDetail?.bookingOpenDate)} -{" "}
+                {extractTimeFromISO(packageRequestDetail?.bookingCloseDate)}
               </span>
             </p>
           </div>
@@ -432,9 +411,7 @@ export default function DetailPackageRequiredPage() {
 
         <p className="text-[16px] text-gray-900">
           <span className="font-semibold">สิ่งอำนวยความสะดวก :</span>{" "}
-          <span className="font-normal">
-            {packageRequestDetail?.facility ?? "-"}
-          </span>
+          <span className="font-normal">{packageRequestDetail?.facility ?? "-"}</span>
         </p>
 
         <div className="space-y-6">
@@ -457,15 +434,11 @@ export default function DetailPackageRequiredPage() {
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">ที่อยู่ :</span>{" "}
-              <span className="font-normal">
-                {buildAddressLine(packageRequestDetail)}
-              </span>
+              <span className="font-normal">{buildAddressLine(packageRequestDetail)}</span>
             </p>
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">คำอธิบายที่อยู่ :</span>{" "}
-              <span className="font-normal">
-                {packageRequestDetail?.location?.detail || "-"}
-              </span>
+              <span className="font-normal">{packageRequestDetail?.location?.detail || "-"}</span>
             </p>
           </div>
 

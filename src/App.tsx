@@ -1,6 +1,6 @@
-import { Route, Routes } from "react-router";
 import SuperAdminLayout from "@/Layouts/SuperAdmin/SuperAdminLayout";
 import SuperAdminRoutes from "@/Layouts/SuperAdmin/SuperAdminRoutes";
+import { Route, Routes } from "react-router";
 
 import AdminLayout from "@/Layouts/Admin/AdminLayout";
 import AdminRoutes from "@/Layouts/Admin/AdminRoutes";
@@ -9,13 +9,17 @@ import MemberLayout from "@/Layouts/Member/MemberLayout";
 import MemberRoutes from "@/Layouts/Member/MemberRoutes";
 
 import ProtectedRoute from "@/Libs/ProtectedRoute";
-import LoginTourist from "@/Pages/LoginTourist";
+import Home from "@/Pages/Home";
 import LoginAdmin from "@/Pages/LoginAdmin";
+import LoginTourist from "@/Pages/LoginTourist";
+import PackagesPage from "@/Pages/Tourist/PackagesPage";
 
 function App() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />
           <Route path="partner/login" element={<LoginAdmin />} />

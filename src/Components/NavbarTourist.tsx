@@ -3,6 +3,7 @@
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขข้อมูลส่วนตัว, ประวัติการจอง, เปลี่ยนรหัสผ่าน, ดูรายงาน และออกจากระบบ
  */
 import { useState } from "react";
+import SearchBar from "./Search/SearchBar";
 
 const NavbarTourist = () => {
   // State สำหรับจัดการการเข้าสู่ระบบ
@@ -25,9 +26,10 @@ const NavbarTourist = () => {
   };
 
   return (
-    <header className="bg-white">
+    <header className=" container mx-auto">
       <nav className="flex items-center justify-between m-80px px-12 h-16 lg:gab-6">
-        <a href="#">
+        <div className="flex items-center gap-6">
+        <a href="/">
           <img
             src={"/public/logo-black.png"}
             className="w-40.25 h-7.93"
@@ -36,7 +38,11 @@ const NavbarTourist = () => {
         </a>
 
         {/* กล่องค้นหา */}
-        <p>กล่องค้นหา</p>
+          <SearchBar
+            onSearch={() => {}}
+            placeholder="ค้นหาแพ็กเกจกิจกรรม:"
+          />
+        </div>
 
         <div className="ml-auto flex flex-col items-center gap-6 lg:flex-row lg:gap-6">
           {isAuthen ? (

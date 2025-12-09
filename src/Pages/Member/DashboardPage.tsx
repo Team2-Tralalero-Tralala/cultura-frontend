@@ -12,7 +12,7 @@ import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } fro
 import {
   fetchMemberDashboardData,
   type MemberDashboardFilters,
-  type AdminDashboardResponse,
+  type MemberDashboardResponse,
 } from "@/Services/dashboard-service";
 import { BarChart } from "@/Components/Graph/BarChart";
 import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
@@ -22,7 +22,7 @@ import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_c
  * วัตถุประสงค์: ใช้สำหรับแสดงข้อมูลสรุปผล Dashboard ของสมาชิกภายในชุมชน
  */
 export function DashboardPage() {
-  const [dashboardData, setDashboardData] = React.useState<AdminDashboardResponse>();
+  const [dashboardData, setDashboardData] = React.useState<MemberDashboardResponse>();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 

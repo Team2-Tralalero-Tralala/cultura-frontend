@@ -12,8 +12,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import { DashboardPage } from "@/Pages/Member/DashboardPage";
 import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
-import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
-import PackageFeedbacksPage from '@/Pages/Member/PackageFeedbacksPage';
+import PackageHistoryMember from "@/Pages/Member/HistoryPackageMember";
+import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
+import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
 
 export default function MemberRoutes() {
   return (

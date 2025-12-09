@@ -142,37 +142,21 @@ export interface AdminDashboardGraph {
 export interface AdminDashboardResponse {
   summary: AdminDashboardSummaryItem;
   graph: AdminDashboardGraph;
+  topPackages: {
+    rank: number;
+    name: string;
+    bookingCount: number;
+  }[];
+}
+
+/*
+ * คำอธิบาย : Type definition สำหรับ response ของ Member Dashboard
+ * หน้าที่ : กำหนดสัญญาโครงสร้างข้อมูลที่ใช้ทั้งฝั่งหน้าเว็บและบริการเรียกข้อมูล
+ */
+export interface MemberDashboardResponse {
+  summary: AdminDashboardSummaryItem;
+  graph: AdminDashboardGraph;
   package: AdminDashboardPackage;
-}
-/*
- * คำอธิบาย : Interface สำหรับพารามิเตอร์การกรองข้อมูล Dashboard
- */
-export interface AdminDashboardFilters {
-  dateStart: string;
-  dateEnd: string;
-  groupBy?: "hour" | "day" | "week" | "month" | "year";
-}
-/*
- * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
- * Input :
- *   - filters (DashboardFilters) : พารามิเตอร์สำหรับดึงข้อมูลและกรองผลลัพธ์
- * Output :
- *    - คืนค่า Promise ของ DashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ stats
- */
-export async function fetchAdminDashboardData(
-  filters: AdminDashboardFilters
-): Promise<AdminDashboardResponse> {
-  const { dateStart, dateEnd, groupBy } = filters;
-
-  let url = `/admin/dashboard?dateStart=${dateStart}&dateEnd=${dateEnd}`;
-
-  if (groupBy) url += `&groupBy=${groupBy}`;
-
-  const res = await api.get(url, {
-    withCredentials: true,
-  });
-
-  return res.data.data;
 }
 /*
  * คำอธิบาย : Type definition สำหรับพารามิเตอร์การกรองข้อมูล Dashboard
@@ -190,6 +174,48 @@ export interface MemberDashboardFilters {
   packageDates: string[];
 }
 /*
+ * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
+ * Input :
+ *   - filters (DashboardFilters) : พารามิเตอร์สำหรับดึงข้อมูลและกรองผลลัพธ์
+ * Output :
+ *    - คืนค่า Promise ของ DashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ stats
+ */
+export async function fetchAdminDashboardData(
+  filters: MemberDashboardFilters
+): Promise<AdminDashboardResponse> {
+  const {
+    bookingPeriodType,
+    bookingDates,
+    revenuePeriodType,
+    revenueDates,
+    packagePeriodType,
+    packageDates,
+  } = filters;
+
+  const params = new URLSearchParams();
+  if (Array.isArray(bookingDates)) {
+    bookingDates.forEach((date) => params.append("bookingDates", date));
+  }
+  if (Array.isArray(revenueDates)) {
+    revenueDates.forEach((date) => params.append("revenueDates", date));
+  }
+  if (Array.isArray(packageDates)) {
+    packageDates.forEach((date) => params.append("packageDates", date));
+  }
+  params.append("bookingPeriodType", bookingPeriodType);
+  params.append("revenuePeriodType", revenuePeriodType);
+  params.append("packagePeriodType", packagePeriodType);
+
+  const url = `/admin/dashboard?${params.toString()}`;
+
+  const res = await api.get(url, {
+    withCredentials: true,
+  });
+
+  return res.data.data;
+}
+
+/*
  * ฟังก์ชัน : fetchMemberDashboardData
  * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
  * Input :
@@ -199,7 +225,7 @@ export interface MemberDashboardFilters {
  */
 export async function fetchMemberDashboardData(
   filters: MemberDashboardFilters
-): Promise<AdminDashboardResponse> {
+): Promise<MemberDashboardResponse> {
   const {
     bookingPeriodType,
     bookingDates,

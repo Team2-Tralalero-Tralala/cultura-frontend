@@ -10,6 +10,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import ManageBookingMember from '@/Pages/Member/ManageBookingMember';
 import { DashboardPage } from "@/Pages/Member/DashboardPage";
 import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
 import PackageHistoryMember from "@/Pages/Member/HistoryPackageMember";
@@ -19,7 +20,9 @@ import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
 export default function MemberRoutes() {
   return (
     <Routes>
+
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="bookings/all" element={<ManageBookingMember />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />

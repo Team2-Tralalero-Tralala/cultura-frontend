@@ -829,6 +829,7 @@ export const EditPackagePage = () => {
                         <PackageStatusDropdown
                             value={formState.statusPackage}
                             onChange={(status) => setFormField("statusPackage", status)}
+                            exclude={["DRAFT"]}
                         />
                     </div>
 

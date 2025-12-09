@@ -7,10 +7,8 @@
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
 import { LineGraph } from "@/Components/LineGraph";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import AccordionDetails from "@mui/material/AccordionDetails";
+import Collapse from "@mui/material/Collapse";
 
 import React from "react";
 import {
@@ -141,6 +139,8 @@ export function DashboardPage() {
   React.useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  const [isTopPackagesExpanded, setIsTopPackagesExpanded] = React.useState(false);
 
   /**
    * ฟังก์ชัน: handleBookingDateChange
@@ -308,59 +308,69 @@ export function DashboardPage() {
               }
             />
           </div>
-          <Accordion className="!shadow-none !border-0 !rounded-auth-card bg-white before:!hidden">
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel1-content"
-              id="panel1-header"
+          <div className="!shadow-none !border-0 !rounded-auth-card bg-white overflow-hidden">
+            <div
+              className="flex justify-between items-center w-full px-8 py-4 cursor-pointer select-none min-h-[48px]"
+              onClick={() => setIsTopPackagesExpanded(!isTopPackagesExpanded)}
             >
               <div className="flex justify-between items-center w-full">
                 <h2 className="font-bold text-xl ">20 แพ็กเกจที่มีการจองสูงสุด</h2>
-                <CalendarTrigger
-                  mode={packageDateRange.periodType}
-                  dateRange={[packageDateRange.start, packageDateRange.end]}
-                  dateList={packageDateRange.dates}
-                  onModeChange={(mode) => setPackageDateRange(calculateInitialDateRange(mode))}
-                  onChange={handlePackageDateChange}
-                />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CalendarTrigger
+                    mode={packageDateRange.periodType}
+                    dateRange={[packageDateRange.start, packageDateRange.end]}
+                    dateList={packageDateRange.dates}
+                    onModeChange={(mode) => setPackageDateRange(calculateInitialDateRange(mode))}
+                    onChange={handlePackageDateChange}
+                  />
+                </div>
               </div>
-            </AccordionSummary>
+              <div
+                className={`ml-2 transition-transform duration-300 flex items-center ${
+                  isTopPackagesExpanded ? "rotate-180" : ""
+                }`}
+              >
+                <ExpandMoreIcon className="text-gray-500" />
+              </div>
+            </div>
 
-            <AccordionDetails className="!px-8 !pb-6">
-              <div className="overflow-x-auto">
-                <table className="w-full text-start">
-                  <thead>
-                    <tr className="bg-[#4A816F] text-white rounded-t-lg">
-                      <th className="py-3 px-4 text-left rounded-tl-lg w-[10%]">อันดับ</th>
-                      <th className="py-3 px-4 text-left w-[80%]">ชื่อแพ็กเกจ</th>
-                      <th className="py-3 px-4 text-left rounded-tr-lg w-[10%]">จำนวนการจอง</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboardData.topPackages && dashboardData.topPackages.length > 0 ? (
-                      dashboardData.topPackages.map((packages, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="py-2 px-4 pl-8">{packages.rank}</td>
-                          <td className="py-2 px-4 text-gray-800 font-medium">
-                            {packages.name || "-"}
-                          </td>
-                          <td className="py-2 px-4 text-gray-700 text-center">
-                            {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
+            <Collapse in={isTopPackagesExpanded}>
+              <div className="px-8 pb-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-start">
+                    <thead>
+                      <tr className="bg-[#4A816F] text-white rounded-t-lg">
+                        <th className="py-3 px-4 text-left rounded-tl-lg w-[10%]">อันดับ</th>
+                        <th className="py-3 px-4 text-left w-[80%]">ชื่อแพ็กเกจ</th>
+                        <th className="py-3 px-4 text-left rounded-tr-lg w-[10%]">จำนวนการจอง</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dashboardData.topPackages && dashboardData.topPackages.length > 0 ? (
+                        dashboardData.topPackages.map((packages, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
+                            <td className="py-2 px-4 pl-8">{packages.rank}</td>
+                            <td className="py-2 px-4 text-gray-800 font-medium">
+                              {packages.name || "-"}
+                            </td>
+                            <td className="py-2 px-4 text-gray-700 text-center">
+                              {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="text-center py-4 text-gray-500">
+                            ไม่มีข้อมูลการจองในช่วงเวลานี้
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={3} className="text-center py-4 text-gray-500">
-                          ไม่มีข้อมูลการจองในช่วงเวลานี้
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </AccordionDetails>
-          </Accordion>
+            </Collapse>
+          </div>
         </div>
       ) : null}
     </div>

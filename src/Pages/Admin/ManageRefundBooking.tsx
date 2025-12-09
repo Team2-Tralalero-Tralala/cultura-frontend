@@ -289,7 +289,7 @@ export function ManageRefundBooking() {
       />
 
       <div className="flex flex-col gap-2 -mt-4">
-        <h1 className="text-xl font-bold">คำขอคืนเงิน</h1>
+        <h1 className="text-[20px] font-bold text-black">คำขอคืนเงิน</h1>
         <div className="flex items-center gap-2 w-full">
           <div className="w-[260px]">
             <SearchBarTable

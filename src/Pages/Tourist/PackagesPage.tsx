@@ -31,7 +31,7 @@ export default function PackagesPage() {
   const isPopular = sort === "popular";
 
   // State สำหรับข้อมูลแพ็กเกจ
-  const [packages, setPackages] = useState<(PackageData & { id: number })[]>([]);
+  const [packages, setPackages] = useState<(PackageData)[]>([]);
 
   // State สำหรับสถานะการโหลดข้อมูล
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -57,7 +57,7 @@ export default function PackagesPage() {
    * ฟังก์ชัน : transformPackageData
    * คำอธิบาย : แปลงข้อมูล Package จาก API เป็นรูปแบบ PackageData พร้อมเก็บ ID
    * Input : packageData (PackageApiData) - ข้อมูล Package จาก API
-   * Output : PackageData & { id: number } - ข้อมูล Package ที่แปลงแล้วพร้อม ID
+   * Output : PackageData - ข้อมูล Package ที่แปลงแล้วพร้อม ID
    */
   const transformPackageData = (packageData: PackageApiData): PackageData => {
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -72,6 +72,7 @@ export default function PackagesPage() {
       : packageData.coverImage;
 
     return {
+      id: packageData.id,
       image: packageData.coverImage
         ? backendBaseUrl + imagePath
         : "https://placehold.co/400x300?text=No+Image",
@@ -99,9 +100,7 @@ export default function PackagesPage() {
       setErrorMessage(null);
 
       // เรียก API ตาม sort parameter
-      const packagesData = isPopular
-        ? await fetchPopularPackages()
-        : await fetchNewestPackages();
+      const packagesData = isPopular ? await fetchPopularPackages() : await fetchNewestPackages();
       const transformedPackages = packagesData.map(transformPackageData);
 
       setPackages(transformedPackages);
@@ -144,7 +143,10 @@ export default function PackagesPage() {
         {/* Breadcrumb */}
         <div className="mb-6">
           <BreadcrumbNavigation
-            items={[{ label: "หน้าแรก", to: "/" }, { label: breadcrumbLabel }]}
+            current={{
+              label: breadcrumbLabel,
+              to: `/tourist/packages` + (isPopular ? "?sort=popular" : "?sort=new"),
+            }}
           />
         </div>
 

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import CardPackage from "./CardPackage";
 
 export type PackageData = {
+  id: number;
   image: string;
   title: string;
   location: string;

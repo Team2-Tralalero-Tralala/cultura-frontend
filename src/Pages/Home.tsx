@@ -4,6 +4,7 @@
  * ประกอบด้วย Navbar, Hero Carousel, และส่วนแสดงแพ็กเกจต่างๆ
  */
 
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import HeroCarousel from "@/Components/HeroCarousel";
 import NavbarTourist from "@/Components/NavbarTourist";
@@ -77,6 +78,7 @@ export default function Home() {
       : packageData.coverImage;
 
     return {
+      id: packageData.id,
       image: packageData.coverImage
         ? backendBaseUrl + imagePath
         : "https://placehold.co/400x300?text=No+Image",
@@ -231,6 +233,14 @@ export default function Home() {
           onTagClick={handleTagClick}
         />
       )}
+        <div className="opacity-0 absolute top-0 left-0">
+          <BreadcrumbNavigation
+            current={{
+              label: "หน้าแรก",
+              to: `/`,
+            }}
+          />
+        </div>
 
       {/* Footer */}
       <Footer />

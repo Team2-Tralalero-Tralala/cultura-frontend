@@ -1,8 +1,9 @@
 /*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ SuperAdmin (Detail Package SuperAdmin)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
+ * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member (Detail Package Member)
+ * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend เฉพาะที่ Member มีสิทธิ์เข้าถึง
+ * และแสดงข้อมูลเชิงรายละเอียดเหมือนกับหน้าของ SuperAdmin
  * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไข)
+ * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไขของ Member)
  */
 
 import { useEffect, useState } from "react";
@@ -71,7 +72,7 @@ interface HomestayHistory {
   homestay?: HomestayData | null;
 }
 
-interface PackageMedia {
+interface PackageFile {
   id: number;
   path: string;
   type: string;
@@ -96,7 +97,7 @@ interface PackageData {
   openBookingAt: DateTimeField;
   closeBookingAt: DateTimeField;
   location?: LocationData | null;
-  files: PackageMedia[];
+  files: PackageFile[];
   homestayHistories: HomestayHistory[];
 }
 
@@ -130,12 +131,12 @@ function extractDateTime(isoString?: string | null): DateTimeField {
 }
 
 /**
- * ฟังก์ชัน : DetailPackageSuperAdmin
- * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ SuperAdmin ดูข้อมูลเชิงลึกของแพ็กเกจ
+ * ฟังก์ชัน : DetailPackageMember
+ * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ Member ดูข้อมูลเชิงลึกของแพ็กเกจ
  * Input  : - (ใช้ useParams เพื่ออ่านค่า id ของแพ็กเกจจาก URL)
  * Output : JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจ)
  */
-export default function DetailPackageSuperAdmin() {
+export default function DetailPackageMember() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [packageDetail, setPackageDetail] = useState<PackageData | null>(null);
@@ -144,7 +145,7 @@ export default function DetailPackageSuperAdmin() {
 
   /**
    * ฟังก์ชัน : useEffect(fetchPackageDetail)
-   * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id เมื่อ component mount หรือ id เปลี่ยน
+   * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id (เฉพาะที่ Member มีสิทธิ์)
    * Input  : -
    * Output : - (อัปเดต state packageDetail, isLoading, errorMessage)
    */
@@ -152,13 +153,12 @@ export default function DetailPackageSuperAdmin() {
     async function fetchPackageDetail() {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/packages/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/member/package/${id}`, {
           withCredentials: true,
         });
 
         const packageRawData = response.data.data;
 
-        // Map โครงสร้างข้อมูลให้ตรงกับ interface PackageData
         const mappedPackageDetail: PackageData = {
           id: packageRawData.id,
           name: packageRawData.name,
@@ -220,11 +220,17 @@ export default function DetailPackageSuperAdmin() {
                     ? {
                         id: homestayHistoryItem.homestay.id,
                         name: homestayHistoryItem.homestay.name ?? "",
-                        roomType: homestayHistoryItem.homestay.roomType ?? "",
-                        capacity: homestayHistoryItem.homestay.capacity ?? 0,
+                        roomType:
+                          homestayHistoryItem.homestay.type ??
+                          homestayHistoryItem.homestay.roomType ??
+                          "",
+                        capacity:
+                          homestayHistoryItem.homestay.guestPerRoom ??
+                          homestayHistoryItem.homestay.capacity ??
+                          0,
                         detail:
-                          homestayHistoryItem.homestay.description ??
                           homestayHistoryItem.homestay.detail ??
+                          homestayHistoryItem.homestay.description ??
                           "-",
                         facility: homestayHistoryItem.homestay.facility ?? "",
                         images: (
@@ -253,16 +259,18 @@ export default function DetailPackageSuperAdmin() {
         };
 
         setPackageDetail(mappedPackageDetail);
-        console.log("Mapped package data:", mappedPackageDetail);
+        console.log("Mapped package data (member):", mappedPackageDetail);
       } catch (error) {
-        console.error("Error fetching package:", error);
+        console.error("Error fetching package for member:", error);
         setErrorMessage("เกิดข้อผิดพลาดในการโหลดข้อมูล");
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchPackageDetail();
+    if (id) {
+      fetchPackageDetail();
+    }
   }, [id]);
 
   if (isLoading) {
@@ -288,7 +296,6 @@ export default function DetailPackageSuperAdmin() {
 
       const homestayMainImage = homestayDetail.images?.[0];
 
-      // เตรียมรายการสิ่งอำนวยความสะดวก (ตัดตามแบบหน้า Edit)
       const homestayFacilityItems =
         homestayDetail.facility
           ?.split(/[,•\n]/)
@@ -357,7 +364,7 @@ export default function DetailPackageSuperAdmin() {
         <Breadcrumb
           current={{
             label: "รายละเอียดแพ็กเกจ",
-            to: `/super/package/${id}`,
+            to: `/member/package/${id}`,
           }}
         />
       </div>
@@ -369,15 +376,15 @@ export default function DetailPackageSuperAdmin() {
             {/* ปุ่มย้อนกลับ */}
             <div
               className="mt-1 mr-3 cursor-pointer"
-              onClick={() => navigate(`/super/packages/all`)}
+              onClick={() => navigate(`/member/packages/all`)}
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
           </div>
           <div className="w-60">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
-            <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
+            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ (สำหรับ Member) */}
+            <Button onClick={() => navigate(`/member/package/${id}/edit`)}>
               <EditIcon />
               แก้ไขรายละเอียดแพ็กเกจ
             </Button>
@@ -394,10 +401,11 @@ export default function DetailPackageSuperAdmin() {
 
         {/* สถานะแพ็กเกจ */}
         <div className="mb-6">
-          <div className="flex flex-row gap-5">
+          <div className="flex flex-row items-center gap-5">
             <p className="text-md text-black">
               <strong>สถานะแพ็กเกจ :</strong>
-            </p>
+              </p>
+
             {/* Badge สถานะ */}
             <span
               className={`px-4 py-1 rounded-full text-sm font-semibold

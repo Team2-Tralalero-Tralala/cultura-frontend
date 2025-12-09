@@ -54,7 +54,9 @@ const storeSchema = z.object({
  * Output : File object (พร้อม type และ flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    credentials: "include",
+  });
   const blob = await res.blob();
   const ext = filename.split(".").pop() || "jpg";
   const type = blob.type || `image/${ext}`;
@@ -136,11 +138,14 @@ export function EditStore() {
           })) ?? []
         );
 
+        // ✅ โหลดภาพจาก backend แล้วแปลงเป็น File จริง เพื่อให้ UploadCard แสดง preview ได้
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
         const coverFilesFetched: File[] = await Promise.all(
           (data.storeImage || [])
             .filter((img: any) => img.type === "COVER")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -149,7 +154,7 @@ export function EditStore() {
           (data.storeImage || [])
             .filter((img: any) => img.type === "GALLERY")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );

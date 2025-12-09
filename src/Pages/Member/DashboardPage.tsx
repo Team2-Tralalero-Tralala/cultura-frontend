@@ -1,33 +1,28 @@
 /**
- * คำอธิบาย: component สำหรับหน้ารายของ Admin
+ * คำอธิบาย: component สำหรับหน้ารายของ Member
  * แสดงข้อมูลสรุปต่างๆประกอบด้วย
  * 1. ข้อมูลสรุป (summary) - แพ็กเกจทั้งหมด รายได้ทั้งหมด การจองสำเร็จ ยกเลิกการจอง
  * 2. ข้อมูลกราฟ (graph) - แสดงกราฟการจองและรายได้ตามวันที่
- * 3. ข้อมูลแพ็กเกจ 20 อันดับที่ยอดจองเยอะที่สุกในชุมชม
+ * 3. ข้อมูลแพ็กเกจ 5 อันดับที่ยอดจองเยอะที่สุดในชุมชน
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
 import { LineGraph } from "@/Components/LineGraph";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import AccordionDetails from "@mui/material/AccordionDetails";
-
 import React from "react";
+import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import {
-  fetchAdminDashboardData,
-  type AdminDashboardResponse,
+  fetchMemberDashboardData,
   type MemberDashboardFilters,
+  type MemberDashboardResponse,
 } from "@/Services/dashboard-service";
 import { BarChart } from "@/Components/Graph/BarChart";
-import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
 
 /**
  * Component: DashboardPage
- * วัตถุประสงค์: ใช้สำหรับแสดงข้อมูลสรุปผล Dashboard ของผู้ดูแลชุมชน
+ * วัตถุประสงค์: ใช้สำหรับแสดงข้อมูลสรุปผล Dashboard ของสมาชิกภายในชุมชน
  */
 export function DashboardPage() {
-  const [dashboardData, setDashboardData] = React.useState<AdminDashboardResponse>();
+  const [dashboardData, setDashboardData] = React.useState<MemberDashboardResponse>();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -128,7 +123,7 @@ export function DashboardPage() {
         packagePeriodType: packageDateRange.periodType,
         packageDates: getFormattedDates(packageDateRange.dates),
       };
-      const response = await fetchAdminDashboardData(filters);
+      const response = await fetchMemberDashboardData(filters);
       setDashboardData(response);
     } catch (error: any) {
       console.error(error);
@@ -213,109 +208,110 @@ export function DashboardPage() {
           <div className="text-red-600">{errorMessage}</div>
         </div>
       ) : dashboardData ? (
-        <div className="space-y-4">
-          <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="font-bold text-xl">สถิติการจองแพ็กเกจ</h2>
-              <CalendarTrigger
-                mode={bookingDateRange.periodType}
-                dateRange={[bookingDateRange.start, bookingDateRange.end]}
-                dateList={bookingDateRange.dates}
-                onModeChange={(mode) => setBookingDateRange(calculateInitialDateRange(mode))}
-                onChange={handleBookingDateChange}
-              />
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center rounded-lg pointer-events-none">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 opacity-50"></div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                  <p className="text-base mb-2 font-semibold">แพ็กเกจทั้งหมด</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {" "}
-                      {(dashboardData.summary?.totalPackages ?? 0).toLocaleString()}
-                    </p>
-                    <p className="font-bold text-base">แพ็กเกจ</p>
-                  </div>
-                </div>
-                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                  <p className="text-base mb-2 font-semibold">รายได้ทั้งหมด</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {(dashboardData.summary?.totalRevenue ?? 0).toLocaleString()}
-                    </p>
-                    <p className="font-bold text-base">บาท</p>
-                  </div>
-                </div>
-                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                  <p className="text-base mb-2 font-semibold">การจองสำเร็จ</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {(dashboardData.summary?.successBookingCount ?? 0).toLocaleString()}
-                    </p>
-                    <p className="font-bold text-base">ครั้ง</p>
-                  </div>
-                </div>
-                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                  <p className="text-base mb-2 font-semibold">ยกเลิกการจอง</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {(dashboardData.summary?.cancelledBookingCount ?? 0).toLocaleString()}
-                    </p>
-                    <p className="font-bold text-base">ครั้ง</p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <LineGraph
-                  className="w-full h-[350px] border-2 border-gray-200 rounded-2xl p-6"
-                  labels={dashboardData.graph.bookingCountGraph.labels}
-                  data={dashboardData.graph.bookingCountGraph.data}
-                  title="จำนวนการจองแพ็กเกจ"
-                  labelX={
-                    bookingDateRange.periodType === "weekly"
-                      ? "วัน"
-                      : bookingDateRange.periodType === "monthly"
-                      ? "เดือน"
-                      : "ปี"
-                  }
+          )}
+          <h1 className="font-bold text-xl mb-4">รายงานและสถิติ</h1>
+          <div>
+            <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="font-bold text-xl">สถิติการจองแพ็กเกจ</h2>
+                <CalendarTrigger
+                  mode={bookingDateRange.periodType}
+                  dateRange={[bookingDateRange.start, bookingDateRange.end]}
+                  dateList={bookingDateRange.dates}
+                  onModeChange={(mode) => setBookingDateRange(calculateInitialDateRange(mode))}
+                  onChange={handleBookingDateChange}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                    <p className="text-base mb-2 font-semibold">แพ็กเกจทั้งหมด</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {" "}
+                        {(dashboardData.summary?.totalPackages ?? 0).toLocaleString()}
+                      </p>
+                      <p className="font-bold text-base">แพ็กเกจ</p>
+                    </div>
+                  </div>
+                  <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                    <p className="text-base mb-2 font-semibold">รายได้ทั้งหมด</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {(dashboardData.summary?.totalRevenue ?? 0).toLocaleString()}
+                      </p>
+                      <p className="font-bold text-base">บาท</p>
+                    </div>
+                  </div>
+                  <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                    <p className="text-base mb-2 font-semibold">การจองสำเร็จ</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {(dashboardData.summary?.successBookingCount ?? 0).toLocaleString()}
+                      </p>
+                      <p className="font-bold text-base">ครั้ง</p>
+                    </div>
+                  </div>
+                  <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                    <p className="text-base mb-2 font-semibold">ยกเลิกการจอง</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {(dashboardData.summary?.cancelledBookingCount ?? 0).toLocaleString()}
+                      </p>
+                      <p className="font-bold text-base">ครั้ง</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <LineGraph
+                    className="w-full h-[350px] border-2 border-gray-200 rounded-2xl p-6"
+                    labels={dashboardData.graph.bookingCountGraph.labels}
+                    data={dashboardData.graph.bookingCountGraph.data}
+                    title="จำนวนการจองแพ็กเกจ"
+                    labelX={
+                      bookingDateRange.periodType === "weekly"
+                        ? "วัน"
+                        : bookingDateRange.periodType === "monthly"
+                        ? "เดือน"
+                        : "ปี"
+                    }
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          {/* total revenue */}
-          <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="font-bold text-xl ">รายได้จากการจองแพ็กเกจทั้งหมด</h2>
-              <CalendarTrigger
-                mode={revenueDateRange.periodType}
-                dateRange={[revenueDateRange.start, revenueDateRange.end]}
-                dateList={revenueDateRange.dates}
-                onModeChange={(mode) => setRevenueDateRange(calculateInitialDateRange(mode))}
-                onChange={handleRevenueDateChange}
+            <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="font-bold text-xl ">รายได้จากการจองแพ็กเกจ</h2>
+                <CalendarTrigger
+                  mode={revenueDateRange.periodType}
+                  dateRange={[revenueDateRange.start, revenueDateRange.end]}
+                  dateList={revenueDateRange.dates}
+                  onModeChange={(mode) => setRevenueDateRange(calculateInitialDateRange(mode))}
+                  onChange={handleRevenueDateChange}
+                />
+              </div>
+              <BarChart
+                className="w-full h-[500px]"
+                labels={dashboardData.graph.revenueGraph.labels}
+                data={dashboardData.graph.revenueGraph.data}
+                title=""
+                labelX={
+                  revenueDateRange.periodType === "weekly"
+                    ? "วัน"
+                    : revenueDateRange.periodType === "monthly"
+                    ? "เดือน"
+                    : "ปี"
+                }
               />
             </div>
-            <BarChart
-              className="w-full h-[500px]"
-              labels={dashboardData.graph.revenueGraph.labels}
-              data={dashboardData.graph.revenueGraph.data}
-              title=""
-              labelX={
-                revenueDateRange.periodType === "weekly"
-                  ? "วัน"
-                  : revenueDateRange.periodType === "monthly"
-                  ? "เดือน"
-                  : "ปี"
-              }
-            />
-          </div>
-          <Accordion className="!shadow-none !border-0 !rounded-auth-card bg-white before:!hidden">
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel1-content"
-              id="panel1-header"
-            >
-              <div className="flex justify-between items-center w-full">
-                <h2 className="font-bold text-xl ">20 แพ็กเกจที่มีการจองสูงสุด</h2>
+            <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="font-bold text-xl ">5 แพ็กเกจที่มีการจองสูงสุด</h2>
                 <CalendarTrigger
                   mode={packageDateRange.periodType}
                   dateRange={[packageDateRange.start, packageDateRange.end]}
@@ -324,43 +320,39 @@ export function DashboardPage() {
                   onChange={handlePackageDateChange}
                 />
               </div>
-            </AccordionSummary>
-
-            <AccordionDetails className="!px-8 !pb-6">
-              <div className="overflow-x-auto">
-                <table className="w-full text-start">
-                  <thead>
-                    <tr className="bg-[#4A816F] text-white rounded-t-lg">
-                      <th className="py-3 px-4 text-left rounded-tl-lg w-[10%]">อันดับ</th>
-                      <th className="py-3 px-4 text-left w-[80%]">ชื่อแพ็กเกจ</th>
-                      <th className="py-3 px-4 text-left rounded-tr-lg w-[10%]">จำนวนการจอง</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboardData.topPackages && dashboardData.topPackages.length > 0 ? (
-                      dashboardData.topPackages.map((packages, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="py-2 px-4 pl-8">{packages.rank}</td>
-                          <td className="py-2 px-4 text-gray-800 font-medium">
-                            {packages.name || "-"}
-                          </td>
-                          <td className="py-2 px-4 text-gray-700 text-center">
-                            {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={3} className="text-center py-4 text-gray-500">
-                          ไม่มีข้อมูลการจองในช่วงเวลานี้
+              <table className="w-full text-start">
+                <thead>
+                  <tr className="bg-[#4A816F] text-white rounded-t-lg">
+                    <th className="py-3 px-4 text-left rounded-tl-lg w-[10%]">อันดับ</th>
+                    <th className="py-3 px-4 text-left w-[80%]">ชื่อแพ็กเกจ</th>
+                    <th className="py-3 px-4 text-left rounded-tr-lg w-[10%]">จำนวนการจอง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboardData.package?.topPackages &&
+                  dashboardData.package.topPackages.length > 0 ? (
+                    dashboardData.package.topPackages.map((packages, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="py-2 px-4 pl-8">{packages.rank}</td>
+                        <td className="py-2 px-4 text-gray-800 font-medium">
+                          {packages.name || "-"}
+                        </td>
+                        <td className="py-2 px-4 text-gray-700 text-center">
+                          {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </AccordionDetails>
-          </Accordion>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="text-center py-4 text-gray-500">
+                        ไม่มีข้อมูลการจองในช่วงเวลานี้
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>

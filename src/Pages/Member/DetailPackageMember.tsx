@@ -462,7 +462,7 @@ export default function DetailPackageMember() {
           </div>
         )}
 
-        {/* ===== รูปหลัก ===== */}
+        {/* รูปหลัก */}
         <div className="grid grid-cols-1 mb-6 md:grid-cols-[55%_auto] gap-10 items-start">
           <DetailPackageGallery packageDetail={packageDetail} />
         </div>

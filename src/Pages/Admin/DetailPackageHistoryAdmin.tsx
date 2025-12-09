@@ -32,8 +32,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
  */
 const BASE_URL = new URL(apiUrl).origin;
 
-// ================== Helper Interfaces ==================
-
 interface DateTimeField {
   date: string | null;
   time: string | null;
@@ -111,8 +109,6 @@ interface PackageData {
   files: PackageFile[];
   homestayHistories: HomestayHistory[];
 }
-
-// ================== Helper Functions ==================
 
 /**
  * ฟังก์ชัน : formatDateTH
@@ -297,7 +293,6 @@ export default function DetailPackageHistoryAdmin() {
     fetchPackageDetail();
   }, [id]);
 
-  // ================== Loading / Error ==================
   if (isLoading) {
     return <div className="p-6 text-gray-500">กำลังโหลดข้อมูล...</div>;
   }
@@ -474,7 +469,7 @@ export default function DetailPackageHistoryAdmin() {
           </p>
         )}
 
-        {/* ===== รูปหลัก ===== */}
+        {/* รูปหลัก */}
         <div className="grid grid-cols-1 mb-6 md:grid-cols-[55%_auto] gap-10 items-start">
           <DetailPackageGallery packageDetail={packageDetail} />
         </div>

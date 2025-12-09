@@ -275,19 +275,6 @@ export default function DetailPackageSuperAdmin() {
     return <div className="p-6 text-gray-500">ไม่พบข้อมูลแพ็กเกจ</div>;
   }
 
-  // ดึงรูปหลักและรูปเพิ่มเติมจาก type
-  // พยายามหา COVER ก่อน ถ้าไม่มีค่อย fallback เป็น GALLERY หรือรูปแรก
-  const coverImageFile =
-    packageDetail.files?.find((file) => file.type === "COVER") ||
-    packageDetail.files?.find((file) => file.type === "GALLERY") ||
-    packageDetail.files?.[0] ||
-    null;
-
-  const galleryImageFiles = packageDetail.files?.filter(
-    (imageFile: PackageFile) => imageFile.type === "GALLERY"
-  );
-  // galleryImageFiles ยังไม่ได้ใช้งานใน UI ตอนนี้ แต่เตรียมไว้สำหรับในอนาคต
-
   // เตรียม section แสดงที่พักในแพ็กเกจ (ถ้ามี)
   let homestaySection: JSX.Element | null = null;
 
@@ -467,7 +454,7 @@ export default function DetailPackageSuperAdmin() {
           </div>
         )}
 
-        {/* ===== รูปหลัก ===== */}
+        {/* รูปหลัก */}
         <div className="grid grid-cols-1 mb-6 md:grid-cols-[55%_auto] gap-10 items-start">
           <DetailPackageGallery packageDetail={packageDetail} />
         </div>

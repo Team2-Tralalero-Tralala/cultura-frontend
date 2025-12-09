@@ -13,8 +13,7 @@ import { Tag } from "@/Components/Tag";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 import { fetchHomestayDetailByAdmin } from "@/Services/homestay-services";
 
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 /*
  * ฟังก์ชัน : resolveBackendUploadUrl
@@ -29,9 +28,9 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
   const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
   if (!cleaned.startsWith("uploads/")) {
-    return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
+    return `${apiUrl}/uploads/${cleaned}`;
   }
-  return `${BACKEND_BASE_URL}/${cleaned}`;
+  return `${apiUrl}/${cleaned}`;
 }
 
 /*

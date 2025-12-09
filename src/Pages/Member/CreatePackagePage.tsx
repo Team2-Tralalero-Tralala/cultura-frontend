@@ -1,135 +1,59 @@
-// src/Pages/Member/CreatePackageMember.tsx
 /**
- * - หน้าสร้างแพ็กเกจ (บทบาท Member)
- * - เพิ่มระบบ validate ด้วย Zod ให้แสดงกรอบแดง/ข้อความช่วยใต้ช่องเหมือนหน้า Create Community
- * - เพิ่ม Modal ยืนยัน (SweetAlert2) ไว้ในไฟล์นี้เลย และเรียกก่อนยิง POST
+ * คำอธิบาย : Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
+ * - ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ (หน้าตาเหมือนหน้าแก้ไข)
+ * - รองรับการอัปโหลดรูปภาพ (Cover/Gallery/Video)
+ * - ส่งข้อมูลแบบ multipart/form-data
+ * Input: -
+ * Output: หน้าฟอร์มสำหรับสร้างแพ็กเกจ
  */
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
 import TextField from "../../Components/TextField";
 import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import Button from "@/Components/Button";
+import CommunityMemberSelector, {
+  type Member as CommunityMember,
+} from "@/Components/Selector/CommunityMemberSelector";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
+import { TagSelector } from "@/Components/Selector/TagSelector";
+import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
+import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
 
-// === เพิ่ม import สำหรับ SweetAlert2 (ใช้ใน Modal) ===
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+const apiUrl = import.meta.env.VITE_API_URL as string;
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
-/* =========================
- * Inline Modal Components
- * ========================= */
-
-// Modal ยืนยันการทำรายการ (ใช้สไตล์เดียวกับภาพตัวอย่าง)
-type ConfirmModalProps = {
-  open: boolean;
-  title?: string;
-  text?: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void;
-  onCancel?: () => void;
-};
-
-const ConfirmModal: React.FC<ConfirmModalProps> = ({
-  open,
-  onConfirm,
-  onCancel,
-  title = "ยืนยันการสร้างแพ็กเกจ",
-  text = "คุณต้องการยืนยันการสร้างแพ็กเกจหรือไม่",
-  confirmText = "ยืนยัน",
-  cancelText = "ยกเลิก",
-}) => {
-  const MySwal = withReactContent(Swal);
-
-  useEffect(() => {
-    if (!open) return;
-
-    void MySwal.fire({
-      iconHtml: <Icon icon="circum:circle-alert" style={{ fontSize: 150, color: "#004D2C" }} />,
-      iconColor: "#004D2C",
-      title,
-      text,
-      width: 560,
-      padding: "1.75rem",
-      showCancelButton: true,
-      showConfirmButton: true,
-      confirmButtonText: confirmText,
-      cancelButtonText: cancelText,
-      buttonsStyling: false,
-      allowOutsideClick: false,
-      allowEscapeKey: true,
-      reverseButtons: true,
-      customClass: {
-        popup: "rounded-2xl",
-        title: "text-2xl font-bold leading-tight",
-        htmlContainer: "text-base",
-        actions: "mt-6 flex justify-center gap-4",
-        confirmButton:
-          "px-6 py-2.5 rounded-lg bg-[#004D2C] text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
-        cancelButton:
-          "px-6 py-2.5 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400",
-        icon: "!border-0 !bg-transparent !shadow-none !w-auto !h-auto p-0",
-      },
-      didOpen: () => {
-        const fontStack = 'var(--font-sarabun), "Sarabun", sans-serif';
-        const popup = Swal.getPopup();
-        const titleEl = Swal.getTitle();
-        const html = Swal.getHtmlContainer();
-        const btns = Swal.getActions();
-        if (popup) popup.style.fontFamily = fontStack;
-        if (titleEl) titleEl.style.fontFamily = fontStack;
-        if (html) html.style.fontFamily = fontStack;
-        if (btns) btns.style.fontFamily = fontStack;
-      },
-    }).then((result) => {
-      if (result.isConfirmed) onConfirm();
-      else onCancel?.();
-    });
-  }, [open, MySwal, title, text, confirmText, cancelText, onConfirm, onCancel]);
-
-  return null; // ไม่เรนเดอร์อะไรใน DOM
-};
-
-// ===== Helpers =====
-function normalizeOrDefault(value: string, fallback = "-") {
-  const trimmed = (value ?? "").toString().trim();
+/*
+ * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
+ */
+function normalizeOrDefault(inputValue: string, fallback = "-") {
+  const trimmed = (inputValue ?? "").toString().trim();
   return trimmed.length ? trimmed : fallback;
 }
-function toIntOrNull(v: any): number | null {
-  const n = Number(String(v ?? "").trim());
-  return Number.isFinite(n) ? n : null;
-}
-function toTimeInput(input?: string | Date | null) {
-  if (!input) return "";
-  if (typeof input === "string") {
-    const m = input.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
-    if (m && m[4] !== undefined && m[5] !== undefined) {
-      const hh = m[4].padStart(2, "0");
-      const mm = m[5].padStart(2, "0");
-      return `${hh}:${mm}`;
-    }
-  }
-  const d = new Date(input as any);
-  if (isNaN(d.getTime())) return "";
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
+
+/*
+ * คำอธิบาย : แปลงค่าใดๆ เป็น number หรือ null
+ */
+function toIntOrNull(value: any): number | null {
+  const trimmed = String(value ?? "").trim();
+  if (trimmed === "") return null;
+  const numberValue = Number(trimmed);
+  return Number.isFinite(numberValue) ? numberValue : null;
 }
 
 type PackageForm = {
   name: string;
   description: string;
-
+  statusPackage: PackageStatus;
   houseNumber: string;
   villageNumber: string;
   province: string;
@@ -140,11 +64,9 @@ type PackageForm = {
   latitude: string;
   longitude: string;
   placeQuery: string;
-
   overseerMemberId: string;
   tagId: string;
   facility: string;
-
   startDate: string;
   startTime: string;
   endDate: string;
@@ -153,16 +75,15 @@ type PackageForm = {
   openTime: string;
   closeDate: string;
   closeTime: string;
-
   capacity: string;
   price: string;
-  addHomestay: boolean;
+  isAddHomestay: boolean;
 };
 
 const initialFormState: PackageForm = {
   name: "",
   description: "",
-
+  statusPackage: "DRAFT",
   houseNumber: "",
   villageNumber: "",
   province: "",
@@ -173,11 +94,9 @@ const initialFormState: PackageForm = {
   latitude: "",
   longitude: "",
   placeQuery: "",
-
   overseerMemberId: "",
   tagId: "",
   facility: "",
-
   startDate: "",
   startTime: "",
   endDate: "",
@@ -186,31 +105,23 @@ const initialFormState: PackageForm = {
   openTime: "",
   closeDate: "",
   closeTime: "",
-
   capacity: "",
   price: "",
-  addHomestay: false,
+  isAddHomestay: false,
 };
 
-// ================== ZOD SCHEMA (สไตล์เดียวกับหน้า Create Community) ==================
 const packageSchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
   description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
-
+  statusPackage: z.enum(["DRAFT", "PUBLISH", "UNPUBLISH"]),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
   province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ / เขต"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล / แขวง"),
-  postalCode: z.number().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
-
-  // latitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
-  // longitude: z.string().min(1, "หากไม่ทราบพิกัด โปรดค้นหาจุดบนแผนที่และปักหมุด"),
-
-  overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
+  district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  addressDetail: z.string().min(1, "กรุณากรอกรายละเอียดที่อยู่"),
+  // overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
   capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
   price: z.string().min(1, "กรุณากรอกราคา"),
-
   startDate: z.string().min(1, "กรุณาเลือกวันที่เริ่ม"),
   startTime: z.string().min(1, "กรุณาเลือกเวลาเริ่ม"),
   endDate: z.string().min(1, "กรุณาเลือกวันที่สิ้นสุด"),
@@ -219,205 +130,127 @@ const packageSchema = z.object({
   openTime: z.string().min(1, "กรุณาเลือกเวลาเปิดจอง"),
   closeDate: z.string().min(1, "กรุณาเลือกวันที่ปิดจอง"),
   closeTime: z.string().min(1, "กรุณาเลือกเวลาปิดจอง"),
-
   facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
 });
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-export const CreatePackagePage: React.FC = () => {
+export const CreatePackagePage = () => {
   const navigate = useNavigate();
-
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
+  const [communityId, setCommunityId] = useState<number | undefined>(undefined);
+  const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // errors (เพิ่มเพื่อ validate)
+  const [isLoading, setLoading] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [formErrors, setFormErrors] = useState<PackageErrors>({});
+  const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
+  const [tagIds, setTagIds] = useState<number[]>([]);
+  const [coverFiles, setCoverFiles] = useState<File[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([])
+  const [startDateObj, setStartDateObj] = useState<Date | null>(null);
+  const [endDateObj, setEndDateObj] = useState<Date | null>(null);
+  const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
+  const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
+  const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
+  const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
 
-  // === state สำหรับ Modal ยืนยัน ===
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingPayload, setPendingPayload] = useState<any | null>(null);
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
+   * Input: fieldName (ชื่อ Field), fieldValue (ค่าของ Field), newState (ข้อมูลฟอร์มใหม่)
+   * Output: -
+   */
+  const validateField = React.useCallback(
+    (field: keyof PackageForm, value: any, newState: PackageForm) => {
+      const result = packageSchema.safeParse(newState);
+      setFormErrors((prev) => ({
+        ...prev,
+        [field]: result.success
+          ? undefined
+          : result.error.issues.find((issue) => issue.path[0] === field)?.message,
+      }));
+    },
+    []
+  );
 
-  // validate ช่องเดียว
-  const validateField = (field: keyof PackageForm, value: any) => {
-    const base = { ...formState, [field]: value };
-    const result = packageSchema.safeParse(base);
-    setFormErrors((prev) => ({
-      ...prev,
-      [field]: result.success
-        ? undefined
-        : result.error.issues.find((i) => i.path[0] === field)?.message,
-    }));
-  };
-
-  // validate ทั้งฟอร์ม + เงื่อนไขช่วงวันที่ และเงื่อนไขที่พัก
+  /*
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนบันทึก
+   * Input: -
+   * Output: สถานะความถูกต้อง (Boolean)
+   */
   const validateAll = () => {
-    let ok = true;
+    let isValid = true;
     const result = packageSchema.safeParse(formState);
     if (!result.success) {
-      const errs: PackageErrors = {};
+      const errorsObject: PackageErrors = {};
       for (const issue of result.error.issues) {
-        errs[issue.path[0] as keyof PackageForm] = issue.message;
+        errorsObject[issue.path[0] as keyof PackageForm] = issue.message;
       }
-      setFormErrors(errs);
-      ok = false;
+      setFormErrors(errorsObject);
+      isValid = false;
     } else {
       setFormErrors({});
     }
-    // เงื่อนไขช่วงเปิด/ปิดการจอง และสิ้นสุดกิจกรรม
     if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
       setFormErrors((prev) => ({
         ...prev,
         closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
       }));
-      ok = false;
+      isValid = false;
     }
     if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
       setFormErrors((prev) => ({
         ...prev,
         closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
       }));
-      ok = false;
+      isValid = false;
     }
-    // ถ้าเลือกที่พัก บังคับกรอกชุดวันเวลา (validate เฉพาะจุดแสดงใต้ TextField)
     if (selectedHomestay) {
       if (!hsCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
-        }));
-        ok = false;
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
+        isValid = false;
       }
       if (!hsCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
-        }));
-        ok = false;
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
+        isValid = false;
       }
       if (!hsCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
-        }));
-        ok = false;
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
+        isValid = false;
       }
       if (!hsCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
-          hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
-        }));
-        ok = false;
+        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
+        isValid = false;
       }
     }
-    return ok;
+    return isValid;
   };
 
-  // + types ภายในไฟล์
-  type TagOption = { id: number; name: string };
-
-  // + states
-  const [tagQuery, setTagQuery] = useState("");
-  const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
-  const [selectedTags, setSelectedTags] = useState<TagOption[]>([]);
-
-  // + ค้นหาแท็กแบบ debounce + dropdown control
-  const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openTagBox, setOpenTagBox] = useState(false);
-
-  // ===== Member picker =====
   type MemberOption = { id: number; fname: string; lname: string };
   const [memberQuery, setMemberQuery] = useState("");
   const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
   const showMemberBox = memberQuery.trim().length >= 1 && memberOptions.length > 0;
 
   React.useEffect(() => {
-    const q = memberQuery.trim();
-    if (!q) {
+    const query = memberQuery.trim();
+    if (!query) {
       setMemberOptions([]);
       return;
     }
+    setMemberOptions([]);
+  }, [memberQuery]);
 
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/member/community/members`, {
-          params: { q, limit: 10 },
-          withCredentials: true,
-        });
+  const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
 
-        const raw = res?.data?.data ?? [];
-        setMemberOptions(
-          (Array.isArray(raw) ? raw : []).map((m: any) => ({
-            id: Number(m.id),
-            fname: m.fname ?? "",
-            lname: m.lname ?? "",
-          }))
-        );
-      } catch (e) {
-        console.error("search members error:", e);
-        setMemberOptions([]);
-      }
-    }, 250);
-
-    return () => clearTimeout(t);
-  }, [memberQuery, apiUrl]);
-
-  // ปิด dropdown เมื่อคลิกนอกกรอบ
   React.useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const onDown = (event: MouseEvent) => {
       if (!searchBoxRef.current) return;
-      if (!searchBoxRef.current.contains(e.target as Node)) setOpenTagBox(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const MIN_TAG_QUERY_CHARS = 2;
-  const norm = (s: string) => (s ?? "").toLowerCase().normalize("NFC").trim();
-
-  React.useEffect(() => {
-    const q = tagQuery.trim();
-    if (q.length < MIN_TAG_QUERY_CHARS) {
-      setTagOptions([]);
-      setOpenTagBox(false);
-      return;
-    }
-
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/tags`, {
-          params: { q, limit: 8 },
-          withCredentials: true,
-        });
-        const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
-        const opts = (Array.isArray(raw) ? raw : []).map((t: any) => ({
-          id: Number(t.id),
-          name: t.name ?? t.title ?? "",
-        }));
-        const byText = opts.filter((o) => norm(o.name).includes(norm(q)));
-        const filtered = byText.filter((o) => !selectedTags.some((s) => s.id === o.id));
-        setTagOptions(filtered);
-        setOpenTagBox(filtered.length > 0);
-      } catch (e) {
-        console.error("search tags error:", e);
-      }
-    }, 250);
-
-    return () => clearTimeout(t);
-  }, [tagQuery, selectedTags]);
-
-  const addTag = (opt: TagOption) => {
-    if (selectedTags.some((t) => t.id === opt.id)) return;
-    setSelectedTags((prev) => [...prev, opt]);
-    setTagQuery("");
-    setTagOptions([]);
-    setOpenTagBox(false);
-  };
-  const removeTag = (id: number) => setSelectedTags((prev) => prev.filter((t) => t.id !== id));
-
-  // ===== Homestay picker =====
   type HomestayOption = {
     id: number;
     name: string;
@@ -428,17 +261,12 @@ export const CreatePackagePage: React.FC = () => {
   const [homestayQuery, setHomestayQuery] = useState("");
   const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
   const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
-
   const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openHomestayBox, setOpenHomestayBox] = useState(false);
-  const [coverFiles, setCoverFiles] = useState<File[]>([]);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [isOpenHomestayBox, setOpenHomestayBox] = useState(false);
 
-  // click-outside สำหรับกล่องค้นหาที่พัก
   React.useEffect(() => {
-    const onDown = (e: MouseEvent) => {
-      if (homestayBoxRef.current && !homestayBoxRef.current.contains(e.target as Node)) {
+    const onDown = (event: MouseEvent) => {
+      if (homestayBoxRef.current && !homestayBoxRef.current.contains(event.target as Node)) {
         setOpenHomestayBox(false);
       }
     };
@@ -446,219 +274,234 @@ export const CreatePackagePage: React.FC = () => {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const MIN_HOMESTAY_QUERY_CHARS = 2;
-  React.useEffect(() => {
-    const q = homestayQuery.trim();
-    if (q.length < MIN_HOMESTAY_QUERY_CHARS) {
+  useEffect(() => {
+    const fetchMyCommunity = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/member/community`, {
+          withCredentials: true
+        });
+        const myCommId = response.data?.data?.id;
+        if (myCommId) {
+          setCommunityId(Number(myCommId));
+        }
+      } catch (error) {
+        console.error("Failed to fetch my community:", error);
+      }
+    };
+
+    fetchMyCommunity();
+  }, []);
+
+  const MIN_HOMESTAY_QUERY_CHARS = 0;
+
+  /*
+   * คำอธิบาย : ฟังก์ชันดึงข้อมูลรายการที่พักจาก Server ตามคำค้นหา
+   * Input: query (คำค้นหา)
+   * Output: -
+   */
+  const fetchHomestays = React.useCallback(async (query: string) => {
+    const trimmedQuery = query.trim();
+    try {
+      const response = await axios.get(`${apiUrl}/member/list-homestays`, {
+        params: { query: trimmedQuery, limit: 8 },
+        withCredentials: true,
+      });
+      const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];
+      const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map((homestay: any) => ({
+        id: Number(homestay.id),
+        name: homestay.name ?? "",
+        facility: homestay.facility ?? homestay.description ?? "",
+        images: homestay.homestayImage ?? homestay.images ?? [],
+      }));
+      setHomestayOptions(options);
+      setOpenHomestayBox(options.length > 0);
+    } catch (error) {
+      console.error("search homestays error:", error);
       setHomestayOptions([]);
       setOpenHomestayBox(false);
-      return;
     }
-    const t = setTimeout(async () => {
-      try {
-        const res = await axios.get(`${apiUrl}/member/community/homestays`, {
-          params: { q, limit: 8 },
-          withCredentials: true,
-        });
+  }, []);
 
-        const raw = res?.data?.data ?? res?.data?.items ?? res?.data ?? [];
-        const opts: HomestayOption[] = (Array.isArray(raw) ? raw : []).map((h: any) => ({
-          id: Number(h.id),
-          name: h.name ?? "",
-          facility: h.facility ?? h.description ?? "",
-          images: h.homestayImage ?? h.images ?? [],
-        }));
-        setHomestayOptions(opts);
-        setOpenHomestayBox(opts.length > 0);
-      } catch (e) {
-        console.error("search homestays error:", e);
-        setHomestayOptions([]);
-        setOpenHomestayBox(false);
+  React.useEffect(() => {
+    const timerId = setTimeout(() => {
+      if (homestayQuery || document.activeElement === homestayBoxRef.current?.querySelector('input')) {
+        fetchHomestays(homestayQuery);
       }
     }, 250);
-    return () => clearTimeout(t);
-  }, [homestayQuery]);
+    return () => clearTimeout(timerId);
+  }, [homestayQuery, fetchHomestays]);
 
-  const chooseHomestay = (h: HomestayOption) => {
-    setSelectedHomestay(h);
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับเลือกที่พักจากรายการค้นหา
+   * Input: homestay (ข้อมูลที่พักที่เลือก)
+   * Output: -
+   */
+  const chooseHomestay = (homestay: HomestayOption) => {
+    setSelectedHomestay(homestay);
     setHomestayQuery("");
     setHomestayOptions([]);
     setOpenHomestayBox(false);
-    // เก็บ id ลงฟอร์มไว้ส่ง (no-op กัน TS บ่น ไม่แก้โครงสร้าง)
     setFormField("tagId" as any, formState.tagId);
   };
 
-  // ฟังก์ชัน set field + validate ช่องนั้น
-  const setFormField = <K extends keyof PackageForm>(key: K, value: PackageForm[K]) => {
-    setFormState((prev) => ({ ...prev, [key]: value }));
-    validateField(key, value);
-  };
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าในฟอร์มและตรวจสอบความถูกต้องทันที
+   * Input: fieldName (ชื่อ Field), fieldValue (ค่าใหม่)
+   * Output: -
+   */
+  const setFormField = React.useCallback(
+    <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
+      setFormState((prev) => {
+        const newState = { ...prev, [key]: value };
+        validateField(key, value, newState);
+        return newState;
+      });
+    },
+    [validateField]
+  );
 
-  const canSubmitForm = useMemo(() => {
-    const required = [
-      formState.name,
-      formState.description,
-      formState.houseNumber,
-      formState.villageNumber,
-      formState.province,
-      formState.district,
-      formState.subDistrict,
-      formState.postalCode,
-      formState.latitude,
-      formState.longitude,
-      formState.overseerMemberId,
-      formState.capacity,
-      formState.price,
-      formState.startDate,
-      formState.endDate,
-      formState.openDate,
-      formState.closeDate,
-    ];
-    return required.every((v) => String(v ?? "").trim() !== "");
-  }, [formState]);
-
-  // ====== Homestay check-in/out (optional) ======
   const [hsCheckInDate, setHsCheckInDate] = useState("");
   const [hsCheckInTime, setHsCheckInTime] = useState("");
   const [hsCheckOutDate, setHsCheckOutDate] = useState("");
   const [hsCheckOutTime, setHsCheckOutTime] = useState("");
+  const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
+   * Input: -
+   * Output: -
+   */
   const clearHomestay = () => {
     setSelectedHomestay(null);
+    setHsCheckInDateObj(null);
     setHsCheckInDate("");
     setHsCheckInTime("");
+    setHsCheckOutDateObj(null);
     setHsCheckOutDate("");
     setHsCheckOutTime("");
+    setHsBookedRoom("1");
   };
 
-  // ====== แยกฟังก์ชันยิง API ======
-  const doCreate = async (payload: any) => {
-    try {
-      setIsSaving(true);
-      setErrorMessage(null);
-      setSuccessMessage(null);
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
+   * Input: [latitude, longitude] (พิกัดละติจูดและลองจิจูด)
+   * Output: - (อัปเดต state ในฟอร์ม)
+   */
+  const handleMapChange = React.useCallback(([latitude, longitude]: [number, number]) => {
+    setFormField("latitude", String(latitude));
+    setFormField("longitude", String(longitude));
+    setPosition([latitude, longitude]);
+  }, [setFormField]);
 
-      await axios.post(`${apiUrl}/member/package`, payload, {
+  /*
+   * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
+   * Input: -
+   * Output: -
+   */
+  const handleConfirmSave = async () => {
+    setIsConfirmModalOpen(false);
+    if (isSaving) return;
+    setIsSaving(true);
+
+    try {
+      const payload = {
+        ...(formState.overseerMemberId ? { overseerMemberId: Number(formState.overseerMemberId) } : {}),
+        name: normalizeOrDefault(formState.name),
+        description: normalizeOrDefault(formState.description),
+        statusPackage: formState.statusPackage,
+        capacity: Math.max(1, Number(formState.capacity || 0)),
+        price: Math.max(0, Number(formState.price || 0)),
+        warning: normalizeOrDefault(formState.facility),
+        startDate: normalizeOrDefault(formState.startDate),
+        dueDate: normalizeOrDefault(formState.endDate),
+        ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
+        ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
+        bookingOpenDate: normalizeOrDefault(formState.openDate),
+        bookingCloseDate: normalizeOrDefault(formState.closeDate),
+        ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
+        ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
+        ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
+        ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
+        ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
+        ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
+        ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
+        facility: normalizeOrDefault(formState.facility),
+        tagIds,
+        ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
+        location: {
+          houseNumber: normalizeOrDefault(formState.houseNumber),
+          villageNumber: toIntOrNull(formState.villageNumber),
+          subDistrict: normalizeOrDefault(formState.subDistrict),
+          district: normalizeOrDefault(formState.district),
+          province: normalizeOrDefault(formState.province),
+          postalCode: normalizeOrDefault(formState.postalCode),
+          detail: normalizeOrDefault(formState.addressDetail),
+          latitude: Number(formState.latitude),
+          longitude: Number(formState.longitude),
+        },
+      };
+
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(payload));
+      coverFiles.forEach((file: any) => formData.append("cover", file));
+      galleryFiles.forEach((file: any) => formData.append("gallery", file));
+      videoFiles.forEach((file: any) => formData.append("video", file));
+      await axios.post(`${apiUrl}/member/package`, formData, {
         withCredentials: true,
-        headers: { "Content-Type": "application/json" },
       });
 
-      alert("สร้างแพ็กเกจสำเร็จ!");
       navigate("/member/packages/all");
     } catch (error: any) {
-      console.error("Create package (member) error:", error?.response?.data);
-      setErrorMessage(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "สร้างแพ็กเกจไม่สำเร็จ"
-      );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
-      setPendingPayload(null);
     }
   };
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    // ให้เบราว์เซอร์ตรวจ required/ชนิด input ก่อน
-    const formEl = e.currentTarget;
-    if (!formEl.reportValidity()) return;
-
-    // ตรวจด้วย Zod + เงื่อนไขเสริม ก่อนเปิด modal confirm
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
+   * Input: event (เหตุการณ์จากฟอร์ม)
+   * Output: - (เปิด Modal ยืนยัน หรือแสดง Error)
+   */
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSaving) return;
     if (!validateAll()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
-    // (คง custom validation เดิมต่อจากนี้)
     if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
-    // เตรียม payload แล้วเปิด Modal ยืนยัน (แทน window.confirm)
-    const payload = {
-      overseerMemberId: Number(formState.overseerMemberId),
-      name: normalizeOrDefault(formState.name),
-      description: normalizeOrDefault(formState.description),
-      capacity: Math.max(1, Number(formState.capacity || 0)),
-      price: Math.max(0, Number(formState.price || 0)),
-      warning: normalizeOrDefault(formState.facility),
-      statusPackage: "DRAFT" as const,
-      statusApprove: "PENDING" as const,
-      startDate: normalizeOrDefault(formState.startDate),
-      dueDate: normalizeOrDefault(formState.endDate),
-      ...(formState.startTime.trim() && {
-        startTime: formState.startTime.trim(),
-      }),
-      ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-      openBookingAt: normalizeOrDefault(formState.openDate),
-      closeBookingAt: normalizeOrDefault(formState.closeDate),
-      ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
-      ...(formState.closeTime.trim() && {
-        closeTime: formState.closeTime.trim(),
-      }),
-      ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
-      ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
-      ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
-      ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
-
-      facility: normalizeOrDefault(formState.facility),
-      tagIds: selectedTags.map((t) => t.id),
-      ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
-
-      location: {
-        houseNumber: normalizeOrDefault(formState.houseNumber),
-        villageNumber: toIntOrNull(formState.villageNumber),
-        subDistrict: normalizeOrDefault(formState.subDistrict),
-        district: normalizeOrDefault(formState.district),
-        province: normalizeOrDefault(formState.province),
-        postalCode: normalizeOrDefault(formState.postalCode),
-        detail: normalizeOrDefault(formState.addressDetail),
-        latitude: Number(formState.latitude),
-        longitude: Number(formState.longitude),
-      },
-    };
-
-    setPendingPayload(payload);
-    setConfirmOpen(true);
+    setIsConfirmModalOpen(true);
   }
 
-  const startPos = React.useMemo(
-    () =>
-      [Number(formState.latitude) || 13.7563, Number(formState.longitude) || 100.5018] as [
-        number,
-        number
-      ],
-    [formState.latitude, formState.longitude]
-  );
 
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
-      {errorMessage && <div className="text-red-600 text-sm">{errorMessage}</div>}
-      {successMessage && <div className="text-emerald-700 text-sm">{successMessage}</div>}
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
-      >
+      {/* Breadcrumb */}
+      <div>
+        <Breadcrumb
+          current={{
+            label: "เพิ่มแพ็กเกจ",
+            to: `/member/package/create`,
+          }}
+        />
+      </div>
+      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
-          onClick={() => navigate("/member/packages/all")}
-          className="inline-flex items-center gap-2 text-xl mb-1 group"
-          aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-xl mb-1 group hover"
+          aria-label="ย้อนกลับ"
         >
-          <Icon icon="mingcute:arrow-left-line" width={22} />
-          <span>สร้างแพ็กเกจ</span>
+          <Icon icon="lucide:arrow-left" width={22} />
+          <span className="text-xl font-semibold ">สร้างแพ็กเกจใหม่</span>
         </button>
 
         {/* ชื่อ/คำอธิบาย */}
@@ -669,10 +512,22 @@ export const CreatePackagePage: React.FC = () => {
             required
             placeholder="ชื่อแพ็กเกจ"
             value={formState.name}
-            onChange={(e) => setFormField("name", e.target.value)}
+            onChange={(event) => setFormField("name", event.target.value)}
             error={!!formErrors.name}
             helperText={formErrors.name}
           />
+
+          <div className="space-y-2">
+            <label className="block text-base font-semibold">
+              สถานะเเพ็กเกจ <span className="text-red-600 text-base">*</span>
+            </label>
+
+            <PackageStatusDropdown
+              value={formState.statusPackage}
+              onChange={(status) => setFormField("statusPackage", status)}
+            />
+          </div>
+
           <div>
             <TextArea
               id="description"
@@ -680,13 +535,10 @@ export const CreatePackagePage: React.FC = () => {
               required
               placeholder="คำอธิบายแพ็กเกจ"
               value={formState.description}
-              onChange={(e) => setFormField("description", e.target.value)}
+              onChange={(event) => setFormField("description", event.target.value)}
               error={!!formErrors?.description}
               helperText={formErrors?.description}
             />
-            {!!formErrors.description && (
-              <div className="text-red-600 text-sm mt-1">{formErrors.description}</div>
-            )}
           </div>
         </section>
 
@@ -699,23 +551,21 @@ export const CreatePackagePage: React.FC = () => {
               required
               placeholder="กรอกบ้านเลขที่ของชุมชน"
               value={formState.houseNumber}
-              onChange={(e) => setFormField("houseNumber", e.target.value)}
+              onChange={(event) => setFormField("houseNumber", event.target.value)}
               error={!!formErrors.houseNumber}
               helperText={formErrors.houseNumber}
             />
             <TextField
               id="villageNumber"
               label="หมู่ที่"
-              required
               placeholder="กรอกหมู่ของชุมชน"
               value={formState.villageNumber}
-              onChange={(e) => setFormField("villageNumber", e.target.value)}
+              onChange={(event) => setFormField("villageNumber", event.target.value)}
               error={!!formErrors.villageNumber}
               helperText={formErrors.villageNumber}
             />
 
-            {/* ที่อยู่แบบ selector */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 relative">
               <ThailandLocationSelector
                 value={{
                   province: formState.province,
@@ -723,46 +573,38 @@ export const CreatePackagePage: React.FC = () => {
                   subdistrict: formState.subDistrict,
                   postalCode: formState.postalCode,
                 }}
-                onChange={(loc: ThailandLocation) => {
-                  setFormState((prev) => ({
-                    ...prev,
-                    province: loc.province ?? "",
-                    district: loc.district ?? "",
-                    subDistrict: loc.subdistrict ?? "",
-                    postalCode: loc.postalCode ?? "",
-                  }));
-                  validateField("province", loc.province ?? "");
-                  validateField("district", loc.district ?? "");
-                  validateField("subDistrict", loc.subdistrict ?? "");
-                  validateField("postalCode", loc.postalCode ?? "");
+                error={{
+                  province: !!formErrors.province,
+                  district: !!formErrors.district,
+                  subdistrict: !!formErrors.subDistrict,
+                }}
+                helperText={{
+                  province: formErrors.province,
+                  district: formErrors.district,
+                  subdistrict: formErrors.subDistrict,
+                }}
+                onChange={(location: ThailandLocation) => {
+                  setFormState((prev) => {
+                    const newState = {
+                      ...prev,
+                      province: location.province ?? "",
+                      district: location.district ?? "",
+                      subDistrict: location.subdistrict ?? "",
+                      postalCode: location.postalCode ? String(location.postalCode) : "",
+                    };
+                    setFormErrors((prevErrors) => ({
+                      ...prevErrors,
+                      province: location.province ? undefined : prevErrors.province,
+                      district: location.district ? undefined : prevErrors.district,
+                      subDistrict: location.subdistrict ? undefined : prevErrors.subDistrict,
+                      postalCode: location.postalCode ? undefined : prevErrors.postalCode,
+                    }));
+                    return newState;
+                  });
                 }}
               />
-              {/* แสดง error ใต้ selector (ใช้ field แยก) */}
-              <div className="grid grid-cols-2 gap-y-[6px] gap-x-[12px] mt-2">
-                <div>
-                  {!!formErrors.province && (
-                    <div className="text-red-600 text-sm">{formErrors.province}</div>
-                  )}
-                </div>
-                <div>
-                  {!!formErrors.district && (
-                    <div className="text-red-600 text-sm">{formErrors.district}</div>
-                  )}
-                </div>
-                <div>
-                  {!!formErrors.subDistrict && (
-                    <div className="text-red-600 text-sm">{formErrors.subDistrict}</div>
-                  )}
-                </div>
-                <div>
-                  {!!formErrors.postalCode && (
-                    <div className="text-red-600 text-sm">{formErrors.postalCode}</div>
-                  )}
-                </div>
-              </div>
             </div>
 
-            {/* คำอธิบายที่อยู่ */}
             <div className="md:col-span-2">
               <TextArea
                 id="addressDetail"
@@ -770,88 +612,26 @@ export const CreatePackagePage: React.FC = () => {
                 required
                 placeholder="คำอธิบายที่อยู่"
                 value={formState.addressDetail}
-                onChange={(e) => setFormField("addressDetail", e.target.value)}
+                onChange={(event) => setFormField("addressDetail", event.target.value)}
                 error={!!formErrors?.addressDetail}
                 helperText={formErrors?.addressDetail}
               />
             </div>
 
-            {/* Map Picker */}
             <div className="md:col-span-2">
-              <MapPicker
-                startingPosition={startPos}
-                startingZoom={13}
-                onChange={([lat, lng]) => {
-                  setFormField("latitude", String(lat));
-                  setFormField("longitude", String(lng));
-                }}
-              />
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {!!formErrors.latitude && (
-                  <div className="text-red-600 text-sm">{formErrors.latitude}</div>
-                )}
-                {!!formErrors.longitude && (
-                  <div className="text-red-600 text-sm">{formErrors.longitude}</div>
-                )}
-              </div>
+              {!isLoading && (
+                <MapPicker
+                  startingPosition={position}
+                  startingZoom={13}
+                  onChange={handleMapChange}
+                />
+              )}
             </div>
           </div>
         </section>
 
         {/* ผู้ดูแล + ความจุ */}
-        <section className="grid md:grid-cols-2 gap-5">
-          {/* เลือกผู้ดูแล */}
-          <div className="space-y-2">
-            <label className="block text-base font-semibold">
-              เลือกผู้ดูแล <span className="text-red-600">*</span>
-            </label>
-
-            <div className="relative">
-              <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
-                <Icon icon="mingcute:search-line" width="22" />
-                <input
-                  type="text"
-                  placeholder="พิมพ์ชื่อ/นามสกุล เพื่อค้นหา"
-                  className="w-full outline-none border-none bg-transparent"
-                  value={memberQuery}
-                  onChange={(e) => setMemberQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && memberOptions[0]) {
-                      e.preventDefault();
-                      const m = memberOptions[0];
-                      setFormField("overseerMemberId", String(m.id));
-                      setMemberQuery(`${m.fname} ${m.lname}`);
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Dropdown */}
-              {showMemberBox && (
-                <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
-                  {memberOptions.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      className="w-full text-left px-4 py-2 hover:bg-green-50"
-                      onClick={() => {
-                        setFormField("overseerMemberId", String(m.id));
-                        setMemberQuery(`${m.fname} ${m.lname}`);
-                      }}
-                    >
-                      {m.fname} {m.lname}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {!!formErrors.overseerMemberId && (
-              <div className="text-red-600 text-sm">{formErrors.overseerMemberId}</div>
-            )}
-          </div>
-
-          {/* ความจุ */}
+        <section className="w-full">
           <TextField
             id="capacity"
             label="เปิดรับจำนวน"
@@ -859,189 +639,123 @@ export const CreatePackagePage: React.FC = () => {
             type="number"
             placeholder="จำนวนคนที่เปิดรับ"
             value={formState.capacity}
-            onChange={(e) => setFormField("capacity", e.target.value)}
+            onChange={(event) => setFormField("capacity", event.target.value)}
             error={!!formErrors.capacity}
             helperText={formErrors.capacity}
           />
         </section>
 
-        {/* สิ่งอำนวยความสะดวก */}
         <section>
           <div className="md:col-span-2">
             <TextArea
-              id="addressDetail"
+              id="facility"
               label="สิ่งอำนวยความสะดวก"
               required
               placeholder="สิ่งอำนวยความสะดวก"
               value={formState.facility}
-              onChange={(e) => setFormField("facility", e.target.value)}
+              onChange={(event) => setFormField("facility", event.target.value)}
               error={!!formErrors?.facility}
               helperText={formErrors?.facility}
             />
-
-            {!!formErrors.facility && (
-              <div className="text-red-600 text-sm mt-1">{formErrors.facility}</div>
-            )}
           </div>
         </section>
 
         {/* วันเวลา */}
         <section className="grid md:grid-cols-4 gap-5">
-          <TextField
+          <BoxDateInput
             id="startDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่เริ่ม"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
             required
-            type="date"
-            value={formState.startDate}
-            onChange={(e) => setFormField("startDate", e.target.value)}
-            error={!!formErrors.startDate}
-            helperText={formErrors.startDate}
+            value={startDateObj}
+            onChange={(date) => {
+              setStartDateObj(date);
+              if (date) setFormField("startDate", date.toISOString().split("T")[0] as any);
+              else setFormField("startDate", "" as any);
+            }}
+            minDate={new Date()}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.startDate}
           />
-          <TextField
-            id="startTime"
+          <BoxTimeInput
             label="เวลาที่เริ่ม"
-            required
-            type="time"
             value={formState.startTime}
-            onChange={(e) => setFormField("startTime", e.target.value)}
-            error={!!formErrors.startTime}
-            helperText={formErrors.startTime}
+            onChange={(time) => setFormField("startTime", time)}
+            required
+            errorText={formErrors.startTime}
           />
-          <TextField
+          <BoxDateInput
             id="endDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่สิ้นสุด"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุด"
             required
-            type="date"
-            value={formState.endDate}
-            onChange={(e) => setFormField("endDate", e.target.value)}
-            error={!!formErrors.endDate}
-            helperText={formErrors.endDate}
+            value={endDateObj}
+            onChange={(date) => {
+              setEndDateObj(date);
+              if (date) setFormField("endDate", date.toISOString().split("T")[0] as any);
+              else setFormField("endDate", "" as any);
+            }}
+            minDate={new Date()}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.endDate}
           />
-          <TextField
-            id="endTime"
+          <BoxTimeInput
             label="เวลาที่สิ้นสุด"
-            required
-            type="time"
             value={formState.endTime}
-            onChange={(e) => setFormField("endTime", e.target.value)}
-            error={!!formErrors.endTime}
-            helperText={formErrors.endTime}
+            onChange={(time) => setFormField("endTime", time)}
+            required
+            errorText={formErrors.endTime}
           />
-          <TextField
+          <BoxDateInput
             id="openDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่เปิดจอง"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่เปิดจอง"
             required
-            type="date"
-            value={formState.openDate}
-            onChange={(e) => setFormField("openDate", e.target.value)}
-            error={!!formErrors.openDate}
-            helperText={formErrors.openDate}
+            value={openDateObj}
+            onChange={(date) => {
+              setOpenDateObj(date);
+              if (date) setFormField("openDate", date.toISOString().split("T")[0] as any);
+              else setFormField("openDate", "" as any);
+            }}
+            minDate={new Date()}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.openDate}
           />
-          <TextField
-            id="openTime"
+          <BoxTimeInput
             label="เวลาที่เปิดจอง"
-            required
-            type="time"
             value={formState.openTime}
-            onChange={(e) => setFormField("openTime", e.target.value)}
-            error={!!formErrors.openTime}
-            helperText={formErrors.openTime}
+            onChange={(time) => setFormField("openTime", time)}
+            required
+            errorText={formErrors.openTime}
           />
-          <TextField
+          <BoxDateInput
             id="closeDate"
-            label="วัน/เดือน/ปี (ค.ศ.) ที่ปิดจอง"
+            label="วัน/เดือน/ปี (พ.ศ.) ที่ปิดจอง"
             required
-            type="date"
-            value={formState.closeDate}
-            onChange={(e) => setFormField("closeDate", e.target.value)}
-            error={!!formErrors.closeDate}
-            helperText={formErrors.closeDate}
+            value={closeDateObj}
+            onChange={(date) => {
+              setCloseDateObj(date);
+              if (date) setFormField("closeDate", date.toISOString().split("T")[0] as any);
+              else setFormField("closeDate", "" as any);
+            }}
+            minDate={new Date()}
+            maxDate={new Date("2100-12-31")}
+            errorText={formErrors.closeDate}
           />
-          <TextField
-            id="closeTime"
+          <BoxTimeInput
             label="เวลาที่ปิดจอง"
-            required
-            type="time"
             value={formState.closeTime}
-            onChange={(e) => setFormField("closeTime", e.target.value)}
-            error={!!formErrors.closeTime}
-            helperText={formErrors.closeTime}
+            onChange={(time) => setFormField("closeTime", time)}
+            required
+            errorText={formErrors.closeTime}
           />
         </section>
 
         {/* แท็ก / ราคา */}
         <section className="grid md:grid-cols-2 gap-5">
-          {/* ช่องค้นหาแท็ก */}
-          <div className="space-y-2">
-            <label htmlFor="tags" className="block text-base font-semibold">
-              แท็ก <span className="text-red-600">*</span>
-            </label>
-
-            <div ref={searchBoxRef} className="relative">
-              <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
-                <Icon icon="mingcute:search-line" width="22" />
-                <input
-                  id="tags"
-                  type="text"
-                  placeholder="ค้นหาแท็ก เช่น เดินป่า ทะเล ภูเขา"
-                  className="w-full outline-none border-none bg-transparent"
-                  value={tagQuery}
-                  onChange={(e) => setTagQuery(e.target.value)}
-                  onFocus={() =>
-                    setOpenTagBox(
-                      tagQuery.trim().length >= MIN_TAG_QUERY_CHARS && tagOptions.length > 0
-                    )
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && tagOptions[0]) {
-                      e.preventDefault();
-                      addTag(tagOptions[0]);
-                    }
-                    if (e.key === "Escape") setOpenTagBox(false);
-                  }}
-                />
-              </div>
-
-              {openTagBox && tagOptions.length > 0 && (
-                <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
-                  {tagOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className="w-full text-left px-4 py-2 hover:bg-green-50"
-                      onClick={() => addTag(opt)}
-                    >
-                      {opt.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+          <div className="md:col-span-1">
+            <div ref={searchBoxRef}>
+              <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
             </div>
-
-            {selectedTags.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {selectedTags.map((t) => (
-                  <span
-                    key={t.id}
-                    className="inline-flex items-center gap-2 rounded-md px-3 py-1 border bg-gray-50"
-                  >
-                    {t.name}
-                    <button
-                      type="button"
-                      className="leading-none text-gray-600 hover:text-black"
-                      onClick={() => removeTag(t.id)}
-                      aria-label={`ลบแท็ก ${t.name}`}
-                      title="ลบ"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* ราคา */}
           <TextField
             id="price"
             label="ราคา"
@@ -1049,7 +763,7 @@ export const CreatePackagePage: React.FC = () => {
             type="number"
             placeholder="กรอกราคา"
             value={formState.price}
-            onChange={(e) => setFormField("price", e.target.value)}
+            onChange={(event) => setFormField("price", event.target.value)}
             error={!!formErrors.price}
             helperText={formErrors.price}
           />
@@ -1059,7 +773,7 @@ export const CreatePackagePage: React.FC = () => {
         <section className="space-y-6">
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              อัปโหลดภาพหน้าปก <span className="text-red-600">*</span>
+              อัพโหลดภาพหน้าปก <span className="text-red-600">*</span>
             </label>
             <UploadCard
               max={1}
@@ -1081,7 +795,7 @@ export const CreatePackagePage: React.FC = () => {
 
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              อัปโหลดรูปภาพเพิ่มเติม <span className="text-red-600">*</span>
+              อัพโหลดรูปภาพเพิ่มเติม <span className="text-red-600">*</span>
             </label>
             <UploadCard
               max={5}
@@ -1103,12 +817,12 @@ export const CreatePackagePage: React.FC = () => {
 
           <div className="space-y-2">
             <label className="block text-base font-semibold">
-              อัปโหลดวิดีโอเพิ่มเติม <span className="text-red-600">*</span>
+              อัพโหลดวิดีโอเพิ่มเติม <span className="text-red-600">*</span>
             </label>
             <UploadCard
               max={5}
               accept="video/*"
-              multiple
+              multiple={false}
               value={videoFiles}
               onChange={setVideoFiles}
               itemW={160}
@@ -1130,7 +844,6 @@ export const CreatePackagePage: React.FC = () => {
             ที่พัก <span className="text-gray-500 text-sm">(ไม่บังคับ)</span>
           </label>
 
-          {/* กล่องค้นหาที่พัก */}
           <div ref={homestayBoxRef} className="relative">
             <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
               <Icon icon="mingcute:search-line" width="22" />
@@ -1139,90 +852,90 @@ export const CreatePackagePage: React.FC = () => {
                 placeholder="ค้นหาชื่อที่พัก"
                 className="w-full outline-none border-none bg-transparent"
                 value={homestayQuery}
-                onChange={(e) => setHomestayQuery(e.target.value)}
-                onFocus={() =>
-                  setOpenHomestayBox(
-                    homestayQuery.trim().length >= MIN_HOMESTAY_QUERY_CHARS &&
-                      homestayOptions.length > 0
-                  )
-                }
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && homestayOptions[0]) {
-                    e.preventDefault();
+                onChange={(event) => setHomestayQuery(event.target.value)}
+                onFocus={() => {
+                  if (homestayQuery.trim() === "" || homestayOptions.length > 0) {
+                    fetchHomestays(homestayQuery);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && homestayOptions[0]) {
+                    event.preventDefault();
                     chooseHomestay(homestayOptions[0]);
                   }
-                  if (e.key === "Escape") setOpenHomestayBox(false);
+                  if (event.key === "Escape") setOpenHomestayBox(false);
                 }}
               />
             </div>
 
-            {openHomestayBox && homestayOptions.length > 0 && (
+            {isOpenHomestayBox && homestayOptions.length > 0 && (
               <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
-                {homestayOptions.map((h) => (
+                {homestayOptions.map((homestay) => (
                   <button
-                    key={h.id}
+                    key={homestay.id}
                     type="button"
                     className="w-full text-left px-4 py-2 hover:bg-green-50"
-                    onClick={() => chooseHomestay(h)}
+                    onClick={() => chooseHomestay(homestay)}
                   >
-                    {h.name}
+                    {homestay.name}
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* การ์ดแสดงที่พักที่เลือก */}
           {selectedHomestay && (
             <>
-              {/* แถววันที่/เวลา (ถ้ามีที่พัก) */}
               <div className="grid md:grid-cols-4 gap-4 mb-3">
-                <TextField
+                <BoxDateInput
                   id="hsCheckInDate"
-                  label="วัน/เดือน/ปี (ค.ศ.) ที่เช็กอินพัก (หากมีที่พัก)"
-                  type="date"
-                  value={hsCheckInDate}
-                  onChange={(e) => setHsCheckInDate(e.target.value)}
-                  error={!!(formErrors as any).hsCheckInDate}
-                  helperText={(formErrors as any).hsCheckInDate}
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กอินพัก"
+                  value={hsCheckInDateObj}
+                  onChange={(date) => {
+                    setHsCheckInDateObj(date);
+                    if (date) setHsCheckInDate(date.toISOString().split("T")[0]);
+                    else setHsCheckInDate("");
+                  }}
+                  minDate={new Date()}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={(formErrors as any).hsCheckInDate}
                 />
-                <TextField
-                  id="hsCheckInTime"
+                <BoxTimeInput
                   label="เวลาเช็กอิน"
-                  type="time"
                   value={hsCheckInTime}
-                  onChange={(e) => setHsCheckInTime(e.target.value)}
-                  error={!!(formErrors as any).hsCheckInTime}
-                  helperText={(formErrors as any).hsCheckInTime}
+                  onChange={(time) => setHsCheckInTime(time)}
+                  required
+                  errorText={(formErrors as any).hsCheckInTime}
                 />
-                <TextField
+                <BoxDateInput
                   id="hsCheckOutDate"
-                  label="วัน/เดือน/ปี (ค.ศ.) ที่เช็กเอาท์ (หากมีที่พัก)"
-                  type="date"
-                  value={hsCheckOutDate}
-                  onChange={(e) => setHsCheckOutDate(e.target.value)}
-                  error={!!(formErrors as any).hsCheckOutDate}
-                  helperText={(formErrors as any).hsCheckOutDate}
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กเอาท์"
+                  value={hsCheckOutDateObj}
+                  onChange={(date) => {
+                    setHsCheckOutDateObj(date);
+                    if (date) setHsCheckOutDate(date.toISOString().split("T")[0]);
+                    else setHsCheckOutDate("");
+                  }}
+                  minDate={new Date()}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={(formErrors as any).hsCheckOutDate}
                 />
-                <TextField
-                  id="hsCheckOutTime"
+                <BoxTimeInput
                   label="เวลาเช็กเอาท์"
-                  type="time"
                   value={hsCheckOutTime}
-                  onChange={(e) => setHsCheckOutTime(e.target.value)}
-                  error={!!(formErrors as any).hsCheckOutTime}
-                  helperText={(formErrors as any).hsCheckOutTime}
+                  onChange={(time) => setHsCheckOutTime(time)}
+                  required
+                  errorText={(formErrors as any).hsCheckOutTime}
                 />
+
               </div>
 
-              {/* การ์ดที่พัก + ปุ่มถังขยะ */}
               <div className="relative rounded-xl border p-4 bg-white shadow-sm">
                 <button
                   type="button"
                   onClick={clearHomestay}
-                  aria-label="เอาที่พักนี้ออก"
-                  title="เอาที่พักนี้ออก"
                   className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border hover:bg-red-50"
+                  title="เอาที่พักนี้ออก"
                 >
                   <Icon icon="mdi:trash-can-outline" width="18" />
                 </button>
@@ -1232,8 +945,9 @@ export const CreatePackagePage: React.FC = () => {
                     <img
                       className="w-full h-40 object-cover rounded-lg"
                       src={
-                        selectedHomestay.images?.[0]?.image ||
-                        "https://placehold.co/640x480?text=Homestay"
+                        selectedHomestay.images?.[0]?.image
+                          ? `${new URL(apiUrl).origin}/uploads/${selectedHomestay.images[0].image}`
+                          : "https://placehold.co/640x480?text=Homestay"
                       }
                       alt={selectedHomestay.name}
                     />
@@ -1241,19 +955,18 @@ export const CreatePackagePage: React.FC = () => {
 
                   <div className="col-span-12 sm:col-span-8">
                     <div className="font-semibold text-lg mb-2">{selectedHomestay.name}</div>
-
                     {selectedHomestay.facility && (
                       <div>
                         <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
                         <ul className="list-disc pl-5 space-y-1">
                           {selectedHomestay.facility
                             .split(/[,•\n]/)
-                            .map((s) => s.trim())
+                            .map((line) => line.trim())
                             .filter(Boolean)
                             .slice(0, 12)
-                            .map((f, i) => (
-                              <li key={i} className="text-sm">
-                                {f}
+                            .map((facilityItem, index) => (
+                              <li key={index} className="text-sm">
+                                {facilityItem}
                               </li>
                             ))}
                         </ul>
@@ -1273,29 +986,27 @@ export const CreatePackagePage: React.FC = () => {
             </Button>
           </div>
           <div className="w-36">
-            <Button type="confirm-admin" htmlType="submit">
-              {isSaving ? "กำลังบันทึก..." : "สร้าง"}
-            </Button>
+            <fieldset disabled={isSaving}>
+              <Button type="confirm-admin" htmlType="submit">
+                {isSaving ? "กำลังบันทึก..." : "สร้างแพ็กเกจ"}
+              </Button>
+            </fieldset>
           </div>
         </div>
       </form>
 
-      {/* === เรียก Modal ยืนยันการสร้าง === */}
-      <ConfirmModal
-        open={confirmOpen}
+      <Modal
+        open={isConfirmModalOpen}
         title="ยืนยันการสร้างแพ็กเกจ"
-        text="คุณต้องการยืนยันการสร้างแพ็กเกจหรือไม่"
+        text="คุณต้องการสร้างแพ็กเกจนี้ใช่หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
-        onConfirm={() => {
-          setConfirmOpen(false);
-          if (pendingPayload) void doCreate(pendingPayload);
-        }}
+        onConfirm={handleConfirmSave}
         onCancel={() => {
-          setConfirmOpen(false);
-          setPendingPayload(null);
+          setIsConfirmModalOpen(false);
         }}
       />
+
     </div>
   );
 };

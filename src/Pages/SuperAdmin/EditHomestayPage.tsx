@@ -102,11 +102,13 @@ const schema = z.object({
  * Output: File object (กำหนด MIME type และเติม flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`fetch ${url} -> ${response.status}`);
-  const blob = await response.blob();
-  const fileExtension = filename.split(".").pop() || "jpg";
-  const type = blob.type || `image/${fileExtension}`;
+  const res = await fetch(url, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
+  const blob = await res.blob();
+  const ext = filename.split(".").pop() || "jpg";
+  const type = blob.type || `image/${ext}`;
   const file = new File([blob], filename, { type });
   (file as any).isFromServer = true;
   return file;

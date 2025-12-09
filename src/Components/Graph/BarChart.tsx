@@ -30,6 +30,7 @@ export type BarChartProps = {
   title?: string;
 
   className?: string;
+  labelX?: string;
 };
 /*
  * Component: BarChart
@@ -42,6 +43,7 @@ export const BarChart: React.FC<BarChartProps> = ({
   data,
   title = "รายได้การจองแพ็กเกจทั้งหมด",
   className = "w-full h-[500px] p-6 bg-white rounded-2xl border border-gray-200 shadow-sm",
+  labelX = "วัน",
 }) => {
   /**
    * คำอธิบาย : กำหนดข้อมูลและ configuration สำหรับ Chart.js
@@ -50,13 +52,18 @@ export const BarChart: React.FC<BarChartProps> = ({
     labels,
     datasets: [
       {
-        label: "รายได้ (บาท)",
+        label: "รายได้รวมการจองแพ็กเกจ",
         data,
-        backgroundColor: "rgba(16, 185, 129, 0.6)", // เขียวโปร่งแสง
-        borderColor: "#10b981",
-        borderWidth: 1,
-        borderRadius: 6,
-        barThickness: 40,
+        backgroundColor: "#6ed7a9", // เขียวอ่อน
+        borderColor: "#16a34a",
+        borderWidth: {
+          top: 2,
+          bottom: 0,
+          left: 0,
+          right: 0,
+        },
+        borderRadius: 4,
+        barThickness: 50,
       },
     ],
   };
@@ -68,10 +75,18 @@ export const BarChart: React.FC<BarChartProps> = ({
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: true,
+        position: "bottom" as const,
+        align: "center" as const,
+        labels: {
+          usePointStyle: true,
+          pointStyle: "rect",
+          font: { family: "Sarabun", size: 12 },
+          color: "#000",
+        },
       },
       title: {
-        display: true,
+        display: false,
         text: title,
         font: { size: 18, weight: "bold" as const, family: "Sarabun" },
         color: "#111827",
@@ -94,13 +109,15 @@ export const BarChart: React.FC<BarChartProps> = ({
       x: {
         title: {
           display: true,
-          text: "วัน",
-          color: "#374151",
-          font: { size: 14 },
+          text: labelX,
+          align: "end" as const,
+          color: "#000",
+          font: { size: 16, weight: "bold" as const },
         },
         grid: {
           color: "rgba(0, 0, 0, 0.05)",
           drawBorder: false,
+          borderDash: [5, 5],
         },
         ticks: {
           color: "#6b7280",
@@ -110,14 +127,19 @@ export const BarChart: React.FC<BarChartProps> = ({
       y: {
         title: {
           display: true,
-          text: "รายได้ (บาท)",
-          color: "#374151",
-          font: { size: 14 },
+          text: "จำนวน",
+          align: "end" as const,
+          color: "#000",
+          font: { size: 16, weight: "bold" as const },
         },
         beginAtZero: true,
+        border: {
+          display: false,
+        },
         grid: {
           color: "rgba(0, 0, 0, 0.05)",
           drawBorder: false,
+          borderDash: [5, 5],
         },
         ticks: {
           color: "#6b7280",

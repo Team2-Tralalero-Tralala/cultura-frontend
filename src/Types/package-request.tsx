@@ -47,4 +47,13 @@ export interface PackageRequestDetail {
     latitude: number;
     longitude: number;
   };
+    homestayHistories: {
+    checkInTime: string;
+    checkOutTime: string;
+    homestay: {
+      name: string;
+      facility?: string;
+      homestayImage: { image: string; type?: string }[];
+    } | null;
+  }[];
 }

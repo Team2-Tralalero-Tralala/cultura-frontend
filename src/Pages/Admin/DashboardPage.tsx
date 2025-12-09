@@ -11,15 +11,16 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccordionDetails from "@mui/material/AccordionDetails";
+
 import React from "react";
 import {
   fetchAdminDashboardData,
-  type AdminDashboardFilters,
   type AdminDashboardResponse,
+  type MemberDashboardFilters,
 } from "@/Services/dashboard-service";
 import { BarChart } from "@/Components/Graph/BarChart";
-import { Icon } from "@iconify/react";
-import { WeeklyDate } from "@/Components/calendar/WeeklyDate";
+import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
+import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
 
 /**
  * Component: DashboardPage
@@ -29,255 +30,303 @@ export function DashboardPage() {
   const [dashboardData, setDashboardData] = React.useState<AdminDashboardResponse>();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  // กำหนดช่วงวันที่เริ่มต้นเป็นสัปดาห์ปัจจุบัน
-  const getCurrentWeek = React.useCallback(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = วันอาทิตย์, 6 = วันเสาร์
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // ปรับให้เป็นวันจันทร์
 
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() + mondayOffset);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    return [startOfWeek, endOfWeek] as [Date, Date];
-  }, []);
-
-  const [dateRange, setDateRange] = React.useState<[Date | null, Date | null]>(() =>
-    getCurrentWeek()
-  );
-  const [showCalendar, setShowCalendar] = React.useState<boolean>(false);
-  const [showCalendar2, setShowCalendar2] = React.useState<boolean>(false);
-  const calendarRef = React.useRef<HTMLDivElement>(null);
-  const calendarRef2 = React.useRef<HTMLDivElement>(null);
-
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD
-   * Input : date (Date | null) - วันที่ที่ต้องการแปลง
-   * Output : string - วันที่ในรูปแบบ YYYY-MM-DD หรือ string ว่างถ้า date เป็น null
-   */
-  const formatDateToString = (date: Date | null): string => {
-    if (!date) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  type PeriodType = "weekly" | "monthly" | "yearly";
   /**
-   * ฟังก์ชัน fetchData
-   * คำอธิบาย : ดึงข้อมูล Dashboard จาก API โดยใช้ช่วงวันที่ที่เลือก
-   * Input : ไม่มี
-   * Output :
-   *   - เซ็ตข้อมูลใน state dashboardData
-   *   - เซ็ต errorMessage เมื่อเกิดข้อผิดพลาด
+   * ฟังก์ชัน: calculateInitialDateRange
+   * คำอธิบาย: คำนวณช่วงวันที่เริ่มต้นตามประเภทช่วงเวลา (รายสัปดาห์, รายเดือน, รายปี)
+   * Input: periodType (PeriodType) - ประเภทของช่วงเวลาที่ต้องการคำนวณ
+   * Output: Object ที่ประกอบด้วยวันเริ่มต้น (start), วันสิ้นสุด (end), รายการวันที่ (dates), และประเภทช่วงเวลา (periodType)
    */
-  const fetchData = React.useCallback(async () => {
-    const [startDate, endDate] = dateRange;
-    if (!startDate || !endDate) return;
-    console.log(startDate, endDate);
+  const calculateInitialDateRange = (periodType: PeriodType) => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+    let dateList: Date[] = [];
+
+    switch (periodType) {
+      case "weekly": {
+        startDate = new Date(now);
+        const dayOfWeek = startDate.getDay();
+        const difference = startDate.getDate() - dayOfWeek; // Start of week (Sunday)
+        startDate.setDate(difference);
+        startDate.setHours(0, 0, 0, 0);
+
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6); // End of week (Saturday)
+        endDate.setHours(23, 59, 59, 999);
+        dateList = [startDate, endDate];
+        break;
+      }
+      case "monthly": {
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        // Only select the current month
+        dateList = [startDate];
+        break;
+      }
+      case "yearly": {
+        startDate = startOfYear(now);
+        endDate = endOfYear(now);
+        // Only select the current year
+        dateList = [startDate];
+        break;
+      }
+    }
+    return { start: startDate, end: endDate, dates: dateList, periodType: periodType };
+  };
+
+  const initialDateRange = calculateInitialDateRange("weekly");
+
+  const [revenueDateRange, setRevenueDateRange] = React.useState<{
+    start: Date;
+    end: Date;
+    dates: Date[];
+    periodType: PeriodType;
+  }>(initialDateRange);
+
+  const [bookingDateRange, setBookingDateRange] = React.useState<{
+    start: Date;
+    end: Date;
+    dates: Date[];
+    periodType: PeriodType;
+  }>(initialDateRange);
+
+  const [packageDateRange, setPackageDateRange] = React.useState<{
+    start: Date;
+    end: Date;
+    dates: Date[];
+    periodType: PeriodType;
+  }>(initialDateRange);
+
+  /**
+   * ฟังก์ชัน: fetchDashboardData
+   * คำอธิบาย: ดึงข้อมูล Dashboard จาก API ตาม filter ที่กำหนด
+   * Input: - (ใช้ state ภายใน ฟังก์ชัน)
+   * Output: - (อัปเดต state dashboardData)
+   */
+  const fetchDashboardData = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
-      const dateStart = formatDateToString(startDate);
-      const dateEnd = formatDateToString(endDate);
 
-      const filters: AdminDashboardFilters = {
-        dateStart,
-        dateEnd,
-        groupBy: "day",
+      /**
+       * ฟังก์ชัน: getFormattedDates
+       * คำอธิบาย: แปลงวันที่เป็น format yyyy-MM-dd และเรียงลำดับ
+       * Input: dates (Date[]) - รายการวันที่
+       * Output: Array<string> - รายการวันที่ที่ถูก format และเรียงลำดับ
+       */
+      const getFormattedDates = (dates: Date[]) => {
+        const uniqueDates = Array.from(new Set(dates.map((d) => format(d, "yyyy-MM-dd"))));
+        return uniqueDates.sort();
       };
 
-      const data = await fetchAdminDashboardData(filters);
-      setDashboardData(data);
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      const filters: MemberDashboardFilters = {
+        bookingPeriodType: bookingDateRange.periodType,
+        bookingDates: getFormattedDates(bookingDateRange.dates),
+        revenuePeriodType: revenueDateRange.periodType,
+        revenueDates: getFormattedDates(revenueDateRange.dates),
+        packagePeriodType: packageDateRange.periodType,
+        packageDates: getFormattedDates(packageDateRange.dates),
+      };
+      const response = await fetchAdminDashboardData(filters);
+      setDashboardData(response);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange]);
+  }, [bookingDateRange, revenueDateRange, packageDateRange]);
 
-  /*
-   * คำอธิบาย : จัดการเมื่อมีการเลือกช่วงวันที่ครบ
-   * Input : start (Date) - วันที่เริ่มต้น, end (Date) - วันที่สิ้นสุด
-   * Output : ปิดปฏิทินหลังจากเลือกครบ
+  React.useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  /**
+   * ฟังก์ชัน: handleBookingDateChange
+   * คำอธิบาย: อัปเดต state ช่วงเวลาสำหรับการจองเมื่อมีการเปลี่ยนแปลงจาก CalendarTrigger
+   * Input: range (Object containing start, end, dates, mode)
+   * Output: - (อัปเดต state bookingDateRange)
    */
-  const handleRangeCommit = (start: Date, end: Date) => {
-    setDateRange([start, end]);
-    setShowCalendar(false);
-    setShowCalendar2(false);
+  const handleBookingDateChange = (range: {
+    start: Date;
+    end: Date;
+    dates: Date[];
+    mode: PeriodType;
+  }) => {
+    setBookingDateRange({
+      start: range.start,
+      end: range.end,
+      dates: range.dates,
+      periodType: range.mode,
+    });
   };
-  /*
-   * คำอธิบาย : ปิดปฏิทินเมื่อคลิกภายนอก
-   * Input : ไม่มี
-   * Output : ตั้งค่า showCalendar และ showCalendar2 เป็น false
-   */
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        setShowCalendar(false);
-      }
-      if (calendarRef2.current && !calendarRef2.current.contains(event.target as Node)) {
-        setShowCalendar2(false);
-      }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-  /*
-   * คำอธิบาย : โหลดข้อมูลใหม่เมื่อมีการเปลี่ยนแปลงวันที่
-   * Input : ไม่มี
-   * Output : ไม่มี
+  /**
+   * ฟังก์ชัน: handleRevenueDateChange
+   * คำอธิบาย: อัปเดต state ช่วงเวลาสำหรับรายได้เมื่อมีการเปลี่ยนแปลงจาก CalendarTrigger
+   * Input: range (Object containing start, end, dates, mode)
+   * Output: - (อัปเดต state revenueDateRange)
    */
-  React.useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const handleRevenueDateChange = (range: {
+    start: Date;
+    end: Date;
+    dates: Date[];
+    mode: PeriodType;
+  }) => {
+    setRevenueDateRange({
+      start: range.start,
+      end: range.end,
+      dates: range.dates,
+      periodType: range.mode,
+    });
+  };
+
+  /**
+   * ฟังก์ชัน: handlePackageDateChange
+   * คำอธิบาย: อัปเดต state ช่วงเวลาสำหรับแพ็กเกจเมื่อมีการเปลี่ยนแปลงจาก CalendarTrigger
+   * Input: range (Object containing start, end, dates, mode)
+   * Output: - (อัปเดต state packageDateRange)
+   */
+  const handlePackageDateChange = (range: {
+    start: Date;
+    end: Date;
+    dates: Date[];
+    mode: PeriodType;
+  }) => {
+    setPackageDateRange({
+      start: range.start,
+      end: range.end,
+      dates: range.dates,
+      periodType: range.mode,
+    });
+  };
 
   return (
     <div className="space-y-4 h-full">
-      {isLoading ? (
+      {!dashboardData && isLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">กำลังโหลดข้อมูล...</div>
         </div>
-      ) : errorMessage ? (
+      ) : !dashboardData && errorMessage ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-red-600">{errorMessage}</div>
         </div>
       ) : dashboardData ? (
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold">รายงานและสถิติ</h1>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                <p className="text-base mb-2 font-semibold">แพ็กเกจทั้งหมด</p>
-                <div className="flex justify-between w-full items-end gap-2">
-                  <p className="text-2xl font-bold">
-                    {(dashboardData.summary?.totalPackages ?? 0).toLocaleString()}
-                  </p>
-                  <p className="font-bold text-base">แพ็กเกจ</p>
-                </div>
-              </div>
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                <p className="text-base mb-2 font-semibold">รายได้ทั้งหมด</p>
-                <div className="flex justify-between w-full items-end gap-2">
-                  <p className="text-2xl font-bold">
-                    {(dashboardData.summary?.totalRevenue ?? 0).toLocaleString()}
-                  </p>
-                  <p className="font-bold text-base">บาท</p>
-                </div>
-              </div>
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                <p className="text-base mb-2 font-semibold">การจองสำเร็จ</p>
-                <div className="flex justify-between w-full items-end gap-2">
-                  <p className="text-2xl font-bold">
-                    {(dashboardData.summary?.successBookingCount ?? 0).toLocaleString()}
-                  </p>
-                  <p className="font-bold text-base">ครั้ง</p>
-                </div>
-              </div>
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
-                <p className="text-base mb-2 font-semibold">ยกเลิกการจอง</p>
-                <div className="flex justify-between w-full items-end gap-2">
-                  <p className="text-2xl font-bold">
-                    {(dashboardData.summary?.cancelledBookingCount ?? 0).toLocaleString()}
-                  </p>
-                  <p className="font-bold text-base">ครั้ง</p>
-                </div>
-              </div>
-            </div>
-            {/* total package */}
-            <div className="flex flex-col w-full p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold">จำนวนการจองแพ็กเกจทั้งหมด</h2>
-                <div className="relative" ref={calendarRef}>
-                  <button
-                    type="button"
-                    onClick={() => setShowCalendar(!showCalendar)}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                  >
-                    <Icon icon="quill:calendar" className="w-5 h-5" />
-                    <span className="text-sm">
-                      {dateRange[0] && dateRange[1]
-                        ? `${formatDateToString(dateRange[0])} - ${formatDateToString(
-                            dateRange[1]
-                          )}`
-                        : "เลือกช่วงวันที่"}
-                    </span>
-                  </button>
-
-                  {showCalendar && (
-                    <div className="absolute right-0 top-full mt-2 z-50">
-                      <WeeklyDate
-                        value={dateRange}
-                        onChange={setDateRange}
-                        onRangeCommit={handleRangeCommit}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <LineGraph
-                className="w-full h-64"
-                labels={dashboardData.graph?.bookingCountGraph?.labels ?? []}
-                data={dashboardData.graph?.bookingCountGraph?.data ?? []}
-                title=""
+          <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="font-bold text-xl">สถิติการจองแพ็กเกจ</h2>
+              <CalendarTrigger
+                mode={bookingDateRange.periodType}
+                dateRange={[bookingDateRange.start, bookingDateRange.end]}
+                dateList={bookingDateRange.dates}
+                onModeChange={(mode) => setBookingDateRange(calculateInitialDateRange(mode))}
+                onChange={handleBookingDateChange}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                  <p className="text-base mb-2 font-semibold">แพ็กเกจทั้งหมด</p>
+                  <div className="flex justify-between w-full items-end gap-2">
+                    <p className="text-2xl font-bold">
+                      {" "}
+                      {(dashboardData.summary?.totalPackages ?? 0).toLocaleString()}
+                    </p>
+                    <p className="font-bold text-base">แพ็กเกจ</p>
+                  </div>
+                </div>
+                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                  <p className="text-base mb-2 font-semibold">รายได้ทั้งหมด</p>
+                  <div className="flex justify-between w-full items-end gap-2">
+                    <p className="text-2xl font-bold">
+                      {(dashboardData.summary?.totalRevenue ?? 0).toLocaleString()}
+                    </p>
+                    <p className="font-bold text-base">บาท</p>
+                  </div>
+                </div>
+                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                  <p className="text-base mb-2 font-semibold">การจองสำเร็จ</p>
+                  <div className="flex justify-between w-full items-end gap-2">
+                    <p className="text-2xl font-bold">
+                      {(dashboardData.summary?.successBookingCount ?? 0).toLocaleString()}
+                    </p>
+                    <p className="font-bold text-base">ครั้ง</p>
+                  </div>
+                </div>
+                <div className="border-2 border-gray-200 rounded-2xl p-6 flex flex-col justify-end">
+                  <p className="text-base mb-2 font-semibold">ยกเลิกการจอง</p>
+                  <div className="flex justify-between w-full items-end gap-2">
+                    <p className="text-2xl font-bold">
+                      {(dashboardData.summary?.cancelledBookingCount ?? 0).toLocaleString()}
+                    </p>
+                    <p className="font-bold text-base">ครั้ง</p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <LineGraph
+                  className="w-full h-[350px] border-2 border-gray-200 rounded-2xl p-6"
+                  labels={dashboardData.graph.bookingCountGraph.labels}
+                  data={dashboardData.graph.bookingCountGraph.data}
+                  title="จำนวนการจองแพ็กเกจ"
+                  labelX={
+                    bookingDateRange.periodType === "weekly"
+                      ? "วัน"
+                      : bookingDateRange.periodType === "monthly"
+                      ? "เดือน"
+                      : "ปี"
+                  }
+                />
+              </div>
             </div>
           </div>
           {/* total revenue */}
-          <div className="flex flex-col w-full bg-white p-6  border-2 border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">รายได้จากแพ็กเกจทั้งหมด</h2>
-              <div className="relative" ref={calendarRef2}>
-                <button
-                  type="button"
-                  onClick={() => setShowCalendar2(!showCalendar2)}
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  <Icon icon="quill:calendar" className="w-5 h-5" />
-                  <span className="text-sm">
-                    {dateRange[0] && dateRange[1]
-                      ? `${formatDateToString(dateRange[0])} - ${formatDateToString(dateRange[1])}`
-                      : "เลือกช่วงวันที่"}
-                  </span>
-                </button>
-
-                {showCalendar2 && (
-                  <div className="absolute right-0 top-full mt-2 z-50">
-                    <WeeklyDate
-                      value={dateRange}
-                      onChange={setDateRange}
-                      onRangeCommit={handleRangeCommit}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="pl-10 pr-10">
-              <BarChart
-                className="w-full h-64"
-                labels={dashboardData.graph?.revenueGraph?.labels ?? []}
-                data={dashboardData.graph?.revenueGraph?.data ?? []}
-                title=""
+          <div className="bg-white pl-8 pr-8 pt-6 pb-6 rounded-auth-card mb-5">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="font-bold text-xl ">รายได้จากการจองแพ็กเกจทั้งหมด</h2>
+              <CalendarTrigger
+                mode={revenueDateRange.periodType}
+                dateRange={[revenueDateRange.start, revenueDateRange.end]}
+                dateList={revenueDateRange.dates}
+                onModeChange={(mode) => setRevenueDateRange(calculateInitialDateRange(mode))}
+                onChange={handleRevenueDateChange}
               />
             </div>
+            <BarChart
+              className="w-full h-[500px]"
+              labels={dashboardData.graph.revenueGraph.labels}
+              data={dashboardData.graph.revenueGraph.data}
+              title=""
+              labelX={
+                revenueDateRange.periodType === "weekly"
+                  ? "วัน"
+                  : revenueDateRange.periodType === "monthly"
+                  ? "เดือน"
+                  : "ปี"
+              }
+            />
           </div>
-          <Accordion className="!shadow-none !border-0 !rounded-lg p-2">
+          <Accordion className="!shadow-none !border-0 !rounded-auth-card bg-white before:!hidden">
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel1-content"
               id="panel1-header"
             >
-              <h2 className="text-2xl font-semibold">20 แพ็กเกจที่มีการจองสูงสุด</h2>
+              <div className="flex justify-between items-center w-full">
+                <h2 className="font-bold text-xl ">20 แพ็กเกจที่มีการจองสูงสุด</h2>
+                <CalendarTrigger
+                  mode={packageDateRange.periodType}
+                  dateRange={[packageDateRange.start, packageDateRange.end]}
+                  dateList={packageDateRange.dates}
+                  onModeChange={(mode) => setPackageDateRange(calculateInitialDateRange(mode))}
+                  onChange={handlePackageDateChange}
+                />
+              </div>
             </AccordionSummary>
 
-            <AccordionDetails>
+            <AccordionDetails className="!px-8 !pb-6">
               <div className="overflow-x-auto">
                 <table className="w-full text-start">
                   <thead>
@@ -288,14 +337,15 @@ export function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData.package?.topPackages &&
-                    dashboardData.package.topPackages.length > 0 ? (
-                      dashboardData.package.topPackages.map((pkg, index) => (
+                    {dashboardData.topPackages && dashboardData.topPackages.length > 0 ? (
+                      dashboardData.topPackages.map((packages, index) => (
                         <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="py-2 px-4 pl-8">{pkg.rank}</td>
-                          <td className="py-2 px-4 text-gray-800 font-medium">{pkg.name || "-"}</td>
+                          <td className="py-2 px-4 pl-8">{packages.rank}</td>
+                          <td className="py-2 px-4 text-gray-800 font-medium">
+                            {packages.name || "-"}
+                          </td>
                           <td className="py-2 px-4 text-gray-700 text-center">
-                            {pkg.bookingCount?.toLocaleString() ?? 0} ครั้ง
+                            {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
                           </td>
                         </tr>
                       ))

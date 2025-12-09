@@ -7,21 +7,28 @@
  * - รวมทุกหน้าในหมวดหมู่ "สมาชิก"
  * - ระบุ path และ component ที่ควรแสดงเมื่อเข้าหน้านั้น
  */
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import { ManageRefundBookingMember } from '@/Pages/Member/ManageRefundBookingPage';
 
+import ManageBookingMember from '@/Pages/Member/ManageBookingMember';
+import { DashboardPage } from "@/Pages/Member/DashboardPage";
 import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
-import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
-import PackageFeedbacksPage from '@/Pages/Member/PackageFeedbacksPage';
+import PackageHistoryMember from "@/Pages/Member/HistoryPackageMember";
+import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
+import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
 
 export default function MemberRoutes() {
   return (
     <Routes>
       <Route path="/bookings/refunded-pending" element={<ManageRefundBookingMember />} />
       
+
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="bookings/all" element={<ManageBookingMember />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}

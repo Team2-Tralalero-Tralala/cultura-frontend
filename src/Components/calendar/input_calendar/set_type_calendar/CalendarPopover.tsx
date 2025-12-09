@@ -32,6 +32,14 @@ export type CalendarPopoverProps = {
   positionClassName?: string;
   /** ป้ายสำหรับผู้อ่านหน้าจอ ถ้าไม่ระบุจะสร้างตามโหมด */
   ariaLabel?: string;
+  /** Callbacks */
+  onWeeklyChange?: (range: [Date | null, Date | null]) => void;
+  onMonthlyChange?: (dates: Date[]) => void;
+  onYearlyChange?: (dates: Date[]) => void;
+  /** วันที่ที่ถูกเลือก (สำหรับ Monthly / Yearly) */
+  selectedDates?: Date[];
+  /** ช่วงวันที่ที่ถูกเลือก (สำหรับ Weekly) */
+  selectedRange?: [Date | null, Date | null];
 };
 
 /** ---------- Component ---------- */
@@ -40,6 +48,11 @@ export const CalendarPopover: React.FC<CalendarPopoverProps> = ({
   className,
   positionClassName,
   ariaLabel,
+  onWeeklyChange,
+  onMonthlyChange,
+  onYearlyChange,
+  selectedDates = [],
+  selectedRange = [null, null],
 }) => {
   /**
    * ตัวแปร: computedAriaLabel
@@ -73,9 +86,13 @@ export const CalendarPopover: React.FC<CalendarPopoverProps> = ({
       aria-label={computedAriaLabel}
     >
       {/* เรนเดอร์คอมโพเนนต์ปฏิทินตามโหมดที่กำหนด */}
-      {type === "weekly" && <WeeklyDate />}
-      {type === "monthly" && <MonthlyDate />}
-      {type === "yearly" && <YearlyDate />}
+      {type === "weekly" && <WeeklyDate onChange={onWeeklyChange} value={selectedRange} />}
+      {type === "monthly" && (
+        <MonthlyDate onDateChange={onMonthlyChange} defaultSelected={selectedDates} />
+      )}
+      {type === "yearly" && (
+        <YearlyDate onDateChange={onYearlyChange} defaultSelected={selectedDates} />
+      )}
     </div>
   );
 };

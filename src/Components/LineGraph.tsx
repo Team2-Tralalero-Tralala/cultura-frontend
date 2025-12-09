@@ -5,16 +5,17 @@
  * รองรับการแสดงข้อมูลจาก props และการปรับแต่งสีตามธีม
  */
 import {
-    CategoryScale,
-    Chart as ChartJS,
-    Filler,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
 } from "chart.js";
+import { AlignRight } from "lucide-react";
 import React from "react";
 import { Line } from "react-chartjs-2";
 
@@ -46,6 +47,7 @@ export type LineGraphProps = {
   title?: string;
 
   className?: string;
+  labelX?: string;
 };
 
 /*
@@ -59,6 +61,7 @@ export const LineGraph: React.FC<LineGraphProps> = ({
   data,
   title = "จำนวนการจองแพ็กเกจทั้งหมด",
   className = "w-full h-64 p-4 bg-white rounded-lg border border-gray-200 shadow-sm",
+  labelX,
 }) => {
   /*
    * คำอธิบาย : กำหนดข้อมูลและ configuration สำหรับ Chart.js
@@ -101,7 +104,7 @@ export const LineGraph: React.FC<LineGraphProps> = ({
         display: true,
         text: title,
         font: {
-          size: 16,
+          size: 18,
           weight: "bold" as const,
         },
         color: "#111827", // gray-900
@@ -109,6 +112,7 @@ export const LineGraph: React.FC<LineGraphProps> = ({
           top: 10,
           bottom: 20,
         },
+        align: "start" as const,
       },
       tooltip: {
         backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -127,6 +131,13 @@ export const LineGraph: React.FC<LineGraphProps> = ({
     },
     scales: {
       x: {
+        title: {
+          display: !!labelX,
+          text: labelX,
+          align: "end" as const,
+          color: "#000",
+          font: { size: 14, weight: "bold" as const },
+        },
         grid: {
           display: true,
           color: "rgba(0, 0, 0, 0.05)",
@@ -140,6 +151,13 @@ export const LineGraph: React.FC<LineGraphProps> = ({
         },
       },
       y: {
+        title: {
+          display: true,
+          text: "จำนวน",
+          align: "end" as const,
+          color: "#000",
+          font: { size: 14, weight: "bold" as const },
+        },
         grid: {
           display: true,
           color: "rgba(0, 0, 0, 0.05)",
@@ -162,4 +180,3 @@ export const LineGraph: React.FC<LineGraphProps> = ({
     </div>
   );
 };
-

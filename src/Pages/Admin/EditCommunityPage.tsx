@@ -737,7 +737,7 @@ export function EditCommunity() {
             <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
               <div>
                 <h3 className="text-base font-bold mb-1.5">ร้านค้า</h3>
-                <Link to={`/super/community/own/stores/all`}>
+                <Link to={`/admin/community/stores`}>
                   <Button type="confirm-admin">
                     <Icon icon="carbon:store" style={{ fontSize: "24px" }} className="mr-2" />
                     จัดการร้านค้า
@@ -748,7 +748,7 @@ export function EditCommunity() {
                 <div className="text-base font-bold mb-1.5">
                   <h3>ที่พัก</h3>
                 </div>
-                <Link to={`/super/community/own/homestays/all`}>
+                <Link to={`/admin/community/homestays`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="healthicons:home-outline"

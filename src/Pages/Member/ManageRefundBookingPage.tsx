@@ -195,29 +195,32 @@ export function ManageRefundBookingMember() {
       // responseBody = ส่วนข้อมูลหลักที่ได้จาก response
       const responseBody = response.data?.data || response.data;
       // refundRequests = รายการคำขอคืนเงินที่เป็น Array
-      const refundRequests = Array.isArray(responseBody?.data) 
-        ? responseBody.data 
-        : (Array.isArray(responseBody) ? responseBody : []);
+      const refundRequests = Array.isArray(responseBody?.data)
+        ? responseBody.data
+        : Array.isArray(responseBody)
+        ? responseBody
+        : [];
       // paginationInfo = ข้อมูลเกี่ยวกับการแบ่งหน้า
-      const paginationInfo = responseBody?.pagination || response.data?.pagination || response.pagination || {};
+      const paginationInfo = responseBody?.pagination || response.data?.pagination || {};
 
       const mappedRows: RefundRow[] = refundRequests.map((item: any) => ({
         id: item.id,
         touristName: `${item.tourist?.fname ?? ""} ${item.tourist?.lname ?? ""}`.trim(),
         packageName: item.package?.name ?? "-",
-        totalPrice: `฿${((item.package?.price ?? 0) * (item.totalParticipant ?? 1)).toLocaleString()}`,
+        totalPrice: `฿${(
+          (item.package?.price ?? 0) * (item.totalParticipant ?? 1)
+        ).toLocaleString()}`,
         status: item.status,
-        transferSlip: item.transferSlip || "-", 
+        transferSlip: item.transferSlip || "-",
       }));
 
       setRows(mappedRows);
       setPagination({
-          currentPage: paginationInfo.currentPage ?? currentPage,
-          totalPages: paginationInfo.totalPages ?? 1,
-          totalCount: paginationInfo.totalCount ?? refundRequests.length,
-          limit: paginationInfo.limit ?? pageSize
+        currentPage: paginationInfo.currentPage ?? currentPage,
+        totalPages: paginationInfo.totalPages ?? 1,
+        totalCount: paginationInfo.totalCount ?? refundRequests.length,
+        limit: paginationInfo.limit ?? pageSize,
       });
-
     } catch (error: any) {
       setErrorMessage(error.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
@@ -243,14 +246,14 @@ export function ManageRefundBookingMember() {
    */
   const handleApprove = async (row: RefundRow) => {
     try {
-        setIsLoading(true);
-        await approveRefundMember(row.id);
-        await reload();
+      setIsLoading(true);
+      await approveRefundMember(row.id);
+      await reload();
     } catch (error: any) {
-        console.error(error);
-        setErrorMessage(error.message || "อนุมัติไม่สำเร็จ");
+      console.error(error);
+      setErrorMessage(error.message || "อนุมัติไม่สำเร็จ");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -259,23 +262,36 @@ export function ManageRefundBookingMember() {
    */
   const handleReject = async (row: RefundRow, reason?: string) => {
     try {
-        setIsLoading(true);
-        await rejectRefundMember(row.id, reason || "");
-        await reload();
+      setIsLoading(true);
+      await rejectRefundMember(row.id, reason || "");
+      await reload();
     } catch (error: any) {
-        console.error(error);
-        setErrorMessage(error.message || "ปฏิเสธไม่สำเร็จ");
+      console.error(error);
+      setErrorMessage(error.message || "ปฏิเสธไม่สำเร็จ");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const columns = useMemo(() => makeColumns(
-    (row) => { setSelectedRow(row); setConfirmOpen(true); },
-    (row) => { setSelectedRow(row); setRejectOpen(true); },
-    (id) => navigate(`/member/booking/${id}`),
-    (url) => { setSlipUrl(url); setSlipOpen(true); }
-  ), [navigate]);
+  const columns = useMemo(
+    () =>
+      makeColumns(
+        (row) => {
+          setSelectedRow(row);
+          setConfirmOpen(true);
+        },
+        (row) => {
+          setSelectedRow(row);
+          setRejectOpen(true);
+        },
+        (id) => navigate(`/member/booking/${id}`),
+        (url) => {
+          setSlipUrl(url);
+          setSlipOpen(true);
+        }
+      ),
+    [navigate]
+  );
 
   return (
     <div className="space-y-4">
@@ -300,7 +316,7 @@ export function ManageRefundBookingMember() {
 
       {errorMessage && (
         <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
-            {errorMessage}
+          {errorMessage}
         </div>
       )}
 
@@ -314,24 +330,32 @@ export function ManageRefundBookingMember() {
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
         onPageChange={setCurrentPage}
-        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       />
 
       {/* Modal ยืนยันการอนุมัติ */}
       <Modal
         open={isConfirmOpen}
         title="ยืนยันการอนุมัติคำขอคืนเงิน"
-        text={selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""}
+        text={
+          selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""
+        }
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={async () => {
           if (!selectedRow) return;
           const row = selectedRow;
-          setConfirmOpen(false); 
+          setConfirmOpen(false);
           await handleApprove(row);
           setSelectedRow(null);
         }}
-        onCancel={() => { setConfirmOpen(false); setSelectedRow(null); }}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setSelectedRow(null);
+        }}
       />
 
       {/* Modal ปฏิเสธคำขอ */}
@@ -348,7 +372,10 @@ export function ManageRefundBookingMember() {
           await handleReject(row, reason);
           setSelectedRow(null);
         }}
-        onCancel={() => { setRejectOpen(false); setSelectedRow(null); }}
+        onCancel={() => {
+          setRejectOpen(false);
+          setSelectedRow(null);
+        }}
       />
 
       {/* Modal แสดงรูปภาพสลิป */}

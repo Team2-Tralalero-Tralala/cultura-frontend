@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member (Detail Package Member)
  * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend เฉพาะที่ Member มีสิทธิ์เข้าถึง
@@ -23,6 +24,7 @@ import DetailPackageGallery from "@/Components/DetailPackageGallery";
  * Input  : -
  * Output : string | undefined (ค่า base URL จาก environment)
  */
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface DateTimeField {
@@ -75,7 +77,7 @@ interface HomestayHistory {
 interface PackageFile {
   id: number;
   path: string;
-  type: string;
+  type: "GALLERY" | "COVER" | "VIDEO";
 }
 
 interface PackageData {
@@ -240,7 +242,7 @@ export default function DetailPackageMember() {
                         ).map((imageItem: any, imageIndex: number) => ({
                           id: imageItem.id ?? imageIndex,
                           path: imageItem.image ?? imageItem.filePath ?? imageItem.path ?? "",
-                          type: imageItem.type ?? "GALLERY",
+                          type: imageItem.type,
                         })),
                         location: homestayHistoryItem.homestay.location
                           ? {

@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * คำอธิบาย : หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import React, {  useState, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 // Components
 import Button from "@/Components/Button";

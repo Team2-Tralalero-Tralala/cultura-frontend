@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ SuperAdmin (Detail Package SuperAdmin)
  * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
@@ -74,7 +75,7 @@ interface HomestayHistory {
 interface PackageMedia {
   id: number;
   path: string;
-  type: string;
+  type: "GALLERY" | "COVER" | "VIDEO";
 }
 
 interface PackageData {
@@ -234,7 +235,7 @@ export default function DetailPackageSuperAdmin() {
                         ).map((imageItem: any, imageIndex: number) => ({
                           id: imageItem.id ?? imageIndex,
                           path: imageItem.image ?? imageItem.filePath ?? imageItem.path ?? "",
-                          type: imageItem.type ?? "GALLERY",
+                          type: imageItem.type,
                         })),
                         location: homestayHistoryItem.homestay.location
                           ? {

@@ -8,7 +8,7 @@
  * - ระบุ path และ component ที่ควรแสดงเมื่อเข้าหน้านั้น
  */
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import ManagePackagePage from '@/Pages/Member/ManagePackagePage';
 import { EditPackagePage } from '@/Pages/Member/EditPackagePage';
@@ -27,7 +27,6 @@ export default function MemberRoutes() {
   return (
     <Routes>
       <Route path="/bookings/refunded-pending" element={<ManageRefundBookingMember />} />
-
 
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="packages/all" element={<ManagePackagePage />} />

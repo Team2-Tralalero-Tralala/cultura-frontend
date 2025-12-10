@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Admin (Detail Package Admin)
  * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
@@ -15,6 +16,7 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
+
 
 /**
  * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
@@ -74,7 +76,7 @@ interface HomestayHistory {
 interface PackageFile {
   id: number;
   path: string;
-  type: string;
+  type: "GALLERY" | "COVER" | "VIDEO";
 }
 
 interface PackageData {
@@ -205,8 +207,8 @@ export default function DetailPackageAdmin() {
             ? packageRawData.packageFile.map((fileItem: any) => ({
                 id: fileItem.id,
                 path: fileItem.filePath,
-                type: fileItem.type,
-              }))
+                type: (fileItem.type),
+              } as PackageFile))
             : [],
           homestayHistories: packageRawData.homestayHistories
             ? packageRawData.homestayHistories.map(

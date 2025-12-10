@@ -52,7 +52,6 @@ export function BankSelector({
       });
       const data = response.data.data;
       setBanks(data);
-      console.log(data);
     }
     loadBank();
   }, [bank]);

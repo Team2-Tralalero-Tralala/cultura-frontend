@@ -99,7 +99,6 @@ export function CreateStore() {
         newErrors[fieldName as string] = issue.message;
       });
       setFormErrors(newErrors);
-      console.log("❌ Validation errors:", result.error.issues); // ช่วย debug ได้ง่ายมาก
       return false;
     }
 
@@ -446,7 +445,7 @@ export function CreateStore() {
         <Modal
           open={openCancelConfirm}
           title="ยืนยันการยกเลิก"
-          text="เมื่อกดตกลง ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+          text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
           onConfirm={() => {
             setOpenCancelConfirm(false);
             navigate(-1);

@@ -40,6 +40,7 @@ const TextArea: React.FC<BaseFieldProps> = ({
   onChange,
   error = false,
   helperText = "",
+  rows = 4,
 }) => {
   return (
     <div className="space-y-1.5">
@@ -66,6 +67,7 @@ const TextArea: React.FC<BaseFieldProps> = ({
           placeholder={placeholder}
           onChange={onChange}
           value={value}
+          rows={rows}
           className={`block w-full rounded-form border-1 
             ${
               error

@@ -28,6 +28,7 @@ type Props = {
     value: PackageStatus;
     onChange: (value: PackageStatus) => void;
     disabled?: boolean;
+    exclude?: PackageStatus[];
 };
 
 /*
@@ -39,6 +40,7 @@ export const PackageStatusDropdown: React.FC<Props> = ({
     value,
     onChange,
     disabled = false,
+    exclude = [],
 }) => {
     const [isOpen, setOpen] = React.useState(false);
     const currentStatusConfig = STATUS_CONFIG[value];
@@ -77,30 +79,32 @@ export const PackageStatusDropdown: React.FC<Props> = ({
             {/* เมนู */}
             {isOpen && !disabled && (
                 <div className="absolute z-30 mt-1 w-[140px] rounded-md border border-gray-300 bg-white shadow-lg overflow-hidden">
-                    {(["DRAFT", "PUBLISH", "UNPUBLISH"] as PackageStatus[]).map(
-                        (status) => {
-                            const config = STATUS_CONFIG[status];
-                            return (
-                                <button
-                                    key={status}
-                                    type="button"
-                                    className={`
+                    {(["DRAFT", "PUBLISH", "UNPUBLISH"] as PackageStatus[])
+                        .filter((status) => !exclude.includes(status))
+                        .map(
+                            (status) => {
+                                const config = STATUS_CONFIG[status];
+                                return (
+                                    <button
+                                        key={status}
+                                        type="button"
+                                        className={`
               flex w-full items-center gap-3 px-3 py-2 text-left
               hover:bg-gray-100
               ${status === value ? "bg-gray-50" : ""}
               whitespace-nowrap
               rounded-none
             `}
-                                    onClick={() => handleSelect(status)}
-                                >
-                                    <Icon icon={config.icon} width={22} />
-                                    <span className="text-base leading-none">
-                                        {config.label}
-                                    </span>
-                                </button>
-                            );
-                        },
-                    )}
+                                        onClick={() => handleSelect(status)}
+                                    >
+                                        <Icon icon={config.icon} width={22} />
+                                        <span className="text-base leading-none">
+                                            {config.label}
+                                        </span>
+                                    </button>
+                                );
+                            },
+                        )}
                 </div>
             )}
         </div>

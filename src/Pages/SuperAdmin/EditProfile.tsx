@@ -1,12 +1,18 @@
 /*
- * Component: EditMemberPage (Admin)
- * Description: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
- * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+ * Component: EditProfile
+ * Description:
+ *   - หน้าสำหรับผู้ใช้งานที่ล็อกอินอยู่ แก้ไขข้อมูลส่วนตัวของตัวเอง
+ *   - ใช้งานร่วมกับ API กลาง (/shared/profile)
+ *   - ใช้ได้กับทุก Role ที่มีบัญชีในระบบ
+ *
+ * Behavior:
+ *   - โหลดข้อมูลโปรไฟล์จากระบบเมื่อเปิดหน้า
+ *   - แสดง Modal ยืนยันก่อนบันทึก
+ *   - แสดง Modal แจ้งผลลัพธ์ (สำเร็จ / ไม่สำเร็จ)
+ *   - เมื่อบันทึกสำเร็จ จะ reload หน้าเพื่ออัปเดตข้อมูลใน Navbar
  */
-
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
@@ -16,21 +22,13 @@ import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
 
 /*
- * คำอธิบาย : Interface สำหรับกำหนดโครงสร้างข้อมูลที่ใช้ในการแก้ไขข้อมูลสมาชิก
+ * Interface: UserProfile
+ * Description:
+ *   - โครงสร้างข้อมูลโปรไฟล์ที่ใช้ควบคุมฟอร์มแก้ไขข้อมูลส่วนตัว
+ *   - mapping จากข้อมูลที่ได้จาก API /shared/profile
  */
-interface EditMemberBody {
-  fname: string;
-  lname: string;
-  username: string;
-  email: string;
-  phone: string;
-  roleId: number;
-  communityRole: string;
-}
-
 interface UserProfile {
   profileImage: string | null;
   username: string;
@@ -40,16 +38,12 @@ interface UserProfile {
   phone: string;
 }
 
-/*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลสมาชิกโดย Admin
- */
 export const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userId } = useParams();
-
   /*
-   * คำอธิบาย : State สำหรับเก็บค่าฟอร์มข้อมูลสมาชิก
+   * State: formData
+   * ใช้เก็บค่าข้อมูลจากฟอร์มแก้ไขโปรไฟล์
    */
   const [formData, setFormData] = useState<UserProfile>({
     profileImage: null,
@@ -61,29 +55,21 @@ export const EditProfile: React.FC = () => {
   });
 
   /*
-   * คำอธิบาย : State สำหรับเก็บไฟล์รูปโปรไฟล์ที่อัปโหลดใหม่
+   * State สำหรับจัดการรูปโปรไฟล์และ modal ต่าง ๆ
    */
   const [profileImage, setProfileImage] = useState<File | null>(null);
-
-  /*
-   * คำอธิบาย : State สำหรับเก็บ URL รูปโปรไฟล์ที่โหลดจากระบบ
-   */
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  /*
-   * คำอธิบาย : State สำหรับควบคุม Modal ยืนยันการบันทึกข้อมูล
-   */
   const [showConfirm, setShowConfirm] = useState(false);
-
-  /*
-   * คำอธิบาย : State สำหรับควบคุม Modal แสดงผลเมื่อแก้ไขสำเร็จ
-   */
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorModal, setShowErrorModal] = useState(false);
+
 
   /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
-   * Input : -
-   * Output : -
+   * Function: fetchData
+   * Description:
+   *   - ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่จากระบบ
+   *   - นำข้อมูลมา set ลง form และ avatar
    */
   const fetchData = async () => {
     try {
@@ -92,35 +78,72 @@ export const EditProfile: React.FC = () => {
 
       if (!profile) throw new Error("ไม่พบข้อมูลสมาชิก");
 
-      setFormData({ ...profile });
+      setFormData({
+        profileImage: profile.profileImage ?? null,
+        username: profile.username ?? "",
+        email: profile.email ?? "",
+        fname: profile.fname ?? "",
+        lname: profile.lname ?? "",
+        phone: profile.phone ?? "",
+      });
 
-      setAvatarUrl(profile.profileImageUrl || null);
+      setAvatarUrl(profile.profileImageUrl || profile.profileImage || null);
     } catch (error: any) {
-      console.error("❌ Error fetching member:", error);
+      console.error("❌ Error fetching profile:", error);
       toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
-      navigate("/admin/members");
+      navigate(-1);
     }
   };
 
-  /*
-   * คำอธิบาย : Hook สำหรับโหลดข้อมูลสมาชิกเมื่อมี userId
-   */
-  /*
-   * คำอธิบาย : Hook สำหรับโหลดข้อมูลสมาชิกเมื่อมี userId
-   */
   useEffect(() => {
     fetchData();
-  }, [userId]);
+  }, []);
 
   /*
-   * คำอธิบาย : ฟังก์ชันจัดการการเปลี่ยนแปลงค่าของ Input
-   * Input : event
-   * Output : -
+   * Function: handleChange
+   * Description:
+   *   - จัดการการเปลี่ยนแปลงค่าของ input ในฟอร์ม
+   *   - ใช้ id ของ input เป็นตัว map field ใน state
    */
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
+
+  /*
+   * Function: handleSubmit
+   * Description:
+   *   - ส่งข้อมูลแก้ไขโปรไฟล์ไปยัง BE
+   *   - แสดง Modal แจ้งสำเร็จ หรือ Modal แจ้งข้อผิดพลาด
+   */
+  const handleSubmit = async () => {
+  try {
+    const body = {
+      fname: formData.fname,
+      lname: formData.lname,
+      username: formData.username,
+      email: formData.email,
+      phone: formData.phone,
+    };
+
+    await api.put("/shared/profile", body);
+
+    // ไม่ต้อง toast แล้ว ให้โชว์แค่ modal
+    setShowSuccessModal(true);
+  } catch (error: any) {
+  console.error("❌ Error updating profile:", error);
+
+  const message =
+    error?.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้";
+
+  setErrorMessage(message);
+  setShowErrorModal(true);
+}
+
+};
+
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
@@ -155,7 +178,9 @@ export const EditProfile: React.FC = () => {
             <path d="M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขข้อมูลส่วนตัว</h1>
+        <h1 className="text-xl font-bold text-black tracking-tight">
+          แก้ไขข้อมูลส่วนตัว
+        </h1>
       </div>
 
       <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200">
@@ -243,7 +268,7 @@ export const EditProfile: React.FC = () => {
         cancelText="ยกเลิก"
         onConfirm={() => {
           setShowConfirm(false);
-          // handleSubmit();
+          handleSubmit();
         }}
         onCancel={() => setShowConfirm(false)}
       />
@@ -251,13 +276,26 @@ export const EditProfile: React.FC = () => {
       <ModalAlert
         open={showSuccessModal}
         type="success"
-        title="แก้ไขสมาชิกสำเร็จ"
-        message="ข้อมูลสมาชิกถูกแก้ไขเรียบร้อยแล้ว"
+        title="แก้ไขข้อมูลส่วนตัวสำเร็จ"
+        message="ข้อมูลส่วนตัวของคุณถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
-          navigate("/admin/members");
-        }}
+  setShowSuccessModal(false);
+  // รีโหลดทั้งหน้า เพื่อให้ Navbar ไปโหลดชื่อใหม่จาก BE/AuthProvider
+  window.location.reload();
+}}
+
       />
+      <ModalAlert
+  open={showErrorModal}
+  type="error"
+  title="ไม่สามารถบันทึกข้อมูลได้"
+  message={errorMessage}
+  onClose={() => {
+    setShowErrorModal(false);
+    setErrorMessage("");
+  }}
+/>
+
     </div>
   );
 };

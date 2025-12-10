@@ -1,16 +1,16 @@
 /*
- * หน้า: จัดการที่พัก (Super Admin)
- * คำอธิบาย :
- *   - แสดงตารางรายการที่พักในชุมชน
+ * หน้า: จัดการที่พักในชุมชน (Super Admin)
+ * คำอธิบาย:
+ *   - แสดงรายการที่พักทั้งหมดของชุมชน
  *   - รองรับค้นหา / ลบทีละรายการ / ลบหลายรายการ (Bulk Delete)
- *   - Breadcrumb อิง Component กลาง
- *   - Role: SuperAdmin เท่านั้น
+ *   - Breadcrumb ใช้ Component กลาง
+ *   - ใช้เฉพาะ Role: SuperAdmin
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-/* Components */
+/* ---------------- Components ---------------- */
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import { Modal } from "@/Components/Modal/Modal";
@@ -18,14 +18,16 @@ import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { TrashIcon } from "@/Components/Tables/Icon";
 
-/* Services */
+/* ---------------- Services ---------------- */
 import { getHomestaysAll, deleteHomestayBySuperAdmin } from "@/Services/homestay-services";
 import { getCommunityById } from "@/Services/community-service";
 
-/* Types */
+/* ---------------- Types ---------------- */
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
-// ================= Types =================
+/**
+ * โครงสร้างข้อมูลของ Homestay สำหรับตาราง
+ */
 type HomestayRow = {
   id: number;
   name: string;
@@ -33,36 +35,45 @@ type HomestayRow = {
   type: string;
 };
 
-// ================= Utilities =================
-const normalizeText = (s: string) =>
-  (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+/**
+ * normalizeText
+ * คำอธิบาย: ทำข้อความให้เป็นรูปแบบที่เหมาะกับการค้นหา
+ * Input: string
+ * Output: string (lowercase + trim + normalize)
+ */
+const normalizeText = (text: string) =>
+  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-// ================= Component =================
+
+/* Component */
 export default function ManageHomestaySuperAdmin() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
 
-  // ====== Data State ======
+  /* State : Data */
   const [communityName, setCommunityName] = useState("-");
   const [rows, setRows] = useState<HomestayRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // ====== Pagination & Search State ======
+  /* State : Search / Pagination */
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // ====== Delete State ======
+  /* State : Delete Modal */
   const [selectedRows, setSelectedRows] = useState<HomestayRow[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [isOpenBulkConfirm, setIsOpenBulkConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false); // 🔥 ป้องกัน modal เด้งซ้ำ
+  const [isDeleting, setIsDeleting] = useState(false); // ป้องกัน modal เด้งซ้ำ
 
-  // ================= Load Community Name =================
+  /**
+   * Fetch ชื่อชุมชนตาม communityId
+   * ใช้แสดงใน Breadcrumb และ Header
+   */
   useEffect(() => {
     async function fetchCommunity() {
       try {
@@ -76,7 +87,12 @@ export default function ManageHomestaySuperAdmin() {
     fetchCommunity();
   }, [communityId]);
 
-  // ================= Load Homestays Data =================
+  /**
+   * fetchData
+   * คำอธิบาย: โหลดรายการโฮมสเตย์ตาม communityId พร้อม pagination
+   * Input: currentPage, pageSize
+   * Output: อัปเดต rows, totalPages, totalCount
+   */
   const fetchData = useCallback(async () => {
     if (!communityId) return;
 
@@ -111,7 +127,10 @@ export default function ManageHomestaySuperAdmin() {
     fetchData();
   }, [fetchData]);
 
-  // ================= Search Filter =================
+  /**
+   * filteredRows
+   * คำอธิบาย: กรองข้อมูลตามคำค้นหา (searchQuery)
+   */
   const filteredRows = useMemo(() => {
     const q = normalizeText(searchQuery);
     if (!q) return rows;
@@ -120,6 +139,10 @@ export default function ManageHomestaySuperAdmin() {
     );
   }, [rows, searchQuery]);
 
+  /**
+   * handleDelete
+   * คำอธิบาย: ลบ 1 รายการตาม deleteId
+   */
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return;
 
@@ -140,6 +163,11 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
+  /**
+   * handleBulkDelete
+   * คำอธิบาย: ลบหลายรายการพร้อมกัน
+   * Input: selectedRows[]
+   */
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0 || isDeleting) return;
 
@@ -161,6 +189,7 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
+  /* Cancel Delete */
   const handleCancelDelete = () => {
     setIsOpenConfirm(false);
     setDeleteId(null);
@@ -171,6 +200,10 @@ export default function ManageHomestaySuperAdmin() {
     setSelectedRows([]);
   };
 
+  /**
+   * columns
+   * คำอธิบาย: คอลัมน์สำหรับแสดงข้อมูลในตาราง
+   */
   const columns: Column<HomestayRow>[] = useMemo(
     () => [
       {
@@ -198,7 +231,6 @@ export default function ManageHomestaySuperAdmin() {
     [communityId]
   );
 
-  /* ---------------- Row Actions ---------------- */
   const rowActions: DataTableActionsConfig<HomestayRow> = useMemo(
     () => ({
       header: "จัดการ",
@@ -217,7 +249,6 @@ export default function ManageHomestaySuperAdmin() {
     [communityId, navigate]
   );
 
-  /* ---------------- Bulk Actions ---------------- */
   const bulkActions: BulkAction<HomestayRow>[] = useMemo(
     () => [
       {
@@ -235,10 +266,7 @@ export default function ManageHomestaySuperAdmin() {
     []
   );
 
-  // ================= Pagination Handlers =================
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  const handlePageChange = (page: number) => setCurrentPage(page);
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
@@ -250,7 +278,8 @@ export default function ManageHomestaySuperAdmin() {
     setCurrentPage(1);
   };
 
-  // ================= Render =================
+
+  /* Render */
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}
@@ -265,13 +294,10 @@ export default function ManageHomestaySuperAdmin() {
       <div className="flex flex-col gap-2 -mt-4">
         <h1 className="text-xl font-bold">จัดการที่พัก</h1>
 
-        {/* Search & Add Button */}
+        {/* Search + Add Button */}
         <div className="flex items-center justify-between gap-3 w-full">
           <div className="flex-1 max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
+            <SearchBarTable value={searchQuery} onChange={handleSearchChange} />
           </div>
           <div className="ml-auto">
             <Button
@@ -284,10 +310,12 @@ export default function ManageHomestaySuperAdmin() {
         </div>
       </div>
 
+      {/* Error Message */}
       {errorMessage && (
         <div className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded">{errorMessage}</div>
       )}
 
+      {/* Data Table */}
       <DataTable<HomestayRow>
         data={filteredRows}
         getKey={(row) => String(row.id)}
@@ -309,7 +337,7 @@ export default function ManageHomestaySuperAdmin() {
         theme="brand"
       />
 
-      {/* Modal — Single Delete */}
+      {/* Single Delete Modal */}
       <Modal
         open={isOpenConfirm}
         title="ยืนยันการลบที่พัก"
@@ -318,7 +346,7 @@ export default function ManageHomestaySuperAdmin() {
         onCancel={handleCancelDelete}
       />
 
-      {/* Modal — Bulk Delete */}
+      {/* Bulk Delete Modal */}
       <Modal
         open={isOpenBulkConfirm}
         title="ยืนยันการลบหลายรายการ"

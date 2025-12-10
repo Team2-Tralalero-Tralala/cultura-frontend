@@ -1,43 +1,27 @@
-/*
- * คำอธิบาย : หน้าแสดงรายการคำขอคืนเงินของชุมชน (Admin)
- * หน้าที่ :
- *   - แสดงตารางคำขอคืนเงินของนักท่องเที่ยวในชุมชนที่ตนดูแล
- *   - มีฟังก์ชันค้นหา / อนุมัติ / ปฏิเสธ (พร้อมกรอกเหตุผล)
- *   - รองรับการจัดการหลายรายการ (Bulk Action)
- * Input : ดึงข้อมูลจาก API โดยตรง
- * Output : ตารางคำขอคืนเงินพร้อม Pagination, Modal, และการอัปเดตสถานะ
+/**
+ * คำอธิบาย : หน้าจัดการคำขอคืนเงิน (Admin)
+ * ปรับปรุง UI ให้เหมือนฝั่ง Member แต่ใช้ Service ของ Admin
  */
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
-import DataTable from "@/Components/Tables/Index";
+// Components
+import DataTable from "@/Components/Tables/DataTable";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-import type { Column, BulkAction, Pagination } from "@/Components/Tables/Types";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+
+// Services (Admin)
 import {
   fetchRefundRequests,
   approveRefund,
   rejectRefund,
 } from "@/Services/booking-service";
 
-/*
- * ฟังก์ชัน : normalizeText
- * คำอธิบาย : แปลงข้อความให้เป็นตัวพิมพ์เล็ก ลบช่องว่างเกิน และ normalize สำหรับค้นหา
- * Input : s (string)
- * Output : string ที่ถูก normalize แล้ว
- */
-const normalizeText = (s: string) =>
-  (s ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+// Types
+import type { Column } from "@/Components/Tables/Types";
 
-/*
- * คำอธิบาย : โครงสร้างข้อมูลคำขอคืนเงินที่ใช้แสดงในตาราง
- */
 type RefundRow = {
   id: number;
   touristName: string;
@@ -47,283 +31,382 @@ type RefundRow = {
   transferSlip: string;
 };
 
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
+ * รองรับทั้งแบบ Full URL และ Relative Path
+ * Input : path (string | null) - ที่อยู่ของไฟล์รูปภาพ (เช่น "uploads/slip.jpg" หรือ "http://...")
+ * Output : string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
+ */
+const getSlipImageUrl = (path: string | null): string | null => {
+  if (!path || path === "-") return null;
+  
+  let cleanPath = path.replace(/\\/g, "/");
+  if (cleanPath.startsWith("http")) return cleanPath;
+  if (cleanPath.startsWith("/")) cleanPath = cleanPath.substring(1);
+  
+  const fileBaseUrl = import.meta.env.VITE_FILE_URL;
+  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  
+  if (fileBaseUrl) return `${fileBaseUrl}/${cleanPath}`;
+  const prefix = cleanPath.startsWith("uploads") ? "" : "uploads/";
+  return `${apiBaseUrl}/${prefix}${cleanPath}`;
+};
+
+/**
+ * คำอธิบาย : กำหนดโครงสร้างคอลัมน์ (Column Definition)
+ */
+const makeColumns = (
+  onApprove: (row: RefundRow) => void,
+  onReject: (row: RefundRow) => void,
+  onNavigate: (id: number) => void,
+  onOpenSlip: (url: string) => void
+): Column<RefundRow>[] => [
+  {
+    key: "touristName",
+    header: "ชื่อผู้จอง",
+    className: "min-w-[220px]",
+    render: (row) => (
+      <div
+        onClick={() => onNavigate(row.id)}
+        className="cursor-pointer text-dark-green hover:underline"
+      >
+        {row.touristName}
+      </div>
+    ),
+  },
+  {
+    key: "packageName",
+    header: "ชื่อกิจกรรม",
+    className: "min-w-[220px]",
+    render: (row) => (
+      <div
+        onClick={() => onNavigate(row.id)}
+        className="cursor-pointer text-dark-green hover:underline"
+      >
+        {row.packageName}
+      </div>
+    ),
+  },
+  {
+    key: "totalPrice",
+    header: "ราคารวม",
+    className: "min-w-[120px] text-left pl-4",
+    render: (row) => <div className="text-left">{row.totalPrice}</div>,
+  },
+  {
+    key: "status",
+    header: "สถานะ",
+    className: "min-w-[140px]",
+    render: (row) => {
+      const statusTextMap: Record<string, string> = {
+        REFUND_PENDING: "รอคืนเงิน",
+        REFUNDED: "อนุมัติแล้ว",
+        REFUND_REJECTED: "ปฏิเสธแล้ว",
+      };
+      const statusKey = row.status?.toUpperCase() || "";
+      return <div>{statusTextMap[statusKey] ?? row.status}</div>;
+    },
+  },
+  {
+    key: "transferSlip",
+    header: "หลักฐาน",
+    className: "min-w-[180px]",
+    render: (row) => {
+      const fullUrl = getSlipImageUrl(row.transferSlip);
+      if (!fullUrl) return <div>-</div>;
+
+      const fileName = row.transferSlip.split("/").pop() ?? "หลักฐานการโอน";
+
+      return (
+        <button
+          type="button"
+          onClick={() => onOpenSlip(fullUrl)}
+          title={fileName}
+          className="text-[#4A816F] underline underline-offset-2 hover:text-[#2f5b49] max-w-[180px] truncate block text-left"
+        >
+          {fileName}
+        </button>
+      );
+    },
+  },
+  {
+    key: "actions",
+    header: <div className="text-center w-full">จัดการ</div>,
+    className: "w-[200px] text-center pr-2",
+    render: (row) => {
+      const isPending = row.status?.toUpperCase() === "REFUND_PENDING";
+      return isPending ? (
+        <div className="flex justify-center items-center gap-3">
+          <button
+            onClick={() => onReject(row)}
+            className="w-[77px] h-[31px] text-[16px] rounded-md border border-[#4A816F] bg-white text-[#4A816F] hover:bg-[#E6F0EC]"
+          >
+            ปฏิเสธ
+          </button>
+          <button
+            onClick={() => onApprove(row)}
+            className="w-[77px] h-[31px] text-[16px] rounded-md bg-[#4A816F] text-white hover:bg-[#3B6D5D]"
+          >
+            อนุมัติ
+          </button>
+        </div>
+      ) : (
+        <div className="text-gray-400 text-center">-</div>
+      );
+    },
+  },
+];
+
 export function ManageRefundBooking() {
-  // State หลัก
+  const navigate = useNavigate();
+
   const [rows, setRows] = useState<RefundRow[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({
+  const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
     limit: 10,
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Modal ยืนยันอนุมัติ
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState("");
-  const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
+  // Modal States
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [isRejectOpen, setRejectOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<RefundRow | null>(null);
 
-  // Modal ปฏิเสธ (มีเหตุผล)
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [selectedRejectId, setSelectedRejectId] = useState<number | null>(null);
-  const [isRejecting, setIsRejecting] = useState(false);
+  // Slip Modal States
+  const [isSlipOpen, setSlipOpen] = useState(false);
+  const [slipUrl, setSlipUrl] = useState<string | null>(null);
 
-  /*
-   * ฟังก์ชัน : fetchData
-   * คำอธิบาย : ดึงข้อมูลคำขอคืนเงินทั้งหมดของชุมชนจาก API
-   * Input : pagination.currentPage, pagination.limit
-   * Output : เซตข้อมูลตารางและข้อมูลหน้าปัจจุบัน
+  /**
+   * คำอธิบาย : ดึงข้อมูลคำขอคืนเงินจาก Admin API
    */
-  const fetchData = useCallback(async () => {
+  const reload = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const res = await fetchRefundRequests(pagination.currentPage, pagination.limit);
-      const payload = res.data?.data;
-      const list = Array.isArray(payload?.data) ? payload.data : [];
-      const pg = payload?.pagination ?? {};
+      // เรียก API Admin
+      const response = await fetchRefundRequests(currentPage, pageSize);
+      // responseBody = ส่วนข้อมูลหลักที่ได้จาก response
+      const responseBody = response.data?.data || response.data;
+      // refundRequests = รายการคำขอคืนเงินที่เป็น Array
+      const refundRequests = Array.isArray(responseBody?.data) 
+        ? responseBody.data 
+        : (Array.isArray(responseBody) ? responseBody : []);
+      // paginationInfo = ข้อมูลเกี่ยวกับการแบ่งหน้า
+      const paginationInfo = responseBody?.pagination || response.data?.pagination || {};
 
-      const mapped: RefundRow[] = list.map((r: any) => ({
-        id: r.id,
-        touristName: `${r.tourist?.fname ?? ""} ${r.tourist?.lname ?? ""}`.trim(),
-        packageName: r.package?.name ?? "-",
-        totalPrice: `฿${((r.package?.price ?? 0) * (r.totalParticipant ?? 1)).toLocaleString()}`,
-        status:
-          r.status === "REFUND_PENDING"
-            ? "รอคืนเงิน"
-            : r.status === "REFUNDED"
-              ? "อนุมัติแล้ว"
-              : r.status === "REFUND_REJECTED"
-                ? "ปฏิเสธแล้ว"
-                : "-",
-        transferSlip: r.transferSlip
-          ? `${import.meta.env.VITE_API_URL}/${r.transferSlip}`
-          : "-",
+      const mappedRows: RefundRow[] = refundRequests.map((item: any) => ({
+        id: item.id,
+        touristName: `${item.tourist?.fname ?? ""} ${item.tourist?.lname ?? ""}`.trim(),
+        packageName: item.package?.name ?? "-",
+        totalPrice: `฿${((item.package?.price ?? 0) * (item.totalParticipant ?? 1)).toLocaleString()}`,
+        status: item.status,
+        transferSlip: item.transferSlip || "-", 
       }));
 
-      setRows(mapped);
-      setPagination((prev) => ({
-        ...prev,
-        totalPages: pg.totalPages ?? 1,
-        totalCount: pg.totalCount ?? mapped.length,
-      }));
+      setRows(mappedRows);
+      setPagination({
+          currentPage: paginationInfo.currentPage ?? currentPage,
+          totalPages: paginationInfo.totalPages ?? 1,
+          totalCount: paginationInfo.totalCount ?? refundRequests.length,
+          limit: paginationInfo.limit ?? pageSize
+      });
+
     } catch (error: any) {
-      console.error("Fetch refund requests failed:", error);
-      setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setErrorMessage(error.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.currentPage, pagination.limit]);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    reload();
+  }, [reload]);
 
-  /*
-   * ฟังก์ชัน : filteredRows
-   * คำอธิบาย : กรองข้อมูลในตารางตามคำค้น
-   */
+  // Client-side filtering
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
-    return rows.filter(
-      (r) =>
-        !q ||
-        r.touristName.toLowerCase().includes(q) ||
-        r.packageName.toLowerCase().includes(q)
+    const keyword = searchQuery.toLowerCase();
+    return rows.filter((row) =>
+      [row.touristName, row.packageName, row.status].some((value) =>
+        value.toLowerCase().includes(keyword)
+      )
     );
   }, [rows, searchQuery]);
 
-  // คอลัมน์ของ DataTable
-  const columns: Column<RefundRow>[] = [
-    { key: "touristName", header: "ชื่อผู้จอง" },
-    { key: "packageName", header: "ชื่อกิจกรรม" },
-    { key: "totalPrice", header: "ราคารวม" },
-    { key: "status", header: "สถานะ" },
-    {
-      key: "transferSlip",
-      header: "หลักฐาน",
-      render: (row) =>
-        row.transferSlip !== "-" ? (
-          <a
-            href={row.transferSlip}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#4A816F] underline hover:text-[#376454]"
-          >
-            ดูหลักฐาน
-          </a>
-        ) : (
-          "-"
-        ),
-    },
-    {
-      key: "actions",
-      header: <div className="text-center pr-4">จัดการ</div>,
-      className: "!text-right",
-      width: "160px",
-      render: (row) =>
-        row.status === "รอคืนเงิน" ? (
-          <div className="flex gap-2 justify-end pr-4">
-            {/* ปุ่มปฏิเสธ */}
-            <button
-              onClick={() => {
-                setSelectedRejectId(row.id);
-                setRejectModalOpen(true);
-              }}
-              className="border border-[#4A816F] text-[#4A816F] bg-white hover:bg-[#E6F0EC]
-                         text-[13px] h-[31px] min-w-[77px] rounded-md px-3 py-[2px]
-                         transition-colors duration-200"
-            >
-              ปฏิเสธ
-            </button>
+  /**
+   * คำอธิบาย : ดำเนินการอนุมัติคำขอคืนเงิน (Admin Service)
+   */
+  const handleApprove = async (row: RefundRow) => {
+    try {
+        setIsLoading(true);
+        await approveRefund(row.id); // Admin Service
+        await reload();
+    } catch (error: any) {
+        console.error(error);
+        setErrorMessage(error.message || "อนุมัติไม่สำเร็จ");
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
-            {/* ปุ่มอนุมัติ */}
-            <button
-              onClick={() => {
-                setModalTitle("ยืนยันการอนุมัติ");
-                setModalText(
-                  `คุณต้องการอนุมัติคำขอคืนเงินของ "${row.touristName}" หรือไม่?`
-                );
-                setOnConfirmAction(() => async () => {
-                  try {
-                    await approveRefund(row.id);
-                    await fetchData();
-                  } catch (err) {
-                    console.error("Approve failed:", err);
-                    alert("เกิดข้อผิดพลาดในการอนุมัติคำขอ");
-                  }
-                });
-                setModalOpen(true);
-              }}
-              className="bg-[#4A816F] text-white hover:bg-[#3B6D5D]
-                         text-[13px] h-[31px] min-w-[77px] rounded-md px-3 py-[2px]
-                         transition-colors duration-200"
-            >
-              อนุมัติ
-            </button>
-          </div>
-        ) : (
-          <div className="text-gray-500 text-center pr-4">-</div>
-        ),
-    },
-  ];
+  /**
+   * คำอธิบาย : ดำเนินการปฏิเสธคำขอคืนเงิน (Admin Service)
+   */
+  const handleReject = async (row: RefundRow, reason?: string) => {
+    try {
+        setIsLoading(true);
+        await rejectRefund(row.id, reason || ""); // Admin Service
+        await reload();
+    } catch (error: any) {
+        console.error(error);
+        setErrorMessage(error.message || "ปฏิเสธไม่สำเร็จ");
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
-  // Bulk Actions (อนุมัติทั้งหมด)
-  const bulkActions: BulkAction<RefundRow>[] = [
-    {
-      id: "bulk-approve",
-      label: "อนุมัติทั้งหมด",
-      onClick: (rows) => {
-        setModalTitle("ยืนยันอนุมัติทั้งหมด");
-        setModalText(`คุณต้องการอนุมัติคำขอคืนเงิน ${rows.length} รายการหรือไม่?`);
-        setOnConfirmAction(() => async () => {
-          for (const r of rows) {
-            try {
-              await approveRefund(r.id);
-            } catch (err) {
-              console.error(`Approve failed for ID ${r.id}:`, err);
-            }
-          }
-          await fetchData();
-        });
-        setModalOpen(true);
-      },
-    },
-  ];
+  const columns = useMemo(() => makeColumns(
+    (row) => { setSelectedRow(row); setConfirmOpen(true); },
+    (row) => { setSelectedRow(row); setRejectOpen(true); },
+    (id) => navigate(`/admin/booking/${id}`),
+    (url) => { setSlipUrl(url); setSlipOpen(true); }
+  ), [navigate]);
 
   return (
-    <div className="space-y-4 cursor-default">
-      {/* Breadcrumb */}
-      <div>
-        <Breadcrumb
-          current={{
-            label: "คำขอคืนเงิน",
-            to: `/admin/booking/refund`,
-          }}
-        />
-      </div>
+    <div className="space-y-4">
+      <Breadcrumb
+        current={{
+          label: "คำขอคืนเงิน",
+          to: "/admin/booking/refunds",
+        }}
+      />
 
-      {/* Header + Toolbar */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">คำขอคืนเงิน</h1>
-        <div className="flex items-center gap-3">
-          <div className="max-w-md">
+      <div className="flex flex-col gap-2 -mt-4">
+        <h1 className="text-[20px] font-bold text-black">คำขอคืนเงิน</h1>
+        <div className="flex items-center gap-2 w-full">
+          <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => setSearchQuery(event.target.value)}
             />
           </div>
         </div>
       </div>
 
-      {/* Error */}
-      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
+      {errorMessage && (
+        <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
+            {errorMessage}
+        </div>
+      )}
 
-      {/* Table */}
       <DataTable<RefundRow>
         data={filteredRows}
         columns={columns}
         getKey={(row) => String(row.id)}
-        bulkActions={bulkActions}
         selectable
+        theme="brand"
+        isLoading={isLoading}
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: p }))
-        }
-        onPageSizeChange={(s) =>
-          setPagination((prev) => ({ ...prev, limit: s, currentPage: 1 }))
-        }
-        isLoading={isLoading}
-        theme="brand"
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
       />
 
-      {/* Modal ยืนยันอนุมัติ */}
+      {/* Modal ยืนยันการอนุมัติ */}
       <Modal
-        open={modalOpen}
-        title={modalTitle}
-        text={modalText}
+        open={isConfirmOpen }
+        title="ยืนยันการอนุมัติคำขอคืนเงิน"
+        text={selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""}
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
-        onConfirm={() => {
-          onConfirmAction();
-          setModalOpen(false);
+        onConfirm={async () => {
+          if (!selectedRow) return;
+          const row = selectedRow;
+          setConfirmOpen(false); 
+          await handleApprove(row);
+          setSelectedRow(null);
         }}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => { setConfirmOpen(false); setSelectedRow(null); }}
       />
 
-      {/* Modal ปฏิเสธ (พร้อมกรอกเหตุผล) */}
+      {/* Modal ปฏิเสธคำขอ */}
       <RejectModal
-        open={rejectModalOpen}
+        open={isRejectOpen}
         title="ปฏิเสธคำขอคืนเงิน"
-        text="กรุณาระบุเหตุผลการปฏิเสธ เพื่อส่งให้นักท่องเที่ยวทราบ"
-        confirmText={isRejecting ? "กำลังส่ง..." : "ส่ง"}
+        text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
+        confirmText="ส่ง"
         cancelText="ยกเลิก"
-        maxLength={100}
         onConfirm={async (reason) => {
-          if (!selectedRejectId) return;
-          setIsRejecting(true);
-          try {
-            await rejectRefund(selectedRejectId, reason);
-            await fetchData();
-          } catch (err) {
-            console.error("Reject failed:", err);
-            alert("เกิดข้อผิดพลาดในการปฏิเสธคำขอ");
-          } finally {
-            setIsRejecting(false);
-            setRejectModalOpen(false);
-            setSelectedRejectId(null);
-          }
+          if (!selectedRow) return;
+          const row = selectedRow;
+          setRejectOpen(false);
+          await handleReject(row, reason);
+          setSelectedRow(null);
         }}
-        onCancel={() => {
-          setRejectModalOpen(false);
-          setSelectedRejectId(null);
-        }}
+        onCancel={() => { setRejectOpen(false); setSelectedRow(null); }}
       />
+
+      {/* Modal แสดงรูปภาพสลิป */}
+      {isSlipOpen  && slipUrl && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+          <div
+            className="
+              relative
+              bg-[#E5E5E5]/70
+              rounded-[24px]
+              shadow-lg
+              w-[650px]
+              h-[650px]
+              max-w-[95vw]
+              max-h-[90vh]
+              flex
+              items-center
+              justify-center
+            "
+          >
+            {/* ปุ่มปิด */}
+            <button
+              type="button"
+              onClick={() => {
+                setSlipOpen(false);
+                setSlipUrl(null);
+              }}
+              className="
+                absolute
+                right-4
+                top-3
+                text-2xl
+                text-gray-700
+                hover:text-black
+              "
+            >
+              ×
+            </button>
+
+            {/* โซนรูป */}
+            <div className="w-full h-full p-6 flex items-center justify-center">
+              <img
+                src={slipUrl}
+                alt="หลักฐานการโอน"
+                className="
+                  max-w-full
+                  max-h-full
+                  object-contain
+                  rounded-[16px]
+                  bg-white
+                "
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

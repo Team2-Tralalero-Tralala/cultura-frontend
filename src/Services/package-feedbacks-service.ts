@@ -71,3 +71,30 @@ export const replyPackageFeedback = async (
 
   return response.data;
 };
+
+/**
+ * ฟังก์ชัน : replyPackageFeedbackAdmin 
+ * คำอธิบาย : เรียก API เพื่อตอบกลับข้อความรีวิวของสมาชิก
+ * Route : POST /member/feedback/:feedbackId/reply
+ *
+ * Input :
+ *   - feedbackId : หมายเลข Feedback ที่ต้องการตอบกลับ
+ *   - payload : { replyMessage: string } ข้อความตอบกลับรีวิว
+ *
+ * Output :
+ *   - ข้อมูล Feedback ที่ถูกอัปเดตแล้ว (ส่วนของการตอบกลับ)
+ */
+export const replyPackageFeedbackAdmin = async (
+  feedbackId: number,
+  payload: ReplyFeedbackPayload
+) => {
+  const response = await axios.post(
+    `${apiUrl}/admin/feedback/${feedbackId}/reply`,
+    payload,
+    {
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};

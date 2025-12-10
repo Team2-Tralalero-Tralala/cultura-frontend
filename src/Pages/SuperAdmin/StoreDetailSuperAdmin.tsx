@@ -11,19 +11,34 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ChevronRight, Edit, ArrowLeft } from "lucide-react";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
+/** Environment URL */
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BACKEND_BASE_URL = API_URL.replace(/\/api$/, ""); // เช่น "http://localhost:3000"
+
 /**
- * Interface: Community
- * อธิบายข้อมูลชุมชนที่ร้านค้าอยู่ภายใต้
+ * ฟังก์ชัน buildImageUrl
+ * จัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้องเสมอ
  */
+const buildImageUrl = (imagePath?: string): string => {
+  if (!imagePath) return "";
+
+  // ถ้าเป็น URL เต็มอยู่แล้ว (http/https)
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  // ลบ "/" ด้านหน้า เช่น "/uploads/a.jpg" -> "uploads/a.jpg"
+  const cleanPath = imagePath.replace(/^\/+/, "");
+
+  return `${BACKEND_BASE_URL}/${cleanPath}`;
+};
+
+/** Interface */
 interface Community {
   id: number;
   name: string;
 }
 
-/**
- * Interface: Store
- * อธิบายโครงสร้างข้อมูลร้านค้าที่ได้รับจาก backend หลังจัดรูปแบบแล้ว
- */
 interface Store {
   id: number;
   name: string;
@@ -40,44 +55,35 @@ interface Store {
 }
 
 const StoreDetailPage = () => {
-  /** อ่าน ID จาก URL */
   const { id } = useParams<{ id: string }>();
-
-  /** ใช้ navigate เพื่อไปหน้าอื่น */
   const navigate = useNavigate();
 
-  /** ข้อมูลร้านค้า */
   const [store, setStore] = useState<Store | null>(null);
-
-  /** สถานะโหลด */
   const [loading, setLoading] = useState(true);
 
   /**
-   * Function: fetchStore
-   * วัตถุประสงค์: โหลดข้อมูลร้านค้าจาก API และจัดรูปแบบก่อนเก็บใน state
+   * โหลดข้อมูลร้านค้า
    */
   const fetchStore = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/super/stores/${id}`, {
+      const res = await fetch(`${API_URL}/super/stores/${id}`, {
         credentials: "include",
       });
+
       const result = await res.json();
 
       if (result?.data) {
         const data = result.data;
-        const backendUrl = "http://localhost:3000/uploads";
 
-        /** จัดรูปแบบรูปภาพ */
+        /** แปลงรูปภาพทั้งหมดจาก backend */
         const images: string[] =
           data.storeImage?.map((img: any) =>
             img.image
-              ? img.image.startsWith("http")
-                ? img.image
-                : `${backendUrl}/${img.image}`
-              : `${backendUrl}/store-main.jpg`
-          ) || [`${backendUrl}/store-main.jpg`];
+              ? buildImageUrl(img.image)
+              : buildImageUrl("uploads/store-main.jpg")
+          ) || [buildImageUrl("uploads/store-main.jpg")];
 
-        /** จัดรูปแบบข้อมูลร้านค้าเพื่อใช้ใน UI */
+        /** จัดรูปแบบข้อมูลร้านค้า */
         const formatted: Store = {
           id: data.id,
           name: data.name ?? "-",
@@ -119,26 +125,16 @@ const StoreDetailPage = () => {
     }
   };
 
-  /**
-   * Effect: โหลดข้อมูลร้านเมื่อเปิดหน้า หรือเมื่อ id เปลี่ยน
-   */
+  /** โหลดข้อมูลเมื่อเปิดหน้า */
   useEffect(() => {
     fetchStore();
   }, [id]);
 
-  /** แสดงสถานะโหลด */
   if (loading) return <div className="p-6 text-gray-600">กำลังโหลดข้อมูล...</div>;
-
-  /** ไม่มีข้อมูล */
   if (!store) return <div className="p-6 text-red-500">ไม่พบข้อมูลร้านค้า</div>;
 
-  /** เลือกรูปแรกเป็นรูปปก */
   const coverImage = store.images[0];
 
-  /**
-   * Function: handleEditClick
-   * วัตถุประสงค์: ไปหน้าแก้ไขร้านค้า
-   */
   const handleEditClick = () => {
     if (!id) return;
     navigate(`/super/community/${store.community?.id}/store/${id}/edit`);
@@ -157,13 +153,16 @@ const StoreDetailPage = () => {
       {/* Main Section */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          {/* Back Button Section */}
-          <div className="mt-1 mr-3 cursor-pointer flex items-center gap-2" onClick={() => navigate("/super/community/:communityId/stores/all")}>
+          {/* Back Button */}
+          <div
+            className="mt-1 mr-3 cursor-pointer flex items-center gap-2"
+            onClick={() => navigate(`/super/community/${store.community?.id}/stores/all`)}
+          >
             <ArrowLeft className="w-5 h-5" />
             <h1 className="text-[20px] font-bold">รายละเอียดร้านค้า</h1>
           </div>
 
-          {/* ปุ่มแก้ไข */}
+          {/* Edit Button */}
           <button
             onClick={handleEditClick}
             className="flex items-center bg-[#055035] text-white px-4 py-2 rounded-lg hover:bg-green-900 transition"
@@ -197,7 +196,7 @@ const StoreDetailPage = () => {
               <span className="font-bold">รายละเอียดร้านค้า :</span> {store.detail}
             </p>
 
-            {/* แท็ก */}
+            {/* Tags */}
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="font-bold text-[16px]">แท็ก :</span>
               {store.tags.length > 0 ? (
@@ -216,7 +215,7 @@ const StoreDetailPage = () => {
           </div>
         </div>
 
-        {/* รูปเพิ่มเติม */}
+        {/* Additional Images */}
         {store.images.length > 1 && (
           <div className="mt-6">
             <h2 className="text-[20px] font-bold mb-3">รูปภาพเพิ่มเติม</h2>
@@ -233,12 +232,11 @@ const StoreDetailPage = () => {
           </div>
         )}
 
-        {/* แผนที่ */}
+        {/* Map */}
         <h2 className="text-[20px] font-bold mt-10 mb-3">แผนที่</h2>
 
         {store.location ? (
           <>
-            {/* Map iframe */}
             <div className="w-full h-[300px] rounded-xl overflow-hidden mb-4">
               <iframe
                 title="store-map"
@@ -247,17 +245,18 @@ const StoreDetailPage = () => {
                 loading="lazy"
               ></iframe>
             </div>
-            {/* Location Info */}
+
             <div className="grid md:grid-cols-2 gap-6 text-gray-700 mb-6 mt-4">
               <div className="mt-6">
                 <p className="mb-2">
                   <strong>ที่อยู่ :</strong> {store.location.address}
                 </p>
                 <p className="mb-2">
-                  <strong>ละติจูด / ลองจิจูด :</strong> {store.location.latitude}, {store.location.longitude}
+                  <strong>ละติจูด / ลองจิจูด :</strong> {store.location.latitude},{" "}
+                  {store.location.longitude}
                 </p>
                 <p className="mb-2">
-                  <strong>OpenStreetMap URL :</strong>{" "}
+                  <strong>Google Maps URL :</strong>{" "}
                   <a
                     href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}
                     target="_blank"
@@ -268,13 +267,13 @@ const StoreDetailPage = () => {
                   </a>
                 </p>
               </div>
+
               <div className="mt-6">
                 <p className="mb-2">
                   <strong>คำอธิบายที่อยู่ :</strong> {store.location.detail}
                 </p>
               </div>
             </div>
-
           </>
         ) : (
           <p className="text-gray-500">ไม่มีข้อมูลตำแหน่งร้านค้า</p>

@@ -56,11 +56,13 @@ interface ThailandLocationSelectProps {
     province?: boolean;
     district?: boolean;
     subdistrict?: boolean;
+    postalCode?: boolean;
   };
   helperText?: {
     province?: string;
     district?: string;
     subdistrict?: string;
+    postalCode?: string;
   };
 }
 
@@ -116,11 +118,13 @@ export default function ThailandLocationSelector({
     province: false,
     district: false,
     subdistrict: false,
+    postalCode: false,
   },
   helperText = {
     province: "",
     district: "",
     subdistrict: "",
+    postalCode: "",
   },
 }: ThailandLocationSelectProps) {
   const [geoData, setGeoData] = useState<Record<string, Province>>({});
@@ -153,7 +157,11 @@ export default function ThailandLocationSelector({
       province: value.province,
       district: district ? value.district : "",
       subdistrict: subdistrict ? value.subdistrict : "",
-      postalCode: subdistrict?.postalCode || value.postalCode || "",
+      postalCode: subdistrict?.postalCode
+        ? String(subdistrict.postalCode)
+        : value.postalCode
+        ? String(value.postalCode)
+        : "",
     });
   }, [ready]);
 
@@ -176,7 +184,7 @@ export default function ThailandLocationSelector({
     if (!district) return [];
     return Object.keys(district.subdistricts).map((name) => ({
       label: name,
-      postalCode: district.subdistricts[name].postalCode,
+      postalCode: String(district.subdistricts[name].postalCode),
     }));
   }, [geoData, value?.province, value?.district]);
 
@@ -215,7 +223,7 @@ export default function ThailandLocationSelector({
     onChange({
       ...value,
       subdistrict: newValue?.label || "",
-      postalCode: newValue?.postalCode || "",
+      postalCode: newValue?.postalCode ? String(newValue.postalCode) : "",
     });
   };
   /*
@@ -402,6 +410,8 @@ export default function ThailandLocationSelector({
           placeholder="รหัสไปรษณีย์"
           required
           readOnly={true}
+          error={error?.postalCode}
+          helperText={helperText?.postalCode}
         />
       </div>
     </div>

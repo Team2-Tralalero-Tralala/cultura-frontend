@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * คำอธิบาย : หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import React, {  useState, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 // Components
 import Button from "@/Components/Button";
@@ -19,6 +21,7 @@ import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
 // Types
 import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import axios from "axios";
 
 // ประเภทข้อมูลร้านค้าในตาราง
 type StoreRow = {
@@ -82,6 +85,9 @@ export default function ManageStoreAdmin() {
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 
   /*
 * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
@@ -175,7 +181,14 @@ export default function ManageStoreAdmin() {
   * Input : storeID
   */
   const handleDelete = async (storeId: number) => {
-    console.log("ลบ store:", storeId);
+    try {
+      await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error("Failed to delete store:", error);
+      setErrorMessage("ลบร้านค้าไม่สำเร็จ");
+    }
   };
 
   /*

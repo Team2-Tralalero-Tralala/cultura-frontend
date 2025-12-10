@@ -82,6 +82,7 @@ const communitySchema = z.object({
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
 
   latitude: z
     .string("กรุณากรอกละติจูด")
@@ -185,6 +186,8 @@ export function EditCommunity() {
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
+  const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+
   const navigate = useNavigate();
 
   /*
@@ -232,6 +235,10 @@ export function EditCommunity() {
             subDistrict: data.location.subDistrict,
             postalCode: data.location.postalCode,
           },
+          province: data.location.province,
+          district: data.location.district,
+          subDistrict: data.location.subDistrict,
+          postalCode: data.location.postalCode,
         });
         setLocation({
           province: data.location.province,
@@ -313,23 +320,6 @@ export function EditCommunity() {
     }
     fetchData();
   }, [communityId]);
-
-  React.useEffect(() => {
-    if (location.province) {
-      setFormData((prev) => ({
-        ...prev,
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: location.postalCode,
-      }));
-
-      // ตรวจสอบ error ทันที
-      validateField("province", location.province);
-      validateField("district", location.district);
-      validateField("subDistrict", location.subdistrict);
-    }
-  }, [location]);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -480,7 +470,6 @@ export function EditCommunity() {
           longitude: Number(position[1]),
         },
       };
-      console.log(payload);
 
       const formDataToSend = new FormData();
 
@@ -507,17 +496,9 @@ export function EditCommunity() {
       setAlertOpen(true);
       navigate("/super/communities/all");
     } catch (error: any) {
-      const backendMessage =
-        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
-
-      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
-      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
-      // หากสำเร็จ
-      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
-
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage(cleanMessage);
+      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
       setAlertOpen(true);
     } finally {
       setIsSubmitting(false);
@@ -589,7 +570,7 @@ export function EditCommunity() {
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
               roundedCover="rounded-[5px]"
-              coverHeight={360}
+              coverHeight={500}
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
@@ -753,7 +734,7 @@ export function EditCommunity() {
                 <div className="text-base font-bold mb-1.5">
                   <h3>ที่พัก</h3>
                 </div>
-                <Link to={`/super/community/${communityId}/homestays/all`}>
+                <Link to={`/super/community/${communityId}/homestay/all`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="healthicons:home-outline"
@@ -880,9 +861,10 @@ export function EditCommunity() {
                     subDistrict: loc.subdistrict,
                     postalCode: loc.postalCode,
                   }));
-                  validateField("province", loc.province);
-                  validateField("district", loc.district);
-                  validateField("subDistrict", loc.subdistrict);
+                  if (loc.province) validateField("province", loc.province);
+                  if (loc.district) validateField("district", loc.district);
+                  if (loc.subdistrict) validateField("subDistrict", loc.subdistrict);
+                  if (loc.postalCode) validateField("postalCode", loc.postalCode);
                 }}
                 error={{
                   province: !!formErrors.province,
@@ -893,6 +875,7 @@ export function EditCommunity() {
                   province: formErrors.province,
                   district: formErrors.district,
                   subdistrict: formErrors.subDistrict,
+                  postalCode: formErrors.postalCode,
                 }}
               />
             </div>
@@ -1099,11 +1082,13 @@ export function EditCommunity() {
           </div>
         </AccordionDetails>
       </Accordion>
-      <div className="flex justify-end mt-2.5">
-        <div className="w-36">
-          <Button type="cancel">ยกเลิก</Button>
+      <div className="flex justify-end mt-5 mb-10 mr-5">
+        <div className="w-32 mr-2.5">
+          <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+            ยกเลิก
+          </Button>
         </div>
-        <div className="ml-2.5 w-36">
+        <div className="w-32">
           <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
             บันทึก
           </Button>
@@ -1111,13 +1096,23 @@ export function EditCommunity() {
       </div>
       <Modal
         open={openConfirm}
-        title="ยืนยันการแก้ไขชุมชน"
-        text="คุณต้องการยืนยันการแก้ไขชุมชนหรือไม่"
+        title="ยืนยันการแก้ไขข้อมูล"
+        text="คุณต้องการยืนยันการแก้ไขข้อมูลหรือไม่"
         onConfirm={async () => {
           setOpenConfirm(false);
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <Modal
+        open={openCancelConfirm}
+        title="ยืนยันการยกเลิก"
+        text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        onConfirm={() => {
+          setOpenCancelConfirm(false);
+          navigate(-1);
+        }}
+        onCancel={() => setOpenCancelConfirm(false)}
       />
       <ModalAlert
         open={alertOpen}

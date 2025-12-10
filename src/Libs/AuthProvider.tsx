@@ -154,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const currentRole = user.role.toLowerCase();
       switch (currentRole) {
         case "tourist":
-          navigate("/guest/home", { replace: true });
+          navigate("/", { replace: true });
           break;
         default:
           navigate("/guest/partner/login", { replace: true });

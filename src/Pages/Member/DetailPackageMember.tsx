@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Admin (Detail Package Admin)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
+ * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member (Detail Package Member)
+ * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend เฉพาะที่ Member มีสิทธิ์เข้าถึง
+ * และแสดงข้อมูลเชิงรายละเอียดเหมือนกับหน้าของ SuperAdmin
  * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไขของ Admin)
+ * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไขของ Member)
  */
 
 import { useEffect, useState } from "react";
@@ -17,13 +18,13 @@ import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
-
 /**
  * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
  * คำอธิบาย : URL ของ Backend สำหรับติดต่อ API
  * Input  : -
  * Output : string | undefined (ค่า base URL จาก environment)
  */
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface DateTimeField {
@@ -132,22 +133,21 @@ function extractDateTime(isoString?: string | null): DateTimeField {
 }
 
 /**
- * ฟังก์ชัน : DetailPackageAdmin
- * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ Admin ดูข้อมูลเชิงลึกของแพ็กเกจ
+ * ฟังก์ชัน : DetailPackageMember
+ * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ Member ดูข้อมูลเชิงลึกของแพ็กเกจ
  * Input  : - (ใช้ useParams เพื่ออ่านค่า id ของแพ็กเกจจาก URL)
- * Output : JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Admin)
+ * Output : JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจ)
  */
-export default function DetailPackageAdmin() {
+export default function DetailPackageMember() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [packageDetail, setPackageDetail] = useState<PackageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /**
    * ฟังก์ชัน : useEffect(fetchPackageDetail)
-   * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id เมื่อ component mount หรือ id เปลี่ยน
+   * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id (เฉพาะที่ Member มีสิทธิ์)
    * Input  : -
    * Output : - (อัปเดต state packageDetail, isLoading, errorMessage)
    */
@@ -155,7 +155,7 @@ export default function DetailPackageAdmin() {
     async function fetchPackageDetail() {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/packages/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/member/package/${id}`, {
           withCredentials: true,
         });
 
@@ -207,8 +207,8 @@ export default function DetailPackageAdmin() {
             ? packageRawData.packageFile.map((fileItem: any) => ({
                 id: fileItem.id,
                 path: fileItem.filePath,
-                type: (fileItem.type),
-              } as PackageFile))
+                type: fileItem.type,
+              }))
             : [],
           homestayHistories: packageRawData.homestayHistories
             ? packageRawData.homestayHistories.map(
@@ -222,11 +222,17 @@ export default function DetailPackageAdmin() {
                     ? {
                         id: homestayHistoryItem.homestay.id,
                         name: homestayHistoryItem.homestay.name ?? "",
-                        roomType: homestayHistoryItem.homestay.roomType ?? "",
-                        capacity: homestayHistoryItem.homestay.capacity ?? 0,
+                        roomType:
+                          homestayHistoryItem.homestay.type ??
+                          homestayHistoryItem.homestay.roomType ??
+                          "",
+                        capacity:
+                          homestayHistoryItem.homestay.guestPerRoom ??
+                          homestayHistoryItem.homestay.capacity ??
+                          0,
                         detail:
-                          homestayHistoryItem.homestay.description ??
                           homestayHistoryItem.homestay.detail ??
+                          homestayHistoryItem.homestay.description ??
                           "-",
                         facility: homestayHistoryItem.homestay.facility ?? "",
                         images: (
@@ -236,7 +242,7 @@ export default function DetailPackageAdmin() {
                         ).map((imageItem: any, imageIndex: number) => ({
                           id: imageItem.id ?? imageIndex,
                           path: imageItem.image ?? imageItem.filePath ?? imageItem.path ?? "",
-                          type: imageItem.type ?? "GALLERY",
+                          type: imageItem.type,
                         })),
                         location: homestayHistoryItem.homestay.location
                           ? {
@@ -255,16 +261,18 @@ export default function DetailPackageAdmin() {
         };
 
         setPackageDetail(mappedPackageDetail);
-        console.log("Mapped package data (admin):", mappedPackageDetail);
+        console.log("Mapped package data (member):", mappedPackageDetail);
       } catch (error) {
-        console.error("Error fetching package (admin):", error);
+        console.error("Error fetching package for member:", error);
         setErrorMessage("เกิดข้อผิดพลาดในการโหลดข้อมูล");
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchPackageDetail();
+    if (id) {
+      fetchPackageDetail();
+    }
   }, [id]);
 
   if (isLoading) {
@@ -276,6 +284,7 @@ export default function DetailPackageAdmin() {
   if (!packageDetail) {
     return <div className="p-6 text-gray-500">ไม่พบข้อมูลแพ็กเกจ</div>;
   }
+
   // เตรียม section แสดงที่พักในแพ็กเกจ (ถ้ามี)
   let homestaySection: JSX.Element | null = null;
 
@@ -286,6 +295,7 @@ export default function DetailPackageAdmin() {
     if (homestayDetail) {
       const checkInDateTime = extractDateTime(firstHomestayHistory.checkInTime);
       const checkOutDateTime = extractDateTime(firstHomestayHistory.checkOutTime);
+
       const homestayMainImage = homestayDetail.images?.[0];
 
       const homestayFacilityItems =
@@ -315,6 +325,7 @@ export default function DetailPackageAdmin() {
           </div>
 
           <div className="border rounded-2xl p-6 flex gap-6 bg-white shadow-sm">
+            {/* รูปที่พัก */}
             <div className="w-64 h-40 flex-shrink-0 overflow-hidden rounded-xl border">
               <img
                 className="w-full h-full object-cover"
@@ -327,6 +338,7 @@ export default function DetailPackageAdmin() {
               />
             </div>
 
+            {/* รายละเอียดที่พัก */}
             <div className="flex-1 text-black">
               <div className="font-semibold text-lg mb-2">{homestayDetail.name}</div>
 
@@ -354,26 +366,27 @@ export default function DetailPackageAdmin() {
         <Breadcrumb
           current={{
             label: "รายละเอียดแพ็กเกจ",
-            to: `/admin/package/${id}`,
+            to: `/member/package/${id}`,
           }}
         />
       </div>
+
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
           <div className="flex flex-row">
-            {/* ปุ่มย้อนกลับ -> ไปหน้าประวัติแพ็กเกจของ Admin */}
+            {/* ปุ่มย้อนกลับ */}
             <div
               className="mt-1 mr-3 cursor-pointer"
-              onClick={() => navigate("/admin/packages/all")}
+              onClick={() => navigate(`/member/packages/all`)}
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
           </div>
           <div className="w-60">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ สำหรับ Admin */}
-            <Button onClick={() => navigate(`/admin/package/${id}/edit`)}>
+            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ (สำหรับ Member) */}
+            <Button onClick={() => navigate(`/member/package/${id}/edit`)}>
               <EditIcon />
               แก้ไขรายละเอียดแพ็กเกจ
             </Button>
@@ -393,7 +406,8 @@ export default function DetailPackageAdmin() {
           <div className="flex flex-row items-center gap-5">
             <p className="text-md text-black">
               <strong>สถานะแพ็กเกจ :</strong>
-            </p>
+              </p>
+
             {/* Badge สถานะ */}
             <span
               className={`px-4 py-1 rounded-full text-sm font-semibold
@@ -437,17 +451,17 @@ export default function DetailPackageAdmin() {
 
         {/* แท็ก */}
         {packageDetail.tags?.length > 0 && (
-          <p className="mb-6 flex gap-2 flex-row text-black text-md items-center">
+          <div className="mb-6 flex gap-2 flex-row text-md text-black items-center">
             <strong>แท็ก :</strong>{" "}
-            {packageDetail.tags.map((tagLabel, tagIndex) => (
+            {packageDetail.tags.map((tagLabel, index) => (
               <Tag
-                key={tagIndex}
+                key={index}
                 label={tagLabel}
                 sizeClass="h-8 px-4"
                 className="text-black bg-white whitespace-nowrap"
               />
             ))}
-          </p>
+          </div>
         )}
 
         {/* รูปหลัก */}
@@ -455,7 +469,7 @@ export default function DetailPackageAdmin() {
           <DetailPackageGallery packageDetail={packageDetail} />
         </div>
 
-        {/* ข้อมูลผู้ดูแล / ช่วงเวลา */}
+        {/* ข้อมูลผู้ดูแล */}
         <div className="grid md:grid-cols-2 gap-6 text-black text-md mb-6">
           <div>
             <p className="mb-6">
@@ -486,9 +500,9 @@ export default function DetailPackageAdmin() {
           </div>
         </div>
 
-        {/* สิ่งอำนวยความสะดวกแพ็กเกจ */}
-        <div className="mb-6 ">
-          <p className="text-md text-black">
+        {/* สิ่งอำนวยความสะดวก */}
+        <div className="mb-6">
+          <p className="text-black text-md">
             <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {packageDetail.facility || "-"}
           </p>
         </div>

@@ -29,6 +29,7 @@ const storeSchema = z.object({
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
   latitude: z.union([
     z.string().min(1, "กรุณากรอกละติจูด"),
     z.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
@@ -68,6 +69,7 @@ export function CreateStore() {
     longitude: position[1],
   });
   const navigate = useNavigate();
+  const [openCancelConfirm, setOpenCancelConfirm] = useState(false);
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
    * Input :
@@ -101,12 +103,49 @@ export function CreateStore() {
         newErrors[fieldName as string] = issue.message;
       });
       setFormErrors(newErrors);
-      console.log("❌ Validation errors:", result.error.issues); // ช่วย debug ได้ง่ายมาก
       return false;
     }
 
     setFormErrors({});
     return true;
+  };
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input : none (ตรวจสอบจาก state formData, location, position, files)
+   * Output : boolean (true หากมีการแก้ไขข้อมูล, false หากไม่มี)
+   */
+  const checkIsDirty = () => {
+    const isFormDirty =
+      !!formData.name ||
+      !!formData.detail ||
+      !!formData.houseNumber ||
+      !!formData.villageNumber ||
+      !!formData.locationDetail ||
+      (formData.tagStores && formData.tagStores.length > 0);
+
+    const isLocationDirty =
+      !!location.province || !!location.district || !!location.subdistrict || !!location.postalCode;
+
+    const isFilesDirty = coverFiles.length > 0 || galleryFiles.length > 0;
+
+    const isPositionDirty =
+      position[0] !== startingPosition[0] || position[1] !== startingPosition[1];
+
+    return isFormDirty || isLocationDirty || isFilesDirty || isPositionDirty;
+  };
+
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อกดปุ่มยกเลิก
+   * หากมีการแก้ไขข้อมูลจะแสดง Modal ยืนยัน, หากไม่มีจะย้อนกลับไปหน้าก่อนหน้าทันที
+   * Input : none
+   * Output : none (อาจเปลี่ยน state openCancelConfirm หรือ navigate)
+   */
+  const handleCancel = () => {
+    if (checkIsDirty()) {
+      setOpenCancelConfirm(true);
+    } else {
+      navigate(-1);
+    }
   };
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
@@ -147,12 +186,19 @@ export function CreateStore() {
   const handleSubmit = async () => {
     try {
       const isValid = validateField();
-      console.log(isValid);
       if (!isValid) {
         setAlertType("error");
         setAlertTitle("ข้อมูลไม่ถูกต้อง");
         setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
         setAlertOpen(true);
+        return;
+      }
+      if (coverFiles.length === 0 || galleryFiles.length === 0) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณาอัพโหลดรูปภาพให้ครบถ้วน");
+        setAlertOpen(true);
+        return;
       }
       const {
         locationDetail,
@@ -201,16 +247,9 @@ export function CreateStore() {
       setAlertOpen(true);
       navigate("/admin/community/stores");
     } catch (error: any) {
-      const backendMessage =
-        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
-
-      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
-      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
-      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
-
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage(cleanMessage);
+      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
       setAlertOpen(true);
     }
   };
@@ -295,20 +334,22 @@ export function CreateStore() {
                   subDistrict: loc.subdistrict,
                   postalCode: loc.postalCode,
                 }));
-                // ตรวจสอบความถูกต้องของ field ที่เกี่ยวข้อง
-                validateField("province", loc.province);
-                validateField("district", loc.district);
-                validateField("subDistrict", loc.subdistrict);
+                if (loc.province) validateField("province", loc.province);
+                if (loc.district) validateField("district", loc.district);
+                if (loc.subdistrict) validateField("subDistrict", loc.subdistrict);
+                if (loc.postalCode) validateField("postalCode", loc.postalCode);
               }}
               error={{
                 province: !!formErrors.province,
                 district: !!formErrors.district,
                 subdistrict: !!formErrors.subDistrict,
+                postalCode: !!formErrors.postalCode,
               }}
               helperText={{
                 province: formErrors.province,
                 district: formErrors.district,
                 subdistrict: formErrors.subDistrict,
+                postalCode: formErrors.postalCode,
               }}
             />
           </div>
@@ -386,7 +427,9 @@ export function CreateStore() {
         </div>
         <div className="flex justify-end mt-5">
           <div className="w-32 mr-2.5">
-            <Button type="cancel">ยกเลิก</Button>
+            <Button type="cancel" onClick={handleCancel}>
+              ยกเลิก
+            </Button>
           </div>
           <div className="w-32">
             <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
@@ -403,6 +446,16 @@ export function CreateStore() {
             await handleSubmit();
           }}
           onCancel={() => setOpenConfirm(false)}
+        />
+        <Modal
+          open={openCancelConfirm}
+          title="ยืนยันการยกเลิก"
+          text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+          onConfirm={() => {
+            setOpenCancelConfirm(false);
+            navigate(-1);
+          }}
+          onCancel={() => setOpenCancelConfirm(false)}
         />
         <ModalAlert
           open={alertOpen}

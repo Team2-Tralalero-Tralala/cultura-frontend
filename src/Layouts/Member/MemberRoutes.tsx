@@ -22,6 +22,8 @@ import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
 import DetailPackageMember from '@/Pages/Member/DetailPackageMember';
 import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
 import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
+import PackageDraftAdmin from "@/Pages/Admin/PackageDraftAdmin";
+import PackageDraftMember from "@/Pages/Member/PackageDraftMember";
 
 export default function MemberRoutes() {
   return (
@@ -40,6 +42,8 @@ export default function MemberRoutes() {
       <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
+      <Route path="packages/draft" element={<PackageDraftMember />} />
+      
 
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />

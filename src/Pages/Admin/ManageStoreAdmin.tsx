@@ -4,7 +4,7 @@
  * คำอธิบาย : หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
-import React, {  useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 // Components
@@ -20,7 +20,12 @@ import { getAllStoreAdmin } from "@/Services/store-service";
 import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
 // Types
-import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import type {
+  Column,
+  DataTableActionsConfig,
+  BulkAction,
+  Pagination,
+} from "@/Components/Tables/Types";
 import axios from "axios";
 
 // ประเภทข้อมูลร้านค้าในตาราง
@@ -40,12 +45,7 @@ type StoreFromApi = {
 };
 
 const normalizeText = (str: string) =>
-  (str ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 // กำหนดคอลัมน์ของตาราง
 const columns: Column<StoreRow>[] = [
@@ -83,15 +83,14 @@ export default function ManageStoreAdmin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteIds, setDeleteIds] = useState<number | number[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-
   /*
-* คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
-*/
+   * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
+   */
   const loadStores = async () => {
     try {
       setIsLoading(true);
@@ -103,14 +102,11 @@ export default function ManageStoreAdmin() {
       const response = await getAllStoreAdmin(currentPage, limit);
 
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
-      const resultPagination: Pagination =
-        response?.data?.data?.pagination ?? pagination;
-
+      const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
 
       // แปลงข้อมูลให้เข้ากับตาราง
       const mapped: StoreRow[] = resultData.map((store) => {
-        const tagNames =
-          store.tagStores?.map((tag) => tag.tag?.name).filter(Boolean) ?? [];
+        const tagNames = store.tagStores?.map((tag) => tag.tag?.name).filter(Boolean) ?? [];
         return {
           id: store.id,
           name: store.name ?? "-",
@@ -155,17 +151,17 @@ export default function ManageStoreAdmin() {
     callbacks: {
       edit: (row) => navigate(`/admin/community/store/${row.id}/edit/`),
       delete: (row) => {
-        setDeleteId(row.id);
+        setDeleteIds(row.id);
         setIsOpenConfirm(true);
       },
     },
   };
 
   /*
-  * คำอธิบาย : ฟังก์ชันสำหรับกรองข้อมูลร้านค้าตามคำค้นหา
-  * Input : searchQuery
-  * Output : รายการร้านค้าที่ผ่านการกรอง
-  */
+   * คำอธิบาย : ฟังก์ชันสำหรับกรองข้อมูลร้านค้าตามคำค้นหา
+   * Input : searchQuery
+   * Output : รายการร้านค้าที่ผ่านการกรอง
+   */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
     return rows.filter((row) => {
@@ -177,9 +173,9 @@ export default function ManageStoreAdmin() {
   }, [rows, searchQuery]);
 
   /*
-  * คำอธิบาย : ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
-  * Input : storeID
-  */
+   * คำอธิบาย : ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
+   * Input : storeID
+   */
   const handleDelete = async (storeId: number) => {
     try {
       await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
@@ -192,11 +188,10 @@ export default function ManageStoreAdmin() {
   };
 
   /*
-  * คำอธิบาย : ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
-  * Input : rows
-  */
+   * คำอธิบาย : ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
+   * Input : rows
+   */
   const bulkActions: BulkAction<StoreRow>[] = [
-
     {
       id: "bulk-delete",
       label: "ลบทั้งหมด",
@@ -205,8 +200,8 @@ export default function ManageStoreAdmin() {
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         const storeIds = rows.map((row) => row.id);
-        alert("bulk delete: " + storeIds);
-        await loadStores();
+        setDeleteIds(storeIds);
+        setIsOpenConfirm(true);
       },
     },
   ];
@@ -233,12 +228,18 @@ export default function ManageStoreAdmin() {
         <div className="flex items-center justify-between w-full ">
           {/* Section: Search */}
           <div className="w-[260px]">
-            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
           </div>
 
           {/* Section: Add Store */}
           <div>
-            <Button onClick={() => navigate("/admin/community/store/create")} aria-label="เพิ่มร้านค้า">
+            <Button
+              onClick={() => navigate("/admin/community/store/create")}
+              aria-label="เพิ่มร้านค้า"
+            >
               <span className="text-lg leading-none">＋</span>
               <span>เพิ่มร้านค้า</span>
             </Button>
@@ -282,15 +283,19 @@ export default function ManageStoreAdmin() {
         title="ยืนยันการลบร้านค้า"
         text="คุณต้องการลบร้านค้านี้หรือไม่?"
         onConfirm={async () => {
-          if (!deleteId) return;
-          await handleDelete(deleteId);
+          if (!deleteIds) return;
+          if (Array.isArray(deleteIds)) {
+            await Promise.all(deleteIds.map((id) => handleDelete(id)));
+          } else {
+            await handleDelete(deleteIds);
+          }
           setIsOpenConfirm(false);
-          setDeleteId(null);
+          setDeleteIds(null);
           await loadStores();
         }}
         onCancel={() => {
           setIsOpenConfirm(false);
-          setDeleteId(null);
+          setDeleteIds(null);
         }}
       />
     </div>

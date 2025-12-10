@@ -73,82 +73,114 @@ const buildFileUrl = (rawPath?: string): string => {
   // ประกอบเป็น URL เต็ม เช่น http://localhost:3000/uploads/store1.jpg
   return `${BASE_URL}/${cleanPath}`;
 };
-
 /**
  * ฟังก์ชัน : DetailPackageGallery
  * คำอธิบาย :
- *   Component สำหรับแสดงแกลเลอรีสื่อ (รูป/วิดีโอ) ของแพ็กเกจ
- *   โดยเลือกสื่อหลัก และให้ผู้ใช้คลิกเปลี่ยนผ่านแถบ thumbnail ด้านล่าง
- * Input  :
- *   - packageDetail : ข้อมูลรายละเอียดแพ็กเกจที่มีไฟล์สื่อ (files)
+ *   Component สำหรับแสดงสื่อของแพ็กเกจ (ภาพ / วิดีโอ)
+ *   - แสดงสื่อหลักด้านบน 1 รายการ (เลือกจาก COVER > VIDEO > GALLERY)
+ *   - แสดงแถบ Thumbnail ด้านล่าง สามารถคลิกเพื่อสลับสื่อที่แสดงด้านบนได้
+ *   - รองรับทั้งไฟล์ประเภท COVER, GALLERY และ VIDEO
+ *
+ * Input :
+ *   - packageDetail.files : รายการไฟล์ของแพ็กเกจ (id, path, type)
+ *
  * Output :
- *   - JSX.Element ส่วน UI แสดงสื่อหลัก + แถบ thumbnail
+ *   - JSX ส่วนของสื่อในหน้า Detail Package
  */
-function DetailPackageGallery({ packageDetail }: { packageDetail: PackageDetailData }) {
-  const [activeMediaItem, setActiveMediaItem] = useState<PackageMedia | null>(null);
+
+function DetailPackageGallery({
+  packageDetail,
+}: {
+  packageDetail: PackageDetailData;
+}) {
+  /**
+   * state : activeMediaItem
+   * คำอธิบาย : เก็บไฟล์สื่อที่กำลังถูกแสดงด้านบน
+   */
+  const [activeMediaItem, setActiveMediaItem] =
+    useState<PackageMedia | null>(null);
 
   /**
-   * Memo : sortedMediaFiles
-   * คำอธิบาย : เรียงลำดับไฟล์สำหรับใช้เป็น thumbnail
-   *   โดยให้ชนิด VIDEO มาก่อน ตามด้วย COVER และ GALLERY ตามลำดับ
+   * ตัวแปร : sortedMediaFiles
+   * คำอธิบาย :
+   *   - กรองไฟล์ที่ไม่มี path ทิ้งก่อน
+   *   - เรียงลำดับไฟล์ใหม่ให้ VIDEO อยู่ซ้ายสุด ตามด้วย COVER และ GALLERY
+   *   - ใช้ useMemo เพื่อไม่ให้คำนวณซ้ำเมื่อ packageDetail.files ไม่เปลี่ยน
    */
   const sortedMediaFiles = useMemo(() => {
-    const mediaFiles = packageDetail.files || [];
+    // กรองเฉพาะไฟล์ที่มี path จริง ๆ
+    const mediaFiles = (packageDetail.files || []).filter(
+      (mediaItem) => !!mediaItem.path && mediaItem.path.trim() !== ""
+    );
 
-    const videoMediaFiles = mediaFiles.filter((fileItem) => fileItem.type === "VIDEO");
-    const coverMediaFiles = mediaFiles.filter((fileItem) => fileItem.type === "COVER");
-    const galleryMediaFiles = mediaFiles.filter((fileItem) => fileItem.type === "GALLERY");
+    const videoMediaFiles = mediaFiles.filter(
+      (fileItem) => fileItem.type === "VIDEO"
+    );
+    const coverMediaFiles = mediaFiles.filter(
+      (fileItem) => fileItem.type === "COVER"
+    );
+    const galleryMediaFiles = mediaFiles.filter(
+      (fileItem) => fileItem.type === "GALLERY"
+    );
 
-    // วิดีโออยู่ซ้ายสุด ตามด้วย cover และรูป gallery
+    // เรียงตามลำดับที่ต้องการ
     return [...videoMediaFiles, ...coverMediaFiles, ...galleryMediaFiles];
   }, [packageDetail.files]);
 
   /**
-   * useEffect : เลือก media หลักตอนโหลดครั้งแรกหรือเมื่อ packageDetail.files เปลี่ยน
-   * ลำดับการเลือก :
-   *   1. COVER
-   *   2. VIDEO
-   *   3. GALLERY
-   *   4. null (ถ้าไม่มีสื่อเลย)
+   * useEffect :
+   *   - ใช้เลือก "สื่อหลัก" ครั้งแรกเมื่อโหลด component / เมื่อไฟล์เปลี่ยน
+   *   - ลำดับการเลือก: COVER > VIDEO > GALLERY
+   *   - ถ้าไม่เจอเลยให้เป็น null แล้ว fallback ไปเป็นรูป No Image
    */
   useEffect(() => {
-    const mediaFiles = packageDetail.files || [];
+    const mediaFiles = (packageDetail.files || []).filter(
+      (mediaItem) => !!mediaItem.path && mediaItem.path.trim() !== ""
+    );
 
-    const coverMedia = mediaFiles.find((fileItem) => fileItem.type === "COVER");
-    const videoMedia = mediaFiles.find((fileItem) => fileItem.type === "VIDEO");
-    const galleryMedia = mediaFiles.find((fileItem) => fileItem.type === "GALLERY");
+    const coverMedia = mediaFiles.find(
+      (fileItem) => fileItem.type === "COVER"
+    );
+    const videoMedia = mediaFiles.find(
+      (fileItem) => fileItem.type === "VIDEO"
+    );
+    const galleryMedia = mediaFiles.find(
+      (fileItem) => fileItem.type === "GALLERY"
+    );
 
     setActiveMediaItem(coverMedia || videoMedia || galleryMedia || null);
   }, [packageDetail.files]);
 
   /**
    * ฟังก์ชัน : buildMediaUrl
-   * คำอธิบาย : สร้าง URL ของ media แต่ละรายการจากข้อมูลใน state
-   * Input  : media?: PackageMedia | null
-   * Output : string (URL ของไฟล์ หรือ "" ถ้าไม่มีข้อมูล)
+   * คำอธิบาย : แปลง path ของไฟล์ให้เป็น URL ที่พร้อมใช้งานบนหน้าเว็บ
+   * หมายเหตุ : buildFileUrl เป็น util ภายนอกที่ประกอบ BASE_URL + path
    */
   const buildMediaUrl = (media?: PackageMedia | null): string =>
     media ? buildFileUrl(media.path) : "";
 
+  const activeMediaUrl = buildMediaUrl(activeMediaItem);
+
   return (
     <div className="space-y-4">
-      {/* สื่อหลักด้านบน (รูป/วิดีโอ) */}
+      {/* ===== สื่อหลักด้านบน (รูปหรือวิดีโอ) ===== */}
       <div className="w-full">
-        {activeMediaItem ? (
+        {activeMediaItem && activeMediaUrl ? (
           activeMediaItem.type === "VIDEO" ? (
             <video
-              src={buildMediaUrl(activeMediaItem)}
+              src={activeMediaUrl}
               controls
               className="w-full h-[400px] object-cover rounded-xl shadow mb-2 bg-black"
             />
           ) : (
             <img
-              src={buildMediaUrl(activeMediaItem)}
+              src={activeMediaUrl}
               alt="package-main"
               className="w-full h-[400px] object-cover rounded-xl shadow mb-2"
             />
           )
         ) : (
+          // กรณีไม่มีสื่อเลย แสดงภาพ Placeholder
           <img
             src="https://placehold.co/800x400?text=No+Image"
             alt="no-image"
@@ -157,13 +189,16 @@ function DetailPackageGallery({ packageDetail }: { packageDetail: PackageDetailD
         )}
       </div>
 
-      {/* แถบ thumbnail ด้านล่าง (ถ้ามีไฟล์มากกว่า 0) */}
+      {/* ===== แถบ Thumbnail ด้านล่าง (เลื่อนแนวนอนได้ ถ้ามีไฟล์) ===== */}
       {sortedMediaFiles.length > 0 && (
         <div className="overflow-x-auto">
           <div className="flex gap-3 min-w-full">
             {sortedMediaFiles.map((mediaItem) => {
-              const isActive = activeMediaItem?.id === mediaItem.id;
               const mediaUrl = buildMediaUrl(mediaItem);
+              // ถ้า URL ว่าง ไม่ต้องเรนเดอร์ thumbnail นั้น
+              if (!mediaUrl) return null;
+
+              const isActive = activeMediaItem?.id === mediaItem.id;
 
               return (
                 <button
@@ -175,13 +210,13 @@ function DetailPackageGallery({ packageDetail }: { packageDetail: PackageDetailD
                   }`}
                 >
                   {mediaItem.type === "VIDEO" ? (
+                    // Thumbnail สำหรับ VIDEO : แสดงภาพตัวอย่าง + ปุ่ม play ทับด้านบน
                     <div className="relative w-[120px] h-[80px]">
                       <video
                         src={mediaUrl}
                         preload="metadata"
                         className="w-full h-full object-cover"
                       />
-                      {/* ปุ่มเล่นซ้อนทับบน thumbnail วิดีโอ */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center">
                           <span className="ml-1 border-l-8 border-y-[8px] border-y-transparent border-l-emerald-600" />
@@ -189,6 +224,7 @@ function DetailPackageGallery({ packageDetail }: { packageDetail: PackageDetailD
                       </div>
                     </div>
                   ) : (
+                    // Thumbnail สำหรับภาพนิ่ง
                     <img
                       src={mediaUrl}
                       alt={mediaItem.type}

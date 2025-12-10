@@ -321,9 +321,9 @@ export default function ManagePackageSuperAdmin() {
               <div className="flex items-center justify-center gap-2 px-1">
                 <Icon
                   icon="material-symbols:add-rounded"
-                  className="text-2xl" // ปรับขนาดไอคอนประมาณ 24px
+                  className="text-2xl"
                 />
-                <span className="whitespace-nowrap font-medium text-lg pb-0.5">
+                <span className="whitespace-nowrap">
                   เพิ่มแพ็กเกจ
                 </span>
               </div>

@@ -36,7 +36,7 @@ const accountSchema = z.object({
   fname: z.string().min(1, "กรุณากรอกชื่อ"),
   lname: z.string().min(1, "กรุณากรอกนามสกุล"),
   username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง ตัวอย่างที่ถูกต้อง: example@example.com"),
   phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
   password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
   confirmPassword: z.string(),

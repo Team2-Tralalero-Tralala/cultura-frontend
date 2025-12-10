@@ -40,6 +40,8 @@ import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 import CreateMemberPage from "@/Pages/Admin/CreateMemberPage";
 import EditMemberPage from "@/Pages/Admin/EditMemberPage";
+import AuthentionLogAdmin from "@/Pages/Admin/AuthentionLogAdmin";
+
 export default function AdminRoutes() {
   return (
     <Routes>
@@ -64,8 +66,8 @@ export default function AdminRoutes() {
       <Route path="/booking/:bookingId" element={<BookingDetailAdmin />} />
 
       <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
-      
- 
+
+
 
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
@@ -98,6 +100,7 @@ export default function AdminRoutes() {
       <Route path="package/:id/edit" element={<EditPackagePage />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="package/:id" element={<DetailPackageAdmin />} />
+      <Route path="logs" element={<AuthentionLogAdmin />} />
     </Routes>
   );
 }

@@ -150,8 +150,7 @@ const CreateMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        password: formData.password,
-        roleId: 3, 
+        password: formData.password, 
         communityRole: formData.communityRole.trim(),
       };
 

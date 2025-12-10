@@ -120,7 +120,7 @@ export default function ManageMembers() {
                     [m?.fname, m?.lname].filter(Boolean).join(" ").trim() ||
                     m?.username ||
                     "-",
-                roleName: m?.role?.name ?? m?.roleName ?? "-",
+                roleName: m?.activityRole || m?.role?.name || "-",
                 contact: m?.email ?? m?.phone ?? "-",
             }));
 

@@ -52,7 +52,6 @@ type StoreFromApi = {
   }[];
 };
 
-
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
@@ -90,11 +89,10 @@ export default function ManageStores() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
-
 
   //ดึงชื่อชุมชน
   useEffect(() => {
@@ -161,7 +159,7 @@ export default function ManageStores() {
     callbacks: {
       edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
-        setDeleteId(row.id);
+        setDeleteIds([row.id]);
         setIsOpenConfirm(true);
       },
     },
@@ -180,9 +178,14 @@ export default function ManageStores() {
   }, [rows, searchQuery]);
 
   const handleDelete = async (storeId: number) => {
-    await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
-      withCredentials: true,
-    });
+    try {
+      await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error("Failed to delete store:", error);
+      setErrorMessage("ลบร้านค้าไม่สำเร็จ");
+    }
   };
 
   const bulkActions: BulkAction<StoreRow>[] = [
@@ -194,8 +197,8 @@ export default function ManageStores() {
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         const storeIds = rows.map((row) => row.id);
-        alert("bulk delete: " + storeIds);
-        await loadStores();
+        setDeleteIds(storeIds);
+        setIsOpenConfirm(true);
       },
     },
   ];
@@ -276,22 +279,29 @@ export default function ManageStores() {
       </div>
 
       {/* Modal สำหรับยืนยันการลบร้านค้า */}
-            <Modal
-              open={isOpenConfirm}
-              title="ยืนยันการลบร้านค้า"
-              text="คุณต้องการลบร้านค้านี้หรือไม่?"
-              onConfirm={async () => {
-                if (!deleteId) return;
-                await handleDelete(deleteId);
-                setIsOpenConfirm(false);
-                setDeleteId(null);
-                await loadStores();
-              }}
-              onCancel={() => {
-                setIsOpenConfirm(false);
-                setDeleteId(null);
-              }}
-            />
+      <Modal
+        open={isOpenConfirm}
+        title="ยืนยันการลบร้านค้า"
+        text={
+          deleteIds?.length > 1
+            ? `คุณต้องการลบร้านค้านี้ทั้งหมด ${deleteIds.length} รายการหรือไม่?`
+            : "คุณต้องการลบร้านค้านี้หรือไม่?"
+        }
+        onConfirm={async () => {
+          if (!deleteIds?.length) return;
+
+          // ลบทุก id (กรณีเดี่ยวก็มีแค่ 1)
+          await Promise.all(deleteIds.map((id) => handleDelete(id)));
+
+          setIsOpenConfirm(false);
+          setDeleteIds([]);
+          await loadStores();
+        }}
+        onCancel={() => {
+          setIsOpenConfirm(false);
+          setDeleteIds([]);
+        }}
+      />
     </div>
   );
 }

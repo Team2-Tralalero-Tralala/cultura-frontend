@@ -263,6 +263,7 @@ export const EditPackagePage = () => {
     const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
     const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
     const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
+    const [originalStatus, setOriginalStatus] = useState<PackageStatus | null>(null);
 
     /*
      * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -288,6 +289,16 @@ export const EditPackagePage = () => {
      * Output : boolean - true หากถูกต้องทั้งหมด, false หากมีข้อผิดพลาด
      */
     const validateAll = () => {
+        if (formState.statusPackage === "DRAFT") {
+            const errors: PackageErrors = {};
+            if (!formState.name?.trim()) {
+                errors.name = "กรุณากรอกชื่อแพ็กเกจ";
+                setFormErrors(errors);
+                return false;
+            }
+            setFormErrors({});
+            return true;
+        }
         let isValid = true;
         const result = packageSchema.safeParse(formState);
         if (!result.success) {
@@ -544,6 +555,7 @@ export const EditPackagePage = () => {
                 const dueParsed = dueDateRaw ? new Date(dueDateRaw) : null;
                 const openParsed = bookingOpenRaw ? new Date(bookingOpenRaw) : null;
                 const closeParsed = bookingCloseRaw ? new Date(bookingCloseRaw) : null;
+                const status = (packageData.statusPackage as PackageStatus) ?? "DRAFT";
 
                 setStartDateObj(startParsed && !isNaN(startParsed.getTime()) ? startParsed : null);
                 setEndDateObj(dueParsed && !isNaN(dueParsed.getTime()) ? dueParsed : null);
@@ -553,8 +565,7 @@ export const EditPackagePage = () => {
                 setFormState({
                     name: packageData.name ?? "",
                     description: packageData.description ?? "",
-                    statusPackage:
-                        (packageData.statusPackage as PackageStatus) ?? "DRAFT",
+                    statusPackage: status,
                     houseNumber: locationData.houseNumber ?? "",
                     villageNumber: locationData.villageNumber != null ? String(locationData.villageNumber) : "",
                     province: locationData.province ?? "",
@@ -634,6 +645,7 @@ export const EditPackagePage = () => {
                 setCoverFiles(coverFetched);
                 setGalleryFiles(galleryFetched);
                 setVideoFiles(videoFetched);
+                setOriginalStatus(status);
                 if (homestayHistory?.homestay) {
                     setSelectedHomestay({
                         id: Number(homestayHistory.homestay.id),
@@ -692,47 +704,46 @@ export const EditPackagePage = () => {
     const handleConfirmSave = async () => {
         setIsConfirmModalOpen(false);
         if (!id || isSaving) return;
-
         setIsSaving(true);
         setErrorMessage(null);
-        setSuccessMessage(null);
-
         try {
+            const overseerIdVal = Number(formState.overseerMemberId);
+            const safeOverseerId = overseerIdVal > 0 ? overseerIdVal : null;
+
             const payload = {
-                overseerMemberId: Number(formState.overseerMemberId),
+                overseerMemberId: safeOverseerId,
                 name: normalizeOrDefault(formState.name),
-                description: normalizeOrDefault(formState.description),
+                description: formState.description || "",
                 statusPackage: formState.statusPackage,
                 capacity: Math.max(1, Number(formState.capacity || 0)),
                 price: Math.max(0, Number(formState.price || 0)),
-                warning: normalizeOrDefault(formState.facility),
-                startDate: normalizeOrDefault(formState.startDate),
-                dueDate: normalizeOrDefault(formState.endDate),
+                warning: formState.facility || "",
+                startDate: formState.startDate || null,
+                dueDate: formState.endDate || null,
+                bookingOpenDate: formState.openDate || null,
+                bookingCloseDate: formState.closeDate || null,
                 ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
                 ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-                bookingOpenDate: normalizeOrDefault(formState.openDate),
-                bookingCloseDate: normalizeOrDefault(formState.closeDate),
                 ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
                 ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-
                 ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
                 ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
                 ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
                 ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
                 ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-                facility: normalizeOrDefault(formState.facility),
-                tagIds,
-                ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
+                facility: formState.facility || "",
+                tagIds: tagIds.map(id => Number(id)),
+                homestayId: selectedHomestay ? selectedHomestay.id : -1,
                 location: {
-                    houseNumber: normalizeOrDefault(formState.houseNumber),
+                    houseNumber: formState.houseNumber,
                     villageNumber: toIntOrNull(formState.villageNumber),
-                    subDistrict: normalizeOrDefault(formState.subDistrict),
-                    district: normalizeOrDefault(formState.district),
-                    province: normalizeOrDefault(formState.province),
-                    postalCode: normalizeOrDefault(formState.postalCode),
-                    detail: normalizeOrDefault(formState.addressDetail),
-                    latitude: Number(formState.latitude),
-                    longitude: Number(formState.longitude),
+                    subDistrict: formState.subDistrict,
+                    district: formState.district,
+                    province: formState.province,
+                    postalCode: formState.postalCode,
+                    detail: formState.addressDetail,
+                    latitude: Number(formState.latitude) || 0,
+                    longitude: Number(formState.longitude) || 0,
                 },
             };
 
@@ -741,23 +752,24 @@ export const EditPackagePage = () => {
             coverFiles.forEach((file: any) => formData.append("cover", file));
             galleryFiles.forEach((file: any) => formData.append("gallery", file));
             videoFiles.forEach((file: any) => formData.append("video", file));
+
             await axios.put(`${apiUrl}/member/package/${id}`, formData, {
                 withCredentials: true,
             });
             navigate("/member/packages/all");
+
         } catch (error: any) {
             setErrorMessage(
                 error?.response?.data?.message ||
-                error?.response?.data?.error ||
+                (Array.isArray(error?.response?.data?.message) ? error?.response?.data?.message.join(", ") : null) ||
                 error?.message ||
-                "บันทึกแพ็กเกจไม่สำเร็จ",
+                "บันทึกแพ็กเกจไม่สำเร็จ"
             );
             window.scrollTo({ top: 0, behavior: "smooth" });
         } finally {
             setIsSaving(false);
         }
     };
-
     /*
      * คำอธิบาย : Handler ที่ถูกเรียกเมื่อกด Submit ฟอร์ม
      * - ตรวจสอบความถูกต้องทั้งหมด
@@ -829,7 +841,7 @@ export const EditPackagePage = () => {
                         <PackageStatusDropdown
                             value={formState.statusPackage}
                             onChange={(status) => setFormField("statusPackage", status)}
-                            exclude={["DRAFT"]}
+                            exclude={originalStatus === "DRAFT" ? [] : ["DRAFT"]}
                         />
                     </div>
 

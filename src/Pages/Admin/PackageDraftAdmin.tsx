@@ -1,28 +1,22 @@
 /*
- * คำอธิบาย : Component สำหรับแสดงรายการแพ็กเกจ (ฉบับร่าง) สำหรับแอดมิน
- * หน้าที่ : ใช้สำหรับแสดงตารางแพ็กเกจฉบับร่าง รองรับการค้นหา เลือกหลายรายการ ลบแบบเดี่ยว/หลายรายการ และ Pagination
- * Input : ไม่มี (ดึงจาก API โดยตรง)
- * Output : ตารางรายการแพ็กเกจฉบับร่าง พร้อมปุ่มเพิ่ม/แก้ไข/ลบ และการแบ่งหน้า
+ * Component : จัดการรายการแพ็กเกจฉบับร่าง (Draft)
+ * รายละเอียด : แสดงรายการแพ็กเกจฉบับร่าง พร้อมระบบค้นหาแบบ Client-side, การลบเดี่ยว, ลบหลายรายการ
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import axios from "axios";
 
-// ================= Import UI Components =================
+// ================= Import Components =================
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SearchBarTable";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 import { Modal } from "../../Components/Modal/Modal";
 
-// ================= Types =================
 import type { BulkAction } from "../../Components/Tables/Types";
 import { TrashIcon, PencilIcon } from "../../Components/Tables/Icon";
 
 // ================= Interface =================
-/*
- * คำอธิบาย : โครงสร้างข้อมูลแพ็กเกจที่นำมาใช้ในตาราง
- */
 type Package = {
   id: number;
   name: string;
@@ -32,29 +26,29 @@ type Package = {
   [key: string]: unknown;
 };
 
-// ================= Utility =================
+// ================= Function : Normalize Text =================
 /*
- * คำอธิบาย : ฟังก์ชัน debounce ใช้หน่วงเวลาค้นหา เพื่อลดจำนวนครั้งในการยิง API
- * Input : fn (callback), delay (ms)
- * Output : ฟังก์ชันที่ถูก debounce แล้ว
+ * คำอธิบาย : ฟังก์ชันจัดรูปแบบข้อความให้เป็นมาตรฐานก่อนนำไปค้นหา
+ * Input : text (any)
+ * Output : string ที่ถูก trim, lowercase และ normalize
  */
-function debounce<F extends (...args: any[]) => any>(fn: F, delay: number) {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<F>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
-}
+const normalizeText = (text: any) =>
+  (text ?? "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFC")
+    .replace(/\s+/g, " ");
 
-// ================= Component หลัก =================
+// =====================================================
+
 const PackageDraftAdmin = () => {
-  // ====== State: Data & Loading ======
+  // ================= State =================
   const [packages, setPackages] = useState<Package[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const apiUrl = import.meta.env.VITE_API_URL;
 
-  // ====== Pagination ======
+  // Pagination
   const [pagination, setPagination] = useState({
     currentPage: 1,
     limit: 10,
@@ -62,50 +56,47 @@ const PackageDraftAdmin = () => {
     totalCount: 0,
   });
 
-  // ====== State: เลือกหลายรายการ ======
   const [selectedRows, setSelectedRows] = useState<Package[]>([]);
 
-  // ====== Modal: ลบเดี่ยว ======
-  const [deleteModal, setDeleteModal] = useState<{
-    open: boolean;
-    pkg: Package | null;
-  }>({
+  // Modal ลบเดี่ยว
+  const [deleteModal, setDeleteModal] = useState({
     open: false,
-    pkg: null,
+    pkg: null as Package | null,
   });
 
-  // ====== Modal: ลบหลายรายการ ======
-  const [bulkDeleteModal, setBulkDeleteModal] = useState<{
-    open: boolean;
-    rows: Package[];
-  }>({
+  // Modal ลบหลายรายการ
+  const [bulkDeleteModal, setBulkDeleteModal] = useState({
     open: false,
-    rows: [],
+    rows: [] as Package[],
   });
 
-  // ================= API: โหลดข้อมูลแพ็กเกจ =================
+  // ================= Function : Fetch Data =================
   /*
-   * คำอธิบาย : ฟังก์ชันโหลดรายการแพ็กเกจฉบับร่างจาก API
-   * Input : search, page, limit
-   * Output : เซตข้อมูลลงใน state packages
+   * คำอธิบาย : ดึงรายการแพ็กเกจฉบับร่างจาก API และจัดรูปแบบข้อมูลก่อนแสดงผล
+   * Input : -
+   * Output : อัปเดต state packages และ pagination
    */
-  const fetchPackages = async (search = "", page = 1, limit = 10) => {
+  const fetchPackages = useCallback(async () => {
     try {
       setLoading(true);
 
       const res = await fetch(
-        `http://localhost:3000/api/admin/packages/draft?search=${search}&page=${page}&limit=${limit}`,
+        `http://localhost:3000/api/admin/packages/draft`,
         { credentials: "include" }
       );
 
       const result = await res.json();
+
       const formatted: Package[] = Array.isArray(result.data)
         ? result.data.map((pkg: any) => ({
             id: pkg.id ?? 0,
             name: pkg.name ?? "-",
             community: pkg.community?.name ?? "-",
             overseer: pkg.overseerPackage?.name ?? "-",
-            status: pkg.statusPackage === "DRAFT" ? "ฉบับร่าง" : pkg.statusPackage,
+            status:
+              pkg.statusPackage === "DRAFT"
+                ? "ฉบับร่าง"
+                : pkg.statusPackage,
           }))
         : [];
 
@@ -113,31 +104,69 @@ const PackageDraftAdmin = () => {
 
       setPagination((prev) => ({
         ...prev,
-        totalCount: result.totalCount ?? formatted.length,
-        totalPages: result.totalCount
-          ? Math.ceil(result.totalCount / prev.limit)
-          : 1,
-        currentPage: page,
+        totalCount: formatted.length,
+        totalPages: Math.ceil(formatted.length / prev.limit),
       }));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Debounce สำหรับ search
-  const debouncedFetch = useCallback(debounce(fetchPackages, 300), []);
-
-  // โหลดข้อมูลเมื่อเปลี่ยน search / page / limit
+  // โหลดข้อมูลครั้งแรก
   useEffect(() => {
-    debouncedFetch(searchTerm, pagination.currentPage, pagination.limit);
-  }, [searchTerm, pagination.currentPage, pagination.limit]);
+    fetchPackages();
+  }, [fetchPackages]);
 
-  // ================= ลบเดี่ยว =================
+  // ================= Search Filter (Client-side) =================
   /*
-   * คำอธิบาย : ฟังก์ชันลบแพ็กเกจเดี่ยว
+   * คำอธิบาย : กรองรายการใน Client จาก searchTerm
+   * Input : searchTerm, packages
+   * Output : rows ที่ผ่านการค้นหาแล้ว
+   */
+  const filteredRows = useMemo(() => {
+    const query = normalizeText(searchTerm);
+    if (!query) return packages;
+
+    return packages.filter((pkg) => {
+      const fields = [
+        pkg.name,
+        pkg.community,
+        pkg.overseer,
+        pkg.status,
+      ].map(normalizeText);
+
+      return fields.some((text) => text.includes(query));
+    });
+  }, [packages, searchTerm]);
+
+  // อัปเดต Pagination เมื่อผลค้นหาเปลี่ยน
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: 1,
+      totalCount: filteredRows.length,
+      totalPages: Math.ceil(filteredRows.length / prev.limit),
+    }));
+  }, [filteredRows]);
+
+  // ================= Pagination Logic =================
+  /*
+   * คำอธิบาย : คำนวณ rows ที่ต้องแสดงตามหน้าปัจจุบัน
+   */
+  const paginatedRows = useMemo(() => {
+    const start = (pagination.currentPage - 1) * pagination.limit;
+    return filteredRows.slice(start, start + pagination.limit);
+  }, [filteredRows, pagination.currentPage, pagination.limit]);
+
+  // ================= Function : Delete Single =================
+  /*
+   * คำอธิบาย : ลบแพ็กเกจรายการเดียว
+   * Input : deleteModal.pkg
+   * Output : ลบข้อมูลและโหลดใหม่
    */
   const handleConfirmDelete = async () => {
     if (!deleteModal.pkg) return;
+
     setDeleteModal({ open: false, pkg: null });
 
     try {
@@ -145,19 +174,21 @@ const PackageDraftAdmin = () => {
         `http://localhost:3000/api/admin/packages/draft/${deleteModal.pkg.id}`,
         { withCredentials: true }
       );
-
-      await fetchPackages(searchTerm, pagination.currentPage, pagination.limit);
+      fetchPackages();
     } catch (err) {
       console.error("Delete error:", err);
     }
   };
 
-  // ================= ลบหลายรายการ =================
+  // ================= Function : Delete Multiple =================
   /*
-   * คำอธิบาย : ฟังก์ชันลบหลายแพ็กเกจพร้อมกัน (Bulk Delete)
+   * คำอธิบาย : ลบหลายรายการพร้อมกัน
+   * Input : bulkDeleteModal.rows
+   * Output : ลบข้อมูลทั้งหมดและโหลดใหม่
    */
   const handleConfirmBulkDelete = async () => {
     const ids = bulkDeleteModal.rows.map((r) => r.id);
+
     setBulkDeleteModal({ open: false, rows: [] });
 
     try {
@@ -167,9 +198,8 @@ const PackageDraftAdmin = () => {
         { withCredentials: true }
       );
 
-      setSelectedRows([]); // ล้าง selection ทันที
-
-      await fetchPackages(searchTerm, pagination.currentPage, pagination.limit);
+      setSelectedRows([]);
+      fetchPackages();
     } catch (error) {
       console.error("Bulk delete failed:", error);
     }
@@ -183,9 +213,7 @@ const PackageDraftAdmin = () => {
       icon: TrashIcon,
       intent: "danger",
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-      onClick: (rows) => {
-        setBulkDeleteModal({ open: true, rows });
-      },
+      onClick: (rows) => setBulkDeleteModal({ open: true, rows }),
     },
   ];
 
@@ -194,32 +222,43 @@ const PackageDraftAdmin = () => {
     {
       key: "name",
       header: "ชื่อแพ็กเกจ",
+      /*
+       * คลิกชื่อเพื่อไปยังหน้าแสดงรายละเอียดแพ็กเกจ
+       */
       render: (pkg) => (
         <span
           className="cursor-pointer hover:text-gray-800"
-          onClick={() => (window.location.href = `/admin/package/${pkg.id}`)}
+          onClick={() =>
+            (window.location.href = `/admin/package/${pkg.id}`)
+          }
         >
           {pkg.name}
         </span>
       ),
     },
-    { key: "community", header: "ชื่อชุมชน"},
-    { key: "overseer", header: "ชื่อผู้ดูแล"},
+    { key: "community", header: "ชื่อชุมชน" },
+    { key: "overseer", header: "ชื่อผู้ดูแล" },
     { key: "status", header: "สถานะ" },
+
     {
       key: "setting",
       header: "จัดการ",
+      /*
+       * ปุ่มแก้ไข และ ปุ่มลบ ในแต่ละแถว
+       */
       render: (pkg) => (
         <div className="flex space-x-2 gap-2">
           <span
-            className="cursor-pointer "
-            onClick={() => (window.location.href = `/admin/package/${pkg.id}/edit`)}
+            className="cursor-pointer"
+            onClick={() =>
+              (window.location.href = `/admin/package/${pkg.id}/edit`)
+            }
           >
             <PencilIcon className="w-4 h-4" />
           </span>
 
           <span
-            className="cursor-pointer "
+            className="cursor-pointer"
             onClick={() => setDeleteModal({ open: true, pkg })}
           >
             <TrashIcon className="w-4 h-4" />
@@ -233,11 +272,16 @@ const PackageDraftAdmin = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
       {/* Breadcrumb */}
-      <Breadcrumb current={{ label: "ฉบับร่าง", to: "/admin/packages/draft" }} />
+      <Breadcrumb
+        current={{ label: "ฉบับร่าง", to: "/admin/packages/draft" }}
+      />
 
-      {/* Toolbar: Search + Add button */}
+      {/* Toolbar */}
       <div className="flex justify-between mb-4">
-        <SearchBarTable value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <SearchBarTable
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
 
         <button
           className="px-3 py-2 border rounded-form text-white flex items-center hover:bg-green-900"
@@ -251,19 +295,28 @@ const PackageDraftAdmin = () => {
 
       {/* Table */}
       <DataTable<Package>
-        data={packages}
+        data={paginatedRows}
         columns={columns}
         getKey={(pkg) => pkg.id.toString()}
         bulkActions={selectedRows.length > 0 ? bulkActions : []}
         selectable
         onSelectedChange={(rows) => setSelectedRows(rows)}
         pagination={pagination}
-        onPageChange={(p) => setPagination((prev) => ({ ...prev, currentPage: p }))}
-        onPageSizeChange={(limit) => setPagination((prev) => ({ ...prev, limit, currentPage: 1 }))}
+        onPageChange={(p) =>
+          setPagination((prev) => ({ ...prev, currentPage: p }))
+        }
+        onPageSizeChange={(limit) =>
+          setPagination((prev) => ({
+            ...prev,
+            limit,
+            currentPage: 1,
+          }))
+        }
         isLoading={loading}
         theme="brand"
       />
-      {/* Modal: Delete single */}
+
+      {/* Modal : ลบเดี่ยว */}
       <Modal
         open={deleteModal.open}
         title="ยืนยันการลบแพ็กเกจ"
@@ -274,7 +327,7 @@ const PackageDraftAdmin = () => {
         onCancel={() => setDeleteModal({ open: false, pkg: null })}
       />
 
-      {/* Modal: Delete multiple */}
+      {/* Modal : ลบหลายรายการ */}
       <Modal
         open={bulkDeleteModal.open}
         title="ลบแพ็กเกจหลายรายการ"

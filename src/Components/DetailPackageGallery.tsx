@@ -25,7 +25,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
  *   ตัวอย่างค่า : "http://localhost:3000"
  */
 const BASE_URL = new URL(API_BASE_URL).origin;
-
 type MediaType = "COVER" | "GALLERY" | "VIDEO";
 
 /**

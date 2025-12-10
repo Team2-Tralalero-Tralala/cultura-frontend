@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * คำอธิบาย :
  *   หน้ารายละเอียดแพ็กเกจ (สำหรับผู้ดูแลระบบระดับ Admin)
@@ -9,8 +10,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Button from "../../Components/Button";
-import { Backward, EditIcon } from "../../Icon/MaterialSymbolsLight";
+// import Button from "../../Components/Button";
+// import { Backward, EditIcon } from "../../Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
@@ -84,7 +85,7 @@ interface HomestayHistory {
 interface PackageFile {
   id: number;
   path: string;
-  type: string;
+  type: "GALLERY" | "COVER" | "VIDEO";
 }
 
 interface PackageData {
@@ -93,7 +94,7 @@ interface PackageData {
   description: string;
   capacity: number;
   price: number;
-  facility: string;
+  facility: string
   warning: string;
   statusPackage: string;
   statusApprove?: string | null;

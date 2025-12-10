@@ -51,6 +51,8 @@ type Feedback = {
   responder?: Responder | null;
 };
 
+type SortOrder = "newest" | "oldest";
+
 /**
  * ฟังก์ชัน : getImageUrl
  * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
@@ -67,56 +69,30 @@ function getImageUrl(fileName?: string): string | undefined {
 }
 
 /**
- * ฟังก์ชัน : formatTimeAgo
- * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไป เช่น "2 ชั่วโมงที่แล้ว"
+ * ฟังก์ชัน : formatDateThai
+ * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
  * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
  * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
  */
-function formatTimeAgo(createdAt: string): string {
-  const now = new Date();
-  const created = new Date(createdAt);
-
-  if (Number.isNaN(created.getTime())) {
-    return "";
-  }
-
-  const diff = now.getTime() - created.getTime();
-
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-
-  if (minutes < 1) return "เมื่อสักครู่";
-  if (minutes < 60) return `${minutes} นาทีที่แล้ว`;
-  if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`;
-  if (days < 30) return `${days} วันที่แล้ว`;
-  if (months < 12) return `${months} เดือนที่แล้ว`;
-  return `${years} ปีที่แล้ว`;
-}
+const formatDateThai = (isoDateString: string) => {
+    const date = new Date(isoDateString);
+    return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+};
 
 /**
- * ฟังก์ชัน : formatMaskedFullName
- * คำอธิบาย : แปลงชื่อจริงให้เป็นรูปแบบปกปิดบางส่วน (เฉพาะตัวแรกที่แสดง ช่วงที่เหลือเป็น *)
- * Input    : tourist (Tourist) - ข้อมูลนักท่องเที่ยว
- * Output   : string - ชื่อที่ถูก mask แล้ว
+ * ฟังก์ชัน : formatFullName
+ * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
+ * Input : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
+ * Output: string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
  */
-function formatMaskedFullName(tourist: Tourist): string {
-  const getMaskedText = (text: string): string => {
-    if (!text) {
-      return "";
-    }
-
-    const firstCharacter = text[0];
-    const maskedCharacters = "*".repeat(Math.max(1, text.length - 1));
-    return firstCharacter + maskedCharacters;
-  };
-
-  const maskedFirstName = getMaskedText(tourist.fname);
-  const maskedLastName = getMaskedText(tourist.lname);
-
-  return `${maskedFirstName} ${maskedLastName}`.trim();
+function formatFullName(tourist: Tourist): string {
+  const mask = (text: string) =>
+    text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
+  return `${mask(tourist.fname)} ${mask(tourist.lname)}`.trim();
 }
 
 /**
@@ -143,8 +119,7 @@ export default function PackageFeedbacksPage() {
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const [sortOrder, setSortOrder] =
-    React.useState<"unreplied" | "replied">("unreplied");
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>("newest");
 
   const [replyTexts, setReplyTexts] = React.useState<Record<number, string>>(
     {}
@@ -165,48 +140,32 @@ export default function PackageFeedbacksPage() {
 
     setIsLoading(true);
 
-    getPackageFeedbacksByPackageIdMember(packageIdNumber).then(
-      (response) => {
-        const typedResponse = response as { data?: Feedback[] } | Feedback[];
-        const feedbackResponseLists = Array.isArray(typedResponse)
-          ? typedResponse
-          : typedResponse.data ?? [];
+    getPackageFeedbacksByPackageIdMember(packageIdNumber).then((response) => {
+      const typedResponse = response as { data?: Feedback[] } | Feedback[];
+      const feedbackResponseLists = Array.isArray(typedResponse)
+        ? typedResponse
+        : typedResponse.data ?? [];
 
-        setFeedbackLists(feedbackResponseLists);
-        setIsLoading(false);
-      }
-    );
+      setFeedbackLists(feedbackResponseLists);
+      setIsLoading(false);
+    });
   }, [packageIdNumber]);
 
   /**
    * ฟังก์ชัน : getSortedFeedbackLists
-   * คำอธิบาย : เรียงลำดับรายการ feedback ให้กลุ่มที่เลือกอยู่ด้านบน แต่ยังคงแสดงทุกรายการ
-   * Input    : feedbackLists (Feedback[]) - รายการ feedback ทั้งหมด
-   *            sortOrder ("unreplied" | "replied") - ตัวเลือกเรียงลำดับ
-   * Output   : Feedback[] - รายการที่ผ่านการจัดลำดับแล้ว
+   * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
    */
   const sortedFeedbackLists = React.useMemo(() => {
     return [...feedbackLists]
-      .map((feedbackItem) => {
-        const hasReply =
-          !!feedbackItem.replyMessage &&
-          feedbackItem.replyMessage.trim() !== "";
-
-        const isPrimaryGroup =
-          sortOrder === "replied" ? hasReply : !hasReply;
-
-        return {
-          feedbackItem,
-          isPrimaryGroup,
-          createdAtTime: new Date(feedbackItem.createdAt).getTime(),
-        };
-      })
+      .map((feedbackItem) => ({
+        feedbackItem,
+        createdAtTime: new Date(feedbackItem.createdAt).getTime(),
+      }))
       .sort((current, next) => {
-        if (current.isPrimaryGroup !== next.isPrimaryGroup) {
-          return current.isPrimaryGroup ? -1 : 1;
+        if (sortOrder === "newest") {
+          return next.createdAtTime - current.createdAtTime;
         }
-
-        return next.createdAtTime - current.createdAtTime;
+        return current.createdAtTime - next.createdAtTime;
       })
       .map((item) => item.feedbackItem);
   }, [feedbackLists, sortOrder]);
@@ -214,9 +173,9 @@ export default function PackageFeedbacksPage() {
   const packageName =
     feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
 
-  const filterOptions = [
-    { label: "ยังไม่ได้ตอบกลับ", value: "unreplied" },
-    { label: "ตอบกลับแล้ว", value: "replied" },
+  const filterOptions: { label: string; value: SortOrder }[] = [
+    { label: "ใหม่สุด", value: "newest" },
+    { label: "เก่าสุด", value: "oldest" },
   ];
 
   /**
@@ -311,9 +270,7 @@ export default function PackageFeedbacksPage() {
             <FilterDropdown
               options={filterOptions}
               selected={sortOrder}
-              onChange={(value) =>
-                setSortOrder(value as "unreplied" | "replied")
-              }
+              onChange={(value) => setSortOrder(value as SortOrder)}
             />
           </div>
         </div>
@@ -333,7 +290,7 @@ export default function PackageFeedbacksPage() {
                 !!feedbackItem.replyMessage &&
                 feedbackItem.replyMessage.trim() !== "";
 
-              const feedbackTimeLabel = formatTimeAgo(feedbackItem.createdAt);
+              const feedbackTimeLabel = formatDateThai(feedbackItem.createdAt);
 
               const replyName = feedbackItem.responder
                 ? `${feedbackItem.responder.fname} ${feedbackItem.responder.lname}`
@@ -344,7 +301,7 @@ export default function PackageFeedbacksPage() {
                 replyName.charAt(0).toUpperCase();
 
               const replyTimeLabel = feedbackItem.replyAt
-                ? formatTimeAgo(feedbackItem.replyAt)
+                ? formatDateThai(feedbackItem.createdAt)
                 : "";
 
               return (
@@ -363,9 +320,7 @@ export default function PackageFeedbacksPage() {
                       </div>
 
                       <span className="font-semibold text-gray-800">
-                        {formatMaskedFullName(
-                          feedbackItem.bookingHistory.tourist
-                        )}
+                        {formatFullName(feedbackItem.bookingHistory.tourist)}
                       </span>
                     </div>
 

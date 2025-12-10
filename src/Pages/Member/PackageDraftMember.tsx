@@ -47,7 +47,7 @@ function debounce<F extends (...args: any[]) => any>(fn: F, delay: number) {
 }
 
 // ================= Component หลัก =================
-const PackageDraftAdmin = () => {
+const PackageDraftMember = () => {
   // ====== State: Data & Loading ======
   const [packages, setPackages] = useState<Package[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -94,7 +94,7 @@ const PackageDraftAdmin = () => {
       setLoading(true);
 
       const res = await fetch(
-        `http://localhost:3000/api/admin/packages/draft?search=${search}&page=${page}&limit=${limit}`,
+        `http://localhost:3000/api/member/packages/draft?search=${search}&page=${page}&limit=${limit}`,
         { credentials: "include" }
       );
 
@@ -104,7 +104,7 @@ const PackageDraftAdmin = () => {
             id: pkg.id ?? 0,
             name: pkg.name ?? "-",
             community: pkg.community?.name ?? "-",
-            overseer: pkg.overseerPackage?.name ?? "-",
+            overseer: pkg.overseerPackage?.username ?? "-",
             status: pkg.statusPackage === "DRAFT" ? "ฉบับร่าง" : pkg.statusPackage,
           }))
         : [];
@@ -142,7 +142,7 @@ const PackageDraftAdmin = () => {
 
     try {
       await axios.delete(
-        `http://localhost:3000/api/admin/packages/draft/${deleteModal.pkg.id}`,
+        `http://localhost:3000/api/member/packages/draft/${deleteModal.pkg.id}`,
         { withCredentials: true }
       );
 
@@ -162,7 +162,7 @@ const PackageDraftAdmin = () => {
 
     try {
       await axios.patch(
-        `http://localhost:3000/api/admin/packages/draft/bulk-delete`,
+        `http://localhost:3000/api/member/packages/draft/bulk-delete`,
         { ids },
         { withCredentials: true }
       );
@@ -196,33 +196,57 @@ const PackageDraftAdmin = () => {
       header: "ชื่อแพ็กเกจ",
       render: (pkg) => (
         <span
-          className="cursor-pointer hover:text-gray-800"
-          onClick={() => (window.location.href = `/admin/package/${pkg.id}`)}
+          className="cursor-pointer text-gray-600 hover:text-gray-800"
+          onClick={() => (window.location.href = `/member/package/${pkg.id}`)}
         >
           {pkg.name}
         </span>
       ),
     },
-    { key: "community", header: "ชื่อชุมชน"},
-    { key: "overseer", header: "ชื่อผู้ดูแล"},
-    { key: "status", header: "สถานะ" },
+    { key: "community", header: "ชื่อชุมชน",
+      render: (pkg) => (
+        <span
+          className=" text-gray-600 "
+        >
+          {pkg.community}
+        </span>
+      ),
+     },
+    { key: "overseer", header: "ชื่อผู้ดูแล",
+      render: (pkg) => (
+        <span
+          className=" text-gray-600 "
+        >
+          {pkg.overseer}
+        </span>
+      ), },
+    { key: "status", header: "สถานะ" ,
+      
+      render: (pkg) => (
+        <span
+          className=" text-gray-600 "
+        >
+          {pkg.status}
+        </span>
+      ),
+    },
     {
       key: "setting",
       header: "จัดการ",
       render: (pkg) => (
-        <div className="flex space-x-2 gap-2">
+        <div className="flex space-x-2">
           <span
-            className="cursor-pointer "
-            onClick={() => (window.location.href = `/admin/package/${pkg.id}/edit`)}
+            className="cursor-pointer text-gray-500"
+            onClick={() => (window.location.href = `/member/package/${pkg.id}/edit`)}
           >
-            <PencilIcon className="w-4 h-4" />
+            <PencilIcon className="w-5 h-5" />
           </span>
 
           <span
-            className="cursor-pointer "
+            className="cursor-pointer text-gray-500"
             onClick={() => setDeleteModal({ open: true, pkg })}
           >
-            <TrashIcon className="w-4 h-4" />
+            <TrashIcon className="w-5 h-5" />
           </span>
         </div>
       ),
@@ -233,7 +257,7 @@ const PackageDraftAdmin = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
       {/* Breadcrumb */}
-      <Breadcrumb current={{ label: "ฉบับร่าง", to: "/admin/packages/draft" }} />
+      <Breadcrumb current={{ label: "ฉบับร่าง", to: "/member/packages/draft" }} />
 
       {/* Toolbar: Search + Add button */}
       <div className="flex justify-between mb-4">
@@ -242,7 +266,7 @@ const PackageDraftAdmin = () => {
         <button
           className="px-3 py-2 border rounded-form text-white flex items-center hover:bg-green-900"
           style={{ backgroundColor: "#055035" }}
-          onClick={() => (window.location.href = "/admin/package/create")}
+          onClick={() => (window.location.href = "/member/packages/create")}
         >
           <Plus size={18} className="mr-2" />
           เพิ่มแพ็กเกจ
@@ -288,4 +312,4 @@ const PackageDraftAdmin = () => {
   );
 };
 
-export default PackageDraftAdmin;
+export default PackageDraftMember;

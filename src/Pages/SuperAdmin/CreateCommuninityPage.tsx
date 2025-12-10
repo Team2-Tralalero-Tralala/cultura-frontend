@@ -77,6 +77,7 @@ const communitySchema = z.object({
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
 
   latitude: z
     .union([z.string(), z.number()])
@@ -142,7 +143,60 @@ export default function CreateCommuninityPage() {
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
+  const [openCancelConfirm, setOpenCancelConfirm] = useState(false);
   const navigate = useNavigate();
+  /**
+   * คำอธิบาย: ฟังก์ชันนี้ใช้เพื่อตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลงหรือไม่
+   * Input: ไม่มี input
+   * Output: boolean
+   */
+  const checkIsDirty = () => {
+    const isFormDirty =
+      !!formData.name ||
+      !!formData.type ||
+      !!formData.registerNumber ||
+      !!formData.bankName ||
+      !!formData.accountName ||
+      !!formData.accountNumber ||
+      !!formData.description ||
+      !!formData.mainActivityName ||
+      !!formData.mainActivityDescription ||
+      !!formData.houseNumber ||
+      !!formData.villageNumber ||
+      !!formData.detail ||
+      !!formData.phone ||
+      !!formData.email ||
+      !!formData.urlWebsite ||
+      !!formData.urlFacebook ||
+      !!formData.urlLine ||
+      !!formData.urlTiktok ||
+      (formData.communityMembers && formData.communityMembers.length > 0);
+
+    const isLocationDirty =
+      !!location.province || !!location.district || !!location.subdistrict || !!location.postalCode;
+
+    const isFilesDirty =
+      !!coverFiles || !!logoFile || galleryFiles.length > 0 || videoFiles.length > 0;
+
+    const isPositionDirty =
+      position[0] !== startingPosition[0] || position[1] !== startingPosition[1];
+
+    return isFormDirty || isLocationDirty || isFilesDirty || isPositionDirty;
+  };
+
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบการยกเลิก
+   * Input: ไม่มี input
+   * Output: boolean
+   */
+  const handleCancel = () => {
+    if (checkIsDirty()) {
+      setOpenCancelConfirm(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
    * Input : panel (string)
@@ -190,23 +244,6 @@ export default function CreateCommuninityPage() {
     setFormErrors({});
     return true;
   };
-
-  React.useEffect(() => {
-    if (location.province) {
-      setFormData((prev) => ({
-        ...prev,
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: location.postalCode,
-      }));
-
-      // ตรวจสอบ error ทันที
-      validateField("province", location.province);
-      validateField("district", location.district);
-      validateField("subDistrict", location.subdistrict);
-    }
-  }, [location]);
 
   React.useEffect(() => {
     setFormData((prev) => ({
@@ -313,7 +350,6 @@ export default function CreateCommuninityPage() {
             latitude: Number(position[0]),
             longitude: Number(position[1]),
           },
-          // ไม่ต้องรวมไฟล์ใน JSON เพราะจะส่งแยก
         })
       );
 
@@ -331,24 +367,15 @@ export default function CreateCommuninityPage() {
       videoFiles.forEach((file) => {
         formDataToSend.append("video", file);
       });
-      console.log("Submitting form data:", formDataToSend);
       await createCommunity(formDataToSend);
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
       navigate("/super/communities/all");
     } catch (error: any) {
-      const backendMessage =
-        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
-
-      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
-      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
-      // หากสำเร็จ
-      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
-
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage(cleanMessage);
+      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
       setAlertOpen(true);
     }
   };
@@ -360,7 +387,6 @@ export default function CreateCommuninityPage() {
           current={{
             label: "เพิ่มวิสาหกิจชุมชน",
             to: "/super/community/create",
-
           }}
         />
       </div>
@@ -400,8 +426,7 @@ export default function CreateCommuninityPage() {
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
               roundedCover="rounded-[5px]"
-              width={1024}
-              coverHeight={360}
+              coverHeight={500}
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
@@ -551,10 +576,7 @@ export default function CreateCommuninityPage() {
             </div>
             <div className="flex col-span-2">
               <div className="mr-5">
-                <h3 className="font-bold text-base mb-3">
-                  อัพโหลดรูปภาพเพิ่มเติม
-                  <span className="text-red-600"> *</span>{" "}
-                </h3>
+                <h3 className="font-bold text-base mb-3">อัพโหลดรูปภาพเพิ่มเติม</h3>
                 <UploadCard
                   max={5}
                   accept="image/*"
@@ -575,10 +597,7 @@ export default function CreateCommuninityPage() {
             </div>
             <div className="col-span-2">
               <div className="mr-5">
-                <h3 className="font-bold text-base mb-3">
-                  อัพโหลดวิดีโอเพิ่มเติม
-                  <span className="text-red-600"> *</span>{" "}
-                </h3>
+                <h3 className="font-bold text-base mb-3">อัพโหลดวิดีโอเพิ่มเติม</h3>
                 <UploadCard
                   max={5}
                   accept="video/*"
@@ -662,19 +681,22 @@ export default function CreateCommuninityPage() {
                     postalCode: loc.postalCode,
                   }));
                   // ตรวจสอบความถูกต้องของ field ที่เกี่ยวข้อง
-                  validateField("province", loc.province);
-                  validateField("district", loc.district);
-                  validateField("subDistrict", loc.subdistrict);
+                  if (loc.province) validateField("province", loc.province);
+                  if (loc.district) validateField("district", loc.district);
+                  if (loc.subdistrict) validateField("subDistrict", loc.subdistrict);
+                  if (loc.postalCode) validateField("postalCode", loc.postalCode);
                 }}
                 error={{
                   province: !!formErrors.province,
                   district: !!formErrors.district,
                   subdistrict: !!formErrors.subDistrict,
+                  postalCode: !!formErrors.postalCode,
                 }}
                 helperText={{
                   province: formErrors.province,
                   district: formErrors.district,
                   subdistrict: formErrors.subDistrict,
+                  postalCode: formErrors.postalCode,
                 }}
               />
             </div>
@@ -885,13 +907,15 @@ export default function CreateCommuninityPage() {
           </div>
         </AccordionDetails>
       </Accordion>
-      <div className="flex justify-end mt-2.5">
-        <div className="w-36">
-          <Button type="cancel">ยกเลิก</Button>
+      <div className="flex justify-end mt-5 mb-10 mr-5">
+        <div className="w-32 mr-2.5">
+          <Button type="cancel" onClick={handleCancel}>
+            ยกเลิก
+          </Button>
         </div>
-        <div className="ml-2.5 w-36">
+        <div className="w-32">
           <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
-            สร้างชุมชน
+            บันทึก
           </Button>
         </div>
       </div>
@@ -904,6 +928,16 @@ export default function CreateCommuninityPage() {
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <Modal
+        open={openCancelConfirm}
+        title="ยืนยันการยกเลิก"
+        text="เเมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        onConfirm={() => {
+          setOpenCancelConfirm(false);
+          navigate(-1);
+        }}
+        onCancel={() => setOpenCancelConfirm(false)}
       />
       <ModalAlert
         open={alertOpen}

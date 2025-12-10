@@ -37,6 +37,7 @@ import ManageTags from "@/Pages/SuperAdmin/ManageTags";
 import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
 import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageAccountCommunity";
 import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperAdmin";
+import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 
 /*
  * Module: SuperAdminRoutes
@@ -87,7 +88,10 @@ export default function SuperAdminRoutes() {
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="shared/tags" element={<ManageTags />} />
       <Route path="community/:communityId/homestay/create" element={<CreateHomestaysPage />} />
-      <Route path="community/:communityId/homestay/:homestayId/edit" element={<EditHomestayPage />} />
+      <Route
+        path="community/:communityId/homestay/:homestayId/edit"
+        element={<EditHomestayPage />}
+      />
       <Route path="dashboard" element={<DashboardPage />} />
       <Route path="setting" element={<SettingHomePage />} />
       <Route path="backups" element={<BackupsPage />} />
@@ -122,6 +126,7 @@ export default function SuperAdminRoutes() {
 
       {/* หน้าตารางของ tag */}
       <Route path="tags" element={<ManageTags />} />
+      <Route path="profile-me" element={<EditProfile />} />
     </Routes>
   );
 }

@@ -41,6 +41,7 @@ import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 import CreateMemberPage from "@/Pages/Admin/CreateMemberPage";
 import EditMemberPage from "@/Pages/Admin/EditMemberPage";
 import AuthentionLogAdmin from "@/Pages/Admin/AuthentionLogAdmin";
+import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 
 export default function AdminRoutes() {
   return (
@@ -101,6 +102,8 @@ export default function AdminRoutes() {
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="package/:id" element={<DetailPackageAdmin />} />
       <Route path="logs" element={<AuthentionLogAdmin />} />
+
+      <Route path="profile-me" element={<EditProfile />} />
     </Routes>
   );
 }

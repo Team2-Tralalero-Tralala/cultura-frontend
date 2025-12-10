@@ -180,6 +180,17 @@ export const CreatePackagePage = () => {
    * Output: สถานะความถูกต้อง (Boolean)
    */
   const validateAll = () => {
+    if (formState.statusPackage === "DRAFT") {
+      const errors: PackageErrors = {};
+      let isValid = true;
+
+      if (!formState.name?.trim()) {
+        errors.name = "กรุณากรอกชื่อแพ็กเกจ";
+        isValid = false;
+      }
+      setFormErrors(errors);
+      return isValid;
+    }
     let isValid = true;
     const result = packageSchema.safeParse(formState);
     if (!result.success) {
@@ -398,26 +409,25 @@ export const CreatePackagePage = () => {
    * Input: -
    * Output: -
    */
-  const handleConfirmSave = async () => {
+const handleConfirmSave = async () => {
     setIsConfirmModalOpen(false);
     if (isSaving) return;
     setIsSaving(true);
-
     try {
       const payload = {
         ...(formState.overseerMemberId ? { overseerMemberId: Number(formState.overseerMemberId) } : {}),
         name: normalizeOrDefault(formState.name),
-        description: normalizeOrDefault(formState.description),
+        description: formState.description || "", 
         statusPackage: formState.statusPackage,
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
-        warning: normalizeOrDefault(formState.facility),
-        startDate: normalizeOrDefault(formState.startDate),
-        dueDate: normalizeOrDefault(formState.endDate),
+        warning: formState.facility || "", 
+        startDate: formState.startDate || null,
+        dueDate: formState.endDate || null,
+        bookingOpenDate: formState.openDate || null,
+        bookingCloseDate: formState.closeDate || null,
         ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
         ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-        bookingOpenDate: normalizeOrDefault(formState.openDate),
-        bookingCloseDate: normalizeOrDefault(formState.closeDate),
         ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
         ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
@@ -425,19 +435,20 @@ export const CreatePackagePage = () => {
         ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
         ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
         ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-        facility: normalizeOrDefault(formState.facility),
+        
+        facility: formState.facility || "",
         tagIds,
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
         location: {
-          houseNumber: normalizeOrDefault(formState.houseNumber),
+          houseNumber: formState.houseNumber,
           villageNumber: toIntOrNull(formState.villageNumber),
-          subDistrict: normalizeOrDefault(formState.subDistrict),
-          district: normalizeOrDefault(formState.district),
-          province: normalizeOrDefault(formState.province),
-          postalCode: normalizeOrDefault(formState.postalCode),
-          detail: normalizeOrDefault(formState.addressDetail),
-          latitude: Number(formState.latitude),
-          longitude: Number(formState.longitude),
+          subDistrict: formState.subDistrict,
+          district: formState.district,
+          province: formState.province,
+          postalCode: formState.postalCode,
+          detail: formState.addressDetail,
+          latitude: Number(formState.latitude) || 0,
+          longitude: Number(formState.longitude) || 0,
         },
       };
 
@@ -446,12 +457,14 @@ export const CreatePackagePage = () => {
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
       videoFiles.forEach((file: any) => formData.append("video", file));
+      
       await axios.post(`${apiUrl}/member/package`, formData, {
         withCredentials: true,
       });
 
       navigate("/member/packages/all");
     } catch (error: any) {
+      console.error(error);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);

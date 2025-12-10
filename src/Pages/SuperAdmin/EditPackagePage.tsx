@@ -270,7 +270,7 @@ export const EditPackagePage = () => {
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
   const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
   const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
-
+  const [initialStatus, setInitialStatus] = useState<PackageStatus | null>(null);
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -825,6 +825,7 @@ export const EditPackagePage = () => {
             <PackageStatusDropdown
               value={formState.statusPackage}
               onChange={(status) => setFormField("statusPackage", status)}
+              exclude={initialStatus === "DRAFT" ? [] : ["DRAFT"]}
             />
           </div>
 

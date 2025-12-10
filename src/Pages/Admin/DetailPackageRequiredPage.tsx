@@ -1,10 +1,3 @@
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจที่ถูกร้องขอ (Detail Package Request)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
- * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถปลี่ยนสถานะ อนุมัติ/ปฏิเสธ (เรียกผ่าน service: package-request-service)
- */
-
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -23,7 +16,6 @@ import RejectModal from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 /**
  * ฟังก์ชัน : - (ค่าคงที่)
@@ -114,7 +106,7 @@ export function formatThaiDate(dateString: string) {
   const dayName = days[date.getDay()];
   const day = date.getDate();
   const monthName = months[date.getMonth()];
-  const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+  const year = date.getFullYear() + 543;
 
   return `${dayName} ที่ ${day} ${monthName} พ.ศ. ${year}`;
 }
@@ -505,7 +497,6 @@ export default function DetailPackageRequiredPage() {
               startingPosition={mapCenter}
               startingZoom={13}
               onChange={(_latlng) => {
-                // view only
               }}
             />
           </div>

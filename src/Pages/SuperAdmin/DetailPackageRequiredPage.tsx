@@ -91,7 +91,7 @@ export function formatThaiDate(dateString: string) {
   const dayName = days[date.getDay()];
   const day = date.getDate();
   const monthName = months[date.getMonth()];
-  const year = date.getFullYear() + 543; // แปลงเป็น พ.ศ.
+  const year = date.getFullYear() + 543;
 
   return `${dayName} ที่ ${day} ${monthName} พ.ศ. ${year}`;
 }

@@ -73,7 +73,7 @@ const NavbarSam = () => {
               {/* เมนูใน dropdown */}
               <li>
                 <Link
-                  to="/profile/edit"
+                  to="/super/profile-me"
                   onClick={closeDropdown}
                   className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold"
                 >

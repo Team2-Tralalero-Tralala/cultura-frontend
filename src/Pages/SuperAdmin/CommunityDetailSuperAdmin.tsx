@@ -11,15 +11,12 @@ import { Icon } from "@iconify/react";
 import { getCommunityDetailById } from "@/Services/community-service";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/* ===========================================================
-   ส่วน Helper Function
-   =========================================================== */
 
 /**
- * ฟังก์ชัน : show
+ * ฟังก์ชัน : displayText
  * ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล
  */
-const show = (v?: string | null) => (v && String(v).trim() ? v : "-");
+const displayText = (v?: string | null) => (v && String(v).trim() ? v : "-");
 
 /**
  * ฟังก์ชัน : toThaiDate
@@ -35,15 +32,6 @@ const toThaiDate = (iso?: string | null) => {
   return `${dd}/${mm}/${yyyy}`;
 };
 
-/*
- * ===========================================================
- * ฟังก์ชัน : resolveBackendUploadUrl
- * -----------------------------------------------------------
- * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend (มักขึ้นต้นด้วย uploads/)
- * ให้เป็น URL ดาวน์โหลดเต็มที่พร้อมใช้งานบน frontend
- * ใช้ค่าใน .env (VITE_API_URL) และ fallback เป็น localhost หากไม่พบค่า
- * ===========================================================
- */
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
@@ -88,12 +76,10 @@ function listImagesByType(community: any, type: string): string[] {
   );
   return arr.map(pickImagePath).filter(Boolean) as string[];
 }
-/* ===========================================================
-   Components ย่อยที่ใช้ภายในหน้า
-   =========================================================== */
 
+/* Components ย่อยที่ใช้ภายในหน้า */
 /**
- * Component : Row
+ * ฟังก์ชัน : Row
  * แสดงแถวข้อมูลแบบ Label : Value
  */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -107,7 +93,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /**
- * Component : AvatarCircle
+ * ฟังก์ชัน : AvatarCircle
  * แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
  */
 function AvatarCircle({ src, name, size = 64 }: any) {
@@ -132,7 +118,7 @@ function AvatarCircle({ src, name, size = 64 }: any) {
 }
 
 /**
- * Component : LogoCircle
+ * ฟังก์ชัน : LogoCircle
  * แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
  */
 function LogoCircle({ src, name, size = 120 }: any) {
@@ -154,7 +140,7 @@ function LogoCircle({ src, name, size = 120 }: any) {
 }
 
 /**
- * Component : CoverRect
+ * ฟังก์ชัน : CoverRect
  * แสดงภาพปก (แนวนอนสี่เหลี่ยม)
  */
 function CoverRect({ src, height = 320 }: any) {
@@ -181,7 +167,7 @@ const Pin = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 /**
- * Component : Section
+ * ฟังก์ชัน : Section
  * Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
  */
 function Section({
@@ -236,7 +222,7 @@ function Section({
 }
 
 /**
- * Component : ItemCard
+ * ฟังก์ชัน : ItemCard
  * การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / แพ็กเกจ / ที่พัก)
  */
 function ItemCard({ image, title, children }: any) {
@@ -258,9 +244,7 @@ function ItemCard({ image, title, children }: any) {
     </div>
   );
 }
-/* ===========================================================
-   Component หลัก : CommunityDetailSuperAdmin
-   =========================================================== */
+/* ฟังก์ชันหลัก : CommunityDetailSuperAdmin */
 
 export default function CommunityDetailSuperAdmin() {
   const navigate = useNavigate();
@@ -269,7 +253,7 @@ export default function CommunityDetailSuperAdmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ---------------------- ดึงข้อมูลชุมชน ---------------------- */
+  /* ดึงข้อมูลชุมชน */
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -284,7 +268,7 @@ export default function CommunityDetailSuperAdmin() {
     })();
   }, [id]);
 
-  /* ---------------------- ดึงรูปจาก backend ---------------------- */
+  /* ดึงรูปจาก backend */
   const coverImage = useMemo(
     () => resolveBackendUploadUrl(findImage(community, "COVER")),
     [community]
@@ -308,19 +292,17 @@ export default function CommunityDetailSuperAdmin() {
     [community]
   );
 
-  /* ---------------------- สถานะโหลด / error ---------------------- */
+  /* สถานะโหลด / error */
   if (isLoading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!community) return <div className="p-8">ไม่พบข้อมูล</div>;
 
   const isOpen = String(community.status || "").toUpperCase() === "OPEN";
 
-  /* ---------------------- ส่วนแสดงผลหลัก ---------------------- */
+  /*  ส่วนแสดงผลหลัก */
   return (
     <div className="w-full space-y-4">
-      {/* --------------------------------------------------------
-        Breadcrumb นำทางหน้า
-      -------------------------------------------------------- */}
+      {/* Breadcrumb นำทางหน้า */}
       <div>
         <Breadcrumb
           current={{
@@ -330,9 +312,7 @@ export default function CommunityDetailSuperAdmin() {
         />
       </div>
 
-      {/* --------------------------------------------------------
-         กล่องหลักแสดงรายละเอียด
-       -------------------------------------------------------- */}
+      {/* กล่องหลักแสดงรายละเอียด */}
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm box-border w-full p-6">
         {/* ส่วนหัว + ปุ่มแก้ไข */}
         <div className="px-6 pt-5 pb-3 flex items-center justify-between">
@@ -358,9 +338,7 @@ export default function CommunityDetailSuperAdmin() {
           </Link>
         </div>
 
-        {/* --------------------------------------------------------
-           ภาพปกและโลโก้ชุมชน
-         -------------------------------------------------------- */}
+        {/* ภาพปกและโลโก้ชุมชน*/}
         {(() => {
           const COVER_H = 300;
           const LOGO = 240;
@@ -377,7 +355,7 @@ export default function CommunityDetailSuperAdmin() {
                     {/* Title + Status */}
                     <div className="flex items-center gap-3">
                       <h1 className="text-[22px] font-bold leading-tight">
-                        {show(community.name)}
+                        {displayText(community.name)}
                       </h1>
 
                       {!!community.status && (
@@ -411,8 +389,8 @@ export default function CommunityDetailSuperAdmin() {
                     <div className="mt-3 flex items-start gap-2 text-black">
                       <Pin className="mt-1.5 shrink-0" />
                       <span className="leading-relaxed">
-                        {show(community.location?.detail)} {show(community.location?.subDistrict)}{" "}
-                        {show(community.location?.district)} {show(community.location?.province)}{" "}
+                        {displayText(community.location?.detail)} {displayText(community.location?.subDistrict)}{" "}
+                        {displayText(community.location?.district)} {displayText(community.location?.province)}{" "}
                         {community.location?.postalCode ? `(${community.location.postalCode})` : ""}
                       </span>
                     </div>
@@ -423,7 +401,7 @@ export default function CommunityDetailSuperAdmin() {
       icon="famicons:book"
       className="text-[17px] text-black mt-1.5"
     /> */}
-                      <p className="leading-relaxed">{show(community.description)}</p>
+                      <p className="leading-relaxed">{displayText(community.description)}</p>
                     </div>
                   </div>
                 </div>
@@ -432,26 +410,24 @@ export default function CommunityDetailSuperAdmin() {
           );
         })()}
 
-        {/* --------------------------------------------------------
-           รายละเอียดข้อมูลชุมชน (แสดงแบบสองคอลัมน์)
-         -------------------------------------------------------- */}
+        {/* รายละเอียดข้อมูลชุมชน (แสดงแบบสองคอลัมน์) */}
         <div className="px-6 sm:px-8 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 text-sm leading-relaxed">
-            <Row label="ชื่อวิสาหกิจชุมชน">{show(community.name)}</Row>
-            <Row label="ชื่อย่อ">{show(community.alias)}</Row>
+            <Row label="ชื่อวิสาหกิจชุมชน">{displayText(community.name)}</Row>
+            <Row label="ชื่อย่อ">{displayText(community.alias)}</Row>
 
-            <Row label="ประเภทวิสาหกิจชุมชน">{show(community.type)}</Row>
-            <Row label="เลขทะเบียน">{show(community.registerNumber)}</Row>
+            <Row label="ประเภทวิสาหกิจชุมชน">{displayText(community.type)}</Row>
+            <Row label="เลขทะเบียน">{displayText(community.registerNumber)}</Row>
 
             <Row label="วันที่จดทะเบียน">{toThaiDate(community.registerDate)}</Row>
-            <Row label="เบอร์โทร">{show(community.phone)}</Row>
+            <Row label="เบอร์โทร">{displayText(community.phone)}</Row>
 
-            <Row label="อีเมล">{show(community.email)}</Row>
+            <Row label="อีเมล">{displayText(community.email)}</Row>
             <Row label="ที่อยู่">
               <span className="whitespace-pre-line break-words">
-                {`${show(community.location?.detail)} ${show(
+                {`${displayText(community.location?.detail)} ${displayText(
                   community.location?.subDistrict
-                )} ${show(community.location?.district)} ${show(community.location?.province)} ${
+                )} ${displayText(community.location?.district)} ${displayText(community.location?.province)} ${
                   community.location?.postalCode ? `(${community.location.postalCode})` : ""
                 }`}
               </span>
@@ -462,10 +438,10 @@ export default function CommunityDetailSuperAdmin() {
                 ? `${community.location.latitude}, ${community.location.longitude}`
                 : "-"}
             </Row>
-            <Row label="คำอธิบายที่อยู่">{show(community.location?.detailMore)}</Row>
+            <Row label="คำอธิบายที่อยู่">{displayText(community.location?.detailMore)}</Row>
 
-            <Row label="ชื่อกิจกรรมหลัก">{show(community.mainActivityName)}</Row>
-            <Row label="รายละเอียดกิจกรรมหลัก">{show(community.mainActivityDescription)}</Row>
+            <Row label="ชื่อกิจกรรมหลัก">{displayText(community.mainActivityName)}</Row>
+            <Row label="รายละเอียดกิจกรรมหลัก">{displayText(community.mainActivityDescription)}</Row>
 
             <Row label="เว็บไซต์">
               {community.urlWebsite ? (
@@ -481,27 +457,30 @@ export default function CommunityDetailSuperAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="จำนวนสมาชิก">{show(community.communityMembers?.length || 0)} คน</Row>
+             <Row label="จำนวนสมาชิก">
+              {displayText(
+                (community.communityMembers?.length || 0) +
+                (community.admin ? 1 : 0)
+              )} คน
+            </Row>
 
-            <Row label="ชื่อผู้ดูแลหลัก">{show(community.mainAdmin)}</Row>
-            <Row label="เบอร์โทรผู้ดูแลหลัก">{show(community.mainAdminPhone)}</Row>
+            <Row label="ชื่อผู้ดูแลหลัก">{displayText(community.mainAdmin)}</Row>
+            <Row label="เบอร์โทรผู้ดูแลหลัก">{displayText(community.mainAdminPhone)}</Row>
 
-            <Row label="ผู้ประสานงาน">{show(community.coordinatorName)}</Row>
-            <Row label="เบอร์โทรผู้ประสานงาน">{show(community.coordinatorPhone)}</Row>
+            <Row label="ผู้ประสานงาน">{displayText(community.coordinatorName)}</Row>
+            <Row label="เบอร์โทรผู้ประสานงาน">{displayText(community.coordinatorPhone)}</Row>
 
-            <Row label="ผู้ดูแล">{show(community.mainAdmin)}</Row>
+            <Row label="ผู้ดูแล">{displayText(community.mainAdmin)}</Row>
             <div />
 
-            <Row label="ชื่อธนาคาร">{show(community.bankName)}</Row>
-            <Row label="เลขบัญชี">{show(community.accountNumber)}</Row>
+            <Row label="ชื่อธนาคาร">{displayText(community.bankName)}</Row>
+            <Row label="เลขบัญชี">{displayText(community.accountNumber)}</Row>
 
-            <Row label="ชื่อบัญชีธนาคาร">{show(community.accountName)}</Row>
+            <Row label="ชื่อบัญชีธนาคาร">{displayText(community.accountName)}</Row>
           </div>
         </div>
 
-        {/* --------------------------------------------------------
-           ช่องทางการติดต่ออื่น ๆ
-         -------------------------------------------------------- */}
+        {/* ช่องทางการติดต่ออื่น ๆ */}
         <div className="px-6 sm:px-8 mt-8">
           <h2 className="text-xl font-semibold">ช่องทางการติดต่ออื่นๆ</h2>
           <div className="mt-3 space-y-1 text-sm">
@@ -547,21 +526,17 @@ export default function CommunityDetailSuperAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="อื่นๆ">{show(community.urlOther)}</Row>
+            <Row label="อื่นๆ">{displayText(community.urlOther)}</Row>
           </div>
         </div>
 
-        {/* --------------------------------------------------------
-           ประวัติชุมชน
-         -------------------------------------------------------- */}
+        {/* ประวัติชุมชน */}
         <div className="px-6 sm:px-8 mt-10">
           <h2 className="text-xl font-semibold">ประวัติชุมชน</h2>
-          <p className="mt-2 leading-relaxed">{show(community.description)}</p>
+          <p className="mt-2 leading-relaxed">{displayText(community.description)}</p>
         </div>
 
-        {/* --------------------------------------------------------
-           แกลเลอรีรูปภาพเพิ่มเติม
-         -------------------------------------------------------- */}
+        {/* แกลเลอรีรูปภาพเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
           <h2 className="text-xl font-semibold">รูปภาพเพิ่มเติม</h2>
           {galleries?.length ? (
@@ -580,9 +555,7 @@ export default function CommunityDetailSuperAdmin() {
           )}
         </div>
 
-        {/* --------------------------------------------------------
-           วิดีโอเพิ่มเติม
-         -------------------------------------------------------- */}
+        {/* วิดีโอเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
           <h2 className="text-xl font-semibold">วิดีโอเพิ่มเติม</h2>
           {videos?.length ? (
@@ -601,9 +574,7 @@ export default function CommunityDetailSuperAdmin() {
           )}
         </div>
 
-        {/* --------------------------------------------------------
-           แผนที่ตำแหน่งชุมชน (OpenStreetMap)
-         -------------------------------------------------------- */}
+        {/* แผนที่ตำแหน่งชุมชน (OpenStreetMap) */}
         {community.location?.latitude && community.location?.longitude && (
           <div className="px-6 sm:px-8 mt-10 pb-10">
             <h2 className="text-xl font-semibold">แผนที่ตำแหน่งชุมชน</h2>
@@ -635,22 +606,20 @@ export default function CommunityDetailSuperAdmin() {
           </div>
         )}
 
-        {/* --------------------------------------------------------
-           Accordion: แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
-         -------------------------------------------------------- */}
+        {/* Accordion: แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก */}
         <div className="px-6 sm:px-8 mt-6 pb-8">
           {(() => {
             const pkgs = (community.packages || []).filter(
-              (x: any) => x.communityId === community.id
+              (pkg: any) => pkg.communityId === community.id
             );
             const stores = (community.stores || []).filter(
-              (x: any) => x.communityId === community.id
+              (store: any) => store.communityId === community.id
             );
             const homestays = (community.homestays || []).filter(
-              (x: any) => x.communityId === community.id
+              (homestay: any) => homestay.communityId === community.id
             );
 
-            return (
+             return (
               <>
                 {/* ส่วนแสดงข้อมูลแพ็กเกจ */}
                 <Section
@@ -660,25 +629,33 @@ export default function CommunityDetailSuperAdmin() {
                 >
                   {pkgs.length ? (
                     <div className="space-y-4">
-                      {pkgs.map((p: any) => (
-                        <ItemCard
-                          key={p.id}
-                          image={resolveBackendUploadUrl(
-                            p?.packageFile?.find(
-                              (f: any) => String(f.type).toUpperCase() === "COVER"
-                            )?.filePath
-                          )}
-                          title={p.name}
+                      {pkgs.map((pkg: any) => (
+                        <div
+                          key={pkg.id}
+                          onClick={() => navigate(`/super/package/${pkg.id}`)}
+                          className="cursor-pointer"
                         >
-                          <div className="space-y-1">
-                            <div>
-                              - ความจุ {p.capacity} คน • ราคา{" "}
-                              {p.price?.toLocaleString?.() ?? p.price} บาท
+                          <ItemCard
+                            image={resolveBackendUploadUrl(
+                              pkg?.packageFile?.find(
+                                (fileImage: any) => String(fileImage.type).toUpperCase() === "COVER"
+                              )?.filePath
+                            )}
+                            title={pkg.name}
+                          >
+                            <div className="space-y-1">
+                              <div>
+                                - ความจุ {pkg.capacity} คน • ราคา{" "}
+                                {pkg.price?.toLocaleString?.() ?? pkg.price} บาท
+                              </div>
+                              {pkg.description && (
+                                <div className="line-clamp-3">{pkg.description}</div>
+                              )}
                             </div>
-                            {p.description && <div className="line-clamp-3">{p.description}</div>}
-                          </div>
-                        </ItemCard>
+                          </ItemCard>
+                        </div>
                       ))}
+
                     </div>
                   ) : (
                     <div className="text-slate-500 text-sm">ยังไม่มีแพ็กเกจ</div>
@@ -693,19 +670,25 @@ export default function CommunityDetailSuperAdmin() {
                 >
                   {stores.length ? (
                     <div className="space-y-4">
-                      {stores.map((s: any) => (
-                        <ItemCard
-                          key={s.id}
-                          image={resolveBackendUploadUrl(
-                            s?.storeImage?.find(
-                              (f: any) => String(f.type).toUpperCase() === "COVER"
-                            )?.image
-                          )}
-                          title={s.name}
+                      {stores.map((store: any) => (
+                        <div
+                          key={store.id}
+                          onClick={() => navigate(`/super/store/${store.id}`)}
+                          className="cursor-pointer"
                         >
-                          <div className="line-clamp-3">{s.detail || "-"}</div>
-                        </ItemCard>
+                          <ItemCard
+                            image={resolveBackendUploadUrl(
+                              store?.storeImage?.find(
+                                (fileImage: any) => String(fileImage.type).toUpperCase() === "COVER"
+                              )?.image
+                            )}
+                            title={store.name}
+                          >
+                            <div className="line-clamp-3">{store.detail || "-"}</div>
+                          </ItemCard>
+                        </div>
                       ))}
+
                     </div>
                   ) : (
                     <div className="text-slate-500 text-sm">ยังไม่มีร้านค้า</div>
@@ -720,25 +703,31 @@ export default function CommunityDetailSuperAdmin() {
                 >
                   {homestays.length ? (
                     <div className="space-y-4">
-                      {homestays.map((h: any) => (
-                        <ItemCard
-                          key={h.id}
-                          image={resolveBackendUploadUrl(
-                            h?.homestayImage?.find(
-                              (f: any) => String(f.type).toUpperCase() === "COVER"
-                            )?.image
-                          )}
-                          title={h.name}
+                      {homestays.map((homestay: any) => (
+                        <div
+                          key={homestay.id}
+                          onClick={() => navigate(`/super/community/${community.id}/homestay/${homestay.id}`)}
+                          className="cursor-pointer"
                         >
-                          <div className="space-y-1">
-                            <div>
-                              - ประเภท {show(h.type)} • รองรับ {show(h.guestPerRoom)} คน/ห้อง •
-                              ทั้งหมด {show(h.totalRoom)} ห้อง
+                          <ItemCard
+                            image={resolveBackendUploadUrl(
+                              homestay?.homestayImage?.find(
+                                (fileImage: any) => String(fileImage.type).toUpperCase() === "COVER"
+                              )?.image
+                            )}
+                            title={homestay.name}
+                          >
+                            <div className="space-y-1">
+                              <div>
+                                - ประเภท {displayText(homestay.type)} • รองรับ {displayText(homestay.guestPerRoom)} คน/ห้อง •
+                                ทั้งหมด {displayText(homestay.totalRoom)} ห้อง
+                              </div>
+                              <div className="line-clamp-3">{displayText(homestay.facility)}</div>
                             </div>
-                            <div className="line-clamp-3">{show(h.facility)}</div>
-                          </div>
-                        </ItemCard>
+                          </ItemCard>
+                        </div>
                       ))}
+
                     </div>
                   ) : (
                     <div className="text-slate-500 text-sm">ยังไม่มีที่พัก</div>
@@ -746,25 +735,69 @@ export default function CommunityDetailSuperAdmin() {
                 </Section>
 
                 {/* ส่วนแสดงข้อมูลสมาชิก */}
-
                 <Section
                   title="รายชื่อสมาชิก"
-                  count={community.communityMembers?.length || 0}
+                  count={
+                    (community.communityMembers?.length || 0) +
+                    (community.admin ? 1 : 0)
+                  }
                   onManage={() => navigate(`/super/account/community/${community.id}`)}
                 >
-                  {community.communityMembers?.length ? (
+                  {community.communityMembers?.length || community.admin ? (
                     <div className="space-y-3">
-                      {community.communityMembers.map((communityMember: any) => {
+                      {/* การ์ดแอดมินชุมชน */}
+                      {community.admin && (() => {
+                        const admin = community.admin;
+                        const adminFullName = [admin.fname, admin.lname].filter(Boolean).join(" ").trim();
+
+                        return (
+                          <div
+                            key={`admin-${admin.id}`}
+                            onClick={() => navigate(`/super/account/${admin.id}`)}
+                            className="bg-emerald-50 border-emerald-200 rounded-xl border shadow-sm p-4 flex gap-4 items-center"
+                          >
+                            <AvatarCircle
+                              src={resolveBackendUploadUrl(admin.profileImage)}
+                              name={adminFullName || admin.username}
+                              size={64}
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 font-medium truncate">
+                                <span className="truncate">
+                                  {adminFullName || admin.username}
+                                </span>
+
+                                {/* badge แอดมินชุมชน ต่อท้ายชื่อ */}
+                                <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                  แอดมินชุมชน
+                                </span>
+                              </div>
+
+                              {admin.activityRole && (
+                                <div className="text-sm text-slate-700 mt-1">
+                                  • {admin.activityRole}
+                                </div>
+                              )}
+                              <div className="mt-1 text-sm text-slate-600 truncate">
+                                {admin.email || "-"}
+                              </div>
+                              <div className="text-sm text-slate-600">
+                                {admin.phone || "-"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* การ์ดสมาชิกทั่วไป */}
+                      {community.communityMembers?.map((communityMember: any) => {
                         const member = communityMember.user;
-                        const fullName = [member.fname, member.lname]
-                          .filter(Boolean)
-                          .join(" ")
-                          .trim();
+                        const fullName = [member.fname, member.lname].filter(Boolean).join(" ").trim();
 
                         return (
                           <div
                             key={communityMember.id}
-                            onClick={() => navigate(`/super/account/community/${community.id}`)}
+                            onClick={() => navigate(`/super/account/${member.id}`)}
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
                             <AvatarCircle
@@ -784,7 +817,9 @@ export default function CommunityDetailSuperAdmin() {
                               <div className="mt-1 text-sm text-slate-600 truncate">
                                 {member.email || "-"}
                               </div>
-                              <div className="text-sm text-slate-600">{member.phone || "-"}</div>
+                              <div className="text-sm text-slate-600">
+                                {member.phone || "-"}
+                              </div>
                             </div>
                           </div>
                         );
@@ -794,6 +829,7 @@ export default function CommunityDetailSuperAdmin() {
                     <div className="text-slate-500 text-sm">ยังไม่มีสมาชิก</div>
                   )}
                 </Section>
+
               </>
             );
           })()}

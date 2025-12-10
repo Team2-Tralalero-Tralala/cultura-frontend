@@ -38,6 +38,9 @@ import ManagePackagePage from "@/Pages/Admin/ManagePackagePage";
 import CreatePackagePage from "@/Pages/Admin/CreatePackagePage";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
+import CreateMemberPage from "@/Pages/Admin/CreateMemberPage";
+import EditMemberPage from "@/Pages/Admin/EditMemberPage";
+import AuthentionLogAdmin from "@/Pages/Admin/AuthentionLogAdmin";
 
 export default function AdminRoutes() {
   return (
@@ -64,6 +67,8 @@ export default function AdminRoutes() {
 
       <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
 
+
+
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
       <Route path="package-requests" element={<PackageRequestsAdmin />} />
@@ -75,7 +80,8 @@ export default function AdminRoutes() {
 
       <Route path="/booking/refunds" element={<ManageRefundBooking />} />
       <Route path="/members" element={<ManageMembers />} />
-
+      <Route path="/member/create" element={<CreateMemberPage />} />
+      <Route path="/member/:userId/edit" element={<EditMemberPage />} />
       {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
       <Route path="/package/histories" element={<PackageHistoryAdmin />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
@@ -94,6 +100,7 @@ export default function AdminRoutes() {
       <Route path="package/:id/edit" element={<EditPackagePage />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="package/:id" element={<DetailPackageAdmin />} />
+      <Route path="logs" element={<AuthentionLogAdmin />} />
     </Routes>
   );
 }

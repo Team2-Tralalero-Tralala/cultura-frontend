@@ -350,7 +350,7 @@ export default function CreateHomestaysAdminPage() {
     }, [form.latitude, form.longitude]);
 
     return (
-        <div className="w-full max-w-none px-8">
+        <div className="w-full max-w-none">
             {/* breadcrump */}
             <div>
                 <Breadcrumb

@@ -282,7 +282,7 @@ export default function PackageFeedbacksPage() {
 
           <div className="p-6 space-y-6">
             {isLoading && (
-              <div className="text-gray-500 text-sm">กำลังโหลด...</div>
+              <div className="text-gray-500 text-sm">ไม่มีข้อเสนอแนะในแพ็กเกจนี้</div>
             )}
 
             {sortedFeedbackLists.map((feedbackItem) => {

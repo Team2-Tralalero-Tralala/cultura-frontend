@@ -311,6 +311,7 @@ export function EditStore() {
       setAlertTitle("สร้างแก้ไขร้านค้าสำเร็จ");
       setAlertMessage("ข้อมูลร้านค้าถูกแก้ไข");
       setAlertOpen(true);
+      navigate(-1);
     } catch (error: any) {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");

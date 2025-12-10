@@ -200,7 +200,7 @@ export function ManageRefundBooking() {
         ? responseBody.data 
         : (Array.isArray(responseBody) ? responseBody : []);
       // paginationInfo = ข้อมูลเกี่ยวกับการแบ่งหน้า
-      const paginationInfo = responseBody?.pagination || response.data?.pagination || response.pagination || {};
+      const paginationInfo = responseBody?.pagination || response.data?.pagination || {};
 
       const mappedRows: RefundRow[] = refundRequests.map((item: any) => ({
         id: item.id,

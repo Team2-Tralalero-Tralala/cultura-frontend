@@ -565,9 +565,6 @@ export default function DetailPackageRequiredPage() {
             </div>
           </div>
         ) : null}
-
-
-
       </section>
 
       {!isApproved && (

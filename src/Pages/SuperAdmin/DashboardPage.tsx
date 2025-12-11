@@ -28,31 +28,6 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import axios from "axios";
 import React from "react";
 
-import * as pdfMake from "pdfmake/build/pdfmake";
-import * as pdfFonts from "pdfmake/build/vfs_fonts";
-// @ts-ignore
-import * as thaiFontsVFS from "addthaifont-pdfmake/build/vfs_fonts";
-
-(pdfMake as any).addFonts({
-  Sarabun: {
-		normal: "Sarabun-Light.ttf",
-		bold: "Sarabun-Regular.ttf",
-		italics: "Sarabun-LightItalic.ttf",
-		bolditalics: "Sarabun-Italic.ttf",
-	},
-	Kanit: {
-		normal: "Kanit-Light.ttf",
-		bold: "Kanit-Regular.ttf",
-		italics: "Kanit-LightItalic.ttf",
-		bolditalics: "Kanit-Italic.ttf",
-	},
-	Prompt: {
-		normal: "Prompt-Light.ttf",
-		bold: "Prompt-Regular.ttf",
-		italics: "Prompt-LightItalic.ttf",
-		bolditalics: "Prompt-Italic.ttf",
-	},
-})
 
 /*
  * คำอธิบาย : คอลัมน์ตารางสำหรับแสดงสถิติตามจังหวัด
@@ -135,7 +110,7 @@ async function loadProvinces(): Promise<string[]> {
  */
 export default function DashboardPage() {
   // ====== state ข้อมูล ======
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [dashboardData, setDashboardData] = React.useState<DashboardResponse | null>(null);
 
@@ -232,7 +207,7 @@ export default function DashboardPage() {
 
   // ====== โหลดข้อมูล ======
   /*
-   * คำอธิบาย : ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD
+   * คำอธิบาย : ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD (สำหรับ API)
    * Input : date (Date | null) - วันที่ที่ต้องการแปลง
    * Output : string - วันที่ในรูปแบบ YYYY-MM-DD หรือ string ว่างถ้า date เป็น null
    */
@@ -242,6 +217,19 @@ export default function DashboardPage() {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  };
+
+  /*
+   * คำอธิบาย : แปลงวันที่เป็นรูปแบบไทย (dd/mm/YYYY) โดยใช้ปี พ.ศ.
+   * Input : date (Date | null) - วันที่ที่ต้องการแปลง
+   * Output : string - วันที่ในรูปแบบ dd/mm/YYYY (ปี พ.ศ.) หรือ string ว่างถ้า date เป็น null
+   */
+  const formatDateToThai = (date: Date | null): string => {
+    if (!date) return "";
+    const buddhistYear = date.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${day}/${month}/${buddhistYear}`;
   };
 
   /*
@@ -256,7 +244,7 @@ export default function DashboardPage() {
     if (!startDate || !endDate) return;
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       setErrorMessage(null);
       const dateStart = formatDateToString(startDate);
       const dateEnd = formatDateToString(endDate);
@@ -318,8 +306,10 @@ export default function DashboardPage() {
     if (!dashboardData) return;
 
     // Dynamic import for pdfmake to work with Vite
-    const pdfMake = (await import("pdfmake/build/pdfmake")).default;
-    const pdfFonts = await import("pdfmake/build/vfs_fonts");
+    // @ts-ignore
+    const pdfMake = (await import("pdfmake-thaifont-2/build/pdfmake")).default;
+    // @ts-ignore
+    const pdfFonts = await import("pdfmake-thaifont-2/build/vfs_fonts");
 
     // Set up pdfmake fonts
     if (pdfFonts && (pdfFonts as any).pdfMake && (pdfFonts as any).pdfMake.vfs) {
@@ -337,7 +327,7 @@ export default function DashboardPage() {
         },
         // Date Range
         {
-          text: `ช่วงวันที่: ${formatDateToString(dateRange[0])} - ${formatDateToString(
+          text: `ช่วงวันที่: ${formatDateToThai(dateRange[0])} - ${formatDateToThai(
             dateRange[1]
           )}`,
           style: "subheader",
@@ -459,7 +449,7 @@ export default function DashboardPage() {
     };
 
     pdfMake.createPdf(docDefinition as any).download(
-      `รายงานข้อมูลจังหวัด_${formatDateToString(dateRange[0])}_${formatDateToString(
+      `รายงานข้อมูลจังหวัด_${formatDateToThai(dateRange[0])}_${formatDateToThai(
         dateRange[1]
       )}.pdf`
     );
@@ -655,7 +645,7 @@ export default function DashboardPage() {
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold">
                       <span className="font-bold">ข้อมูลจังหวัด</span>ทั้งหมดในช่วง{" "}
-                      {formatDateToString(dateRange[0])} - {formatDateToString(dateRange[1])}
+                      {formatDateToThai(dateRange[0])} - {formatDateToThai(dateRange[1])}
                     </h3>
                     <button
                       type="button"
@@ -689,7 +679,7 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-semibold">
                       <span className="font-bold">แผนภูมิ</span>วงกลม แสดงข้อมูลของจังหวัด
                       {selectedProvince ? ` ${selectedProvince}` : "ทั้งหมด"} ในช่วง วันที่{" "}
-                      {formatDateToString(dateRange[0])} - {formatDateToString(dateRange[1])}
+                      {formatDateToThai(dateRange[0])} - {formatDateToThai(dateRange[1])}
                     </h3>
                     <p className="text-sm text-gray-600 mt-2">
                       จำนวนวิสาหกิจชุมชน: {dashboardData.summary.totalCommunities.toLocaleString()}{" "}

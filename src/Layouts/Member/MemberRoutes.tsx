@@ -10,6 +10,8 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
+import Feedback from '@/Pages/Member/Feedback';
+
 import ManagePackagePage from '@/Pages/Member/ManagePackagePage';
 import { EditPackagePage } from '@/Pages/Member/EditPackagePage';
 import CreatePackagePage from '@/Pages/Member/CreatePackagePage';
@@ -30,6 +32,7 @@ export default function MemberRoutes() {
       <Route path="/bookings/refunded-pending" element={<ManageRefundBookingMember />} />
 
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
+      <Route path="feedbacks" element={<Feedback />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />

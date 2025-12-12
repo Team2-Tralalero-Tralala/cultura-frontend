@@ -147,7 +147,7 @@ export function ManageAccountPage() {
    */
   const optionsRole = [
     { label: "ทั้งหมด", value: "all" },
-    { label: "ผู้ดูแลระบบ", value: "admin" },
+    { label: "ผู้ดูแลชุมชน", value: "admin" },
     { label: "สมาชิก", value: "member" },
     { label: "ผู้ใช้งานทั่วไป", value: "tourist" },
   ];

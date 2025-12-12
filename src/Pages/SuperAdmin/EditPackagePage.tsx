@@ -101,7 +101,9 @@ function toDateOnly(input?: string | Date | null) {
  * Output : Promise<File>
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    credentials: "include",
+  });
   if (!response.ok) throw new Error(`fetch ${url} -> ${response.status}`);
   const blob = await response.blob();
   const extension = filename.split(".").pop() || "jpg";
@@ -268,7 +270,7 @@ export const EditPackagePage = () => {
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
   const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
   const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
-
+  const [initialStatus, setInitialStatus] = useState<PackageStatus | null>(null);
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -790,7 +792,7 @@ export const EditPackagePage = () => {
                 }}
               />
             </div>
-      <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
+      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
           onClick={() => navigate(`/super/packages/all`)}
@@ -823,6 +825,7 @@ export const EditPackagePage = () => {
             <PackageStatusDropdown
               value={formState.statusPackage}
               onChange={(status) => setFormField("statusPackage", status)}
+              exclude={initialStatus === "DRAFT" ? [] : ["DRAFT"]}
             />
           </div>
 

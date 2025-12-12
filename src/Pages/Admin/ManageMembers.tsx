@@ -83,7 +83,8 @@ export default function ManageMembers() {
             setIsLoading(true);
             setErrorMessage(null);
 
-            const response = await axios.get(`http://localhost:3000/api/admin/communities/members`, {
+            const apiUrl = apiBaseUrl || import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+            const response = await axios.get(`${apiUrl}/admin/communities/members`, {
                 params: { page: currentPage, limit: pageSize },
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
@@ -120,7 +121,7 @@ export default function ManageMembers() {
                     [m?.fname, m?.lname].filter(Boolean).join(" ").trim() ||
                     m?.username ||
                     "-",
-                roleName: m?.role?.name ?? m?.roleName ?? "-",
+                roleName: m?.activityRole || m?.role?.name || "-",
                 contact: m?.email ?? m?.phone ?? "-",
             }));
 
@@ -163,8 +164,8 @@ export default function ManageMembers() {
             variant: "icons",
             items: () => ["edit", "delete"],
             callbacks: {
-                users: (row) => navigate(`/super/members/${row.id}/roles`),
-                edit: (row) => navigate(`/super/members/${row.id}/edit`),
+                users: (row) => navigate(`/admin/member/${row.id}/roles`),
+                edit: (row) => navigate(`/admin/member/${row.id}/edit`),
                 delete: async (row) => {
                     setSelectedRow(row);
                     setOpenDeleteModal(true);
@@ -204,7 +205,7 @@ export default function ManageMembers() {
     );
 
     /* header actions */
-    const handleCreateMember = () => navigate("/super/members/create");
+    const handleCreateMember = () => navigate("/admin/member/create");
 
     /* pagination object for DataTable */
     const pagination: TablePagination = {

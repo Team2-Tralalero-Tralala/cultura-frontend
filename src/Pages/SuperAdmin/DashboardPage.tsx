@@ -7,12 +7,11 @@
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { WeeklyDate } from "@/Components/calendar/WeeklyDate";
+import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { LineGraph } from "@/Components/LineGraph";
 import { PieGraph } from "@/Components/PieGraph";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
 import type { DashboardResponse } from "@/Services/dashboard-service";
@@ -28,6 +27,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import axios from "axios";
 import React from "react";
+
 
 /*
  * คำอธิบาย : คอลัมน์ตารางสำหรับแสดงสถิติตามจังหวัด
@@ -110,7 +110,7 @@ async function loadProvinces(): Promise<string[]> {
  */
 export default function DashboardPage() {
   // ====== state ข้อมูล ======
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [dashboardData, setDashboardData] = React.useState<DashboardResponse | null>(null);
 
@@ -131,13 +131,14 @@ export default function DashboardPage() {
     return [startOfWeek, endOfWeek] as [Date, Date];
   }, []);
 
+  const [calendarMode, setCalendarMode] = React.useState<"weekly" | "monthly" | "yearly">("weekly");
   const [dateRange, setDateRange] = React.useState<[Date | null, Date | null]>(() =>
     getCurrentWeek()
   );
-  const [showCalendar, setShowCalendar] = React.useState<boolean>(false);
-  const [showCalendar2, setShowCalendar2] = React.useState<boolean>(false);
-  const calendarRef = React.useRef<HTMLDivElement>(null);
-  const calendarRef2 = React.useRef<HTMLDivElement>(null);
+  const [dateList, setDateList] = React.useState<Date[]>(() => {
+    const [start, end] = getCurrentWeek();
+    return start && end ? [start, end] : [];
+  });
 
   // ====== state สำหรับ Accordion ======
   const [expanded, setExpanded] = React.useState<string | false>("stats-panel");
@@ -187,27 +188,6 @@ export default function DashboardPage() {
     fetchProvinces();
   }, []);
 
-  // ====== ปิดปฏิทินเมื่อคลิกข้างนอก ======
-  /*
-   * คำอธิบาย : ปิดปฏิทินเมื่อคลิกภายนอก
-   * Input : ไม่มี
-   * Output : ตั้งค่า showCalendar และ showCalendar2 เป็น false
-   */
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        setShowCalendar(false);
-      }
-      if (calendarRef2.current && !calendarRef2.current.contains(event.target as Node)) {
-        setShowCalendar2(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   // ====== Debounce search query ======
   /*
@@ -227,7 +207,7 @@ export default function DashboardPage() {
 
   // ====== โหลดข้อมูล ======
   /*
-   * คำอธิบาย : ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD
+   * คำอธิบาย : ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD (สำหรับ API)
    * Input : date (Date | null) - วันที่ที่ต้องการแปลง
    * Output : string - วันที่ในรูปแบบ YYYY-MM-DD หรือ string ว่างถ้า date เป็น null
    */
@@ -237,6 +217,19 @@ export default function DashboardPage() {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  };
+
+  /*
+   * คำอธิบาย : แปลงวันที่เป็นรูปแบบไทย (dd/mm/YYYY) โดยใช้ปี พ.ศ.
+   * Input : date (Date | null) - วันที่ที่ต้องการแปลง
+   * Output : string - วันที่ในรูปแบบ dd/mm/YYYY (ปี พ.ศ.) หรือ string ว่างถ้า date เป็น null
+   */
+  const formatDateToThai = (date: Date | null): string => {
+    if (!date) return "";
+    const buddhistYear = date.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${day}/${month}/${buddhistYear}`;
   };
 
   /*
@@ -251,7 +244,7 @@ export default function DashboardPage() {
     if (!startDate || !endDate) return;
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       setErrorMessage(null);
       const dateStart = formatDateToString(startDate);
       const dateEnd = formatDateToString(endDate);
@@ -289,14 +282,177 @@ export default function DashboardPage() {
   ]);
 
   /*
-   * คำอธิบาย : จัดการเมื่อมีการเลือกช่วงวันที่ครบ
-   * Input : start (Date) - วันที่เริ่มต้น, end (Date) - วันที่สิ้นสุด
-   * Output : ปิดปฏิทินหลังจากเลือกครบ
+   * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนแปลงวันที่จาก CalendarTrigger
+   * Input : result - ข้อมูลวันที่ที่เลือก (start, end, dates, mode)
+   * Output : อัพเดท state ของ dateRange และ dateList
    */
-  const handleRangeCommit = (start: Date, end: Date) => {
-    setDateRange([start, end]);
-    setShowCalendar(false);
-    setShowCalendar2(false);
+  const handleCalendarChange = (result: {
+    start: Date;
+    end: Date;
+    dates: Date[];
+    mode: "weekly" | "monthly" | "yearly";
+  }) => {
+    setDateRange([result.start, result.end]);
+    setDateList(result.dates);
+    setCalendarMode(result.mode);
+  };
+
+  /*
+   * คำอธิบาย : สร้างและดาวน์โหลดไฟล์ PDF รายงานข้อมูลจังหวัด
+   * Input : ไม่มี (ใช้ข้อมูลจาก dashboardData และ dateRange)
+   * Output : สร้างและดาวน์โหลดไฟล์ PDF
+   */
+  const handlePrintReport = async () => {
+    if (!dashboardData) return;
+
+    // Dynamic import for pdfmake to work with Vite
+    // @ts-ignore
+    const pdfMake = (await import("pdfmake-thaifont-2/build/pdfmake")).default;
+    // @ts-ignore
+    const pdfFonts = await import("pdfmake-thaifont-2/build/vfs_fonts");
+
+    // Set up pdfmake fonts
+    if (pdfFonts && (pdfFonts as any).pdfMake && (pdfFonts as any).pdfMake.vfs) {
+      pdfMake.vfs = (pdfFonts as any).pdfMake.vfs;
+    }
+
+    const docDefinition = {
+      content: [
+        // Header
+        {
+          text: "รายงานข้อมูลจังหวัด",
+          style: "header",
+          alignment: "center",
+          margin: [0, 0, 0, 20],
+        },
+        // Date Range
+        {
+          text: `ช่วงวันที่: ${formatDateToThai(dateRange[0])} - ${formatDateToThai(
+            dateRange[1]
+          )}`,
+          style: "subheader",
+          margin: [0, 0, 0, 20],
+        },
+        // Summary Section
+        {
+          text: "ข้อมูลสรุป",
+          style: "sectionHeader",
+          margin: [0, 10, 0, 10],
+        },
+        {
+          columns: [
+            {
+              text: `แพ็กเกจทั้งหมด: ${dashboardData.summary.totalPackages.toLocaleString()}`,
+              margin: [0, 5, 0, 5],
+            },
+            {
+              text: `ชุมชนทั้งหมด: ${dashboardData.summary.totalCommunities.toLocaleString()}`,
+              margin: [0, 5, 0, 5],
+            },
+          ],
+        },
+        {
+          columns: [
+            {
+              text: `การจองสำเร็จ: ${dashboardData.summary.successBookingCount.toLocaleString()}`,
+              margin: [0, 5, 0, 5],
+            },
+            {
+              text: `ยกเลิกการจอง: ${dashboardData.summary.cancelledBookingCount.toLocaleString()}`,
+              margin: [0, 5, 0, 5],
+            },
+          ],
+        },
+        // Province Statistics Table
+        {
+          text: "ข้อมูลสถิติตามจังหวัด",
+          style: "sectionHeader",
+          margin: [0, 20, 0, 10],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ["*", "auto", "auto", "auto", "auto", "auto"],
+            body: [
+              // Header row
+              [
+                { text: "จังหวัด", style: "tableHeader", bold: true },
+                { text: "จำนวนวิสาหกิจชุมชน", style: "tableHeader", bold: true, alignment: "right" },
+                { text: "จำนวนแพ็กเกจ", style: "tableHeader", bold: true, alignment: "right" },
+                { text: "การจองทั้งหมด", style: "tableHeader", bold: true, alignment: "right" },
+                { text: "การจองสำเร็จ", style: "tableHeader", bold: true, alignment: "right" },
+                { text: "ยกเลิกการจอง", style: "tableHeader", bold: true, alignment: "right" },
+              ],
+              // Data rows
+              ...dashboardData.stats.data.map((item) => [
+                item.province,
+                { text: item.communityCount.toLocaleString(), alignment: "right" },
+                { text: item.packageCount.toLocaleString(), alignment: "right" },
+                { text: item.bookingCount.toLocaleString(), alignment: "right" },
+                { text: item.successBookingCount.toLocaleString(), alignment: "right" },
+                { text: item.cancelledBookingCount.toLocaleString(), alignment: "right" },
+              ]),
+            ],
+          },
+          layout: {
+            hLineWidth: function (i: number, node: any) {
+              if (i === 0 || i === node.table.body.length) return 1;
+              return 0.5;
+            },
+            vLineWidth: function () {
+              return 0.5;
+            },
+            hLineColor: function () {
+              return "#cccccc";
+            },
+            vLineColor: function () {
+              return "#cccccc";
+            },
+            paddingLeft: function () {
+              return 5;
+            },
+            paddingRight: function () {
+              return 5;
+            },
+            paddingTop: function () {
+              return 5;
+            },
+            paddingBottom: function () {
+              return 5;
+            },
+          } as any,
+        },
+      ],
+      styles: {
+        header: {
+          fontSize: 24,
+          bold: true,
+        },
+        subheader: {
+          fontSize: 14,
+          color: "#666666",
+        },
+        sectionHeader: {
+          fontSize: 18,
+          bold: true,
+        },
+        tableHeader: {
+          fontSize: 12,
+          bold: true,
+          fillColor: "#4A816F",
+          color: "#FFFFFF",
+        },
+      },
+      defaultStyle: {
+        font: "Sarabun",
+      },
+    };
+
+    pdfMake.createPdf(docDefinition as any).download(
+      `รายงานข้อมูลจังหวัด_${formatDateToThai(dateRange[0])}_${formatDateToThai(
+        dateRange[1]
+      )}.pdf`
+    );
   };
 
   /*
@@ -349,84 +505,71 @@ export default function DashboardPage() {
         ) : dashboardData ? (
           <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
-                  <p className="text-sm text-gray-500 mb-2">แพ็กเกจทั้งหมด</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {dashboardData.summary.totalPackages.toLocaleString()}
-                    </p>
-                    <p className="font-bold">แพ็กเกจ</p>
-                  </div>
-                </div>
-
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
-                  <p className="text-sm text-gray-500 mb-2">ชุมชนทั้งหมด</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {dashboardData.summary.totalCommunities.toLocaleString()}
-                    </p>
-                    <p className="font-bold">ชุมชน</p>
-                  </div>
-                </div>
-
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
-                  <p className="text-sm text-gray-500 mb-2">การจองสำเร็จ</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {dashboardData.summary.successBookingCount.toLocaleString()}
-                    </p>
-                    <p className="font-bold">ครั้ง</p>
-                  </div>
-                </div>
-
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
-                  <p className="text-sm text-gray-500 mb-2">ยกเลิกการจอง</p>
-                  <div className="flex justify-between w-full items-end gap-2">
-                    <p className="text-2xl font-bold">
-                      {dashboardData.summary.cancelledBookingCount.toLocaleString()}
-                    </p>
-                    <p className="font-bold">ครั้ง</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col w-full p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold">จำนวนการจองแพ็กเกจทั้งหมด</h3>
-                  <div className="relative" ref={calendarRef}>
-                    <button
-                      type="button"
-                      onClick={() => setShowCalendar(!showCalendar)}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                    >
-                      <Icon icon="quill:calendar" className="w-5 h-5" />
-                      <span className="text-sm">
-                        {dateRange[0] && dateRange[1]
-                          ? `${formatDateToString(dateRange[0])} - ${formatDateToString(
-                            dateRange[1]
-                          )}`
-                          : "เลือกช่วงวันที่"}
-                      </span>
-                    </button>
-
-                    {showCalendar && (
-                      <div className="absolute right-0 top-full mt-2 z-50">
-                        <WeeklyDate
-                          value={dateRange}
-                          onChange={setDateRange}
-                          onRangeCommit={handleRangeCommit}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <LineGraph
-                  className="w-full h-64"
-                  labels={dashboardData.graph.labels}
-                  data={dashboardData.graph.data}
-                  title=""
+            <div className="bg-white p-8 flex flex-col gap-6 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">สถิติการจองแพ็กเกจ</h2>
+                <CalendarTrigger
+                  mode={calendarMode}
+                  dateRange={dateRange}
+                  dateList={dateList}
+                  onModeChange={setCalendarMode}
+                  onChange={handleCalendarChange}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
+                    <p className="text-sm text-gray-500 mb-2">แพ็กเกจทั้งหมด</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {dashboardData.summary.totalPackages.toLocaleString()}
+                      </p>
+                      <p className="font-bold">แพ็กเกจ</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
+                    <p className="text-sm text-gray-500 mb-2">ชุมชนทั้งหมด</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {dashboardData.summary.totalCommunities.toLocaleString()}
+                      </p>
+                      <p className="font-bold">ชุมชน</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
+                    <p className="text-sm text-gray-500 mb-2">การจองสำเร็จ</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {dashboardData.summary.successBookingCount.toLocaleString()}
+                      </p>
+                      <p className="font-bold">ครั้ง</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-6 flex flex-col justify-end">
+                    <p className="text-sm text-gray-500 mb-2">ยกเลิกการจอง</p>
+                    <div className="flex justify-between w-full items-end gap-2">
+                      <p className="text-2xl font-bold">
+                        {dashboardData.summary.cancelledBookingCount.toLocaleString()}
+                      </p>
+                      <p className="font-bold">ครั้ง</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col w-full p-12 bg-white rounded-lg border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold">จำนวนการจองแพ็กเกจทั้งหมด</h3>
+                  </div>
+                  <LineGraph
+                    className="w-full h-64"
+                    labels={dashboardData.graph.labels}
+                    data={dashboardData.graph.data}
+                    title=""
+                  />
+                </div>
               </div>
             </div>
 
@@ -442,11 +585,11 @@ export default function DashboardPage() {
                 id="stats-panel-header"
                 className="!rounded-t-lg"
               >
-                <h2 className="text-xl font-bold">สถิติ</h2>
+                <h2 className="text-xl font-bold px-4 pt-4">รายงาน</h2>
               </AccordionSummary>
               <AccordionDetails className="space-y-4 ">
                 {/* Filters and Controls */}
-                <div className="flex items-center justify-between gap-3 w-full mb-4 px-4">
+                {/* <div className="flex items-center justify-between gap-3 w-full mb-4 px-4">
                   <div className="flex-1 max-w-md">
                     <SearchBarTable
                       value={searchQuery}
@@ -462,7 +605,7 @@ export default function DashboardPage() {
                     <Icon icon="mdi:printer-outline" className="w-5 h-5" />
                     <span>พิมพ์รายงาน</span>
                   </button>
-                </div>
+                </div> */}
 
                 <div className="flex justify-between gap-4 px-4">
                   <div className="flex flex-row gap-4 items-center">
@@ -472,8 +615,6 @@ export default function DashboardPage() {
                       selected={filterRegion}
                       onChange={setFilterRegion}
                     />
-                  </div>
-                  <div className="flex flex-row gap-4 items-center">
                     {/* Province Combobox */}
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">จังหวัด</span>
@@ -486,44 +627,34 @@ export default function DashboardPage() {
                         />
                       </div>
                     </div>
-
+                  </div>
+                  <div className="flex flex-row gap-4 items-center">
                     {/* Calendar Trigger */}
-                    <div className="relative" ref={calendarRef2}>
-                      <button
-                        type="button"
-                        onClick={() => setShowCalendar2(!showCalendar2)}
-                        className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                      >
-                        <Icon icon="quill:calendar" className="w-5 h-5" />
-                        <span className="text-sm">
-                          {dateRange[0] && dateRange[1]
-                            ? `${formatDateToString(dateRange[0])} - ${formatDateToString(
-                              dateRange[1]
-                            )}`
-                            : "เลือกช่วงวันที่"}
-                        </span>
-                      </button>
-
-                      {showCalendar2 && (
-                        <div className="absolute right-0 top-full mt-2 z-50">
-                          <WeeklyDate
-                            value={dateRange}
-                            onChange={setDateRange}
-                            onRangeCommit={handleRangeCommit}
-                          />
-                        </div>
-                      )}
-                    </div>
+                    <CalendarTrigger
+                      mode={calendarMode}
+                      dateRange={dateRange}
+                      dateList={dateList}
+                      onModeChange={setCalendarMode}
+                      onChange={handleCalendarChange}
+                    />
                   </div>
                 </div>
 
                 <div className="p-4 mx-4 space-y-4 bg-white rounded-lg border border-gray-200 shadow-sm">
                   {/* Title and Date Range */}
-                  <div className="mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold">
-                      <span className="font-bold">ข้อมูลจังหวัด</span>ทั้งหมดในช่วง {formatDateToString(dateRange[0])} -{" "}
-                      {formatDateToString(dateRange[1])}
+                      <span className="font-bold">ข้อมูลจังหวัด</span>ทั้งหมดในช่วง{" "}
+                      {formatDateToThai(dateRange[0])} - {formatDateToThai(dateRange[1])}
                     </h3>
+                    <button
+                      type="button"
+                      onClick={handlePrintReport}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    >
+                      <Icon icon="mdi:printer-outline" className="w-5 h-5" />
+                      <span>พิมพ์รายงาน</span>
+                    </button>
                   </div>
 
                   {/* Data Table */}
@@ -541,22 +672,23 @@ export default function DashboardPage() {
                     pagination={dashboardData.stats.pagination as Pagination}
                     isLoading={isLoading}
                   />
-
+                </div>
+                <div className="p-4 mx-4 space-y-4 bg-white rounded-lg border border-gray-200 shadow-sm">
                   {/* Pie Graph Title */}
-                  <div className="mb-4 mt-8">
+                  <div className="mb-4">
                     <h3 className="text-lg font-semibold">
                       <span className="font-bold">แผนภูมิ</span>วงกลม แสดงข้อมูลของจังหวัด
                       {selectedProvince ? ` ${selectedProvince}` : "ทั้งหมด"} ในช่วง วันที่{" "}
-                      {formatDateToString(dateRange[0])} - {formatDateToString(dateRange[1])}
+                      {formatDateToThai(dateRange[0])} - {formatDateToThai(dateRange[1])}
                     </h3>
                     <p className="text-sm text-gray-600 mt-2">
-                      จำนวนวิสาหกิจชุมชน: {dashboardData.summary.totalCommunities.toLocaleString()} ชุมชน
+                      จำนวนวิสาหกิจชุมชน: {dashboardData.summary.totalCommunities.toLocaleString()}{" "}
+                      ชุมชน
                     </p>
                     <p className="text-sm text-gray-600">
                       จำนวนแพ็กเกจ: {dashboardData.summary.totalPackages.toLocaleString()} แพ็กเกจ
                     </p>
                   </div>
-
                   <PieGraph
                     successCount={dashboardData.summary.successBookingCount}
                     cancelledCount={dashboardData.summary.cancelledBookingCount}

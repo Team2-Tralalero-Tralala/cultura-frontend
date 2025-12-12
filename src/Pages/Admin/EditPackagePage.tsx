@@ -263,6 +263,7 @@ export const EditPackagePage = () => {
     const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
     const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
     const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
+    const [initialStatus, setInitialStatus] = useState<PackageStatus | null>(null);
 
     /*
      * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -517,7 +518,7 @@ export const EditPackagePage = () => {
                     withCredentials: true,
                 });
                 const packageData = response?.data?.data;
-
+                setInitialStatus((packageData.statusPackage as PackageStatus) ?? "DRAFT");
                 setCommunityId(Number(packageData?.communityId ?? packageData?.community?.id ?? NaN) || undefined);
 
                 if (packageData?.overseerPackage) {
@@ -698,41 +699,43 @@ export const EditPackagePage = () => {
         setSuccessMessage(null);
 
         try {
+            const overseerIdVal = Number(formState.overseerMemberId);
+            const safeOverseerId = overseerIdVal > 0 ? overseerIdVal : null;
+
             const payload = {
-                overseerMemberId: Number(formState.overseerMemberId),
+                overseerMemberId: safeOverseerId,
                 name: normalizeOrDefault(formState.name),
-                description: normalizeOrDefault(formState.description),
+                description: formState.description || "",
                 statusPackage: formState.statusPackage,
                 capacity: Math.max(1, Number(formState.capacity || 0)),
                 price: Math.max(0, Number(formState.price || 0)),
-                warning: normalizeOrDefault(formState.facility),
-                startDate: normalizeOrDefault(formState.startDate),
-                dueDate: normalizeOrDefault(formState.endDate),
+                warning: formState.facility || "",
+                startDate: formState.startDate || null,
+                dueDate: formState.endDate || null,
+                bookingOpenDate: formState.openDate || null,
+                bookingCloseDate: formState.closeDate || null,
                 ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
                 ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-                bookingOpenDate: normalizeOrDefault(formState.openDate),
-                bookingCloseDate: normalizeOrDefault(formState.closeDate),
                 ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
                 ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-
                 ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
                 ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
                 ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
                 ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
                 ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-                facility: normalizeOrDefault(formState.facility),
-                tagIds,
-                ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
+                facility: formState.facility || "",
+                tagIds: tagIds.map(id => Number(id)),
+                homestayId: selectedHomestay ? selectedHomestay.id : -1,
                 location: {
-                    houseNumber: normalizeOrDefault(formState.houseNumber),
+                    houseNumber: formState.houseNumber || "",
                     villageNumber: toIntOrNull(formState.villageNumber),
-                    subDistrict: normalizeOrDefault(formState.subDistrict),
-                    district: normalizeOrDefault(formState.district),
-                    province: normalizeOrDefault(formState.province),
-                    postalCode: normalizeOrDefault(formState.postalCode),
-                    detail: normalizeOrDefault(formState.addressDetail),
-                    latitude: Number(formState.latitude),
-                    longitude: Number(formState.longitude),
+                    subDistrict: formState.subDistrict || "",
+                    district: formState.district || "",
+                    province: formState.province || "",
+                    postalCode: formState.postalCode || "",
+                    detail: formState.addressDetail || "",
+                    latitude: Number(formState.latitude) || 0,
+                    longitude: Number(formState.longitude) || 0,
                 },
             };
 
@@ -741,6 +744,7 @@ export const EditPackagePage = () => {
             coverFiles.forEach((file: any) => formData.append("cover", file));
             galleryFiles.forEach((file: any) => formData.append("gallery", file));
             videoFiles.forEach((file: any) => formData.append("video", file));
+
             await axios.put(`${apiUrl}/admin/package/${id}`, formData, {
                 withCredentials: true,
             });
@@ -768,19 +772,27 @@ export const EditPackagePage = () => {
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (!id || isSaving) return;
-        if (!validateAll()) {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-        if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-            setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-        if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-            setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
+        if (formState.statusPackage !== "DRAFT") {
+            if (!validateAll()) {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
+            if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
+                setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
+            if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
+                setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
+        } else {
+            if (!formState.name.trim()) {
+                setFormErrors({ name: "กรุณากรอกชื่อแพ็กเกจ" });
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
         }
         setIsConfirmModalOpen(true);
     }
@@ -829,6 +841,7 @@ export const EditPackagePage = () => {
                         <PackageStatusDropdown
                             value={formState.statusPackage}
                             onChange={(status) => setFormField("statusPackage", status)}
+                            exclude={initialStatus === "DRAFT" ? [] : ["DRAFT"]}
                         />
                     </div>
 

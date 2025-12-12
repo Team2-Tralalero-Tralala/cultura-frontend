@@ -9,8 +9,7 @@ import axios from "axios";
 
 // สร้าง instance ของ axios พร้อม baseURL จาก ENV
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
@@ -83,3 +82,17 @@ export async function getHomestaysAll(communityId: number, page = 1, limit = 10)
     params: { page, limit },
   });
 }
+
+/*
+ * ฟังก์ชัน : deleteHomestayBySuperAdmin
+ * อธิบาย : ลบข้อมูลที่พัก (Soft Delete)
+ * Input : id - รหัสโฮมสเตย์
+ * Output : Response จาก API
+ * Mapping : PATCH /super/homestay/:homestayId
+ */
+
+export async function deleteHomestayBySuperAdmin(homestayId: number) {
+  return api.patch(`/super/community/homestay/${homestayId}`);
+}
+
+

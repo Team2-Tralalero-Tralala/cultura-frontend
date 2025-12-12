@@ -21,7 +21,7 @@ import type { StoreData } from "@/Types/Store";
 import { Icon } from "@iconify/react";
 import React from "react";
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import z from "zod";
 
 /**
@@ -34,6 +34,7 @@ const storeSchema = z.object({
   province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
   district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
   latitude: z.union([
     z.string().min(1, "กรุณากรอกละติจูด"),
     z.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
@@ -54,7 +55,9 @@ const storeSchema = z.object({
  * Output : File object (พร้อม type และ flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    credentials: "include",
+  });
   const blob = await res.blob();
   const ext = filename.split(".").pop() || "jpg";
   const type = blob.type || `image/${ext}`;
@@ -92,6 +95,8 @@ export function EditStore() {
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+  const [openCancelConfirm, setOpenCancelConfirm] = useState(false);
+  const navigate = useNavigate();
 
   /**
    * โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
@@ -137,11 +142,13 @@ export function EditStore() {
           })) ?? []
         );
 
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
         const coverFilesFetched: File[] = await Promise.all(
           (data.storeImage || [])
             .filter((img: any) => img.type === "COVER")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -150,7 +157,7 @@ export function EditStore() {
           (data.storeImage || [])
             .filter((img: any) => img.type === "GALLERY")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -166,8 +173,6 @@ export function EditStore() {
     }
     loadData();
   }, [storeId]);
-  console.log("fetch", formData);
-  console.log(tags);
   /**
    * อัปเดตค่า location ใน formData ทุกครั้งเมื่อผู้ใช้เลือกจังหวัด/อำเภอ/ตำบลใหม่
    */
@@ -187,9 +192,10 @@ export function EditStore() {
     }
   }, [location]);
   /**
-   * ฟังก์ชัน validateField สำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
-   * หากระบุ field จะตรวจสอบเฉพาะฟิลด์นั้น
-   * หากไม่ระบุ field จะตรวจสอบทั้งฟอร์ม
+   * คำอธิบาย : ฟังก์ชัน validateField สำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * หากระบุ field จะตรวจสอบเฉพาะฟิลด์นั้น, หากไม่ระบุ field จะตรวจสอบทั้งฟอร์ม
+   * Input : field (ชื่อฟิลด์ที่ต้องการตรวจสอบ), value (ค่าของฟิลด์นั้น)
+   * Output : boolean (true หากข้อมูลถูกต้อง, false หากไม่ถูกต้อง)
    */
   const validateField = (field?: string, value?: any) => {
     if (field) {
@@ -221,8 +227,10 @@ export function EditStore() {
   };
 
   /**
-   * ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
+   * คำอธิบาย : ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
    * จะอัปเดตค่าใน formData และเรียก validateField เพื่อตรวจสอบความถูกต้องทันที
+   * Input : e (React ChangeEvent จาก input หรือ textarea)
+   * Output : none (อัปเดต state formData และ formErrors)
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -232,9 +240,10 @@ export function EditStore() {
   };
 
   /**
-   * ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
-   * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง
-   * และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
+   * คำอธิบาย : ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
+   * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
+   * Input : none (ใช้ข้อมูลจาก state formData, files)
+   * Output : none (ส่ง request ไปยัง API หรือแสดง Error Alert)
    */
   const handleSubmit = async () => {
     console.log("form", formData);
@@ -248,7 +257,16 @@ export function EditStore() {
         setAlertOpen(true);
         return;
       }
+      if (coverFiles.length === 0 || galleryFiles.length === 0) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณาอัพโหลดรูปภาพให้ครบถ้วน");
+        setAlertOpen(true);
+        return;
+      }
       const {
+        id,
+        communityId,
         houseNumber,
         longitude,
         latitude,
@@ -263,7 +281,7 @@ export function EditStore() {
 
       const payload = {
         ...cleanForm,
-        tagStores: selectedTagIds, // ✅ เพิ่ม tagStores กลับเข้า payload
+        tagStores: selectedTagIds,
         location: {
           houseNumber: formData.houseNumber,
           villageNumber: Number(formData.villageNumber),
@@ -280,7 +298,6 @@ export function EditStore() {
       const formDataToSend = new FormData();
       formDataToSend.append("data", JSON.stringify(payload));
 
-      // ✅ แน่ใจว่าไม่อัปโหลดซ้ำไฟล์จาก server
       coverFiles.forEach((file: any) => {
         formDataToSend.append("cover", file);
       });
@@ -294,17 +311,11 @@ export function EditStore() {
       setAlertTitle("สร้างแก้ไขร้านค้าสำเร็จ");
       setAlertMessage("ข้อมูลร้านค้าถูกแก้ไข");
       setAlertOpen(true);
+      navigate(-1);
     } catch (error: any) {
-      const backendMessage =
-        error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
-
-      const thaiMessageMatch = backendMessage.match(/[\u0E00-\u0E7F].*/);
-      let cleanMessage = thaiMessageMatch ? thaiMessageMatch[0].trim() : backendMessage.trim();
-      cleanMessage = cleanMessage.replace(/["');]+$/g, "").trim();
-
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage(cleanMessage);
+      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
       setAlertOpen(true);
     }
   };
@@ -395,19 +406,22 @@ export function EditStore() {
                   subDistrict: loc.subdistrict,
                   postalCode: loc.postalCode,
                 }));
-                validateField("province", loc.province);
-                validateField("district", loc.district);
-                validateField("subDistrict", loc.subdistrict);
+                if (loc.province) validateField("province", loc.province);
+                if (loc.district) validateField("district", loc.district);
+                if (loc.subdistrict) validateField("subDistrict", loc.subdistrict);
+                if (loc.postalCode) validateField("postalCode", loc.postalCode);
               }}
               error={{
                 province: !!formErrors.province,
                 district: !!formErrors.district,
                 subdistrict: !!formErrors.subDistrict,
+                postalCode: !!formErrors.postalCode,
               }}
               helperText={{
                 province: formErrors.province,
                 district: formErrors.district,
                 subdistrict: formErrors.subDistrict,
+                postalCode: formErrors.postalCode,
               }}
             />
           </div>
@@ -491,7 +505,9 @@ export function EditStore() {
         {/* ปุ่ม action */}
         <div className="flex justify-end mt-5">
           <div className="w-32 mr-2.5">
-            <Button type="cancel">ยกเลิก</Button>
+            <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+              ยกเลิก
+            </Button>
           </div>
           <div className="w-32">
             <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
@@ -510,6 +526,16 @@ export function EditStore() {
             await handleSubmit();
           }}
           onCancel={() => setOpenConfirm(false)}
+        />
+        <Modal
+          open={openCancelConfirm}
+          title="ยืนยันการยกเลิก"
+          text="ต้องการยกเลิกการแก้ไขร้านค้าหรือไม่"
+          onConfirm={() => {
+            setOpenCancelConfirm(false);
+            navigate(-1);
+          }}
+          onCancel={() => setOpenCancelConfirm(false)}
         />
         <ModalAlert
           open={alertOpen}

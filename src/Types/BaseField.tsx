@@ -24,9 +24,8 @@ export type BaseFieldProps = {
   name?: string;
   value?: any;
   readOnly?: boolean;
-  onChange?: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   error?: boolean;
   helperText?: string;
+  rows?: number;
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import Button from "@/Components/Button";
@@ -59,7 +59,14 @@ const formatThaiDateTime = (iso: string) => {
  * คำอธิบาย : คอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
  */
 const columns: Column<PackageHistoryRow>[] = [
-  { key: "name", header: "ชื่อแพ็กเกจ", className: "min-w-[220px]" },
+  { key: "name", header: "ชื่อแพ็กเกจ", className: "min-w-[220px]" , render: (row) => (
+      <Link
+        to={`/admin/packages/history/${row.id}`}
+        className="hover:text-dark-green hover:underline"
+      >
+        {row.name}
+      </Link>
+    ),},
   { key: "community", header: "ชื่อชุมชน", className: "min-w-[200px]" },
   { key: "overseer", header: "ผู้ดูแล", className: "min-w-[140px]" },
   { key: "status", header: "สถานะแพ็กเกจ", className: "min-w-[160px]" },
@@ -162,6 +169,7 @@ export default function PackageHistoryAdmin() {
     width: "150px",
     variant: "icons",
     items: () => ["copy", "delete"],
+
     callbacks: {
       copy: (row) => navigate(``), //ตะวันแก้
       delete: (row) => {
@@ -169,6 +177,7 @@ export default function PackageHistoryAdmin() {
         setOpenConfirm(true);
       },
     },
+
   };
 
   /*

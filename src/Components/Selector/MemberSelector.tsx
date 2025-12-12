@@ -144,6 +144,25 @@ export default function MemberSelector({
             {option.fname} {option.lname}
           </li>
         )}
+        slotProps={{
+          popper: {
+            sx: {
+              "& .MuiAutocomplete-listbox": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+              "& .MuiAutocomplete-option": {
+                fontFamily: "var(--font-sarabun)",
+                fontSize: "16px",
+              },
+            },
+          },
+        }}
+        sx={{
+          "& .MuiInputBase-input": {
+            fontFamily: "var(--font-sarabun)",
+          },
+        }}
         renderInput={(params) => {
           // Destructure props carefully
           const { InputProps, inputProps } = params;

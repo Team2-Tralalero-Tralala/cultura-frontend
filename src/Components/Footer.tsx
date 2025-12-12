@@ -7,7 +7,7 @@
 export default function Footer() {
   return (
     <footer className="border-t">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto container px-6 py-8">
         {/* columns */}
         <div className="flex flex-col gap-8 sm:flex-row sm:gap-24">
           {/* พาร์ทเนอร์ */}
@@ -43,7 +43,7 @@ export default function Footer() {
 
       {/* copyright */}
       <div className="border-t">
-        <div className="mx-auto max-w-6xl px-6 py-4 text-left text-base text-gray-700">
+        <div className="mx-auto container px-6 py-4 text-left text-base text-gray-700">
           © 2025–Now Cultura. All Rights Reserved.
         </div>
       </div>

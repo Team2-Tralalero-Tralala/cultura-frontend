@@ -1,10 +1,3 @@
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจที่ถูกร้องขอ (Detail Package Request)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
- * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถปลี่ยนสถานะ อนุมัติ/ปฏิเสธ (เรียกผ่าน service: package-request-service)
- */
-
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,6 +14,8 @@ import "leaflet/dist/leaflet.css";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 /**
  * ฟังก์ชัน : - (ค่าคงที่)
@@ -28,8 +23,22 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
  * Input : -
  * Output: -
  */
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+delete (L.Icon.Default as any).prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+/*
+ * คำอธิบาย : Base URL สำหรับฝั่ง Client
+ * - BACKEND_BASE_URL: ใช้ประกอบ URL สำหรับไฟล์อัปโหลด (รูปภาพ)
+ * - API_BASE_URL: ใช้เรียก approve/reject (ผ่าน fetch)
+ */
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
+const API_BASE_URL = apiUrl;
 
 /**
  * ฟังก์ชัน : resolveBackendUploadUrl
@@ -56,6 +65,66 @@ function formatDate(isoString?: string): string {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+/**
+ * ฟังก์ชัน : formatThaiDate
+ * คำอธิบาย : แปลงวันที่ ISO เป็นรูปแบบไทย dd/mm/yyyy
+ * Input : isoString?: string
+ * Output: วันที่ในรูปแบบไทย วันพุธที่ 1 ตุลาคม พ.ศ. 2568  เวลา 14:00   
+ */
+export function formatThaiDate(dateString: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  const days = [
+    "วันอาทิตย์",
+    "วันจันทร์",
+    "วันอังคาร",
+    "วันพุธ",
+    "วันพฤหัสบดี",
+    "วันศุกร์",
+    "วันเสาร์",
+  ];
+
+  const months = [
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
+  ];
+
+  const dayName = days[date.getDay()];
+  const day = date.getDate();
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear() + 543;
+
+  return `${dayName} ที่ ${day} ${monthName} พ.ศ. ${year}`;
+}
+
+/**
+ * ฟังก์ชัน : parseFacilityText
+ * คำอธิบาย : แปลงข้อความสิ่งอำนวยความสะดวกจากรูปแบบ string ให้เป็นรายการ array
+ *             รองรับการคั่นด้วย \n, comma (,), หรือสัญลักษณ์ bullet (•)
+ * Input : text?: string (ข้อความสิ่งอำนวยความสะดวกจาก backend)
+ * Output: string[] (รายการสิ่งอำนวยความสะดวกแต่ละบรรทัด)
+ */
+function parseFacilityText(text?: string): string[] {
+  if (!text) return [];
+
+  return text
+    .split(/\r?\n|,|•/g)
+    .map(item => item.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -100,8 +169,9 @@ function buildAddressLine(detail?: PackageRequestDetail | null): string {
 export default function DetailPackageRequiredPage() {
   const navigate = useNavigate();
   const { requestId } = useParams<{ requestId: string }>();
-  const [packageRequestDetail, setPackageRequestDetail] =
-    useState<PackageRequestDetail | null>(null);
+  const [packageRequestDetail, setPackageRequestDetail] = useState<PackageRequestDetail | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -124,6 +194,10 @@ export default function DetailPackageRequiredPage() {
     };
   }, [requestId]);
 
+  /* ค่าศูนย์กลางแผนที่ (fallback: กรุงเทพมหานคร) */
+  const mapCenterLatitude = packageRequestDetail?.location?.latitude ?? 13.7563;
+  const mapCenterLongitude = packageRequestDetail?.location?.longitude ?? 100.5018;
+
   /**
    * ฟังก์ชัน : mapCenter (useMemo)
    * คำอธิบาย : คำนวณพิกัดศูนย์กลางแผนที่จากข้อมูลแพ็กเกจ หรือใช้ fallback เป็นกรุงเทพฯ
@@ -134,10 +208,7 @@ export default function DetailPackageRequiredPage() {
     const lat = packageRequestDetail?.location?.latitude ?? 13.7563;
     const lng = packageRequestDetail?.location?.longitude ?? 100.5018;
     return [lat, lng];
-  }, [
-    packageRequestDetail?.location?.latitude,
-    packageRequestDetail?.location?.longitude,
-  ]);
+  }, [packageRequestDetail?.location?.latitude, packageRequestDetail?.location?.longitude]);
 
   /**
    * ฟังก์ชัน : mapKey
@@ -184,17 +255,14 @@ export default function DetailPackageRequiredPage() {
       setIsApproveModalOpen(false);
 
       navigate("/admin/package-requests", { replace: true });
-
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "ไม่สามารถอนุมัติได้";
       setErrorMessage(message);
-
     } finally {
       setIsLoading(false);
       setApproveClicked(false);
     }
   }
-
 
   /**
    * ฟังก์ชัน : rejectCurrentRequest
@@ -244,9 +312,7 @@ export default function DetailPackageRequiredPage() {
    * Input : -
    * Output: boolean
    */
-  const isApproved = String(
-    (packageRequestDetail as any)?.statusApprove || ""
-  )
+  const isApproved = String((packageRequestDetail as any)?.statusApprove || "")
     .toUpperCase()
     .startsWith("APPROVE");
 
@@ -268,9 +334,7 @@ export default function DetailPackageRequiredPage() {
             aria-label="ย้อนกลับไปยังรายการคำร้องแพ็กเกจ"
           >
             <ArrowLeft className="w-5 h-5 text-gray-800" />
-            <h1 className="text-[20px] font-bold text-gray-800">
-              รายละเอียดแพ็กเกจ
-            </h1>
+            <h1 className="text-[20px] font-bold text-gray-800">รายละเอียดแพ็กเกจ</h1>
           </button>
 
           <div>
@@ -286,9 +350,7 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">ชื่อแพ็กเกจ :</span>{" "}
-            <span className="font-normal">
-              {packageRequestDetail?.name || "-"}
-            </span>
+            <span className="font-normal">{packageRequestDetail?.name || "-"}</span>
           </p>
         </div>
 
@@ -308,9 +370,7 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">คำอธิบาย :</span>{" "}
-            <span className="font-normal">
-              {packageRequestDetail?.description || "-"}
-            </span>
+            <span className="font-normal">{packageRequestDetail?.description || "-"}</span>
           </p>
         </div>
 
@@ -318,8 +378,7 @@ export default function DetailPackageRequiredPage() {
           <p className="text-[16px] text-gray-900">
             <span className="font-semibold">จำนวนคนที่เปิดรับ :</span>{" "}
             <span className="font-normal">
-              {packageRequestDetail?.capacity ?? "-"}{" "}
-              {packageRequestDetail?.capacity ? "คน" : ""}
+              {packageRequestDetail?.capacity ?? "-"} {packageRequestDetail?.capacity ? "คน" : ""}
             </span>
           </p>
           <p className="text-[16px] text-gray-900">
@@ -388,18 +447,14 @@ export default function DetailPackageRequiredPage() {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
-              <span className="font-semibold">
-                วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ :
-              </span>{" "}
+              <span className="font-semibold">วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ :</span>{" "}
               <span className="font-normal">
                 {formatDate(packageRequestDetail?.startDate)} -{" "}
                 {formatDate(packageRequestDetail?.dueDate)}
               </span>
             </p>
             <p className="text-[16px] text-gray-900">
-              <span className="font-semibold">
-                วันที่เปิด - วันที่ปิดจอง :
-              </span>{" "}
+              <span className="font-semibold">วันที่เปิด - วันที่ปิดจอง :</span>{" "}
               <span className="font-normal">
                 {formatDate(packageRequestDetail?.bookingOpenDate)} -{" "}
                 {formatDate(packageRequestDetail?.bookingCloseDate)}
@@ -418,13 +473,8 @@ export default function DetailPackageRequiredPage() {
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">เวลา :</span>{" "}
               <span className="font-normal">
-                {extractTimeFromISO(
-                  packageRequestDetail?.bookingOpenDate
-                )}{" "}
-                -{" "}
-                {extractTimeFromISO(
-                  packageRequestDetail?.bookingCloseDate
-                )}
+                {extractTimeFromISO(packageRequestDetail?.bookingOpenDate)} -{" "}
+                {extractTimeFromISO(packageRequestDetail?.bookingCloseDate)}
               </span>
             </p>
           </div>
@@ -432,9 +482,7 @@ export default function DetailPackageRequiredPage() {
 
         <p className="text-[16px] text-gray-900">
           <span className="font-semibold">สิ่งอำนวยความสะดวก :</span>{" "}
-          <span className="font-normal">
-            {packageRequestDetail?.facility ?? "-"}
-          </span>
+          <span className="font-normal">{packageRequestDetail?.facility ?? "-"}</span>
         </p>
 
         <div className="space-y-6">
@@ -449,7 +497,6 @@ export default function DetailPackageRequiredPage() {
               startingPosition={mapCenter}
               startingZoom={13}
               onChange={(_latlng) => {
-                // view only
               }}
             />
           </div>
@@ -457,15 +504,11 @@ export default function DetailPackageRequiredPage() {
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">ที่อยู่ :</span>{" "}
-              <span className="font-normal">
-                {buildAddressLine(packageRequestDetail)}
-              </span>
+              <span className="font-normal">{buildAddressLine(packageRequestDetail)}</span>
             </p>
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">คำอธิบายที่อยู่ :</span>{" "}
-              <span className="font-normal">
-                {packageRequestDetail?.location?.detail || "-"}
-              </span>
+              <span className="font-normal">{packageRequestDetail?.location?.detail || "-"}</span>
             </p>
           </div>
 
@@ -479,7 +522,71 @@ export default function DetailPackageRequiredPage() {
             </p>
           </div>
         </div>
+        <p className="text-[16px] text-gray-900">
+          <span className="font-semibold">ที่พักในแพ็กเกจ</span>{" "}
+        </p>
+
+        {packageRequestDetail?.homestayHistories?.length ? (
+          <div className="grid grid-cols-2 gap-6">
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">เช็คอิน :</span>{" "}
+              <span className="font-normal">
+                {formatThaiDate(
+                  packageRequestDetail.homestayHistories[0].checkInTime
+                )} เวลา {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkInTime)}
+              </span>
+            </p>
+
+            <p className="text-[16px] text-gray-900">
+              <span className="font-semibold">เช็คเอาท์ :</span>{" "}
+              <span className="font-normal">
+                {formatThaiDate(
+                  packageRequestDetail.homestayHistories[0].checkOutTime
+                )} เวลา {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkOutTime)}
+              </span>
+            </p>
+
+            <div className="col-span-2 w-full min-h-[200px] border border-gray-300 rounded-xl p-4 shadow-sm bg-white mt-2 flex items-start gap-16">
+
+              {packageRequestDetail?.homestayHistories?.[0]?.homestay?.homestayImage?.length ? (
+                <img
+                  src={resolveBackendUploadUrl(
+                    packageRequestDetail.homestayHistories[0].homestay.homestayImage[0].image
+                  )}
+                  alt="homestay"
+                  className="w-[356px] h-[183px] object-cover rounded-lg"
+                />
+              ) : (
+                <div className="w-[356px] h-[183px] bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+                  ไม่มีรูปภาพ
+                </div>
+              )}
+
+              <div className="flex-1">
+
+                <p className="text-[16px] font-semibold text-gray-900">
+                  {packageRequestDetail?.homestayHistories?.[0]?.homestay?.name ?? "-"}
+                </p>
+
+                <p className="text-[16px] font-semibold mt-2">
+                  สิ่งอำนวยความสะดวก
+                </p>
+
+                <ul className="list-disc ml-6 text-[16px] text-gray-800 mt-1">
+                  {parseFacilityText(
+                    packageRequestDetail?.homestayHistories?.[0]?.homestay?.facility
+                  ).map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+
+              </div>
+            </div>
+          </div>
+        ) : null}
+
       </section>
+
 
       {!isApproved && (
         <div className="flex justify-end gap-3 mt-4">

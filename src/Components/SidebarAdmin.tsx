@@ -18,7 +18,6 @@ type MenuKey =
   | "community-stores"
   | "community-homestays"
   | "members"
-
   | "packages"
   | "packages-requests"
   | "packages-draft"
@@ -55,7 +54,6 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/community/own")) {
       setActiveMenuKey("community");
       setOpenDropdown("community");
-
     } else if (currentPath.startsWith("/members")) {
       setActiveMenuKey("members");
       setOpenDropdown(null);
@@ -75,7 +73,7 @@ const SidebarAdmin = () => {
     } else if (currentPath.startsWith("/packages")) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (currentPath === "/booking/refund-requests") {
+    } else if (currentPath === "/booking/refunds") {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
     } else if (currentPath === "/bookings-histories/all") {
@@ -114,8 +112,9 @@ const SidebarAdmin = () => {
     <Link
       to={`${basePath}${to}`}
       onClick={() => handleClick(key, parentKey)}
-      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive(key) ? "bg-[#0D845A]" : ""
-        }`}
+      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+        isActive(key) ? "bg-[#0D845A]" : ""
+      }`}
     >
       <Icon icon={icon} className="text-xl" />
       {label}
@@ -138,8 +137,9 @@ const SidebarAdmin = () => {
           <Link
             to={`${basePath}/community/own`}
             onClick={() => handleClick("community")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("community") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("community") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="ri:community-line" className="text-xl" />
@@ -173,8 +173,9 @@ const SidebarAdmin = () => {
           <Link
             to={`${basePath}/packages/all`}
             onClick={() => handleClick("packages")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("packages") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -219,8 +220,9 @@ const SidebarAdmin = () => {
           <Link
             to={`${basePath}/bookings`}
             onClick={() => handleClick("booking")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("booking") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -232,7 +234,7 @@ const SidebarAdmin = () => {
             <div className="ml-4 mt-1 flex flex-col gap-1 border-l border-white/40 pl-2">
               {menuLink(
                 "คำขอคืนเงิน",
-                "/booking/refund-requests",
+                "/booking/refunds",
                 "mdi:cash-refund",
                 "booking-refunds",
                 "booking"
@@ -260,8 +262,9 @@ const SidebarAdmin = () => {
             handleClick("logout");
             logout();
           }}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${isActive("logout") ? "bg-[#0D845A]" : ""
-            }`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${
+            isActive("logout") ? "bg-[#0D845A]" : ""
+          }`}
         >
           <Icon icon="solar:logout-2-outline" className="text-xl" />
           ออกจากระบบ

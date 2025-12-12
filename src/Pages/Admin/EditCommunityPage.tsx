@@ -31,7 +31,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Switch from "@/Components/Switch";
 import * as React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import z from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { BankSelector } from "@/Components/Selector/BankSelector";
@@ -82,6 +82,8 @@ const communitySchema = z.object({
 
   subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
 
+  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
+
   latitude: z
     .string("กรุณากรอกละติจูด")
     .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
@@ -114,7 +116,9 @@ const communitySchema = z.object({
  *   - เพิ่ม property isFromServer = true เพื่อระบุว่าไฟล์นี้มาจาก server (ไม่ใช่ไฟล์ใหม่ที่ผู้ใช้อัปโหลด)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    credentials: "include",
+  });
   const blob = await res.blob();
   const ext = filename.split(".").pop() || "jpg";
   const type = blob.type || `image/${ext}`;
@@ -179,6 +183,9 @@ export function EditCommunity() {
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
+  const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+
+  const navigate = useNavigate();
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
@@ -224,6 +231,10 @@ export function EditCommunity() {
             subDistrict: data.location.subDistrict,
             postalCode: data.location.postalCode,
           },
+          province: data.location.province,
+          district: data.location.district,
+          subDistrict: data.location.subDistrict,
+          postalCode: data.location.postalCode,
         });
         setLocation({
           province: data.location.province,
@@ -248,11 +259,13 @@ export function EditCommunity() {
         setChecked(data.status === "OPEN" ? true : false);
         setIsVisibleRating(data.isRatingVisible);
 
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
         const logoFileFetch: File[] = await Promise.all(
           (data.communityImage || [])
             .filter((img: any) => img.type === "LOGO")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -260,7 +273,7 @@ export function EditCommunity() {
           (data.communityImage || [])
             .filter((img: any) => img.type === "COVER")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -268,7 +281,7 @@ export function EditCommunity() {
           (data.communityImage || [])
             .filter((img: any) => img.type === "GALLERY")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
+              const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
             })
         );
@@ -276,8 +289,10 @@ export function EditCommunity() {
           (data.communityImage || [])
             .filter((img: any) => img.type === "VIDEO")
             .map(async (img: any) => {
-              const fullUrl = `http://localhost:3000/${img.image}`;
-              const response = await fetch(fullUrl);
+              const fullUrl = `${backendUrl}/${img.image}`;
+              const response = await fetch(fullUrl, {
+                credentials: "include",
+              });
               const blob = await response.blob();
               const fixedBlob =
                 blob.type && blob.type.startsWith("video/")
@@ -293,6 +308,8 @@ export function EditCommunity() {
         setVideoFiles(videoFileFetch);
         const memberIds = data.communityMembers?.map((m: any) => m.user.id) ?? [];
         setSelectedMembers(memberIds);
+
+        // Set Initial States for Dirty Check
       } catch (error) {
         console.error(error);
       } finally {
@@ -301,23 +318,6 @@ export function EditCommunity() {
     }
     fetchData();
   }, []);
-
-  React.useEffect(() => {
-    if (location.province) {
-      setFormData((prev) => ({
-        ...prev,
-        province: location.province,
-        district: location.district,
-        subDistrict: location.subdistrict,
-        postalCode: location.postalCode,
-      }));
-
-      // ตรวจสอบ error ทันที
-      validateField("province", location.province);
-      validateField("district", location.district);
-      validateField("subDistrict", location.subdistrict);
-    }
-  }, [location]);
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
@@ -472,6 +472,14 @@ export function EditCommunity() {
 
       const formDataToSend = new FormData();
 
+      if (galleryFiles.length === 0 || videoFiles.length === 0) {
+        setAlertType("error");
+        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertMessage("กรุณาอัพโหลดรูปภาพและวิดีโอให้ครบถ้วน");
+        setAlertOpen(true);
+        return;
+      }
+
       formDataToSend.append("data", JSON.stringify(payload));
 
       if (logoFile) {
@@ -495,6 +503,7 @@ export function EditCommunity() {
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
       setAlertOpen(true);
+      navigate("/admin/community/own");
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
@@ -576,7 +585,7 @@ export function EditCommunity() {
           <div className="flex flex-col items-center mb-20">
             <UploadProfile
               roundedCover="rounded-[5px]"
-              coverHeight={360}
+              coverHeight={500}
               avatarSize={210} //รัศสมีวงกลม
               coverLabel="คลิกเพื่อเพิ่มรูปภาพหน้าปก"
               avatarLabel="เพิ่มรูปโลโก้ / โปรไฟล์"
@@ -729,7 +738,7 @@ export function EditCommunity() {
             <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
               <div>
                 <h3 className="text-base font-bold mb-1.5">ร้านค้า</h3>
-                <Link to={`/super/community/own/stores/all`}>
+                <Link to={`/admin/community/stores`}>
                   <Button type="confirm-admin">
                     <Icon icon="carbon:store" style={{ fontSize: "24px" }} className="mr-2" />
                     จัดการร้านค้า
@@ -740,7 +749,7 @@ export function EditCommunity() {
                 <div className="text-base font-bold mb-1.5">
                   <h3>ที่พัก</h3>
                 </div>
-                <Link to={`/super/community/own/homestays/all`}>
+                <Link to={`/admin/community/homestays`}>
                   <Button type="confirm-admin">
                     <Icon
                       icon="healthicons:home-outline"
@@ -867,9 +876,10 @@ export function EditCommunity() {
                     subDistrict: loc.subdistrict,
                     postalCode: loc.postalCode,
                   }));
-                  validateField("province", loc.province);
-                  validateField("district", loc.district);
-                  validateField("subDistrict", loc.subdistrict);
+                  if (loc.province) validateField("province", loc.province);
+                  if (loc.district) validateField("district", loc.district);
+                  if (loc.subdistrict) validateField("subDistrict", loc.subdistrict);
+                  if (loc.postalCode) validateField("postalCode", loc.postalCode);
                 }}
                 error={{
                   province: !!formErrors.province,
@@ -880,6 +890,7 @@ export function EditCommunity() {
                   province: formErrors.province,
                   district: formErrors.district,
                   subdistrict: formErrors.subDistrict,
+                  postalCode: formErrors.postalCode,
                 }}
               />
             </div>
@@ -1087,11 +1098,13 @@ export function EditCommunity() {
           </div>
         </AccordionDetails>
       </Accordion>
-      <div className="flex justify-end mt-2.5">
-        <div className="w-36">
-          <Button type="cancel">ยกเลิก</Button>
+      <div className="flex justify-end mt-5 mb-10 mr-5">
+        <div className="w-32 mr-2.5">
+          <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+            ยกเลิก
+          </Button>
         </div>
-        <div className="ml-2.5 w-36">
+        <div className="w-32">
           <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
             บันทึก
           </Button>
@@ -1099,13 +1112,23 @@ export function EditCommunity() {
       </div>
       <Modal
         open={openConfirm}
-        title="ยืนยันการแก้ไขชุมชน"
-        text="คุณต้องการยืนยันการแก้ไขชุมชนหรือไม่"
+        title="ยืนยันการแก้ไขข้อมูล"
+        text="คุณต้องการยืนยันการแก้ไขข้อมูลหรือไม่"
         onConfirm={async () => {
           setOpenConfirm(false);
           await handleSubmit();
         }}
         onCancel={() => setOpenConfirm(false)}
+      />
+      <Modal
+        open={openCancelConfirm}
+        title="ยืนยันการยกเลิก"
+        text="เมื่อกดตกลง ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        onConfirm={() => {
+          setOpenCancelConfirm(false);
+          navigate(-1);
+        }}
+        onCancel={() => setOpenCancelConfirm(false)}
       />
       <ModalAlert
         open={alertOpen}

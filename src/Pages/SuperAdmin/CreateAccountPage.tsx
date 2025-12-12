@@ -2,7 +2,7 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 02 ธันวาคม 2568 (Smart Fetch Community)
+ * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
  */
 
 import React, { useState, useEffect } from "react";
@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/api";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
@@ -20,7 +21,6 @@ import ThailandLocationSelector, {
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-// Import สำหรับ Dropdown
 import Autocomplete from "@mui/material/Autocomplete";
 import Popper from "@mui/material/Popper";
 import { Icon } from "@iconify/react";
@@ -36,7 +36,7 @@ const accountSchema = z.object({
   fname: z.string().min(1, "กรุณากรอกชื่อ"),
   lname: z.string().min(1, "กรุณากรอกนามสกุล"),
   username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง ตัวอย่างที่ถูกต้อง: example@example.com"),
   phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
   password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
   confirmPassword: z.string(),
@@ -74,7 +74,7 @@ interface CreateAccountPageProps {
 
 interface RoleSpecificData {
   communityId: string;
-  activityRole: string; 
+  activityRole: string;
   gender: string;
   birthDate: string;
 }
@@ -89,7 +89,7 @@ interface CreateAccountBody {
   password?: string;
   profileImage?: string | null;
   memberOfCommunity?: number | null;
-  communityRole?: string; 
+  communityRole?: string;
   gender?: "MALE" | "FEMALE" | "NONE";
   birthDate?: string | null;
   province?: string;
@@ -143,11 +143,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
   const [roleSpecificData, setRoleSpecificData] = useState<RoleSpecificData>({
     communityId: "",
-    activityRole: "", 
+    activityRole: "",
     gender: "",
     birthDate: "",
   });
-  
+
   const [locationData, setLocationData] = useState<ThailandLocation>({
     province: "",
     district: "",
@@ -155,6 +155,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     postalCode: "",
   });
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
@@ -168,35 +169,29 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       const fetchCommunities = async () => {
         setIsCommunityLoading(true);
         try {
-          // 1. ลองดึงแบบ SuperAdmin (เอาทั้งหมด)
-          // ตัด limit=1000 ออกก่อน เผื่อ backend รับ type number แล้ว crash
-          const res = await api.get("/super/communities"); 
-          
+          const res = await api.get("/super/communities");
+
           let data: CommunityOption[] = [];
-          
-          // แกะ Response (รองรับ Pagination)
+
           if (res.data?.data?.data && Array.isArray(res.data.data.data)) {
-             data = res.data.data.data;
+            data = res.data.data.data;
           } else if (res.data?.data && Array.isArray(res.data.data)) {
-             data = res.data.data;
+            data = res.data.data;
           } else if (Array.isArray(res.data)) {
-             data = res.data;
+            data = res.data;
           }
 
-          // 2. ถ้าไม่เจอข้อมูล (อาจจะเป็น Admin ธรรมดา) ให้ลองดึงของตัวเอง
           if (data.length === 0) {
             console.log("SuperAdmin fetch empty, trying Admin fetch...");
             try {
               const resAdmin = await api.get("/admin/community");
-              // Response ของ Admin เป็น Single Object
               const adminCommunity = resAdmin.data?.data;
               if (adminCommunity && adminCommunity.id && adminCommunity.name) {
                 data = [{ id: adminCommunity.id, name: adminCommunity.name }];
-                
-                // Auto select ให้เลย ถ้ามีอันเดียว
-                setRoleSpecificData(prev => ({
-                    ...prev,
-                    communityId: String(adminCommunity.id)
+
+                setRoleSpecificData((prev) => ({
+                  ...prev,
+                  communityId: String(adminCommunity.id),
                 }));
               }
             } catch (errAdmin) {
@@ -207,15 +202,14 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           setCommunityOptions(data);
         } catch (error) {
           console.error("Failed to fetch communities", error);
-          // ถ้า Error หลัก ให้ลอง fetch แบบ Admin เป็น Last Resort
           try {
-             const resAdmin = await api.get("/admin/community");
-             const adminCommunity = resAdmin.data?.data;
-             if (adminCommunity) {
-                setCommunityOptions([{ id: adminCommunity.id, name: adminCommunity.name }]);
-             }
+            const resAdmin = await api.get("/admin/community");
+            const adminCommunity = resAdmin.data?.data;
+            if (adminCommunity) {
+              setCommunityOptions([{ id: adminCommunity.id, name: adminCommunity.name }]);
+            }
           } catch (e) {
-             setCommunityOptions([]);
+            setCommunityOptions([]);
           }
         } finally {
           setIsCommunityLoading(false);
@@ -288,14 +282,14 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
 
     if (role === "Member") {
-       if (!roleSpecificData.communityId) {
-         toast.error("กรุณาเลือกชุมชน ❌");
-         return;
-       }
-       if (!roleSpecificData.activityRole) {
-         toast.error("กรุณากรอกบทบาทในชุมชน ❌");
-         return;
-       }
+      if (!roleSpecificData.communityId) {
+        toast.error("กรุณาเลือกชุมชน ❌");
+        return;
+      }
+      if (!roleSpecificData.activityRole) {
+        toast.error("กรุณากรอกบทบาทในชุมชน ❌");
+        return;
+      }
     }
 
     try {
@@ -316,7 +310,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
       if (role === "Member") {
         accountBody.memberOfCommunity = Number(roleSpecificData.communityId) || null;
-        accountBody.communityRole = roleSpecificData.activityRole.trim(); 
+        accountBody.communityRole = roleSpecificData.activityRole.trim();
       } else if (role === "Tourist") {
         accountBody.gender =
           roleSpecificData.gender === "ชาย"
@@ -335,7 +329,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-        toast.success("สร้างบัญชีสำเร็จ (แต่ไม่พบ ID สำหรับอัปโหลดรูป)");
+        setShowConfirm(false);
+        setShowSuccessModal(true);
         return;
       }
 
@@ -348,26 +343,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         });
       }
 
-      toast.success(response.data.message || "สร้างบัญชีและอัปโหลดรูปสำเร็จ ✅");
-
-      setFormData({
-        fname: "",
-        lname: "",
-        username: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-        profileImage: null,
-      });
-      setRoleSpecificData({ communityId: "", activityRole: "", gender: "", birthDate: "" });
-      setLocationData({
-        province: "",
-        district: "",
-        subdistrict: "",
-        postalCode: "",
-      });
       setShowConfirm(false);
+      setShowSuccessModal(true);
     } catch (error: any) {
       console.error("❌ Error creating account:", error);
       toast.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
@@ -376,15 +353,13 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
-      {/* 1. Breadcrumb */}
       <div>
         <Breadcrumb
-              current={{
-              label: "เพิ่มบัญชี",
-               to: "/super/account/admin/create",
-
-             }}
-            />
+          current={{
+            label: "เพิ่มบัญชี",
+            to: "/super/account/admin/create",
+          }}
+        />
       </div>
 
       <div className="flex items-center gap-3 mb-6 pl-6">
@@ -524,8 +499,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             </div>
 
             {role === "Member" && (
-              <div className="space-y-6"> 
-                {/* 1. Community Selector (TextField Style) */}
+              <div className="space-y-6">
                 <div className="space-y-1.5 w-full">
                   <div className="flex items-center justify-between">
                     <label className="block text-base font-semibold text-black">
@@ -575,7 +549,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                   />
                 </div>
                 
-                {/* 2. Activity Role */}
                 <TextField
                   id="activityRole"
                   label="บทบาทในชุมชน"
@@ -620,6 +593,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                             name="gender"
                             value={genderLabel}
                             checked={roleSpecificData.gender === genderLabel}
+                            className="accent-[#0A4B32] w-4 h-4 cursor-pointer"
                             onChange={() =>
                               setRoleSpecificData((prevData) => ({
                                 ...prevData,
@@ -668,6 +642,17 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
         onCancel={() => setShowConfirm(false)}
+      />
+
+      <ModalAlert
+        open={showSuccessModal}
+        type="success"
+        title="สร้างบัญชีสำเร็จ"
+        message="บัญชีผู้ใช้ถูกสร้างเรียบร้อยแล้ว"
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate("/super/accounts/all"); 
+        }}
       />
     </div>
   );

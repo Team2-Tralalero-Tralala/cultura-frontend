@@ -16,6 +16,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Button } from "@/Components/ui/button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -103,26 +104,27 @@ const Modal: React.FC<ModalProps> = ({
               setLocalError('');
             }}
             className={`px-3 w-full h-[50px] rounded-[8px] transition-colors duration-200 ${localError || errorMessage
-                ? 'border-red-500 border-[1.5px]'
-                : 'border-black border-[1px]'
+              ? 'border-red-500 border-[1.5px]'
+              : 'border-black border-[1px]'
               }`}
           />
         </div>
 
         {/* ปุ่มยกเลิกและยืนยัน */}
         <div className="flex justify-center gap-4 mt-2">
-          <button
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="text-black w-[100px] h-[31px] border border-black rounded-[3px]"
+            className="w-[100px] border-black text-black hover:bg-gray-50"
           >
             ยกเลิก
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
-            className="bg-[#4A816F] hover:bg-[#3a6657] text-white w-[100px] h-[31px] rounded-[3px]"
+            className="w-[100px] bg-[#055035] hover:bg-[#3a6657] text-white"
           >
             ยืนยัน
-          </button>
+          </Button>
         </div>
       </div>
     </div>

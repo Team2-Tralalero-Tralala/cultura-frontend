@@ -28,20 +28,6 @@ type Row = {
   approved: boolean;
 };
 
-const bulkActions: BulkAction<Row>[] = [
-  {
-    id: "bulk-delete",
-    label: "ลบทั้งหมด",
-    icon: TrashIcon,
-    intent: "danger",
-    confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-    onClick: async (rows) => {
-      const packageIdList = rows.map((row) => row.id);
-      console.log("bulk delete:", packageIdList);
-    },
-  },
-];
-
 /*
  * คำอธิบาย : ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
  * Input: -
@@ -91,6 +77,7 @@ export default function ManagePackageSuperAdmin() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [rowsToBulkDelete, setRowsToBulkDelete] = useState<Row[]>([]);
 
   /*
    * คำอธิบาย : (Callback) โหลดข้อมูลแพ็กเกจจาก API ตาม page และ limit ปัจจุบัน
@@ -158,30 +145,68 @@ export default function ManagePackageSuperAdmin() {
    * Input: - (ใช้ rowToDelete จาก state)
    * Output : (void) - (async) เรียก API ลบ, แสดง alert, และโหลดข้อมูลใหม่
    */
-  const handleConfirmDelete = useCallback(async () => {
-    if (!rowToDelete) return;
-    const rowId = rowToDelete.id;
-    const rowTitle = rowToDelete.title;
-    setIsDeleteModalOpen(false);
+const handleConfirmDelete = useCallback(async () => {
+    setIsDeleteModalOpen(false); // ปิด Modal ก่อนเริ่ม process
 
-    try {
-      await axios.patch(`${apiUrl}/super/package/${rowId}`, null, { withCredentials: true });
+    // กรณี A: ลบแบบกลุ่ม (Bulk Delete)
+    if (rowsToBulkDelete.length > 0) {
+      try {
+        setIsLoading(true);
+        const packageIdList = rowsToBulkDelete.map((row) => row.id);
 
-      await reloadPackages();
-    } catch (error: any) {
-      console.error("delete failed:", error?.response?.data ?? error);
-      alert(
-        `ลบไม่สำเร็จ (${rowTitle}): ${
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "unknown error"
-        }`
-      );
-    } finally {
-      setRowToDelete(null);
+        // ยิง API ลบทีละตัวพร้อมกัน
+        await Promise.all(
+          packageIdList.map((id) =>
+            axios.patch(`${apiUrl}/super/package/${id}`, null, {
+              withCredentials: true,
+            })
+          )
+        );
+
+        await reloadPackages(); // โหลดข้อมูลใหม่
+        setRowsToBulkDelete([]); // เคลียร์ค่า
+      } catch (error: any) {
+        console.error("Bulk delete failed:", error);
+        alert(`เกิดข้อผิดพลาดในการลบกลุ่ม: ${error?.message || "unknown error"}`);
+      } finally {
+        setIsLoading(false);
+      }
+      return; // จบการทำงาน
     }
-  }, [rowToDelete, reloadPackages]);
+
+    // กรณี B: ลบรายการเดียว (Single Delete - Logic เดิม)
+    if (rowToDelete) {
+      try {
+        await axios.patch(`${apiUrl}/super/package/${rowToDelete.id}`, null, {
+          withCredentials: true,
+        });
+        await reloadPackages();
+      } catch (error: any) {
+        console.error("delete failed:", error);
+        alert(`ลบไม่สำเร็จ: ${error?.message || "unknown error"}`);
+      } finally {
+        setRowToDelete(null);
+      }
+    }
+  }, [rowToDelete, rowsToBulkDelete, reloadPackages]);
+
+  // 3. [แก้ไข] bulkActions ย้ายเข้ามาใน Component และสั่งแค่เปิด Modal
+  const bulkActions: BulkAction<Row>[] = React.useMemo(
+    () => [
+      {
+        id: "bulk-delete",
+        label: "ลบทั้งหมด",
+        icon: TrashIcon,
+        intent: "danger",
+        // ไม่ต้องมี confirm ในนี้ เพราะเราจะใช้ Modal ของเราเอง
+        onClick: (rows) => {
+          setRowsToBulkDelete(rows); // เก็บค่า rows ที่ถูกเลือก
+          setIsDeleteModalOpen(true); // เปิด Modal
+        },
+      },
+    ],
+    []
+  );
 
   const rowActions: DataTableActionsConfig<Row> = React.useMemo(
     () => ({
@@ -268,6 +293,7 @@ export default function ManagePackageSuperAdmin() {
     }),
     [currentPage, pageSize, totalItems]
   );
+
 
   return (
     <div className="space-y-4">

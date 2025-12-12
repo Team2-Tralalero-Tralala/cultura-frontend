@@ -40,12 +40,13 @@ const TextArea: React.FC<BaseFieldProps> = ({
   onChange,
   error = false,
   helperText = "",
+  rows = 4,
 }) => {
   return (
     <div className="space-y-1.5">
       {/* Label + helperText in one row */}
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-base text-black">
+        <label htmlFor={id} className="block text-base text-black font-bold">
           {label}
           {required && <RequiredMark />}
         </label>
@@ -66,6 +67,7 @@ const TextArea: React.FC<BaseFieldProps> = ({
           placeholder={placeholder}
           onChange={onChange}
           value={value}
+          rows={rows}
           className={`block w-full rounded-form border-1 
             ${
               error

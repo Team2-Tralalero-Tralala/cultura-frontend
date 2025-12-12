@@ -21,19 +21,19 @@ import React from "react";
  * - ariaLabel/title: ตัวเลือก A11y/tooltip
  */
 export type TagProps = {
-    label: React.ReactNode;
-    className?: string;
+  label: React.ReactNode;
+  className?: string;
 
-    /** ใส่คลาส Tailwind ขนาดทีเดียว เช่น "w-24 h-10" (ถ้ามีจะ override ค่าด้านล่าง) */
-    sizeClass?: string;
+  /** ใส่คลาส Tailwind ขนาดทีเดียว เช่น "w-24 h-10" (ถ้ามีจะ override ค่าด้านล่าง) */
+  sizeClass?: string;
 
-    /** กำหนดความกว้าง/สูง: number = px, string = CSS length หรือคลาส Tailwind (w-*, h-*) */
-    width?: number | string;
-    height?: number | string;
+  /** กำหนดความกว้าง/สูง: number = px, string = CSS length หรือคลาส Tailwind (w-*, h-*) */
+  width?: number | string;
+  height?: number | string;
 
-    /** A11y */
-    ariaLabel?: string;
-    title?: string;
+  /** A11y */
+  ariaLabel?: string;
+  title?: string;
 };
 
 /** ---------- Utils (Pure) ---------- */
@@ -59,45 +59,49 @@ const toLen = (v?: number | string) => (typeof v === "number" ? `${v}px` : v);
  * Output : <div> ป้ายพร้อมขนาดตามที่กำหนด
  */
 export const Tag = React.forwardRef<HTMLDivElement, TagProps>(
-    ({ label, className, sizeClass, width, height, ariaLabel, title }, ref) => {
-        // ถ้าใช้ sizeClass ⇒ ข้ามการคำนวณ width/height ทั้งหมด
-        if (sizeClass) {
-            return (
-                <div
-                    ref={ref}
-                    className={`${sizeClass} border border-gray-200 rounded-lg flex items-center justify-center text-sm ${className ?? ""}`}
-                    aria-label={ariaLabel}
-                    title={title}
-                >
-                    {label}
-                </div>
-            );
-        }
-
-        // ไม่ได้ส่ง sizeClass ⇒ ตรวจว่า width/height เป็นคลาส w-/h- หรือเป็น length
-        const wClass = isTwW(width as string) ? (width as string) : undefined;
-        const hClass = isTwH(height as string) ? (height as string) : undefined;
-
-        const sizeClasses = `${wClass ?? "w-20"} ${hClass ?? "h-9"}`;
-
-        // ถ้า width/height เป็นตัวเลขหรือ CSS length → ใส่เป็น style
-        const style: React.CSSProperties = {
-            width: !wClass ? toLen(width) : undefined,
-            height: !hClass ? toLen(height) : undefined,
-        };
-
-        return (
-            <div
-                ref={ref}
-                className={`${sizeClasses} border border-gray-600 rounded-lg flex items-center justify-center font-medium ${className ?? ""}`}
-                style={style}
-                aria-label={ariaLabel}
-                title={title}
-            >
-                {label}
-            </div>
-        );
+  ({ label, className, sizeClass, width, height, ariaLabel, title }, ref) => {
+    // ถ้าใช้ sizeClass ⇒ ข้ามการคำนวณ width/height ทั้งหมด
+    if (sizeClass) {
+      return (
+        <div
+          ref={ref}
+          className={`${sizeClass} border border-gray-200 rounded-lg flex items-center justify-center text-sm ${
+            className ?? ""
+          }`}
+          aria-label={ariaLabel}
+          title={title}
+        >
+          {label}
+        </div>
+      );
     }
+
+    // ไม่ได้ส่ง sizeClass ⇒ ตรวจว่า width/height เป็นคลาส w-/h- หรือเป็น length
+    const wClass = isTwW(width as string) ? (width as string) : undefined;
+    const hClass = isTwH(height as string) ? (height as string) : undefined;
+
+    const sizeClasses = `${wClass ?? "w-fit px-3"} ${hClass ?? "h-9"}`;
+
+    // ถ้า width/height เป็นตัวเลขหรือ CSS length → ใส่เป็น style
+    const style: React.CSSProperties = {
+      width: !wClass ? toLen(width) : undefined,
+      height: !hClass ? toLen(height) : undefined,
+    };
+
+    return (
+      <div
+        ref={ref}
+        className={`${sizeClasses} border border-gray-600 rounded-lg flex items-center justify-center font-medium ${
+          className ?? ""
+        }`}
+        style={style}
+        aria-label={ariaLabel}
+        title={title}
+      >
+        {label}
+      </div>
+    );
+  }
 );
 
 Tag.displayName = "Tag";

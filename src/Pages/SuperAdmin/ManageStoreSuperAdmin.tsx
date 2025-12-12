@@ -29,6 +29,7 @@ import type {
   DataTableActionsConfig,
   Pagination,
 } from "@/Components/Tables/Types";
+import axios from "axios";
 
 // Type ของตาราง
 type StoreRow = {
@@ -61,10 +62,7 @@ const columns: Column<StoreRow>[] = [
     header: "ชื่อร้านค้า",
     className: "min-w-[200px]",
     render: (row) => (
-      <Link
-        to={`/super/store/${row.id}`}
-        className="hover:text-dark-green hover:underline"
-      >
+      <Link to={`/super/store/${row.id}`} className="hover:text-dark-green hover:underline">
         {row.name}
       </Link>
     ),
@@ -91,8 +89,10 @@ export default function ManageStores() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   //ดึงชื่อชุมชน
   useEffect(() => {
@@ -122,9 +122,7 @@ export default function ManageStores() {
       const response = await getAllStore(Number(communityId), currentPage, limit);
 
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
-      const resultPagination: Pagination =
-        response?.data?.data?.pagination ?? pagination;
-
+      const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
 
       // แปลงข้อมูลให้เข้ากับตาราง
       const mapped: StoreRow[] = resultData.map((store) => {
@@ -147,7 +145,6 @@ export default function ManageStores() {
     }
   };
 
-
   React.useEffect(() => {
     loadStores();
   }, [Number(communityId), pagination.currentPage, pagination.limit]);
@@ -162,7 +159,7 @@ export default function ManageStores() {
     callbacks: {
       edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
-        setDeleteId(row.id);
+        setDeleteIds([row.id]);
         setIsOpenConfirm(true);
       },
     },
@@ -180,8 +177,15 @@ export default function ManageStores() {
     });
   }, [rows, searchQuery]);
 
-  const handleDelete = (storeId: number) => {
-    console.log("ลบ store : ", storeId);
+  const handleDelete = async (storeId: number) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error("Failed to delete store:", error);
+      setErrorMessage("ลบร้านค้าไม่สำเร็จ");
+    }
   };
 
   const bulkActions: BulkAction<StoreRow>[] = [
@@ -193,12 +197,11 @@ export default function ManageStores() {
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         const storeIds = rows.map((row) => row.id);
-        alert("bulk delete: " + storeIds);
-        await loadStores();
+        setDeleteIds(storeIds);
+        setIsOpenConfirm(true);
       },
     },
   ];
-
 
   return (
     <div className="space-y-4">
@@ -275,30 +278,28 @@ export default function ManageStores() {
         />
       </div>
 
-      {/* Modal ยืนยันการลบ */}
+      {/* Modal สำหรับยืนยันการลบร้านค้า */}
       <Modal
         open={isOpenConfirm}
-
         title="ยืนยันการลบร้านค้า"
-        text="คุณต้องการลบร้านค้านี้หรือไม่?"
+        text={
+          deleteIds?.length > 1
+            ? `คุณต้องการลบร้านค้านี้ทั้งหมด ${deleteIds.length} รายการหรือไม่?`
+            : "คุณต้องการลบร้านค้านี้หรือไม่?"
+        }
         onConfirm={async () => {
-          if (deleteId == null) return;
-          try {
-            await handleDelete(deleteId);
-            await loadStores(); // โหลดใหม่หลังลบสำเร็จ
-          } catch (error: any) {
-            alert(
-              `ลบไม่สำเร็จ: ${error?.response?.data?.message ?? error.message}`
-            );
-          } finally {
-            setIsOpenConfirm(false);
+          if (!deleteIds?.length) return;
 
-            setDeleteId(null);
-          }
+          // ลบทุก id (กรณีเดี่ยวก็มีแค่ 1)
+          await Promise.all(deleteIds.map((id) => handleDelete(id)));
+
+          setIsOpenConfirm(false);
+          setDeleteIds([]);
+          await loadStores();
         }}
         onCancel={() => {
           setIsOpenConfirm(false);
-          setDeleteId(null);
+          setDeleteIds([]);
         }}
       />
     </div>

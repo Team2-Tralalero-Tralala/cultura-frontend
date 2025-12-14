@@ -69,7 +69,8 @@ const NavbarTourist = () => {
               {/* Dropdown แสดงเมื่อคลิก */}
               {isOpen && (
                 <ul className="absolute bg-white rounded-lg w-max shadow-md mt-2 z-10">
-                  <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
+                  <li onClick={() => {navigate('/tourist/edit-profile'); setIsOpen(false);}}
+                  className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer" >
                     แก้ไขข้อมูลส่วนตัว
                   </li>
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">

@@ -8,7 +8,7 @@ import { getStoreWithOtherStoresInCommunity } from "@/Services/store-service";
 import { Tag } from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import Thumbnails from "@/Components/Thumbnails";
-import PaginationRoundedForCardPackage from "@/Components/Pagination/PaginationRoundedForCardPackage";
+import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 
 type StoreTag = { 
     id: number; 
@@ -120,7 +120,7 @@ export default function StoreDetailPage() {
                     to: `/tourist/community/${communityId}/detail/store/${storeId}`,
                     }} 
                 />
-    
+
                 <h1 className="text-[40px] font-bold text-black mb-6">{store?.name}</h1>
 
                 <div className="flex flex-wrap gap-[29px] mb-6">
@@ -177,7 +177,7 @@ export default function StoreDetailPage() {
 
                 {/* Pagination ขวาล่าง */}
                 <div className="flex justify-end">
-                    <PaginationRoundedForCardPackage
+                    <Pagination
                         totalData={totalOtherStores}
                         onQueryChange={({ page }) => setPage(page)}
                     />

@@ -37,19 +37,20 @@ const NavbarTourist = () => {
 
   return (
     <header className=" container mx-auto">
-      <nav className="flex items-center justify-between m-80px px-12 h-16 lg:gab-6">
-        <div className="flex items-center gap-6">
-        <a href="/">
-          <img
-            src={"/public/logo-black.png"}
-            className="w-40.25 h-7.93"
-            alt="Cultura logo"
-          />
-        </a>
+      <nav className="flex items-center justify-between m-80px px-6 h-16 lg:gap-6">
+        <div className="flex items-center gap-10">
+          <a href="/">
+            <img
+              src={"/public/logo-black.png"}
+              className="w-40.25 h-7.93"
+              alt="Cultura logo"
+            />
+          </a>
+          
 
-        {/* กล่องค้นหา */}
+          {/* กล่องค้นหา */}
           <SearchBar
-            onSearch={() => {}}
+            onSearch={() => { }}
             placeholder="ค้นหาแพ็กเกจกิจกรรม:"
           />
         </div>
@@ -62,8 +63,8 @@ const NavbarTourist = () => {
                 onClick={toggleDropdown}
                 className="flex items-center justify-between gap-3 hover:text-green-500 p-2"
               >
+                {user.fname} {user.lname}
                 <img src={"/profile.png"} className="w-9 h-9" />
-                Profile
               </button>
 
               {/* Dropdown แสดงเมื่อคลิก */}

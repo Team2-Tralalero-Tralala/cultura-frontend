@@ -67,3 +67,23 @@ export async function approveRefundMember(bookingId: number) {
 export async function rejectRefundMember(bookingId: number, reason: string) {
   return api.patch(`/member/booking-history/${bookingId}/reject-refund`, { reason });
 }
+
+/*
+ * คำอธิบาย : ดึงประวัติการจองทั้งหมดของ Member (รองรับการกรองสถานะ ALL, BOOKED, PENDING ฯลฯ)
+ * Mapping : GET /member/booking-histories
+ * Input : page, limit, status (default='ALL')
+ */
+export async function getMemberBookingHistories(
+  page = 1, 
+  limit = 10, 
+  status = "ALL"
+) {
+  // ใช้ตัวแปร api ตัวเดิมที่คุณประกาศไว้ด้านบน
+  return api.get(`/member/booking-histories`, { 
+    params: { 
+      page, 
+      limit, 
+      status // ส่ง status ไปเพื่อให้ Backend ตัวใหม่ทำงาน (Dispatcher)
+    } 
+  });
+}

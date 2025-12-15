@@ -9,6 +9,7 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
@@ -31,54 +32,6 @@ apiClient.interceptors.request.use((config) => {
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
 /*
-* คําอธิบาย : ฟังก์ชันสำหรับแสดง Modal แจ้งเตือนผลลัพธ์การทำงาน (สำเร็จ หรือ ล้มเหลว)
-* Input : open (สถานะเปิด/ปิด), status (ประเภทผลลัพธ์ success/error), message (ข้อความ), onClose (ฟังก์ชันปิด modal)
-* Output : JSX Element ของ Modal Result
-*/
-function ResultModal({
-    open,
-    status,
-    message,
-    onClose,
-}: {
-    open: boolean;
-    status: "success" | "error";
-    message: string;
-    onClose: () => void;
-}) {
-    if (!open) return null;
-
-    const headerClass =
-        status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800";
-    const iconName = status === "success" ? "circum:circle-check" : "circum:circle-alert";
-    const titleText = status === "success" ? "สำเร็จ" : "ไม่สำเร็จ";
-
-    return (
-        <div
-            role="dialog"
-            aria-modal="true"
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-        >
-            <div className="absolute inset-0 bg-black/40 z-0" onClick={onClose} />
-            <div className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
-                <div className={`flex items-center gap-2 px-6 py-4 ${headerClass}`}>
-                    <Icon icon={iconName} className="h-6 w-6" />
-                    <h3 className="text-lg font-semibold">{titleText}</h3>
-                </div>
-                <div className="px-6 py-6 text-gray-700 text-base">{message}</div>
-                <div className="px-6 pb-6 flex justify-end">
-                    <div className="w-24">
-                        <Button type="confirm-admin" htmlType="button" onClick={onClose}>
-                            ตกลง
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-/*
 * คําอธิบาย : ฟังก์ชัน Component หลักสำหรับหน้าจอเปลี่ยนรหัสผ่านของนักท่องเที่ยว
 * Input : -
 * Output : JSX Element หน้าจอเปลี่ยนรหัสผ่าน
@@ -96,9 +49,12 @@ export default function TouristChangePasswordPage() {
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const [resultOpen, setResultOpen] = useState(false);
-    const [resultStatus, setResultStatus] = useState<"success" | "error">("success");
-    const [resultText, setResultText] = useState<string>("");
+
+    // State สำหรับ ModalAlert
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertType, setAlertType] = useState<"success" | "error" | "warning">("success");
+    const [alertTitle, setAlertTitle] = useState("");
+    const [alertMessage, setAlertMessage] = useState("");
 
     const canSubmit = useMemo(() => {
         if (!currentPassword || !newPassword || !confirmNewPassword) return false;
@@ -146,9 +102,12 @@ export default function TouristChangePasswordPage() {
         if (!canSubmit) {
             const validationErrorMessage = "ข้อมูลไม่ครบหรือรูปแบบรหัสผ่านไม่ถูกต้อง";
             setMessage({ type: "error", text: validationErrorMessage });
-            setResultStatus("error");
-            setResultText(validationErrorMessage);
-            setResultOpen(true);
+
+            // ตั้งค่า ModalAlert (Warning)
+            setAlertType("warning");
+            setAlertTitle("ตรวจสอบข้อมูล");
+            setAlertMessage(validationErrorMessage);
+            setAlertOpen(true);
             return;
         }
 
@@ -162,9 +121,13 @@ export default function TouristChangePasswordPage() {
 
             const successMessage = "เปลี่ยนรหัสผ่านสำเร็จ";
             setMessage({ type: "success", text: successMessage });
-            setResultStatus("success");
-            setResultText(successMessage);
-            setResultOpen(true);
+
+            // ตั้งค่า ModalAlert (Success)
+            setAlertType("success");
+            setAlertTitle("ดำเนินการสำเร็จ");
+            setAlertMessage(successMessage);
+            setAlertOpen(true);
+
             resetForm();
         } catch (error: any) {
             const statusCode = error?.response?.status;
@@ -174,9 +137,12 @@ export default function TouristChangePasswordPage() {
                     : error?.response?.data?.message || error?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่";
 
             setMessage({ type: "error", text: apiMessage });
-            setResultStatus("error");
-            setResultText(apiMessage);
-            setResultOpen(true);
+
+            // ตั้งค่า ModalAlert (Error)
+            setAlertType("error");
+            setAlertTitle("เกิดข้อผิดพลาด");
+            setAlertMessage(apiMessage);
+            setAlertOpen(true);
         } finally {
             setSubmitting(false);
         }
@@ -332,7 +298,7 @@ export default function TouristChangePasswordPage() {
                                                     hover:bg-[#009e55] transition-colors
                                                     ${submitting ? "opacity-70 cursor-not-allowed" : ""}
                                                 `}
-                                                >
+                                    >
                                         {submitting ? "กำลังบันทึก..." : "ยืนยัน"}
                                     </button>
                                 </div>
@@ -352,11 +318,12 @@ export default function TouristChangePasswordPage() {
                 cancelText="ยกเลิก"
             />
 
-            <ResultModal
-                open={resultOpen}
-                status={resultStatus}
-                message={resultText}
-                onClose={() => setResultOpen(false)}
+            <ModalAlert
+                open={alertOpen}
+                type={alertType}
+                title={alertTitle}
+                message={alertMessage}
+                onClose={() => setAlertOpen(false)}
             />
 
             {/* Footer อยู่นอก Container หลัก และอยู่ล่างสุด */}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   MapPin,
   Home,
@@ -13,8 +13,7 @@ import {
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import NavbarTourist from "@/Components/NavbarTourist";
-
-// --- Interfaces ---
+import CardPackage from "@/Components/CardPackage";
 
 interface PackageFile {
   id: number;
@@ -59,6 +58,16 @@ interface HomestayHistory {
   homestay: HomestayData;
 }
 
+interface RelatedPackage {
+  id: number;
+  name: string;
+  price: number;
+  capacity: number;
+  location: LocationData;
+  coverImage: string | undefined;
+  tags: string[];
+}
+
 interface PackageDetail {
   id: number;
   name: string;
@@ -75,6 +84,7 @@ interface PackageDetail {
   packageFile: PackageFile[];
   tagPackages: { tag: Tag }[];
   homestayHistories: HomestayHistory[];
+  relatedPackages?: RelatedPackage[];
 }
 
 interface ApiResponse {
@@ -85,28 +95,32 @@ interface ApiResponse {
 
 export default function DetailPackagePage() {
   const { packageId } = useParams<{ packageId: string }>();
-
-  // State Management
   const [packageDetail, setPackageDetail] = useState<PackageDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [bookingQuantity, setBookingQuantity] = useState<number>(1);
+  const [visibleCount, setVisibleCount] = useState<number>(4);
+  const navigate = useNavigate();
 
-  // Helper: สร้าง URL รูปภาพให้ถูกต้อง (ชี้ไปที่ Backend)
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 4);
+  };
+  const handlePackageClick = (packageId: number) => {
+    navigate(`/tourist/package/${packageId}`);
+  };
+
+  const handleConfirmClick = (packageId: number) => {
+    navigate(`/tourist/booking/package/${packageId}/summary`);
+  };
+
   const getImageUrl = (path: string | undefined) => {
     if (!path) return "https://placehold.co/800x450?text=No+Image";
-    if (path.startsWith("http")) return path; // ถ้าเป็น link เต็มอยู่แล้ว
-
-    // ดึง URL Backend จาก env หรือใช้ default
+    if (path.startsWith("http")) return path;
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
     try {
-      // ดึงเฉพาะ Domain (Origin) เช่น http://localhost:3000
       const origin = new URL(apiBase).origin;
-
-      // ตัด / ตัวหน้าออกถ้ามี เพื่อไม่ให้เป็น //uploads
       const cleanPath = path.startsWith("/") ? path.slice(1) : path;
 
       return `${origin}/${cleanPath}`;
@@ -118,40 +132,33 @@ export default function DetailPackagePage() {
   useEffect(() => {
     const fetchPackageDetail = async () => {
       try {
+        setVisibleCount(4);
         setIsLoading(true);
         setErrorMessage(null);
-
         if (!packageId) {
           throw new Error("ไม่พบรหัสแพ็กเกจ");
         }
-
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
         const response = await fetch(`${apiUrl}/tourist/package/${packageId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         });
-
         if (!response.ok) {
           throw new Error("ไม่สามารถดึงข้อมูลแพ็กเกจได้");
         }
 
         const responseJson: ApiResponse = await response.json();
         const data = responseJson.data;
-
-        // ✅ [แก้ไข] เพิ่มการตรวจสอบว่า data มีอยู่จริงหรือไม่
         if (!data) {
           throw new Error("ไม่พบข้อมูลแพ็กเกจ หรือข้อมูลไม่ถูกต้อง");
         }
 
         setPackageDetail(data);
 
-        // ✅ [แก้ไข] ตรวจสอบ data ก่อนเรียกใช้ packageFile (ป้องกัน Error)
         if (data.packageFile && data.packageFile.length > 0) {
           const coverImage = data.packageFile.find((file) => file.type === "COVER");
-          // ใช้ fallback ไปภาพแรกถ้าหา cover ไม่เจอ
           const targetImage = coverImage || data.packageFile[0];
           const imagePath = targetImage ? targetImage.filePath : "";
           setSelectedImage(getImageUrl(imagePath));
@@ -169,8 +176,6 @@ export default function DetailPackagePage() {
 
     fetchPackageDetail();
   }, [packageId]);
-
-  // Utility Functions
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("th-TH", {
@@ -231,7 +236,7 @@ export default function DetailPackagePage() {
         />
       </div>
 
-      <div className="container mx-auto px-4 max-w-6xl ">
+      <div className="container mx-auto px-4">
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 mt-2">
           {packageDetail.name}
@@ -239,7 +244,7 @@ export default function DetailPackagePage() {
 
         {/* Tags */}
         {packageDetail.tagPackages.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4 mt-2">
             {packageDetail.tagPackages.map((item, idx) => (
               <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-md border border-gray-200">
                 {item.tag.name}
@@ -249,32 +254,32 @@ export default function DetailPackagePage() {
         )}
 
         {/* Description */}
-        <div className="mb-6">
+        <div className="mb-4 mt-2">
           <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
             {packageDetail.description || "-"}
           </p>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4 mt-2">
           <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
             เปิดจองแล้ว {packageDetail.bookingOpenDate || "-"} ถึง {packageDetail.bookingCloseDate || "-"}
           </p>
         </div>
 
         {/* Location & Date Info Bar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-4 mt-2">
           <MapPin className="text-black w-4 h-4" />
           <span className="text-gray-600">
             {packageDetail.location.subDistrict}, {packageDetail.location.province}
           </span>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4 mt-2">
           <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
             จำนวนการจอง {packageDetail.capacity || "-"} คน
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-4 mt-2">
           <span className="font-medium text-gray-900">วันที่เริ่ม - วันที่สิ้นสุด - เวลา : </span>
           <span className="text-gray-600">
             {formatDate(packageDetail.startDate)} - {formatDate(packageDetail.dueDate)}
@@ -315,7 +320,7 @@ export default function DetailPackagePage() {
           </div>
         </div>
 
-        {/* --- Accommodation Section (Conditional) --- */}
+        {/* Accommodation Section (Conditional) */}
         {hasHomestay && currentHomestay && (
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-4">
@@ -394,7 +399,7 @@ export default function DetailPackagePage() {
           </div>
         )}
 
-        {/* --- Package Facilities --- */}
+        {/* Package Facilities */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Users className="text-gray-800" size={20} />
@@ -417,7 +422,7 @@ export default function DetailPackagePage() {
           </div>
         </div>
 
-        {/* --- Guidelines / Warnings --- */}
+        {/* Guidelines / Warnings */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="text-gray-800" size={20} />
@@ -440,12 +445,12 @@ export default function DetailPackagePage() {
               <span className="text-gray-500 text-sm">ไม่มีคำแนะนำเพิ่มเติม</span>
             )}
           </div>
-          <div className="container mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-gray-900">ราคา THB {formatPrice(packageDetail.price)}</span>
             </div>
 
-            <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-4 w-full sm:w-auto mb-6 mt-6">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600 mr-2">จำนวน</span>
                 <div className="flex items-center border border-gray-300 rounded-md">
@@ -470,18 +475,53 @@ export default function DetailPackagePage() {
                 </div>
                 <span className="text-sm text-gray-600 ml-1">คน</span>
               </div>
-
-              <button className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-8 rounded-md transition-colors shadow-sm">
+              <button onClick={() => handleConfirmClick(packageDetail.id)} className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-8 rounded-md transition-colors shadow-sm">
                 จองเลย
               </button>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="w-full border-t border-gray-200 my-8"></div>
 
-          <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-gray-900">แพ็กเกจที่คุณสนใจ</span>
-            </div>
+      <div className="container mx-auto px-4 mb-4">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-lg font-bold text-gray-900">แพ็กเกจที่คุณสนใจ</span>
         </div>
 
+        {packageDetail.relatedPackages && packageDetail.relatedPackages.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {packageDetail.relatedPackages.slice(0, visibleCount).map((pkg) => (
+                <CardPackage
+                  key={pkg.id}
+                  image={getImageUrl(pkg.coverImage)}
+                  title={pkg.name}
+                  location={`${pkg.location.subDistrict}, ${pkg.location.province}`}
+                  priceTHB={pkg.price}
+                  booked={0}
+                  capacity={pkg.capacity}
+                  tags={pkg.tags || []}
+                  bookingStatus="OPEN"
+                  onClick={() => handlePackageClick(pkg.id)}
+                />
+              ))}
+            </div>
+
+            {visibleCount < packageDetail.relatedPackages.length && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={handleLoadMore}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm"
+                >
+                  <span>ดูเพิ่มเติม</span>
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-gray-500 text-center py-8">ไม่มีแพ็กเกจที่เกี่ยวข้องในขณะนี้</p>
+        )}
       </div>
       <Footer />
     </div>

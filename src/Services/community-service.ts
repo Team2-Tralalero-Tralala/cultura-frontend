@@ -160,3 +160,21 @@ export async function updateCommunityOwn(data: CommunityFormData | FormData) {
 export async function getCommunityDetailByMember() {
   return api.get(`/member/community`);
 }
+
+/**
+ * ดึงรายละเอียดชุมชนที่เปิดสาธารณะ สำหรับ Tourist, Guest
+ * Mapping: GET /shared/community/:communityId
+ */
+export async function getCommunityDetailPublic(
+  communityId: number,
+  params?: {
+    packagePage?: number;
+    packageLimit?: number;
+    storePage?: number;
+    storeLimit?: number;
+    homestayPage?: number;
+    homestayLimit?: number;
+  }
+) {
+  return axios.get(`${apiUrl}/shared/community/${communityId}`, { params });
+}

@@ -161,9 +161,23 @@ export async function getCommunityDetailByMember() {
   return api.get(`/member/community`);
 }
 
-/**
- * ดึงรายละเอียดชุมชนที่เปิดสาธารณะ สำหรับ Tourist, Guest
- * Mapping: GET /shared/community/:communityId
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงรายละเอียดชุมชนที่เปิดสาธารณะ (Public)
+ *           ใช้สำหรับหน้า Guest และ Tourist
+ *           Mapping GET /shared/community/:communityId
+ *
+ * Input :
+ *   - communityId (number) : รหัสของชุมชนที่ต้องการดูรายละเอียด
+ *   - params (object) :
+ *       - packagePage (number)   : หน้าของแพ็กเกจ
+ *       - packageLimit (number)  : จำนวนแพ็กเกจต่อหน้า
+ *       - storePage (number)     : หน้าของร้านค้า
+ *       - storeLimit (number)    : จำนวนร้านค้าต่อหน้า
+ *       - homestayPage (number)  : หน้าของที่พัก
+ *       - homestayLimit (number) : จำนวนที่พักต่อหน้า
+ *
+ * Output :
+ *   - Promise<Response> : ข้อมูลรายละเอียดชุมชน พร้อมรายการ package / store / homestay
  */
 export async function getCommunityDetailPublic(
   communityId: number,

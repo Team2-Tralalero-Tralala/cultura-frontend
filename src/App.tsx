@@ -23,12 +23,12 @@ function App() {
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
-        <Route path="/guest/community/:communityId/detail" element={<CommunityDetailUser />} />
 
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />
           <Route path="partner/login" element={<LoginAdmin />} />
+          <Route path="community/:communityId/detail" element={<CommunityDetailUser />} />
         </Route>
 
         <Route

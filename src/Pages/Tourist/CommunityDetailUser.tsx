@@ -18,7 +18,6 @@ import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
 
 /**
- * ฟังก์ชัน : displayText
  * คำอธิบาย : ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล/เป็นค่าว่าง
  *
  * Input:
@@ -30,7 +29,6 @@ const displayText = (value?: string | null) =>
   value && String(value).trim() ? value : "-";
 
 /**
- * ฟังก์ชัน : toThaiDate
  * คำอธิบาย : แปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
  *
  * Input:
@@ -56,7 +54,6 @@ const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /**
- * ฟังก์ชัน : resolveBackendUploadUrl
  * คำอธิบาย : แปลง path ที่ได้จาก backend ให้เป็น URL เต็มของไฟล์ใน /uploads
  *
  * Input:
@@ -74,7 +71,6 @@ function resolveBackendUploadUrl(
 }
 
 /**
- * ฟังก์ชัน : pickImagePath
  * คำอธิบาย : ดึง path รูปภาพจาก object โดยรองรับ field หลายชื่อ (กันเคส shape ต่างกัน)
  *
  * Input:
@@ -93,7 +89,6 @@ function pickImagePath(imageObject: any): string | null {
 }
 
 /**
- * ฟังก์ชัน : findImage
  * คำอธิบาย : ค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
  *
  * Input:
@@ -111,7 +106,6 @@ function findImage(community: any, type: string): string | null {
 }
 
 /**
- * ฟังก์ชัน : listImagesByType
  * คำอธิบาย : คืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
  *
  * Input:
@@ -130,8 +124,9 @@ function listImagesByType(community: any, type: string): string[] {
 }
 
 /**
- * Component : Row
- * คำอธิบาย : แสดงแถวข้อมูลแบบ Label : Value
+ * คำอธิบาย : Component สำหรับแสดงข้อมูลในรูปแบบ "Label : Value"
+ * Input : -
+ * Output : แถวข้อมูล 1 แถว (Label : Value) สำหรับใช้ในหน้ารายละเอียด
  */
 function Row({
   label,
@@ -152,8 +147,11 @@ function Row({
 }
 
 /**
- * Component : LogoCircle
- * คำอธิบาย : แสดงโลโก้ของชุมชนแบบวงกลมใหญ่ (fallback เป็นตัวอักษรย่อ)
+ * คำอธิบาย : Component สำหรับแสดงโลโก้ของชุมชนในรูปแบบวงกลม
+ *             หากมีรูปโลโก้จะแสดงรูปภาพ
+ *             หากไม่มีรูปโลโก้จะแสดงตัวอักษรย่อจากชื่อชุมชนแทน
+ * Input : -
+ * Output : องค์ประกอบโลโก้แบบวงกลม (รูปภาพหรืออักษรย่อ)
  */
 function LogoCircle({ src, name, size = 240 }: any) {
   const base =
@@ -185,8 +183,11 @@ function LogoCircle({ src, name, size = 240 }: any) {
 }
 
 /**
- * Component : CoverRect
- * คำอธิบาย : แสดงภาพปก (แนวนอนสี่เหลี่ยม) ถ้าไม่มี → placeholder
+ * คำอธิบาย : Component สำหรับแสดงภาพปกของชุมชนหรือรายการข้อมูล
+ *             หากมีรูปภาพจะแสดงเป็นภาพปก
+ *             หากไม่มีรูปภาพจะแสดง placeholder แทน
+ * Input : -
+ * Output : องค์ประกอบภาพปก (รูปภาพหรือ placeholder)
  */
 function CoverRect({ src, height = 300 }: any) {
   if (src) {
@@ -210,18 +211,12 @@ function CoverRect({ src, height = 300 }: any) {
 }
 
 /**
- * Icon : Pin
- * คำอธิบาย : ไอคอนหมุดพิกัด ใช้โชว์ที่อยู่
+ * คำอธิบาย : หน้าแสดงรายละเอียดชุมชนแบบ Public สำหรับ Guest / Tourist
+ *             - ดึงข้อมูลชุมชน + รายการแพ็กเกจ/ร้านค้า/ที่พัก แบบแยก pagination
+ *             - แสดงภาพปก/โลโก้/ข้อมูลติดต่อ/แกลเลอรี/วิดีโอ/แผนที่
+ * Input : -
+ * Output : หน้ารายละเอียดชุมชน (Public Community Detail Page)
  */
-const Pin = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" width="20" height="20" {...props}>
-    <path
-      d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
 export default function CommunityDetailUser() {
   const location = useLocation();
   const isGuestPath = location.pathname.startsWith("/guest");
@@ -264,12 +259,13 @@ export default function CommunityDetailUser() {
     limit: number;
   } | null>(null);
 
-  /**
-   * ฟังก์ชัน : getPackageCover
-   * คำอธิบาย : ดึงรูปปกแพ็กเกจ (type=COVER) เพื่อส่งเข้า CardPackage
-   */
-  function getPackageCover(pkg: any): string | undefined {
-    const coverFile = pkg?.packageFile?.find(
+ /**
+ * คำอธิบาย : ดึง URL รูปปกของแพ็กเกจ (type=COVER) เพื่อใช้แสดงบน CardPackage
+ * Input : tourPackage (ข้อมูลแพ็กเกจที่มี packageFile)
+ * Output : URL ของรูปปกแพ็กเกจ (ถ้าไม่มีคืนค่า undefined)
+ */
+  function getPackageCover(tourPackage: any): string | undefined {
+    const coverFile = tourPackage?.packageFile?.find(
       (packageFileItem: any) =>
         String(packageFileItem.type).toUpperCase() === "COVER"
     );
@@ -277,18 +273,17 @@ export default function CommunityDetailUser() {
   }
 
   /**
-   * ฟังก์ชัน : getBookingStatus
-   * คำอธิบาย : คำนวณสถานะการจองของแพ็กเกจจากวันเปิด/ปิดจอง
-   *
-   * Output:
-   *  - UPCOMING : ยังไม่ถึงวันเปิดจอง
-   *  - OPEN     : อยู่ในช่วงเปิดจอง
-   *  - CLOSED   : เลยวันปิดจองแล้ว
-   */
-  function getBookingStatus(pkg: any): "OPEN" | "CLOSED" | "UPCOMING" {
+ * คำอธิบาย : คำนวณสถานะการจองของแพ็กเกจจากวันเปิด/ปิดจอง
+ * Input : tourPackage (ต้องมี bookingOpenDate / bookingCloseDate)
+ * Output :
+ *   - "UPCOMING" : ยังไม่ถึงวันเปิดจอง
+ *   - "OPEN"     : อยู่ในช่วงเปิดจอง
+ *   - "CLOSED"   : เลยวันปิดจองแล้ว
+ */
+  function getBookingStatus(tourPackage: any): "OPEN" | "CLOSED" | "UPCOMING" {
     const now = new Date();
-    const open = pkg?.bookingOpenDate ? new Date(pkg.bookingOpenDate) : null;
-    const close = pkg?.bookingCloseDate ? new Date(pkg.bookingCloseDate) : null;
+    const open = tourPackage?.bookingOpenDate ? new Date(tourPackage.bookingOpenDate) : null;
+    const close = tourPackage?.bookingCloseDate ? new Date(tourPackage.bookingCloseDate) : null;
 
     if (open && now < open) return "UPCOMING";
     if (close && now > close) return "CLOSED";
@@ -296,9 +291,10 @@ export default function CommunityDetailUser() {
   }
 
   /**
-   * ฟังก์ชัน : getStoreCover
-   * คำอธิบาย : ดึงรูปปกร้านค้า (type=COVER) สำหรับหน้ารายละเอียดชุมชนแบบ public
-   */
+ * คำอธิบาย : ดึง URL รูปปกร้านค้า (type=COVER) สำหรับแสดงในรายการร้านค้าหน้ารายละเอียดชุมชน
+ * Input : store (ข้อมูลร้านค้าที่มี storeImage)
+ * Output : URL ของรูปปกร้านค้า (ถ้าไม่มีคืนค่า undefined)
+ */
   function getStoreCover(store: any): string | undefined {
     const storeCoverImage = store?.storeImage?.find(
       (storeImageItem: any) =>
@@ -307,10 +303,11 @@ export default function CommunityDetailUser() {
     return resolveBackendUploadUrl(storeCoverImage?.image);
   }
 
-  /**
-   * ฟังก์ชัน : getHomestayCover
-   * คำอธิบาย : ดึงรูปปกที่พัก (type=COVER) สำหรับหน้ารายละเอียดชุมชนแบบ public
-   */
+/**
+ * คำอธิบาย : ดึง URL รูปปกที่พัก (type=COVER) สำหรับแสดงในรายการที่พักหน้ารายละเอียดชุมชน
+ * Input : homestay (ข้อมูลที่พักที่มี homestayImage)
+ * Output : URL ของรูปปกที่พัก (ถ้าไม่มีคืนค่า undefined)
+ */
   function getHomestayCover(homestay: any): string | undefined {
     const homestayCoverImage = homestay?.homestayImage?.find(
       (homestayImageItem: any) =>
@@ -318,11 +315,13 @@ export default function CommunityDetailUser() {
     );
     return resolveBackendUploadUrl(homestayCoverImage?.image);
   }
-
-  /*
-   * ส่วน : Fetch (Public)
-   * คำอธิบาย : ดึงข้อมูลชุมชน + แพ็กเกจ(8/หน้า) + ร้านค้า(12/หน้า) + ที่พัก(12/หน้า)
-   */
+/**
+ * คำอธิบาย : ดึงข้อมูลรายละเอียดชุมชนแบบ Public จาก Backend
+ *             - โหลดข้อมูลเมื่อ communityId หรือ page ของ package/store/homestay เปลี่ยน
+ *             - อัปเดต state: community, packages, stores, homestays และ pagination
+ * Input : -
+ * Output : -
+ */
   useEffect(() => {
     if (!communityId) return;
 
@@ -364,10 +363,6 @@ export default function CommunityDetailUser() {
     })();
   }, [communityId, packagePage, storePage, homestayPage]);
 
-  /*
-   * ส่วน : Memo รูปภาพ (Community)
-   * คำอธิบาย : คำนวณรูป cover/logo/gallery/video เพื่อเอาไป render
-   */
   const coverImage = useMemo(
     () => resolveBackendUploadUrl(findImage(community, "COVER")),
     [community]
@@ -391,18 +386,14 @@ export default function CommunityDetailUser() {
     [community]
   );
 
-  /*
-   * ส่วน : Loading / Error Guard
-   */
+  /* ส่วน : Loading / Error Guard */
   if (isLoading && !community) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!community) return <div className="p-8">ไม่พบข้อมูล</div>;
 
   const isOpen = String(community.status || "").toUpperCase() === "OPEN";
 
-  /*
-   * ส่วน : Render
-   */
+  /* ส่วน : Render */
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
@@ -429,23 +420,23 @@ export default function CommunityDetailUser() {
 
         {/* ส่วน : ภาพปก + โลโก้ */}
         {(() => {
-          const COVER_H = 300;
-          const LOGO = 240;
+          const coverHeight = 300;
+          const logo = 240;
 
           return (
             <div className="pb-6">
               <div className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
-                <CoverRect src={coverImage} height={COVER_H} />
+                <CoverRect src={coverImage} height={coverHeight} />
 
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
                   <div
                     className="absolute left-6 md:left-8 -translate-y-1/2"
                     style={{ top: 0 }}
                   >
-                    <LogoCircle src={logoImage} name={community?.name} size={LOGO} />
+                    <LogoCircle src={logoImage} name={community?.name} size={logo} />
                   </div>
 
-                  <div style={{ paddingLeft: LOGO + 24 }}>
+                  <div style={{ paddingLeft: logo + 24 }}>
                     {/* ชื่อ + สถานะ */}
                     <div className="flex items-center gap-3">
                       <h1 className="text-[22px] font-bold leading-tight">
@@ -456,9 +447,9 @@ export default function CommunityDetailUser() {
                         <span
                           className={`px-2.5 py-0.5 text-sm rounded-full ${
                             isOpen
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-slate-700"
-                          }`}
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-700"
+                            }`}
                         >
                           {isOpen ? "เปิด" : "ปิด"}
                         </span>
@@ -481,7 +472,10 @@ export default function CommunityDetailUser() {
 
                     {/* Location */}
                     <div className="mt-3 flex items-start gap-2 text-black">
-                      <Pin className="mt-1.5 shrink-0" />
+                      <Icon
+                        icon="mdi:map-marker"
+                        className="mt-1 shrink-0 text-[21px]"
+                      />
                       <span className="leading-relaxed">
                         {displayText(community.location?.detail)}{" "}
                         {displayText(community.location?.subDistrict)}{" "}
@@ -527,9 +521,9 @@ export default function CommunityDetailUser() {
                   community.location?.province
                 )} ${
                   community.location?.postalCode
-                    ? `(${community.location.postalCode})`
-                    : ""
-                }`}
+                  ? `(${community.location.postalCode})`
+                  : ""
+                  }`}
               </span>
             </Row>
 
@@ -570,7 +564,14 @@ export default function CommunityDetailUser() {
               </Row>
             )}
 
-            <Row label="ชื่อผู้ดูแลหลัก">{displayText(community.mainAdmin)}</Row>
+            <Row label="ชื่อผู้ดูแลหลัก">
+              {displayText(
+                community.admin
+                  ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
+                  : null
+              )}
+            </Row>
+
             <Row label="เบอร์โทรผู้ดูแลหลัก">
               {displayText(community.mainAdminPhone)}
             </Row>
@@ -696,9 +697,9 @@ export default function CommunityDetailUser() {
 
                 const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
                   longitude - zoomDelta
-                }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${
-                  latitude + zoomDelta
-                }&layer=mapnik&marker=${latitude}%2C${longitude}`;
+                  }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${
+                    latitude + zoomDelta
+                  }&layer=mapnik&marker=${latitude}%2C${longitude}`;
 
                 return (
                   <iframe
@@ -727,30 +728,29 @@ export default function CommunityDetailUser() {
           ) : (
             <>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {packages.map((pkg: any) => {
-                  const status = getBookingStatus(pkg);
+                {packages.map((tourPackage: any) => {
+                  const status = getBookingStatus(tourPackage);
 
                   return (
                     <Link
-                      key={pkg.id}
-                      to={`${basePath}/package/${pkg.id}`}
+                      key={tourPackage.id}
+                      to={`${basePath}/package/${tourPackage.id}`}
                       className="block rounded-2xl transition-transform duration-150 hover:-translate-y-1"
                     >
                       <CardPackage
-                        image={getPackageCover(pkg) || ""}
-                        title={pkg.name || "-"}
-                        location={`${community?.location?.district || ""} ${
-                          community?.location?.province || ""
-                        }`.trim()}
-                        bookingStart={pkg.bookingOpenDate}
-                        bookingEnd={pkg.bookingCloseDate}
+                        image={getPackageCover(tourPackage) || ""}
+                        title={tourPackage.name || "-"}
+                        location={`${community?.location?.district || ""} ${community?.location?.province || ""
+                          }`.trim()}
+                        bookingStart={tourPackage.bookingOpenDate}
+                        bookingEnd={tourPackage.bookingCloseDate}
                         bookingStatus={status}
-                        booked={pkg.booked ?? pkg.bookedCount ?? 0}
-                        capacity={pkg.capacity ?? 0}
-                        tags={(pkg.tags ?? pkg.tagPackages ?? [])
+                        booked={tourPackage.booked ?? tourPackage.bookedCount ?? 0}
+                        capacity={tourPackage.capacity ?? 0}
+                        tags={(tourPackage.tags ?? tourPackage.tagPackages ?? [])
                           .map((tagItem: any) => tagItem?.name ?? tagItem?.tag?.name)
                           .filter(Boolean)}
-                        priceTHB={Number(pkg.price ?? 0)}
+                        priceTHB={Number(tourPackage.price ?? 0)}
                       />
                     </Link>
                   );

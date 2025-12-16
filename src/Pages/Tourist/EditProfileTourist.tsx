@@ -1,15 +1,6 @@
-/*
- * Component: EditProfileTourist
- * Description:
- *   - หน้าสำหรับนักท่องเที่ยวที่ล็อกอินอยู่ แก้ไขข้อมูลส่วนตัวของตัวเอง
- *   - ใช้งานร่วมกับ API กลาง (/shared/profile)
- *
- * Behavior:
- *   - โหลดข้อมูลโปรไฟล์จากระบบเมื่อเปิดหน้า
- *   - แสดง Modal ยืนยันก่อนบันทึก
- *   - แสดง Modal แจ้งผลลัพธ์ (สำเร็จ / ไม่สำเร็จ)
- *   - เมื่อบันทึกสำเร็จ จะ reload หน้าเพื่ออัปเดตข้อมูลใน Navbar
- */
+/**
+* คำอธิบาย : Component สำหรับแก้ไขข้อมูลส่วนตัวของ Tourist
+*/
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -24,14 +15,8 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
-// เพิ่มเติมประเภทเพศ
 type Gender = "MALE" | "FEMALE" | "NONE" | "";
-/*
- * Interface: UserProfile
- * Description:
- *   - โครงสร้างข้อมูลโปรไฟล์ที่ใช้ควบคุมฟอร์มแก้ไขข้อมูลส่วนตัวของนักท่องเที่ยว
- *   - mapping จากข้อมูลที่ได้จาก API /shared/profile
- */
+
 interface UserProfile {
   username: string;
   email: string;
@@ -45,10 +30,8 @@ interface UserProfile {
   province: string;
   postalCode: string;
 }
-/*
- * คำอธิบาย : ค่าเริ่มต้นของฟอร์มแก้ไขข้อมูลส่วนตัว
- */
-const INITIAL_FORM: UserProfile = {
+
+const initialForm: UserProfile = {
   username: "",
   email: "",
   fname: "",
@@ -61,44 +44,42 @@ const INITIAL_FORM: UserProfile = {
   province: "",
   postalCode: "",
 };
-/*
- * คำอธิบาย : ตัวเลือกเพศสำหรับฟอร์มแก้ไขข้อมูลส่วนตัว
- */
-const GENDER_OPTIONS: { label: string; value: Exclude<Gender, ""> }[] = [
+
+const genderOptions: { label: string; value: Exclude<Gender, ""> }[] = [
   { label: "ชาย", value: "MALE" },
   { label: "หญิง", value: "FEMALE" },
   { label: "ไม่ระบุ", value: "NONE" },
 ];
+
 /*
- * คำอธิบาย : Component EditProfileTourist
- * หน้าสำหรับนักท่องเที่ยวที่ล็อกอินอยู่ เพื่อแก้ไขข้อมูลส่วนตัวของตนเอง
- */
+* คําอธิบาย : ฟังก์ชันสำหรับแก้ไขข้อมูลส่วนตัวของ Tourist
+* Input : ไม่มี
+* Output : แสดงหน้าจอแก้ไขข้อมูลส่วนตัวของ Tourist
+*/
 const EditProfileTourist: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [formData, setFormData] = useState<UserProfile>(INITIAL_FORM);
+  const [formData, setFormData] = useState<UserProfile>(initialForm);
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
 /*
- * คำอธิบาย : ฟังก์ชัน fetchProfile
- * ดึงข้อมูลโปรไฟล์ของนักท่องเที่ยวที่ล็อกอินอยู่จากระบบ
- */
+* คําอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลส่วนตัวของ Tourist
+* Input : ไม่มี
+* Output : ข้อมูลส่วนตัวของ Tourist
+*/
   const fetchProfile = useCallback(async () => {
     try {
       const { data } = await api.get("/shared/profile");
       const profile = data?.data;
 
       if (!profile) throw new Error("Profile not found");
-      
-/*
- * คำอธิบาย : ตั้งค่าข้อมูลโปรไฟล์ลงในฟอร์มและ avatar
- */
       setFormData({
         username: profile.username ?? "",
         email: profile.email ?? "",
@@ -122,9 +103,6 @@ const EditProfileTourist: React.FC = () => {
           `${baseUrl}/${profile.profileImage.replace(/\\/g, "/")}`
         );
       }
-  /*
-   * คำอธิบาย : จัดการกรณีเกิดข้อผิดพลาดขณะดึงข้อมูลโปรไฟล์
-   */
     } catch (error) {
       console.error(error);
       toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
@@ -135,20 +113,24 @@ const EditProfileTourist: React.FC = () => {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
 /*
- * คำอธิบาย : ฟังก์ชัน handleChange
- * จัดการการเปลี่ยนแปลงข้อมูลในฟอร์มแก้ไขข้อมูลส่วนตัว
- */
+* คําอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+* Input : event - เหตุการณ์การเปลี่ยนแปลงในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+* Output : อัปเดตสถานะ formData เมื่อมีการเปลี่ยนแปลงในฟอร์ม
+*/
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
+
 /*
- * คำอธิบาย : ฟังก์ชัน handleSubmit
- * ส่งข้อมูลแก้ไขโปรไฟล์ไปยัง backend และจัดการผลลัพธ์ที่ได้รับ
- */
+* คําอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+* Input : ไม่มี
+* Output : ส่งคำขอไปยัง API เพื่ออัปเดตข้อมูลส่วนตัวของ Tourist
+*/
   const handleSubmit = async () => {
     try {
       const payload = new FormData();
@@ -162,7 +144,7 @@ const EditProfileTourist: React.FC = () => {
       }
 
       await api.put("/tourist/edit-profile", payload);
-      setShowSuccess(true);
+      setIsSuccessModalOpen(true);
     } catch (error: any) {
       const response = error?.response?.data;
       let message = "ไม่สามารถบันทึกข้อมูลได้";
@@ -174,12 +156,10 @@ const EditProfileTourist: React.FC = () => {
       }
 
       setErrorMessage(message);
-      setShowError(true);
+      setIsErrorModalOpen(true);
     }
   };
-/*
- * คำอธิบาย :หน้า EditProfileTourist
- */
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <NavbarTourist />
@@ -229,8 +209,8 @@ const EditProfileTourist: React.FC = () => {
                   </label>
 
                   <div className="flex gap-10">
-                    {GENDER_OPTIONS.map((option) => {
-                      const checked = formData.gender === option.value;
+                    {genderOptions.map((option) => {
+                      const isChecked = formData.gender === option.value;
 
                       return (
                         <label
@@ -240,7 +220,7 @@ const EditProfileTourist: React.FC = () => {
                           <input
                             type="radio"
                             hidden
-                            checked={checked}
+                            checked={isChecked}
                             onChange={() =>
                               setFormData((prev) => ({
                                 ...prev,
@@ -249,7 +229,7 @@ const EditProfileTourist: React.FC = () => {
                             }
                           />
                           <div className="w-5 h-5 rounded-full border flex items-center justify-center bg-gray-200">
-                            {checked && (
+                            {isChecked && (
                               <div className="w-3 h-3 rounded-full bg-[#00BF6A]" />
                             )}
                           </div>
@@ -277,7 +257,7 @@ const EditProfileTourist: React.FC = () => {
                 </Button>
                 <Button
                   type="confirm-tourist"
-                  onClick={() => setShowConfirm(true)}
+                  onClick={() => setIsConfirmModalOpen(true)}
                 >
                   บันทึก
                 </Button>
@@ -287,32 +267,32 @@ const EditProfileTourist: React.FC = () => {
         </section>
       </main>
 
-      {/* MODALS */}
+      {/* Modals ยืนยันการเเก้ไขข้อมูลส่วนตัว */}
       <Modal
-        open={showConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการเเก้ไขข้อมูลส่วนตัว"
         text="คุณต้องการยืนยันแก้ไขข้อมูลส่วนตัวหรือไม่?"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsConfirmModalOpen(false);
           handleSubmit();
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
-      {/* MODALS เเก้ไขข้อมูลส่วนตัวสำเร็จ */}
+      {/* Modals เเก้ไขข้อมูลส่วนตัวสำเร็จ */}
       <ModalAlert
-        open={showSuccess}
+        open={isSuccessModalOpen}
         type="success"
         title="แก้ไขข้อมูลส่วนตัวสำเร็จ"
         message="ข้อมูลส่วนตัวของคุณถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => window.location.reload()}
       />
-      {/* MODALS เกิดข้อผิดพลาด */}
+      {/* Modals เกิดข้อผิดพลาด */}
       <ModalAlert
-        open={showError}
+        open={isErrorModalOpen}
         type="error"
         title="ไม่สามารถบันทึกข้อมูลได้"
         message={errorMessage}
-        onClose={() => setShowError(false)}
+        onClose={() => setIsErrorModalOpen(false)}
       />
 
       <Footer />

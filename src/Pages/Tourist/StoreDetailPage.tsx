@@ -13,13 +13,13 @@ import { Icon } from "@iconify/react";
 import Thumbnails from "@/Components/Thumbnails";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 
-type StoreTag = { 
-    id: number; 
-    name: string 
+type StoreTag = {
+    id: number;
+    name: string
 };
 
-type StoreImage = { 
-    image: string 
+type StoreImage = {
+    image: string
 };
 
 type StoreLocation = {
@@ -42,11 +42,11 @@ type Store = {
     tagStores: { tag: StoreTag }[];
 };
 
-type OtherStore = { 
-    id: number; 
-    name: string; 
-    storeImage: 
-    StoreImage[] 
+type OtherStore = {
+    id: number;
+    name: string;
+    storeImage:
+    StoreImage[]
 };
 
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -112,11 +112,11 @@ export default function StoreDetailPage() {
         <div className="min-h-screen bg-gray-50">
             <NavbarTourist />
             <div className="container mx-auto px-4 py-8">
-                <BreadcrumbNavigation 
-                current={{ 
-                    label: "รายละเอียดร้านค้า", 
-                    to: `/tourist/community/${communityId}/detail/store/${storeId}`,
-                    }} 
+                <BreadcrumbNavigation
+                    current={{
+                        label: "รายละเอียดร้านค้า",
+                        to: `/tourist/community/${communityId}/detail/store/${storeId}`,
+                    }}
                 />
 
                 <h1 className="text-[40px] font-bold text-black mb-6">{store?.name}</h1>
@@ -154,46 +154,42 @@ export default function StoreDetailPage() {
 
                 <h2 className="text-[24px] font-bold text-black mt-12 mb-6">ร้านค้าอื่นของชุมชน</h2>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-    {otherStores.map((other) => {
-        const firstImage = other.storeImage?.[0];
-        const imageUrl = firstImage
-            ? resolveBackendUploadUrl(firstImage.image)
-            : undefined;
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    {otherStores.map((other) => {
+                        const firstImage = other.storeImage?.[0];
+                        const imageUrl = firstImage
+                            ? resolveBackendUploadUrl(firstImage.image)
+                            : undefined;
+                        const targetUrl = `/tourist/community/${communityId}/detail/store/${other.id}`;
+                        return (
+                            <div
+                                key={other.id}
+                                className="flex flex-col items-center cursor-pointer"
+                                onClick={() => {
+                                    window.location.href = targetUrl;
+                                }}
+                            >
+                                <div className="w-full aspect-[17/10] bg-gray-100 rounded-md overflow-hidden mb-2">
+                                    {imageUrl ? (
+                                        <img
+                                            src={imageUrl}
+                                            alt={other.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                            ไม่มีรูป
+                                        </div>
+                                    )}
+                                </div>
 
-        const targetUrl = `/tourist/community/${communityId}/detail/store/${other.id}`;
-
-        return (
-            <div
-                key={other.id}
-                className="flex flex-col items-center cursor-pointer"
-                onClick={() => {
-                    window.location.href = targetUrl; // ⬅️ reload หน้าใหม่จริง
-                }}
-            >
-                {/* รูป */}
-                <div className="w-full aspect-[17/10] bg-gray-100 rounded-md overflow-hidden mb-2">
-                    {imageUrl ? (
-                        <img
-                            src={imageUrl}
-                            alt={other.name}
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                            ไม่มีรูป
-                        </div>
-                    )}
+                                <p className="text-center text-[16px] font-bold truncate w-full">
+                                    {other.name}
+                                </p>
+                            </div>
+                        );
+                    })}
                 </div>
-
-                {/* ชื่อร้าน */}
-                <p className="text-center text-[16px] font-bold truncate w-full">
-                    {other.name}
-                </p>
-            </div>
-        );
-    })}
-</div>
 
 
                 {/* Pagination ขวาล่าง */}

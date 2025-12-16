@@ -1,33 +1,17 @@
 /*
- * File: ChangePasswordPage.tsx (Tourist)
  * Component: ChangePasswordPage
- * หน้าที่: ฟอร์มเปลี่ยนรหัสผ่านสำหรับนักท่องเที่ยว
+ * ฟอร์มเปลี่ยนรหัสผ่านสำหรับนักท่องเที่ยว
  */
 
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
-import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const apiBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
-const apiPrefix = apiUrl;
-
-const apiClient = axios.create({
-    baseURL: apiBaseUrl,
-    withCredentials: true,
-});
-
-apiClient.interceptors.request.use((config) => {
-    const accessToken = localStorage.getItem("access_token");
-    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
-    return config;
-});
+import api from "@/Libs/api";
 
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
@@ -41,21 +25,25 @@ export default function TouristChangePasswordPage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+    const [isShowCurrentPassword, setIsShowCurrentPassword] = useState(false);
+    const [isShowNewPassword, setIsShowNewPassword] = useState(false);
+    const [isShowConfirmNewPassword, setIsShowConfirmNewPassword] = useState(false);
 
-    const [submitting, setSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-    // State สำหรับ ModalAlert
-    const [alertOpen, setAlertOpen] = useState(false);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [alertType, setAlertType] = useState<"success" | "error" | "warning">("success");
     const [alertTitle, setAlertTitle] = useState("");
     const [alertMessage, setAlertMessage] = useState("");
 
+    /*
+    * คําอธิบาย : คำนวณสถานะความพร้อมของการส่งข้อมูล (Validation เบื้องต้น)
+    * Input : currentPassword, newPassword, confirmNewPassword
+    * Output : boolean (true หากข้อมูลครบและถูกต้อง, false หากไม่พร้อม)
+    */
     const canSubmit = useMemo(() => {
         if (!currentPassword || !newPassword || !confirmNewPassword) return false;
         if (newPassword !== confirmNewPassword) return false;
@@ -63,6 +51,11 @@ export default function TouristChangePasswordPage() {
         return true;
     }, [currentPassword, newPassword, confirmNewPassword]);
 
+    /*
+    * คําอธิบาย : คำนวณข้อความแนะนำความปลอดภัยของรหัสผ่าน
+    * Input : newPassword
+    * Output : JSX Element (รายการข้อกำหนด) หรือ String หรือ null
+    */
     const strengthHint = useMemo(() => {
         if (!newPassword) return null;
         if (!passwordRule.test(newPassword)) {
@@ -99,8 +92,8 @@ export default function TouristChangePasswordPage() {
     */
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        if (submitting) return;
-        setConfirmOpen(true);
+        if (isSubmitting) return;
+        setIsConfirmOpen(true);
     };
 
     /*
@@ -109,7 +102,7 @@ export default function TouristChangePasswordPage() {
     * Output : - (Update State ผลลัพธ์การทำงาน)
     */
     const proceedChangePassword = async () => {
-        setConfirmOpen(false);
+        setIsConfirmOpen(false);
 
         if (!canSubmit) {
             const validationErrorMessage = "ข้อมูลไม่ครบหรือรูปแบบรหัสผ่านไม่ถูกต้อง";
@@ -119,13 +112,13 @@ export default function TouristChangePasswordPage() {
             setAlertType("warning");
             setAlertTitle("ตรวจสอบข้อมูล");
             setAlertMessage(validationErrorMessage);
-            setAlertOpen(true);
+            setIsAlertOpen(true);
             return;
         }
 
         try {
-            setSubmitting(true);
-            await apiClient.patch(`${apiPrefix}/tourist/change-password`, {
+            setIsSubmitting(true);
+            await api.patch(`/tourist/change-password`, {
                 currentPassword,
                 newPassword,
                 confirmNewPassword
@@ -134,11 +127,10 @@ export default function TouristChangePasswordPage() {
             const successMessage = "เปลี่ยนรหัสผ่านสำเร็จ";
             setMessage({ type: "success", text: successMessage });
 
-            // ตั้งค่า ModalAlert (Success)
             setAlertType("success");
             setAlertTitle("ดำเนินการสำเร็จ");
             setAlertMessage(successMessage);
-            setAlertOpen(true);
+            setIsAlertOpen(true);
 
             resetForm();
         } catch (error: any) {
@@ -154,18 +146,15 @@ export default function TouristChangePasswordPage() {
             setAlertType("error");
             setAlertTitle("เกิดข้อผิดพลาด");
             setAlertMessage(apiMessage);
-            setAlertOpen(true);
+            setIsAlertOpen(true);
         } finally {
-            setSubmitting(false);
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
-            {/* Navbar อยู่นอก Container หลัก */}
             <NavbarTourist />
-
-            {/* ส่วนเนื้อหาหลัก: ใช้ flex-grow ที่ main โดยตรง เพื่อให้พื้นหลังสีขาวขยายเต็มพื้นที่ความสูงที่เหลือ */}
             <main className="flex-grow w-full bg-white px-8 py-8">
                 <div className="ml-[200px]">
                     <Breadcrumb
@@ -201,7 +190,7 @@ export default function TouristChangePasswordPage() {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type={showCurrentPassword ? "text" : "password"}
+                                        type={isShowCurrentPassword ? "text" : "password"}
                                         value={currentPassword}
                                         onChange={(event) => setCurrentPassword(event.target.value)}
                                         placeholder="กรอกรหัสผ่านปัจจุบัน"
@@ -212,9 +201,9 @@ export default function TouristChangePasswordPage() {
                                     <button
                                         type="button"
                                         className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                        onClick={() => setIsShowCurrentPassword(!isShowCurrentPassword)}
                                     >
-                                        <Icon icon={showCurrentPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
+                                        <Icon icon={isShowCurrentPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
                                     </button>
                                 </div>
                             </div>
@@ -225,7 +214,7 @@ export default function TouristChangePasswordPage() {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type={showNewPassword ? "text" : "password"}
+                                        type={isShowNewPassword ? "text" : "password"}
                                         value={newPassword}
                                         onChange={(event) => setNewPassword(event.target.value)}
                                         placeholder="กรอกรหัสผ่านใหม่"
@@ -239,12 +228,12 @@ export default function TouristChangePasswordPage() {
                                     <button
                                         type="button"
                                         className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        onClick={() => setIsShowNewPassword(!isShowNewPassword)}
                                     >
-                                        <Icon icon={showNewPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
+                                        <Icon icon={isShowNewPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
                                     </button>
                                 </div>
-                                <div className={`mt-2 text-xs flex items-center gap-1 ${!newPassword ? "text-gray-400" :
+                                <div className={`mt-2 text-xs flex items-start gap-1 ${!newPassword ? "text-gray-400" :
                                     passwordRule.test(newPassword) ? "text-emerald-600" : "text-red-500"
                                     }`}>
                                     {strengthHint && <Icon icon={passwordRule.test(newPassword) ? "mdi:check" : "mdi:alert-circle-outline"} />}
@@ -258,7 +247,7 @@ export default function TouristChangePasswordPage() {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type={showConfirmNewPassword ? "text" : "password"}
+                                        type={isShowConfirmNewPassword ? "text" : "password"}
                                         value={confirmNewPassword}
                                         onChange={(event) => setConfirmNewPassword(event.target.value)}
                                         placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
@@ -272,9 +261,9 @@ export default function TouristChangePasswordPage() {
                                     <button
                                         type="button"
                                         className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                        onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                                        onClick={() => setIsShowConfirmNewPassword(!isShowConfirmNewPassword)}
                                     >
-                                        <Icon icon={showConfirmNewPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
+                                        <Icon icon={isShowConfirmNewPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
                                     </button>
                                 </div>
                                 {confirmNewPassword && newPassword !== confirmNewPassword && (
@@ -290,7 +279,7 @@ export default function TouristChangePasswordPage() {
                                         type="cancel"
                                         htmlType="button"
                                         onClick={() => {
-                                            if (submitting) return;
+                                            if (isSubmitting) return;
                                             resetForm();
                                             setMessage(null);
                                         }}
@@ -299,19 +288,18 @@ export default function TouristChangePasswordPage() {
                                     </Button>
                                 </div>
                                 <div className="w-32">
-                                    {/* เปลี่ยนมาใช้ tag button ธรรมดาเพื่อใส่สีเอง */}
                                     <button
                                         type="submit"
-                                        disabled={submitting}
+                                        disabled={isSubmitting}
                                         className={`
                                                     flex items-center justify-center w-full px-3 py-2 
                                                     border rounded-form text-base text-white
                                                     bg-[#00BF6A] border-[#00BF6A] 
                                                     hover:bg-[#009e55] transition-colors
-                                                    ${submitting ? "opacity-70 cursor-not-allowed" : ""}
+                                                    ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}
                                                 `}
                                     >
-                                        {submitting ? "กำลังบันทึก..." : "ยืนยัน"}
+                                        {isSubmitting ? "กำลังบันทึก..." : "ยืนยัน"}
                                     </button>
                                 </div>
                             </div>
@@ -321,9 +309,9 @@ export default function TouristChangePasswordPage() {
             </main>
 
             <ConfirmModal
-                open={confirmOpen}
+                open={isConfirmOpen}
                 onConfirm={() => void proceedChangePassword()}
-                onCancel={() => setConfirmOpen(false)}
+                onCancel={() => setIsConfirmOpen(false)}
                 title="ยืนยันการเปลี่ยนรหัสผ่าน"
                 text="คุณต้องการยืนยันการเปลี่ยนรหัสผ่านใช่หรือไม่?"
                 confirmText="ยืนยัน"
@@ -331,14 +319,12 @@ export default function TouristChangePasswordPage() {
             />
 
             <ModalAlert
-                open={alertOpen}
+                open={isAlertOpen}
                 type={alertType}
                 title={alertTitle}
                 message={alertMessage}
-                onClose={() => setAlertOpen(false)}
+                onClose={() => setIsAlertOpen(false)}
             />
-
-            {/* Footer อยู่นอก Container หลัก และอยู่ล่างสุด */}
             <Footer />
         </div>
     );

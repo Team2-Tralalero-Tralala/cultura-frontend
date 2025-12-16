@@ -64,8 +64,20 @@ export default function TouristChangePasswordPage() {
     }, [currentPassword, newPassword, confirmNewPassword]);
 
     const strengthHint = useMemo(() => {
-        if (!newPassword) return "";
-        if (!passwordRule.test(newPassword)) return "รหัสต้องยาว ≥ 8 และมี a-z, A-Z, 0-9";
+        if (!newPassword) return null;
+        if (!passwordRule.test(newPassword)) {
+            return (
+                <div className="mt-1">
+                    <p className="mb-1">รหัสผ่านต้องประกอบด้วย:</p>
+                    <ul className="list-disc pl-4 space-y-0.5">
+                        <li>ความยาว 8 ตัวอักษรขึ้นไป</li>
+                        <li>ตัวอักษรพิมพ์ใหญ่ (A-Z)</li>
+                        <li>ตัวอักษรพิมพ์เล็ก (a-z)</li>
+                        <li>ตัวเลข (0-9)</li>
+                    </ul>
+                </div>
+            );
+        }
         return "รหัสผ่านปลอดภัย";
     }, [newPassword]);
 

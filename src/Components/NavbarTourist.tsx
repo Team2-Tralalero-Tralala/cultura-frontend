@@ -49,7 +49,11 @@ const NavbarTourist = () => {
 
         {/* กล่องค้นหา */}
           <SearchBar
-            onSearch={() => {}}
+            onSearch={(text) => {
+              if (text.trim()) {
+                navigate(`/tourist/search?q=${encodeURIComponent(text)}`);
+              }
+            }}
             placeholder="ค้นหาแพ็กเกจกิจกรรม:"
           />
         </div>

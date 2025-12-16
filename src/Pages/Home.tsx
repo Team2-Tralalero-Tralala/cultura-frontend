@@ -176,8 +176,7 @@ export default function Home() {
    * Output : void
    */
   const handleTagClick = (tag: string) => {
-    console.log("Tag clicked:", tag);
-    // TODO: Navigate to filtered packages by tag
+    navigate(`/tourist/search?tag=${encodeURIComponent(tag)}`);
   };
 
   return (

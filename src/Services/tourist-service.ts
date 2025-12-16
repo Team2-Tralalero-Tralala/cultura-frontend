@@ -136,3 +136,203 @@ export async function fetchPopularPackages(): Promise<PackageApiData[]> {
   });
   return response.data.data;
 }
+
+/*
+ * Interface สำหรับข้อมูล Community Location จาก Search API
+ */
+export interface SearchCommunityLocation {
+  id: number;
+  province: string;
+  district: string;
+  subDistrict: string;
+}
+
+/*
+ * Interface สำหรับข้อมูล Community จาก Search API
+ */
+export interface SearchCommunityData {
+  id: number;
+  name: string;
+  alias: string | null;
+  type: string;
+  description: string | null;
+  mainActivityName: string | null;
+  mainActivityDescription: string | null;
+  rating: number | null;
+  location: SearchCommunityLocation | null;
+  coverImage: string | null;
+}
+
+/*
+ * Interface สำหรับข้อมูล Packages Response จาก Search API
+ */
+export interface SearchPackagesResponse {
+  data: PackageApiData[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+  };
+}
+
+/*
+ * Interface สำหรับข้อมูล Search Overview Response
+ */
+export interface SearchOverviewData {
+  packages: SearchPackagesResponse;
+  communities: SearchCommunityData[];
+}
+
+/*
+ * Interface สำหรับข้อมูลที่แปลงแล้วจาก Search Overview
+ */
+export interface TransformedSearchOverviewData {
+  packages: PackageApiData[];
+  communities: SearchCommunityData[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+  };
+}
+
+/*
+ * Interface สำหรับ Response จาก Search Overview API
+ */
+export interface SearchOverviewResponse {
+  status: number;
+  error: boolean;
+  message: string;
+  data: SearchOverviewData;
+}
+
+/*
+ * ฟังก์ชัน : fetchSearchOverview
+ * คำอธิบาย : ดึงข้อมูลการค้นหาแพ็กเกจและชุมชนจาก API
+ * Input :
+ *   - tag (string | null) - แท็กที่ต้องการค้นหา
+ *   - query (string | null) - คำค้นหา
+ *   - page (number) - หน้าปัจจุบัน
+ *   - limit (number) - จำนวนรายการต่อหน้า
+ *   - filters (object) - ตัวกรองเพิ่มเติม (priceMin, priceMax, startDate, endDate, tags)
+ * Output : Promise<TransformedSearchOverviewData> - ข้อมูลการค้นหาประกอบด้วย packages, communities และ pagination
+ */
+export async function fetchSearchOverview(
+  tag: string | null,
+  query: string | null,
+  page: number,
+  limit: number,
+  filters?: {
+    priceMin?: number;
+    priceMax?: number;
+    startDate?: string | null;
+    endDate?: string | null;
+    tags?: string[];
+  }
+): Promise<TransformedSearchOverviewData> {
+  const params: Record<string, string | number> = {
+    page,
+    limit,
+  };
+
+  if (query) {
+    params.search = query;
+  }
+
+  // รวมแท็กจาก URL parameter และ filters เป็น comma-separated string
+  const allTags: string[] = [];
+  if (tag) {
+    allTags.push(tag);
+  }
+  if (filters?.tags && filters.tags.length > 0) {
+    allTags.push(...filters.tags);
+  }
+  // ลบ duplicates และรวมเป็น comma-separated string
+  if (allTags.length > 0) {
+    const uniqueTags = Array.from(new Set(allTags));
+    params.tag = uniqueTags.join(",");
+  }
+
+  // เพิ่มตัวกรองราคา
+  if (filters?.priceMin !== undefined) {
+    params.priceMin = filters.priceMin;
+  }
+
+  if (filters?.priceMax !== undefined) {
+    params.priceMax = filters.priceMax;
+  }
+
+  // เพิ่มตัวกรองวันที่
+  if (filters?.startDate) {
+    params.startDate = filters.startDate;
+  }
+
+  if (filters?.endDate) {
+    params.endDate = filters.endDate;
+  }
+
+  const response = await api.get<SearchOverviewResponse>("/tourist/search/overview", {
+    params,
+  });
+
+  const data = response.data.data;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+
+  // ตรวจสอบว่า packages มี structure ที่ถูกต้อง
+  if (!data.packages || !data.packages.data || !Array.isArray(data.packages.data)) {
+    console.error("API response error: packages.data is not an array", data);
+    throw new Error("Invalid API response: packages.data is not an array");
+  }
+
+  // ตรวจสอบว่า communities เป็น array หรือไม่
+  if (!Array.isArray(data.communities)) {
+    console.error("API response error: communities is not an array", data);
+    throw new Error("Invalid API response: communities is not an array");
+  }
+
+  // แปลง image URLs เป็น full URLs สำหรับ packages
+  const transformedPackages = data.packages.data.map((pkg) => {
+    if (pkg.coverImage) {
+      const imagePath = pkg.coverImage.startsWith("/")
+        ? pkg.coverImage.slice(1)
+        : pkg.coverImage;
+      return {
+        ...pkg,
+        coverImage: backendBaseUrl + "/" + imagePath,
+      };
+    }
+    return pkg;
+  });
+
+  // แปลง image URLs เป็น full URLs สำหรับ communities
+  const transformedCommunities = data.communities.map((community) => {
+    let imageUrl = "https://placehold.co/150x150?text=" + encodeURIComponent(community.name);
+    if (community.coverImage) {
+      const imagePath = community.coverImage.startsWith("/")
+        ? community.coverImage.slice(1)
+        : community.coverImage;
+      imageUrl = backendBaseUrl + "/" + imagePath;
+    }
+    return {
+      ...community,
+      image: imageUrl,
+    };
+  });
+
+  // ดึง pagination จาก packages.pagination
+  const pagination = data.packages.pagination || {
+    currentPage: page,
+    totalPages: Math.ceil(data.packages.data.length / limit),
+    totalCount: data.packages.data.length,
+    limit: limit,
+  };
+
+  return {
+    packages: transformedPackages,
+    communities: transformedCommunities,
+    pagination,
+  };
+}

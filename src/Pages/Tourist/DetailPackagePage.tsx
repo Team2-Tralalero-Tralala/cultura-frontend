@@ -458,8 +458,8 @@ export default function DetailPackagePage() {
         {/* Location & Date Info Bar */}
         <div className="flex items-center gap-2 mb-4 mt-2">
           <IconMapPinOutline className="text-black text-lg" />
-          <span className="text-gray-600">
-            {packageDetail.location.subDistrict}, {packageDetail.location.province}
+          <span className="text-black">
+            อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
           </span>
         </div>
 
@@ -471,7 +471,7 @@ export default function DetailPackagePage() {
 
         <div className="flex items-center gap-2 mb-4 mt-2">
           <span className="font-medium text-gray-900">วันที่เริ่ม - วันที่สิ้นสุด : </span>
-          <span className="text-gray-600">
+          <span className="text-black">
             {formatDateWithTime(packageDetail.startDate)} - {formatDateWithTime(packageDetail.dueDate)}
           </span>
         </div>

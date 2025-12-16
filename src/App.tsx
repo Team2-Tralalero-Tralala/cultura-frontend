@@ -13,7 +13,7 @@ import Home from "@/Pages/Home";
 import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
-import { RegisterPage } from "./Pages/RegisterPage";
+import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 
 function App() {
   return (

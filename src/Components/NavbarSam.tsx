@@ -6,6 +6,7 @@ import { AuthProvider, AuthContext } from "@/Libs/AuthProvider";
 import { useContext, useState } from "react";
 import imgUser from "/profile.png";
 import { Link } from "react-router-dom";
+import { Icon } from "@iconify/react";
 
 const NavbarSam = () => {
   // State สำหรับจัดการการเปิด-ปิด dropdown
@@ -93,8 +94,8 @@ const NavbarSam = () => {
                     }
                   })()}
                   onClick={closeDropdown}
-                  className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold"
-                >
+                  className="flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold">
+                  <Icon icon="flowbite:user-edit-outline" className="text-xl" />
                   แก้ไขโปรไฟล์
                 </Link>
               </li>
@@ -114,16 +115,17 @@ const NavbarSam = () => {
                     }
                   })()}
                   onClick={closeDropdown}
-                  className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold"
-                >
+                  className="flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold">
+                  <Icon icon="material-symbols:lock-outline" className="text-xl" />
                   เปลี่ยนรหัสผ่าน
                 </Link>
               </li>
               <hr className="border-gray-200 my-2" />
               <li
-                className="block py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold"
+                className="flex items-center gap-2 py-2 px-2 cursor-pointer hover:bg-gray-100 rounded-md text-base-semibold"
                 onClick={logOut}
               >
+                <Icon icon="majesticons:logout-line" className="text-xl" />
                 ออกจากระบบ
               </li>
             </ul>

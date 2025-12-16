@@ -263,20 +263,6 @@ export default function DetailPackagePage() {
   };
 
   /*
-   * คำอธิบาย : ฟังก์ชันสำหรับการแปลงวันที่เป็นภาษาไทย (เฉพาะวันที่)
-   * Input: dateString
-   * Output : วันที่ในรูปแบบ "4 ส.ค. 2568"
-   */
-  const formatDateToThai = (dateString: string | null): string => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  /*
    * คำอธิบาย : ฟังก์ชันสำหรับการแปลงวันที่และเวลาเป็นภาษาไทยแบบเต็มรูปแบบ
    * Input: isoString
    * Output : รูปแบบ "วันจันทร์ที่ 4 สิงหาคม 2568 | เวลา 14.00 น."

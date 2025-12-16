@@ -217,7 +217,16 @@ export default function DetailPackagePage() {
     }
   };
 
-
+  /*
+   * คำอธิบาย : สร้างรายการสื่อ (รูปภาพ) สำหรับใช้แสดงในแกลเลอรีของแพ็กเกจ
+   * เงื่อนไข :
+   *  - หากมีข้อมูล packageFile จะทำการแปลงเป็น MediaItem[]
+   *  - หากไม่มีข้อมูล จะกำหนดค่าเริ่มต้นเป็น Array ว่าง
+   * Input :
+   *  - packageDetail.packageFile
+   * Output :
+   *  - galleryItems (MediaItem[])
+   */
   const galleryItems: MediaItem[] = packageDetail?.packageFile
     ? packageDetail.packageFile.map((file) => ({
       type: "image",

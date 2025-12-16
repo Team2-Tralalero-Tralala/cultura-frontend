@@ -35,10 +35,8 @@ const statusLabelTh: Record<string, string> = {
 // Dropdown options 
 const statusOptions = [
   { label: "ทั้งหมด", value: "ALL" },
-  { label: "รอตรวจสอบ", value: "PENDING" },
   { label: "จองสำเร็จ", value: "BOOKED" },
   { label: "ปฏิเสธการจอง", value: "REJECTED" },
-  { label: "รอคืนเงิน", value: "REFUND_PENDING" },
   { label: "คืนเงินแล้ว", value: "REFUNDED" },
   { label: "ปฏิเสธการคืนเงิน", value: "REFUND_REJECTED" },
 ] as const;

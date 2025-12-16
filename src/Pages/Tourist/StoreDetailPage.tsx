@@ -1,3 +1,6 @@
+/** 
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดร้านค้า และร้านอื่นๆในชุมชุมเดียวกัน
+*/
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -50,11 +53,10 @@ const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /*
- * ฟังก์ชัน : resolveBackendUploadUrl
- * คำอธิบาย : แปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
- * Input : fileName (string | undefined) - ชื่อไฟล์ที่ได้จาก backend
- * Output : string | undefined - URL ของไฟล์ภาพ
- */
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
+ * Input : fileName ชื่อไฟล์ที่ได้จาก backend
+ * Output : string - URL ของไฟล์ภาพ
+*/
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
     if (!fileName) return undefined;
     const cleaned = fileName.replace(/^\/?uploads\//, "");
@@ -62,11 +64,10 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
 }
 
 /*
- * ฟังก์ชัน : buildStoreAddressLine
- * คำอธิบาย : สร้าง string แสดงที่อยู่ร้านค้าจาก object location
- * Input : location (StoreLocation | null | undefined)
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้าง string แสดงที่อยู่ร้านค้าจาก object location
+ * Input : object location (StoreLocation)
  * Output : string - ที่อยู่แบบรวม
- */
+*/
 function buildStoreAddressLine(location?: StoreLocation | null): string {
     const text = [
         location?.houseNumber,
@@ -81,11 +82,8 @@ function buildStoreAddressLine(location?: StoreLocation | null): string {
 }
 
 /*
- * ฟังก์ชัน : StoreDetailPage
- * คำอธิบาย : แสดงรายละเอียดร้านค้า พร้อมรายการร้านค้าอื่นในชุมชน และ pagination
- * Input : ไม่มี
- * Output : React Component ที่ render หน้าแสดงรายละเอียดร้านค้า และร้านค้าอื่นในชุมชน
- */
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดงรายละเอียดร้านค้า พร้อมรายการร้านค้าอื่นในชุมชน และ pagination
+*/
 export default function StoreDetailPage() {
     const { communityId, storeId } = useParams();
     const limit = 12;

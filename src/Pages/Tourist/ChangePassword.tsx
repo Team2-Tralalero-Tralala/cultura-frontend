@@ -6,6 +6,7 @@
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
+import TextField from "@/Components/TextField"; 
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -24,10 +25,6 @@ export default function TouristChangePasswordPage() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
-
-    const [isShowCurrentPassword, setIsShowCurrentPassword] = useState(false);
-    const [isShowNewPassword, setIsShowNewPassword] = useState(false);
-    const [isShowConfirmNewPassword, setIsShowConfirmNewPassword] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -60,7 +57,7 @@ export default function TouristChangePasswordPage() {
         if (!newPassword) return null;
         if (!passwordRule.test(newPassword)) {
             return (
-                <div className="mt-1">
+                <div className="mt-1 text-xs">
                     <p className="mb-1">รหัสผ่านต้องประกอบด้วย:</p>
                     <ul className="list-disc pl-4 space-y-0.5">
                         <li>ความยาว 8 ตัวอักษรขึ้นไป</li>
@@ -71,7 +68,7 @@ export default function TouristChangePasswordPage() {
                 </div>
             );
         }
-        return "รหัสผ่านปลอดภัย";
+        return <div className="mt-1 text-xs text-emerald-600"><Icon icon="mdi:check" className="inline mr-1" />รหัสผ่านปลอดภัย</div>;
     }, [newPassword]);
 
     /*
@@ -108,7 +105,6 @@ export default function TouristChangePasswordPage() {
             const validationErrorMessage = "ข้อมูลไม่ครบหรือรูปแบบรหัสผ่านไม่ถูกต้อง";
             setMessage({ type: "error", text: validationErrorMessage });
 
-            // ตั้งค่า ModalAlert (Warning)
             setAlertType("warning");
             setAlertTitle("ตรวจสอบข้อมูล");
             setAlertMessage(validationErrorMessage);
@@ -118,7 +114,7 @@ export default function TouristChangePasswordPage() {
 
         try {
             setIsSubmitting(true);
-            await api.patch(`/tourist/change-password`, {
+            await api.post(`/shared/account/change-password/me`, {
                 currentPassword,
                 newPassword,
                 confirmNewPassword
@@ -142,7 +138,6 @@ export default function TouristChangePasswordPage() {
 
             setMessage({ type: "error", text: apiMessage });
 
-            // ตั้งค่า ModalAlert (Error)
             setAlertType("error");
             setAlertTitle("เกิดข้อผิดพลาด");
             setAlertMessage(apiMessage);
@@ -185,92 +180,45 @@ export default function TouristChangePasswordPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
                             <div className="w-[246px]">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    รหัสผ่าน
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={isShowCurrentPassword ? "text" : "password"}
-                                        value={currentPassword}
-                                        onChange={(event) => setCurrentPassword(event.target.value)}
-                                        placeholder="กรอกรหัสผ่านปัจจุบัน"
-                                        className="w-full border border-[#898989] rounded-lg px-4 py-2.5 pr-10 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
-                                        autoComplete="current-password"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                        onClick={() => setIsShowCurrentPassword(!isShowCurrentPassword)}
-                                    >
-                                        <Icon icon={isShowCurrentPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
-                                    </button>
-                                </div>
+                                <TextField
+                                    id="current-password"
+                                    type="password"
+                                    label="รหัสผ่าน"
+                                    placeholder="กรอกรหัสผ่านปัจจุบัน"
+                                    required
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                />
                             </div>
 
                             <div className="w-[246px]">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    รหัสผ่านใหม่
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={isShowNewPassword ? "text" : "password"}
-                                        value={newPassword}
-                                        onChange={(event) => setNewPassword(event.target.value)}
-                                        placeholder="กรอกรหัสผ่านใหม่"
-                                        className={`w-full border rounded-lg px-4 py-2.5 pr-10 focus:ring-2 transition-all outline-none ${newPassword && !passwordRule.test(newPassword)
-                                            ? "border-red-300 focus:ring-red-200"
-                                            : "border-[#898989] focus:ring-emerald-500 focus:border-emerald-500"
-                                            }`}
-                                        autoComplete="new-password"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                        onClick={() => setIsShowNewPassword(!isShowNewPassword)}
-                                    >
-                                        <Icon icon={isShowNewPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className={`mt-2 text-xs flex items-start gap-1 ${!newPassword ? "text-gray-400" :
-                                    passwordRule.test(newPassword) ? "text-emerald-600" : "text-red-500"
-                                    }`}>
-                                    {strengthHint && <Icon icon={passwordRule.test(newPassword) ? "mdi:check" : "mdi:alert-circle-outline"} />}
+                                <TextField
+                                    id="new-password"
+                                    type="password"
+                                    label="รหัสผ่านใหม่"
+                                    placeholder="กรอกรหัสผ่านใหม่"
+                                    required
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    error={!!newPassword && !passwordRule.test(newPassword)}
+                                />
+                                <div className={`text-xs ${!newPassword ? "text-gray-400" : passwordRule.test(newPassword) ? "text-emerald-600" : "text-red-500"}`}>
                                     {strengthHint}
                                 </div>
                             </div>
 
                             <div className="w-[246px]">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    ยืนยันรหัสผ่านใหม่
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={isShowConfirmNewPassword ? "text" : "password"}
-                                        value={confirmNewPassword}
-                                        onChange={(event) => setConfirmNewPassword(event.target.value)}
-                                        placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                                        className={`w-full border rounded-lg px-4 py-2.5 pr-10 focus:ring-2 transition-all outline-none ${confirmNewPassword && newPassword !== confirmNewPassword
-                                            ? "border-red-300 focus:ring-red-200"
-                                            : "border-[#898989] focus:ring-emerald-500 focus:border-emerald-500"
-                                            }`}
-                                        autoComplete="new-password"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                        onClick={() => setIsShowConfirmNewPassword(!isShowConfirmNewPassword)}
-                                    >
-                                        <Icon icon={isShowConfirmNewPassword ? "mdi:eye-off" : "mdi:eye"} className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                {confirmNewPassword && newPassword !== confirmNewPassword && (
-                                    <p className="mt-2 text-xs text-red-500 flex items-center gap-1">
-                                        <Icon icon="mdi:close-circle-outline" /> รหัสผ่านใหม่และการยืนยันไม่ตรงกัน
-                                    </p>
-                                )}
+                                <TextField
+                                    id="confirm-password"
+                                    type="password"
+                                    label="ยืนยันรหัสผ่านใหม่"
+                                    placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+                                    required
+                                    value={confirmNewPassword}
+                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                    error={!!confirmNewPassword && newPassword !== confirmNewPassword}
+                                    helperText={!!confirmNewPassword && newPassword !== confirmNewPassword ? "รหัสผ่านใหม่และการยืนยันไม่ตรงกัน" : ""}
+                                />
                             </div>
 
                             <div className="flex gap-4 pt-4 w-[246px]">
@@ -288,19 +236,12 @@ export default function TouristChangePasswordPage() {
                                     </Button>
                                 </div>
                                 <div className="w-32">
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className={`
-                                                    flex items-center justify-center w-full px-3 py-2 
-                                                    border rounded-form text-base text-white
-                                                    bg-[#00BF6A] border-[#00BF6A] 
-                                                    hover:bg-[#009e55] transition-colors
-                                                    ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}
-                                                `}
+                                    <Button
+                                        type="confirm-tourist"
+                                        htmlType="submit"
                                     >
                                         {isSubmitting ? "กำลังบันทึก..." : "ยืนยัน"}
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </form>

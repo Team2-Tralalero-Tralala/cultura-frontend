@@ -1,17 +1,36 @@
+/*
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดที่พักโฮมสเตย์ของผู้ใช้ทั่วไป (Tourist)
+ * แสดงรายละเอียดต่าง ๆ เช่น ชื่อที่พัก, ประเภท, สิ่งอำนวยความสะดวก, ที่อยู่, คำอธิบาย, แกลเลอรีรูปภาพ
+ * รวมถึงแสดงที่พักอื่น ๆ ในชุมชนเดียวกัน พร้อมระบบ Pagination
+ */
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Tag } from "@/Components/Tag";
-import { getHomestayDetailAndOtherHomestay, fetchHomestayDetail } from "@/Services/homestay-services";
+import { getHomestayDetailAndOtherHomestay } from "@/Services/homestay-services";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
-import { MapPin, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import NavbarTourist from "@/Components/NavbarTourist";
+import Footer from "@/Components/Footer";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
+import { Tag } from "@/Components/Tag";
+import { Icon } from "@iconify/react";
+import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
+import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 
-// Helper for image URL
-const resolveBackendUploadUrl = (path?: string) => {
-  if (!path) return "https://placehold.co/600x400?text=No+Image";
-  if (path.startsWith("http")) return path;
-  return path;
-};
+const apiUrl = import.meta.env.VITE_API_URL;
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
+ * Input : fileName ชื่อไฟล์ที่ได้จาก backend
+ * Output : string - URL ของไฟล์ภาพ
+*/
+function resolveBackendUploadUrl(fileName?: string): string | undefined {
+  if (!fileName) return undefined;
+  const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!cleaned.startsWith("uploads/")) {
+    return `${apiUrl}/uploads/${cleaned}`;
+  }
+  return `${apiUrl}/${cleaned}`;
+}
 
 interface OtherHomestay {
   id: number;
@@ -25,9 +44,14 @@ export default function DetailHomestayTourist() {
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
   const [otherHomestays, setOtherHomestays] = useState<OtherHomestay[]>([]);
   const [loading, setLoading] = useState(true);
-  // Gallery state
-  const [mainImage, setMainImage] = useState<string>("");
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const [page, setPage] = useState(1);
+  const [totalOtherHomestays, setTotalOtherHomestays] = useState(0);
+  const LIMIT = 12;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [homestayId, communityId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,28 +61,25 @@ export default function DetailHomestayTourist() {
         const hId = Number(homestayId);
         const cId = Number(communityId);
 
-        // Fetch data using the shared public endpoint
-        const data = await getHomestayDetailAndOtherHomestay(cId, hId);
+        const data = await getHomestayDetailAndOtherHomestay(cId, hId, page, LIMIT);
 
         if (data && data.homestay) {
-          // Reconstruct the full HomestayDetail object
-          // The backend splits homestay, community, and location at the top level of the response
           const fullHomestay: HomestayDetail = {
             ...data.homestay,
             community: data.community,
             location: data.location,
           };
           setHomestay(fullHomestay);
-
-          // Set initial main image
-          const cover = fullHomestay.homestayImage?.find((i: any) => i.type === "COVER") || fullHomestay.homestayImage?.[0];
-          if (cover) setMainImage(resolveBackendUploadUrl(cover.image));
         }
 
-        if (data && data.otherHomestays && data.otherHomestays.data) {
-          setOtherHomestays(data.otherHomestays.data);
-        } else if (Array.isArray(data.otherHomestays)) {
-          setOtherHomestays(data.otherHomestays);
+        if (data && data.otherHomestays) {
+          if (Array.isArray(data.otherHomestays)) {
+             setOtherHomestays(data.otherHomestays);
+             setTotalOtherHomestays(data.otherHomestays.length);
+          } else {
+             setOtherHomestays(data.otherHomestays.data || []);
+             setTotalOtherHomestays(data.otherHomestays.pagination?.totalCount || 0);
+          }
         }
       } catch (error) {
         console.error("Error loading homestay data", error);
@@ -67,159 +88,150 @@ export default function DetailHomestayTourist() {
       }
     };
     loadData();
-  }, [homestayId, communityId]);
+  }, [homestayId, communityId, page]); 
 
-  if (loading) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
-  if (!homestay) return <div className="p-10 text-center">ไม่พบข้อมูลที่พัก</div>;
+  if (loading && !homestay) return <div className="p-10 text-center min-h-screen content-center">กำลังโหลดข้อมูล...</div>;
+  if (!homestay) return <div className="p-10 text-center min-h-screen content-center">ไม่พบข้อมูลที่พัก</div>;
 
   const images = homestay.homestayImage || [];
-  const galleryImages = images.filter(img => img.type === 'GALLERY');
-  // If we have a cover, put it first, then gallery?
-  // Strategy: All images in one list for selection.
-  const allImages = images.sort((a, b) => (a.type === 'COVER' ? -1 : 1));
+  const sortedImages = [...images].sort((a, b) => (a.type === 'COVER' ? -1 : 1));
 
-  // Handlers for "Other places" scrolling?
-  // Simple grid for now.
+  const galleryItems: MediaItem[] = sortedImages.map(img => ({
+    type: 'image',
+    src: resolveBackendUploadUrl(img.image) ?? "https://placehold.co/600x400?text=No+Image",
+    alt: homestay.name
+  }));
+
+  if (galleryItems.length === 0) {
+    galleryItems.push({
+      type: 'image',
+      src: "https://placehold.co/600x400?text=No+Image",
+      alt: "No Image"
+    });
+  }
 
   return (
-    <div className="bg-white min-h-screen pb-20 font-sans">
-      {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-4 text-sm text-gray-500 flex items-center gap-2">
-        <Link to="/" className="hover:text-[#055035]">หน้าแรก</Link>
-        <span>&gt;</span>
-        <span>(ผลการค้นหา)</span>
-        <span>&gt;</span>
-        <span>รายละเอียดชุมชน</span>
-        <span>&gt;</span>
-        <span className="text-[#055035] font-medium">รายละเอียดที่พัก</span>
+    <div className="bg-white min-h-screen flex flex-col font-prompt">
+      <NavbarTourist />
+
+      {/* Breadcrumb Section */}
+      <div className="container mx-auto py-2">
+        <BreadcrumbNavigation
+          current={{
+            label: homestay.name,
+            to: `/tourist/community/${communityId}/detail/homestay/${homestayId}`,
+          }}
+        />
       </div>
 
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto px-4 max-w-7xl pb-2 mt-6">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-[#055035] mb-4">{homestay.name}</h1>
+        <h1 className="text-xl font-bold text-black mb-6">{homestay.name}</h1>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-3 mb-8">
           {homestay.tagHomestays?.map((t, i) => (
-            <span key={i} className="px-3 py-1 rounded-full border border-gray-300 text-sm text-gray-600">
-              {t.tag.name}
-            </span>
+            <Tag
+              key={i}
+              label={t.tag.name}
+              className="border-gray-200 bg-white text-gray-600 px-4 py-1"
+            />
           ))}
-          {!homestay.tagHomestays?.length && <span className="text-gray-400">-</span>}
         </div>
 
-        {/* Details Section */}
-        <div className="mb-10">
-          <div className="grid md:grid-cols-[1fr_auto] gap-8">
-            <div className="space-y-4 text-gray-700">
-              <div className="flex">
-                <span className="font-bold min-w-[150px]">ประเภทที่พัก :</span>
-                <span>{homestay.type || "โฮมสเตย์"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-bold min-w-[150px]">สิ่งอำนวยความสะดวก :</span>
-                <div className="flex-1">
-                  {homestay.facility ? (
-                    <ul className="list-inside grid grid-cols-2 gap-x-4 gap-y-1">
-                      {homestay.facility.split(",").map((f, idx) => (
-                        <li key={idx} className="list-disc">{f.trim()}</li>
-                      ))}
-                    </ul>
-                  ) : "-"}
-                </div>
-              </div>
+        {/* Info Section */}
+        <div className="mb-12 text-base text-gray-800 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+            <span className="font-bold min-w-[180px]">ประเภทที่พัก :</span>
+            <span>{homestay.type || "โฮมสเตย์"}</span>
+          </div>
 
-              {/* Address block with Icon */}
-              <div className="flex items-start mt-4">
-                <MapPin className="w-5 h-5 text-black mr-2 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">
-                    {homestay.location.houseNumber} {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} {homestay.location.district} จ.{homestay.location.province} {homestay.location.postalCode}
-                  </p>
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+            <span className="font-bold min-w-[180px]">สิ่งอำนวยความสะดวก :</span>
+            <div className="flex-1">
+              {homestay.facility ? (
+                <div className="flex flex-col gap-1">
+                  {homestay.facility.split(",").map((f, idx) => (
+                    <div key={idx} className="text-gray-700">
+                      {f.trim()}
+                    </div>
+                  ))}
                 </div>
-              </div>
-
-              {/* Description */}
-              <div className="mt-4">
-                <p className="font-bold mb-1">คำอธิบายที่อยู่ :</p>
-                <p>{homestay.location.detail || "-"}</p>
-              </div>
+              ) : "-"}
             </div>
           </div>
+
+          {/* Address */}
+          <div className="flex items-start mt-4 pt-2">
+            <Icon icon="mdi:location" className="w-5 h-5 text-black mr-2 mt-0.5 flex-shrink-0" />
+            <span className="font-medium">
+              {homestay.location.houseNumber} {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} {homestay.location.subDistrict} {homestay.location.district} จ.{homestay.location.province} {homestay.location.postalCode}
+            </span>
+          </div>
+
+          {/* Description */}
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-4">
+            <span className="font-bold min-w-[180px]">คำอธิบายที่อยู่ :</span>
+            <span className="whitespace-pre-line">{homestay.location.detail || "ที่พักตรงข้ามร้านค้าอย่างสุขภาพดี และห่างจากไร้ปันสุข 200 เมตร"}</span>
+          </div>
         </div>
 
-        {/* Image Gallery */}
+        {/* Gallery */}
         <div className="mb-16">
-          {/* Main Image */}
-          <div className="w-full h-[500px] mb-4 overflow-hidden rounded-xl bg-gray-100 cursor-pointer" onClick={() => setPreviewImage(mainImage)}>
-            {mainImage ? (
-              <img src={mainImage} className="w-full h-full object-cover" alt="Main" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
-            )}
-          </div>
-
-          {/* Thumbnails */}
-          <div className="grid grid-cols-4 gap-4">
-            {allImages.slice(0, 4).map((img, i) => {
-              const url = resolveBackendUploadUrl(img.image);
-              return (
-                <div key={i} className="h-[120px] rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition"
-                  onClick={() => setMainImage(url)}>
-                  <img src={url} className="w-full h-full object-cover" alt={`Thumb ${i}`} />
-                </div>
-              )
-            })}
-          </div>
+          <Thumbnails items={galleryItems} className="!max-w-6xl" />
         </div>
 
-        {/* Other Places (Items of community) */}
+        {/* Line Separator */}
+        <div className="h-px bg-gray-200 w-full mb-10 text-[#00BF6A]"></div>
+
+        {/* Other Homestays Section */}
         {otherHomestays.length > 0 && (
-          <div className="mb-20">
-            <h2 className="text-2xl font-bold text-black mb-6 border-b pb-2">ที่พักอื่นของชุมชน</h2>
-            <div className="grid grid-cols-1 sc-sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-black mb-8">ที่พักอื่นของชุมชน</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {otherHomestays.map((item) => {
                 const cover = item.homestayImage?.find((img: any) => img.type === 'COVER') || item.homestayImage?.[0];
                 const imgUrl = resolveBackendUploadUrl(cover?.image);
+
                 return (
-                  <Link to={`/homestay/${item.id}`} key={item.id} className="group block">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
-                      <div className="aspect-[4/3] bg-gray-200 overflow-hidden">
-                        <img src={imgUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                  <Link
+                    to={`/tourist/community/${communityId}/detail/homestay/${item.id}`}
+                    key={item.id}
+                    className="group block"
+                    onClick={() => {
+                        setPage(1);
+                    }}
+                  >
+                    <div className="bg-white overflow-hidden rounded-lg transition-all duration-300">
+                      <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative rounded-lg border border-gray-200">
+                        <img
+                          src={imgUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
                       </div>
-                      <div className="p-4 text-center">
-                        <h3 className="font-bold text-gray-800 text-lg group-hover:text-[#055035] transition">{item.name}</h3>
+                      <div className="mt-3 text-center">
+                        <h3 className="font-bold text-black text-base group-hover:text-[#055035] transition">{item.name}</h3>
                       </div>
                     </div>
                   </Link>
                 );
               })}
             </div>
+
+            {/* Pagination */}
+            <div className="flex justify-end mt-6">
+                <Pagination
+                  totalData={totalOtherHomestays}
+                  onQueryChange={({ page }) => setPage(page)}
+                />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Modal Preview */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-[999] bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-4 -right-4 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center font-bold"
-            >
-              ✕
-            </button>
-            <img
-              src={previewImage}
-              alt="preview"
-              className="max-w-full max-h-[90vh] rounded-lg object-contain"
-            />
-          </div>
-        </div>
-      )}
+      <Footer />
     </div>
   );
 }

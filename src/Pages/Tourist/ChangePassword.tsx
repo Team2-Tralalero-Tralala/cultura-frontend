@@ -6,7 +6,7 @@
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField"; 
+import TextField from "@/Components/TextField";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -187,7 +187,7 @@ export default function TouristChangePasswordPage() {
                                     placeholder="กรอกรหัสผ่านปัจจุบัน"
                                     required
                                     value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    onChange={(event) => setCurrentPassword(event.target.value)}
                                 />
                             </div>
 
@@ -199,7 +199,7 @@ export default function TouristChangePasswordPage() {
                                     placeholder="กรอกรหัสผ่านใหม่"
                                     required
                                     value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    onChange={(event) => setNewPassword(event.target.value)}
                                     error={!!newPassword && !passwordRule.test(newPassword)}
                                 />
                                 <div className={`text-xs ${!newPassword ? "text-gray-400" : passwordRule.test(newPassword) ? "text-emerald-600" : "text-red-500"}`}>
@@ -215,7 +215,7 @@ export default function TouristChangePasswordPage() {
                                     placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
                                     required
                                     value={confirmNewPassword}
-                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                    onChange={(event) => setConfirmNewPassword(event.target.value)}
                                     error={!!confirmNewPassword && newPassword !== confirmNewPassword}
                                     helperText={!!confirmNewPassword && newPassword !== confirmNewPassword ? "รหัสผ่านใหม่และการยืนยันไม่ตรงกัน" : ""}
                                 />

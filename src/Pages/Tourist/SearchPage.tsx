@@ -136,22 +136,35 @@ export default function SearchPage() {
    * Output : PackageData - ข้อมูล Package ที่แปลงแล้ว
    */
   const transformPackageData = (packageData: PackageApiData): PackageData => {
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-    let backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+    // ตรวจสอบว่า coverImage เป็น full URL อยู่แล้วหรือไม่
+    const isFullUrl = packageData.coverImage?.startsWith("http://") ||
+                      packageData.coverImage?.startsWith("https://");
 
-    if (!backendBaseUrl.endsWith("/")) {
-      backendBaseUrl += "/";
+    let imageUrl: string;
+    if (!packageData.coverImage) {
+      imageUrl = "https://placehold.co/400x300?text=No+Image";
+    } else if (isFullUrl) {
+      // ถ้าเป็น full URL อยู่แล้ว ให้ใช้ตรงๆ
+      imageUrl = packageData.coverImage;
+    } else {
+      // ถ้าเป็น relative path ให้สร้าง full URL
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      let backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+
+      if (!backendBaseUrl.endsWith("/")) {
+        backendBaseUrl += "/";
+      }
+
+      const imagePath = packageData.coverImage.startsWith("/")
+        ? packageData.coverImage.slice(1)
+        : packageData.coverImage;
+
+      imageUrl = backendBaseUrl + imagePath;
     }
-
-    const imagePath = packageData.coverImage?.startsWith("/")
-      ? packageData.coverImage.slice(1)
-      : packageData.coverImage;
 
     return {
       id: packageData.id,
-      image: packageData.coverImage
-        ? backendBaseUrl + imagePath
-        : "https://placehold.co/400x300?text=No+Image",
+      image: imageUrl,
       title: packageData.name || "ไม่มีชื่อ",
       location: formatLocation(packageData.location),
       bookingStart: packageData.startDate || null,

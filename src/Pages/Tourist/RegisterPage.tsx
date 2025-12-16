@@ -358,55 +358,6 @@ export function RegisterPage() {
               helperText={formErrors.passwordConfirm}
             />
           </div>
-          <div className="col-span-2">
-            <label className="block text-base font-semibold text-black mb-2">
-              เพศ <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-6">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="MALE"
-                  name="gender"
-                  id="male"
-                  onChange={handleGenderChange}
-                  checked={formData.gender === "MALE"}
-                  className="appearance-none w-6 h-6 rounded-full border-2 border-gray-300 bg-white checked:bg-[#1DC9A0] checked:border-4 checked:border-white checked:ring-1 checked:ring-[#1DC9A0] cursor-pointer"
-                />
-                <label htmlFor="male" className="text-base text-black cursor-pointer">
-                  ชาย
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="FEMALE"
-                  name="gender"
-                  id="female"
-                  onChange={handleGenderChange}
-                  checked={formData.gender === "FEMALE"}
-                  className="appearance-none w-6 h-6 rounded-full border-2 border-gray-300 bg-white checked:bg-[#1DC9A0] checked:border-4 checked:border-white checked:ring-1 checked:ring-[#1DC9A0] cursor-pointer"
-                />
-                <label htmlFor="female" className="text-base text-black cursor-pointer">
-                  หญิง
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="NONE"
-                  name="gender"
-                  id="none"
-                  onChange={handleGenderChange}
-                  checked={formData.gender === "NONE"}
-                  className="appearance-none w-6 h-6 rounded-full border-2 border-gray-300 bg-white checked:bg-[#1DC9A0] checked:border-4 checked:border-white checked:ring-1 checked:ring-[#1DC9A0] cursor-pointer"
-                />
-                <label htmlFor="none" className="text-base text-black cursor-pointer">
-                  ไม่ระบุ
-                </label>
-              </div>
-            </div>
-          </div>
           <div>
             <TextField
               id="phone"
@@ -439,6 +390,55 @@ export function RegisterPage() {
                 value={formData.birthDate || null}
                 onChange={handleDateChange}
               />
+            </div>
+          </div>
+        </div>
+        <div className="col-span-2 mt-2">
+          <label className="block text-base font-semibold text-black mb-2">
+            เพศ <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-6">
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                value="MALE"
+                name="gender"
+                id="male"
+                onChange={handleGenderChange}
+                checked={formData.gender === "MALE"}
+                className="appearance-none w-6 h-6 rounded-full border-2 border-gray-300 bg-white checked:bg-[#1DC9A0] checked:border-4 checked:border-white checked:ring-1 checked:ring-[#1DC9A0] cursor-pointer"
+              />
+              <label htmlFor="male" className="text-base text-black cursor-pointer">
+                ชาย
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                value="FEMALE"
+                name="gender"
+                id="female"
+                onChange={handleGenderChange}
+                checked={formData.gender === "FEMALE"}
+                className="appearance-none w-6 h-6 rounded-full border-2 border-gray-300 bg-white checked:bg-[#1DC9A0] checked:border-4 checked:border-white checked:ring-1 checked:ring-[#1DC9A0] cursor-pointer"
+              />
+              <label htmlFor="female" className="text-base text-black cursor-pointer">
+                หญิง
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                value="NONE"
+                name="gender"
+                id="none"
+                onChange={handleGenderChange}
+                checked={formData.gender === "NONE"}
+                className="appearance-none w-6 h-6 rounded-full border-2 border-gray-300 bg-white checked:bg-[#1DC9A0] checked:border-4 checked:border-white checked:ring-1 checked:ring-[#1DC9A0] cursor-pointer"
+              />
+              <label htmlFor="none" className="text-base text-black cursor-pointer">
+                ไม่ระบุ
+              </label>
             </div>
           </div>
         </div>

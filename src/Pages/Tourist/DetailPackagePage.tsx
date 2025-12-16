@@ -280,7 +280,9 @@ export default function DetailPackagePage() {
   };
 
   /*
-   * คำอธิบาย : ฟังก์ชันแปลงวันที่และเวลา แบบ "15 เมษายน 2568 เวลา 9:00"
+   * คำอธิบาย : ฟังก์ชันแปลงวันที่และเวลา เป็นรูปแบบภาษาไทย (เช่น "15 เมษายน 2568 เวลา 9:00")
+   * Input: dateString - ข้อความวันที่ (string หรือ null)
+   * Output : ข้อความวันที่และเวลาในรูปแบบภาษาไทย หรือ "-" หากไม่มีข้อมูล
    */
   const formatDateWithTime = (dateString: string | null): string => {
     if (!dateString) return "-";

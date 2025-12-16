@@ -154,24 +154,47 @@ export default function StoreDetailPage() {
 
                 <h2 className="text-[24px] font-bold text-black mt-12 mb-6">ร้านค้าอื่นของชุมชน</h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    {otherStores.map((other) => {
-                        const firstImage = other.storeImage?.[0];
-                        const imageUrl = firstImage ? resolveBackendUploadUrl(firstImage.image) : undefined;
-                        return (
-                            <div key={other.id} className="flex flex-col items-center">
-                                <div className="w-full aspect-[17/10] bg-gray-100 rounded-md overflow-hidden mb-2">
-                                    {imageUrl ? (
-                                        <img src={imageUrl} alt={other.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">ไม่มีรูป</div>
-                                    )}
-                                </div>
-                                <p className="text-center text-[16px] font-bold truncate w-full">{other.name}</p>
-                            </div>
-                        );
-                    })}
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    {otherStores.map((other) => {
+        const firstImage = other.storeImage?.[0];
+        const imageUrl = firstImage
+            ? resolveBackendUploadUrl(firstImage.image)
+            : undefined;
+
+        const targetUrl = `/tourist/community/${communityId}/detail/store/${other.id}`;
+
+        return (
+            <div
+                key={other.id}
+                className="flex flex-col items-center cursor-pointer"
+                onClick={() => {
+                    window.location.href = targetUrl; // ⬅️ reload หน้าใหม่จริง
+                }}
+            >
+                {/* รูป */}
+                <div className="w-full aspect-[17/10] bg-gray-100 rounded-md overflow-hidden mb-2">
+                    {imageUrl ? (
+                        <img
+                            src={imageUrl}
+                            alt={other.name}
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                            ไม่มีรูป
+                        </div>
+                    )}
                 </div>
+
+                {/* ชื่อร้าน */}
+                <p className="text-center text-[16px] font-bold truncate w-full">
+                    {other.name}
+                </p>
+            </div>
+        );
+    })}
+</div>
+
 
                 {/* Pagination ขวาล่าง */}
                 <div className="flex justify-end">

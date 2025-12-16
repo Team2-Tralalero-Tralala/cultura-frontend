@@ -11,99 +11,7 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import NavbarTourist from "@/Components/NavbarTourist";
 import CardPackage from "@/Components/CardPackage";
 import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
-
-// 1. Icon Tag (ชื่อที่พัก)
-const IconTagOutline = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 1024 1024" fill="currentColor" className={className}>
-    <path d="M483.2 790.3L861.4 412c1.7-1.7 2.5-4 2.3-6.3l-25.5-301.4c-.7-7.8-6.8-13.9-14.6-14.6L522.2 64.3c-2.3-.2-4.7.6-6.3 2.3L137.7 444.8a8.03 8.03 0 0 0 0 11.3l334.2 334.2c3.1 3.2 8.2 3.2 11.3 0zm62.6-651.7l224.6 19l19 224.6L477.5 694L233.9 450.5l311.9-311.9zm60.16 186.23a48 48 0 1 0 67.88-67.89a48 48 0 1 0-67.88 67.89zM889.7 539.8l-39.6-39.5a8.03 8.03 0 0 0-11.3 0l-362 361.3l-237.6-237a8.03 8.03 0 0 0-11.3 0l-39.6 39.5a8.03 8.03 0 0 0 0 11.3l243.2 242.8l39.6 39.5c3.1 3.1 8.2 3.1 11.3 0l407.3-406.6c3.1-3.1 3.1-8.2 0-11.3z" />
-  </svg>
-);
-
-// 2. Icon Map Pin (ที่ตั้ง)
-const IconMapPinOutline = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-);
-
-// 3. Icon Bed (ประเภทที่พัก)
-const IconBedOutline = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M2 4v16" />
-    <path d="M2 8h18a2 2 0 0 1 2 2v10" />
-    <path d="M2 17h20" />
-    <path d="M6 8v9" />
-  </svg>
-);
-
-// 4. Icon User (ความจุผู้เข้าพัก)
-const IconUserOutline = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-// mdi:location (ที่ตั้งด้านบน)
-const IconMdiLocation = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87 3.13-7 7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-  </svg>
-);
-
-// carbon:hotel (รายละเอียดที่พัก)
-const IconAntDesign = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 32 32"><path fill="#000000" d="M9.5 15A1.5 1.5 0 1 1 8 16.5A1.5 1.5 0 0 1 9.5 15m0-2a3.5 3.5 0 1 0 3.5 3.5A3.5 3.5 0 0 0 9.5 13Z" /><path fill="#000000" d="M25 14h-8a2 2 0 0 0-2 2v6H4V10.6l12-6.46l12.53 6.74l.94-1.76l-13-7a1 1 0 0 0-.94 0l-13 7A1 1 0 0 0 2 10v20h2v-6h24v6h2V19a5 5 0 0 0-5-5Zm-8 8v-6h8a3 3 0 0 1 3 3v3Z" /></svg>
-);
-
-// ant-design:tags-outlined
-const IconAntTags = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 32 32" fill="currentColor" className={className}>
-    <path d="M9.5 15A1.5 1.5 0 1 1 8 16.5A1.5 1.5 0 0 1 9.5 15m0-2a3.5 3.5 0 1 0 3.5 3.5A3.5 3.5 0 0 0 9.5 13Z" />
-    <path d="M25 14h-8a2 2 0 0 0-2 2v6H4V10.6l12-6.46l12.53 6.74l.94-1.76l-13-7a1 1 0 0 0-.94 0l-13 7A1 1 0 0 0 2 10v20h2v-6h24v6h2V19a5 5 0 0 0-5-5Zm-8 8v-6h8a3 3 0 0 1 3 3v3Z" />
-  </svg>
-);
-
-// hugeicons:calendar-check-in-01
-const IconHugeCalendarCheckIn = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" className={className}>
-    <path d="M18 2v2M6 2v2m5.05 18c-4.03 0-6.046 0-7.298-1.354C2.5 19.293 2.5 17.114 2.5 12.756v-.513c0-4.357 0-6.536 1.252-7.89C5.004 3 7.02 3 11.05 3h1.9c4.03 0 6.046 0 7.298 1.354c1.179 1.274 1.248 3.28 1.252 7.146V13" />
-    <path d="M13 17.5h8m-8 0c0 .7 1.994 2.009 2.5 2.5M13 17.5c0-.7 1.994-2.008 2.5-2.5M3 8h18" />
-  </svg>
-);
-
-// hugeicons:calendar-check-out-01
-const IconHugeCalendarCheckOut = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" className={className}>
-    <path d="M11.05 22c-4.03 0-6.046 0-7.298-1.354C2.5 19.293 2.5 17.114 2.5 12.756v-.513c0-4.357 0-6.536 1.252-7.89C5.004 3 7.02 3 11.05 3h1.9c4.03 0 6.046 0 7.298 1.354c1.179 1.274 1.248 3.28 1.252 7.146V13m-.5 5.5h-8m8 0c0 .7-1.994 2.009-2.5 2.5m2.5-2.5c0-.7-1.994-2.009-2.5-2.5M18 2v2M6 2v2M3 8h18" />
-  </svg>
-);
-
-// lucide-lab:cup-saucer
-const IconCupSaucer = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className={className}>
-    <path d="M2 18a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4ZM6 8h12v6a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4Zm12 0h1a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3h-1M6 4a1 1 0 0 1 1-1a1 1 0 0 0 1-1m4 2a1 1 0 0 1 1-1a1 1 0 0 0 1-1m4 2a1 1 0 0 1 1-1a1 1 0 0 0 1-1" />
-  </svg>
-);
-
-// healthicons:travel
-const IconHealthTravel = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 48 48" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="m24.288 28.042l6.542 1.947l5.607-3.816A1 1 0 0 1 38 27v5h-2v-3.11l-4 2.722V40c0 .768.289 1.47.764 2H15.236c.475-.53.764-1.232.764-2v-8.465l-4-2.666V32h-2v-5a1 1 0 0 1 1.555-.832l5.696 3.797l6.46-1.923A.979.979 0 0 1 24 28c.083 0 .166.01.247.031l.008.002a.892.892 0 0 1 .033.01ZM25 30.341l5 1.488V40h-5v-9.659Zm-7 1.488l5-1.488V40h-5v-8.17Z" clipRule="evenodd" />
-    <path d="M37 34a3 3 0 0 0-3 3v2a3 3 0 0 0 3 3h5v-5a3 3 0 0 0-3-3h-2ZM9 34a3 3 0 0 0-3 3v5h5a3 3 0 0 0 3-3v-2a3 3 0 0 0-3-3H9Z" />
-    <path d="M24 6c-4.5 0-7 1.2-7 1.2V12l-3.529 3.529c-.593.593-.236 1.588.6 1.648c2.017.143 5.434.323 9.929.323c2.206 0 4.152-.043 5.8-.104h-.017a6 6 0 1 1-11.567 0c-.74-.027-1.42-.058-2.036-.09a8 8 0 1 0 15.64 0a112.94 112.94 0 0 0 2.109-.13c.836-.06 1.193-1.054.6-1.647L30.999 12V7.2S28.5 6 24 6Z" />
-  </svg>
-);
-
-// typcn:warning-outline
-const IconTypcnWarning = ({ className }: { className?: string }) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 5.511c.561 0 1.119.354 1.544 1.062l5.912 9.854C20.307 17.842 19.65 19 18 19H6c-1.65 0-2.307-1.159-1.456-2.573l5.912-9.854c.425-.708.983-1.062 1.544-1.062m0-2c-1.296 0-2.482.74-3.259 2.031l-5.912 9.856c-.786 1.309-.872 2.705-.235 3.83S4.473 21 6 21h12c1.527 0 2.77-.646 3.406-1.771s.551-2.521-.235-3.83l-5.912-9.854C14.482 4.251 13.296 3.511 12 3.511z" />
-    <circle cx="12" cy="16" r="1.3" />
-    <path d="M13.5 10c0-.83-.671-1.5-1.5-1.5a1.499 1.499 0 0 0-1.389 2.062C11.165 11.938 12 14 12 14l1.391-3.438c.068-.173.109-.363.109-.562z" />
-  </svg>
-);
+import { Icon } from "@iconify/react";
 
 interface PackageFile {
   id: number;
@@ -459,7 +367,7 @@ export default function DetailPackagePage() {
 
         {/* Location & Date Info Bar */}
         <div className="flex items-center gap-2 mb-4 mt-2">
-          <IconMapPinOutline className="text-black text-lg" />
+          <Icon icon="mdi:location" className="text-black text-lg" />
           <span className="text-black">
             อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
           </span>
@@ -494,8 +402,8 @@ export default function DetailPackagePage() {
         {/* Detail Hometay Section */}
         {isHasHomestay && currentHomestay && currentHistory && (
           <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <IconAntTags className="text-gray-800 text-2xl" />
+            <div className="flex items-center gap-3 mb-6">
+              <Icon icon="carbon:hotel" className="text-gray-900 text-2xl" />
               <h2 className="text-xl font-bold text-gray-900">รายละเอียดที่พัก</h2>
             </div>
 
@@ -503,8 +411,8 @@ export default function DetailPackagePage() {
               <div className="space-y-6">
                 {/* ชื่อที่พัก */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconTagOutline className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="ant-design:tags-outlined" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">ชื่อที่พัก :</span>
@@ -514,8 +422,8 @@ export default function DetailPackagePage() {
 
                 {/* ที่ตั้ง */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconMapPinOutline className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="typcn:location-outline" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">ที่ตั้ง :</span>
@@ -529,8 +437,8 @@ export default function DetailPackagePage() {
 
                 {/* ประเภทที่พัก */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconBedOutline className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="mdi:guest-room-outline" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">ประเภทที่พัก :</span>
@@ -540,8 +448,8 @@ export default function DetailPackagePage() {
 
                 {/* ความจุผู้เข้าพัก */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconUserOutline className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="mdi:account-outline" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">ความจุผู้เข้าพัก :</span>
@@ -553,8 +461,8 @@ export default function DetailPackagePage() {
 
                 {/* เช็กอิน */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconHugeCalendarCheckIn className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="hugeicons:calendar-check-in-01" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">เช็กอิน :</span>
@@ -566,8 +474,8 @@ export default function DetailPackagePage() {
 
                 {/* เช็กเอาท์ */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconHugeCalendarCheckOut className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="hugeicons:calendar-check-out-01" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">เช็กเอาท์ :</span>
@@ -579,8 +487,8 @@ export default function DetailPackagePage() {
 
                 {/* สิ่งอำนวยความสะดวก */}
                 <div className="flex flex-col md:flex-row md:items-start gap-2">
-                  <div className="w-8 flex justify-center mt-1">
-                    <IconCupSaucer className="text-gray-900 text-xl" />
+                  <div className="w-8 flex justify-center mt-0.5">
+                    <Icon icon="lucide-lab:cup-saucer" className="text-gray-900 text-lg" />
                   </div>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-1 md:gap-4">
                     <span className="font-bold text-gray-900 text-base">สิ่งอำนวยความสะดวก :</span>
@@ -620,7 +528,7 @@ export default function DetailPackagePage() {
         {/* Package Facilities */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <IconHealthTravel className="text-gray-800 text-2xl" />
+            <Icon icon="healthicons:travel" className="text-gray-800 text-2xl" />
             <h2 className="text-xl font-bold text-gray-900">
               สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)
             </h2>
@@ -645,7 +553,7 @@ export default function DetailPackagePage() {
         {/* Guidelines / Warnings */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <IconTypcnWarning className="text-gray-800 text-2xl" />
+            <Icon icon="typcn:warning-outline" className="text-gray-800 text-2xl" />
             <h2 className="text-xl font-bold text-gray-900">
               คำแนะนำสำหรับผู้เข้าร่วมกิจกรรม (สิ่งที่ควรทราบ & สิ่งที่ควรเตรียม)
             </h2>

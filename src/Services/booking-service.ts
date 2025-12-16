@@ -68,17 +68,24 @@ export async function rejectRefundMember(bookingId: number, reason: string) {
   return api.patch(`/member/booking-history/${bookingId}/reject-refund`, { reason });
 }
 
-/*
- * คำอธิบาย : ดึงประวัติการจองทั้งหมดของ Member (รองรับการกรองสถานะ ALL, BOOKED, PENDING ฯลฯ)
- * Mapping : GET /member/booking-histories
- * Input : page, limit, status (default='ALL')
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลประวัติการจองของสมาชิก พร้อมรองรับการแบ่งหน้าและการกรองด้วยสถานะ
+ * Input : page (เลขหน้าปัจจุบัน), limit (จำนวนรายการต่อหน้า), status (สถานะที่ต้องการกรอง)
+ * Output : Promise ข้อมูลรายการจองและข้อมูล Pagination
  */
 export async function getMemberBookingHistories(
   page = 1, 
   limit = 10, 
   status = "ALL"
 ) {
-  // ใช้ตัวแปร api ตัวเดิมที่คุณประกาศไว้ด้านบน
+  /**
+   * คำอธิบาย : เรียก API สำหรับดึงข้อมูลประวัติการจองของสมาชิก
+   * โดยรองรับการแบ่งหน้า (Pagination) และการกรองตามสถานะการจอง
+   * Query Params :
+   *  - page   : หมายเลขหน้าที่ต้องการดึงข้อมูล
+   *  - limit  : จำนวนรายการต่อหน้า
+   *  - status : สถานะการจอง (ALL, PENDING, BOOKED, REFUNDED ฯลฯ)
+   */
   return api.get(`/member/booking-histories`, { 
     params: { 
       page, 

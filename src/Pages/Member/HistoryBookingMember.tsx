@@ -1,3 +1,9 @@
+/**
+ * คำอธิบาย: Component สำหรับแสดงประวัติการจองของผู้ใช้งานในระบบ (Booking History)
+ * ประกอบด้วยตารางแสดงรายละเอียดการจอง, ระบบการค้นหา (Search), การกรองสถานะ (Filter) 
+ * และการจัดการการแบ่งหน้า (Pagination) รวมถึง Modal สำหรับดูสลิปหลักฐาน
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,8 +20,10 @@ import { getMemberBookingHistories } from "@/Services/booking-service";
 
 /* --- Constants & Types --- */
 
-// Maps API status strings to Thai labels
-const STATUS_LABEL_TH: Record<string, string> = {
+/**
+ * คำอธิบาย : ตัวแปรสำหรับ map ค่า status จาก API เป็นข้อความภาษาไทย
+ */
+const statusLabelTh: Record<string, string> = {
   PENDING: "รอตรวจสอบ",
   BOOKED: "จองสำเร็จ",
   REJECTED: "ปฏิเสธการจอง",
@@ -24,8 +32,8 @@ const STATUS_LABEL_TH: Record<string, string> = {
   REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
 };
 
-// Dropdown options
-const STATUS_OPTIONS = [
+// Dropdown options 
+const statusOptions = [
   { label: "ทั้งหมด", value: "ALL" },
   { label: "รอตรวจสอบ", value: "PENDING" },
   { label: "จองสำเร็จ", value: "BOOKED" },
@@ -43,32 +51,30 @@ type BookingRow = {
   totalPrice: string;
   status: string;    
   evidence: string;   
+  fullSlipUrl: string | null; 
   bookedAt: string;   
   rawStatus: string;  
 };
 
-// Response shape from your service
-type ServiceResponse = {
-  data: {
-    data: any[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalCount: number;
-      limit: number;
-    };
-  };
-};
-
 /* --- Helpers --- */
 
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงค่าตัวเลขให้เป็นรูปแบบสกุลเงินบาทไทย (THB)
+ * Input : amount (number)
+ * Output : string
+ */
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB" }).format(amount);
 };
 
-const formatThaiDateTime = (iso: string) => {
-  if (!iso) return "-";
-  const date = new Date(iso);
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลง ISO string เป็นรูปแบบวันที่ไทย
+ * Input : isoString (string)
+ * Output : string
+ */
+const formatThaiDateTime = (isoString: string) => {
+  if (!isoString) return "-";
+  const date = new Date(isoString);
   return date.toLocaleString("th-TH", {
     year: "numeric",
     month: "2-digit",
@@ -78,17 +84,48 @@ const formatThaiDateTime = (iso: string) => {
   });
 };
 
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL เต็มของรูปภาพ (ดึง Logic มาจากหน้า Refund ของคุณ)
+ * Input : path (string | null)
+ * Output : string | null
+ */
+const getSlipImageUrl = (path: string | null): string | null => {
+  if (!path || path === "-") return null;
+
+  let cleanPath = path.replace(/\\/g, "/");
+  if (cleanPath.startsWith("http")) return cleanPath;
+  if (cleanPath.startsWith("/")) cleanPath = cleanPath.substring(1);
+
+  // ใช้ Env Variable ถ้ามี หรือใช้ Default Localhost
+  const fileBaseUrl = import.meta.env.VITE_FILE_URL;
+  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000"; 
+
+  if (fileBaseUrl) return `${fileBaseUrl}/${cleanPath}`;
+  
+  // Logic การต่อ Path
+  const prefix = cleanPath.startsWith("uploads") ? "" : "uploads/";
+  return `${apiBaseUrl}/${prefix}${cleanPath}`;
+};
+
+/**
+ * คำอธิบาย : ฟังก์ชันแปลงข้อมูล API เป็น Row Data
+ * Input : item (any)
+ * Output : BookingRow
+ */
 const mapApiToRow = (item: any): BookingRow => {
   const bookerName = item.bookerName ?? `${item.tourist?.fname ?? ''} ${item.tourist?.lname ?? ''}`.trim();
   const eventName = item.eventName ?? item.package?.name ?? '-';
   const totalPrice = formatCurrency(item.totalPrice || 0);
   
   const rawStatus = (item.status ?? "").toUpperCase();
-  const statusLabel = STATUS_LABEL_TH[rawStatus] ?? rawStatus;
+  const statusLabel = statusLabelTh[rawStatus] ?? rawStatus;
 
-  // Slip logic: just return text, no link
-  const slipUrl = item.slipUrl ?? item.transferSlip;
-  const evidence = slipUrl ? "slip.jpg" : "-"; // Or show filename if you parse it
+  // Slip logic
+  const slipPath = item.slipUrl ?? item.transferSlip;
+  const evidence = slipPath ? slipPath.split('/').pop() || "view_slip" : "-";
+  
+  // สร้าง URL เต็มเตรียมไว้
+  const fullSlipUrl = getSlipImageUrl(slipPath);
 
   const bookedAt = formatThaiDateTime(item.bookingDate ?? item.created_at);
 
@@ -99,30 +136,30 @@ const mapApiToRow = (item: any): BookingRow => {
     totalPrice,
     status: statusLabel,
     evidence,
+    fullSlipUrl,
     bookedAt,
     rawStatus
   };
 };
 
-// Column definitions
-const columns: Column<BookingRow>[] = [
-  { key: "bookerName", header: "ชื่อผู้จอง", className: "min-w-[150px]" },
-  { key: "eventName", header: "ชื่อกิจกรรม", className: "min-w-[200px]" },
-  { key: "totalPrice", header: "ราคา", className: "min-w-[100px]" },
-  { key: "status", header: "สถานะ", className: "min-w-[140px]" },
-  { key: "evidence", header: "หลักฐาน", className: "min-w-[120px]" },
-  { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
-];
-
 /* --- Main Component --- */
 
+/**
+ * คำอธิบาย : Component สำหรับหน้าประวัติการจองของสมาชิก พร้อม Modal ดูรูปสลิป
+ * Input : -
+ * Output : JSX Element
+ */
 export default function HistoryBookingMember() {
   const navigate = useNavigate();
 
   // Data State
   const [tableRows, setTableRows] = useState<BookingRow[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // is... ตาม Standard 4.5
   
+  // Modal State 
+  const [isSlipOpen, setSlipOpen] = useState(false);
+  const [previewSlipUrl, setPreviewSlipUrl] = useState<string | null>(null);
+
   // Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
@@ -134,69 +171,84 @@ export default function HistoryBookingMember() {
   const [totalCount, setTotalCount] = useState(0);
 
   /**
-   * Load data from API
+   * คำอธิบาย : สร้าง Columns สำหรับ DataTable (ใช้ useMemo เพื่อให้เรียกฟังก์ชันเปิด Modal ได้)
+   * Input : -
+   * Output : Column Definition Array
    */
-  const loadPageData = useCallback(async (p: number, l: number) => {
+  const columns = useMemo<Column<BookingRow>[]>(() => [
+    { key: "bookerName", header: "ชื่อผู้จอง", className: "min-w-[150px]" },
+    { key: "eventName", header: "ชื่อกิจกรรม", className: "min-w-[200px]" },
+    { key: "totalPrice", header: "ราคา", className: "min-w-[100px]" },
+    { key: "status", header: "สถานะ", className: "min-w-[140px]" },
+    { 
+      key: "evidence", 
+      header: "หลักฐาน", 
+      className: "min-w-[120px]",
+      render: (row: BookingRow) => (
+        row.fullSlipUrl ? (
+          <button
+            type="button"
+            onClick={() => {
+              setPreviewSlipUrl(row.fullSlipUrl);
+              setSlipOpen(true);
+            }}
+            className="text-[#4A816F] underline underline-offset-2 hover:text-[#2f5b49] cursor-pointer"
+            title={row.evidence}
+          >
+            {row.evidence}
+          </button>
+        ) : (
+          <span>-</span>
+        )
+      )
+    },
+    { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
+  ], []);
+
+  /**
+   * คำอธิบาย : โหลดข้อมูลประวัติการจองจาก API
+   * Input : targetPage, currentLimit
+   * Output : void
+   */
+  const loadPageData = useCallback(async (targetPage: number, currentLimit: number) => {
     setIsLoading(true);
     try {
-      // NOTE: We send "ALL" to the API to get everything for the current page,
-      // then we might filter client-side if that's the desired behavior (like the admin example).
-      // However, usually API filtering is better.
-      // Based on your admin code, it seems you fetch by page and then filter the *current page's* results?
-      // Or does the API support status param? Your service does support it.
-      // Let's pass the status to the API for efficiency if possible.
-      
       const statusParam = selectedStatus === "ALL" ? "ALL" : selectedStatus;
       
-      const res = await getMemberBookingHistories(p, l, statusParam);
+      const res = await getMemberBookingHistories(targetPage, currentLimit, statusParam);
       
-      // Access the nested data structure safely
       const rawList = res.data?.data?.data ?? [];
-      const pag = res.data?.data?.pagination ?? {};
+      const paginationData = res.data?.data?.pagination ?? {};
 
       const mappedRows = rawList.map(mapApiToRow);
       setTableRows(mappedRows);
 
-      setTotalPages(pag.totalPages ?? 1);
-      setTotalCount(pag.totalCount ?? 0);
+      setTotalPages(paginationData.totalPages ?? 1);
+      setTotalCount(paginationData.totalCount ?? 0);
 
     } catch (error) {
       console.error("Failed to load bookings", error);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedStatus]); // Re-create function if status changes to fetch new filtered data
+  }, [selectedStatus]);
 
-  // Initial Load & on Page/Limit/Status change
   useEffect(() => {
     loadPageData(page, limit);
   }, [page, limit, loadPageData]);
 
   /**
-   * Filter rows (Client-side Search)
+   * คำอธิบาย : ฟังก์ชันสำหรับกรองรายการข้อมูลในตารางตามคำค้นหา (Client-side Search)
+   * Input : tableRows (ข้อมูลแถวทั้งหมด), searchQuery (คำค้นหา)
+   * Output : BookingRow[] (รายการข้อมูลที่ผ่านการกรองแล้ว)
    */
   const filteredRows = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    
-    // Status is handled by API reload in useEffect, so we just filter by search query here
-    if (!q) return tableRows;
-
+    const searchTerm = searchQuery.toLowerCase().trim();
+    if (!searchTerm) return tableRows;
     return tableRows.filter((row) => 
-      Object.values(row)
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
+      Object.values(row).join(" ").toLowerCase().includes(searchTerm)
     );
   }, [tableRows, searchQuery]);
-
-  const getRowKey = (row: BookingRow) => row.id.toString();
-
-  const paginationConfig: Pagination = {
-    currentPage: page,
-    totalPages,
-    totalCount,
-    limit,
-  };
 
   return (
     <div className="space-y-4">
@@ -204,7 +256,7 @@ export default function HistoryBookingMember() {
         <Breadcrumb
           current={{
             label: "ประวัติการจอง",
-            to: `/member/bookings-histories`, // Check your route path has 's' or not
+            to: `/member/bookings-histories`, 
           }}
         />
         <h1 className="text-xl font-semibold text-gray-800">ประวัติการจอง</h1>
@@ -213,15 +265,15 @@ export default function HistoryBookingMember() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <SearchBarTable 
               value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
+              onChange={(event) => setSearchQuery(event.target.value)} 
             />
             
             <FilterDropdown
-              options={STATUS_OPTIONS as unknown as { label: string; value: string }[]}
+              options={statusOptions as any}
               selected={selectedStatus}
-              onChange={(v) => {
-                setSelectedStatus(v);
-                setPage(1); // Reset to page 1 on filter change
+              onChange={(newStatus) => {
+                setSelectedStatus(newStatus);
+                setPage(1);
               }}
             />
           </div>
@@ -235,20 +287,48 @@ export default function HistoryBookingMember() {
 
         <DataTable<BookingRow>
           data={filteredRows}
-          getKey={getRowKey}
+          getKey={(row) => row.id.toString()}
           columns={columns}
           theme="brand"
-          pagination={paginationConfig}
+          pagination={{ currentPage: page, totalPages, totalCount, limit }}
           isLoading={isLoading}
-          onPageChange={(p) => setPage(p)}
-          onPageSizeChange={(v) => {
-            setLimit(v);
+          onPageChange={(targetPage) => setPage(targetPage)}
+          onPageSizeChange={(newLimit) => {
+            setLimit(newLimit);
             setPage(1);
           }}
           pageSizeOptions={[10, 20, 50]}
           selectable={false}
         />
       </div>
+
+      {/* Modal แสดงรูปภาพสลิป */}
+      {isSlipOpen && previewSlipUrl && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+          <div className="relative bg-[#E5E5E5]/90 rounded-[24px] shadow-lg w-[650px] h-[650px] max-w-[95vw] max-h-[90vh] flex items-center justify-center">
+            {/* ปุ่มปิด */}
+            <button
+              type="button"
+              onClick={() => {
+                setSlipOpen(false);
+                setPreviewSlipUrl(null);
+              }}
+              className="absolute right-4 top-3 text-2xl text-gray-700 hover:text-black font-bold z-10"
+            >
+              ×
+            </button>
+
+            {/* โซนรูป */}
+            <div className="w-full h-full p-6 flex items-center justify-center">
+              <img
+                src={previewSlipUrl}
+                alt="หลักฐานการโอน"
+                className="max-w-full max-h-full object-contain rounded-[16px] bg-white shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -56,7 +56,7 @@ export default function AuthLayout({
     }
   }
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-white overflow-hidden">
+    <div className="relative h-screen flex items-center justify-center bg-white overflow-hidden">
       {/* มุมบนซ้าย */}
       <div
         className={`
@@ -67,7 +67,7 @@ export default function AuthLayout({
   `}
       ></div>
 
-      <div className="absolute top-10 left-10 flex items-center">
+      <div className="absolute top-10 left-10 flex items-center z-50">
         <img src={logo} alt="Cultura Logo" className="w-40 top-8 right-8" />
       </div>
       {/* มุมล่างขวา */}
@@ -75,13 +75,17 @@ export default function AuthLayout({
         className={`absolute bottom-0 right-0 w-64 h-64 ${getBgColor()} rounded-tl-full ring-1 ring-offset-8 ${getRingColor()} `}
       ></div>
       {/* ปุ่มสมัครสมาชิก */}
-      <div className="absolute top-10 right-10 flex items-center gap-10">
+      <div className="absolute top-10 right-10 flex items-center gap-10 z-50">
         <div className="text-gray-800 text-base">{rightLabel}</div>
         {rightButton}
       </div>
 
       {/* การ์ดเข้าสู่ระบบ */}
-      <div className="relative">{children}</div>
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center p-4">
+          <div className="relative">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }

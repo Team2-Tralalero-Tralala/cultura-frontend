@@ -179,14 +179,14 @@ export default function DetailHomestayTourist() {
 
           {/* Address */}
           <a
-            href={`https://www.openstreetmap.org/search?query=${homestay.location.latitude}%2C+${homestay.location.longitude}&zoom=17&minlon=${homestay.location.longitude - 0.006}&minlat=${homestay.location.latitude - 0.004}&maxlon=${homestay.location.longitude + 0.006}&maxlat=${homestay.location.latitude + 0.004}#map=17/${homestay.location.latitude}/${homestay.location.longitude}`}
+            href={`https://www.google.com/maps?q=${homestay.location.latitude},${homestay.location.longitude}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start mt-4 pt-2 hover:text-[#00BF6A] transition-colors cursor-pointer"
           >
             <Icon icon="mdi:location" className="w-5 h-5 text-black mr-2 mt-0.5 flex-shrink-0" />
             <span className="font-medium">
-              {homestay.location.houseNumber} {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} {homestay.location.subDistrict} {homestay.location.district} จ.{homestay.location.province} {homestay.location.postalCode}
+              {homestay.location.houseNumber} {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} ต.{homestay.location.subDistrict} อ.{homestay.location.district} จ.{homestay.location.province} {homestay.location.postalCode}
             </span>
           </a>
 

@@ -2,14 +2,13 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ Super Admin, Admin และ Member
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขโปรไฟล์, เปลี่ยนรหัสผ่าน และออกจากระบบ
  */
-import { AuthProvider, AuthContext } from "@/Libs/AuthProvider";
+import { AuthContext } from "@/Libs/AuthProvider";
 import { useContext, useState } from "react";
 import imgUser from "/profile.png";
 import { Link } from "react-router-dom";
 
 /*
- * ฟังก์ชัน : NavbarSam
- * คำอธิบาย : Component สำหรับแสดง Navbar ของผู้ใช้กลุ่ม Sam (Super Admin, Admin, Member)
+ * คำอธิบาย : สำหรับแสดง Navbar ของผู้ใช้กลุ่ม Sam (Super Admin, Admin, Member)
  * Input : -
  * Output : ส่วนแสดงผล Navbar
  */
@@ -30,7 +29,6 @@ const NavbarSam = () => {
   };
 
   /*
-   * ฟังก์ชัน : formatRole
    * คำอธิบาย : จัดรูปแบบข้อความ Role ให้สวยงาม (เช่น superadmin -> Super Admin)
    * Input : role (string) - บทบาทของผู้ใช้
    * Output : ข้อความ Role ที่จัดรูปแบบแล้ว

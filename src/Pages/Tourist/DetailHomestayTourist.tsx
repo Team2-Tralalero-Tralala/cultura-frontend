@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getHomestayDetailAndOtherHomestay } from "@/Services/homestay-services";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 import NavbarTourist from "@/Components/NavbarTourist";
@@ -49,11 +49,11 @@ export default function DetailHomestayTourist() {
 
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
   const [otherHomestays, setOtherHomestays] = useState<OtherHomestay[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [page, setPage] = useState(1);
   const [totalOtherHomestays, setTotalOtherHomestays] = useState(0);
-  const LIMIT = 12;
+  const limit = 12;
 
   /*
    * คำอธิบาย : สำหรับเลื่อนหน้าจอไปด้านบนเมื่อมีการเปลี่ยนแปลง homestayId หรือ communityId
@@ -70,11 +70,9 @@ export default function DetailHomestayTourist() {
     const loadData = async () => {
       if (!homestayId || !communityId) return;
       try {
-        setLoading(true);
-        const homestayIds = Number(homestayId);
-        const communityIds = Number(communityId);
+        setIsLoading(true);
 
-        const data = await getHomestayDetailAndOtherHomestay(communityIds, homestayIds, page, LIMIT);
+        const data = await getHomestayDetailAndOtherHomestay(Number(communityId), Number(homestayId), page, limit);
 
         if (data && data.homestay) {
           const fullHomestay: HomestayDetail = {
@@ -97,17 +95,17 @@ export default function DetailHomestayTourist() {
       } catch (error) {
         console.error("Error loading homestay data", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
     loadData();
   }, [homestayId, communityId, page]);
 
-  if (loading && !homestay) return <div className="p-10 text-center min-h-screen content-center">กำลังโหลดข้อมูล...</div>;
+  if (isLoading && !homestay) return <div className="p-10 text-center min-h-screen content-center">กำลังโหลดข้อมูล...</div>;
   if (!homestay) return <div className="p-10 text-center min-h-screen content-center">ไม่พบข้อมูลที่พัก</div>;
 
   const images = homestay.homestayImage || [];
-  const sortedImages = [...images].sort((imageA, imageB) => (imageA.type === 'COVER' ? -1 : 1));
+  const sortedImages = [...images].sort((imageA) => (imageA.type === 'COVER' ? -1 : 1));
 
   const galleryItems: MediaItem[] = sortedImages.map(img => ({
     type: 'image',

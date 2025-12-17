@@ -521,7 +521,7 @@ export default function CommunityDetailUser() {
                   community.location?.province
                 )} ${
                   community.location?.postalCode
-                  ? `(${community.location.postalCode})`
+                  ? `${community.location.postalCode}`
                   : ""
                   }`}
               </span>

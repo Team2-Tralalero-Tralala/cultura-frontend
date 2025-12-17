@@ -23,7 +23,7 @@ export default function LoginTourist() {
     <AuthLayout
       rightLabel="ยังไม่มีบัญชี"
       rightButton={
-        <Link to="guest/tourist/register">
+        <Link to="/guest/signup">
           <Button type="confirm-tourist" htmlType="button">
             ลงทะเบียน
           </Button>

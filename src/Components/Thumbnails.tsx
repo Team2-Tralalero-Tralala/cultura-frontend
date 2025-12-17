@@ -74,6 +74,20 @@ interface ThumbnailsProps {
   colors?: ThumbnailColors;
 }
 
+/**
+ * คำอธิบาย :
+ * Component สำหรับแสดง Thumbnail  ใช้สำหรับแสดงรูปภาพหลายรูปในหน้าเดียวกันโดยสามารถคลิก Thumbnailเพื่อเปลี่ยนรูปหลักที่แสดงอยู่ได้
+ * Input :
+ * - items (MediaItem[])        : รายการรูปภาพที่ต้องการแสดง
+ * - options (EmblaOptionsType) : (optional) ค่า configuration ของ Embla Carousel
+ * - className (string)         : (optional) className เพิ่มเติมสำหรับ wrapper หลัก
+ * - colors (ThumbnailColors)  : (optional) กำหนดสีของ Thumbnail และสถานะ active
+ *
+ * Output :
+ * - JSX.Element ที่แสดงรูปภาพหลักและ Thumbnail
+ * - ผู้ใช้สามารถโต้ตอบ (Interaction) ด้วยการคลิก Thumbnail
+ *   เพื่อเปลี่ยนรูปหลักได้
+ */
 export default function Thumbnails({
   items,
   options,
@@ -92,7 +106,7 @@ export default function Thumbnails({
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  const VISIBLE_COUNT = 5;
+  const visibleCount = 5;
 
   const {
     activeBorder = "#22c55e",
@@ -102,9 +116,12 @@ export default function Thumbnails({
     scrollbarTrack = "#e5e7eb",
   } = colors ?? {};
 
-  /**
-   * ฟังก์ชันสำหรับคลิก Thumbnail เพื่อเลื่อนไปยังรูปที่เลือก
-   */
+/**
+ * คำอธิบาย :
+ * ฟังก์ชันสำหรับเมื่อผู้ใช้คลิก Thumbnail
+ * โดยจะสั่งให้ Embla Carousel เลื่อนไปยังรูปหลัก
+ * ตามตำแหน่ง index ของ Thumbnail ที่ถูกคลิก
+*/
   const onThumbClick = useCallback(
     (index: number) => {
       emblaApi?.scrollTo(index);
@@ -112,9 +129,12 @@ export default function Thumbnails({
     [emblaApi]
   );
 
-  /**
-   * ฟังก์ชันสำหรับอัปเดต index ของรูปที่ถูกเลือก
-   */
+/**
+ * คำอธิบาย :
+ * ฟังก์ชันสำหรับอัปเดตสถานะของรูปที่ถูกเลือกใน Carousel
+ * โดยดึงตำแหน่งของรูปที่กำลังแสดงอยู่จาก Embla Carousel
+ * แล้วนำมาเก็บไว้ใน state selectedIndex
+*/
   const onSelect = useCallback(() => {
     if (!emblaApi) {
       return;
@@ -176,7 +196,7 @@ export default function Thumbnails({
                 }}
                 className={[
                   "relative aspect-video overflow-hidden rounded-md border transition-all",
-                  `flex-[0_0_calc((100%_-_32px)/${VISIBLE_COUNT})]`,
+                  `flex-[0_0_calc((100%_-_32px)/${visibleCount})]`,
                   !isActive && "hover:border-[color:var(--hover-border)]",
                 ].join(" ")}
               >

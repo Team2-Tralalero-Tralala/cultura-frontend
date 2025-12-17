@@ -38,7 +38,7 @@ type Store = {
     id: number;
     name: string;
     detail: string | null;
-    storeImage: StoreImage[];
+    storeImages: StoreImage[];
     communityId: number;
     location: StoreLocation | null;
     tagStores: { tag: StoreTag }[];
@@ -83,9 +83,20 @@ function buildStoreAddressLine(location?: StoreLocation | null): string {
     return text || "-";
 }
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแสดงรายละเอียดร้านค้า พร้อมรายการร้านค้าอื่นในชุมชน และ pagination
-*/
+/**
+ * คำอธิบาย :
+ * Component สำหรับแสดงรายละเอียดร้านค้าในชุมชน
+ * โดยดึงข้อมูลร้านหลักและร้านค้าอื่น ๆ ภายในชุมชนเดียวกัน
+ *
+ * Input :
+ * - communityId
+ * - storeId
+ *
+ * Output :
+ * - JSX.Element สำหรับหน้าแสดงรายละเอียดร้านค้า
+ *   ประกอบด้วยข้อมูลร้าน, รูปภาพ, ที่อยู่, แผนที่,
+ *   และรายการร้านค้าอื่นพร้อม Pagination
+ */
 export default function StoreDetailPage() {
     const { communityId, storeId } = useParams();
     const limit = 12;
@@ -175,8 +186,8 @@ export default function StoreDetailPage() {
                 </p>
 
                 <div className="mb-12">
-                    {store?.storeImage?.length ? (
-                        <Thumbnails items={store.storeImage.map((file, i) => ({
+                    {store?.storeImages?.length ? (
+                        <Thumbnails items={store.storeImages.map((file, i) => ({
                             type: "image" as const,
                             src: resolveBackendUploadUrl(file.image) || "https://placehold.co/600x400?text=No+Image",
                             alt: `${store.name} - รูป ${i + 1}`,

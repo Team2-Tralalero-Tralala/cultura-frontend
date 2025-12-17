@@ -22,7 +22,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
  * Input : fileName ชื่อไฟล์ที่ได้จาก backend
  * Output : string - URL ของไฟล์ภาพ
-*/
+ */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
   const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
@@ -38,6 +38,11 @@ interface OtherHomestay {
   homestayImage: { image: string; type: string }[];
 }
 
+/*
+ * คำอธิบาย : Component สำหรับหน้า "รายละเอียดที่พักโฮมสเตย์ของผู้ใช้ทั่วไป (Tourist)"
+ * แสดงรายละเอียดที่พักโฮมสเตย์ รวมถึงที่พักอื่น ๆ ในชุมชนเดียวกัน
+ * มีการจัดการสถานะการโหลดข้อมูลและการแสดงผลข้อมูลต่าง ๆ
+ */
 export default function DetailHomestayTourist() {
   const { communityId, homestayId } = useParams<{ communityId: string; homestayId: string }>();
 
@@ -49,19 +54,26 @@ export default function DetailHomestayTourist() {
   const [totalOtherHomestays, setTotalOtherHomestays] = useState(0);
   const LIMIT = 12;
 
+  /*
+   * คำอธิบาย : สำหรับเลื่อนหน้าจอไปด้านบนเมื่อมีการเปลี่ยนแปลง homestayId หรือ communityId
+   */
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [homestayId, communityId]);
 
+  /*
+   * คำอธิบาย : สำหรับดึงข้อมูลรายละเอียดที่พักและที่พักอื่นๆในชุมชน
+   * เมื่อ component ถูก mount หรือเมื่อ homestayId, communityId, page เปลี่ยนแปลง
+   */
   useEffect(() => {
     const loadData = async () => {
       if (!homestayId || !communityId) return;
       try {
         setLoading(true);
-        const hId = Number(homestayId);
-        const cId = Number(communityId);
+        const homestayIds = Number(homestayId);
+        const communityIds = Number(communityId);
 
-        const data = await getHomestayDetailAndOtherHomestay(cId, hId, page, LIMIT);
+        const data = await getHomestayDetailAndOtherHomestay(communityIds, homestayIds, page, LIMIT);
 
         if (data && data.homestay) {
           const fullHomestay: HomestayDetail = {
@@ -74,11 +86,11 @@ export default function DetailHomestayTourist() {
 
         if (data && data.otherHomestays) {
           if (Array.isArray(data.otherHomestays)) {
-             setOtherHomestays(data.otherHomestays);
-             setTotalOtherHomestays(data.otherHomestays.length);
+            setOtherHomestays(data.otherHomestays);
+            setTotalOtherHomestays(data.otherHomestays.length);
           } else {
-             setOtherHomestays(data.otherHomestays.data || []);
-             setTotalOtherHomestays(data.otherHomestays.pagination?.totalCount || 0);
+            setOtherHomestays(data.otherHomestays.data || []);
+            setTotalOtherHomestays(data.otherHomestays.pagination?.totalCount || 0);
           }
         }
       } catch (error) {
@@ -88,13 +100,13 @@ export default function DetailHomestayTourist() {
       }
     };
     loadData();
-  }, [homestayId, communityId, page]); 
+  }, [homestayId, communityId, page]);
 
   if (loading && !homestay) return <div className="p-10 text-center min-h-screen content-center">กำลังโหลดข้อมูล...</div>;
   if (!homestay) return <div className="p-10 text-center min-h-screen content-center">ไม่พบข้อมูลที่พัก</div>;
 
   const images = homestay.homestayImage || [];
-  const sortedImages = [...images].sort((a, b) => (a.type === 'COVER' ? -1 : 1));
+  const sortedImages = [...images].sort((imageA, imageB) => (imageA.type === 'COVER' ? -1 : 1));
 
   const galleryItems: MediaItem[] = sortedImages.map(img => ({
     type: 'image',
@@ -130,10 +142,10 @@ export default function DetailHomestayTourist() {
 
         {/* Tags */}
         <div className="flex flex-wrap gap-3 mb-8">
-          {homestay.tagHomestays?.map((t, i) => (
+          {homestay.tagHomestays?.map((tag, index) => (
             <Tag
-              key={i}
-              label={t.tag.name}
+              key={index}
+              label={tag.tag.name}
               className="border-gray-200 bg-white text-gray-600 px-4 py-1"
             />
           ))}
@@ -151,9 +163,9 @@ export default function DetailHomestayTourist() {
             <div className="flex-1">
               {homestay.facility ? (
                 <div className="flex flex-col gap-1">
-                  {homestay.facility.split(",").map((f, idx) => (
-                    <div key={idx} className="text-gray-700">
-                      {f.trim()}
+                  {homestay.facility.split(",").map((facility, index) => (
+                    <div key={index} className="text-gray-700">
+                      {facility.trim()}
                     </div>
                   ))}
                 </div>
@@ -161,13 +173,21 @@ export default function DetailHomestayTourist() {
             </div>
           </div>
 
+
           {/* Address */}
-          <div className="flex items-start mt-4 pt-2">
+          <a
+            href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(
+              `${homestay.location.houseNumber} ${homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} ${homestay.location.subDistrict} ${homestay.location.district} ${homestay.location.province} ${homestay.location.postalCode}`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start mt-4 pt-2 hover:text-[#00BF6A] transition-colors cursor-pointer"
+          >
             <Icon icon="mdi:location" className="w-5 h-5 text-black mr-2 mt-0.5 flex-shrink-0" />
             <span className="font-medium">
               {homestay.location.houseNumber} {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} {homestay.location.subDistrict} {homestay.location.district} จ.{homestay.location.province} {homestay.location.postalCode}
             </span>
-          </div>
+          </a>
 
           {/* Description */}
           <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-4">
@@ -200,7 +220,7 @@ export default function DetailHomestayTourist() {
                     key={item.id}
                     className="group block"
                     onClick={() => {
-                        setPage(1);
+                      setPage(1);
                     }}
                   >
                     <div className="bg-white overflow-hidden rounded-lg transition-all duration-300">
@@ -222,10 +242,10 @@ export default function DetailHomestayTourist() {
 
             {/* Pagination */}
             <div className="flex justify-end mt-6">
-                <Pagination
-                  totalData={totalOtherHomestays}
-                  onQueryChange={({ page }) => setPage(page)}
-                />
+              <Pagination
+                totalData={totalOtherHomestays}
+                onQueryChange={({ page }) => setPage(page)}
+              />
             </div>
           </div>
         )}

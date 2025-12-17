@@ -13,6 +13,8 @@ import Home from "@/Pages/Home";
 import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
+import ChangePassword from "./Pages/Tourist/ChangePassword";
+
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 
@@ -23,6 +25,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
+        <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
 
 

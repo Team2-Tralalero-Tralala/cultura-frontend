@@ -1,136 +1,214 @@
-// File: Thumbnails.tsx
-/*
- * คำอธิบาย : แกลเลอรี่ภาพพร้อมแถบ Thumbnail ด้านล่าง
- * หน้าที่ : แสดงภาพหลักแบบสไลด์ และสลับภาพผ่านแถบ Thumbnail (ชิดซ้าย โปร่งใส กระทัดรัด)
- * มาตรฐานคอมเมนต์ : ใช้ Header block + JSDoc บนฟังก์ชันสำคัญ
+/**
+ * คำอธิบาย :
+ * Component สำหรับแสดงรูปภาพหลักพร้อม Thumbnail ด้านล่าง
+ * ผู้ใช้สามารถคลิก Thumbnail เพื่อเปลี่ยนรูปหลักได้
+ * เหมาะสำหรับหน้ารายละเอียด เช่น ร้านค้า, สินค้า หรือแกลเลอรีรูปภาพ
+ *
+ * วิธีใช้งาน (Usage) :
+ *
+ * <Thumbnails
+ *   items={[
+ *     {
+ *       type: "image",
+ *       src: "https://example.com/image-1.jpg",
+ *       alt: "ตัวอย่างรูปที่ 1",
+ *     },
+ *     {
+ *       type: "image",
+ *       src: "https://example.com/image-2.jpg",
+ *       alt: "ตัวอย่างรูปที่ 2",
+ *     },
+ *   ]}
+ * />
+ *
+ * ตัวอย่างการใช้งานจริง :
+ *
+ * <div className="mb-12">
+ *   {store?.storeImage?.length ? (
+ *     <Thumbnails
+ *       items={store.storeImage.map((file, index) => ({
+ *         type: "image",
+ *         src:
+ *           resolveBackendUploadUrl(file.image) ||
+ *           "https://placehold.co/600x400?text=No+Image",
+ *         alt: `${store.name} - รูป ${index + 1}`,
+ *       }))}
+ *     />
+ *   ) : (
+ *     <p className="text-gray-500 text-[16px]">ไม่มีรูปภาพ</p>
+ *   )}
+ * </div>
  */
 
 import React, { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaOptionsType } from "embla-carousel";
 
-/** รายการสื่อที่รองรับ (ปัจจุบัน: image) */
-export type MediaItem = { type: "image"; src: string; alt?: string };
+/**
+ * ประเภทของสื่อที่ใช้แสดงใน Carousel
+ */
+export type MediaItem = {
+  type: "image";
+  src: string;
+  alt?: string;
+};
 
-interface ThumbnailsProps {
-  /** รายการสื่อที่จะแสดง */
-  items: MediaItem[];
-  /** ตัวเลือกเสริมของ Embla */
-  options?: EmblaOptionsType;
-  /** คลาสเสริมภายนอกของคอมโพเนนต์ */
-  className?: string;
+/**
+ * กำหนดสีที่ใช้ใน Thumbnail
+ */
+export interface ThumbnailColors {
+  activeBorder?: string;
+  activeRing?: string;
+  hoverBorder?: string;
+  scrollbarThumb?: string;
+  scrollbarTrack?: string;
 }
 
-/*
- * Thumbnails
- * แสดงภาพหลัก + แถบ Thumbnail ด้านล่าง
- * - ชิดซ้าย (ไม่อยู่ตรงกลาง)
- * - โปร่งใส (ไม่มีพื้นหลังเทา)
- * - ลดขนาดให้กะทัดรัด (max-w-3xl)
+/**
+ * Props ของ Thumbnails Component
  */
-export default function Thumbnails({ items, options, className }: ThumbnailsProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, ...options });
-  const [thumbsRef, thumbsApi] = useEmblaCarousel({
-    dragFree: true,
-    containScroll: "trimSnaps" as const,
+interface ThumbnailsProps {
+  items: MediaItem[];
+  options?: EmblaOptionsType;
+  className?: string;
+  colors?: ThumbnailColors;
+}
+
+/**
+ * คำอธิบาย :
+ * Component สำหรับแสดง Thumbnail  ใช้สำหรับแสดงรูปภาพหลายรูปในหน้าเดียวกันโดยสามารถคลิก Thumbnailเพื่อเปลี่ยนรูปหลักที่แสดงอยู่ได้
+ * Input :
+ * - items (MediaItem[])        : รายการรูปภาพที่ต้องการแสดง
+ * - options (EmblaOptionsType) : (optional) ค่า configuration ของ Embla Carousel
+ * - className (string)         : (optional) className เพิ่มเติมสำหรับ wrapper หลัก
+ * - colors (ThumbnailColors)  : (optional) กำหนดสีของ Thumbnail และสถานะ active
+ *
+ * Output :
+ * - JSX.Element ที่แสดงรูปภาพหลักและ Thumbnail
+ * - ผู้ใช้สามารถโต้ตอบ (Interaction) ด้วยการคลิก Thumbnail
+ *   เพื่อเปลี่ยนรูปหลักได้
+ */
+export default function Thumbnails({
+  items,
+  options,
+  className,
+  colors,
+}: ThumbnailsProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    ...options,
   });
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [thumbsRef] = useEmblaCarousel({
+    dragFree: true,
+    containScroll: "trimSnaps",
+  });
 
-  /* ค่าคงที่ : จำนวนช่อง thumbnail ที่แสดงพร้อมกัน */
-  const THUMBNAILS_VISIBLE_COUNT = 5 as const;
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  /* Placeholder สำหรับเติมช่องว่างให้ครบจำนวน thumbnail */
-  const placeholders = Array.from(
-    { length: Math.max(0, THUMBNAILS_VISIBLE_COUNT - items.length) },
-    (_, i) => i
-  );
+  const visibleCount = 5;
 
-  /** ไปยังสไลด์ตามดัชนีที่เลือกจาก thumbnail */
+  const {
+    activeBorder = "#22c55e",
+    activeRing = "#22c55e",
+    hoverBorder = "#4ade80",
+    scrollbarThumb = "#22c55e",
+    scrollbarTrack = "#e5e7eb",
+  } = colors ?? {};
+
+/**
+ * คำอธิบาย :
+ * ฟังก์ชันสำหรับเมื่อผู้ใช้คลิก Thumbnail
+ * โดยจะสั่งให้ Embla Carousel เลื่อนไปยังรูปหลัก
+ * ตามตำแหน่ง index ของ Thumbnail ที่ถูกคลิก
+*/
   const onThumbClick = useCallback(
-    (index: number) => emblaApi?.scrollTo(index),
+    (index: number) => {
+      emblaApi?.scrollTo(index);
+    },
     [emblaApi]
   );
 
-  /** อัปเดตดัชนีเมื่อสไลด์เปลี่ยน และเลื่อนแถบ thumbnail ให้ตามภาพหลัก */
+/**
+ * คำอธิบาย :
+ * ฟังก์ชันสำหรับอัปเดตสถานะของรูปที่ถูกเลือกใน Carousel
+ * โดยดึงตำแหน่งของรูปที่กำลังแสดงอยู่จาก Embla Carousel
+ * แล้วนำมาเก็บไว้ใน state selectedIndex
+*/
   const onSelect = useCallback(() => {
-    if (!emblaApi || !thumbsApi) return;
-    const index = emblaApi.selectedScrollSnap();
-    setSelectedIndex(index);
-    thumbsApi.scrollTo(index);
-  }, [emblaApi, thumbsApi]);
+    if (!emblaApi) {
+      return;
+    }
+
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi) {
+      return;
+    }
+
     onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
-  useEffect(() => {
-    thumbsApi?.reInit();
-  }, [thumbsApi, items]);
-
   return (
-    // ✅ ชิดซ้าย และลดขนาด component ทั้งหมด
-    <div className={`w-full max-w-3xl ml-0 ${className ?? ""}`}>
-      {/* รูปหลัก */}
+    <div className={`w-full max-w-3xl ${className ?? ""}`}>
+      {/* ===== รูปหลัก ===== */}
       <div
-        className="overflow-hidden rounded-lg border border-gray-300 shadow-md bg-transparent"
         ref={emblaRef}
+        className="overflow-hidden rounded-lg border border-gray-300 shadow-md"
       >
         <div className="flex">
-          {items.map((item, i) => (
-            <div key={i} className="min-w-0 flex-[0_0_100%]">
-              <div className="relative aspect-video w-full bg-transparent">
-                <img
-                  src={item.src}
-                  alt={item.alt ?? `Slide ${i + 1}`}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
+          {items.map((item, index) => (
+            <div key={index} className="flex-[0_0_100%]">
+              <img
+                src={item.src}
+                alt={item.alt ?? `Slide ${index + 1}`}
+                className="w-full aspect-video object-cover"
+                loading="lazy"
+              />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Thumbnails ด้านล่าง (5 ช่อง, โปร่งใส, ชิดซ้าย) */}
-      <div className="mt-3 w-full" ref={thumbsRef}>
-        <div className="flex gap-2 justify-start w-full">
-          {items.map((thumb, i) => {
-            const isActive = i === selectedIndex;
-            const widthPercent = 100 / THUMBNAILS_VISIBLE_COUNT;
+      {/* ===== Thumbnail ===== */}
+      <div
+        ref={thumbsRef}
+        className="mt-3 overflow-x-auto overflow-y-hidden thumbs-scrollbar"
+      >
+        <div className="flex gap-2">
+          {items.map((thumb, index) => {
+            const isActive = index === selectedIndex;
+
             return (
               <button
-                key={i}
-                onClick={() => onThumbClick(i)}
-                className={[
-                  `relative overflow-hidden rounded-md border transition-all flex-[0_0_calc(${widthPercent}%_-_8px)] aspect-video bg-transparent`,
-                  isActive
-                    ? "border-blue-500 ring-2 ring-blue-500"
-                    : "border-gray-300 hover:border-blue-300",
-                ].join(" ")}
-                aria-label={`Go to slide ${i + 1}`}
+                key={index}
                 type="button"
+                onClick={() => onThumbClick(index)}
+                style={{
+                  borderColor: isActive ? activeBorder : undefined,
+                  boxShadow: isActive
+                    ? `0 0 0 2px ${activeRing}`
+                    : undefined,
+                }}
+                className={[
+                  "relative aspect-video overflow-hidden rounded-md border transition-all",
+                  `flex-[0_0_calc((100%_-_32px)/${visibleCount})]`,
+                  !isActive && "hover:border-[color:var(--hover-border)]",
+                ].join(" ")}
               >
                 <img
                   src={thumb.src}
-                  alt={thumb.alt ?? `Thumb ${i + 1}`}
-                  className="h-full w-full object-cover rounded-md"
+                  alt={thumb.alt ?? `Thumb ${index + 1}`}
+                  className="h-full w-full object-cover"
                   loading="lazy"
                 />
               </button>
             );
           })}
-
-          {/* Placeholder สำหรับช่องว่าง */}
-          {placeholders.map((i) => (
-            <div
-              key={`placeholder-${i}`}
-              className="flex-[0_0_calc(20%_-_8px)] aspect-video rounded-md border border-transparent bg-transparent"
-            />
-          ))}
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import axios from "axios";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Cropper from "react-easy-crop";
@@ -167,49 +168,6 @@ async function replaceBanner(id: number, file: File) {
 }
 
 /*
-* คำอธิบาย : แสดง Modal แจ้งผลลัพธ์การทำงาน
-* Input : open, status, message, onClose
-* Output : JSX Element
-*/
-function ResultModal({
-  open,
-  status,
-  message,
-  onClose,
-}: {
-  open: boolean;
-  status: "success" | "error";
-  message: string;
-  onClose: () => void;
-}) {
-  if (!open) return null;
-  const headClass =
-    status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800";
-  const title = status === "success" ? "สำเร็จ" : "ไม่สำเร็จ";
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center"
-    >
-      <div className="absolute inset-0 bg-black/40 z-0" onClick={onClose} />
-      <div className="relative z-10 w-[612px] max-w-full h-[200px] rounded-2xl bg-white shadow-xl">
-        <div className={`flex items-center gap-2 px-5 py-3 rounded-t-2xl ${headClass}`}>
-          <Icon icon="circum:circle-alert" className="h-5 w-5" />
-          <h3 className="text-base font-semibold">{title}</h3>
-        </div>
-        <div className="px-5 py-4 text-gray-700">{message}</div>
-        <div className="px-5 pb-5">
-          <Button type="confirm-admin" htmlType="button" onClick={onClose}>
-            ตกลง
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/*
 * คำอธิบาย : หน้าจัดการรูป Banner หน้าแรก รองรับการ Crop ก่อนอัปโหลด
 * Input : -
 * Output : JSX Element
@@ -235,7 +193,8 @@ export default function UploadBannerPage() {
   const [tempFile, setTempFile] = useState<File | null>(null);
 
   const [resultOpen, setResultOpen] = useState(false);
-  const [resultStatus, setResultStatus] = useState<"success" | "error">("success");
+  const [resultType, setResultType] = useState<"success" | "error">("success");
+  const [resultTitle, setResultTitle] = useState("");
   const [resultMessage, setResultMessage] = useState("");
 
   const editInputRef = useRef<HTMLInputElement | null>(null);
@@ -367,11 +326,13 @@ export default function UploadBannerPage() {
     try {
       await uploadBanners([file]);
       await refresh();
-      setResultStatus("success");
+      setResultType("success");
+      setResultTitle("สำเร็จ");
       setResultMessage(`อัปโหลดสำเร็จ`);
       setResultOpen(true);
     } catch (error: any) {
-      setResultStatus("error");
+      setResultType("error");
+      setResultTitle("ไม่สำเร็จ");
       setResultMessage(error?.message || "อัปโหลดไม่สำเร็จ");
       setResultOpen(true);
     }
@@ -459,7 +420,8 @@ export default function UploadBannerPage() {
           const localIndex = pendingIndex - serverCount;
           setBannerFiles((previousFiles) => previousFiles.filter((_unused, index) => index !== localIndex));
         }
-        setResultStatus("success");
+        setResultType("success");
+        setResultTitle("สำเร็จ");
         setResultMessage("ลบรูปภาพสำเร็จ");
         setResultOpen(true);
       }
@@ -478,12 +440,14 @@ export default function UploadBannerPage() {
             return nextFiles;
           });
         }
-        setResultStatus("success");
+        setResultType("success");
+        setResultTitle("สำเร็จ");
         setResultMessage("แก้ไขรูปภาพสำเร็จ");
         setResultOpen(true);
       }
     } catch (error: any) {
-      setResultStatus("error");
+      setResultType("error");
+      setResultTitle("ไม่สำเร็จ");
       setResultMessage(error?.message || "ไม่สำเร็จ");
       setResultOpen(true);
     }
@@ -596,9 +560,10 @@ export default function UploadBannerPage() {
           cancelText="ยกเลิก"
         />
 
-        <ResultModal
+        <ModalAlert
           open={resultOpen}
-          status={resultStatus}
+          type={resultType}
+          title={resultTitle}
           message={resultMessage}
           onClose={() => setResultOpen(false)}
         />

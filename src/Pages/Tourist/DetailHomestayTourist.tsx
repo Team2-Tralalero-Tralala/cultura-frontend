@@ -15,6 +15,7 @@ import { Tag } from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
+import LocalServiceCard from "@/Components/LocalServiceCard";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -141,15 +142,17 @@ export default function DetailHomestayTourist() {
         <h1 className="text-xl font-bold text-black mb-6">{homestay.name}</h1>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          {homestay.tagHomestays?.map((tag, index) => (
-            <Tag
-              key={index}
-              label={tag.tag.name}
-              className="border-gray-200 bg-white text-gray-600 px-4 py-1"
-            />
-          ))}
-        </div>
+        {homestay.tagHomestays && homestay.tagHomestays.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-8">
+            {homestay.tagHomestays.map((tag, index) => (
+              <Tag
+                key={index}
+                label={tag.tag.name}
+                className="border-gray-200 bg-white text-gray-600 px-4 py-1"
+              />
+            ))}
+          </div>
+        )}
 
         {/* Info Section */}
         <div className="mb-12 text-base text-gray-800 space-y-3">
@@ -176,9 +179,7 @@ export default function DetailHomestayTourist() {
 
           {/* Address */}
           <a
-            href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(
-              `${homestay.location.houseNumber} ${homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} ${homestay.location.subDistrict} ${homestay.location.district} ${homestay.location.province} ${homestay.location.postalCode}`
-            )}`}
+            href={`https://www.openstreetmap.org/search?query=${homestay.location.latitude}%2C+${homestay.location.longitude}&zoom=17&minlon=${homestay.location.longitude - 0.006}&minlat=${homestay.location.latitude - 0.004}&maxlon=${homestay.location.longitude + 0.006}&maxlat=${homestay.location.latitude + 0.004}#map=17/${homestay.location.latitude}/${homestay.location.longitude}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start mt-4 pt-2 hover:text-[#00BF6A] transition-colors cursor-pointer"
@@ -215,27 +216,14 @@ export default function DetailHomestayTourist() {
                 const imgUrl = resolveBackendUploadUrl(cover?.image);
 
                 return (
-                  <Link
-                    to={`/tourist/community/${communityId}/detail/homestay/${item.id}`}
+                  <LocalServiceCard
                     key={item.id}
-                    className="group block"
-                    onClick={() => {
-                      setPage(1);
-                    }}
-                  >
-                    <div className="bg-white overflow-hidden rounded-lg transition-all duration-300">
-                      <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative rounded-lg border border-gray-200">
-                        <img
-                          src={imgUrl}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 text-center">
-                        <h3 className="font-bold text-black text-base group-hover:text-[#055035] transition">{item.name}</h3>
-                      </div>
-                    </div>
-                  </Link>
+                    id={item.id}
+                    name={item.name}
+                    imageUrl={imgUrl}
+                    to={`/tourist/community/${communityId}/detail/homestay/${item.id}`}
+                    onClick={() => setPage(1)}
+                  />
                 );
               })}
             </div>

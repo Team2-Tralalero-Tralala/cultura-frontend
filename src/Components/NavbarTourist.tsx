@@ -112,7 +112,7 @@ const NavbarTourist = () => {
           ) : (
             <>
               <button className="border-2 px-6 py-1 rounded-full hover:text-green-500 text-base">
-                <Link to="/tourist/edit-profile" className="flex items-center gap-2">
+                <Link to="/guest/signup" className="flex items-center gap-2">
                   ลงทะเบียน
                 </Link>
               </button>

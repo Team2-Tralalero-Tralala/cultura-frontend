@@ -14,12 +14,13 @@ import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
+import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 
 function App() {
   return (
     <>
       <Routes>
-      <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
@@ -29,6 +30,7 @@ function App() {
           <Route path="login" element={<LoginTourist />} />
           <Route path="partner/login" element={<LoginAdmin />} />
           <Route path="community/:communityId/detail" element={<CommunityDetailUser />} />
+          <Route path="signup" element={<RegisterPage />} />
         </Route>
 
         <Route

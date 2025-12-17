@@ -2,11 +2,16 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ Super Admin, Admin และ Member
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขโปรไฟล์, เปลี่ยนรหัสผ่าน และออกจากระบบ
  */
-import { AuthProvider, AuthContext } from "@/Libs/AuthProvider";
+import { AuthContext } from "@/Libs/AuthProvider";
 import { useContext, useState } from "react";
 import imgUser from "/profile.png";
 import { Link } from "react-router-dom";
 
+/*
+ * คำอธิบาย : สำหรับแสดง Navbar ของผู้ใช้กลุ่ม Sam (Super Admin, Admin, Member)
+ * Input : -
+ * Output : ส่วนแสดงผล Navbar
+ */
 const NavbarSam = () => {
   // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +27,12 @@ const NavbarSam = () => {
       console.error("Logout failed:", error);
     }
   };
+
+  /*
+   * คำอธิบาย : จัดรูปแบบข้อความ Role ให้สวยงาม (เช่น superadmin -> Super Admin)
+   * Input : role (string) - บทบาทของผู้ใช้
+   * Output : ข้อความ Role ที่จัดรูปแบบแล้ว
+   */
   const formatRole = (role?: string) => {
     switch (role) {
       case "superadmin":

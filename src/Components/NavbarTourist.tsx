@@ -75,7 +75,10 @@ const NavbarTourist = () => {
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
                     ประวัติการจอง
                   </li>
-                  <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
+                  <li
+                    className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
+                    onClick={() => navigate("/tourist/change-password")}
+                  >
                     เปลี่ยนรหัสผ่าน
                   </li>
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">

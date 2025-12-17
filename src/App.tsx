@@ -15,6 +15,7 @@ import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
+import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
+        <Route path="/tourist/booking-history/:bookingId/feedback" element={<CreateFeedbackPage />} />
 
 
         <Route path="/guest/*">

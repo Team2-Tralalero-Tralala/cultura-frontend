@@ -67,3 +67,30 @@ export async function approveRefundMember(bookingId: number) {
 export async function rejectRefundMember(bookingId: number, reason: string) {
   return api.patch(`/member/booking-history/${bookingId}/reject-refund`, { reason });
 }
+
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลประวัติการจองของสมาชิก พร้อมรองรับการแบ่งหน้าและการกรองด้วยสถานะ
+ * Input : page (เลขหน้าปัจจุบัน), limit (จำนวนรายการต่อหน้า), status (สถานะที่ต้องการกรอง)
+ * Output : Promise ข้อมูลรายการจองและข้อมูล Pagination
+ */
+export async function getMemberBookingHistories(
+  page = 1, 
+  limit = 10, 
+  status = "ALL"
+) {
+  /**
+   * คำอธิบาย : เรียก API สำหรับดึงข้อมูลประวัติการจองของสมาชิก
+   * โดยรองรับการแบ่งหน้า (Pagination) และการกรองตามสถานะการจอง
+   * Query Params :
+   *  - page   : หมายเลขหน้าที่ต้องการดึงข้อมูล
+   *  - limit  : จำนวนรายการต่อหน้า
+   *  - status : สถานะการจอง (ALL, PENDING, BOOKED, REFUNDED ฯลฯ)
+   */
+  return api.get(`/member/booking-histories`, { 
+    params: { 
+      page, 
+      limit, 
+      status // ส่ง status ไปเพื่อให้ Backend ตัวใหม่ทำงาน (Dispatcher)
+    } 
+  });
+}

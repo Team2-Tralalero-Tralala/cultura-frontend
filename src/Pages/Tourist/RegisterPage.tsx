@@ -58,25 +58,6 @@ const registerSchema = z.object({
 type RegisterSchema = z.infer<typeof registerSchema>;
 
 /**
- * คำอธิบาย: padNumberWithZero (ฟังก์ชันเติมเลข 0 ด้านหน้าให้ครบ 2 หลัก)
- * input: value (ตัวเลขที่ต้องการแปลง)
- * output: String (ตัวเลขที่มี 2 หลัก)
- */
-const padNumberWithZero = (value: number) => value.toString().padStart(2, "0");
-
-/**
- * คำอธิบาย: formatDateToBE (ฟังก์ชันแปลงวันที่เป็นรูปแบบ พ.ศ.)
- * input: date (วันที่ Object หรือ null)
- * output: String (วันที่ในรูปแบบ DD/MM/YYYY พ.ศ.)
- */
-const formatDateToBE = (date: Date | null) => {
-  if (!date) return "";
-  const day = padNumberWithZero(date.getDate());
-  const month = padNumberWithZero(date.getMonth() + 1);
-  const yearBE = date.getFullYear() + 543;
-  return `${day}/${month}/${yearBE}`;
-};
-/**
  * คำอธิบาย: RegisterPage (ฟังก์ชันสำหรับหน้าสมัครสมาชิก)
  * input: -
  * output: JSX.Element (หน้าสมัครสมาชิก)
@@ -183,7 +164,7 @@ export function RegisterPage() {
       const { passwordConfirm, birthDate, ...submissionData } = formData;
       const payload = {
         ...submissionData,
-        birthDate: formatDateToBE(birthDate ?? null),
+        birthDate: birthDate,
         phone: `0${formData.phone}`,
       };
 
@@ -231,6 +212,7 @@ export function RegisterPage() {
    */
   function handleDateChange(date: Date | null) {
     setFormData((prevData) => ({ ...prevData, birthDate: date }));
+    console.log(date);
     validateField("birthDate", date);
   }
 

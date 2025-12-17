@@ -31,6 +31,8 @@ type StoreLocation = {
     province?: string;
     postalCode?: string;
     detail?: string;
+    latitude?: number;
+    longitude?: number;
 };
 type Store = {
     id: number;
@@ -108,6 +110,22 @@ export default function StoreDetailPage() {
         fetchStore();
     }, [communityId, storeId, page]);
 
+    const lat = store?.location?.latitude;
+    const lng = store?.location?.longitude;
+
+    const delta = 0.01;
+
+    const minLat = lat !== undefined ? lat - delta : undefined;
+    const maxLat = lat !== undefined ? lat + delta : undefined;
+    const minLng = lng !== undefined ? lng - delta : undefined;
+    const maxLng = lng !== undefined ? lng + delta : undefined;
+
+    const latLng =
+        store?.location?.latitude !== undefined &&
+            store?.location?.longitude !== undefined
+            ? `${store.location.latitude} ${store.location.longitude}`
+            : "";
+
     return (
         <div className="min-h-screen bg-gray-50">
             <NavbarTourist />
@@ -130,11 +148,27 @@ export default function StoreDetailPage() {
                 <p className="text-[16px] text-gray-900 mb-6">
                     <span className="font-semibold">รายละเอียดร้านค้า :</span> {store?.detail || "-"}
                 </p>
-
-                <div className="flex items-start gap-[12px] mb-6">
-                    <Icon icon="material-symbols:location-on" className="w-5 h-5 mt-[3px] text-black" />
-                    <p className="text-[16px] leading-[31px] text-black">{buildStoreAddressLine(store?.location)}</p>
-                </div>
+                <a
+                    href={`https://www.openstreetmap.org/search?${new URLSearchParams({
+                        query: latLng,
+                        ...(minLat !== undefined && { minlat: String(minLat) }),
+                        ...(maxLat !== undefined && { maxlat: String(maxLat) }),
+                        ...(minLng !== undefined && { minlon: String(minLng) }),
+                        ...(maxLng !== undefined && { maxlon: String(maxLng) }),
+                        zoom: "16",
+                    }).toString()}#map=16/${lat}/${lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-[12px] mb-6 cursor-pointer hover:text-[#00BF6A] transition-colors"
+                >
+                    <Icon
+                        icon="material-symbols:location-on"
+                        className="w-5 h-5 mt-[3px] flex-shrink-0"
+                    />
+                    <p className="text-[16px] leading-[31px]">
+                        {buildStoreAddressLine(store?.location)}
+                    </p>
+                </a>
 
                 <p className="text-[16px] leading-[31px] text-black mb-6">
                     <span className="font-semibold">คำอธิบายที่อยู่ :</span> {store?.location?.detail || "-"}

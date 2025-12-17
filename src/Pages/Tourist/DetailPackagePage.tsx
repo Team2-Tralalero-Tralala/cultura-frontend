@@ -32,6 +32,8 @@ interface LocationData {
   subDistrict: string;
   district: string;
   province: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface HomestayImage {
@@ -109,6 +111,19 @@ export default function DetailPackagePage() {
   const [visibleCount, setVisibleCount] = useState<number>(4);
   const navigate = useNavigate();
   const location = useLocation();
+  const lat = packageDetail?.location?.latitude;
+  const lng = packageDetail?.location?.longitude;
+  const delta = 0.01;
+
+  const minLat = lat !== undefined ? lat - delta : undefined;
+  const maxLat = lat !== undefined ? lat + delta : undefined;
+  const minLng = lng !== undefined ? lng - delta : undefined;
+  const maxLng = lng !== undefined ? lng + delta : undefined;
+
+  const latLng =
+    lat !== undefined && lng !== undefined
+      ? `${lat} ${lng}`
+      : "";
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการแปลง path รูปภาพให้เป็น URL ที่สมบูรณ์
@@ -343,7 +358,7 @@ export default function DetailPackagePage() {
                 key={index}
                 label={item.tag.name}
                 sizeClass="px-3 py-1"
-                className="bg-gray-100 text-gray-600 text-xs rounded-md"
+                className="text-black bg-white whitespace-nowrap text-xs rounded-md"
               />
             ))}
           </div>
@@ -363,12 +378,34 @@ export default function DetailPackagePage() {
         </div>
 
         {/* Location & Date Info Bar */}
-        <div className="flex items-center gap-2 mb-4 mt-2">
-          <Icon icon="mdi:location" className="text-black text-lg" />
-          <span className="text-black">
-            อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
-          </span>
-        </div>
+        {lat && lng ? (
+          <a
+            href={`https://www.openstreetmap.org/search?${new URLSearchParams({
+              query: latLng,
+              ...(minLat !== undefined && { minlat: String(minLat) }),
+              ...(maxLat !== undefined && { maxlat: String(maxLat) }),
+              ...(minLng !== undefined && { minlon: String(minLng) }),
+              ...(maxLng !== undefined && { maxlon: String(maxLng) }),
+              zoom: "16",
+            }).toString()}#map=16/${lat}/${lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 mb-4 mt-2 cursor-pointer hover:text-green-600 transition-colors"
+          >
+            <Icon icon="mdi:location" className="text-black text-lg" />
+            <span className="text-inherit">
+              อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
+            </span>
+          </a>
+        ) : (
+          /* กรณีไม่มีพิกัด แสดงเป็น div เหมือนเดิม */
+          <div className="flex items-center gap-2 mb-4 mt-2">
+            <Icon icon="mdi:location" className="text-black text-lg" />
+            <span className="text-black">
+              อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
+            </span>
+          </div>
+        )}
 
         <div className="mb-4 mt-2">
           <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">

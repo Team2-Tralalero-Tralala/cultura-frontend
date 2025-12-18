@@ -14,6 +14,7 @@ import TextField from "@/Components/TextField";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import ThailandLocationSelector from "@/Components/Selector/ThailandLocationSelector";
 
 type Gender = "MALE" | "FEMALE" | "NONE" | "";
 
@@ -127,6 +128,21 @@ const EditProfileTourist: React.FC = () => {
   };
 
 /*
+* คําอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงที่อยู่ในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+* Input : location - ข้อมูลที่อยู่ที่ถูกเลือกในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+* Output : อัปเดตสถานะ formData เมื่อมีการเปลี่ยนแปลงที่อยู่ในฟอร์ม
+*/
+  const handleLocationChange = (location: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      province: location.province ?? "",
+      district: location.district ?? "",
+      subDistrict: location.subdistrict ?? "",
+      postalCode: location.postalCode ?? "",
+    }));
+  };
+
+/*
 * คําอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
 * Input : ไม่มี
 * Output : ส่งคำขอไปยัง API เพื่ออัปเดตข้อมูลส่วนตัวของ Tourist
@@ -161,7 +177,7 @@ const EditProfileTourist: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-white">
       <NavbarTourist />
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 pt-6 pb-12">
@@ -241,15 +257,16 @@ const EditProfileTourist: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <TextField id="province" label="จังหวัด" required value={formData.province} onChange={handleChange} />
-                <TextField id="district" label="อำเภอ/เขต" required value={formData.district} onChange={handleChange} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <TextField id="subDistrict" label="ตำบล/เเขวง" required value={formData.subDistrict} onChange={handleChange} />
-                <TextField id="postalCode" label="รหัสไปรษณีย์" required value={formData.postalCode} onChange={handleChange} />
-              </div>
+              {/* Thailand Location Selector ใช้เลือกที่อยู่ของ Tourist */}
+              <ThailandLocationSelector
+                value={{
+                  province: formData.province,
+                  district: formData.district,
+                  subdistrict: formData.subDistrict,
+                  postalCode: formData.postalCode,
+                }}
+                onChange={handleLocationChange}
+              />
 
               <div className="flex justify-end gap-4 pt-8 pl-90">
                 <Button type="cancel" onClick={() => navigate(-1)}>

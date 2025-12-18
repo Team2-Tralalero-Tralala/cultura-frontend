@@ -84,12 +84,11 @@ const NavbarTourist = () => {
                       ประวัติการจอง
                     </Link>
                   </li>
-
-                  <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
-                    <Link to="/tourist/change-password" className="flex items-center gap-2">
-                      <Icon icon="material-symbols:lock" className="text-xl" />
-                      เปลี่ยนรหัสผ่าน
-                    </Link>
+                  <li
+                    className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
+                    onClick={() => navigate("/tourist/change-password")}
+                  >
+                    เปลี่ยนรหัสผ่าน
                   </li>
 
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">

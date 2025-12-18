@@ -107,3 +107,17 @@ export async function createStoreByAdmin(data: StoreData | FormData) {
 export async function deleteStore(storeId: number) {
   return api.delete(`/shared/store/${storeId}/delete`);
 }
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลร้านค้าตามและร้านค้าอื่นๆในชุมชนเดียวกัน
+ * Input : communityId, storeId
+ * Output : ข้อมูลร้านค้าตามและร้านค้าอื่นๆในชุมชนเดียวกัน
+*/
+export async function getStoreWithOtherStoresInCommunity(communityId: number, storeId: number, page: number, limit: number) {
+  const response = await axios.get(`${apiUrl}/shared/community/${communityId}/store/${storeId}`,
+    {
+      params: { page, limit },
+    }
+  );
+  return response.data;
+}

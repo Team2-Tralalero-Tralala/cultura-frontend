@@ -1,82 +1,100 @@
 /**
- * หน้าที่: หน้า "สร้างข้อเสนอแนะ" สำหรับนักท่องเที่ยว
- * คุณสมบัติ:
- * - ดึง Token จาก Cookie "accessToken" มาส่งเอง เพื่อแก้ปัญหา 401
- * - ใช้ Components มาตรฐาน
+ * คำอธิบาย : Component สำหรับหน้าการสร้างข้อเสนอแนะ (Feedback) ของนักท่องเที่ยว
+ * โดยรองรับการให้คะแนน, เขียนข้อความติชม และอัปโหลดรูปภาพประกอบ
  */
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import * as z from "zod";
+import * as zod from "zod";
 
 import Button from "@/Components/Button";
 import TextArea from "@/Components/TextArea";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { ModalConfirm } from "@/Components/Modal/ModalConfirmTourist";
+import { Modal } from "@/Components/Modal/Modal";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Icon } from "@iconify/react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// --- Helper Functions ---
-
 /**
- * ฟังก์ชันดึงค่าจาก Cookie ตามชื่อที่ระบุ
- * ใช้แก้ปัญหาเมื่อ Browser ไม่ยอมส่ง Cookie แบบอัตโนมัติ
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงค่าจาก Cookie ตามชื่อที่ระบุ
+ * Input : cookieName
+ * Output : ค่าที่เก็บใน Cookie หรือ null
  */
-const getCookie = (name: string): string | null => {
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? match[2] : null;
+const getCookieValue = (cookieName: string): string | null => {
+  const cookieMatch = document.cookie.match(new RegExp("(^| )" + cookieName + "=([^;]+)"));
+  return cookieMatch ? cookieMatch[2] : null;
 };
 
-type FileLike = File;
-
-type FeedbackForm = {
-  rating: number;
-  message: string;
+type FeedbackFormState = {
+  ratingScore: number;
+  feedbackMessage: string;
 };
 
-const initialForm: FeedbackForm = {
-  rating: 0,
-  message: "",
+const initialFeedbackForm: FeedbackFormState = {
+  ratingScore: 0,
+  feedbackMessage: "",
 };
 
-const feedbackSchema = z.object({
-  rating: z.number().min(1, "กรุณาให้คะแนนอย่างน้อย 1 ดาว").max(5),
-  message: z
+const feedbackValidationSchema = zod.object({
+  ratingScore: zod.number().min(1, "กรุณาให้คะแนนอย่างน้อย 1 ดาว").max(5),
+  feedbackMessage: zod
     .string()
     .max(200, "ข้อเสนอแนะต้องไม่เกิน 200 ตัวอักษร")
     .optional(),
 });
 
-type FormErrors = Partial<Record<keyof FeedbackForm, string>>;
+type FeedbackFormErrors = Partial<Record<keyof FeedbackFormState, string>>;
 
 export function CreateFeedbackPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
-  const [form, setForm] = useState<FeedbackForm>(initialForm);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [galleryFiles, setGalleryFiles] = useState<FileLike[]>([]);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
+  const [feedbackFormData, setFeedbackFormData] = useState<FeedbackFormState>(initialFeedbackForm);
+  const [feedbackFormErrors, setFeedbackFormErrors] = useState<FeedbackFormErrors>({});
+  const [galleryFileLists, setGalleryFileLists] = useState<File[]>([]);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [isDataSavingProcess, setIsDataSavingProcess] = useState(false);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [alertModalTitle, setAlertModalTitle] = useState("");
+  const [alertModalMessage, setAlertModalMessage] = useState("");
 
   /**
-   * อัปเดตฟิลด์ในฟอร์ม และ validate ทันที
+ * คำอธิบาย : ฟังก์ชันสำหรับเปิด Modal แจ้งเตือนพร้อมกำหนดข้อความ
+ * Input : title, message
+ * Output : -
+ */
+  const showAlertModal = (title: string, message: string) => {
+    setAlertModalTitle(title);
+    setAlertModalMessage(message);
+    setIsAlertModalOpen(true);
+  };
+
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลในฟิลด์ของฟอร์มพร้อมตรวจสอบความถูกต้อง
+   * Input : fieldKey, newValue
+   * Output : -
    */
-  function setField(key: keyof FeedbackForm, value: any) {
-    setForm((prevForm) => {
-      if (prevForm[key] === value) return prevForm;
-      const nextForm = { ...prevForm, [key]: value };
-      const parsed = feedbackSchema.safeParse(nextForm);
-      setErrors((prevErrors) => {
-        const nextErrors = { ...prevErrors };
-        if (parsed.success) {
-          delete nextErrors[key];
+  function updateFormField(fieldKey: keyof FeedbackFormState, newValue: any) {
+    setFeedbackFormData((previousForm) => {
+      const nextForm = { ...previousForm, [fieldKey]: newValue };
+      const validationResult = feedbackValidationSchema.safeParse(nextForm);
+      setFeedbackFormErrors((previousErrors) => {
+        const nextErrors = { ...previousErrors };
+        if (validationResult.success) {
+          delete nextErrors[fieldKey];
         } else {
-          const found = parsed.error.issues.find((issue) => issue.path[0] === key);
-          if (found) nextErrors[key] = found.message;
-          else delete nextErrors[key];
+          const foundIssue = validationResult.error.issues.find(
+            (issue) => issue.path[0] === fieldKey
+          );
+          if (foundIssue) {
+            nextErrors[fieldKey] = foundIssue.message;
+          } else {
+            delete nextErrors[fieldKey];
+          }
         }
         return nextErrors;
       });
@@ -85,196 +103,235 @@ export function CreateFeedbackPage() {
   }
 
   /**
-   * ตรวจสอบข้อมูลฟอร์มทั้งหมดก่อน Submit
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์ม
+   * Input : -
+   * Output : boolean (true หากข้อมูลถูกต้อง)
    */
-  function validateAll(): boolean {
-    const result = feedbackSchema.safeParse(form);
-    if (!result.success) {
-      const validationErrors: FormErrors = {};
-      for (const issue of result.error.issues) {
-        validationErrors[issue.path[0] as keyof FeedbackForm] = issue.message;
+  function validateEntireForm(): boolean {
+    const validationResult = feedbackValidationSchema.safeParse(feedbackFormData);
+    if (!validationResult.success) {
+      const fieldErrors: FeedbackFormErrors = {};
+      for (const issue of validationResult.error.issues) {
+        fieldErrors[issue.path[0] as keyof FeedbackFormState] = issue.message;
       }
-      setErrors(validationErrors);
+      setFeedbackFormErrors(fieldErrors);
       return false;
     }
-    setErrors({});
+    setFeedbackFormErrors({});
     return true;
   }
 
   /**
-   * Handler เมื่อกดปุ่ม "ยืนยัน" (เปิด Modal)
+   * คำอธิบาย : Handler เมื่อผู้ใช้กดปุ่มยืนยัน เพื่อเปิด Modal ยืนยันการทำงาน
+   * Input : event (ทางเลือก)
+   * Output : -
    */
-  function handleSubmit(event?: React.FormEvent) {
-    if (event) event.preventDefault();
-    if (isSaving) return;
+  function handleFormSubmit(event?: React.FormEvent) {
+    if (event) {
+      event.preventDefault();
+    }
+    if (isDataSavingProcess) {
+      return;
+    }
 
-    if (!validateAll()) {
+    if (!validateEntireForm()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    setIsConfirmOpen(true);
+    setIsConfirmationModalOpen(true);
   }
 
   /**
-   * ฟังก์ชันยืนยันการบันทึก (ยิง API)
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูล Feedback ไปยัง Backend API
+   * Input : -
+   * Output : -
    */
-  const onConfirmSave = async () => {
-    setIsConfirmOpen(false);
-    setIsSaving(true);
-
+  const onConfirmFeedbackSave = async () => {
+    setIsConfirmationModalOpen(false);
+    setIsDataSavingProcess(true);
     try {
-      const token = getCookie("accessToken");
-      if (!token) {
-        alert("ไม่พบข้อมูลการเข้าสู่ระบบ กรุณา Login ใหม่");
+      const accessToken = getCookieValue("accessToken");
+      if (!accessToken) {
         navigate("/guest/login");
         return;
       }
-      const imagePaths: string[] = galleryFiles.map(
-        (file) => `/uploads/feedbacks/${file.name}`
-      );
-      const payload = {
-        rating: form.rating,
-        message: form.message || "",
-        images: imagePaths,
-      };
+      const feedbackMultipartFormData = new FormData();
+      feedbackMultipartFormData.append("rating", feedbackFormData.ratingScore.toString());
+      feedbackMultipartFormData.append("message", feedbackFormData.feedbackMessage || "");
+      galleryFileLists.forEach((fileItem) => {
+        feedbackMultipartFormData.append("gallery", fileItem);
+      });
+
       await axios.post(
         `${API_URL}/tourist/booking-history/${bookingId}/feedback`,
-        payload,
+        feedbackMultipartFormData,
         {
-          withCredentials: true,
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${accessToken}`,
           },
         }
       );
-      alert("ส่งข้อเสนอแนะสำเร็จ!");
+
+      showAlertModal("สำเร็จ", "ส่งข้อเสนอแนะของคุณเรียบร้อยแล้ว");
       navigate("/tourist/booking-history");
-    } catch (error: any) {
-      console.error(error);
-      const errorMessage = error.response?.data?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล";
-      if (error.response?.status === 401) {
-        alert("เซสชันหมดอายุหรือยังไม่ได้เข้าสู่ระบบ กรุณา Login ใหม่");
+    } catch (requestError: any) {
+      const errorMessage = requestError.response?.data?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล";
+      if (requestError.response?.status === 401) {
+        showAlertModal("เกิดข้อผิดพลาด", "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
         navigate("/guest/login");
       } else {
-        alert(errorMessage);
+        showAlertModal("เกิดข้อผิดพลาด", errorMessage);
       }
     } finally {
-      setIsSaving(false);
+      setIsDataSavingProcess(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-sarabun flex flex-col">
+    <div className="min-h-screen bg-[#F9FAFB] font-sarabun flex flex-col">
       <NavbarTourist />
-      <div className="flex-grow">
-        <Breadcrumb
-          current={{
-            label: "ข้อเสนอแนะ",
-            to: `/tourist/booking-history/${bookingId}/feedback`,
-          }}
-        />
-        <h1 className="text-3xl font-bold mb-8 mt-4">ประวัติการจอง</h1>
-        <div className="bg-white rounded-[16px] p-8 shadow-sm max-w-4xl mx-auto border border-gray-200">
-          <h2 className="text-xl font-bold mb-6">ส่งข้อเสนอแนะไปยังชุมชน</h2>
-          <div className="border border-gray-300 rounded-[12px] p-6">
-            <h3 className="text-lg font-bold mb-4">พักใจใต้เงาไม้</h3>
-            {/* Rating Section */}
-            <div className="flex items-center gap-2 mb-6">
-              <span className="text-base text-gray-700">ให้คะแนนแพ็กเกจ</span>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setField("rating", star)}
-                    className="focus:outline-none transition-transform active:scale-95"
-                  >
-                    {star <= form.rating ? (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="#1DC9A0" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
-                      </svg>
-                    ) : (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1DC9A0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
+
+      <main className="flex-grow max-w-[1200px] mx-auto w-full px-6 py-10">
+        {/* ส่วนนำทาง (Breadcrumb) */}
+        <div className="mb-6">
+          <Breadcrumb
+            current={{
+              label: "ข้อเสนอแนะ",
+              to: `/tourist/booking-history/${bookingId}/feedback`,
+            }}
+          />
+        </div>
+
+        {/* หัวข้อหลักของหน้า */}
+        <h1 className="text-[32px] font-bold text-black mb-8">ประวัติการจอง</h1>
+
+        {/* การ์ดเนื้อหาหลัก (Main Content Card) */}
+        <div className="bg-white rounded-[24px] p-10 shadow-sm border border-gray-100">
+          <h2 className="text-xl font-bold text-black mb-8">ส่งข้อเสนอแนะไปยังชุมชน</h2>
+
+          {/* กล่องแบบฟอร์มด้านใน (Inner Form Container) */}
+          <div className="border border-[#E5E7EB] rounded-[16px] p-10">
+            <h3 className="text-[22px] font-bold text-black mb-8">พักใจใต้เงาไม้</h3>
+
+            {/* ส่วนการให้คะแนน (Rating Section) */}
+            <div className="mb-10">
+              <div className="mb-10">
+                <label className="block text-base font-medium text-gray-700 mb-4">
+                  ให้คะแนนแพ็กเกจ
+                </label>
+                <div className="flex items-center gap-3">
+                  {[1, 2, 3, 4, 5].map((starRatingIndex) => (
+                    <button
+                      key={starRatingIndex}
+                      type="button"
+                      onClick={() => updateFormField("ratingScore", starRatingIndex)}
+                      className="focus:outline-none transition-all hover:scale-110 active:scale-90"
+                    >
+                      <Icon
+                        icon={starRatingIndex <= feedbackFormData.ratingScore ? "mdi:star" : "mdi:star-outline"}
+                        className={`w-8 h-8 ${starRatingIndex <= feedbackFormData.ratingScore
+                          ? "text-[#1DC9A0]"
+                          : "text-[#D1D5DB]"
+                          }`}
+                      />
+                    </button>
+                  ))}
+                  {feedbackFormErrors.ratingScore && (
+                    <span className="text-red-500 text-sm ml-4 font-medium">
+                      {feedbackFormErrors.ratingScore}
+                    </span>
+                  )}
+                </div>
               </div>
-              {errors.rating && (
-                <span className="text-red-500 text-sm ml-2">{errors.rating}</span>
-              )}
             </div>
 
-            {/* Message Section */}
-            <div className="mb-4">
+            {/* ส่วนข้อความเสนอแนะ (Message Section) */}
+            <div className="mb-8">
               <TextArea
-                id="message"
+                id="feedbackMessage"
                 label="ข้อเสนอแนะ"
                 placeholder="ให้ข้อเสนอแนะแก่ชุมชน เช่น ประสบการณ์ คำติชม บริการชุมชน"
-                value={form.message}
-                onChange={(e) => setField("message", e.target.value)}
-                error={!!errors.message}
+                value={feedbackFormData.feedbackMessage}
+                onChange={(event) => updateFormField("feedbackMessage", event.target.value)}
+                error={!!feedbackFormErrors.feedbackMessage}
                 rows={4}
               />
-               <div className="text-right text-sm text-gray-500 mt-1">
-                  {form.message.length}/200 ตัวอักษร
-               </div>
+              <div className="flex justify-between items-center mt-2">
+                <div className="text-red-500 text-sm font-medium">
+                  {feedbackFormErrors.feedbackMessage}
+                </div>
+                <div className="text-sm text-gray-400">
+                  {feedbackFormData.feedbackMessage.length}/200 ตัวอักษร
+                </div>
+              </div>
             </div>
 
-            {/* Image Upload Section */}
-            <div className="mb-8">
-              <label className="block text-base font-semibold mb-2">เพิ่มรูปภาพ</label>
+            {/* ส่วนการอัปโหลดรูปภาพ (Image Section) */}
+            <div className="mb-12">
+              <label className="block text-base font-bold text-black mb-4">เพิ่มรูปภาพ</label>
               <UploadCard
                 max={5}
                 accept="image/*"
                 multiple
-                value={galleryFiles}
-                onChange={setGalleryFiles}
-                itemW={100}
-                itemH={100}
+                value={galleryFileLists}
+                onChange={setGalleryFileLists}
+                itemW={110}
+                itemH={110}
                 square={true}
-                itemClass="border border-dashed border-gray-400 bg-gray-100"
-                rounded="rounded-lg"
-                gapCls="gap-3"
+                itemClass="border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors"
+                rounded="rounded-xl"
+                gapCls="gap-4"
                 containerClass="w-full"
                 wrap
-                iconSizeCls="w-8 h-8"
+                iconSizeCls="w-10 h-10"
               />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 mt-6">
-              <div className="w-24">
+            {/* ส่วนปุ่มดำเนินการ (Action Buttons) */}
+            <div className="flex justify-end gap-5 mt-4">
+              <div className="w-[140px]">
                 <Button type="cancel" onClick={() => navigate(-1)}>
                   ย้อนกลับ
                 </Button>
               </div>
-              <div className="w-24">
+              <div className="w-[140px]">
                 <Button
                   type="confirm-tourist"
-                  onClick={() => handleSubmit()}
+                  onClick={() => handleFormSubmit()}
                 >
-                  {isSaving ? "กำลังส่ง..." : "ยืนยัน"}
+                  {isDataSavingProcess ? "กำลังส่ง..." : "ยืนยัน"}
                 </Button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Confirmation Modal */}
+      {/* Modal ยืนยันการส่งข้อเสนอแนะ */}
       <ModalConfirm
-        open={isConfirmOpen}
+        open={isConfirmationModalOpen}
         title="ยืนยันการส่งข้อเสนอแนะ"
         message="คุณต้องการยืนยันการส่งข้อเสนอแนะไปยังชุมชนหรือไม่"
-        onConfirm={onConfirmSave}
-        onCancel={() => setIsConfirmOpen(false)}
+        onConfirm={onConfirmFeedbackSave}
+        onCancel={() => setIsConfirmationModalOpen(false)}
       />
 
       <Footer />
+      <Modal
+        open={isAlertModalOpen}
+        title={alertModalTitle}
+        text={alertModalMessage}
+        confirmText="ตกลง"
+        onConfirm={() => {
+          setIsAlertModalOpen(false);
+          if (alertModalTitle === "สำเร็จ") {
+            navigate("/tourist/booking-history");
+          }
+        }}
+        cancelText=""
+      />
     </div>
   );
 }

@@ -12,6 +12,10 @@
  */
 
 import type { BookingHistoryItem } from "../Types/BookingHistory";
+import type { BookingAdminDtoFromApi, Pagination, BookingRow } from "@/Types/BookingAdmin";
+import axios from "axios";
+import api from "@/Libs/api";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
  * ดึงประวัติการจองตามสิทธิ์ของผู้ใช้
@@ -49,10 +53,6 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
  * Mapping: GET /admin/bookings/all
  */
 
-import axios from "axios";
-import type { BookingAdminDtoFromApi, Pagination } from "@/Types/BookingAdmin";
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export async function fetchBookingsByAdmin(page = 1, limit = 10): Promise<{
   data: BookingAdminDtoFromApi[];
@@ -194,4 +194,26 @@ export async function updateBookingStatusByMember(
     body,
     { withCredentials: true }
   );
+}
+
+
+export async function getBookingsByTourist(page = 1, limit = 10, sort = "latest", status?: string, period?: string, search?: string): Promise<{
+  data: BookingRow[];
+  pagination: Pagination;
+}> {
+  const res = await axios.get(`${apiUrl}/tourist/booking-histories`, {
+    params: { page, limit, sort, status, period, search },
+    withCredentials: true,
+  });
+
+  const payload = res.data?.data ?? {};
+  return {
+    data: payload.data ?? [],
+    pagination: payload.pagination ?? {
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0,
+      limit,
+    },
+  };
 }

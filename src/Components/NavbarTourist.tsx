@@ -85,9 +85,10 @@ const NavbarTourist = () => {
                     </Link>
                   </li>
                   <li
-                    className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
+                    className="flex items-center gap-2 block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
                     onClick={() => navigate("/tourist/change-password")}
                   >
+                    <Icon icon="material-symbols:lock" className="text-xl" />
                     เปลี่ยนรหัสผ่าน
                   </li>
 

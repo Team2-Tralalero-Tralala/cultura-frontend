@@ -19,6 +19,7 @@ import ChangePassword from "./Pages/Tourist/ChangePassword";
 
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
+import BookingHistoryTourist from "./Pages/Tourist/BookingHistoryTourist";
 
 function App() {
   return (
@@ -31,7 +32,7 @@ function App() {
         <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />
         <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
-
+        <Route path="/tourist/booking-history" element={<BookingHistoryTourist />} />
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

@@ -13,6 +13,7 @@ import Home from "@/Pages/Home";
 import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
+import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
 import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage"
 import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
@@ -28,6 +29,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
+        <Route path="/tourist/package/:packageId" element={<DetailPackagePage />} />
         <Route path="/tourist/edit-profile" element={<EditProfileTourist />} />
         <Route path="/tourist/community/:communityId/detail/store/:storeId" element={<StoreDetailPage />}/>
         <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />

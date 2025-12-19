@@ -1,3 +1,7 @@
+/*
+ * Component: BookingHistoryTourist
+ * Description:  ประวัติการจองของนักท่องเที่ยว    
+ */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
@@ -8,20 +12,9 @@ import type { Pagination as PaginationType } from "@/Components/Tables/Types";
 import FilterDropdown from "@/Components/Filters/Tourists/FiltersForTR";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
+import BookingHistoryCardList, { type BookingItem } from "@/Components/BookingHistoryCardList";
+import Button from "@/Components/Button";
 
-/*
- * Data Types
- */
-type BookingStatus = "Payment" | "Complete" | "Cancel" | "Review" | string;
-
-interface BookingItem {
-    id: number;
-    title: string;
-    location: string;
-    price: number;
-    status: BookingStatus;
-    statusLabel: string;
-}
 
 const statusMap: Record<string, string> = {
     PENDING: "รอยืนยัน",
@@ -35,7 +28,7 @@ const statusMap: Record<string, string> = {
 
 export default function BookingHistoryTourist() {
     const navigate = useNavigate();
-    const [activeSort, setActiveSort] = useState<"latest" | "oldest">("latest");
+    const [activeSort, setActiveSort] = useState<"newest" | "oldest">("newest");
     const [searchQuery, setSearchQuery] = useState("");
 
     // Filter State
@@ -45,6 +38,7 @@ export default function BookingHistoryTourist() {
     });
 
     // Data State
+    const [rawBookings, setRawBookings] = useState<BookingItem[]>([]);
     const [bookings, setBookings] = useState<BookingItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [pagination, setPagination] = useState<PaginationType>({
@@ -54,34 +48,51 @@ export default function BookingHistoryTourist() {
         limit: 10,
     });
 
-    const fetchBookings = async (page = 1, limit = 10, sort = activeSort, status = filterState.status, period = filterState.period, search = searchQuery) => {
+    // 1. Fetch RAW Data (filtered by status/period only)
+    const fetchRawData = async (status = filterState.status, period = filterState.period) => {
         try {
             setIsLoading(true);
-
-            // Prepare params
             const statusParam = status === "ALL" ? "" : status;
             const periodParam = period === "ALL" ? "" : period;
 
-            // Note: service needs update to accept period
-            const res = await getBookingsByTourist(page, limit, sort, statusParam, periodParam, search);
+            const initialRes = await getBookingsByTourist(1, 1000, "newest", statusParam, periodParam, "");
 
-            const mapped: BookingItem[] = res.data.map((item: any) => ({
+            let allData = initialRes.data || [];
+            const { totalCount, totalPages, limit: serverLimit } = initialRes.pagination || { totalCount: 0, totalPages: 1, limit: 10 };
+
+            if (allData.length < totalCount && totalPages > 1) {
+                const promises = [];
+                for (let p = 2; p <= totalPages; p++) {
+                    promises.push(getBookingsByTourist(p, serverLimit, "newest", statusParam, periodParam, ""));
+                }
+                const results = await Promise.all(promises);
+                results.forEach(res => {
+                    if (res.data) {
+                        allData = allData.concat(res.data);
+                    }
+                });
+            }
+
+            const mapped: BookingItem[] = allData.map((item: any) => ({
                 id: item.id,
                 title: item.package?.name ?? "ชื่อแพ็กเกจ",
                 location: item.package?.location ?? item.package?.community?.name ?? "-",
+                bookingDate: item.bookingAt
+                    ? new Date(item.bookingAt).toLocaleDateString("th-TH", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    })
+                    : "-",
+                rawBookingDate: item.bookingAt || 0,
                 price: item.package?.price ?? item.totalPrice ?? 0,
                 status: item.status ?? "-",
                 statusLabel: statusMap[item.status] ?? item.status ?? "-",
             }));
 
-            setBookings(mapped);
-            setPagination(prev => ({
-                ...prev,
-                ...res.pagination,
-                currentPage: page,
-                limit: limit
-            }));
-
+            setRawBookings(mapped);
         } catch (error) {
             console.error("Failed to fetch booking history:", error);
         } finally {
@@ -89,12 +100,49 @@ export default function BookingHistoryTourist() {
         }
     };
 
+    // 2. Fetch on Mount or Filter Change
     useEffect(() => {
-        // Fetch when sort changes or on mount
-        fetchBookings(1, pagination.limit, activeSort, filterState.status, filterState.period, searchQuery);
-    }, [activeSort]);
+        fetchRawData(filterState.status, filterState.period);
+    }, [filterState.status, filterState.period]);
 
-    const handleSort = (type: "latest" | "oldest") => {
+    // 3. Client-Side Processing (Search -> Sort -> Paginate)
+    useEffect(() => {
+        let processed = [...rawBookings];
+
+        // Search
+        if (searchQuery) {
+            const lowerSearch = searchQuery.toLowerCase();
+            processed = processed.filter((item) => {
+                const packageName = item.title?.toLowerCase() || "";
+                const id = String(item.id);
+                return packageName.includes(lowerSearch) || id.includes(lowerSearch);
+            });
+        }
+
+        // Sort
+        if (activeSort === "oldest") {
+            processed.sort((a: any, b: any) => new Date(a.rawBookingDate).getTime() - new Date(b.rawBookingDate).getTime());
+        } else {
+            processed.sort((a: any, b: any) => new Date(b.rawBookingDate).getTime() - new Date(a.rawBookingDate).getTime());
+        }
+
+        // Dynamic Pagination Update based on processed count
+        const totalCount = processed.length;
+        const totalPages = Math.ceil(totalCount / pagination.limit) || 1;
+        const validCurrentPage = Math.min(pagination.currentPage, totalPages) || 1;
+
+        if (totalCount !== pagination.totalCount || totalPages !== pagination.totalPages) {
+            setPagination(prev => ({ ...prev, totalCount, totalPages, currentPage: validCurrentPage }));
+        }
+
+        // Slice
+        const startIndex = (validCurrentPage - 1) * pagination.limit;
+        const sliced = processed.slice(startIndex, startIndex + pagination.limit);
+        setBookings(sliced);
+
+    }, [rawBookings, searchQuery, activeSort, pagination.currentPage, pagination.limit]);
+
+    const handleSort = (type: "newest" | "oldest") => {
         setActiveSort(type);
     };
 
@@ -115,59 +163,56 @@ export default function BookingHistoryTourist() {
                     </div>
 
                     {/* Page Title */}
-                    <h1 className="mb-8 text-3xl font-bold text-gray-900">ประวัติการจอง</h1>
+                    <h1 className="mb-8 text-2xl font-bold text-gray-900">ประวัติการจอง</h1>
 
                     {/* Toolbar */}
                     {/* Toolbar */}
                     <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                         {/* Sorting Buttons */}
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => handleSort("latest")}
-                                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors border ${activeSort === "latest"
-                                    ? "bg-[#00BF6A] text-white border-[#00BF6A]"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                            <Button
+                                type={activeSort === "newest" ? "confirm-tourist" : "cancel"}
+                                onClick={() => handleSort("newest")}
+                                className={`font-medium transition-colors border w-auto px-4 whitespace-nowrap ${activeSort === "newest"
+                                    ? "border-[#00BF6A]"
+                                    : "border-gray-300 text-gray-700"
                                     }`}
                             >
                                 ล่าสุด
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                type={activeSort === "oldest" ? "confirm-tourist" : "cancel"}
                                 onClick={() => handleSort("oldest")}
-                                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors border ${activeSort === "oldest"
-                                    ? "bg-[#00BF6A] text-white border-[#00BF6A]"
-                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                className={`font-medium transition-colors border w-auto px-4 whitespace-nowrap ${activeSort === "oldest"
+                                    ? "border-[#00BF6A]"
+                                    : "border-gray-300 text-gray-700"
                                     }`}
                             >
                                 เก่าสุด
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Search and Filter */}
                         <div className="flex w-full items-center gap-2 sm:w-auto">
                             {/* Search Input */}
-                            <div className="relative flex w-full max-w-xs items-center rounded-full border border-gray-300 bg-white px-4 py-1.5 sm:w-80">
+                            <div className="relative flex w-full max-w-xs items-center rounded-lg border border-black bg-white px-4 py-1.5 sm:w-80">
                                 <input
                                     type="text"
                                     placeholder=""
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            fetchBookings(1, pagination.limit, activeSort, filterState.status, filterState.period, searchQuery);
-                                        }
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setPagination(prev => ({ ...prev, currentPage: 1 }));
                                     }}
                                     className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
                                 />
-                                <button
-                                    onClick={() => fetchBookings(1, pagination.limit, activeSort, filterState.status, filterState.period, searchQuery)}
-                                    className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                >
+                                <div className="ml-2 text-gray-400">
                                     <Icon
                                         icon="mdi:magnify"
                                         width={20}
                                         height={20}
                                     />
-                                </button>
+                                </div>
                             </div>
 
                             {/* Filter Button replaced by Dropdown */}
@@ -199,7 +244,7 @@ export default function BookingHistoryTourist() {
                                 onChange={(key, val) => {
                                     const newState = { ...filterState, [key]: val };
                                     setFilterState(newState);
-                                    fetchBookings(1, pagination.limit, activeSort, newState.status, newState.period, searchQuery);
+                                    setPagination(prev => ({ ...prev, currentPage: 1 }));
                                 }}
                                 label="ตัวกรอง"
                                 icon="material-symbols:sort"
@@ -208,58 +253,7 @@ export default function BookingHistoryTourist() {
                     </div>
 
                     {/* Booking List */}
-                    <div className="flex flex-col gap-4">
-                        {isLoading ? (
-                            <div className="py-10 text-center text-gray-500">กำลังโหลด...</div>
-                        ) : bookings.length === 0 ? (
-                            <div className="py-10 text-center text-gray-400">ไม่มีประวัติการจอง</div>
-                        ) : (
-                            bookings.map((booking) => (
-                                <div
-                                    key={booking.id}
-                                    className="relative flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
-                                    onClick={() => navigate(`/tourist/booking-history/${booking.id}`)}
-                                >
-                                    {/* Card Content */}
-                                    <div className="flex flex-col gap-1 pr-20">
-                                        <h3 className="text-lg font-semibold text-gray-900">
-                                            {booking.title}
-                                        </h3>
-                                        <p className="text-sm text-gray-500">{booking.location}</p>
-                                        <p className="mt-1 font-bold text-gray-900">
-                                            ราคา THB {booking.price.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-
-                                    {/* Status (Top Right) */}
-                                    <div className="absolute top-6 right-6 text-sm text-gray-400">
-                                        {booking.statusLabel}
-                                    </div>
-
-                                    {/* Action Buttons (Bottom Right) */}
-                                    <div className="mt-4 flex justify-end gap-3 sm:absolute sm:bottom-6 sm:right-6 sm:mt-0">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/tourist/booking-history/${booking.id}/feedback`);
-                                            }}
-                                            className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                        >
-                                            ข้อเสนอแนะ
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/tourist/booking-history/${booking.id}`);
-                                            }}
-                                            className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                        >
-                                            ดูเพิ่มเติม
-                                        </button>
-                                    </div>
-                                </div>
-                            )))}
-                    </div>
+                    <BookingHistoryCardList isLoading={isLoading} bookings={bookings} />
 
                     {/* Pagination Control */}
                     <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
@@ -269,7 +263,7 @@ export default function BookingHistoryTourist() {
                                 value={pagination.limit}
                                 onChange={(e) => {
                                     const newLimit = Number(e.target.value);
-                                    fetchBookings(1, newLimit, activeSort, filterState.status, filterState.period, searchQuery);
+                                    setPagination(prev => ({ ...prev, limit: newLimit, currentPage: 1 }));
                                 }}
                                 className="rounded-md border border-gray-300 bg-white px-2 py-1 outline-none focus:border-[#00BF6A]"
                             >
@@ -284,7 +278,9 @@ export default function BookingHistoryTourist() {
                         <Pagination
                             totalData={pagination.totalCount}
                             limit={pagination.limit}
-                            onQueryChange={({ page, limit }) => fetchBookings(page, limit, activeSort, filterState.status, filterState.period, searchQuery)}
+                            onQueryChange={({ page, limit }) => {
+                                setPagination(prev => ({ ...prev, currentPage: page, limit }));
+                            }}
                         />
                     </div>
                 </div>

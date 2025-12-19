@@ -14,21 +14,34 @@ import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
+import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
+import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage"
+import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
+import ChangePassword from "./Pages/Tourist/ChangePassword";
+
+import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
+import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 
 function App() {
   return (
     <>
       <Routes>
-      <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
         <Route path="/tourist/package/:packageId" element={<DetailPackagePage />} />
+        <Route path="/tourist/edit-profile" element={<EditProfileTourist />} />
+        <Route path="/tourist/community/:communityId/detail/store/:storeId" element={<StoreDetailPage />}/>
+        <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />
+        <Route path="/tourist/change-password" element={<ChangePassword />} />
+        <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
 
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />
           <Route path="partner/login" element={<LoginAdmin />} />
-          <Route path="package/:packageId" element={<DetailPackagePage />} />
+          <Route path="community/:communityId/detail" element={<CommunityDetailUser />} />
+          <Route path="signup" element={<RegisterPage />} />
         </Route>
 
         <Route

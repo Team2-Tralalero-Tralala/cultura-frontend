@@ -25,7 +25,7 @@ import DetailPackageMember from '@/Pages/Member/DetailPackageMember';
 import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
 import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
-
+import BookingHistoryMember from "@/Pages/Member/HistoryBookingMember";
 export default function MemberRoutes() {
   return (
     <Routes>
@@ -42,6 +42,7 @@ export default function MemberRoutes() {
       <Route path="bookings/all" element={<ManageBookingMember />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
+      <Route path="bookings-histories" element={<BookingHistoryMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
 

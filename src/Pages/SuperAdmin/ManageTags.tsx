@@ -18,20 +18,15 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
 
-/**
-* คำอธิบาย : แปลงข้อความให้เป็นตัวพิมพ์เล็ก ลบช่องว่างเกิน และ normalize สำหรับค้นหา
-* Input : s (string)
-* Output : string ที่ถูก normalize แล้ว
-*/
-const normalizeText = (str: string) =>
-  (str ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
 
-export default function ManageTags() {
+/**
+ * Component: ManageTags
+ * วัตถุประสงค์: หน้าจัดการประเภท (Super Admin)
+ * - แสดงรายการแท็กทั้งหมด (Server-side pagination)
+ * - ค้นหาแท็ก (Server-side search with debounce)
+ * - เพิ่ม / แก้ไข / ลบ แท็ก
+ */
+export function ManageTags() {
   // table state
   const [rows, setRows] = useState<TagRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,59 +48,47 @@ export default function ManageTags() {
   const [pendingTagName, setPendingTagName] = useState("");
 
   /**
-  * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมด, กรองด้วย searchQuery และทำ pagination
-  */
-  const fetchData = useCallback(async () => {
+   * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดจาก API (Server-side Pagination)
+   */
+  const fetchData = async (page: number, limit: number, search: string) => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      /*
-       * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดจาก Service
-       */
-      const res = await TagService.fetchTags(1, 1000);
-      const data: TagRow[] = Array.isArray(res.data)
-        ? res.data.map((tag: any) => ({ id: tag.id, name: tag.name }))
+      const res = await TagService.fetchTags(page, limit, search);
+
+      const resultData = res?.data?.data ?? [];
+      const resultPagination = res?.data?.pagination ?? {
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        limit: 10,
+      };
+
+      const mappedRows: TagRow[] = Array.isArray(resultData)
+        ? resultData.map((tag: any) => ({ id: tag.id, name: tag.name }))
         : [];
 
-      /*
-      * คำอธิบาย : กรองแท็กตามคำค้นหา
-      */
-      const filtered = data.filter((tag) =>
-        normalizeText(tag.name).includes(normalizeText(searchQuery))
-      );
+      setRows(mappedRows);
+      setPagination(resultPagination);
 
-      /*
-      * คำอธิบาย : คำนวณ pagination
-      */
-      const pages = Math.max(1, Math.ceil(filtered.length / pagination.limit));
-      const safePage = Math.min(pagination.currentPage, pages);
-      const start = (safePage - 1) * pagination.limit;
-      const end = start + pagination.limit;
-
-      /*
-      * คำอธิบาย : อัปเดต state ของ rows และ pagination
-      */
-      setRows(filtered.slice(start, end));
-      setPagination((prev) => ({
-        ...prev,
-        totalCount: filtered.length,
-        totalPages: pages,
-        currentPage: safePage,
-      }));
     } catch (error: any) {
       setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.currentPage, pagination.limit, searchQuery]);
+  };
 
-  /*
-  * คำอธิบาย : โหลดข้อมูลเมื่อ component mount หรือเปลี่ยน dependencies
-  */
+  /**
+   * คำอธิบาย : โหลดข้อมูลเมื่อเปลี่ยนแปลง page, limit, หรือ searchQuery (Debounce)
+   */
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const delay = setTimeout(() => {
+      fetchData(pagination.currentPage, pagination.limit, searchQuery);
+    }, 500);
+
+    return () => clearTimeout(delay);
+  }, [pagination.currentPage, pagination.limit, searchQuery]);
 
   /**
   * คำอธิบาย : เปิด modal สำหรับ create/edit
@@ -118,7 +101,6 @@ export default function ManageTags() {
     setShowInputModal(true);
     setPendingTagName(tag?.name ?? "");
   };
-
   /**
   * คำอธิบาย : ปิด modal และ reset state
   */
@@ -150,7 +132,7 @@ export default function ManageTags() {
 
       closeInputModal();
       setShowConfirmModal(false);
-      await fetchData();
+      await fetchData(pagination.currentPage, pagination.limit, searchQuery);
     } catch (error) {
       console.error(error);
     }
@@ -201,7 +183,7 @@ export default function ManageTags() {
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         await Promise.all(rows.map((row) => TagService.deleteTag(row.id)));
-        await fetchData();
+        await fetchData(pagination.currentPage, pagination.limit, searchQuery);
       },
     },
   ];

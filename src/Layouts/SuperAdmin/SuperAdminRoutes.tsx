@@ -33,7 +33,7 @@ import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
-import ManageTags from "@/Pages/SuperAdmin/ManageTags";
+import { ManageTags } from "@/Pages/SuperAdmin/ManageTags";
 import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
 import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageAccountCommunity";
 import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperAdmin";

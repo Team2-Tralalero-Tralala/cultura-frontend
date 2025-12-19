@@ -1,4 +1,4 @@
-/*
+/**
  * คำอธิบาย : Component สำหรับแสดงแบบฟอร์มข้อมูลวิสาหกิจชุมชนในรูปแบบ Accordion
  * โดยแบ่งออกเป็น 3 ส่วนหลัก ได้แก่
  * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, การจดทะเบียน, บัญชีธนาคาร)
@@ -81,7 +81,7 @@ const communitySchema = z.object({
 
   latitude: z
     .union([z.string(), z.number()])
-    .transform((v) => String(v))
+    .transform((value) => String(value))
     .refine(
       (latitude) => latitude.length > 0 && latitude !== "0",
       "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
@@ -89,7 +89,7 @@ const communitySchema = z.object({
 
   longitude: z
     .union([z.string(), z.number()])
-    .transform((v) => String(v))
+    .transform((value) => String(value))
     .refine(
       (longitude) => longitude.length > 0 && longitude !== "0",
       "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
@@ -109,6 +109,87 @@ const communitySchema = z.object({
 
   adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
+
+/*
+ * คำอธิบาย : เตรียมข้อมูล FormData สำหรับส่งไปยัง Server เพื่อสร้างชุมชนใหม่
+ * Input : object ที่รวมข้อมูล formData, location, position, registerDate, logoFile, coverFiles, galleryFiles, videoFiles
+ * Output : FormData object ที่พร้อมส่ง
+ */
+const prepareSubmitData = ({
+  formData,
+  location,
+  position,
+  registerDate,
+  logoFile,
+  coverFiles,
+  galleryFiles,
+  videoFiles,
+}: {
+  formData: any;
+  location: any;
+  position: any;
+  registerDate: any;
+  logoFile: any;
+  coverFiles: any;
+  galleryFiles: any;
+  videoFiles: any;
+}) => {
+  const {
+    id,
+    locationId,
+    detail,
+    houseNumber,
+    longitude,
+    latitude,
+    villageNumber,
+    province,
+    district,
+    subDistrict,
+    postalCode,
+    ...cleanForm
+  } = formData;
+
+  // สร้าง FormData เพื่อส่ง multipart/form-data
+  const formDataToSend = new FormData();
+
+  formDataToSend.append(
+    "data",
+    JSON.stringify({
+      adminId: Number(formData.adminId),
+      communityMembers: formData.communityMembers ?? [],
+      ...cleanForm,
+      registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
+      location: {
+        houseNumber: formData.houseNumber,
+        villageNumber: Number(formData.villageNumber),
+        province: location.province,
+        district: location.district,
+        subDistrict: location.subdistrict,
+        postalCode: String(location.postalCode),
+        detail: formData.detail,
+        latitude: Number(position[0]),
+        longitude: Number(position[1]),
+      },
+    })
+  );
+
+  if (logoFile) {
+    formDataToSend.append("logo", logoFile);
+  }
+  if (coverFiles) {
+    formDataToSend.append("cover", coverFiles);
+  }
+
+  galleryFiles.forEach((file: File) => {
+    formDataToSend.append("gallery", file);
+  });
+
+  videoFiles.forEach((file: File) => {
+    formDataToSend.append("video", file);
+  });
+
+  return formDataToSend;
+};
 
 /*
  * คำอธิบาย : Component หลักสำหรับหน้า "สร้างวิสาหกิจชุมชนใหม่"
@@ -145,9 +226,9 @@ export default function CreateCommuninityPage() {
   const [alertMessage, setAlertMessage] = React.useState("");
   const [openCancelConfirm, setOpenCancelConfirm] = useState(false);
   const navigate = useNavigate();
-  /**
+  /*
    * คำอธิบาย: ฟังก์ชันนี้ใช้เพื่อตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลงหรือไม่
-   * Input: ไม่มี input
+   * Input: -
    * Output: boolean
    */
   const checkIsDirty = () => {
@@ -184,10 +265,10 @@ export default function CreateCommuninityPage() {
     return isFormDirty || isLocationDirty || isFilesDirty || isPositionDirty;
   };
 
-  /**
+  /*
    * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบการยกเลิก
-   * Input: ไม่มี input
-   * Output: boolean
+   * Input: -
+   * Output: -
    */
   const handleCancel = () => {
     if (checkIsDirty()) {
@@ -199,21 +280,19 @@ export default function CreateCommuninityPage() {
 
   /*
    * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
-   * Input : panel (string)
-   * Output : อัปเดต state expanded
+   * Input : panel
+   * Output : -
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
-    setExpanded((prev) => (isExpanded ? [...prev, panel] : prev.filter((p) => p !== panel)));
+    setExpanded((prev) =>
+      isExpanded ? [...prev, panel] : prev.filter((activePanel) => activePanel !== panel)
+    );
   };
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
-   * Input :
-   *    - field (ชื่อของฟิลด์ที่ต้องการตรวจสอบ)
-   *    - value (ค่าที่ผู้ใช้กรอก)
-   * Output :
-   *    - หากตรวจสอบไม่ผ่าน จะเซ็ตข้อความ error ลงใน formErrors
-   *    - คืนค่า boolean แสดงผลการตรวจสอบ (true = ผ่าน, false = ไม่ผ่าน)
+   * Input : field, value
+   * Output : boolean
    */
   const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -254,8 +333,8 @@ export default function CreateCommuninityPage() {
   }, [position]);
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
-   * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
-   * Output : อัปเดตค่าใน formData และตรวจสอบความถูกต้องของ field นั้น ๆ
+   * Input : e
+   * Output : -
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -266,11 +345,8 @@ export default function CreateCommuninityPage() {
   };
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าใน formData ตามชื่อฟิลด์ที่ระบุ
-   * Input :
-   *   - field (string) : ชื่อฟิลด์ใน formData
-   *   - value (any) : ค่าที่ต้องการอัปเดต
-   * Output :
-   *   - อัปเดตค่าใน formData และตรวจสอบความถูกต้องของฟิลด์นั้น
+   * Input : field, value
+   * Output : -
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
@@ -280,11 +356,8 @@ export default function CreateCommuninityPage() {
   /*
    * คำอธิบาย : ตัวแปร memberList สำหรับสร้างรายการสมาชิกจากข้อมูลใน formData.communityMembers
    * ใช้ useMemo เพื่อป้องกันการคำนวณซ้ำโดยไม่จำเป็น (re-render optimization)
-   * Input :
-   *   - formData.communityMembers (number[] | undefined) : รายการ id ของสมาชิกในชุมชน
-   * Output :
-   *   - memberList (Member[]) : อาร์เรย์ของวัตถุสมาชิกที่มีโครงสร้าง { id, fname, lname }
-   *     โดย fname และ lname จะเป็นค่าว่างไว้ก่อนเพื่อรองรับข้อมูลที่โหลดภายหลัง
+   * Input : formData.communityMembers
+   * Output : Member[]
    */
   const memberList = React.useMemo<Member[]>(
     () =>
@@ -298,11 +371,8 @@ export default function CreateCommuninityPage() {
 
   /*
    * คำอธิบาย : ฟังก์ชันหลักสำหรับส่งข้อมูลฟอร์มไปยัง API เพื่อสร้างวิสาหกิจชุมชนใหม่
-   * Input : ไม่มี (ใช้ข้อมูลจาก state formData และ location)
-   * Output :
-   *   - ตรวจสอบความถูกต้องของข้อมูลทั้งหมด
-   *   - ส่งข้อมูลไปยัง API ผ่าน createCommunity()
-   *   - แสดง Alert สำเร็จหรือข้อผิดพลาดตามผลลัพธ์
+   * Input : -
+   * Output : -
    */
   const handleSubmit = async () => {
     try {
@@ -314,59 +384,18 @@ export default function CreateCommuninityPage() {
         setAlertOpen(true);
         return;
       }
-      const {
-        id,
-        locationId,
-        detail,
-        houseNumber,
-        longitude,
-        latitude,
-        villageNumber,
-        province,
-        district,
-        subDistrict,
-        postalCode,
-        ...cleanForm
-      } = formData;
 
-      // สร้าง FormData เพื่อส่ง multipart/form-data
-      const formDataToSend = new FormData();
-
-      formDataToSend.append(
-        "data",
-        JSON.stringify({
-          adminId: Number(formData.adminId),
-          communityMembers: formData.communityMembers ?? [],
-          ...cleanForm,
-          registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
-          location: {
-            houseNumber: formData.houseNumber,
-            villageNumber: Number(formData.villageNumber),
-            province: location.province,
-            district: location.district,
-            subDistrict: location.subdistrict,
-            postalCode: String(location.postalCode),
-            detail: formData.detail,
-            latitude: Number(position[0]),
-            longitude: Number(position[1]),
-          },
-        })
-      );
-
-      if (logoFile) {
-        formDataToSend.append("logo", logoFile);
-      }
-      if (coverFiles) {
-        formDataToSend.append("cover", coverFiles);
-      }
-
-      galleryFiles.forEach((file) => {
-        formDataToSend.append("gallery", file);
+      const formDataToSend = prepareSubmitData({
+        formData,
+        location,
+        position,
+        registerDate,
+        logoFile,
+        coverFiles,
+        galleryFiles,
+        videoFiles,
       });
 
-      videoFiles.forEach((file) => {
-        formDataToSend.append("video", file);
-      });
       await createCommunity(formDataToSend);
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");

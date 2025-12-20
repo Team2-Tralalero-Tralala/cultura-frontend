@@ -1,6 +1,6 @@
 /*
  * Component: BookingHistoryTourist
- * Description:  ประวัติการจองของนักท่องเที่ยว    
+ * คำอธิบาย :  ประวัติการจองของนักท่องเที่ยว    
  */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,19 +25,17 @@ const statusMap: Record<string, string> = {
     REFUND_REJECTED: "ปฏิเสธคืนเงิน",
 
 };
-
+/**
+ * ฟังก์ชันหลักของหน้า BookingHistoryTourist
+ * คำอธิบาย : แสดงประวัติการจองของนักท่องเที่ยว
+ */
 export default function BookingHistoryTourist() {
-    const navigate = useNavigate();
     const [activeSort, setActiveSort] = useState<"newest" | "oldest">("newest");
     const [searchQuery, setSearchQuery] = useState("");
-
-    // Filter State
     const [filterState, setFilterState] = useState({
         status: "ALL",
         period: "ALL",
     });
-
-    // Data State
     const [rawBookings, setRawBookings] = useState<BookingItem[]>([]);
     const [bookings, setBookings] = useState<BookingItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -47,8 +45,13 @@ export default function BookingHistoryTourist() {
         totalCount: 0,
         limit: 10,
     });
-
-    // 1. Fetch RAW Data (filtered by status/period only)
+    /**
+    * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลประวัติการจองทั้งหมดจาก API
+    * Input :
+    *   - status (string) : สถานะการจองที่ต้องการกรอง
+    *   - period (string) : ช่วงเวลาที่ต้องการกรอง
+    * Output : ไม่มีข้อมูลส่งกลับ (ผลลัพธ์จะถูกตั้งค่าใน state)
+    */
     const fetchRawData = async (status = filterState.status, period = filterState.period) => {
         try {
             setIsLoading(true);
@@ -62,8 +65,8 @@ export default function BookingHistoryTourist() {
 
             if (allData.length < totalCount && totalPages > 1) {
                 const promises = [];
-                for (let p = 2; p <= totalPages; p++) {
-                    promises.push(getBookingsByTourist(p, serverLimit, "newest", statusParam, periodParam, ""));
+                for (let page = 2; page <= totalPages; page++) {
+                    promises.push(getBookingsByTourist(page, serverLimit, "newest", statusParam, periodParam, ""));
                 }
                 const results = await Promise.all(promises);
                 results.forEach(res => {
@@ -72,7 +75,11 @@ export default function BookingHistoryTourist() {
                     }
                 });
             }
-
+            /**
+            * คำอธิบาย : map ข้อมูลที่ได้รับจาก API ไปยังโครงสร้าง BookingItem
+            * Input : ข้อมูลดิบจาก API (any[])
+            * Output : ข้อมูลที่ถูกแมปแล้ว BookingItem[]
+            */
             const mapped: BookingItem[] = allData.map((item: any) => ({
                 id: item.id,
                 title: item.package?.name ?? "ชื่อแพ็กเกจ",
@@ -100,16 +107,14 @@ export default function BookingHistoryTourist() {
         }
     };
 
-    // 2. Fetch on Mount or Filter Change
     useEffect(() => {
         fetchRawData(filterState.status, filterState.period);
     }, [filterState.status, filterState.period]);
 
-    // 3. Client-Side Processing (Search -> Sort -> Paginate)
     useEffect(() => {
         let processed = [...rawBookings];
 
-        // Search
+        // Search Filter
         if (searchQuery) {
             const lowerSearch = searchQuery.toLowerCase();
             processed = processed.filter((item) => {
@@ -121,12 +126,12 @@ export default function BookingHistoryTourist() {
 
         // Sort
         if (activeSort === "oldest") {
-            processed.sort((a: any, b: any) => new Date(a.rawBookingDate).getTime() - new Date(b.rawBookingDate).getTime());
+            processed.sort((bookingA: any, bookingB: any) => new Date(bookingA.rawBookingDate).getTime() - new Date(bookingB.rawBookingDate).getTime());
         } else {
-            processed.sort((a: any, b: any) => new Date(b.rawBookingDate).getTime() - new Date(a.rawBookingDate).getTime());
+            processed.sort((bookingA: any, bookingB: any) => new Date(bookingB.rawBookingDate).getTime() - new Date(bookingA.rawBookingDate).getTime());
         }
 
-        // Dynamic Pagination Update based on processed count
+        // Update Pagination Info
         const totalCount = processed.length;
         const totalPages = Math.ceil(totalCount / pagination.limit) || 1;
         const validCurrentPage = Math.min(pagination.currentPage, totalPages) || 1;
@@ -166,8 +171,8 @@ export default function BookingHistoryTourist() {
                     <h1 className="mb-8 text-2xl font-bold text-gray-900">ประวัติการจอง</h1>
 
                     {/* Toolbar */}
-                    {/* Toolbar */}
                     <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+
                         {/* Sorting Buttons */}
                         <div className="flex gap-2">
                             <Button
@@ -194,14 +199,15 @@ export default function BookingHistoryTourist() {
 
                         {/* Search and Filter */}
                         <div className="flex w-full items-center gap-2 sm:w-auto">
+
                             {/* Search Input */}
                             <div className="relative flex w-full max-w-xs items-center rounded-lg border border-black bg-white px-4 py-1.5 sm:w-80">
                                 <input
                                     type="text"
                                     placeholder=""
                                     value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
+                                    onChange={(event) => {
+                                        setSearchQuery(event.target.value);
                                         setPagination(prev => ({ ...prev, currentPage: 1 }));
                                     }}
                                     className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"

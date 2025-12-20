@@ -3,12 +3,7 @@
  * คำอธิบาย:  การ์ดแสดงประวัติการจอง
  */
 import { useNavigate } from "react-router-dom";
-
-/*
- * Data Types
- */
 export type BookingStatus = "Payment" | "Complete" | "Cancel" | "Review" | string;
-
 export interface BookingItem {
     id: number;
     title: string;
@@ -24,6 +19,11 @@ interface BookingHistoryCardListProps {
     bookings: BookingItem[];
 }
 
+/*
+ * คำอธิบาย: ฟังก์ชันสำหรับแสดงรายการประวัติการจอง
+ * Input : isLoading, bookings
+ * Output : ไม่มีข้อมูลส่งกลับ
+ */
 export default function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListProps) {
     const navigate = useNavigate();
 

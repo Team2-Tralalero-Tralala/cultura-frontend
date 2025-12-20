@@ -196,7 +196,11 @@ export async function updateBookingStatusByMember(
   );
 }
 
-
+/* 
+ * อธิบาย : ดึงประวัติการจองของผู้ที่พัก
+ * Input : page, limit, sort, status, period, search
+ * Output : รายการประวัติการจอง
+ */
 export async function getBookingsByTourist(page = 1, limit = 10, sort = "newest", status?: string, period?: string, search?: string): Promise<{
   data: BookingRow[];
   pagination: Pagination;

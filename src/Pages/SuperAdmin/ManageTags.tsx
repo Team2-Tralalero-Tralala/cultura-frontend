@@ -20,10 +20,9 @@ export type TagRow = { id: number; name: string };
 
 
 /**
- * Component: ManageTags
- * วัตถุประสงค์: หน้าจัดการประเภท (Super Admin)
- * - แสดงรายการแท็กทั้งหมด (Server-side pagination)
- * - ค้นหาแท็ก (Server-side search with debounce)
+ * ฟังก์ชันหลักของหน้า ManageTags
+ * คำอธิบาย : Component หน้าจัดการประเภท
+ * - แสดงรายการแท็กทั้งหมด
  * - เพิ่ม / แก้ไข / ลบ แท็ก
  */
 export function ManageTags() {
@@ -48,7 +47,12 @@ export function ManageTags() {
   const [pendingTagName, setPendingTagName] = useState("");
 
   /**
-   * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดจาก API (Server-side Pagination)
+   * คำอธิบาย : สำหรับดึงข้อมูลแท็กทั้งหมดจาก API
+   * Input :
+   *   - page : หน้าที่ต้องการแสดง
+   *   - limit : จำนวนรายการต่อหน้า
+   *   - search : คำค้นหา (Optional)
+   * Output : อัปเดต state rows และ pagination
    */
   const fetchData = async (page: number, limit: number, search: string) => {
     try {
@@ -80,7 +84,7 @@ export function ManageTags() {
   };
 
   /**
-   * คำอธิบาย : โหลดข้อมูลเมื่อเปลี่ยนแปลง page, limit, หรือ searchQuery (Debounce)
+   * คำอธิบาย : โหลดข้อมูลเมื่อเปลี่ยนแปลง page, limit, หรือ searchQuery 
    */
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -91,19 +95,22 @@ export function ManageTags() {
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
   /**
-  * คำอธิบาย : เปิด modal สำหรับ create/edit
-  * @param type ประเภท modal ("create" | "edit")
-  * @param tag ข้อมูล tag ที่เลือก (ถ้ามี)
-  */
+   * คำอธิบาย : เปิด modal สำหรับ create/edit
+   * Input :
+   *   - type : ประเภท modal ("create" | "edit")
+   *   - tag : ข้อมูล tag ที่เลือก (ถ้ามี)
+   * Output : อัปเดต state modal
+   */
   const openInputModal = (type: "create" | "edit", tag: TagRow | null = null) => {
     setModalType(type);
     setSelectedTag(tag);
     setShowInputModal(true);
     setPendingTagName(tag?.name ?? "");
   };
+
   /**
-  * คำอธิบาย : ปิด modal และ reset state
-  */
+   * คำอธิบาย : ปิด modal และ reset state
+   */
   const closeInputModal = () => {
     setModalType(null);
     setSelectedTag(null);
@@ -112,9 +119,11 @@ export function ManageTags() {
   };
 
   /**
-  * คำอธิบาย : เรียก modal ยืนยันการลบ tag
-  * @param tag ข้อมูล tag ที่ต้องการลบ
-  */
+   * คำอธิบาย : เรียก modal ยืนยันการลบ tag
+   * Input :
+   *   - tag : ข้อมูล tag ที่ต้องการลบ
+   * Output : เปิด modal ยืนยัน
+   */
   const handleDelete = (tag: TagRow) => {
     setSelectedTag(tag);
     setModalType("delete");
@@ -122,8 +131,8 @@ export function ManageTags() {
   };
 
   /**
-  * คำอธิบาย : ยืนยัน action ของ modal (create/edit/delete)
-  */
+   * คำอธิบาย : ยืนยัน action ของ modal (create/edit/delete)
+   */
   const handleFinalConfirm = async () => {
     try {
       if (modalType === "create") await TagService.createTag(pendingTagName);
@@ -138,9 +147,9 @@ export function ManageTags() {
     }
   };
 
-  /*
-  * คำอธิบาย : กำหนด columns ของ DataTable
-  */
+  /**
+   * คำอธิบาย : กำหนด columns ของ DataTable
+   */
   const columns: Column<TagRow>[] = [
     {
       key: "name",
@@ -156,9 +165,9 @@ export function ManageTags() {
     },
   ];
 
-  /*
-  * คำอธิบาย : กำหนด actions ต่อ row
-  */
+  /**
+   * คำอธิบาย : กำหนด actions ต่อ row
+   */
   const rowActions: DataTableActionsConfig<TagRow> = {
     header: "จัดการ",
     align: "left",
@@ -171,9 +180,9 @@ export function ManageTags() {
     },
   };
 
-  /*
-  * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
-  */
+  /**
+   * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
+   */
   const bulkActions: BulkAction<TagRow>[] = [
     {
       id: "bulk-delete",
@@ -188,9 +197,9 @@ export function ManageTags() {
     },
   ];
 
-  /*
-  * คำอธิบาย : render component
-  */
+  /**
+   * คำอธิบาย : render component
+   */
   return (
     <div className="space-y-4 cursor-default">
       {/* Section: Header */}

@@ -1,3 +1,6 @@
+/*
+ * Filter ใช้สำหรับ Role: Tourists
+*/
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 

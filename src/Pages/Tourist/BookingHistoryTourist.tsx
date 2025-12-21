@@ -1,4 +1,4 @@
-/*
+/**
  * คำอธิบาย : Component ประวัติการจองของนักท่องเที่ยว 
  * แสดงรายการประวัติการจอง พร้อมตัวกรอง การค้นหา และการจัดเรียง
  * พร้อมการแบ่งหน้า (Pagination)   
@@ -15,7 +15,7 @@ import Footer from "@/Components/Footer";
 import BookingHistoryCardList, { type BookingItem } from "@/Components/BookingHistoryCardList";
 import Button from "@/Components/Button";
 
-/**
+/*
  * คำอธิบาย : ตัวแปรสำหรับ map ค่า status จาก API เป็นข้อความภาษาไทย
  */
 const statusMap: Record<string, string> = {
@@ -28,7 +28,7 @@ const statusMap: Record<string, string> = {
 
 };
 
-/**
+/*
  * คำอธิบาย : Component สำหรับหน้า "ประวัติการจองของนักท่องเที่ยว"
  * แสดงประวัติการจองของนักท่องเที่ยว 
  * พร้อมตัวกรอง การค้นหา การจัดเรียง และการแบ่งหน้า
@@ -49,7 +49,8 @@ export default function BookingHistoryTourist() {
         totalCount: 0,
         limit: 10,
     });
-    /**
+
+    /*
     * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลประวัติการจองทั้งหมดจาก API
     * Input :
     *   - status (string) : สถานะการจองที่ต้องการกรอง
@@ -80,7 +81,7 @@ export default function BookingHistoryTourist() {
                 });
             }
 
-            /**
+            /*
             * คำอธิบาย : ฟังก์ชันสำหรับ map ข้อมูลที่ได้รับจาก API ไปยังโครงสร้าง BookingItem
             * Input : ข้อมูลดิบจาก API (any[])
             * Output : ข้อมูลที่ถูกแมปแล้ว BookingItem[]

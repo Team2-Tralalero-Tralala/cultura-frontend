@@ -1,5 +1,6 @@
-/*
+/**
  * คำอธิบาย : Component การ์ดแสดงประวัติการจอง
+ * แสดงรายการประวัติการจองในรูปแบบการ์ด
  */
 import { useNavigate } from "react-router-dom";
 

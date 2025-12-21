@@ -1,5 +1,5 @@
 /**
- * จัดการประเภท (Super Admin)
+ * คำอธิบาย : Component สำหรับจัดการประเภท (Super Admin)
  * - แสดงรายการแท็กทั้งหมดในชุมชน
  * - สามารถค้นหา เพิ่ม แก้ไข ลบ แท็กได้
  * - ใช้งานร่วมกับ Modal ยืนยันและฟอร์มเพิ่ม/แก้ไข
@@ -19,11 +19,9 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 export type TagRow = { id: number; name: string };
 
 
-/**
- * ฟังก์ชันหลักของหน้า ManageTags
+/*
  * คำอธิบาย : Component หน้าจัดการประเภท
- * - แสดงรายการแท็กทั้งหมด
- * - เพิ่ม / แก้ไข / ลบ แท็ก
+ * แสดงตารางรายการแท็ก พร้อมฟังก์ชันการค้นหา เพิ่ม แก้ไข และลบแท็ก
  */
 export function ManageTags() {
   // table state
@@ -46,7 +44,7 @@ export function ManageTags() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingTagName, setPendingTagName] = useState("");
 
-  /**
+  /*
    * คำอธิบาย : สำหรับดึงข้อมูลแท็กทั้งหมดจาก API
    * Input :
    *   - page : หน้าที่ต้องการแสดง
@@ -83,7 +81,7 @@ export function ManageTags() {
     }
   };
 
-  /**
+  /*
    * คำอธิบาย : โหลดข้อมูลเมื่อเปลี่ยนแปลง page, limit, หรือ searchQuery 
    */
   useEffect(() => {
@@ -94,10 +92,10 @@ export function ManageTags() {
     return () => clearTimeout(delay);
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
-  /**
+  /*
    * คำอธิบาย : เปิด modal สำหรับ create/edit
    * Input :
-   *   - type : ประเภท modal ("create" | "edit")
+   *   - type : ประเภท modal "create" และ "edit"
    *   - tag : ข้อมูล tag ที่เลือก (ถ้ามี)
    * Output : อัปเดต state modal
    */
@@ -108,7 +106,7 @@ export function ManageTags() {
     setPendingTagName(tag?.name ?? "");
   };
 
-  /**
+  /*
    * คำอธิบาย : ปิด modal และ reset state
    */
   const closeInputModal = () => {
@@ -118,7 +116,7 @@ export function ManageTags() {
     setPendingTagName("");
   };
 
-  /**
+  /*
    * คำอธิบาย : เรียก modal ยืนยันการลบ tag
    * Input :
    *   - tag : ข้อมูล tag ที่ต้องการลบ
@@ -130,7 +128,7 @@ export function ManageTags() {
     setShowConfirmModal(true);
   };
 
-  /**
+  /*
    * คำอธิบาย : ยืนยัน action ของ modal (create/edit/delete)
    */
   const handleFinalConfirm = async () => {
@@ -147,7 +145,7 @@ export function ManageTags() {
     }
   };
 
-  /**
+  /*
    * คำอธิบาย : กำหนด columns ของ DataTable
    */
   const columns: Column<TagRow>[] = [
@@ -165,7 +163,7 @@ export function ManageTags() {
     },
   ];
 
-  /**
+  /*
    * คำอธิบาย : กำหนด actions ต่อ row
    */
   const rowActions: DataTableActionsConfig<TagRow> = {
@@ -180,7 +178,7 @@ export function ManageTags() {
     },
   };
 
-  /**
+  /*
    * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
    */
   const bulkActions: BulkAction<TagRow>[] = [
@@ -197,7 +195,7 @@ export function ManageTags() {
     },
   ];
 
-  /**
+  /*
    * คำอธิบาย : render component
    */
   return (

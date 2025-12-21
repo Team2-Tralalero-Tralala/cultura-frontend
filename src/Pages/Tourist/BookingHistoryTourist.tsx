@@ -1,6 +1,7 @@
 /*
- * Component: BookingHistoryTourist
- * คำอธิบาย :  ประวัติการจองของนักท่องเที่ยว    
+ * คำอธิบาย : Component ประวัติการจองของนักท่องเที่ยว 
+ * แสดงรายการประวัติการจอง พร้อมตัวกรอง การค้นหา และการจัดเรียง
+ * พร้อมการแบ่งหน้า (Pagination)   
  */
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
@@ -14,7 +15,9 @@ import Footer from "@/Components/Footer";
 import BookingHistoryCardList, { type BookingItem } from "@/Components/BookingHistoryCardList";
 import Button from "@/Components/Button";
 
-
+/**
+ * คำอธิบาย : ตัวแปรสำหรับ map ค่า status จาก API เป็นข้อความภาษาไทย
+ */
 const statusMap: Record<string, string> = {
     PENDING: "รอยืนยัน",
     BOOKED: "จองสำเร็จ",
@@ -24,9 +27,11 @@ const statusMap: Record<string, string> = {
     REFUND_REJECTED: "ปฏิเสธคืนเงิน",
 
 };
+
 /**
- * ฟังก์ชันหลักของหน้า BookingHistoryTourist
- * คำอธิบาย : แสดงประวัติการจองของนักท่องเที่ยว
+ * คำอธิบาย : Component สำหรับหน้า "ประวัติการจองของนักท่องเที่ยว"
+ * แสดงประวัติการจองของนักท่องเที่ยว 
+ * พร้อมตัวกรอง การค้นหา การจัดเรียง และการแบ่งหน้า
  */
 export default function BookingHistoryTourist() {
     const [activeSort, setActiveSort] = useState<"newest" | "oldest">("newest");
@@ -74,8 +79,9 @@ export default function BookingHistoryTourist() {
                     }
                 });
             }
+
             /**
-            * คำอธิบาย : map ข้อมูลที่ได้รับจาก API ไปยังโครงสร้าง BookingItem
+            * คำอธิบาย : ฟังก์ชันสำหรับ map ข้อมูลที่ได้รับจาก API ไปยังโครงสร้าง BookingItem
             * Input : ข้อมูลดิบจาก API (any[])
             * Output : ข้อมูลที่ถูกแมปแล้ว BookingItem[]
             */

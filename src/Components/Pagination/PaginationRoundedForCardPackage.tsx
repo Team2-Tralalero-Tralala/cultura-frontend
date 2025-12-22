@@ -1,5 +1,5 @@
-import React from 'react';
-import Pagination from '@mui/material/Pagination';
+import React from "react";
+import Pagination from "@mui/material/Pagination";
 
 /*
  * Component: PaginationRoundedForCardPackage
@@ -13,12 +13,16 @@ import Pagination from '@mui/material/Pagination';
 
 type PaginationRoundedProps = {
   totalData: number; // จำนวนข้อมูลทั้งหมด
+  limit?: number;
   onQueryChange?: (query: { page: number; limit: number }) => void; // callback สำหรับส่งให้ parent เมื่อมีการเปลี่ยนหน้า/จำนวนต่อหน้า
 };
 
-export default function PaginationRoundedForCardPackage({ totalData, onQueryChange }: PaginationRoundedProps) {
+export default function PaginationRoundedForCardPackage({
+  totalData,
+  onQueryChange,
+  limit = 9,
+}: PaginationRoundedProps) {
   const [page, setPage] = React.useState(1); // เก็บหน้าปัจจุบัน
-  const limit = 9; // จำนวน cardpackage ต่อหน้าคงที่ 9
   const totalPages = Math.ceil(totalData / limit); // คำนวณจำนวนหน้าทั้งหมด
 
   /*
@@ -46,14 +50,14 @@ export default function PaginationRoundedForCardPackage({ totalData, onQueryChan
         variant="outlined"
         shape="rounded"
         sx={{
-          '& .MuiPaginationItem-root': { borderColor: '#00BF6A' },
-          '& .MuiPaginationItem-root.Mui-selected': {
-            backgroundColor: '#00BF6A',
-            color: '#fff',
-            borderColor: '#00BF6A',
+          "& .MuiPaginationItem-root": { borderColor: "#00BF6A" },
+          "& .MuiPaginationItem-root.Mui-selected": {
+            backgroundColor: "#00BF6A",
+            color: "#fff",
+            borderColor: "#00BF6A",
           },
-          '& .MuiPaginationItem-root.Mui-selected.Mui-focusVisible': {
-            backgroundColor: '#00BF6A',
+          "& .MuiPaginationItem-root.Mui-selected.Mui-focusVisible": {
+            backgroundColor: "#00BF6A",
           },
         }}
       />

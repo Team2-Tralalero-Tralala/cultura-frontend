@@ -5,7 +5,7 @@
 */
 import React from "react";
 import { useParams } from "react-router-dom";
-import * as PackaheFeedbackService from "@/Services/package-feedbacks-service";
+import * as PackageFeedbackService from "@/Services/package-feedbacks-service";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
@@ -134,7 +134,7 @@ export default function PackageFeedbacksPage() {
 
     setIsLoading(true);
 
-    PackaheFeedbackService.getPackageFeedbacksByPackageIdMember(packageIdNumber).then((response) => {
+    PackageFeedbackService.getPackageFeedbacksByPackageIdMember(packageIdNumber).then((response) => {
       const typedResponse = response as { data?: Feedback[] } | Feedback[];
       const feedbackResponseLists = Array.isArray(typedResponse)
         ? typedResponse
@@ -220,7 +220,7 @@ export default function PackageFeedbacksPage() {
       return;
     }
 
-    await PackaheFeedbackService.replyPackageFeedback(feedbackId, { replyMessage });
+    await PackageFeedbackService.replyPackageFeedback(feedbackId, { replyMessage });
 
     setFeedbackLists((previousFeedbacks) =>
       previousFeedbacks.map((feedbackItem) =>

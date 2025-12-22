@@ -205,8 +205,9 @@ export async function getBookingsByTourist(page = 1, limit = 10, sort = "newest"
   data: BookingRow[];
   pagination: Pagination;
 }> {
+  const sortMapped = sort === "oldest" ? "asc" : "desc";
   const res = await axios.get(`${apiUrl}/tourist/booking-histories`, {
-    params: { page, limit, sort, status, period, search },
+    params: { page, limit, sort: sortMapped, status, period, search },
     withCredentials: true,
   });
 

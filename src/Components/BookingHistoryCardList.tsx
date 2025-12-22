@@ -13,6 +13,8 @@ export interface BookingItem {
     bookingDate?: string;
     status: BookingStatus;
     statusLabel: string;
+    isJoined?: boolean;
+    isEnded?: boolean;
 }
 
 interface BookingHistoryCardListProps {
@@ -39,7 +41,7 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
                 bookings.map((booking) => (
                     <div
                         key={booking.id}
-                        className="relative flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+                        className="relative flex flex-col rounded-xl border border-gray-200 bg-white p-6 cursor-pointer"
                         onClick={() => navigate(`/tourist/booking-history/${booking.id}`)}
                     >
                         {/* Card Content */}
@@ -61,15 +63,17 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
 
                         {/* Action Buttons (Bottom Right) */}
                         <div className="mt-4 flex justify-end gap-3 sm:absolute sm:bottom-6 sm:right-6 sm:mt-0">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/tourist/booking-history/${booking.id}/feedback`);
-                                }}
-                                className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                ข้อเสนอแนะ
-                            </button>
+                            {booking.status === "BOOKED" && booking.isEnded && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/tourist/booking-history/${booking.id}/feedback`);
+                                    }}
+                                    className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    ข้อเสนอแนะ
+                                </button>
+                            )}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();

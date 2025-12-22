@@ -60,7 +60,8 @@ export default function BookingHistoryTourist() {
     const fetchRawData = async (status = filterState.status, period = filterState.period) => {
         try {
             setIsLoading(true);
-            const statusParam = status === "ALL" ? "" : status;
+            const isCancelledGroup = status === "CANCELLED";
+            const statusParam = (status === "ALL" || isCancelledGroup) ? "" : status;
             const periodParam = period === "ALL" ? "" : period;
 
             const initialRes = await getBookingsByTourist(1, 1000, "newest", statusParam, periodParam, "");
@@ -79,6 +80,10 @@ export default function BookingHistoryTourist() {
                         allData = allData.concat(res.data);
                     }
                 });
+            }
+            if (isCancelledGroup) {
+                const refundStatuses = ["REJECTED", "REFUND_PENDING", "REFUNDED", "REFUND_REJECTED"];
+                allData = allData.filter((item: any) => refundStatuses.includes(item.status));
             }
 
             /*
@@ -103,6 +108,10 @@ export default function BookingHistoryTourist() {
                 price: item.package?.price ?? item.totalPrice ?? 0,
                 status: item.status ?? "-",
                 statusLabel: statusMap[item.status] ?? item.status ?? "-",
+                isJoined: item.participation_status === "JOINED" || item.participation_status === true,
+                isEnded: item.package?.dueDate
+                    ? new Date(item.package.dueDate) < new Date()
+                    : false,
             }));
 
             setRawBookings(mapped);
@@ -120,7 +129,10 @@ export default function BookingHistoryTourist() {
     useEffect(() => {
         let processed = [...rawBookings];
 
-        // Search Filter
+
+        /*
+         * คำอธิบาย : ฟังก์ชัน useEffect สำหรับประมวลผลข้อมูลการจองเมื่อ rawBookings, searchQuery, activeSort หรือ pagination.currentPage เปลี่ยนแปลง
+         */
         if (searchQuery) {
             const lowerSearch = searchQuery.toLowerCase();
             processed = processed.filter((item) => {
@@ -130,14 +142,18 @@ export default function BookingHistoryTourist() {
             });
         }
 
-        // Sort
+        /*
+         * คำอธิบาย : การจัดเรียงข้อมูลตามวันที่จอง
+         */
         if (activeSort === "oldest") {
             processed.sort((bookingA: any, bookingB: any) => new Date(bookingA.rawBookingDate).getTime() - new Date(bookingB.rawBookingDate).getTime());
         } else {
             processed.sort((bookingA: any, bookingB: any) => new Date(bookingB.rawBookingDate).getTime() - new Date(bookingA.rawBookingDate).getTime());
         }
 
-        // Update Pagination Info
+        /*
+         * คำอธิบาย : การตั้งค่าการแบ่งหน้า (Pagination)
+         */
         const totalCount = processed.length;
         const totalPages = Math.ceil(totalCount / pagination.limit) || 1;
         const validCurrentPage = Math.min(pagination.currentPage, totalPages) || 1;
@@ -146,7 +162,9 @@ export default function BookingHistoryTourist() {
             setPagination(prev => ({ ...prev, totalCount, totalPages, currentPage: validCurrentPage }));
         }
 
-        // Slice
+        /*
+         * คำอธิบาย : การตัดข้อมูลตามหน้าปัจจุบันและขนาดหน้าที่กำหนด
+         */
         const startIndex = (validCurrentPage - 1) * pagination.limit;
         const sliced = processed.slice(startIndex, startIndex + pagination.limit);
         setBookings(sliced);
@@ -235,10 +253,9 @@ export default function BookingHistoryTourist() {
                                         key: "status",
                                         options: [
                                             { label: "ทั้งหมด", value: "ALL" },
-                                            ...Object.entries(statusMap).map(([key, label]) => ({
-                                                label,
-                                                value: key,
-                                            })),
+                                            { label: "รอยืนยัน", value: "PENDING" },
+                                            { label: "จองสำเร็จ", value: "BOOKED" },
+                                            { label: "ยกเลิกการจอง", value: "CANCELLED" },
                                         ]
                                     },
                                     {
@@ -281,8 +298,7 @@ export default function BookingHistoryTourist() {
                             >
                                 <option value={10}>10</option>
                                 <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
+                                <option value={30}>30</option>
                             </select>
                             <span>รายการ</span>
                         </div>

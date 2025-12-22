@@ -1,5 +1,5 @@
 /**
- * จัดการประเภท (Super Admin)
+ * คำอธิบาย : Component สำหรับจัดการประเภท (Super Admin)
  * - แสดงรายการแท็กทั้งหมดในชุมชน
  * - สามารถค้นหา เพิ่ม แก้ไข ลบ แท็กได้
  * - ใช้งานร่วมกับ Modal ยืนยันและฟอร์มเพิ่ม/แก้ไข
@@ -18,20 +18,12 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
 
-/**
-* คำอธิบาย : แปลงข้อความให้เป็นตัวพิมพ์เล็ก ลบช่องว่างเกิน และ normalize สำหรับค้นหา
-* Input : s (string)
-* Output : string ที่ถูก normalize แล้ว
-*/
-const normalizeText = (str: string) =>
-  (str ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
 
-export default function ManageTags() {
+/*
+ * คำอธิบาย : Component หน้าจัดการประเภท
+ * แสดงตารางรายการแท็ก พร้อมฟังก์ชันการค้นหา เพิ่ม แก้ไข และลบแท็ก
+ */
+export function ManageTags() {
   // table state
   const [rows, setRows] = useState<TagRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,66 +44,61 @@ export default function ManageTags() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingTagName, setPendingTagName] = useState("");
 
-  /**
-  * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมด, กรองด้วย searchQuery และทำ pagination
-  */
-  const fetchData = useCallback(async () => {
+  /*
+   * คำอธิบาย : สำหรับดึงข้อมูลแท็กทั้งหมดจาก API
+   * Input :
+   *   - page : หน้าที่ต้องการแสดง
+   *   - limit : จำนวนรายการต่อหน้า
+   *   - search : คำค้นหา (Optional)
+   * Output : อัปเดต state rows และ pagination
+   */
+  const fetchData = async (page: number, limit: number, search: string) => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      /*
-       * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดจาก Service
-       */
-      const res = await TagService.fetchTags(1, 1000);
-      const data: TagRow[] = Array.isArray(res.data)
-        ? res.data.map((tag: any) => ({ id: tag.id, name: tag.name }))
+      const res = await TagService.fetchTags(page, limit, search);
+
+      const resultData = res?.data?.data ?? [];
+      const resultPagination = res?.data?.pagination ?? {
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        limit: 10,
+      };
+
+      const mappedRows: TagRow[] = Array.isArray(resultData)
+        ? resultData.map((tag: any) => ({ id: tag.id, name: tag.name }))
         : [];
 
-      /*
-      * คำอธิบาย : กรองแท็กตามคำค้นหา
-      */
-      const filtered = data.filter((tag) =>
-        normalizeText(tag.name).includes(normalizeText(searchQuery))
-      );
+      setRows(mappedRows);
+      setPagination(resultPagination);
 
-      /*
-      * คำอธิบาย : คำนวณ pagination
-      */
-      const pages = Math.max(1, Math.ceil(filtered.length / pagination.limit));
-      const safePage = Math.min(pagination.currentPage, pages);
-      const start = (safePage - 1) * pagination.limit;
-      const end = start + pagination.limit;
-
-      /*
-      * คำอธิบาย : อัปเดต state ของ rows และ pagination
-      */
-      setRows(filtered.slice(start, end));
-      setPagination((prev) => ({
-        ...prev,
-        totalCount: filtered.length,
-        totalPages: pages,
-        currentPage: safePage,
-      }));
     } catch (error: any) {
       setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /*
+   * คำอธิบาย : โหลดข้อมูลเมื่อเปลี่ยนแปลง page, limit, หรือ searchQuery 
+   */
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchData(pagination.currentPage, pagination.limit, searchQuery);
+    }, 500);
+
+    return () => clearTimeout(delay);
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
   /*
-  * คำอธิบาย : โหลดข้อมูลเมื่อ component mount หรือเปลี่ยน dependencies
-  */
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  /**
-  * คำอธิบาย : เปิด modal สำหรับ create/edit
-  * @param type ประเภท modal ("create" | "edit")
-  * @param tag ข้อมูล tag ที่เลือก (ถ้ามี)
-  */
+   * คำอธิบาย : เปิด modal สำหรับ create/edit
+   * Input :
+   *   - type : ประเภท modal "create" และ "edit"
+   *   - tag : ข้อมูล tag ที่เลือก (ถ้ามี)
+   * Output : อัปเดต state modal
+   */
   const openInputModal = (type: "create" | "edit", tag: TagRow | null = null) => {
     setModalType(type);
     setSelectedTag(tag);
@@ -119,9 +106,9 @@ export default function ManageTags() {
     setPendingTagName(tag?.name ?? "");
   };
 
-  /**
-  * คำอธิบาย : ปิด modal และ reset state
-  */
+  /*
+   * คำอธิบาย : ปิด modal และ reset state
+   */
   const closeInputModal = () => {
     setModalType(null);
     setSelectedTag(null);
@@ -129,19 +116,21 @@ export default function ManageTags() {
     setPendingTagName("");
   };
 
-  /**
-  * คำอธิบาย : เรียก modal ยืนยันการลบ tag
-  * @param tag ข้อมูล tag ที่ต้องการลบ
-  */
+  /*
+   * คำอธิบาย : เรียก modal ยืนยันการลบ tag
+   * Input :
+   *   - tag : ข้อมูล tag ที่ต้องการลบ
+   * Output : เปิด modal ยืนยัน
+   */
   const handleDelete = (tag: TagRow) => {
     setSelectedTag(tag);
     setModalType("delete");
     setShowConfirmModal(true);
   };
 
-  /**
-  * คำอธิบาย : ยืนยัน action ของ modal (create/edit/delete)
-  */
+  /*
+   * คำอธิบาย : ยืนยัน action ของ modal (create/edit/delete)
+   */
   const handleFinalConfirm = async () => {
     try {
       if (modalType === "create") await TagService.createTag(pendingTagName);
@@ -150,15 +139,15 @@ export default function ManageTags() {
 
       closeInputModal();
       setShowConfirmModal(false);
-      await fetchData();
+      await fetchData(pagination.currentPage, pagination.limit, searchQuery);
     } catch (error) {
       console.error(error);
     }
   };
 
   /*
-  * คำอธิบาย : กำหนด columns ของ DataTable
-  */
+   * คำอธิบาย : กำหนด columns ของ DataTable
+   */
   const columns: Column<TagRow>[] = [
     {
       key: "name",
@@ -175,8 +164,8 @@ export default function ManageTags() {
   ];
 
   /*
-  * คำอธิบาย : กำหนด actions ต่อ row
-  */
+   * คำอธิบาย : กำหนด actions ต่อ row
+   */
   const rowActions: DataTableActionsConfig<TagRow> = {
     header: "จัดการ",
     align: "left",
@@ -190,8 +179,8 @@ export default function ManageTags() {
   };
 
   /*
-  * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
-  */
+   * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
+   */
   const bulkActions: BulkAction<TagRow>[] = [
     {
       id: "bulk-delete",
@@ -201,14 +190,14 @@ export default function ManageTags() {
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         await Promise.all(rows.map((row) => TagService.deleteTag(row.id)));
-        await fetchData();
+        await fetchData(pagination.currentPage, pagination.limit, searchQuery);
       },
     },
   ];
 
   /*
-  * คำอธิบาย : render component
-  */
+   * คำอธิบาย : render component
+   */
   return (
     <div className="space-y-4 cursor-default">
       {/* Section: Header */}

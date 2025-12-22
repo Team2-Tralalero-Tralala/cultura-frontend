@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย : Component สำหรับหน้าการสร้างข้อเสนอแนะ (Feedback) ของนักท่องเที่ยว
+ * คำอธิบาย : หน้าการสร้างข้อเสนอแนะ (Feedback) ของนักท่องเที่ยว
  * โดยรองรับการให้คะแนน, เขียนข้อความติชม และอัปโหลดรูปภาพประกอบ
  */
 import React, { useState } from "react";
@@ -18,16 +18,6 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-/**
- * คำอธิบาย : ฟังก์ชันสำหรับดึงค่าจาก Cookie ตามชื่อที่ระบุ
- * Input : cookieName
- * Output : ค่าที่เก็บใน Cookie หรือ null
- */
-const getCookieValue = (cookieName: string): string | null => {
-  const cookieMatch = document.cookie.match(new RegExp("(^| )" + cookieName + "=([^;]+)"));
-  return cookieMatch ? cookieMatch[2] : null;
-};
 
 type FeedbackFormState = {
   ratingScore: number;
@@ -72,6 +62,16 @@ export function CreateFeedbackPage() {
     setAlertModalMessage(message);
     setIsAlertModalOpen(true);
   };
+
+  /**
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงค่าจาก Cookie ตามชื่อที่ระบุ
+ * Input : cookieName
+ * Output : ค่าที่เก็บใน Cookie หรือ null
+ */
+const getCookieValue = (cookieName: string): string | null => {
+  const cookieMatch = document.cookie.match(new RegExp("(^| )" + cookieName + "=([^;]+)"));
+  return cookieMatch ? cookieMatch[2] : null;
+};
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลในฟิลด์ของฟอร์มพร้อมตรวจสอบความถูกต้อง
@@ -133,7 +133,6 @@ export function CreateFeedbackPage() {
     if (isDataSavingProcess) {
       return;
     }
-
     if (!validateEntireForm()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;

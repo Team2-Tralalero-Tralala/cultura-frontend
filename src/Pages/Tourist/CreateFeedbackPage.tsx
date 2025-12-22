@@ -2,7 +2,7 @@
  * คำอธิบาย : หน้าการสร้างข้อเสนอแนะ (Feedback) ของนักท่องเที่ยว
  * โดยรองรับการให้คะแนน, เขียนข้อความติชม และอัปโหลดรูปภาพประกอบ
  */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as zod from "zod";
@@ -51,6 +51,7 @@ export function CreateFeedbackPage() {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [alertModalTitle, setAlertModalTitle] = useState("");
   const [alertModalMessage, setAlertModalMessage] = useState("");
+  const [packageName, setPackageName] = useState<string>("ชื่อแพ็กเกจ");
 
   /**
  * คำอธิบาย : ฟังก์ชันสำหรับเปิด Modal แจ้งเตือนพร้อมกำหนดข้อความ
@@ -68,10 +69,10 @@ export function CreateFeedbackPage() {
  * Input : cookieName
  * Output : ค่าที่เก็บใน Cookie หรือ null
  */
-const getCookieValue = (cookieName: string): string | null => {
-  const cookieMatch = document.cookie.match(new RegExp("(^| )" + cookieName + "=([^;]+)"));
-  return cookieMatch ? cookieMatch[2] : null;
-};
+  const getCookieValue = (cookieName: string): string | null => {
+    const cookieMatch = document.cookie.match(new RegExp("(^| )" + cookieName + "=([^;]+)"));
+    return cookieMatch ? cookieMatch[2] : null;
+  };
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตข้อมูลในฟิลด์ของฟอร์มพร้อมตรวจสอบความถูกต้อง
@@ -188,6 +189,32 @@ const getCookieValue = (cookieName: string): string | null => {
     }
   };
 
+  useEffect(() => {
+    const fetchBookingDetail = async () => {
+      try {
+        const accessToken = getCookieValue("accessToken");
+        if (!accessToken) return;
+        const response = await axios.get(`${API_URL}/tourist/booking-history/${bookingId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const bookingData = response.data.data;
+        if (bookingData?.package?.name) {
+          setPackageName(bookingData.package.name);
+        } else {
+          setPackageName("ไม่พบชื่อแพ็กเกจ");
+        }
+      } catch (error) {
+        console.error("Error fetching booking detail:", error);
+        setPackageName("เกิดข้อผิดพลาดในการดึงข้อมูล");
+      }
+    };
+    if (bookingId) {
+      fetchBookingDetail();
+    }
+  }, [bookingId]);
+
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sarabun flex flex-col">
       <NavbarTourist />
@@ -212,7 +239,7 @@ const getCookieValue = (cookieName: string): string | null => {
 
           {/* กล่องแบบฟอร์มด้านใน (Inner Form Container) */}
           <div className="border border-[#E5E7EB] rounded-[16px] p-10">
-            <h3 className="text-[22px] font-bold text-black mb-8">พักใจใต้เงาไม้</h3>
+            <h3 className="text-[22px] font-bold text-black mb-8">{packageName}</h3>
 
             {/* ส่วนการให้คะแนน (Rating Section) */}
             <div className="mb-10">

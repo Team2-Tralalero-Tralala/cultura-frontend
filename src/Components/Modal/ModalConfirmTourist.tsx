@@ -1,6 +1,22 @@
+/**
+ * คำอธิบาย : Component สำหรับแสดง Modal ยืนยันการกระทำ พร้อมปุ่มยืนยันและยกเลิก
+ * Input : open, title, message, onConfirm, onCancel
+ * Output : แสดง Modal ยืนยันการทำงาน หรือไม่แสดงเมื่อ open เป็น false
+ */
 import React from "react";
 import Button from "@/Components/Button";
 
+/**
+ * คำอธิบาย : Props สำหรับกำหนดค่าที่ใช้ควบคุมการทำงานของ ModalConfirm
+ * Input :
+ *   - open (boolean) : ใช้กำหนดสถานะการเปิดหรือปิด modal
+ *   - title (string) : ข้อความหัวข้อของ modal
+ *   - message (string) : ข้อความรายละเอียดของ modal
+ *   - onConfirm (function) : ฟังก์ชันที่ถูกเรียกเมื่อกดปุ่มยืนยัน
+ *   - onCancel (function) : ฟังก์ชันที่ถูกเรียกเมื่อกดปุ่มยกเลิก
+ * Output :
+ *   - Props สำหรับควบคุมการแสดงผลของ ModalConfirm
+ */
 type ModalConfirmProps = {
   open: boolean;
   title: string;
@@ -9,6 +25,11 @@ type ModalConfirmProps = {
   onCancel: () => void;
 };
 
+/**
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับแสดง Modal ยืนยันการทำงานจากผู้ใช้งาน
+ * Input : props (ModalConfirmProps)
+ * Output : JSX Element ของ Modal ยืนยัน หรือ null เมื่อ open เป็น false
+ */
 export const ModalConfirm: React.FC<ModalConfirmProps> = ({
   open,
   title,
@@ -35,7 +56,7 @@ export const ModalConfirm: React.FC<ModalConfirmProps> = ({
         <h2 className="text-2xl font-bold text-black mb-2">{title}</h2>
 
         {/* Message */}
-        <p className="text-gray-600 mb-8 text-lg">{message}</p>
+        <p className="text-gray-600 mb-8 text-lg whitespace-nowrap">{message}</p>
 
         {/* Buttons */}
         <div className="flex gap-4 w-full justify-center px-4">

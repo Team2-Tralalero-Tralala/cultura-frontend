@@ -1,37 +1,25 @@
 /*
- * File: UploadBannerPage.tsx
  * Component: UploadBannerPage (Client)
- * หน้าที่:
- * - จัดการรูป Banner หน้าแรก (สูงสุด 5 รูป)
- * - รองรับการ Crop รูปภาพก่อนอัปโหลด
+ * หน้าที่: หน้าจอจัดการรูป Banner หน้าแรก (Upload, Crop, Delete)
  */
 
-"use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import Cropper from "react-easy-crop";
 import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import axios from "axios";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import Cropper from "react-easy-crop";
+import UploadCard from "@/Components/calendar/upload/UploadCard";
+import api from "@/Libs/api"; 
 
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const API_BASE = apiUrl.replace("/api", "") || "http://localhost:3000";
-const API_PREFIX = "/api";
-
-const apiClient = axios.create({ baseURL: API_BASE, withCredentials: true });
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+const apiBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /*
-* คำอธิบาย : ฟังก์ชันสำหรับแปลง area ที่ crop ให้เป็น File object
-* Input : file (ต้นฉบับ), area (พิกัด x,y,w,h), mime, quality
-* Output : File (ที่ถูก crop แล้ว)
-*/
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลง area ที่ crop ให้เป็น File object
+ * Input : file (ต้นฉบับ), area (พิกัด x,y,w,h), mime, quality
+ * Output : Promise<File> (ไฟล์รูปภาพที่ถูกตัดแล้ว)
+ */
 async function cropImageToFile(
   file: File,
   area: { x: number; y: number; width: number; height: number },
@@ -71,22 +59,22 @@ async function cropImageToFile(
 }
 
 /*
-* คำอธิบาย : ตรวจสอบว่าเป็น URL แบบ Absolute หรือไม่
-* Input : urlString
-* Output : boolean
-*/
-const isAbsUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
+ * คำอธิบาย : ตรวจสอบว่าเป็น URL แบบ Absolute หรือไม่
+ * Input : urlString
+ * Output : boolean
+ */
+const isAbsoluteUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
 
 /*
-* คำอธิบาย : สร้าง URL สำหรับพรีวิว Banner
-* Input : item (path, url)
-* Output : string (URL สมบูรณ์)
-*/
-const bannerPreviewUrl = (item: { path: string; url?: string }) => {
-  if (isAbsUrl(item.url)) return item.url as string;
+ * คำอธิบาย : สร้าง URL สำหรับพรีวิว Banner
+ * Input : item (path, url)
+ * Output : string (URL สมบูรณ์)
+ */
+const getBannerPreviewUrl = (item: { path: string; url?: string }) => {
+  if (isAbsoluteUrl(item.url)) return item.url as string;
   const rawPath = item.path || "";
   const leadingPath = "/" + rawPath.replace(/^\/+/, "");
-  return `${API_BASE}${leadingPath}`;
+  return `${apiBaseUrl}${leadingPath}`;
 };
 
 type RawBannerItem = {
@@ -104,12 +92,12 @@ type BannerItem = {
 };
 
 /*
-* คำอธิบาย : ดึงข้อมูล Banner ทั้งหมดจาก API
-* Input : -
-* Output : BannerItem[]
-*/
+ * คำอธิบาย : ดึงข้อมูล Banner ทั้งหมดจาก API
+ * Input : -
+ * Output : Promise<BannerItem[]>
+ */
 async function fetchBanners(): Promise<BannerItem[]> {
-  const response = await apiClient.get(`${API_PREFIX}/super/banner`, { params: { _: Date.now() } });
+  const response = await api.get(`/super/banner`, { params: { _: Date.now() } });
   const rawList = Array.isArray(response.data?.data)
     ? response.data.data
     : Array.isArray(response.data?.banners)
@@ -126,64 +114,64 @@ async function fetchBanners(): Promise<BannerItem[]> {
     };
     return {
       ...bannerItem,
-      url: bannerItem.url ?? bannerPreviewUrl(bannerItem),
+      url: bannerItem.url ?? getBannerPreviewUrl(bannerItem),
     };
   });
 }
 
 /*
-* คำอธิบาย : อัปโหลด Banner ไปยัง Server
-* Input : files[]
-* Output : Response data
-*/
+ * คำอธิบาย : อัปโหลด Banner ไปยัง Server
+ * Input : files[]
+ * Output : Response data
+ */
 async function uploadBanners(files: File[]) {
   const formData = new FormData();
   files.forEach((file) => formData.append("banner", file, file.name));
-  const response = await apiClient.post(`${API_PREFIX}/super/banner`, formData, {
+  const response = await api.post(`/super/banner`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data;
 }
 
 /*
-* คำอธิบาย : ลบ Banner ตาม ID
-* Input : id
-* Output : -
-*/
+ * คำอธิบาย : ลบ Banner ตาม ID
+ * Input : id
+ * Output : -
+ */
 async function deleteBanner(id: number) {
-  await apiClient.delete(`${API_PREFIX}/super/banner/${id}`);
+  await api.delete(`/super/banner/${id}`);
 }
 
 /*
-* คำอธิบาย : แทนที่ไฟล์ Banner เดิม
-* Input : id, file
-* Output : Response data
-*/
+ * คำอธิบาย : แทนที่ไฟล์ Banner เดิม
+ * Input : id, file
+ * Output : Response data
+ */
 async function replaceBanner(id: number, file: File) {
   const formData = new FormData();
   formData.append("banner", file, file.name);
-  const response = await apiClient.put(`${API_PREFIX}/super/banner/${id}`, formData);
+  const response = await api.put(`/super/banner/${id}`, formData);
   return response.data;
 }
 
 /*
-* คำอธิบาย : แสดง Modal แจ้งผลลัพธ์การทำงาน
-* Input : open, status, message, onClose
-* Output : JSX Element
-*/
+ * คำอธิบาย : Component Modal แจ้งผลลัพธ์การทำงาน
+ * Input : open, status, message, onClose
+ * Output : JSX Element
+ */
 function ResultModal({
-  open,
+  isOpen,
   status,
   message,
   onClose,
 }: {
-  open: boolean;
+  isOpen: boolean;
   status: "success" | "error";
   message: string;
   onClose: () => void;
 }) {
-  if (!open) return null;
-  const headClass =
+  if (!isOpen) return null;
+  const headerClass =
     status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800";
   const title = status === "success" ? "สำเร็จ" : "ไม่สำเร็จ";
   return (
@@ -194,7 +182,7 @@ function ResultModal({
     >
       <div className="absolute inset-0 bg-black/40 z-0" onClick={onClose} />
       <div className="relative z-10 w-[612px] max-w-full h-[200px] rounded-2xl bg-white shadow-xl">
-        <div className={`flex items-center gap-2 px-5 py-3 rounded-t-2xl ${headClass}`}>
+        <div className={`flex items-center gap-2 px-5 py-3 rounded-t-2xl ${headerClass}`}>
           <Icon icon="circum:circle-alert" className="h-5 w-5" />
           <h3 className="text-base font-semibold">{title}</h3>
         </div>
@@ -210,38 +198,33 @@ function ResultModal({
 }
 
 /*
-* คำอธิบาย : หน้าจัดการรูป Banner หน้าแรก รองรับการ Crop ก่อนอัปโหลด
-* Input : -
-* Output : JSX Element
-*/
+ * คำอธิบาย : Component หลักสำหรับหน้าจัดการ Banner
+ * Input : -
+ * Output : JSX Element
+ */
 export default function UploadBannerPage() {
-  // Server banners
   const [serverBanners, setServerBanners] = useState<BannerItem[]>([]);
   const serverCount = serverBanners.length;
 
-  // Local previews
   const [bannerFiles, setBannerFiles] = useState<File[]>([]);
   const [localPreviews, setLocalPreviews] = useState<{ url: string }[]>([]);
 
-  // Limits
   const remainingBannerSlots = Math.max(0, 5 - (serverCount + bannerFiles.length));
 
-  // Confirm/Result States
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmDescription, setConfirmDescription] = useState("");
   const [pendingIndex, setPendingIndex] = useState<number | null>(null);
   const [pendingAction, setPendingAction] = useState<"edit" | "delete" | null>(null);
   const [tempFile, setTempFile] = useState<File | null>(null);
 
-  const [resultOpen, setResultOpen] = useState(false);
+  const [isResultOpen, setIsResultOpen] = useState(false);
   const [resultStatus, setResultStatus] = useState<"success" | "error">("success");
   const [resultMessage, setResultMessage] = useState("");
 
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Crop States
-  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [fileToCrop, setFileToCrop] = useState<File | null>(null);
   const [cropImageSource, setCropImageSource] = useState<string | null>(null);
   const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
@@ -259,17 +242,17 @@ export default function UploadBannerPage() {
 
   const combinedPreviews = useMemo(
     () => [
-      ...serverBanners.map((banner) => ({ url: banner.url ?? bannerPreviewUrl(banner) })),
+      ...serverBanners.map((banner) => ({ url: banner.url ?? getBannerPreviewUrl(banner) })),
       ...localPreviews,
     ],
     [serverBanners, localPreviews]
   );
 
   /*
-  * คำอธิบาย : ดึงข้อมูลใหม่และรีเซ็ต State
-  * Input : -
-  * Output : -
-  */
+   * คำอธิบาย : ฟังก์ชันดึงข้อมูลใหม่และรีเซ็ตค่า State
+   * Input : -
+   * Output : -
+   */
   const refresh = async () => {
     try {
       const items = await fetchBanners();
@@ -286,7 +269,7 @@ export default function UploadBannerPage() {
   }, []);
 
   /*
-   * คำอธิบาย : เริ่มกระบวนการ Crop
+   * คำอธิบาย : เริ่มกระบวนการ Crop รูปภาพ
    * Input : file, intent ('add' หรือ 'edit')
    * Output : -
    */
@@ -296,7 +279,7 @@ export default function UploadBannerPage() {
     setCropIntent(intent);
     setCropZoom(1);
     setCropPosition({ x: 0, y: 0 });
-    setCropModalOpen(true);
+    setIsCropModalOpen(true);
   };
 
   /*
@@ -309,7 +292,7 @@ export default function UploadBannerPage() {
   };
 
   /*
-   * คำอธิบาย : บันทึกรูปที่ Crop แล้วและดำเนินการต่อตาม Intent
+   * คำอธิบาย : บันทึกรูปที่ Crop แล้วและดำเนินการต่อตาม Intent (เพิ่ม หรือ แก้ไข)
    * Input : -
    * Output : -
    */
@@ -319,7 +302,7 @@ export default function UploadBannerPage() {
     try {
       const croppedFile = await cropImageToFile(fileToCrop, cropPixels);
 
-      setCropModalOpen(false);
+      setIsCropModalOpen(false);
       URL.revokeObjectURL(cropImageSource!);
       setCropImageSource(null);
 
@@ -335,12 +318,12 @@ export default function UploadBannerPage() {
   };
 
   /*
-   * คำอธิบาย : ยกเลิกการ Crop
+   * คำอธิบาย : ยกเลิกการ Crop และล้างค่า State ที่เกี่ยวข้อง
    * Input : -
    * Output : -
    */
   const handleCropCancel = () => {
-    setCropModalOpen(false);
+    setIsCropModalOpen(false);
     if (cropImageSource) URL.revokeObjectURL(cropImageSource);
     setFileToCrop(null);
     setCropImageSource(null);
@@ -349,7 +332,7 @@ export default function UploadBannerPage() {
   };
 
   /*
-   * คำอธิบาย : รับไฟล์จากการเพิ่มรูปและเริ่ม Crop
+   * คำอธิบาย : รับไฟล์จากการเพิ่มรูปและเรียกฟังก์ชัน Crop
    * Input : files
    * Output : -
    */
@@ -369,16 +352,16 @@ export default function UploadBannerPage() {
       await refresh();
       setResultStatus("success");
       setResultMessage(`อัปโหลดสำเร็จ`);
-      setResultOpen(true);
+      setIsResultOpen(true);
     } catch (error: any) {
       setResultStatus("error");
       setResultMessage(error?.message || "อัปโหลดไม่สำเร็จ");
-      setResultOpen(true);
+      setIsResultOpen(true);
     }
   };
 
   /*
-   * คำอธิบาย : เปิด File Input เพื่อแก้ไขรูป
+   * คำอธิบาย : เปิด File Input เพื่อเตรียมแก้ไขรูป
    * Input : index
    * Output : -
    */
@@ -389,7 +372,7 @@ export default function UploadBannerPage() {
   };
 
   /*
-   * คำอธิบาย : รับไฟล์จากการแก้ไขและเริ่ม Crop
+   * คำอธิบาย : รับไฟล์จากการแก้ไขและเรียกฟังก์ชัน Crop
    * Input : event
    * Output : -
    */
@@ -410,11 +393,11 @@ export default function UploadBannerPage() {
     setTempFile(file);
     setConfirmTitle("ยืนยันการแก้ไขรูปภาพหรือไม่");
     setConfirmDescription("คุณจะไม่สามารถย้อนกลับได้");
-    setConfirmOpen(true);
+    setIsConfirmOpen(true);
   };
 
   /*
-   * คำอธิบาย : เตรียมการลบรูป
+   * คำอธิบาย : ตั้งค่าเพื่อเตรียมลบรูปภาพ
    * Input : index
    * Output : -
    */
@@ -423,29 +406,29 @@ export default function UploadBannerPage() {
     setPendingAction("delete");
     setConfirmTitle("ยืนยันการลบรูปภาพหรือไม่");
     setConfirmDescription("คุณจะไม่สามารถย้อนกลับได้");
-    setConfirmOpen(true);
+    setIsConfirmOpen(true);
   };
 
   /*
-   * คำอธิบาย : ยกเลิกการยืนยัน
+   * คำอธิบาย : ยกเลิกการยืนยัน (Modal Confirm)
    * Input : -
    * Output : -
    */
   const handleCancelConfirm = () => {
-    setConfirmOpen(false);
+    setIsConfirmOpen(false);
     setTempFile(null);
     setPendingIndex(null);
     setPendingAction(null);
   };
 
   /*
-   * คำอธิบาย : ดำเนินการตามที่ผู้ใช้ยืนยัน (Edit/Delete)
+   * คำอธิบาย : ดำเนินการตาม Action ที่ยืนยัน (แก้ไข หรือ ลบ)
    * Input : -
    * Output : -
    */
   const handleConfirmAction = async () => {
     if (pendingIndex == null || pendingAction == null) {
-      setConfirmOpen(false);
+      setIsConfirmOpen(false);
       return;
     }
 
@@ -461,7 +444,7 @@ export default function UploadBannerPage() {
         }
         setResultStatus("success");
         setResultMessage("ลบรูปภาพสำเร็จ");
-        setResultOpen(true);
+        setIsResultOpen(true);
       }
 
       if (pendingAction === "edit") {
@@ -480,15 +463,15 @@ export default function UploadBannerPage() {
         }
         setResultStatus("success");
         setResultMessage("แก้ไขรูปภาพสำเร็จ");
-        setResultOpen(true);
+        setIsResultOpen(true);
       }
     } catch (error: any) {
       setResultStatus("error");
       setResultMessage(error?.message || "ไม่สำเร็จ");
-      setResultOpen(true);
+      setIsResultOpen(true);
     }
 
-    setConfirmOpen(false);
+    setIsConfirmOpen(false);
     setTempFile(null);
     setPendingIndex(null);
     setPendingAction(null);
@@ -587,7 +570,7 @@ export default function UploadBannerPage() {
         />
 
         <Modal
-          open={confirmOpen}
+          open={isConfirmOpen}
           title={confirmTitle}
           text={confirmDescription}
           onCancel={handleCancelConfirm}
@@ -597,13 +580,13 @@ export default function UploadBannerPage() {
         />
 
         <ResultModal
-          open={resultOpen}
+          isOpen={isResultOpen}
           status={resultStatus}
           message={resultMessage}
-          onClose={() => setResultOpen(false)}
+          onClose={() => setIsResultOpen(false)}
         />
 
-        {cropModalOpen && cropImageSource && (
+        {isCropModalOpen && cropImageSource && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80" role="dialog">
             <div className="bg-white rounded-2xl p-4 w-[90vw] max-w-[640px] h-[80vh] flex flex-col gap-3">
               <h3 className="text-lg font-bold text-gray-800">ปรับขนาดรูปภาพ (Crop)</h3>
@@ -644,7 +627,6 @@ export default function UploadBannerPage() {
             </div>
           </div>
         )}
-
       </main>
     </>
   );

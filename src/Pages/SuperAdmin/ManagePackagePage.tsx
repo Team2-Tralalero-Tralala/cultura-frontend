@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย : Component หน้าสำหรับจัดการแพ็กเกจ (สำหรับ Superadmin) ทำหน้าที่แสดงรายการ ค้นหา และจัดการสถานะแพ็กเกจ
+ * คำอธิบาย : หน้าสำหรับจัดการแพ็กเกจ (สำหรับ Superadmin) ทำหน้าที่แสดงรายการ ค้นหา และจัดการสถานะแพ็กเกจ
  */
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";

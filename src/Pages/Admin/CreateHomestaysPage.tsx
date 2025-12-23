@@ -1,18 +1,12 @@
 /**
- * หน้าที่: หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Admin
- * คุณสมบัติ:
- * - ตรวจความถูกต้องด้วย zod
- * - ยืนยันก่อนบันทึกผ่าน Modal
- * - แนบไฟล์รูป (cover / gallery)
- * - ส่งข้อมูลแบบ multipart/form-data:
- * { data: JSON(HomestayDto + tagHomestays), cover[], gallery[] }
- * - เมื่อสำเร็จ กลับไปหน้าแก้ไขชุมชน (ฝั่ง Admin)
+ * คำอธิบาย : Component หน้าสำหรับเพิ่มที่พักรายการเดียว (สำหรับ Admin) รองรับการกรอกข้อมูล ตรวจสอบความถูกต้อง และอัปโหลดรูปภาพ
  */
 import React from "react";
 import * as z from "zod";
 import axios from "axios";
 import { Icon } from "@iconify/react";
 import { useNavigate, useParams } from "react-router-dom";
+
 import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
@@ -27,10 +21,8 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
-/** ประเภทไฟล์ที่แนบมากับฟอร์ม */
 type FileLike = File;
 
-/** โครงสร้างข้อมูลฟอร์มของที่พักหนึ่งรายการ */
 type HomestayForm = {
     name: string;
     type: string;
@@ -49,7 +41,6 @@ type HomestayForm = {
     placeQuery: string;
 };
 
-/** ค่าเริ่มต้นของฟอร์มที่พัก */
 const initialHomestay: HomestayForm = {
     name: "",
     type: "",
@@ -68,7 +59,6 @@ const initialHomestay: HomestayForm = {
     placeQuery: "",
 };
 
-/** schema ตรวจสอบข้อมูลฟอร์มของแต่ละรายการ */
 const homestaySchema = z.object({
     name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
     type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
@@ -88,7 +78,6 @@ const homestaySchema = z.object({
             "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
         ),
     houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-    // villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
     subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
@@ -97,10 +86,13 @@ const homestaySchema = z.object({
     placeQuery: z.string().optional().default(""),
 });
 
-/** type ของ error ต่อฟิลด์ในหนึ่งรายการ */
-type HSFormErrors = Partial<Record<keyof HomestayForm, string>>;
+type HomestayFormErrors = Partial<Record<keyof HomestayForm, string>>;
 
-/** ตัดช่องว่างและคืน fallback หากว่าง */
+/*
+ * คำอธิบาย : ตัดช่องว่างของข้อความและคืนค่า fallback หากข้อความว่างเปล่า
+ * Input: value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนกลับถ้าว่าง)
+ * Output: ข้อความที่ตัดช่องว่างแล้ว หรือค่า fallback
+ */
 function normalizeOrDefault(value: string, fallback = "") {
     const trimmed = (value ?? "").toString().trim();
     return trimmed.length ? trimmed : fallback;
@@ -145,15 +137,15 @@ if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
  * - ตรวจสอบข้อมูล
  * - รวม payload และส่งขึ้น API ตาม communityId (ฝั่ง Admin)
  */
-export default function CreateHomestaysAdminPage() {
+export default function CreateHomestaysPage() {
     const { communityId } = useParams();
     const navigate = useNavigate();
-    const [form, setForm] = React.useState<HomestayForm>(initialHomestay);
-    const [errors, setErrors] = React.useState<HSFormErrors>({});
+    const [homestayFormState, setHomestayFormState] = React.useState<HomestayForm>(initialHomestay);
+    const [formErrors, setFormErrors] = React.useState<HomestayFormErrors>({});
     const [coverFiles, setCoverFiles] = React.useState<FileLike[]>([]);
     const [galleryFiles, setGalleryFiles] = React.useState<FileLike[]>([]);
     const [tagIds, setTagIds] = React.useState<number[]>([]);
-    const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false);
     const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(
         null
     );
@@ -164,53 +156,52 @@ export default function CreateHomestaysAdminPage() {
      * Input: key ของฟอร์ม, value ใหม่
      * Output: -
      */
-    function setField(key: keyof HomestayForm, value: any) {
-        setForm((prevForm) => {
-            if (prevForm[key] === value) return prevForm;
+    function setHomestayFormField(key: keyof HomestayForm, value: any) {
+        setHomestayFormState((previousForm) => {
+            if (previousForm[key] === value) return previousForm;
 
-            const nextForm = { ...prevForm, [key]: value };
-            const parsed = homestaySchema.safeParse(nextForm);
-            setErrors((prevErrors) => {
-                const nextErrors = { ...prevErrors };
+            const nextFormState = { ...previousForm, [key]: value };
+            const parsed = homestaySchema.safeParse(nextFormState);
+            setFormErrors((previousErrors) => {
+                const nextErrorsState = { ...previousErrors };
                 if (parsed.success) {
-                    delete nextErrors[key];
+                    delete nextErrorsState[key];
                 } else {
                     const found = parsed.error.issues.find(
                         (issue) => issue.path[0] === key
                     );
-                    if (found) nextErrors[key] = found.message;
-                    else delete nextErrors[key];
+                    if (found) nextErrorsState[key] = found.message;
+                    else delete nextErrorsState[key];
                 }
-                return nextErrors;
+                return nextErrorsState;
             });
-            return nextForm;
+            return nextFormState;
         });
     }
 
-    /**
-     * คำอธิบาย: ตรวจสอบข้อมูลฟอร์มทั้งหมด
+    /*
+     * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนการบันทึก
      * Input: -
-     * Output: boolean (true หากผ่าน, false หากไม่ผ่าน)
+     * Output: ผลลัพธ์การตรวจสอบ (true หากถูกต้อง, false หากมีข้อผิดพลาด)
      */
     function validateAll(): boolean {
-        const result = homestaySchema.safeParse(form);
+        const result = homestaySchema.safeParse(homestayFormState);
         if (!result.success) {
-            const validationErrors: HSFormErrors = {};
+            const validationErrors: HomestayFormErrors = {};
             for (const issue of result.error.issues) {
                 validationErrors[issue.path[0] as keyof HomestayForm] = issue.message;
             }
-            setErrors(validationErrors);
+            setFormErrors(validationErrors);
             return false;
         }
-        setErrors({});
+        setFormErrors({});
         return true;
     }
 
-    /**
-     * จัดการ submit ฟอร์มเพิ่มที่พัก
-     * - ป้องกันการ reload หน้า
-     * - ตรวจสอบค่า (validateAll)
-     * - แสดง error หรือเปิด modal ยืนยันตามผลลัพธ์
+    /*
+     * คำอธิบาย: จัดการเมื่อมีการกดปุ่มบันทึกเพื่อเตรียมข้อมูลสำหรับส่งไปยัง Server
+     * Input: event (เหตุการณ์จากฟอร์ม)
+     * Output: -
      */
     function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
@@ -221,27 +212,27 @@ export default function CreateHomestaysAdminPage() {
             return;
         }
 
-        const latStr = (form.latitude ?? "").trim();
-        const lngStr = (form.longitude ?? "").trim();
-        const latNum = latStr === "" ? null : Number(latStr);
-        const lngNum = lngStr === "" ? null : Number(lngStr);
+        const latitudeString = (homestayFormState.latitude ?? "").trim();
+        const longitudeString = (homestayFormState.longitude ?? "").trim();
+        const latitudeNumber = latitudeString === "" ? null : Number(latitudeString);
+        const longitudeNumber = longitudeString === "" ? null : Number(longitudeString);
         const singlePayload = {
             base: {
-                name: normalizeOrDefault(form.name),
-                type: normalizeOrDefault(form.type),
-                guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
-                totalRoom: Math.max(1, Number(form.totalRoom || 0)),
-                facility: normalizeOrDefault(form.facility),
+                name: normalizeOrDefault(homestayFormState.name),
+                type: normalizeOrDefault(homestayFormState.type),
+                guestPerRoom: Math.max(1, Number(homestayFormState.guestPerRoom || 0)),
+                totalRoom: Math.max(1, Number(homestayFormState.totalRoom || 0)),
+                facility: normalizeOrDefault(homestayFormState.facility),
                 location: {
-                    houseNumber: normalizeOrDefault(form.houseNumber),
-                    villageNumber: Number(form.villageNumber) || null,
-                    subDistrict: normalizeOrDefault(form.subDistrict),
-                    district: normalizeOrDefault(form.district),
-                    province: normalizeOrDefault(form.province),
-                    postalCode: normalizeOrDefault(String(form.postalCode ?? "")),
-                    detail: normalizeOrDefault(form.addressDetail),
-                    latitude: latNum,
-                    longitude: lngNum,
+                    houseNumber: normalizeOrDefault(homestayFormState.houseNumber),
+                    villageNumber: Number(homestayFormState.villageNumber) || null,
+                    subDistrict: normalizeOrDefault(homestayFormState.subDistrict),
+                    district: normalizeOrDefault(homestayFormState.district),
+                    province: normalizeOrDefault(homestayFormState.province),
+                    postalCode: normalizeOrDefault(String(homestayFormState.postalCode ?? "")),
+                    detail: normalizeOrDefault(homestayFormState.addressDetail),
+                    latitude: latitudeNumber,
+                    longitude: longitudeNumber,
                 },
                 tagHomestays: Array.isArray(tagIds) ? tagIds : [],
             },
@@ -250,88 +241,58 @@ export default function CreateHomestaysAdminPage() {
         };
 
         setPendingPayloads([singlePayload]);
-        setIsConfirmOpen(true);
+        setIsConfirmModalOpen(true);
     }
 
-    /**
-     * คำอธิบาย: handler สำหรับ MapPicker
-     * - อัปเดต latitude/longitude ในฟอร์ม (ไม่ validate ทันที)
+    /*
+     * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
+     * Input: position (อาร์เรย์เก็บค่าละติจูดและลองจิจูด)
+     * Output: -
      */
     const onMapChange = React.useCallback((position: [number, number]) => {
-        const [lat, lng] = position;
-        setForm((prev) => ({
-            ...prev,
-            latitude: String(lat),
-            longitude: String(lng),
+        const [latitude, longitude] = position;
+        setHomestayFormState((previousForm) => ({
+            ...previousForm,
+            latitude: String(latitude),
+            longitude: String(longitude),
         }));
     }, []);
 
-    /**
-     * ฟังก์ชันยืนยันการบันทึก
-     * - ส่งข้อมูลฟอร์มไปยัง API (ฝั่ง Admin)
-     * - อัปโหลดรูปภาพตาม payload ที่ค้างอยู่
-     * - แสดงผลลัพธ์สำเร็จ/ล้มเหลวและนำผู้ใช้กลับไปหน้ารายการที่พักของ Admin
+    /*
+     * คำอธิบาย: ยืนยันการบันทึกข้อมูล ส่งข้อมูลไปยัง API และจัดการการอัปโหลดไฟล์
+     * Input: -
+     * Output: -
      */
     const onConfirmSave = async () => {
-  setIsConfirmOpen(false);
-  console.log("[CreateHomestayAdmin] Enter onConfirmSave");
-
-  // ✅ ป้องกันเคสไม่มี payload จริง ๆ
+  setIsConfirmModalOpen(false);
   if (!pendingPayloads || pendingPayloads.length === 0) {
-    console.warn("[CreateHomestayAdmin] ไม่มี pendingPayloads");
     return;
   }
 
   try {
     setIsSaving(true);
-
-    // ✅ แค่ log ดูเฉย ๆ ว่า route รับอะไรมา แต่ไม่เอาไปใช้บังคับใน URL
     const communityIdNumber = communityId ? Number(communityId) : null;
-    console.log(
-      "[CreateHomestayAdmin] communityId param =",
-      communityId,
-      "=>",
-      communityIdNumber
-    );
-
     for (const pendingPayload of pendingPayloads) {
       const dataPayload = {
         ...pendingPayload.base,
       };
-
       const formData = new FormData();
       formData.append("data", JSON.stringify(dataPayload));
 
       if (pendingPayload.coverFiles?.length) {
         formData.append("cover", pendingPayload.coverFiles[0]);
       }
-
       if (Array.isArray(pendingPayload.galleryFiles)) {
-        for (const gf of pendingPayload.galleryFiles) {
-          formData.append("gallery", gf);
+        for (const galleryFile of pendingPayload.galleryFiles) {
+          formData.append("gallery", galleryFile);
         }
       }
-
-      console.log(
-        "[CreateHomestayAdmin] ก่อน axios.post ไปที่",
-        `${API_URL}/admin/community/homestay`
-      );
-
       await axios.post(`${API_URL}/admin/community/homestay`, formData, {
         withCredentials: true,
       });
-
-      console.log("[CreateHomestayAdmin] หลัง axios.post (สำเร็จ 1 รายการ)");
     }
-
     navigate("/admin/community/homestays");
 } catch (error: any) {
-    console.error("[CreateHomestayAdmin] FULL ERROR:", {
-        message: error?.message,
-        responseData: error?.response?.data,
-        status: error?.response?.status,
-        headers: error?.response?.headers,
-    });
     window.scrollTo({ top: 0, behavior: "smooth" });
 } finally {
     setIsSaving(false);
@@ -341,13 +302,13 @@ export default function CreateHomestaysAdminPage() {
 
 
     const startingPosition = React.useMemo<[number, number]>(() => {
-        const nlat = Number(form.latitude);
-        const nlng = Number(form.longitude);
+        const numberLatitude = Number(homestayFormState.latitude);
+        const numberLongitude = Number(homestayFormState.longitude);
         return [
-            !Number.isNaN(nlat) && form.latitude !== "" ? nlat : 13.7563,
-            !Number.isNaN(nlng) && form.longitude !== "" ? nlng : 100.5018,
+            !Number.isNaN(numberLatitude) && homestayFormState.latitude !== "" ? numberLatitude : 13.7563,
+            !Number.isNaN(numberLongitude) && homestayFormState.longitude !== "" ? numberLongitude : 100.5018,
         ];
-    }, [form.latitude, form.longitude]);
+    }, [homestayFormState.latitude, homestayFormState.longitude]);
 
     return (
         <div className="w-full max-w-none">
@@ -356,7 +317,6 @@ export default function CreateHomestaysAdminPage() {
                 <Breadcrumb
                     current={{
                         label: "เพิ่มที่พัก",
-                        // to: `/admin/community/${communityId}/homestay/create`,
                         to: `/admin/community/homestay/create`,
                     }}
                 />
@@ -385,20 +345,20 @@ export default function CreateHomestaysAdminPage() {
                                 label="ชื่อที่พัก"
                                 required
                                 placeholder="พิมพ์ชื่อที่พัก"
-                                value={form.name}
-                                onChange={(event) => setField("name", event.target.value)}
-                                error={!!errors.name}
-                                helperText={errors.name}
+                                value={homestayFormState.name}
+                                onChange={(event) => setHomestayFormField("name", event.target.value)}
+                                error={!!formErrors.name}
+                                helperText={formErrors.name}
                             />
                             <TextField
                                 id="type"
                                 label="ประเภทที่พัก"
                                 required
                                 placeholder="พิมพ์ประเภทของที่พัก"
-                                value={form.type}
-                                onChange={(event) => setField("type", event.target.value)}
-                                error={!!errors.type}
-                                helperText={errors.type}
+                                value={homestayFormState.type}
+                                onChange={(event) => setHomestayFormField("type", event.target.value)}
+                                error={!!formErrors.type}
+                                helperText={formErrors.type}
                             />
                             <div className="md:col-span-2">
                                 <TextArea
@@ -406,10 +366,10 @@ export default function CreateHomestaysAdminPage() {
                                     label="สิ่งอำนวยความสะดวก"
                                     required
                                     placeholder="ใส่รายละเอียดความสะดวกสบายของที่พัก"
-                                    value={form.facility}
-                                    onChange={(event) => setField("facility", event.target.value)}
-                                    error={!!errors.facility}
-                                    helperText={errors.facility}
+                                    value={homestayFormState.facility}
+                                    onChange={(event) => setHomestayFormField("facility", event.target.value)}
+                                    error={!!formErrors.facility}
+                                    helperText={formErrors.facility}
                                 />
                             </div>
                         </div>
@@ -422,10 +382,10 @@ export default function CreateHomestaysAdminPage() {
                                 required
                                 type="number"
                                 placeholder="กรอกจำนวนห้องทั้งหมด"
-                                value={form.totalRoom}
-                                onChange={(event) => setField("totalRoom", event.target.value)}
-                                error={!!errors.totalRoom}
-                                helperText={errors.totalRoom}
+                                value={homestayFormState.totalRoom}
+                                onChange={(event) => setHomestayFormField("totalRoom", event.target.value)}
+                                error={!!formErrors.totalRoom}
+                                helperText={formErrors.totalRoom}
                             />
                             <TextField
                                 id="guestPerRoom"
@@ -433,10 +393,10 @@ export default function CreateHomestaysAdminPage() {
                                 required
                                 type="number"
                                 placeholder="กรอกจำนวนผู้เข้าพักต่อห้อง"
-                                value={form.guestPerRoom}
-                                onChange={(event) => setField("guestPerRoom", event.target.value)}
-                                error={!!errors.guestPerRoom}
-                                helperText={errors.guestPerRoom}
+                                value={homestayFormState.guestPerRoom}
+                                onChange={(event) => setHomestayFormField("guestPerRoom", event.target.value)}
+                                error={!!formErrors.guestPerRoom}
+                                helperText={formErrors.guestPerRoom}
                             />
                         </div>
 
@@ -447,47 +407,47 @@ export default function CreateHomestaysAdminPage() {
                                 label="บ้านเลขที่"
                                 required
                                 placeholder="บ้านเลขที่"
-                                value={form.houseNumber}
-                                onChange={(event) => setField("houseNumber", event.target.value)}
-                                error={!!errors.houseNumber}
-                                helperText={errors.houseNumber}
+                                value={homestayFormState.houseNumber}
+                                onChange={(event) => setHomestayFormField("houseNumber", event.target.value)}
+                                error={!!formErrors.houseNumber}
+                                helperText={formErrors.houseNumber}
                             />
 
                             <TextField
                                 id="villageNumber"
                                 label="หมู่ที่"
                                 placeholder="หมู่ที่"
-                                value={form.villageNumber}
+                                value={homestayFormState.villageNumber}
                                 onChange={(event) =>
-                                    setField("villageNumber", event.target.value)
+                                    setHomestayFormField("villageNumber", event.target.value)
                                 }
-                                error={!!errors.villageNumber}
-                                helperText={errors.villageNumber}
+                                error={!!formErrors.villageNumber}
+                                helperText={formErrors.villageNumber}
                             />
 
                             <div className="md:col-span-2">
                                 <ThailandLocationSelector
                                     value={{
-                                        province: form.province,
-                                        district: form.district,
-                                        subdistrict: form.subDistrict,
-                                        postalCode: form.postalCode,
+                                        province: homestayFormState.province,
+                                        district: homestayFormState.district,
+                                        subdistrict: homestayFormState.subDistrict,
+                                        postalCode: homestayFormState.postalCode,
                                     }}
-                                    onChange={(loc: ThailandLocation) => {
-                                        setField("province", loc.province ?? "");
-                                        setField("district", loc.district ?? "");
-                                        setField("subDistrict", loc.subdistrict ?? "");
-                                        setField("postalCode", (loc.postalCode ?? "").toString());
+                                    onChange={(location: ThailandLocation) => {
+                                        setHomestayFormField("province", location.province ?? "");
+                                        setHomestayFormField("district", location.district ?? "");
+                                        setHomestayFormField("subDistrict", location.subdistrict ?? "");
+                                        setHomestayFormField("postalCode", (location.postalCode ?? "").toString());
                                     }}
                                     error={{
-                                        province: !!errors.province,
-                                        district: !!errors.district,
-                                        subdistrict: !!errors.subDistrict,
+                                        province: !!formErrors.province,
+                                        district: !!formErrors.district,
+                                        subdistrict: !!formErrors.subDistrict,
                                     }}
                                     helperText={{
-                                        province: errors.province,
-                                        district: errors.district,
-                                        subdistrict: errors.subDistrict,
+                                        province: formErrors.province,
+                                        district: formErrors.district,
+                                        subdistrict: formErrors.subDistrict,
                                     }}
                                 />
                             </div>
@@ -497,12 +457,12 @@ export default function CreateHomestaysAdminPage() {
                                     id="addressDetail"
                                     label="คำอธิบายที่อยู่"
                                     placeholder="คำอธิบายที่อยู่"
-                                    value={form.addressDetail}
+                                    value={homestayFormState.addressDetail}
                                     onChange={(event) =>
-                                        setField("addressDetail", event.target.value)
+                                        setHomestayFormField("addressDetail", event.target.value)
                                     }
-                                    error={!!errors.addressDetail}
-                                    helperText={errors.addressDetail}
+                                    error={!!formErrors.addressDetail}
+                                    helperText={formErrors.addressDetail}
                                 />
                             </div>
                         </div>
@@ -515,14 +475,14 @@ export default function CreateHomestaysAdminPage() {
                                 onChange={onMapChange}
                             />
                             <div className="grid grid-cols-2 gap-3 mt-2">
-                                {!!errors.latitude && (
+                                {!!formErrors.latitude && (
                                     <div className="text-red-600 text-sm">
-                                        {errors.latitude}
+                                        {formErrors.latitude}
                                     </div>
                                 )}
-                                {!!errors.longitude && (
+                                {!!formErrors.longitude && (
                                     <div className="text-red-600 text-sm">
-                                        {errors.longitude}
+                                        {formErrors.longitude}
                                     </div>
                                 )}
                             </div>
@@ -606,7 +566,7 @@ export default function CreateHomestaysAdminPage() {
 
             {/* Modal ยืนยัน */}
             <Modal
-                open={isConfirmOpen}
+                open={isConfirmModalOpen}
                 title="ยืนยันการบันทึกที่พัก"
                 text={`คุณต้องการบันทึกที่พักจำนวน ${pendingPayloads?.length ?? 0
                     } รายการหรือไม่`}
@@ -614,7 +574,7 @@ export default function CreateHomestaysAdminPage() {
                 cancelText="ยกเลิก"
                 onConfirm={onConfirmSave}
                 onCancel={() => {
-                    setIsConfirmOpen(false);
+                    setIsConfirmModalOpen(false);
                     setPendingPayloads(null);
                 }}
             />

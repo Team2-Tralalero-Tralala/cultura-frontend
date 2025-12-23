@@ -1,39 +1,31 @@
 /**
- * Component: StoreDetailPage (Super Admin)
- * Description: แสดงรายละเอียดร้านค้าตาม ID ที่ดึงจาก URL
- * หน้านี้ใช้สำหรับดูข้อมูลเท่านั้น และสามารถไปหน้าแก้ไขได้
- * Input: id (ผ่าน useParams)
- * Output: หน้าแสดงรายละเอียดร้านค้าแบบ read-only พร้อมแผนที่
- */
-
+* คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Super Admin
+*/
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronRight, Edit, ArrowLeft } from "lucide-react";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
-/** Environment URL */
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const BACKEND_BASE_URL = API_URL.replace(/\/api$/, ""); // เช่น "http://localhost:3000"
+const BACKEND_BASE_URL = API_URL.replace(/\/api$/, "");
 
-/**
- * ฟังก์ชัน buildImageUrl
- * จัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้องเสมอ
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้องและสามารถนำไปแสดงผลได้
+ * Input : path ของรูปภาพจาก backend
+ * Output : URL ของรูปภาพที่พร้อมใช้งาน
  */
 const buildImageUrl = (imagePath?: string): string => {
   if (!imagePath) return "";
 
-  // ถ้าเป็น URL เต็มอยู่แล้ว (http/https)
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
     return imagePath;
   }
 
-  // ลบ "/" ด้านหน้า เช่น "/uploads/a.jpg" -> "uploads/a.jpg"
   const cleanPath = imagePath.replace(/^\/+/, "");
 
   return `${BACKEND_BASE_URL}/${cleanPath}`;
 };
 
-/** Interface */
 interface Community {
   id: number;
   name: string;
@@ -54,6 +46,11 @@ interface Store {
   };
 }
 
+/*
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดร้านค้า สำหรับผู้ใช้งานบทบาท Super Admin
+ * Input : รหัสร้านค้าจาก URL parameter
+ * Output : แสดงข้อมูลรายละเอียดร้านค้า รูปภาพ แท็ก และตำแหน่งที่ตั้ง
+ */
 const StoreDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -61,8 +58,10 @@ const StoreDetailPage = () => {
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * โหลดข้อมูลร้านค้า
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายละเอียดร้านค้าจาก backend
+   * Input : ไม่มี (ใช้รหัสร้านค้าจาก URL)
+   * Output : ตั้งค่าข้อมูลร้านค้าเข้าสู่ state เพื่อแสดงผลบนหน้าจอ
    */
   const fetchStore = async () => {
     try {
@@ -75,7 +74,6 @@ const StoreDetailPage = () => {
       if (result?.data) {
         const data = result.data;
 
-        /** แปลงรูปภาพทั้งหมดจาก backend */
         const images: string[] =
           data.storeImage?.map((img: any) =>
             img.image
@@ -83,7 +81,6 @@ const StoreDetailPage = () => {
               : buildImageUrl("uploads/store-main.jpg")
           ) || [buildImageUrl("uploads/store-main.jpg")];
 
-        /** จัดรูปแบบข้อมูลร้านค้า */
         const formatted: Store = {
           id: data.id,
           name: data.name ?? "-",
@@ -125,7 +122,11 @@ const StoreDetailPage = () => {
     }
   };
 
-  /** โหลดข้อมูลเมื่อเปิดหน้า */
+  /*
+   * คำอธิบาย : เรียกใช้งานฟังก์ชันโหลดข้อมูลร้านค้า เมื่อมีการเปิดหน้า หรือเมื่อ id เปลี่ยนแปลง
+   * Input : ไม่มี
+   * Output : โหลดข้อมูลร้านค้าใหม่
+   */
   useEffect(() => {
     fetchStore();
   }, [id]);
@@ -135,11 +136,16 @@ const StoreDetailPage = () => {
 
   const coverImage = store.images[0];
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าแก้ไขข้อมูลร้านค้า
+   * Input : ไม่มี
+   * Output : เปลี่ยนหน้าไปยังหน้าจอแก้ไขร้านค้า
+   */
   const handleEditClick = () => {
     if (!id) return;
     navigate(`/super/community/${store.community?.id}/store/${id}/edit`);
   };
-
+  
   return (
     <div className="font-sarabun bg-[#F0F0F0] min-h-screen">
       {/* Breadcrumb Navigation */}

@@ -37,8 +37,8 @@ const NavbarTourist = () => {
   };
 
   return (
-    <header className=" container mx-auto">
-      <nav className="flex items-center justify-between m-80px px-6 h-16 lg:gap-6">
+    <header className="border-b border-gray-200 bg-white">
+      <nav className="container mx-auto flex items-center justify-between px-6 h-16 lg:gap-6">
         <div className="flex items-center gap-10">
           <a href="/">
             <img
@@ -65,7 +65,11 @@ const NavbarTourist = () => {
                 className="flex items-center justify-between gap-3 hover:text-green-500 p-2"
               >
                 {user.fname} {user.lname}
-                <img src={"/profile.png"} className="w-9 h-9" />
+                <img
+                  src={user.profile_picture || "/profile.png"}
+                  className="w-9 h-9 rounded-full object-cover"
+                  alt="Profile"
+                />
               </button>
 
               {/* Dropdown แสดงเมื่อคลิก */}

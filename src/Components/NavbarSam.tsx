@@ -55,7 +55,10 @@ const NavbarSam = () => {
         <div className="relative ml-auto">
           {/* ปุ่มโปรไฟล์ */}
           <button onClick={toggleDropdown} className="flex items-center justify-between gap-3 p-2">
-            <img src={imgUser} className="w-9 h-9 rounded-full" />
+            <img
+              src={user?.profile_picture || imgUser}
+              className="w-9 h-9 rounded-full object-cover"
+            />
             <span className="font-medium text-base max-w-[180px] truncate">
               {user?.fname} {user?.lname}
             </span>
@@ -67,7 +70,10 @@ const NavbarSam = () => {
             <ul className="absolute bg-white rounded-lg w-[320px] max-w-[90vw] shadow-md p-4 right-0 top-full mt-2 z-10 text-base-semibold">
               {/* แสดงข้อมูล profile */}
               <div className="flex items-center gap-3 mb-3">
-                <img src={imgUser} className="w-10 h-10 rounded-full" />
+                <img
+                  src={user?.profile_picture || imgUser}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-base font-medium truncate">

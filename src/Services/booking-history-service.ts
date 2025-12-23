@@ -201,13 +201,42 @@ export async function updateBookingStatusByMember(
  * Input : page, limit, sort, status, period, search
  * Output : รายการประวัติการจอง
  */
-export async function getBookingsByTourist(page = 1, limit = 10, sort = "newest", status?: string, period?: string, search?: string): Promise<{
+export async function getBookingsByTourist(
+  page = 1,
+  limit = 10,
+  sort = "newest",
+  status?: string,
+  period?: string,
+  search?: string
+): Promise<{
   data: BookingRow[];
   pagination: Pagination;
 }> {
   const sortMapped = sort === "oldest" ? "asc" : "desc";
+  const params: any = { page, limit, sort: sortMapped, search };
+
+  if (status && status !== "ALL") {
+    params.status = status;
+  }
+
+  if (period && period !== "ALL") {
+    const end = new Date();
+    const start = new Date();
+
+    if (period === "7_DAYS") {
+      start.setDate(end.getDate() - 7);
+    } else if (period === "1_MONTH") {
+      start.setMonth(end.getMonth() - 1);
+    } else if (period === "1_YEAR") {
+      start.setFullYear(end.getFullYear() - 1);
+    }
+
+    params.startDate = start.toISOString();
+    params.endDate = end.toISOString();
+  }
+
   const res = await axios.get(`${apiUrl}/tourist/booking-histories`, {
-    params: { page, limit, sort: sortMapped, status, period, search },
+    params,
     withCredentials: true,
   });
 

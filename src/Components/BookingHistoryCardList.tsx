@@ -23,7 +23,6 @@ interface BookingHistoryCardListProps {
 }
 
 /*
- * ฟังก์ชัน : BookingHistoryCardList
  * คำอธิบาย: ฟังก์ชันสำหรับแสดงรายการประวัติการจอง
  * Input : isLoading, bookings
  * Output : -
@@ -65,8 +64,8 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
                         <div className="mt-4 flex justify-end gap-3 sm:absolute sm:bottom-6 sm:right-6 sm:mt-0">
                             {booking.status === "BOOKED" && booking.isEnded && (
                                 <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
+                                    onClick={(event) => {
+                                        event.stopPropagation();
                                         navigate(`/tourist/booking-history/${booking.id}/feedback`);
                                     }}
                                     className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -75,8 +74,8 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
                                 </button>
                             )}
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
+                                onClick={(event) => {
+                                    event.stopPropagation();
                                     navigate(`/tourist/booking-history/${booking.id}`);
                                 }}
                                 className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"

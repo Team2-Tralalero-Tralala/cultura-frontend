@@ -75,9 +75,9 @@ export default function BookingHistoryTourist() {
                     promises.push(getBookingsByTourist(page, serverLimit, "newest", statusParam, periodParam, ""));
                 }
                 const results = await Promise.all(promises);
-                results.forEach(res => {
-                    if (res.data) {
-                        allData = allData.concat(res.data);
+                results.forEach(response => {
+                    if (response.data) {
+                        allData = allData.concat(response.data);
                     }
                 });
             }
@@ -159,7 +159,7 @@ export default function BookingHistoryTourist() {
         const validCurrentPage = Math.min(pagination.currentPage, totalPages) || 1;
 
         if (totalCount !== pagination.totalCount || totalPages !== pagination.totalPages) {
-            setPagination(prev => ({ ...prev, totalCount, totalPages, currentPage: validCurrentPage }));
+            setPagination(previous => ({ ...previous, totalCount, totalPages, currentPage: validCurrentPage }));
         }
 
         /*
@@ -232,7 +232,7 @@ export default function BookingHistoryTourist() {
                                     value={searchQuery}
                                     onChange={(event) => {
                                         setSearchQuery(event.target.value);
-                                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                                        setPagination(previous => ({ ...previous, currentPage: 1 }));
                                     }}
                                     className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
                                 />
@@ -270,10 +270,10 @@ export default function BookingHistoryTourist() {
                                     }
                                 ]}
                                 selected={filterState}
-                                onChange={(key, val) => {
-                                    const newState = { ...filterState, [key]: val };
+                                onChange={(key, value) => {
+                                    const newState = { ...filterState, [key]: value };
                                     setFilterState(newState);
-                                    setPagination(prev => ({ ...prev, currentPage: 1 }));
+                                    setPagination(previous => ({ ...previous, currentPage: 1 }));
                                 }}
                                 label="ตัวกรอง"
                                 icon="material-symbols:sort"
@@ -290,9 +290,9 @@ export default function BookingHistoryTourist() {
                             <span>แสดง</span>
                             <select
                                 value={pagination.limit}
-                                onChange={(e) => {
-                                    const newLimit = Number(e.target.value);
-                                    setPagination(prev => ({ ...prev, limit: newLimit, currentPage: 1 }));
+                                onChange={(event) => {
+                                    const newLimit = Number(event.target.value);
+                                    setPagination(previous => ({ ...previous, limit: newLimit, currentPage: 1 }));
                                 }}
                                 className="rounded-md border border-gray-300 bg-white px-2 py-1 outline-none focus:border-[#00BF6A]"
                             >
@@ -307,7 +307,7 @@ export default function BookingHistoryTourist() {
                             totalData={pagination.totalCount}
                             limit={pagination.limit}
                             onQueryChange={({ page, limit }) => {
-                                setPagination(prev => ({ ...prev, currentPage: page, limit }));
+                                setPagination(previous => ({ ...previous, currentPage: page, limit }));
                             }}
                         />
                     </div>

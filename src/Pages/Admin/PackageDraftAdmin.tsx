@@ -1,22 +1,17 @@
 /*
- * Component : จัดการรายการแพ็กเกจฉบับร่าง (Draft)
- * รายละเอียด : แสดงรายการแพ็กเกจฉบับร่าง พร้อมระบบค้นหาแบบ Client-side, การลบเดี่ยว, ลบหลายรายการ
+ * Component : จัดการรายการแพ็กเกจฉบับร่าง (Draft) ของ Admin
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import axios from "axios";
-
-// ================= Import Components =================
 import DataTable, { type Column } from "../../Components/Tables/Index";
 import SearchBarTable from "../../Components/Search/SearchBarTable";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 import { Modal } from "../../Components/Modal/Modal";
-
 import type { BulkAction } from "../../Components/Tables/Types";
 import { TrashIcon, PencilIcon } from "../../Components/Tables/Icon";
 
-// ================= Interface =================
 type Package = {
   id: number;
   name: string;
@@ -26,7 +21,6 @@ type Package = {
   [key: string]: unknown;
 };
 
-// ================= Function : Normalize Text =================
 /*
  * คำอธิบาย : ฟังก์ชันจัดรูปแบบข้อความให้เป็นมาตรฐานก่อนนำไปค้นหา
  * Input : text (any)
@@ -40,15 +34,15 @@ const normalizeText = (text: any) =>
     .normalize("NFC")
     .replace(/\s+/g, " ");
 
-// =====================================================
-
+/*
+ * คำอธิบาย : คอมโพเนนต์สำหรับแสดงรายการแพ็กเกจฉบับร่างของผู้ดูแลระบบ
+ * Input : ไม่มี
+ * Output : แสดงหน้าจอรายการแพ็กเกจฉบับร่าง พร้อมค้นหา ลบ และจัดการข้อมูล
+ */
 const PackageDraftAdmin = () => {
-  // ================= State =================
   const [packages, setPackages] = useState<Package[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Pagination
   const [pagination, setPagination] = useState({
     currentPage: 1,
     limit: 10,
@@ -58,22 +52,19 @@ const PackageDraftAdmin = () => {
 
   const [selectedRows, setSelectedRows] = useState<Package[]>([]);
 
-  // Modal ลบเดี่ยว
   const [deleteModal, setDeleteModal] = useState({
     open: false,
     pkg: null as Package | null,
   });
 
-  // Modal ลบหลายรายการ
   const [bulkDeleteModal, setBulkDeleteModal] = useState({
     open: false,
     rows: [] as Package[],
   });
 
-  // ================= Function : Fetch Data =================
-  /*
-   * คำอธิบาย : ดึงรายการแพ็กเกจฉบับร่างจาก API และจัดรูปแบบข้อมูลก่อนแสดงผล
-   * Input : -
+ /*
+   * คำอธิบาย : ฟังก์ชันดึงรายการแพ็กเกจฉบับร่างจาก API และจัดรูปแบบข้อมูลก่อนนำไปแสดงผล
+   * Input : ไม่มี
    * Output : อัปเดต state packages และ pagination
    */
   const fetchPackages = useCallback(async () => {
@@ -112,16 +103,14 @@ const PackageDraftAdmin = () => {
     }
   }, []);
 
-  // โหลดข้อมูลครั้งแรก
   useEffect(() => {
     fetchPackages();
   }, [fetchPackages]);
 
-  // ================= Search Filter (Client-side) =================
   /*
-   * คำอธิบาย : กรองรายการใน Client จาก searchTerm
+   * คำอธิบาย : ฟังก์ชันกรองรายการแพ็กเกจตามคำค้นหา (ค้นหาฝั่ง Client)
    * Input : searchTerm, packages
-   * Output : rows ที่ผ่านการค้นหาแล้ว
+   * Output : รายการแพ็กเกจที่ผ่านเงื่อนไขการค้นหา
    */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchTerm);
@@ -139,7 +128,6 @@ const PackageDraftAdmin = () => {
     });
   }, [packages, searchTerm]);
 
-  // อัปเดต Pagination เมื่อผลค้นหาเปลี่ยน
   useEffect(() => {
     setPagination((prev) => ({
       ...prev,
@@ -149,20 +137,15 @@ const PackageDraftAdmin = () => {
     }));
   }, [filteredRows]);
 
-  // ================= Pagination Logic =================
-  /*
-   * คำอธิบาย : คำนวณ rows ที่ต้องแสดงตามหน้าปัจจุบัน
-   */
   const paginatedRows = useMemo(() => {
     const start = (pagination.currentPage - 1) * pagination.limit;
     return filteredRows.slice(start, start + pagination.limit);
   }, [filteredRows, pagination.currentPage, pagination.limit]);
 
-  // ================= Function : Delete Single =================
   /*
-   * คำอธิบาย : ลบแพ็กเกจรายการเดียว
+   * คำอธิบาย : ฟังก์ชันลบแพ็กเกจฉบับร่างทีละรายการ
    * Input : deleteModal.pkg
-   * Output : ลบข้อมูลและโหลดใหม่
+   * Output : ลบข้อมูลจากระบบและโหลดข้อมูลใหม่
    */
   const handleConfirmDelete = async () => {
     if (!deleteModal.pkg) return;
@@ -180,9 +163,8 @@ const PackageDraftAdmin = () => {
     }
   };
 
-  // ================= Function : Delete Multiple =================
   /*
-   * คำอธิบาย : ลบหลายรายการพร้อมกัน
+   * คำอธิบาย : ฟังก์ชันลบหลายรายการพร้อมกัน
    * Input : bulkDeleteModal.rows
    * Output : ลบข้อมูลทั้งหมดและโหลดใหม่
    */
@@ -205,7 +187,6 @@ const PackageDraftAdmin = () => {
     }
   };
 
-  // ================= Bulk Actions =================
   const bulkActions: BulkAction<Package>[] = [
     {
       id: "bulk-delete",
@@ -217,14 +198,10 @@ const PackageDraftAdmin = () => {
     },
   ];
 
-  // ================= Columns =================
   const columns: Column<Package>[] = [
     {
       key: "name",
       header: "ชื่อแพ็กเกจ",
-      /*
-       * คลิกชื่อเพื่อไปยังหน้าแสดงรายละเอียดแพ็กเกจ
-       */
       render: (pkg) => (
         <span
           className="cursor-pointer hover:text-gray-800"
@@ -243,9 +220,6 @@ const PackageDraftAdmin = () => {
     {
       key: "setting",
       header: "จัดการ",
-      /*
-       * ปุ่มแก้ไข และ ปุ่มลบ ในแต่ละแถว
-       */
       render: (pkg) => (
         <div className="flex space-x-2 gap-2">
           <span
@@ -268,7 +242,6 @@ const PackageDraftAdmin = () => {
     },
   ];
 
-  // ================= Render =================
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
       {/* Breadcrumb */}

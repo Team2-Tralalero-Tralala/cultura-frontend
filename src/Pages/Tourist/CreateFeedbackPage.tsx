@@ -10,7 +10,6 @@ import * as zod from "zod";
 import Button from "@/Components/Button";
 import TextArea from "@/Components/TextArea";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
-import { ModalConfirm } from "@/Components/Modal/ModalConfirmTourist";
 import { Modal } from "@/Components/Modal/Modal";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
@@ -216,12 +215,13 @@ export function CreateFeedbackPage() {
   }, [bookingId]);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] font-sarabun flex flex-col">
+    <div className="min-h-screen bg-[#FFFFFF] font-sarabun flex flex-col">
       <NavbarTourist />
 
-      <main className="flex-grow max-w-[1200px] mx-auto w-full px-6 py-10">
+      {/* หัวข้อหลักของหน้า */}
+      <div className="flex-grow max-w-[1200px] mx-auto w-full px-6 py-10">
         {/* ส่วนนำทาง (Breadcrumb) */}
-        <div className="mb-6">
+        <div>
           <Breadcrumb
             current={{
               label: "ข้อเสนอแนะ",
@@ -229,24 +229,27 @@ export function CreateFeedbackPage() {
             }}
           />
         </div>
+        <h1 className="text-[32px] font-bold text-black">ประวัติการจอง</h1>
+      </div>
 
-        {/* หัวข้อหลักของหน้า */}
-        <h1 className="text-[32px] font-bold text-black mb-8">ประวัติการจอง</h1>
 
+      <hr className="border-gray-300 mb-8" />
+      <main className="flex-grow max-w-[1200px] mx-auto w-full px-6 py-10">
         {/* การ์ดเนื้อหาหลัก (Main Content Card) */}
-        <div className="bg-white rounded-[24px] p-10 shadow-sm border border-gray-100">
-          <h2 className="text-xl font-bold text-black mb-8">ส่งข้อเสนอแนะไปยังชุมชน</h2>
+        <div className="rounded-[24px]">
+          <h2 className="text-2xl font-bold text-black mb-8">ส่งข้อเสนอแนะไปยังชุมชน</h2>
 
           {/* กล่องแบบฟอร์มด้านใน (Inner Form Container) */}
-          <div className="border border-[#E5E7EB] rounded-[16px] p-10">
-            <h3 className="text-[22px] font-bold text-black mb-8">{packageName}</h3>
+          <div className="bg-white border border-[#E5E7EB] rounded-[16px] p-10">
+            <h3 className="text-xl font-bold text-black mb-8">{packageName}</h3>
 
             {/* ส่วนการให้คะแนน (Rating Section) */}
             <div className="mb-10">
-              <div className="mb-10">
-                <label className="block text-base font-medium text-gray-700 mb-4">
+              <div className="flex items-center gap-4 mb-10">
+                <label className="text-base font-medium text-black">
                   ให้คะแนนแพ็กเกจ
                 </label>
+
                 <div className="flex items-center gap-3">
                   {[1, 2, 3, 4, 5].map((starRatingIndex) => (
                     <button
@@ -336,12 +339,14 @@ export function CreateFeedbackPage() {
       </main>
 
       {/* Modal ยืนยันการส่งข้อเสนอแนะ */}
-      <ModalConfirm
+      <Modal
         open={isConfirmationModalOpen}
         title="ยืนยันการส่งข้อเสนอแนะ"
-        message="คุณต้องการยืนยันการส่งข้อเสนอแนะไปยังชุมชนหรือไม่"
+        text="คุณต้องการยืนยันการส่งข้อเสนอแนะไปยังชุมชนหรือไม่"
         onConfirm={onConfirmFeedbackSave}
         onCancel={() => setIsConfirmationModalOpen(false)}
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
       />
 
       <Footer />

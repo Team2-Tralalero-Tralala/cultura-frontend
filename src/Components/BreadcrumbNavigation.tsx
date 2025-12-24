@@ -1,26 +1,25 @@
 /**
- * Component : Breadcrumb (แบบจดจำเส้นทางด้วย sessionStorage)
- * คำอธิบาย :
- *    - แสดงเส้นทางของหน้าปัจจุบัน
- *    - จำประวัติการคลิกภายในระบบด้วย sessionStorage
- *    - ถ้าเป็นหน้าที่มาจาก Sidebar (fromSidebar: true) จะ **รีเซ็ต chain ใหม่** ทันที
+ * Component : Breadcrumb
+ * คำอธิบาย : Component สำหรับแสดงเส้นทางของหน้าปัจจุบัน (Breadcrumb Navigation)
+ * โดยมีการจดจำประวัติการเข้าชมด้วย sessionStorage และใช้ Snapshot Strategy
+ * เพื่อป้องกันปัญหาการเข้า URL ตรง หรือการกดปุ่ม Back ของ Browser
  *
  * ตัวอย่าง – หน้ารายการ (มาจาก sidebar) :
- *    <Breadcrumb
- *      current={{
- *        label: "จัดการชุมชน",
- *        to: "/super/communities",
- *        fromSidebar: true,   // << สำคัญ : มาจาก sidebar
- *      }}
- *    />
+ * <Breadcrumb
+ * current={{
+ * label: "จัดการชุมชน",
+ * to: "/super/communities",
+ * fromSidebar: true,   // << สำคัญ : มาจาก sidebar
+ * }}
+ * />
  *
  * ตัวอย่าง – หน้าอื่นๆ ,sub sidebar :
- *    <Breadcrumb
- *      current={{
- *        label: community.name,
- *        to: `/super/community/${community.id}`,
- *      }}
- *    />
+ * <Breadcrumb
+ * current={{
+ * label: community.name,
+ * to: `/super/community/${community.id}`,
+ * }}
+ * />
  */
 
 import { Link, useLocation } from "react-router-dom";
@@ -30,81 +29,132 @@ import { useEffect, useState } from "react";
 type Crumb = {
   label: string;
   to: string;
-  fromSidebar?: boolean; // true = หน้า main ที่มาจาก sidebar
+  fromSidebar?: boolean;
 };
 
 interface BreadcrumbProps {
-  /** หน้าปัจจุบัน */
   current: Crumb;
 }
 
-const STORAGE_KEY = "breadcrumb_state_final_v2";
+// Config Constants
+const SNAPSHOT_KEY = "breadcrumb_snapshots_v2";
+const LAST_CHAIN_KEY = "breadcrumb_last_active_v2";
 
+/**
+ * คำอธิบาย : ดึงส่วนแรกของ URL เพื่อระบุ Role ของผู้ใช้ (เช่น /super/... -> super)
+ * Input : path (String ของ URL path)
+ * Output : String (Role prefix เช่น "super", "tourist")
+ */
+const getRolePrefix = (path: string) => {
+  const parts = path.split("/").filter(Boolean);
+  return parts.length > 0 ? parts[0] : "";
+};
+
+/**
+ * คำอธิบาย : สร้างและจัดการแถบนำทาง Breadcrumb ตามประวัติการเข้าชม
+ * Input : current (ข้อมูลของหน้าปัจจุบัน: label, to, fromSidebar)
+ * Output : JSX Element ของ Breadcrumb nav หรือ null
+ */
 export default function Breadcrumb({ current }: BreadcrumbProps) {
   const location = useLocation();
+
   const [items, setItems] = useState<Crumb[]>([]);
 
-useEffect(() => {
-  // ป้องกันกรณี current.to ยังไม่พร้อม หรือเป็น /undefined /null
-  const normalizedCurrent: Crumb = {
-    ...current,
-    to:
-      !current.to ||
-      current.to.includes("undefined") ||
-      current.to.includes("null")
-        ? location.pathname
-        : current.to,
-  };
+  useEffect(() => {
+    const normalizedCurrent: Crumb = {
+      ...current,
+      to:
+        !current.to ||
+        current.to.includes("undefined") ||
+        current.to.includes("null")
+          ? location.pathname
+          : current.to,
+    };
 
-  let history: Crumb[] = JSON.parse(
-    sessionStorage.getItem(STORAGE_KEY) || "[]"
-  );
-
-  // ถ้ามาจาก sidebar หลัก → รีเซ็ต chain ใหม่เลย
-  if (normalizedCurrent.fromSidebar) {
-    history = [normalizedCurrent];
-  } else {
-    const existedIndex = history.findIndex(
-      (h) => h.to === normalizedCurrent.to
+    const snapshots: Record<string, Crumb[]> = JSON.parse(
+      sessionStorage.getItem(SNAPSHOT_KEY) || "{}"
+    );
+    let lastActiveChain: Crumb[] = JSON.parse(
+      sessionStorage.getItem(LAST_CHAIN_KEY) || "[]"
     );
 
-    if (!history.length) {
-      // ครั้งแรกของ tab นี้ → เริ่มจากหน้าปัจจุบัน
-      history = [normalizedCurrent];
-    } else if (existedIndex === -1) {
-      // ยังไม่เคยมี path นี้ → ต่อท้าย chain
-      history.push(normalizedCurrent);
-    } else {
-      // เคสย้อนกลับมาหน้าเดิมใน chain เดิม
-      history = history.slice(0, existedIndex + 1);
-      history[existedIndex] = normalizedCurrent;
+    const currentKey = location.key;
+    const isFirstLoad = currentKey === "default";
+    let newChain: Crumb[] = [];
+
+    const currentRole = getRolePrefix(normalizedCurrent.to);
+    const lastChainRole = lastActiveChain.length > 0 ? getRolePrefix(lastActiveChain[0].to) : currentRole;
+
+    // ตรวจสอบว่า Role เปลี่ยนไปหรือไม่ (เช่น Logout admin -> Login tourist)
+    const isRoleMismatch = currentRole !== lastChainRole;
+
+    // Priority 1: ถ้ามาจาก Sidebar หรือ มีการเปลี่ยน Role -> ล้างกระดานทันที
+    if (normalizedCurrent.fromSidebar || isRoleMismatch) {
+      newChain = [normalizedCurrent];
     }
-  }
+    // Priority 2: ถ้ามี Snapshot ของ Key นี้ -> ลอง Restore
+    else if (snapshots[currentKey]) {
+      const restoredChain = snapshots[currentKey];
+      const lastItem = restoredChain[restoredChain.length - 1];
 
-  setItems(history);
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-}, [location.pathname, current.label, current.to, current.fromSidebar]);
+      // Sanity Check: Snapshot ที่ดึงมา ปลายทางต้องตรง และ Role ต้องไม่เปลี่ยน
+      if (
+        lastItem &&
+        lastItem.to === normalizedCurrent.to &&
+        getRolePrefix(lastItem.to) === currentRole
+      ) {
+        newChain = restoredChain;
+      } else {
+        // ถ้าไม่ตรง หรือ Role เปลี่ยน แสดงว่าเป็นขยะ -> Reset ใหม่
+        newChain = [normalizedCurrent];
+      }
+    }
+    // Priority 3: กรณีอื่นๆ (กด Link ต่อมา, First Load ที่ไม่มี Snap)
+    else {
+      if (isFirstLoad) {
+        newChain = [normalizedCurrent];
+      } else {
+        // Logic การต่อ Chain ปกติ
+        // แก้ไข: เปลี่ยน h เป็น historyItem ให้สื่อความหมาย
+        const existedIndex = lastActiveChain.findIndex(
+          (historyItem) => historyItem.to === normalizedCurrent.to
+        );
 
+        if (existedIndex !== -1) {
+          newChain = lastActiveChain.slice(0, existedIndex + 1);
+          newChain[existedIndex] = normalizedCurrent;
+        } else {
+          newChain = [...lastActiveChain, normalizedCurrent];
+        }
+      }
+    }
 
-  const handleBack = (index: number) => {
-    const newItems = items.slice(0, index + 1);
-    setItems(newItems);
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
-  };
+    // Save States
+    snapshots[currentKey] = newChain;
+    sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshots));
+    sessionStorage.setItem(LAST_CHAIN_KEY, JSON.stringify(newChain));
+
+    setItems(newChain);
+
+  }, [location.pathname, location.key, current.label, current.to, current.fromSidebar]);
+
+  /**
+   * ฟังก์ชัน : handleBack
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการ event เมื่อกดลิงก์ย้อนกลับ (ปัจจุบันยังไม่มี logic พิเศษ)
+   * Input : -
+   * Output : -
+   */
+  const handleBack = () => { };
 
   if (!items.length) return null;
 
   const lastIndex = items.length - 1;
 
   return (
-    <nav
-      aria-label="breadcrumb"
-      className="flex items-center text-[14px] font-medium -pt-2 pb-5"
-    >
+    <nav aria-label="breadcrumb" className="flex items-center text-[14px] font-medium -pt-2 pb-5">
       {items.map((item, index) => {
         const isCurrent = index === lastIndex;
         const isSingleFromSidebar = items.length === 1 && !!item.fromSidebar;
-
         // กติกาสี:
         // - หน้าเดียว + fromSidebar: ดำ
         // - หน้าปัจจุบัน: #494949
@@ -120,7 +170,7 @@ useEffect(() => {
             {!isCurrent ? (
               <Link
                 to={item.to}
-                onClick={() => handleBack(index)}
+                onClick={handleBack}
                 className={`${textColorClass} hover:text-dark-green transition-colors`}
               >
                 {item.label}
@@ -128,12 +178,8 @@ useEffect(() => {
             ) : (
               <span className={textColorClass}>{item.label}</span>
             )}
-
             {index < lastIndex && (
-              <Icon
-                icon="mdi:chevron-right"
-                className="mx-2 text-gray-400 w-3.5 h-3.5"
-              />
+              <Icon icon="mdi:chevron-right" className="mx-2 text-gray-400 w-3.5 h-3.5" />
             )}
           </div>
         );

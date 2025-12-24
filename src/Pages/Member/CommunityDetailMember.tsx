@@ -1,5 +1,5 @@
-/*
- * คำอธิบาย : แสดงรายละเอียดของชุมชน (Member)
+/**
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดของชุมชน (Member)
  * หน้าที่ : ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
  * สิทธิ์การเข้าถึง : Member เท่านั้น (ดึงข้อมูลชุมชนของตนเอง)
  * เส้นทาง (Route) : /member/community/own
@@ -12,102 +12,84 @@ import { getCommunityDetailByMember } from "@/Services/community-service";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
- * ฟังก์ชัน : displayText
  * คำอธิบาย : แปลงค่าข้อความสำหรับแสดงผล หากไม่มีข้อมูลหรือเป็นค่าว่างจะแสดง "-"
- * Input :
- *   - value (string | null | undefined) : ข้อความที่ต้องการนำมาแสดง
- * Output :
- *   - string : ข้อความเดิม หรือ "-" หากไม่มีข้อมูล
+ * Input : textValue (string | null | undefined)
+ * Output : string
  */
-const displayText = (value?: string | null) => (value && String(value).trim() ? value : "-");
+const displayText = (textValue?: string | null) => (textValue && String(textValue).trim() ? textValue : "-");
 
-/**
- * ฟังก์ชัน : toThaiDate
+/*
  * คำอธิบาย : แปลงวันที่จากรูปแบบ ISO string เป็นวันที่รูปแบบไทย (dd/mm/yyyy)
- * Input :
- *   - iso (string | null | undefined) : วันที่ในรูปแบบ ISO
- * Output :
- *   - string : วันที่รูปแบบ dd/mm/yyyy หรือ "-" หากข้อมูลไม่ถูกต้อง
+ * Input : isoDateString (string | null | undefined)
+ * Output : string
  */
-const toThaiDate = (iso?: string | null) => {
-  if (!iso) return "-";
-  const date = new Date(iso);
+const toThaiDate = (isoDateString?: string | null) => {
+  if (!isoDateString) return "-";
+  const date = new Date(isoDateString);
   if (Number.isNaN(date.getTime())) return "-";
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 /*
- * ฟังก์ชัน : resolveBackendUploadUrl
- * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend (มักขึ้นต้นด้วย uploads/)
- * ให้เป็น URL ดาวน์โหลดเต็มที่พร้อมใช้งานบน frontend
- * ใช้ค่าใน .env (VITE_BACKEND_URL) และ fallback เป็น localhost หากไม่พบค่า
+ * คำอธิบาย : ค่า URL Backend Base จาก Environment Variable
  */
 const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-/**
- * Input : fileName - ชื่อไฟล์หรือพาธไฟล์จาก backend
- * Output : string | undefined - URL เต็ม หรือ undefined ถ้าไม่มีค่า
+/*
+ * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend ให้เป็น URL ดาวน์โหลดเต็มรูปแบบ
+ * Input : fileName (string | null)
+ * Output : string | undefined
  */
 function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
-  // 🔹 แปลง backslash -> forward slash
-  const normalized = fileName.replace(/\\/g, "/");
-  const cleaned = normalized.replace(/^\/?uploads\//, "");
-  return `${backendBaseUrl}/uploads/${cleaned}`;
+  // แปลง backslash -> forward slash
+  const normalizedPath = fileName.replace(/\\/g, "/");
+  const cleanedPath = normalizedPath.replace(/^\/?uploads\//, "");
+  return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
-/**
- * ฟังก์ชัน : pickImagePath
+/*
  * คำอธิบาย : ดึง path รูปภาพจาก object โดยรองรับชื่อ field ที่แตกต่างกัน
- * Input :
- *   - img (any) : object ของรูปภาพ
- * Output :
- *   - string | null : path รูปภาพ หรือ null หากไม่พบ
+ * Input : imageEntity (any)
+ * Output : string | null
  */
-function pickImagePath(img: any): string | null {
-  return img?.url ?? img?.image ?? img?.ci_image ?? img?.filePath ?? null;
+function pickImagePath(imageEntity: any): string | null {
+  return imageEntity?.url ?? imageEntity?.image ?? imageEntity?.ci_image ?? imageEntity?.filePath ?? null;
 }
 
-/**
- * ฟังก์ชัน : findImage
+/*
  * คำอธิบาย : ค้นหารูปภาพของชุมชนตามประเภทที่กำหนด
- * Input :
- *   - community (any) : ข้อมูลชุมชน
- *   - type (string) : ประเภทรูปภาพ (เช่น LOGO, COVER)
- * Output :
- *   - string | null : path รูปภาพ หรือ null หากไม่พบ
+ * Input : communityData (any), imageType (string)
+ * Output : string | null
  */
-function findImage(community: any, type: string): string | null {
-  const item = community?.communityImage?.find(
-    (image: any) => String(image.type).toUpperCase() === type.toUpperCase()
+function findImage(communityData: any, imageType: string): string | null {
+  const imageItem = communityData?.communityImage?.find(
+    (image: any) => String(image.type).toUpperCase() === imageType.toUpperCase()
   );
-  return pickImagePath(item);
+  return pickImagePath(imageItem);
 }
 
-/**
- * ฟังก์ชัน : listImagesByType
+/*
  * คำอธิบาย : ดึงรายการ path รูปภาพของชุมชนตามประเภทที่กำหนด
- * Input :
- *   - community (any) : ข้อมูลชุมชน
- *   - type (string) : ประเภทรูปภาพ (เช่น GALLERY, VIDEO)
- * Output :
- *   - string[] : รายการ path รูปภาพ
+ * Input : communityData (any), imageType (string)
+ * Output : string[]
  */
-function listImagesByType(community: any, type: string): string[] {
-  const images = (community?.communityImage || []).filter(
-    (image: any) => String(image.type).toUpperCase() === type.toUpperCase()
+function listImagesByType(communityData: any, imageType: string): string[] {
+  const imageLists = (communityData?.communityImage || []).filter(
+    (image: any) => String(image.type).toUpperCase() === imageType.toUpperCase()
   );
-  return images.map(pickImagePath).filter(Boolean) as string[];
+  return imageLists.map(pickImagePath).filter(Boolean) as string[];
 }
 
 // Components ย่อยที่ใช้ภายในหน้า
 
-/**
- * ฟังก์ชัน : Row
- * แสดงแถวข้อมูลแบบ Label : Value
+/*
+ * คำอธิบาย : แสดงแถวข้อมูลแบบ Label : Value
+ * Input : label (string), children (ReactNode)
+ * Output : React element
  */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -119,56 +101,59 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-/**
- * ฟังก์ชัน : AvatarCircle
- * แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
+/*
+ * คำอธิบาย : แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
+ * Input : src, name, size
+ * Output : React element
  */
 function AvatarCircle({ src, name, size = 64 }: any) {
-  const base =
+  const baseClassName =
     "rounded-full overflow-hidden grid place-items-center select-none ring-2 ring-white shadow-sm";
   const style = { width: size, height: size };
 
   if (src)
-    return <img src={src} alt="avatar" style={style} className={`${base} object-cover bg-white`} />;
+    return <img src={src} alt="avatar" style={style} className={`${baseClassName} object-cover bg-white`} />;
 
-  const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
+  const initialName = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
     <div
       style={style}
-      className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600 text-white`}
+      className={`${baseClassName} bg-gradient-to-br from-emerald-500 to-teal-600 text-white`}
     >
       <span className="font-semibold" style={{ fontSize: size * 0.45 }}>
-        {initial}
+        {initialName}
       </span>
     </div>
   );
 }
 
-/**
- * ฟังก์ชัน : LogoCircle
- * แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
+/*
+ * คำอธิบาย : แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
+ * Input : src, name, size
+ * Output : React element
  */
 function LogoCircle({ src, name, size = 120 }: any) {
-  const base =
+  const baseClassName =
     "rounded-full ring-4 ring-white shadow-lg overflow-hidden grid place-items-center select-none";
   const style = { width: size, height: size };
 
   if (src)
-    return <img src={src} alt="Logo" style={style} className={`${base} object-cover bg-white`} />;
+    return <img src={src} alt="Logo" style={style} className={`${baseClassName} object-cover bg-white`} />;
 
-  const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
+  const initialName = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
-    <div style={style} className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600`}>
+    <div style={style} className={`${baseClassName} bg-gradient-to-br from-emerald-500 to-teal-600`}>
       <span className="text-white font-bold" style={{ fontSize: size * 0.45 }}>
-        {initial}
+        {initialName}
       </span>
     </div>
   );
 }
 
-/**
- * ฟังก์ชัน : CoverRect
- * แสดงภาพปก (แนวนอนสี่เหลี่ยม)
+/*
+ * คำอธิบาย : แสดงภาพปก (แนวนอนสี่เหลี่ยม)
+ * Input : src, height
+ * Output : React element
  */
 function CoverRect({ src, height = 320 }: any) {
   if (src) return <img src={src} alt="Cover" style={{ height }} className="w-full object-cover" />;
@@ -181,8 +166,10 @@ function CoverRect({ src, height = 320 }: any) {
   );
 }
 
-/**
- * Icon : Pin (หมุดพิกัด)
+/*
+ * คำอธิบาย : Icon Pin (หมุดพิกัด)
+ * Input : props
+ * Output : React element (SVG)
  */
 const Pin = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" width="20" height="20" {...props}>
@@ -193,9 +180,10 @@ const Pin = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-/**
- * ฟังก์ชัน : Section
- * Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
+/*
+ * คำอธิบาย : Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
+ * Input : title, count, children, defaultOpen, onManage
+ * Output : React element
  */
 function Section({
   title,
@@ -210,11 +198,11 @@ function Section({
   defaultOpen?: boolean;
   onManage?: () => void;
 }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isSectionOpen, setIsSectionOpen] = useState(defaultOpen);
   return (
     <div className="mt-4">
       <button
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={() => setIsSectionOpen((prev) => !prev)}
         className="w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left hover:bg-slate-50 text-base font-semibold"
       >
         <span className="font-semibold">{title}</span>
@@ -224,11 +212,11 @@ function Section({
               จำนวน {count} {title}
             </span>
           )}
-          <Icon icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"} width={18} />
+          <Icon icon={isSectionOpen ? "mdi:chevron-up" : "mdi:chevron-down"} width={18} />
         </div>
       </button>
 
-      {isOpen && (
+      {isSectionOpen && (
         <div className="rounded-xl border mt-2 p-4 bg-slate-50">
           {/* ปุ่มจัดการ (แสดงเฉพาะเมื่อมี onManage) */}
           {onManage && (
@@ -248,9 +236,10 @@ function Section({
   );
 }
 
-/**
- * ฟังก์ชัน : ItemCard
- * การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / ที่พัก)
+/*
+ * คำอธิบาย : การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / ที่พัก)
+ * Input : image, title, children
+ * Output : React element
  */
 function ItemCard({ image, title, children }: any) {
   return (
@@ -284,8 +273,8 @@ export default function CommunityDetailAdmin() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await getCommunityDetailByMember();
-        setCommunity(res?.data?.data);
+        const response = await getCommunityDetailByMember();
+        setCommunity(response?.data?.data);
       } catch (err: any) {
         setError(err?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
@@ -303,14 +292,14 @@ export default function CommunityDetailAdmin() {
     () => resolveBackendUploadUrl(findImage(community, "LOGO")),
     [community]
   );
-  const galleries = useMemo(
+  const galleryImageLists = useMemo(
     () =>
       (listImagesByType(community, "GALLERY") || [])
         .map(resolveBackendUploadUrl)
         .filter(Boolean) as string[],
     [community]
   );
-  const videos = useMemo(
+  const videoLists = useMemo(
     () =>
       (listImagesByType(community, "VIDEO") || [])
         .map(resolveBackendUploadUrl)
@@ -318,14 +307,14 @@ export default function CommunityDetailAdmin() {
     [community]
   );
 
-  /*  สถานะโหลด / error */
+  /* สถานะโหลด / error */
   if (isLoading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!community) return <div className="p-8">ไม่พบข้อมูล</div>;
 
-  const isOpen = String(community.status || "").toUpperCase() === "OPEN";
+  const isStatusOpen = String(community.status || "").toUpperCase() === "OPEN";
 
-  /*  ส่วนแสดงผลหลัก */
+  /* ส่วนแสดงผลหลัก */
   return (
     <div className="w-full space-y-4">
       {/* Breadcrumb นำทางหน้า */}
@@ -343,23 +332,23 @@ export default function CommunityDetailAdmin() {
       <div className="rounded-3xl border border-slate-200 bg-white shadow-sm box-border w-full p-6">
         {/* ส่วนหัว */}
         <div className="px-6 pt-5 pb-3 flex items-center justify-between">
-            <h1 className="font-bold text-xl text-black">รายละเอียดของชุมชน</h1>
+          <h1 className="font-bold text-xl text-black">รายละเอียดของชุมชน</h1>
         </div>
 
         {/* ภาพปกและโลโก้ชุมชน */}
         {(() => {
-          const COVER_H = 300;
-          const LOGO = 240;
+          const COVER_HEIGHT = 300;
+          const LOGO_SIZE = 240;
           return (
             <div className="px-6 sm:px-8 pb-6">
               <div className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
-                <CoverRect src={coverImage} height={COVER_H} />
+                <CoverRect src={coverImage} height={COVER_HEIGHT} />
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
                   <div className="absolute left-6 md:left-8 -translate-y-1/2" style={{ top: 0 }}>
-                    <LogoCircle src={logoImage} name={community?.name} size={LOGO} />
+                    <LogoCircle src={logoImage} name={community?.name} size={LOGO_SIZE} />
                   </div>
 
-                  <div style={{ paddingLeft: LOGO + 24 }}>
+                  <div style={{ paddingLeft: LOGO_SIZE + 24 }}>
                     {/* Title + Status */}
                     <div className="flex items-center gap-3">
                       <h1 className="text-[22px] font-bold leading-tight">
@@ -368,13 +357,12 @@ export default function CommunityDetailAdmin() {
 
                       {!!community.status && (
                         <span
-                          className={`px-2.5 py-0.5 text-sm rounded-full ${
-                            isOpen
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-slate-700"
-                          }`}
+                          className={`px-2.5 py-0.5 text-sm rounded-full ${isStatusOpen
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-700"
+                            }`}
                         >
-                          {isOpen ? "เปิด" : "ปิด"}
+                          {isStatusOpen ? "เปิด" : "ปิด"}
                         </span>
                       )}
                     </div>
@@ -415,7 +403,7 @@ export default function CommunityDetailAdmin() {
         })()}
 
         {/* รายละเอียดข้อมูลชุมชน (แสดงแบบสองคอลัมน์) */}
-          <div className="px-6 sm:px-8 mt-2">
+        <div className="px-6 sm:px-8 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 text-sm leading-relaxed">
             <Row label="ชื่อวิสาหกิจชุมชน">{displayText(community.name)}</Row>
             <Row label="ชื่อย่อ">{displayText(community.alias)}</Row>
@@ -431,9 +419,8 @@ export default function CommunityDetailAdmin() {
               <span className="whitespace-pre-line break-words">
                 {`${displayText(community.location?.detail)} ${displayText(
                   community.location?.subDistrict
-                )} ${displayText(community.location?.district)} ${displayText(community.location?.province)} ${
-                  community.location?.postalCode ? `(${community.location.postalCode})` : ""
-                }`}
+                )} ${displayText(community.location?.district)} ${displayText(community.location?.province)} ${community.location?.postalCode ? `(${community.location.postalCode})` : ""
+                  }`}
               </span>
             </Row>
 
@@ -461,15 +448,26 @@ export default function CommunityDetailAdmin() {
                 "-"
               )}
             </Row>
-            <Row label="จำนวนสมาชิก">{displayText(community.communityMembers?.length || 0)} คน</Row>
+            <Row label="จำนวนสมาชิก">
+              {displayText(
+                (community.communityMembers?.length || 0) +
+                (community.admin ? 1 : 0)
+              )} คน
+            </Row>
 
             <Row label="ชื่อผู้ดูแลหลัก">{displayText(community.mainAdmin)}</Row>
             <Row label="เบอร์โทรผู้ดูแลหลัก">{displayText(community.mainAdminPhone)}</Row>
 
-            <Row label="ผู้ประสานงาน">{displayText(community.coordinatorName)}</Row>
+            <Row label="ชื่อผู้ประสานงาน">{displayText(community.coordinatorName)}</Row>
             <Row label="เบอร์โทรผู้ประสานงาน">{displayText(community.coordinatorPhone)}</Row>
 
-            <Row label="ผู้ดูแล">{displayText(community.mainAdmin)}</Row>
+            <Row label="ผู้ดูแล">
+              {displayText(
+                community.admin
+                  ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
+                  : null
+              )}
+            </Row>
             <div />
 
             <Row label="ชื่อธนาคาร">{displayText(community.bankName)}</Row>
@@ -538,11 +536,11 @@ export default function CommunityDetailAdmin() {
         {/* แกลเลอรีรูปภาพเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
           <h2 className="text-xl font-semibold">รูปภาพเพิ่มเติม</h2>
-          {galleries?.length ? (
+          {galleryImageLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {galleries.map((url, i) => (
+              {galleryImageLists.map((url, index) => (
                 <img
-                  key={`${url}-${i}`}
+                  key={`${url}-${index}`}
                   src={url ?? ""}
                   alt=""
                   className="h-40 w-full object-cover rounded-xl"
@@ -554,14 +552,14 @@ export default function CommunityDetailAdmin() {
           )}
         </div>
 
-        {/*  วิดีโอเพิ่มเติม */}
+        {/* วิดีโอเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
           <h2 className="text-xl font-semibold">วิดีโอเพิ่มเติม</h2>
-          {videos?.length ? (
+          {videoLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {videos.map((url, i) => (
+              {videoLists.map((url, index) => (
                 <video
-                  key={`${url}-${i}`}
+                  key={`${url}-${index}`}
                   src={url ?? ""}
                   controls
                   className="h-40 w-full object-cover rounded-xl bg-black [&:fullscreen]:object-contain"
@@ -582,11 +580,9 @@ export default function CommunityDetailAdmin() {
                 const lat = community.location.latitude;
                 const lng = community.location.longitude;
                 const zoomDelta = 0.0025;
-                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
-                  lng - zoomDelta
-                }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${
-                  lat + zoomDelta
-                }&layer=mapnik&marker=${lat}%2C${lng}`;
+                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - zoomDelta
+                  }%2C${lat - zoomDelta}%2C${lng + zoomDelta}%2C${lat + zoomDelta
+                  }&layer=mapnik&marker=${lat}%2C${lng}`;
                 return (
                   <iframe
                     width="100%"
@@ -608,10 +604,10 @@ export default function CommunityDetailAdmin() {
         {/* Accordion: ร้านค้า / ที่พัก / สมาชิก */}
         <div className="px-6 sm:px-8 mt-6 pb-8">
           {(() => {
-            const stores = (community.stores || []).filter(
+            const storeLists = (community.stores || []).filter(
               (store: any) => store.communityId === community.id
             );
-            const homestays = (community.homestays || []).filter(
+            const homestayLists = (community.homestays || []).filter(
               (homestay: any) => homestay.communityId === community.id
             );
 
@@ -620,12 +616,12 @@ export default function CommunityDetailAdmin() {
                 {/* ส่วนแสดงข้อมูลร้านค้า */}
                 <Section
                   title="ร้านค้า"
-                  count={stores.length}
-                  // onManage={() => navigate(`/admin/community/stores`)}
+                  count={storeLists.length}
+                // onManage={() => navigate(`/admin/community/stores`)}
                 >
-                  {stores.length ? (
+                  {storeLists.length ? (
                     <div className="space-y-4">
-                      {stores.map((store: any) => (
+                      {storeLists.map((store: any) => (
                         <ItemCard
                           key={store.id}
                           image={resolveBackendUploadUrl(
@@ -647,12 +643,12 @@ export default function CommunityDetailAdmin() {
                 {/* ส่วนแสดงข้อมูลที่พัก */}
                 <Section
                   title="ที่พัก"
-                  count={homestays.length}
-                  // onManage={() => navigate(`/admin/community/homestays`)}
+                  count={homestayLists.length}
+                // onManage={() => navigate(`/admin/community/homestays`)}
                 >
-                  {homestays.length ? (
+                  {homestayLists.length ? (
                     <div className="space-y-4">
-                      {homestays.map((homestay: any) => (
+                      {homestayLists.map((homestay: any) => (
                         <ItemCard
                           key={homestay.id}
                           image={resolveBackendUploadUrl(
@@ -680,19 +676,67 @@ export default function CommunityDetailAdmin() {
                 {/* ส่วนแสดงข้อมูลสมาชิก */}
                 <Section
                   title="รายชื่อสมาชิก"
-                  count={community.communityMembers?.length || 0}
-                  // onManage={() => navigate(`/admin/members`)}
+                  count={
+                    (community.communityMembers?.length || 0) +
+                    (community.admin ? 1 : 0)
+                  }
+                // onManage={() => navigate(`/admin/members`)}
                 >
-                  {community.communityMembers?.length ? (
+                  {community.communityMembers?.length || community.admin ? (
                     <div className="space-y-3">
-                      {community.communityMembers.map((communityMember: any) => {
+                      {/* การ์ดแอดมินชุมชน */}
+                      {community.admin && (() => {
+                        const admin = community.admin;
+                        const adminFullName = [admin.fname, admin.lname].filter(Boolean).join(" ").trim();
+
+                        return (
+                          <div
+                            key={`admin-${admin.id}`}
+                            // onClick={() => navigate(`/admin/member/${admin.id}`)}
+                            className="bg-emerald-50 border-emerald-200 rounded-xl border shadow-sm p-4 flex gap-4 items-center"
+                          >
+                            <AvatarCircle
+                              src={resolveBackendUploadUrl(admin.profileImage)}
+                              name={adminFullName || admin.username}
+                              size={64}
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 font-medium truncate">
+                                <span className="truncate">
+                                  {adminFullName || admin.username}
+                                </span>
+
+                                {/* badge แอดมินชุมชน ต่อท้ายชื่อ */}
+                                <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                  แอดมินชุมชน
+                                </span>
+                              </div>
+
+                              {admin.activityRole && (
+                                <div className="text-sm text-slate-700 mt-1">
+                                  • {admin.activityRole}
+                                </div>
+                              )}
+                              <div className="mt-1 text-sm text-slate-600 truncate">
+                                {admin.email || "-"}
+                              </div>
+                              <div className="text-sm text-slate-600">
+                                {admin.phone || "-"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* การ์ดสมาชิกทั่วไป */}
+                      {community.communityMembers?.map((communityMember: any) => {
                         const member = communityMember.user;
                         const fullName = [member.fname, member.lname].filter(Boolean).join(" ").trim();
 
                         return (
                           <div
                             key={communityMember.id}
-                            onClick={() => navigate(`/admin/account/${member.id}`)} // ชี้ไปหน้ารายละเอียดสมาชิกฝั่ง Admin
+                            // onClick={() => navigate(`/admin/member/${member.id}`)}
                             className="bg-white rounded-xl border shadow-sm p-4 flex gap-4 items-center"
                           >
                             <AvatarCircle
@@ -701,14 +745,20 @@ export default function CommunityDetailAdmin() {
                               size={64}
                             />
                             <div className="min-w-0">
-                              <div className="font-medium truncate">{fullName || member.username}</div>
+                              <div className="font-medium truncate">
+                                {fullName || member.username}
+                              </div>
                               {member.activityRole && (
-                                <div className="text-sm text-slate-700">• {member.activityRole}</div>
+                                <div className="text-sm text-slate-700">
+                                  • {member.activityRole}
+                                </div>
                               )}
                               <div className="mt-1 text-sm text-slate-600 truncate">
                                 {member.email || "-"}
                               </div>
-                              <div className="text-sm text-slate-600">{member.phone || "-"}</div>
+                              <div className="text-sm text-slate-600">
+                                {member.phone || "-"}
+                              </div>
                             </div>
                           </div>
                         );

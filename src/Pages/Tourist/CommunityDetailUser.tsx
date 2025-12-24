@@ -1,4 +1,4 @@
-/*
+/**
  * หน้า : รายละเอียดชุมชนสำหรับฝั่งผู้ใช้ทั่วไป (Guest / Tourist)
  * คำอธิบาย : สำหรับแสดงรายละเอียดของชุมชน (ชุมชนที่เปิด)
  * หน้าที่ : ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของชุมชนแบบ public
@@ -17,66 +17,54 @@ import PaginationRoundedForCardPackage from "@/Components/Pagination/PaginationR
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
 
-/**
+/*
  * คำอธิบาย : ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล/เป็นค่าว่าง
- *
- * Input:
- *  - value?: string | null
- * Output:
- *  - string (ค่าที่พร้อมแสดงผล)
+ * Input : textValue (string | null | undefined)
+ * Output : string (ค่าที่พร้อมแสดงผล)
  */
-const displayText = (value?: string | null) =>
-  value && String(value).trim() ? value : "-";
+const displayText = (textValue?: string | null) =>
+  textValue && String(textValue).trim() ? textValue : "-";
 
-/**
+/*
  * คำอธิบาย : แปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
- *
- * Input:
- *  - iso?: string | null
- * Output:
- *  - string (dd/mm/yyyy) หรือ "-" ถ้าแปลงไม่ได้
+ * Input : isoDateString (string | null | undefined)
+ * Output : string (dd/mm/yyyy) หรือ "-" ถ้าแปลงไม่ได้
  */
-const toThaiDate = (iso?: string | null) => {
-  if (!iso) return "-";
-  const date = new Date(iso);
+const toThaiDate = (isoDateString?: string | null) => {
+  if (!isoDateString) return "-";
+  const date = new Date(isoDateString);
   if (Number.isNaN(date.getTime())) return "-";
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
-/**
+/*
  * คำอธิบาย : base url สำหรับไฟล์อัปโหลดจาก backend
  * หมายเหตุ : VITE_API_URL มักลงท้ายด้วย /api → จึงต้องตัดออกเพื่อให้ได้ backend base
  */
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
-/**
+/*
  * คำอธิบาย : แปลง path ที่ได้จาก backend ให้เป็น URL เต็มของไฟล์ใน /uploads
- *
- * Input:
- *  - fileName?: string | null
- * Output:
- *  - string | undefined (URL เต็มของไฟล์)
+ * Input : fileName (string | null)
+ * Output : string | undefined (URL เต็มของไฟล์)
  */
 function resolveBackendUploadUrl(
   fileName?: string | null
 ): string | undefined {
   if (!fileName) return undefined;
-  const normalized = fileName.replace(/\\/g, "/");
-  const cleaned = normalized.replace(/^\/?uploads\//, "");
-  return `${backendBaseUrl}/uploads/${cleaned}`;
+  const normalizedPath = fileName.replace(/\\/g, "/");
+  const cleanedPath = normalizedPath.replace(/^\/?uploads\//, "");
+  return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
-/**
+/*
  * คำอธิบาย : ดึง path รูปภาพจาก object โดยรองรับ field หลายชื่อ (กันเคส shape ต่างกัน)
- *
- * Input:
- *  - imageObject: any
- * Output:
- *  - string | null (path รูป)
+ * Input : imageObject (any)
+ * Output : string | null (path รูป)
  */
 function pickImagePath(imageObject: any): string | null {
   return (
@@ -88,45 +76,37 @@ function pickImagePath(imageObject: any): string | null {
   );
 }
 
-/**
+/*
  * คำอธิบาย : ค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
- *
- * Input:
- *  - community: any
- *  - type: string
- * Output:
- *  - string | null (path รูป)
+ * Input : communityData (any), imageType (string)
+ * Output : string | null (path รูป)
  */
-function findImage(community: any, type: string): string | null {
-  const imageItem = community?.communityImage?.find(
+function findImage(communityData: any, imageType: string): string | null {
+  const imageItem = communityData?.communityImage?.find(
     (imageObject: any) =>
-      String(imageObject.type).toUpperCase() === type.toUpperCase()
+      String(imageObject.type).toUpperCase() === imageType.toUpperCase()
   );
   return pickImagePath(imageItem);
 }
 
-/**
+/*
  * คำอธิบาย : คืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
- *
- * Input:
- *  - community: any
- *  - type: string
- * Output:
- *  - string[] (รายการ path รูป)
+ * Input : communityData (any), imageType (string)
+ * Output : string[] (รายการ path รูป)
  */
-function listImagesByType(community: any, type: string): string[] {
-  const imageArray = (community?.communityImage || []).filter(
+function listImagesByType(communityData: any, imageType: string): string[] {
+  const imageArray = (communityData?.communityImage || []).filter(
     (imageObject: any) =>
-      String(imageObject.type).toUpperCase() === type.toUpperCase()
+      String(imageObject.type).toUpperCase() === imageType.toUpperCase()
   );
 
   return imageArray.map(pickImagePath).filter(Boolean) as string[];
 }
 
-/**
+/*
  * คำอธิบาย : Component สำหรับแสดงข้อมูลในรูปแบบ "Label : Value"
- * Input : -
- * Output : แถวข้อมูล 1 แถว (Label : Value) สำหรับใช้ในหน้ารายละเอียด
+ * Input : label (string), children (ReactNode)
+ * Output : React Element
  */
 function Row({
   label,
@@ -146,15 +126,13 @@ function Row({
   );
 }
 
-/**
+/*
  * คำอธิบาย : Component สำหรับแสดงโลโก้ของชุมชนในรูปแบบวงกลม
- *             หากมีรูปโลโก้จะแสดงรูปภาพ
- *             หากไม่มีรูปโลโก้จะแสดงตัวอักษรย่อจากชื่อชุมชนแทน
- * Input : -
- * Output : องค์ประกอบโลโก้แบบวงกลม (รูปภาพหรืออักษรย่อ)
+ * Input : src, name, size
+ * Output : React Element
  */
 function LogoCircle({ src, name, size = 240 }: any) {
-  const base =
+  const baseClassName =
     "rounded-full ring-4 ring-white shadow-lg overflow-hidden grid place-items-center select-none";
   const style = { width: size, height: size };
 
@@ -164,30 +142,28 @@ function LogoCircle({ src, name, size = 240 }: any) {
         src={src}
         alt="Logo"
         style={style}
-        className={`${base} object-cover bg-white`}
+        className={`${baseClassName} object-cover bg-white`}
       />
     );
   }
 
-  const initial = (name || "").trim().charAt(0)?.toUpperCase() || "?";
+  const initialName = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
     <div
       style={style}
-      className={`${base} bg-gradient-to-br from-emerald-500 to-teal-600`}
+      className={`${baseClassName} bg-gradient-to-br from-emerald-500 to-teal-600`}
     >
       <span className="text-white font-bold" style={{ fontSize: size * 0.45 }}>
-        {initial}
+        {initialName}
       </span>
     </div>
   );
 }
 
-/**
+/*
  * คำอธิบาย : Component สำหรับแสดงภาพปกของชุมชนหรือรายการข้อมูล
- *             หากมีรูปภาพจะแสดงเป็นภาพปก
- *             หากไม่มีรูปภาพจะแสดง placeholder แทน
- * Input : -
- * Output : องค์ประกอบภาพปก (รูปภาพหรือ placeholder)
+ * Input : src, height
+ * Output : React Element
  */
 function CoverRect({ src, height = 300 }: any) {
   if (src) {
@@ -210,12 +186,8 @@ function CoverRect({ src, height = 300 }: any) {
   );
 }
 
-/**
+/*
  * คำอธิบาย : หน้าแสดงรายละเอียดชุมชนแบบ Public สำหรับ Guest / Tourist
- *             - ดึงข้อมูลชุมชน + รายการแพ็กเกจ/ร้านค้า/ที่พัก แบบแยก pagination
- *             - แสดงภาพปก/โลโก้/ข้อมูลติดต่อ/แกลเลอรี/วิดีโอ/แผนที่
- * Input : -
- * Output : หน้ารายละเอียดชุมชน (Public Community Detail Page)
  */
 export default function CommunityDetailUser() {
   const location = useLocation();
@@ -226,14 +198,14 @@ export default function CommunityDetailUser() {
 
   const [community, setCommunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [packagePage, setPackagePage] = useState(1);
   const [storePage, setStorePage] = useState(1);
   const [homestayPage, setHomestayPage] = useState(1);
 
   // packages
-  const [packages, setPackages] = useState<any[]>([]);
+  const [tourPackageLists, setTourPackageLists] = useState<any[]>([]); // เปลี่ยน packages เป็น tourPackageLists
   const [packagePagination, setPackagePagination] = useState<{
     currentPage: number;
     totalPages: number;
@@ -242,7 +214,7 @@ export default function CommunityDetailUser() {
   } | null>(null);
 
   // stores
-  const [stores, setStores] = useState<any[]>([]);
+  const [storeLists, setStoreLists] = useState<any[]>([]); // เปลี่ยน stores เป็น storeLists
   const [storePagination, setStorePagination] = useState<{
     currentPage: number;
     totalPages: number;
@@ -251,7 +223,7 @@ export default function CommunityDetailUser() {
   } | null>(null);
 
   // homestays
-  const [homestays, setHomestays] = useState<any[]>([]);
+  const [homestayLists, setHomestayLists] = useState<any[]>([]); // เปลี่ยน homestays เป็น homestayLists
   const [homestayPagination, setHomestayPagination] = useState<{
     currentPage: number;
     totalPages: number;
@@ -259,11 +231,11 @@ export default function CommunityDetailUser() {
     limit: number;
   } | null>(null);
 
- /**
- * คำอธิบาย : ดึง URL รูปปกของแพ็กเกจ (type=COVER) เพื่อใช้แสดงบน CardPackage
- * Input : tourPackage (ข้อมูลแพ็กเกจที่มี packageFile)
- * Output : URL ของรูปปกแพ็กเกจ (ถ้าไม่มีคืนค่า undefined)
- */
+  /*
+   * คำอธิบาย : ดึง URL รูปปกของแพ็กเกจ (type=COVER) เพื่อใช้แสดงบน CardPackage
+   * Input : tourPackage (ข้อมูลแพ็กเกจที่มี packageFile)
+   * Output : URL ของรูปปกแพ็กเกจ (ถ้าไม่มีคืนค่า undefined)
+   */
   function getPackageCover(tourPackage: any): string | undefined {
     const coverFile = tourPackage?.packageFile?.find(
       (packageFileItem: any) =>
@@ -272,29 +244,26 @@ export default function CommunityDetailUser() {
     return resolveBackendUploadUrl(coverFile?.filePath);
   }
 
-  /**
- * คำอธิบาย : คำนวณสถานะการจองของแพ็กเกจจากวันเปิด/ปิดจอง
- * Input : tourPackage (ต้องมี bookingOpenDate / bookingCloseDate)
- * Output :
- *   - "UPCOMING" : ยังไม่ถึงวันเปิดจอง
- *   - "OPEN"     : อยู่ในช่วงเปิดจอง
- *   - "CLOSED"   : เลยวันปิดจองแล้ว
- */
+  /*
+   * คำอธิบาย : คำนวณสถานะการจองของแพ็กเกจจากวันเปิด/ปิดจอง
+   * Input : tourPackage (ต้องมี bookingOpenDate / bookingCloseDate)
+   * Output : "UPCOMING" | "OPEN" | "CLOSED"
+   */
   function getBookingStatus(tourPackage: any): "OPEN" | "CLOSED" | "UPCOMING" {
     const now = new Date();
-    const open = tourPackage?.bookingOpenDate ? new Date(tourPackage.bookingOpenDate) : null;
-    const close = tourPackage?.bookingCloseDate ? new Date(tourPackage.bookingCloseDate) : null;
+    const openDate = tourPackage?.bookingOpenDate ? new Date(tourPackage.bookingOpenDate) : null;
+    const closeDate = tourPackage?.bookingCloseDate ? new Date(tourPackage.bookingCloseDate) : null;
 
-    if (open && now < open) return "UPCOMING";
-    if (close && now > close) return "CLOSED";
+    if (openDate && now < openDate) return "UPCOMING";
+    if (closeDate && now > closeDate) return "CLOSED";
     return "OPEN";
   }
 
-  /**
- * คำอธิบาย : ดึง URL รูปปกร้านค้า (type=COVER) สำหรับแสดงในรายการร้านค้าหน้ารายละเอียดชุมชน
- * Input : store (ข้อมูลร้านค้าที่มี storeImage)
- * Output : URL ของรูปปกร้านค้า (ถ้าไม่มีคืนค่า undefined)
- */
+  /*
+   * คำอธิบาย : ดึง URL รูปปกร้านค้า (type=COVER) สำหรับแสดงในรายการร้านค้าหน้ารายละเอียดชุมชน
+   * Input : store (ข้อมูลร้านค้าที่มี storeImage)
+   * Output : URL ของรูปปกร้านค้า (ถ้าไม่มีคืนค่า undefined)
+   */
   function getStoreCover(store: any): string | undefined {
     const storeCoverImage = store?.storeImage?.find(
       (storeImageItem: any) =>
@@ -303,11 +272,11 @@ export default function CommunityDetailUser() {
     return resolveBackendUploadUrl(storeCoverImage?.image);
   }
 
-/**
- * คำอธิบาย : ดึง URL รูปปกที่พัก (type=COVER) สำหรับแสดงในรายการที่พักหน้ารายละเอียดชุมชน
- * Input : homestay (ข้อมูลที่พักที่มี homestayImage)
- * Output : URL ของรูปปกที่พัก (ถ้าไม่มีคืนค่า undefined)
- */
+  /*
+   * คำอธิบาย : ดึง URL รูปปกที่พัก (type=COVER) สำหรับแสดงในรายการที่พักหน้ารายละเอียดชุมชน
+   * Input : homestay (ข้อมูลที่พักที่มี homestayImage)
+   * Output : URL ของรูปปกที่พัก (ถ้าไม่มีคืนค่า undefined)
+   */
   function getHomestayCover(homestay: any): string | undefined {
     const homestayCoverImage = homestay?.homestayImage?.find(
       (homestayImageItem: any) =>
@@ -315,48 +284,46 @@ export default function CommunityDetailUser() {
     );
     return resolveBackendUploadUrl(homestayCoverImage?.image);
   }
-/**
- * คำอธิบาย : ดึงข้อมูลรายละเอียดชุมชนแบบ Public จาก Backend
- *             - โหลดข้อมูลเมื่อ communityId หรือ page ของ package/store/homestay เปลี่ยน
- *             - อัปเดต state: community, packages, stores, homestays และ pagination
- * Input : -
- * Output : -
- */
+
+  /*
+   * คำอธิบาย : ดึงข้อมูลรายละเอียดชุมชนแบบ Public จาก Backend
+   * Input : -
+   * Output : อัปเดต state ของ community, packages, stores, homestays
+   */
   useEffect(() => {
     if (!communityId) return;
 
     (async () => {
       try {
         setIsLoading(true);
-        setError(null);
+        setErrorMessage(null);
 
-        // ส่ง query.page ให้ตรงกับ BE Controller
-        const res = await getCommunityDetailPublic(Number(communityId), {
+        const response = await getCommunityDetailPublic(Number(communityId), {
           packagePage,
           storePage,
           homestayPage,
         });
 
-        const payload = res?.data?.data;
+        const payloadData = response?.data?.data;
 
-        setCommunity(payload?.community ?? null);
+        setCommunity(payloadData?.community ?? null);
 
-        // packages (รองรับได้ทั้ง shape: {data, pagination} หรือ array ตรง)
-        const packageBlock = payload?.packages;
-        setPackages(packageBlock?.data ?? packageBlock ?? []);
-        setPackagePagination(packageBlock?.pagination ?? null);
+        // packages
+        const packageData = payloadData?.packages;
+        setTourPackageLists(packageData?.data ?? packageData ?? []);
+        setPackagePagination(packageData?.pagination ?? null);
 
         // stores
-        const storeBlock = payload?.stores;
-        setStores(storeBlock?.data ?? storeBlock ?? []);
-        setStorePagination(storeBlock?.pagination ?? null);
+        const storeData = payloadData?.stores;
+        setStoreLists(storeData?.data ?? storeData ?? []);
+        setStorePagination(storeData?.pagination ?? null);
 
         // homestays
-        const homestayBlock = payload?.homestays;
-        setHomestays(homestayBlock?.data ?? homestayBlock ?? []);
-        setHomestayPagination(homestayBlock?.pagination ?? null);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
+        const homestayData = payloadData?.homestays;
+        setHomestayLists(homestayData?.data ?? homestayData ?? []);
+        setHomestayPagination(homestayData?.pagination ?? null);
+      } catch (error: any) {
+        setErrorMessage(error?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setIsLoading(false);
       }
@@ -371,14 +338,14 @@ export default function CommunityDetailUser() {
     () => resolveBackendUploadUrl(findImage(community, "LOGO")),
     [community]
   );
-  const galleries = useMemo(
+  const galleryImageLists = useMemo(
     () =>
       (listImagesByType(community, "GALLERY") || [])
         .map(resolveBackendUploadUrl)
         .filter(Boolean) as string[],
     [community]
   );
-  const videos = useMemo(
+  const videoLists = useMemo(
     () =>
       (listImagesByType(community, "VIDEO") || [])
         .map(resolveBackendUploadUrl)
@@ -388,10 +355,10 @@ export default function CommunityDetailUser() {
 
   /* ส่วน : Loading / Error Guard */
   if (isLoading && !community) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
-  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (errorMessage) return <div className="p-8 text-red-600">{errorMessage}</div>;
   if (!community) return <div className="p-8">ไม่พบข้อมูล</div>;
 
-  const isOpen = String(community.status || "").toUpperCase() === "OPEN";
+  const isStatusOpen = String(community.status || "").toUpperCase() === "OPEN";
 
   /* ส่วน : Render */
   return (
@@ -399,7 +366,7 @@ export default function CommunityDetailUser() {
       {/* Navbar */}
       <NavbarTourist />
 
-      {/* ทั้งหน้าใช้ container เดียว (เหมือน PackagesPage) */}
+      {/* ทั้งหน้าใช้ container เดียว */}
       <div className="container mx-auto px-4 py-8">
         {/* Header: Breadcrumb + Title */}
         <div className="mb-6">
@@ -415,13 +382,12 @@ export default function CommunityDetailUser() {
           </h1>
         </div>
 
-        {/* hr ไม่ต้องเต็มจอ (ให้อยู่ใน container จะไม่เบี้ยว) */}
         <hr className="mb-8 w-full border-t-2 border-[#D9D9D9]" />
 
         {/* ส่วน : ภาพปก + โลโก้ */}
         {(() => {
           const coverHeight = 300;
-          const logo = 240;
+          const logoSize = 240;
 
           return (
             <div className="pb-6">
@@ -433,10 +399,10 @@ export default function CommunityDetailUser() {
                     className="absolute left-6 md:left-8 -translate-y-1/2"
                     style={{ top: 0 }}
                   >
-                    <LogoCircle src={logoImage} name={community?.name} size={logo} />
+                    <LogoCircle src={logoImage} name={community?.name} size={logoSize} />
                   </div>
 
-                  <div style={{ paddingLeft: logo + 24 }}>
+                  <div style={{ paddingLeft: logoSize + 24 }}>
                     {/* ชื่อ + สถานะ */}
                     <div className="flex items-center gap-3">
                       <h1 className="text-[22px] font-bold leading-tight">
@@ -445,13 +411,12 @@ export default function CommunityDetailUser() {
 
                       {!!community.status && (
                         <span
-                          className={`px-2.5 py-0.5 text-sm rounded-full ${
-                            isOpen
+                          className={`px-2.5 py-0.5 text-sm rounded-full ${isStatusOpen
                             ? "bg-emerald-100 text-emerald-700"
                             : "bg-slate-100 text-slate-700"
                             }`}
                         >
-                          {isOpen ? "เปิด" : "ปิด"}
+                          {isStatusOpen ? "เปิด" : "ปิด"}
                         </span>
                       )}
                     </div>
@@ -519,8 +484,7 @@ export default function CommunityDetailUser() {
                   community.location?.subDistrict
                 )} ${displayText(community.location?.district)} ${displayText(
                   community.location?.province
-                )} ${
-                  community.location?.postalCode
+                )} ${community.location?.postalCode
                   ? `${community.location.postalCode}`
                   : ""
                   }`}
@@ -564,13 +528,7 @@ export default function CommunityDetailUser() {
               </Row>
             )}
 
-            <Row label="ชื่อผู้ดูแลหลัก">
-              {displayText(
-                community.admin
-                  ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
-                  : null
-              )}
-            </Row>
+            <Row label="ชื่อผู้ดูแลหลัก">{displayText(community.mainAdmin)}</Row>
 
             <Row label="เบอร์โทรผู้ดูแลหลัก">
               {displayText(community.mainAdminPhone)}
@@ -580,6 +538,15 @@ export default function CommunityDetailUser() {
             <Row label="เบอร์โทรผู้ประสานงาน">
               {displayText(community.coordinatorPhone)}
             </Row>
+
+            <Row label="ผู้ดูแล">
+              {displayText(
+                community.admin
+                  ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
+                  : null
+              )}
+            </Row>
+            <div />
 
             <Row label="ชื่อธนาคาร">{displayText(community.bankName)}</Row>
             <Row label="เลขบัญชี">{displayText(community.accountNumber)}</Row>
@@ -650,9 +617,9 @@ export default function CommunityDetailUser() {
         {/* แกลเลอรีรูปภาพเพิ่มเติม */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold">รูปภาพเพิ่มเติม</h2>
-          {galleries?.length ? (
+          {galleryImageLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {galleries.map((url, index) => (
+              {galleryImageLists.map((url, index) => (
                 <img
                   key={`${url}-${index}`}
                   src={url ?? ""}
@@ -669,9 +636,9 @@ export default function CommunityDetailUser() {
         {/* วิดีโอเพิ่มเติม */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold">วิดีโอเพิ่มเติม</h2>
-          {videos?.length ? (
+          {videoLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {videos.map((url, index) => (
+              {videoLists.map((url, index) => (
                 <video
                   key={`${url}-${index}`}
                   src={url ?? ""}
@@ -695,10 +662,8 @@ export default function CommunityDetailUser() {
                 const longitude = community.location.longitude;
                 const zoomDelta = 0.0025;
 
-                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
-                  longitude - zoomDelta
-                  }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${
-                    latitude + zoomDelta
+                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - zoomDelta
+                  }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${latitude + zoomDelta
                   }&layer=mapnik&marker=${latitude}%2C${longitude}`;
 
                 return (
@@ -719,16 +684,16 @@ export default function CommunityDetailUser() {
           </div>
         )}
 
-        {/* ส่วน : แพ็กเกจทั้งหมดของชุมชน (CardPackage + pagination) */}
+        {/* ส่วน : แพ็กเกจทั้งหมดของชุมชน */}
         <div className="mt-10 pb-10">
           <h2 className="text-xl font-semibold">แพ็กเกจทั้งหมดของชุมชน</h2>
 
-          {(packagePagination?.totalCount ?? packages.length) === 0 ? (
+          {(packagePagination?.totalCount ?? tourPackageLists.length) === 0 ? (
             <p className="mt-3 text-slate-500">ยังไม่มีแพ็กเกจ</p>
           ) : (
             <>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {packages.map((tourPackage: any) => {
+                {tourPackageLists.map((tourPackage: any) => {
                   const status = getBookingStatus(tourPackage);
 
                   return (
@@ -773,12 +738,12 @@ export default function CommunityDetailUser() {
         <div className="mt-10 pb-10">
           <h2 className="text-xl font-semibold">ร้านค้าของชุมชน</h2>
 
-          {(storePagination?.totalCount ?? stores.length) === 0 ? (
+          {(storePagination?.totalCount ?? storeLists.length) === 0 ? (
             <p className="mt-3 text-slate-500">ยังไม่มีร้านค้า</p>
           ) : (
             <>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {stores.map((store: any) => {
+                {storeLists.map((store: any) => {
                   const storeCoverUrl = getStoreCover(store);
 
                   return (
@@ -829,12 +794,12 @@ export default function CommunityDetailUser() {
         <div className="mt-10 pb-10">
           <h2 className="text-xl font-semibold">ที่พักของชุมชน</h2>
 
-          {(homestayPagination?.totalCount ?? homestays.length) === 0 ? (
+          {(homestayPagination?.totalCount ?? homestayLists.length) === 0 ? (
             <p className="mt-3 text-slate-500">ยังไม่มีที่พัก</p>
           ) : (
             <>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {homestays.map((homestay: any) => {
+                {homestayLists.map((homestay: any) => {
                   const homestayCoverUrl = getHomestayCover(homestay);
 
                   return (

@@ -121,7 +121,11 @@ export default function BookingHistoryTourist() {
             setIsLoading(false);
         }
     };
-
+  /**
+   * คำอธิบาย: ดึงข้อมูลใหม่เมื่อมีการเปลี่ยนแปลง filter (status หรือ period)
+   * Input: - (ใช้ filterState)
+   * Output: - (เรียก fetchRawData)
+   */
     useEffect(() => {
         fetchRawData(filterState.status, filterState.period);
     }, [filterState.status, filterState.period]);

@@ -76,7 +76,7 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
                             <button
                                 onClick={(event) => {
                                     event.stopPropagation();
-                                    navigate(`/tourist/booking-history/${booking.id}`);
+                                    navigate(`/tourist/booking-histories/detail?bookingId=${booking.id}`);
                                 }}
                                 className="rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >

@@ -32,7 +32,7 @@ function App() {
         <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />
         <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
-        <Route path="/tourist/booking-history" element={<BookingHistoryTourist />} />
+        <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

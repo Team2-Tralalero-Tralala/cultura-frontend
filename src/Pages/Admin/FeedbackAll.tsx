@@ -11,6 +11,9 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL;
 
+const BACKEND_BASE_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
 /**
  * คำอธิบาย: ประเภทข้อมูลรูปภาพประกอบข้อเสนอแนะจาก API
  */
@@ -36,6 +39,7 @@ type ApiFeedback = {
  */
 type ApiBookingHistory = {
     id: number;
+    tourist: Tourist
     touristId: number;
     packageId: number;
     status: string;
@@ -88,12 +92,30 @@ type PackageGroup = {
     feedbacks: FeedbackCard[];
 };
 
+type Tourist = {
+    fname: string;
+    lname: string;
+};
+
+function getImageUrl(fileName?: string): string | undefined {
+    if (!fileName) {
+        return undefined;
+    }
+
+    const cleanedPath = fileName.replace(/^\/?uploads\//, "");
+    return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+}
+
 type SortOrder = 'newest' | 'oldest';
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว (id จริง) 
  */
-const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
+function formatFullName(tourist: Tourist): string {
+    const mask = (text: string) =>
+        text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
+    return `${mask(tourist.fname)} ${mask(tourist.lname)}`.trim();
+}
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
@@ -101,7 +123,6 @@ const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${Strin
 const formatDateThai = (isoDateString: string) => {
     const date = new Date(isoDateString);
 
-    // 'th-TH' จะแปลงเป็นพุทธศักราชให้อัตโนมัติ
     return date.toLocaleDateString('th-TH', {
         year: 'numeric',
         month: 'short',
@@ -112,19 +133,13 @@ const formatDateThai = (isoDateString: string) => {
 /**
  * คำอธิบาย: Component สำหรับแสดงไอคอนดาวตามคะแนน (Rating) ที่ได้รับ
  */
-const Stars: React.FC<{ rating: number }> = ({ rating }) => (
-    <div className="flex items-center gap-0.5">
-        {Array.from({ length: 5 }).map((_, index) => (
-            <Icon
-                key={index}
-                icon="ic:twotone-star"
-                className={index < rating ? "text-black" : "text-slate-300"}
-                width={18}
-                height={18}
-            />
-        ))}
-    </div>
-);
+function renderStars(rating: number): string {
+    return Array.from({ length: 5 })
+        .map((_, starIndex) => (starIndex < rating ? "★" : "☆"))
+        .join("");
+}
+
+
 
 /**
  * คำอธิบาย: Component ส่วนควบคุมด้านบน แสดงสรุปจำนวนรายการ ช่องค้นหา ปุ่มตัวกรอง
@@ -134,9 +149,9 @@ const TopControls: React.FC<{
     totalPackages: number;
     searchQuery: string;
     onSearchChange: (value: string) => void;
-    currentSort: SortOrder; // ยังคงเก็บสถานะการเรียงลำดับ
-    onSortChange: (sort: SortOrder) => void; // ยังคงมีฟังก์ชันเปลี่ยนสถานะ
-    onFilterClick: () => void; // ฟังก์ชันนี้จะถูกเรียกเมื่อกดปุ่ม Filter
+    currentSort: SortOrder; 
+    onSortChange: (sort: SortOrder) => void; 
+    onFilterClick: () => void; 
     onRefreshClick: () => void;
     isLoading?: boolean;
 }> = ({
@@ -146,11 +161,11 @@ const TopControls: React.FC<{
     onSearchChange,
     currentSort,
     onSortChange,
-    onFilterClick, // ใช้ฟังก์ชันนี้แทนการสลับทันที
+    onFilterClick, 
     onRefreshClick,
     isLoading,
 }) => {
-    const sortDisplay = currentSort === 'newest' ? 'ล่าสุด' : 'เก่าสุด';
+        const sortDisplay = currentSort === 'newest' ? 'ล่าสุด' : 'เก่าสุด';
         return (
             <section className="rounded-xl bg-white border-slate-200 mb-5">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -175,12 +190,11 @@ const TopControls: React.FC<{
                                 className="w-[269px] h-[51px] rounded-lg border border-slate-300 bg-white pl-10 pr-4 text-sm outline-none focus:border-emerald-600 transition"
                             />
                         </div>
-                
+
                         <button
                             type="button"
                             onClick={onFilterClick}
                             className="inline-flex w-[150px] items-center justify-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                            // 💡 เปลี่ยน aria-label ให้สอดคล้อง
                             aria-label={`เรียงตาม: ${sortDisplay} (เปิดตัวเลือก)`}
                         >
                             <Icon icon="hugeicons:filter" width={18} height={18} />
@@ -196,9 +210,7 @@ const TopControls: React.FC<{
  * คำอธิบาย: Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ รวมถึงรูปภาพประกอบ
  */
 const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) => {
-    // ดึงมาแสดงสูงสุดแค่ 3 รูป
     const displayImages = feedback.images.slice(0, 3);
-    // คำนวณรูปส่วนเกิน (เช่น มี 5 รูป, โชว์ 3, เหลือเศษ 2)
     const extraCount = feedback.images.length - 3;
 
     return (
@@ -212,7 +224,7 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                         <div className="text-lg font-medium text-slate-800">{feedback.userName}</div>
                     </div>
                     <div className="flex flex-col gap-1 text-sm items-end text-slate-500">
-                        <Stars rating={feedback.rating} />
+                        {renderStars(feedback.rating)}
                         <span>{formatDateThai(feedback.createdAt)}</span>
                     </div>
                 </div>
@@ -227,13 +239,13 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                     {displayImages.map((imageSource, index) => {
                         const isLastSlot = index === 2;
                         const hasOverlay = isLastSlot && extraCount > 0;
-
+                        const imageUrl = getImageUrl(imageSource)
                         return (
                             <div
                                 key={index}
                                 className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200"
                             >
-                                <img src={imageSource} alt="" className="w-full h-full object-cover" />
+                                <img src={imageUrl} alt="" className="w-full h-full object-cover" />
 
                                 {hasOverlay && (
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -316,6 +328,7 @@ export default function FeddbackAll() {
                 `${apiBaseUrl}/admin/package/feedbacks/all`,
                 { withCredentials: true }
             );
+
             const communityData = response.data?.data;
             const packageList: ApiPackage[] = communityData?.packages ?? [];
 
@@ -326,7 +339,7 @@ export default function FeddbackAll() {
                     (bookingHistory.feedbacks ?? []).forEach((feedback) => {
                         groupFeedbacks.push({
                             id: feedback.id,
-                            userName: maskUserIdAsDisplayName(bookingHistory.touristId),
+                            userName: formatFullName(bookingHistory.tourist),
                             rating: feedback.rating ?? 0,
                             createdAt: feedback.createdAt,
                             message: feedback.message ?? "",
@@ -366,7 +379,6 @@ export default function FeddbackAll() {
     const filteredGroups = React.useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
 
-        // 1. กรองตามคำค้นหาและเรียง Feedback ภายในกลุ่ม
         let groups = packageGroups
             .map((packageGroup) => {
                 const filteredFeedbacks = packageGroup.feedbacks.filter(
@@ -379,7 +391,6 @@ export default function FeddbackAll() {
                 const sortedFeedbacks = [...filteredFeedbacks].sort((a, b) => {
                     const dateA = new Date(a.createdAt).getTime();
                     const dateB = new Date(b.createdAt).getTime();
-                    // เรียง Feedback ภายในกลุ่มจากใหม่สุดไปเก่าสุดเสมอ
                     return dateB - dateA;
                 });
 
@@ -396,8 +407,8 @@ export default function FeddbackAll() {
 
         const sortedPackageGroups = groups.sort((a, b) => {
             const dateA = a.feedbacks.length > 0
-                ? new Date(a.feedbacks[0].createdAt).getTime() 
-                : 0; 
+                ? new Date(a.feedbacks[0].createdAt).getTime()
+                : 0;
 
             const dateB = b.feedbacks.length > 0
                 ? new Date(b.feedbacks[0].createdAt).getTime()
@@ -411,7 +422,7 @@ export default function FeddbackAll() {
 
     const handleSortChange = (newSort: SortOrder) => {
         setSortOrder(newSort);
-        setIsFilterModalOpen(false); 
+        setIsFilterModalOpen(false);
     };
 
     const SortFilterModal = () => (
@@ -419,13 +430,13 @@ export default function FeddbackAll() {
             <button
                 className={`w-full text-left p-2 rounded-md 
                 ${sortOrder === 'newest'
-                    ? 'bg-emerald-100 font-medium text-emerald-700'
-                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700' 
+                        ? 'bg-emerald-100 font-medium text-emerald-700'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                     }`}
                 onClick={() => handleSortChange('newest')
-                    
+
                 }
-                
+
             >
                 <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2" />
                 ล่าสุด
@@ -433,8 +444,8 @@ export default function FeddbackAll() {
             <button
                 className={`w-full text-left p-2 rounded-md 
                 ${sortOrder === 'oldest'
-                        ? 'bg-emerald-100 font-medium text-emerald-700' 
-                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700' 
+                        ? 'bg-emerald-100 font-medium text-emerald-700'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                     }`}
                 onClick={() => handleSortChange('oldest')}
             >
@@ -454,7 +465,7 @@ export default function FeddbackAll() {
             />
             <main className="min-h-screen bg-white py-6 px-6 space-y-6 shadow-md border rounded-xl">
                 <div className="mx-auto bg-white rounded-xl">
-                    <div className="relative"> 
+                    <div className="relative">
                         <TopControls
                             totalItems={totalItems}
                             totalPackages={totalPackages}
@@ -462,7 +473,7 @@ export default function FeddbackAll() {
                             onSearchChange={setSearchQuery}
                             currentSort={sortOrder}
                             onSortChange={setSortOrder}
-                            onFilterClick={() => setIsFilterModalOpen(prev => !prev)} 
+                            onFilterClick={() => setIsFilterModalOpen(prev => !prev)}
                             onRefreshClick={fetchAllFeedbacks}
                             isLoading={isLoading}
                         />

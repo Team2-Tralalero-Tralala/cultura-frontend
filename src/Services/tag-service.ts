@@ -11,11 +11,9 @@
  *   - ใช้ร่วมกับระบบที่มีการ Auth (เช่น session หรือ token)
  */
 
+import api from "@/Libs/api";
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
-
-console.log("API_URL =", import.meta.env.VITE_API_URL);
-
 
 /**
 * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดใช้ใน Tag Selector
@@ -29,18 +27,20 @@ export async function getTags() {
 /**
 * คำอธิบาย : ดึงข้อมูลแท็กทั้งหมด
 */
-export async function fetchTags(page: number, limit: number) {
-  const params: any = { page, limit };
-  const res = await axios.get(`${apiUrl}/shared/tags`, {
-    params,
+export async function fetchTags(
+  page: number,
+  limit: number,
+  search?: string
+) {
+  const url = `/shared/tags`;
+
+  const res = await api.get(url, {
+    params: { page, limit, search },
     withCredentials: true,
   });
-
-  console.log("Raw response:", res.data);
-  return {
-    data: res.data?.data?.data ?? res.data?.data ?? [],
-  };
+  return res.data;
 }
+
 
 /**
 * คำอธิบาย : สร้างแท็กใหม่

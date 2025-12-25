@@ -57,7 +57,7 @@ export const Modal: React.FC<ModalProps> = ({
           width: 612,
           color: "#0f172a",
           padding: "1.5rem",
-          showCancelButton: true,
+          showCancelButton: !!cancelText,
           showConfirmButton: true,
           confirmButtonText: confirmText,
           cancelButtonText: cancelText,

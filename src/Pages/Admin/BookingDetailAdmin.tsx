@@ -28,7 +28,7 @@ import ModalReject from "@/Components/Modal/ModalReject";
  *  ใช้สำหรับแสดงรายละเอียดการจองและจัดการสถานะการจอง
  *
  * Source:
- *  - API: GET /admin/booking-history/:bookingId
+ *  - API: GET /admin/booking/:bookingId
  *
  * Usage:
  *  - ใช้เป็น type สำหรับ state booking
@@ -187,7 +187,7 @@ export default function BookingDetailAdmin() {
    * คำอธิบาย:
    *  - ปฏิเสธการจองแพ็กเกจทัวร์ พร้อมระบุเหตุผล และอัปเดตสถานะการจองผ่าน API
    *  - เรียก API: POST /member/bookings/:bookingId/status
-   * 
+   *
    * Input:
    *  - reason: string (เหตุผลในการปฏิเสธจาก Modal)
    *  - bookingId: string

@@ -269,7 +269,7 @@ export interface TouristDashboardSummaryItem {
 }
 export interface TouristDashboardPackage {
   data: TouristDashboardSummaryItem[];
-  lastBooking: {
+  lastBookingLists: {
     bookingAt: Date;
     totalParticipant: number;
     status: string;

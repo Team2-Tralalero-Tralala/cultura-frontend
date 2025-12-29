@@ -272,9 +272,9 @@ export function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData.package?.lastBooking &&
-                    dashboardData.package.lastBooking.length > 0 ? (
-                      dashboardData.package.lastBooking.map((packages, index) => (
+                    {dashboardData.package?.lastBookingLists &&
+                    dashboardData.package.lastBookingLists.length > 0 ? (
+                      dashboardData.package.lastBookingLists.map((packages, index) => (
                         <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
                           <td className="pl-4">
                             {packages.bookingAt

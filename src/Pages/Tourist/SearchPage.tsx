@@ -346,6 +346,7 @@ export default function SearchPage() {
           startDate: filters.startDate,
           endDate: filters.endDate,
           tags: filters.tags.length > 0 ? filters.tags : undefined,
+          sort: sortBy,
         }
       );
 
@@ -446,6 +447,7 @@ export default function SearchPage() {
     filters.startDate,
     filters.endDate,
     filters.tags,
+    sortBy,
   ]);
 
   /*
@@ -642,8 +644,9 @@ export default function SearchPage() {
                   <div className="flex items-center flex-1 relative">
                     <Icon
                       icon="mdi:magnify"
-                      className="absolute left-3 w-5 h-5 z-10"
+                      className="absolute left-3 w-5 h-5 z-10 cursor-pointer"
                       style={{ color: "#00BF6A" }}
+                      onClick={handleTagAdd}
                     />
                     <input
                       type="text"

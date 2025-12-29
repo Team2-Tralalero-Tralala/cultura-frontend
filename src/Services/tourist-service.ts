@@ -212,7 +212,7 @@ export interface SearchOverviewResponse {
  *   - query (string | null) - คำค้นหา
  *   - page (number) - หน้าปัจจุบัน
  *   - limit (number) - จำนวนรายการต่อหน้า
- *   - filters (object) - ตัวกรองเพิ่มเติม (priceMin, priceMax, startDate, endDate, tags)
+ *   - filters (object) - ตัวกรองเพิ่มเติม (priceMin, priceMax, startDate, endDate, tags, sort)
  * Output : Promise<TransformedSearchOverviewData> - ข้อมูลการค้นหาประกอบด้วย packages, communities และ pagination
  */
 export async function fetchSearchOverview(
@@ -226,6 +226,7 @@ export async function fetchSearchOverview(
     startDate?: string | null;
     endDate?: string | null;
     tags?: string[];
+    sort?: string;
   }
 ): Promise<TransformedSearchOverviewData> {
   const params: Record<string, string | number> = {
@@ -267,6 +268,11 @@ export async function fetchSearchOverview(
 
   if (filters?.endDate) {
     params.endDate = filters.endDate;
+  }
+
+  // เพิ่มตัวกรองการเรียงลำดับ
+  if (filters?.sort) {
+    params.sort = filters.sort;
   }
 
   const response = await api.get<SearchOverviewResponse>("/tourist/search/overview", {

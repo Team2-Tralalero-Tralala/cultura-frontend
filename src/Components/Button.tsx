@@ -17,6 +17,7 @@ function Button({
   type = "confirm-admin",
   htmlType = "button",
   onClick,
+  className,
 }: BaseButtonProps) {
   const isCancel = type == "cancel";
 
@@ -45,7 +46,7 @@ function Button({
         <button
           type={htmlType}
           onClick={onClick}
-          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form text-white text-base ${getBgColor()}`}
+          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form text-white text-base ${getBgColor()} ${className || ""}`}
         >
           {children || "ConfirmAdmin"}
         </button>
@@ -55,7 +56,7 @@ function Button({
         <button
           type={htmlType}
           onClick={onClick}
-          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form  border-black text-black text-base ${getBgColor()}`}
+          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form  border-black text-black text-base ${getBgColor()} ${className || ""}`}
         >
           {children || "Cancel"}
         </button>

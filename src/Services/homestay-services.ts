@@ -6,6 +6,7 @@
  */
 
 import axios from "axios";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 // สร้าง instance ของ axios พร้อม baseURL จาก ENV
 const api = axios.create({
@@ -96,3 +97,16 @@ export async function deleteHomestayBySuperAdmin(homestayId: number) {
 }
 
 
+/* 
+ * อธิบาย : ดึงข้อมูลรายละเอียดที่พักและที่พักอื่น ๆ ในชุมชน
+ * Input : communityId, homestayId
+ * Output : ข้อมูลที่พัก (homestay) และรายการที่พักอื่น (otherHomestays)
+ */
+export async function getHomestayDetailAndOtherHomestay(communityId: number, homestayId: number, page = 1, limit = 12) {
+  const res = await axios.get(`${apiUrl}/shared/community/${communityId}/homestay/${homestayId}`, {
+    params: { page, limit },
+    withCredentials: false,
+    headers: { Authorization: '' }
+  });
+  return res.data?.data;
+}

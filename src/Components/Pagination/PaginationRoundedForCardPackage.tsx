@@ -13,12 +13,13 @@ import Pagination from '@mui/material/Pagination';
 
 type PaginationRoundedProps = {
   totalData: number; // จำนวนข้อมูลทั้งหมด
+  limit?: number; // จำนวนข้อมูลต่อหน้า (Optional: Default 9)
   onQueryChange?: (query: { page: number; limit: number }) => void; // callback สำหรับส่งให้ parent เมื่อมีการเปลี่ยนหน้า/จำนวนต่อหน้า
 };
 
-export default function PaginationRoundedForCardPackage({ totalData, onQueryChange }: PaginationRoundedProps) {
+export default function PaginationRoundedForCardPackage({ totalData, onQueryChange, limit = 9 }: PaginationRoundedProps) {
   const [page, setPage] = React.useState(1); // เก็บหน้าปัจจุบัน
-  const limit = 9; // จำนวน cardpackage ต่อหน้าคงที่ 9
+  // limit comes from props now
   const totalPages = Math.ceil(totalData / limit); // คำนวณจำนวนหน้าทั้งหมด
 
   /*

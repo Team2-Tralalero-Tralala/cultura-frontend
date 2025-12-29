@@ -51,6 +51,8 @@ interface ThailandLocationSelectProps {
   value?: ThailandLocation;
   onChange: (value: ThailandLocation) => void;
   labelPrefix?: string;
+  gapY?: string;
+  gapX?: string;
   disabled?: boolean;
   error?: {
     province?: boolean;
@@ -64,6 +66,7 @@ interface ThailandLocationSelectProps {
     subdistrict?: string;
     postalCode?: string;
   };
+  className?: string; // เพิ่ม className
 }
 
 /*
@@ -126,6 +129,9 @@ export default function ThailandLocationSelector({
     subdistrict: "",
     postalCode: "",
   },
+  gapY = "24px",
+  gapX = "30px",
+  className,
 }: ThailandLocationSelectProps) {
   const [geoData, setGeoData] = useState<Record<string, Province>>({});
   const [ready, setReady] = useState(false);
@@ -281,7 +287,7 @@ export default function ThailandLocationSelector({
     );
   };
   return (
-    <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
+    <div className={`grid grid-cols-2 gap-y-[${gapY}] gap-x-[${gapX}] ${className ?? ""}`}>
       <Autocomplete
         id="province"
         disablePortal

@@ -22,7 +22,6 @@ type PriceRangeSliderProps = {
 };
 
 /*
- * ฟังก์ชัน : PriceRangeSlider
  * คำอธิบาย : แสดง dual range slider สำหรับเลือกช่วงราคา
  * Input : PriceRangeSliderProps (min, max, value, onChange, step, className)
  * Output : React Component ที่ render slider และ input fields
@@ -38,7 +37,6 @@ export default function PriceRangeSlider({
   const [localValue, setLocalValue] = useState<[number, number]>(value);
 
   /*
-   * ฟังก์ชัน : handleSliderChange
    * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนค่า slider
    * Input : event (Event), newValue (number | number[])
    * Output : void
@@ -50,7 +48,6 @@ export default function PriceRangeSlider({
   };
 
   /*
-   * ฟังก์ชัน : handleMinInputChange
    * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนค่า input ราคาต่ำสุด
    * Input : e (React.ChangeEvent<HTMLInputElement>)
    * Output : void
@@ -65,7 +62,6 @@ export default function PriceRangeSlider({
   };
 
   /*
-   * ฟังก์ชัน : handleMaxInputChange
    * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนค่า input ราคาสูงสุด
    * Input : e (React.ChangeEvent<HTMLInputElement>)
    * Output : void
@@ -85,7 +81,7 @@ export default function PriceRangeSlider({
   }, [value]);
 
   return (
-    <div className={`space-y-3 w-full ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Slider */}
       <Slider
         value={localValue}
@@ -121,19 +117,19 @@ export default function PriceRangeSlider({
       />
 
       {/* Price Input Fields */}
-      <div className="flex items-center gap-2 w-full overflow-hidden">
+      <div className="flex items-center gap-2">
         <input
           type="text"
           value={`฿ ${localValue[0].toLocaleString()}`}
           onChange={handleMinInputChange}
-          className="flex-1 min-w-0 px-2 py-2 border border-emerald-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 px-3 py-2 border border-emerald-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
-        <span className="text-gray-500 shrink-0">-</span>
+        <span className="text-gray-500">-</span>
         <input
           type="text"
           value={`฿ ${localValue[1].toLocaleString()}`}
           onChange={handleMaxInputChange}
-          className="flex-1 min-w-0 px-2 py-2 border border-emerald-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 px-3 py-2 border border-emerald-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
     </div>

@@ -87,7 +87,6 @@ export interface PackagesResponse {
 }
 
 /*
- * ฟังก์ชัน : fetchHomeData
  * คำอธิบาย : ดึงข้อมูลหน้าแรกสำหรับ Tourist จาก API
  * Input : ไม่มี
  * Output : Promise<HomeData> - ข้อมูลหน้าแรกประกอบด้วย carouselImages และ activityTags
@@ -112,7 +111,6 @@ export async function fetchHomeData(): Promise<HomeData> {
 }
 
 /*
- * ฟังก์ชัน : fetchNewestPackages
  * คำอธิบาย : ดึงรายการแพ็กเกจมาใหม่จาก API
  * Input : ไม่มี
  * Output : Promise<PackageApiData[]> - รายการแพ็กเกจมาใหม่ (สูงสุด 40 รายการ)
@@ -125,7 +123,6 @@ export async function fetchNewestPackages(): Promise<PackageApiData[]> {
 }
 
 /*
- * ฟังก์ชัน : fetchPopularPackages
  * คำอธิบาย : ดึงรายการแพ็กเกจยอดนิยมจาก API
  * Input : ไม่มี
  * Output : Promise<PackageApiData[]> - รายการแพ็กเกจยอดนิยม (สูงสุด 40 รายการ)
@@ -209,7 +206,6 @@ export interface SearchOverviewResponse {
 }
 
 /*
- * ฟังก์ชัน : fetchSearchOverview
  * คำอธิบาย : ดึงข้อมูลการค้นหาแพ็กเกจและชุมชนจาก API
  * Input :
  *   - tag (string | null) - แท็กที่ต้องการค้นหา
@@ -294,17 +290,17 @@ export async function fetchSearchOverview(
   }
 
   // แปลง image URLs เป็น full URLs สำหรับ packages
-  const transformedPackages = data.packages.data.map((pkg) => {
-    if (pkg.coverImage) {
-      const imagePath = pkg.coverImage.startsWith("/")
-        ? pkg.coverImage.slice(1)
-        : pkg.coverImage;
+  const transformedPackages = data.packages.data.map((packageData) => {
+    if (packageData.coverImage) {
+      const imagePath = packageData.coverImage.startsWith("/")
+        ? packageData.coverImage.slice(1)
+        : packageData.coverImage;
       return {
-        ...pkg,
+        ...packageData,
         coverImage: backendBaseUrl + "/" + imagePath,
       };
     }
-    return pkg;
+    return packageData;
   });
 
   // แปลง image URLs เป็น full URLs สำหรับ communities

@@ -9,7 +9,9 @@ import Footer from "@/Components/Footer";
 import HeroCarousel from "@/Components/HeroCarousel";
 import NavbarTourist from "@/Components/NavbarTourist";
 import PackageSection, { type PackageData } from "@/Components/PackageSection";
+import ServerMaintenanceModal from "@/Components/ServerMaintenanceModal";
 import TagsSection from "@/Components/TagsSection";
+import { fetchServerStatus } from "@/Services/server-service";
 import {
   fetchHomeData,
   fetchNewestPackages,
@@ -46,6 +48,9 @@ export default function Home() {
 
   // State สำหรับข้อความ error
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // State สำหรับสถานะ maintenance modal
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
 
   /*
    * ฟังก์ชัน : formatLocation
@@ -144,9 +149,29 @@ export default function Home() {
     }
   };
 
+  /*
+   * คำอธิบาย : ตรวจสอบสถานะเซิร์ฟเวอร์
+   * Input : ไม่มี
+   * Output : อัพเดท state ของ isMaintenanceModalOpen
+   */
+  const checkServerStatus = async () => {
+    try {
+      const statusResponse = await fetchServerStatus();
+      // ถ้า serverOnline = false แสดง modal
+      if (!statusResponse.data.serverOnline) {
+        setIsMaintenanceModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Error checking server status:", error);
+      // ถ้าเกิด error อาจเป็นเพราะ server offline ก็แสดง modal
+      setIsMaintenanceModalOpen(true);
+    }
+  };
+
   // useEffect สำหรับโหลดข้อมูลเมื่อ component mount
   useEffect(() => {
     loadHomeData();
+    checkServerStatus();
   }, []);
 
   /*
@@ -181,6 +206,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Server Maintenance Modal */}
+      <ServerMaintenanceModal
+        isOpen={isMaintenanceModalOpen}
+        onClose={() => setIsMaintenanceModalOpen(false)}
+      />
+
       {/* <Navbar /> */}
       <NavbarTourist />
 

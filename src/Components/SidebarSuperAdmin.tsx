@@ -1,11 +1,6 @@
 /**
- * Component: SidebarSuperAdmin
- * คำอธิบาย: แถบเมนูด้านข้างสำหรับผู้ดูแลระบบระดับสูง (Super Admin)
- * Features:
+ * คำอธิบาย: Component สำหรับแถบเมนูด้านข้างสำหรับผู้ดูแลระบบระดับสูง (Super Admin)
  * - แสดงเมนูทั้งหมดที่เกี่ยวข้องกับการจัดการระบบ (เช่น ชุมชน, บัญชี, แพ็กเกจ)
- * - รองรับเมนูหลัก และเมนูย่อย (dropdown)
- * - ใช้ React Router ในการนำทาง
- *  * - ใช้ไอคอนจาก Iconify
  */
 
 import React, { useState, useEffect } from "react";
@@ -26,6 +21,11 @@ type MenuKey =
   | "logout"
   | null;
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Sidebar ของผู้ใช้กลุ่ม Super Admin
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Sidebar
+ */
 const SidebarSuperAdmin: React.FC = () => {
   const location = useLocation();
   const { pathname } = location;
@@ -36,6 +36,11 @@ const SidebarSuperAdmin: React.FC = () => {
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับตั้งเมนูที่ใช้งานอยู่ตามเส้นทางปัจจุบัน
+ * Input : pathname, basePath
+ * Output : -
+ */
   useEffect(() => {
     let subPath = pathname;
     if (basePath) {
@@ -81,6 +86,11 @@ const SidebarSuperAdmin: React.FC = () => {
     }
   }, [pathname, basePath]);
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดการการคลิกเมนู
+ * Input : key, parentKey
+ * Output : -
+ */
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
     setActiveMenuKey(key);
     if (parentKey) {
@@ -90,6 +100,11 @@ const SidebarSuperAdmin: React.FC = () => {
     }
   };
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่าเมนูใดที่กำลังใช้งานอยู่
+ * Input : key
+ * Output : boolean
+ */
   const isActive = (key: MenuKey) => activeMenuKey === key;
 
   return (
@@ -102,7 +117,7 @@ const SidebarSuperAdmin: React.FC = () => {
         </div>
 
         <nav className="flex flex-col gap-2 text-base-semibold">
-          {/* === จัดการชุมชน === */}
+          {/* จัดการชุมชน */}
           <Link
             to={`${basePath}/communities/all`}
             onClick={() => handleClick("communities")}
@@ -113,7 +128,7 @@ const SidebarSuperAdmin: React.FC = () => {
             จัดการชุมชน
           </Link>
 
-          {/* === จัดการบัญชี (Dropdown) === */}
+          {/* จัดการบัญชี */}
           <div>
             <Link
               to={`${basePath}/accounts/all`}
@@ -142,7 +157,7 @@ const SidebarSuperAdmin: React.FC = () => {
             )}
           </div>
 
-          {/* === จัดการแพ็กเกจ (Dropdown) === */}
+          {/* จัดการแพ็กเกจ */}
           <div>
             <Link
               to={`${basePath}/packages/all`}
@@ -170,7 +185,7 @@ const SidebarSuperAdmin: React.FC = () => {
             )}
           </div>
 
-          {/* === จัดการประเภท === */}
+          {/* จัดการประเภท */}
           <Link
             to={`${basePath}/tags`}
             onClick={() => handleClick("tags")}
@@ -181,7 +196,7 @@ const SidebarSuperAdmin: React.FC = () => {
             จัดการประเภท
           </Link>
 
-          {/* === รายงาน === */}
+          {/* รายงาน */}
           <Link
             to={`${basePath}/dashboard`}
             onClick={() => handleClick("dashboard")}
@@ -192,7 +207,7 @@ const SidebarSuperAdmin: React.FC = () => {
             รายงาน
           </Link>
 
-          {/* === ประวัติการเข้าใช้งาน === */}
+          {/* ประวัติการเข้าใช้งาน */}
           <Link
             to={`${basePath}/logs`}
             onClick={() => handleClick("logs")}
@@ -205,7 +220,7 @@ const SidebarSuperAdmin: React.FC = () => {
         </nav>
       </div>
 
-      {/* === ตั้งค่า & ออกจากระบบ === */}
+      {/* ตั้งค่า & ออกจากระบบ */}
       <div className="flex flex-col gap-2 text-base-semibold">
         <Link
           to={`${basePath}/setting`}

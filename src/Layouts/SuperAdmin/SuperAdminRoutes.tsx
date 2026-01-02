@@ -1,5 +1,8 @@
+/**
+ * คำอธิบาย : Component สำหรับ Layout ของผู้ใช้งานระดับซูเปอร์แอดมิน (Super Admin)
+ * ใช้สำหรับแสดง Sidebar และพื้นที่คอนเทนต์ของหน้าซูเปอร์แอดมินทั้งหมด
+ */
 import { Route, Routes } from "react-router-dom";
-
 import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
@@ -40,12 +43,10 @@ import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperAdmin";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 
 /*
- * Module: SuperAdminRoutes
- * Description: กำหนดเส้นทาง (Routes) สำหรับ Super Admin
- * - สามารถสร้างและแก้ไขบัญชีได้ 3 ประเภท (Admin / Member / Tourist)
- * - เมื่อเปลี่ยน role ในหน้า CreateAccountPage จะเปลี่ยน path อัตโนมัติ
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Super Admin
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Route
  */
-
 export default function SuperAdminRoutes() {
   return (
     <Routes>

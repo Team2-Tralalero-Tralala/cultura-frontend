@@ -8,30 +8,40 @@ import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./Search/SearchBar";
 import { Icon } from "@iconify/react";
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Navbar ของผู้ใช้กลุ่ม Tourist
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Navbar
+ */
 const NavbarTourist = () => {
-  // ดึงข้อมูล authentication จาก AuthContext
   const { user, logout: logoutAuth } = useAuth();
-  // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
-
   const navigate = useNavigate();
 
-  // ฟังก์ชันสำหรับเข้าสู่ระบบและออกจากระบบ
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับเข้าสู่ระบบ
+ * Input : ไม่มี
+ * Output : void
+ */
   const login = () => {
     navigate("/guest/login");
   };
+
   /*
-   * ฟังก์ชัน : logout
-   * คำอธิบาย : ออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
+   * คำอธิบาย : ฟังก์ชันสำหรับออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
    * Input : ไม่มี
    * Output : void
    */
   const logout = async () => {
     await logoutAuth();
-    setIsOpen(false); // ปิด dropdown ตอน logout
+    setIsOpen(false); 
   };
 
-  // ฟังก์ชันสลับสถานะการเปิด-ปิด dropdown
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับสลับสถานะการเปิด-ปิด dropdown
+   * Input : ไม่มี
+   * Output : void
+   */
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
@@ -47,7 +57,6 @@ const NavbarTourist = () => {
               alt="Cultura logo"
             />
           </a>
-
 
           {/* กล่องค้นหา */}
           <SearchBar

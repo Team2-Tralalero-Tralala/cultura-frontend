@@ -1,11 +1,6 @@
 /**
- * Component: SidebarAdmin
- * คำอธิบาย: แถบเมนูด้านข้างสำหรับผู้ดูแลชุมชน (Admin)
- * Features:
+ * คำอธิบาย: Component สำหรับแถบเมนูด้านข้างสำหรับผู้ดูแลชุมชน (Admin)
  * - แสดงเมนูที่เกี่ยวข้องกับการจัดการ เช่น ชุมชน, สมาชิก, แพ็กเกจ, การจอง, รายงาน และ logs
- * - รองรับเมนูหลักและเมนูย่อยแบบ dropdown
- * - ใช้ React Router ในการจัดการการนำทาง
- * - ใช้ไอคอนจาก Iconify
  */
 
 import { useState, useEffect } from "react";
@@ -31,6 +26,11 @@ type MenuKey =
   | "logout"
   | null;
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Sidebar ของผู้ดูแลชุมชน (Admin)
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Sidebar
+ */
 const SidebarAdmin = () => {
   const location = useLocation();
   const { pathname } = location;
@@ -44,6 +44,11 @@ const SidebarAdmin = () => {
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตั้งค่าเมนูที่ถูกเลือกและเมนู dropdown ที่เปิดอยู่ตามเส้นทางปัจจุบัน
+   * Input : ไม่มี
+   * Output : void
+   */
   useEffect(() => {
     if (currentPath.startsWith("/community/stores")) {
       setActiveMenuKey("community-stores");
@@ -97,8 +102,18 @@ const SidebarAdmin = () => {
     }
   }, [currentPath]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่าเมนูใดถูกเลือกอยู่
+   * Input : key (MenuKey)
+   * Output : boolean
+   */
   const isActive = (key: MenuKey) => activeMenuKey === key;
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการคลิกเมนู
+   * Input : key (MenuKey), parentKey (MenuKey | undefined)
+   * Output : void
+   */
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
     setActiveMenuKey(key);
     if (parentKey) {
@@ -108,13 +123,17 @@ const SidebarAdmin = () => {
     }
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับสร้างลิงก์เมนู
+   * Input : label (string), to (string), icon (string), key (MenuKey), parentKey (MenuKey | undefined)
+   * Output : JSX.Element
+   */
   const menuLink = (label: string, to: string, icon: string, key: MenuKey, parentKey?: MenuKey) => (
     <Link
       to={`${basePath}${to}`}
       onClick={() => handleClick(key, parentKey)}
-      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-        isActive(key) ? "bg-[#0D845A]" : ""
-      }`}
+      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive(key) ? "bg-[#0D845A]" : ""
+        }`}
     >
       <Icon icon={icon} className="text-xl" />
       {label}
@@ -133,13 +152,12 @@ const SidebarAdmin = () => {
 
         {/* เมนู */}
         <nav className="flex flex-col gap-2 text-base-semibold">
-          {/* === ชุมชน === */}
+          {/* ชุมชน */}
           <Link
             to={`${basePath}/community/own`}
             onClick={() => handleClick("community")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("community") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("community") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="ri:community-line" className="text-xl" />
@@ -166,16 +184,15 @@ const SidebarAdmin = () => {
             </div>
           )}
 
-          {/* === สมาชิก === */}
+          {/* สมาชิก */}
           {menuLink("จัดการสมาชิก", "/members", "mdi:account-cog-outline", "members")}
 
-          {/* === แพ็กเกจ === */}
+          {/* แพ็กเกจ */}
           <Link
             to={`${basePath}/packages/all`}
             onClick={() => handleClick("packages")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("packages") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -216,13 +233,12 @@ const SidebarAdmin = () => {
             </div>
           )}
 
-          {/* === การจอง === */}
+          {/* การจอง */}
           <Link
             to={`${basePath}/bookings`}
             onClick={() => handleClick("booking")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("booking") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -249,22 +265,21 @@ const SidebarAdmin = () => {
             </div>
           )}
 
-          {/* === รายงาน และ Logs === */}
+          {/* รายงาน และ Logs */}
           {menuLink("รายงาน", "/dashboard", "mdi:view-dashboard-outline", "dashboard")}
           {menuLink("ประวัติการเข้าใช้งาน", "/logs", "mdi:clipboard-text-clock-outline", "logs")}
         </nav>
       </div>
 
-      {/* === ออกจากระบบ === */}
+      {/* ออกจากระบบ */}
       <div className="flex flex-col gap-2 text-base-semibold">
         <button
           onClick={() => {
             handleClick("logout");
             logout();
           }}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${
-            isActive("logout") ? "bg-[#0D845A]" : ""
-          }`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${isActive("logout") ? "bg-[#0D845A]" : ""
+            }`}
         >
           <Icon icon="solar:logout-2-outline" className="text-xl" />
           ออกจากระบบ

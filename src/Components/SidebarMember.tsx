@@ -1,11 +1,6 @@
 /**
- * Component: SidebarMember
- * คำอธิบาย: แถบเมนูด้านข้างสำหรับสมาชิกทั่วไป (Member)
- * Features:
+ * คำอธิบาย: Component สำหรับแถบเมนูด้านข้างสำหรับสมาชิกทั่วไป (Member)
  * - แสดงเมนูที่เกี่ยวข้องกับการจัดการของสมาชิก เช่น ชุมชน, แพ็กเกจ, การจอง
- * - รองรับเมนูหลักและเมนูย่อยแบบ dropdown
- * - ใช้ React Router สำหรับการนำทางภายในระบบ
- *  * - ใช้ไอคอนจาก Iconify
  */
 
 import React, { useEffect, useState } from 'react';
@@ -26,6 +21,11 @@ type MenuKey =
   | 'logout'
   | null;
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Sidebar ของผู้ใช้กลุ่ม Member
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Sidebar
+ */
 const SidebarMember: React.FC = () => {
   const location = useLocation();
   const { pathname } = location;
@@ -36,6 +36,11 @@ const SidebarMember: React.FC = () => {
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับตั้งเมนูที่ใช้งานอยู่ตามเส้นทางปัจจุบัน
+ * Input : pathname, basePath
+ * Output : -
+ */
   useEffect(() => {
     let subPath = pathname;
     if (basePath) {
@@ -81,6 +86,11 @@ const SidebarMember: React.FC = () => {
     }
   }, [pathname, basePath]);
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดการการคลิกเมนู
+ * Input : key, parentKey
+ * Output : -
+ */
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
     setActiveMenuKey(key);
     if (parentKey) {
@@ -90,6 +100,11 @@ const SidebarMember: React.FC = () => {
     }
   };
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่าเมนูใดที่กำลังใช้งานอยู่
+ * Input : key
+ * Output : boolean
+ */
   const isActive = (key: MenuKey) => activeMenuKey === key;
 
   return (

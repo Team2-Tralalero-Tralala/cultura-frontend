@@ -92,7 +92,7 @@ const NavbarTourist = () => {
                   </li>
 
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
-                    <Link to="/tourist/booking-history" className="flex items-center gap-2">
+                    <Link to="/tourist/booking-histories" className="flex items-center gap-2">
                       <Icon icon="material-symbols:history-rounded" className="text-xl" />
                       ประวัติการจอง
                     </Link>

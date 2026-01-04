@@ -12,6 +12,10 @@
  */
 
 import type { BookingHistoryItem } from "../Types/BookingHistory";
+import type { BookingAdminDtoFromApi, Pagination, BookingRow } from "@/Types/BookingAdmin";
+import axios from "axios";
+import api from "@/Libs/api";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
  * ดึงประวัติการจองตามสิทธิ์ของผู้ใช้
@@ -49,10 +53,6 @@ export async function fetchBookingHistoriesByRole(page = 1, limit = 10): Promise
  * Mapping: GET /admin/bookings/all
  */
 
-import axios from "axios";
-import type { BookingAdminDtoFromApi, Pagination } from "@/Types/BookingAdmin";
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export async function fetchBookingsByAdmin(page = 1, limit = 10): Promise<{
   data: BookingAdminDtoFromApi[];
@@ -194,4 +194,60 @@ export async function updateBookingStatusByMember(
     body,
     { withCredentials: true }
   );
+}
+
+/* 
+ * อธิบาย : ดึงประวัติการจองของผู้ที่พัก
+ * Input : page, limit, sort, status, period, search
+ * Output : รายการประวัติการจอง
+ */
+export async function getBookingsByTourist(
+  page = 1,
+  limit = 10,
+  sort = "newest",
+  status?: string,
+  period?: string,
+  search?: string
+): Promise<{
+  data: BookingRow[];
+  pagination: Pagination;
+}> {
+  const sortMapped = sort === "oldest" ? "asc" : "desc";
+  const params: any = { page, limit, sort: sortMapped, search };
+
+  if (status && status !== "ALL") {
+    params.status = status;
+  }
+
+  if (period && period !== "ALL") {
+    const end = new Date();
+    const start = new Date();
+
+    if (period === "7_DAYS") {
+      start.setDate(end.getDate() - 7);
+    } else if (period === "1_MONTH") {
+      start.setMonth(end.getMonth() - 1);
+    } else if (period === "1_YEAR") {
+      start.setFullYear(end.getFullYear() - 1);
+    }
+
+    params.startDate = start.toISOString();
+    params.endDate = end.toISOString();
+  }
+
+  const res = await axios.get(`${apiUrl}/tourist/booking-histories`, {
+    params,
+    withCredentials: true,
+  });
+
+  const payload = res.data?.data ?? {};
+  return {
+    data: payload.data ?? [],
+    pagination: payload.pagination ?? {
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0,
+      limit,
+    },
+  };
 }

@@ -1,32 +1,34 @@
-/*
+/**
  * หน้า: จัดการที่พักในชุมชน (Super Admin)
  * คำอธิบาย:
- *   - แสดงรายการที่พักทั้งหมดของชุมชน
- *   - รองรับค้นหา / ลบทีละรายการ / ลบหลายรายการ (Bulk Delete)
- *   - Breadcrumb ใช้ Component กลาง
- *   - ใช้เฉพาะ Role: SuperAdmin
+ * - แสดงรายการที่พักทั้งหมดของชุมชน
+ * - รองรับค้นหา / ลบทีละรายการ / ลบหลายรายการ (Bulk Delete)
+ * - Breadcrumb ใช้ Component กลาง
+ * - ใช้เฉพาะ Role: SuperAdmin
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-
-/* ---------------- Components ---------------- */
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import { Modal } from "@/Components/Modal/Modal";
 import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { TrashIcon } from "@/Components/Tables/Icon";
-
-/* ---------------- Services ---------------- */
 import { getHomestaysAll, deleteHomestayBySuperAdmin } from "@/Services/homestay-services";
 import { getCommunityById } from "@/Services/community-service";
-
-/* ---------------- Types ---------------- */
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 /**
- * โครงสร้างข้อมูลของ Homestay สำหรับตาราง
+ * Type: HomestayRow
+ *
+ * คำอธิบาย:
+ *  โครงสร้างข้อมูลที่พัก (Homestay) สำหรับใช้แสดงผลในตาราง
+ *  ใช้ในหน้าจัดการที่พักของผู้ดูแลระบบ (Super Admin)
+ *
+ * Usage:
+ *  - ใช้เป็น type ของข้อมูลใน DataTable
+ *  - ใช้สำหรับแสดงรายการที่พัก พร้อมชื่อ สิ่งอำนวยความสะดวก และประเภทห้อง
  */
 type HomestayRow = {
   id: number;
@@ -35,51 +37,61 @@ type HomestayRow = {
   type: string;
 };
 
-/**
- * normalizeText
- * คำอธิบาย: ทำข้อความให้เป็นรูปแบบที่เหมาะกับการค้นหา
- * Input: string
- * Output: string (lowercase + trim + normalize)
+/*
+ * คำอธิบาย: แปลงข้อความให้อยู่ในรูปแบบมาตรฐานสำหรับการค้นหา
+ * Input:
+ *  - text: string | null | undefined
+ * Output:
+ *  - string: ข้อความตัวพิมพ์เล็ก ตัดช่องว่างส่วนเกิน และ normalize แล้ว
  */
 const normalizeText = (text: string) =>
   (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-
-/* Component */
+/*
+ * คำอธิบาย:
+ *  Component สำหรับจัดการข้อมูลที่พักในชุมชน สำหรับผู้ใช้งาน Role: SuperAdmin
+ *  รองรับการแสดงรายการ ค้นหา แบ่งหน้า และลบข้อมูล (เดี่ยว / หลายรายการ)
+ *
+ * Input:
+ *  - communityId: string
+ *    รหัสชุมชนที่รับมาจาก URL parameter
+ *
+ * Output:
+ *  - Render หน้าแสดงตารางรายการที่พัก
+ *  - จัดการ state ที่เกี่ยวข้องกับข้อมูล การค้นหา การแบ่งหน้า และการลบข้อมูล
+ */
 export default function ManageHomestaySuperAdmin() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
-
-  /* State : Data */
   const [communityName, setCommunityName] = useState("-");
-  const [rows, setRows] = useState<HomestayRow[]>([]);
+  const [homestayRows, setHomestayRows] = useState<HomestayRow[]>([]); // เปลี่ยน rows เป็น homestayRows
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  /* State : Search / Pagination */
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  /* State : Delete Modal */
   const [selectedRows, setSelectedRows] = useState<HomestayRow[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [isOpenBulkConfirm, setIsOpenBulkConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false); // ป้องกัน modal เด้งซ้ำ
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  /**
-   * Fetch ชื่อชุมชนตาม communityId
-   * ใช้แสดงใน Breadcrumb และ Header
+  /*
+   * คำอธิบาย: ดึงข้อมูลชื่อชุมชนจาก communityId
+   * ใช้สำหรับแสดงใน Header และ Breadcrumb
+   * Input
+   *  - communityId: string (จาก URL parameter)
+   * Output
+   *  - อัปเดต state: communityName
    */
   useEffect(() => {
     async function fetchCommunity() {
       try {
         if (!communityId) return;
-        const res = await getCommunityById(Number(communityId));
-        setCommunityName(res.data?.data?.name ?? "-");
+        const response = await getCommunityById(Number(communityId));
+        setCommunityName(response.data?.data?.name ?? "-");
       } catch (error) {
         console.error(error);
       }
@@ -87,11 +99,19 @@ export default function ManageHomestaySuperAdmin() {
     fetchCommunity();
   }, [communityId]);
 
-  /**
-   * fetchData
-   * คำอธิบาย: โหลดรายการโฮมสเตย์ตาม communityId พร้อม pagination
-   * Input: currentPage, pageSize
-   * Output: อัปเดต rows, totalPages, totalCount
+  /*
+   * คำอธิบาย: ดึงข้อมูลรายการที่พักทั้งหมดของชุมชนตามหน้าและจำนวนที่กำหนด
+   * Input:
+   *  - communityId: string
+   *  - currentPage: number
+   *  - pageSize: number
+   * Output:
+   *  - อัปเดต state:
+   *    - homestayRows
+   *    - totalPages
+   *    - totalCount
+   *    - isLoading
+   *    - errorMessage (กรณี error)
    */
   const fetchData = useCallback(async () => {
     if (!communityId) return;
@@ -100,21 +120,25 @@ export default function ManageHomestaySuperAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const { data } = await getHomestaysAll(Number(communityId), currentPage, pageSize);
-      const payload = data?.data;
-      const list = Array.isArray(payload?.data) ? payload.data : [];
+      const { data: responseData } = await getHomestaysAll(
+        Number(communityId),
+        currentPage,
+        pageSize
+      );
+      const homestayPayload = responseData?.data;
+      const homestayLists = Array.isArray(homestayPayload?.data) ? homestayPayload.data : [];
 
-      setRows(
-        list.map((h: any) => ({
-          id: h.id,
-          name: h.name ?? "-",
-          facility: h.facility ?? "-",
-          type: h.type ?? "-",
+      setHomestayRows(
+        homestayLists.map((homestay: any) => ({
+          id: homestay.id,
+          name: homestay.name ?? "-",
+          facility: homestay.facility ?? "-",
+          type: homestay.type ?? "-",
         }))
       );
 
-      setTotalPages(payload?.pagination?.totalPages ?? 1);
-      setTotalCount(payload?.pagination?.totalCount ?? list.length);
+      setTotalPages(homestayPayload?.pagination?.totalPages ?? 1);
+      setTotalCount(homestayPayload?.pagination?.totalCount ?? homestayLists.length);
     } catch (error: any) {
       console.error(error);
       setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -127,21 +151,32 @@ export default function ManageHomestaySuperAdmin() {
     fetchData();
   }, [fetchData]);
 
-  /**
-   * filteredRows
-   * คำอธิบาย: กรองข้อมูลตามคำค้นหา (searchQuery)
+  /*
+   * คำอธิบาย: กรองรายการที่พักตามคำค้นหา
+   * Input:
+   *  - homestayRows: HomestayRow[]
+   *  - searchQuery: string
+   * Output:
+   *  - HomestayRow[] ที่ตรงกับคำค้นหา
    */
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.name, r.facility, r.type].some((v) => normalizeText(v).includes(q))
+    const normalizedSearchQuery = normalizeText(searchQuery);
+    if (!normalizedSearchQuery) return homestayRows;
+    return homestayRows.filter((row) =>
+      [row.name, row.facility, row.type].some((fieldValue) =>
+        normalizeText(fieldValue).includes(normalizedSearchQuery)
+      )
     );
-  }, [rows, searchQuery]);
+  }, [homestayRows, searchQuery]);
 
-  /**
-   * handleDelete
-   * คำอธิบาย: ลบ 1 รายการตาม deleteId
+  /*
+   * คำอธิบาย: ลบที่พัก 1 รายการตาม deleteId
+   * Input:
+   *  - deleteId: number | null
+   * Output:
+   *  - เรียก API ลบข้อมูล
+   *  - โหลดข้อมูลใหม่
+   *  - รีเซ็ตสถานะการลบ
    */
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return;
@@ -163,10 +198,13 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
-  /**
-   * handleBulkDelete
-   * คำอธิบาย: ลบหลายรายการพร้อมกัน
-   * Input: selectedRows[]
+  /*
+   * คำอธิบาย: ลบที่พักหลายรายการพร้อมกัน
+   * Input:
+   *  - selectedRows: HomestayRow[]
+   * Output:
+   *  - ลบข้อมูลตาม id ที่เลือก
+   *  - อัปเดต homestayRows และ totalCount
    */
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0 || isDeleting) return;
@@ -174,13 +212,13 @@ export default function ManageHomestaySuperAdmin() {
     setIsDeleting(true);
     setIsOpenBulkConfirm(false);
 
-    const ids = selectedRows.map((r) => r.id);
+    const homestayIds = selectedRows.map((row) => row.id);
     setSelectedRows([]);
 
     try {
-      await Promise.all(ids.map((id) => deleteHomestayBySuperAdmin(id)));
-      setRows((prev) => prev.filter((row) => !ids.includes(row.id)));
-      setTotalCount((prev) => prev - ids.length);
+      await Promise.all(homestayIds.map((id) => deleteHomestayBySuperAdmin(id)));
+      setHomestayRows((prevRows) => prevRows.filter((row) => !homestayIds.includes(row.id)));
+      setTotalCount((prevCount) => prevCount - homestayIds.length);
     } catch (error) {
       console.error("Bulk delete error:", error);
       alert("เกิดข้อผิดพลาด ไม่สามารถลบหลายรายการได้");
@@ -189,20 +227,34 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
-  /* Cancel Delete */
+  /*
+   * คำอธิบาย: ยกเลิกการลบรายการเดียว
+   * Input: -
+   * Output:
+   *  - ปิด Confirm Modal
+   *  - รีเซ็ต deleteId
+   */
   const handleCancelDelete = () => {
     setIsOpenConfirm(false);
     setDeleteId(null);
   };
 
+  /*
+   * คำอธิบาย: ยกเลิกการลบหลายรายการ
+   * Input: -
+   * Output:
+   *  - ปิด Bulk Confirm Modal
+   *  - ล้างรายการที่เลือก
+   */
   const handleCancelBulkDelete = () => {
     setIsOpenBulkConfirm(false);
     setSelectedRows([]);
   };
 
-  /**
-   * columns
-   * คำอธิบาย: คอลัมน์สำหรับแสดงข้อมูลในตาราง
+  /*
+   * คำอธิบาย: กำหนดคอลัมน์สำหรับแสดงข้อมูลในตาราง
+   * Input: communityId
+   * Output: Array ของ Column config
    */
   const columns: Column<HomestayRow>[] = useMemo(
     () => [
@@ -231,6 +283,11 @@ export default function ManageHomestaySuperAdmin() {
     [communityId]
   );
 
+  /*
+   * คำอธิบาย: กำหนด Actions สำหรับแต่ละแถว (แก้ไข/ลบ)
+   * Input: communityId, navigate
+   * Output: DataTableActionsConfig
+   */
   const rowActions: DataTableActionsConfig<HomestayRow> = useMemo(
     () => ({
       header: "จัดการ",
@@ -249,6 +306,11 @@ export default function ManageHomestaySuperAdmin() {
     [communityId, navigate]
   );
 
+  /*
+   * คำอธิบาย: กำหนด Bulk Actions (ลบทั้งหมด)
+   * Input: -
+   * Output: Array ของ BulkAction
+   */
   const bulkActions: BulkAction<HomestayRow>[] = useMemo(
     () => [
       {
@@ -266,20 +328,33 @@ export default function ManageHomestaySuperAdmin() {
     []
   );
 
+  /*
+   * คำอธิบาย: จัดการเหตุการณ์จาก Pagination และ Search
+   * Input:
+   *  - page: number
+   *  - size: number
+   *  - event: ChangeEvent<HTMLInputElement>
+   * Output:
+   *  - อัปเดต state ที่เกี่ยวข้อง และรีเซ็ต currentPage
+   */
   const handlePageChange = (page: number) => setCurrentPage(page);
-
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
-
-  /* Render */
+  /**
+   * Render Section
+   *
+   * คำอธิบาย:
+   *  - แสดงหน้าแสดงข้อมูลที่พัก
+   *  - ประกอบด้วย Breadcrumb, Header, Toolbar, Table และ Modal
+   */
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}

@@ -6,6 +6,11 @@ import type { StoreData } from "@/Types/Store";
 import api from "@/Libs/api";
 const apiUrl = import.meta.env.VITE_API_URL;
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าทั้งหมดของชุมชนที่อยู่ในชุมชนของ super admin
+ * Input : page, limit
+ * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
+ */
 export async function getAllStore(communityId: number, page: number, limit: number) {
   const params = { page, limit };
   return axios.get(`${apiUrl}/super/community/${communityId}/store`, {
@@ -106,4 +111,18 @@ export async function createStoreByAdmin(data: StoreData | FormData) {
  */
 export async function deleteStore(storeId: number) {
   return api.delete(`/shared/store/${storeId}/delete`);
+}
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลร้านค้าตามและร้านค้าอื่นๆในชุมชนเดียวกัน
+ * Input : communityId, storeId
+ * Output : ข้อมูลร้านค้าตามและร้านค้าอื่นๆในชุมชนเดียวกัน
+*/
+export async function getStoreWithOtherStoresInCommunity(communityId: number, storeId: number, page: number, limit: number) {
+  const response = await axios.get(`${apiUrl}/shared/community/${communityId}/store/${storeId}`,
+    {
+      params: { page, limit },
+    }
+  );
+  return response.data;
 }

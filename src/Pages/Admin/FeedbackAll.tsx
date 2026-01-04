@@ -26,8 +26,14 @@ type ApiFeedback = {
     feedbackImages: ApiFeedbackImage[];
 };
 
+type Tourist = {
+    fname: string;
+    lname: string;
+};
+
 type ApiBookingHistory = {
     id: number;
+    tourist: Tourist;
     touristId: number;
     packageId: number;
     status: string;
@@ -79,6 +85,30 @@ type SortOrder = 'newest' | 'oldest';
  * Output : String (ชื่อที่ถูก Mask แล้ว)
  */
 const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL รูปภาพที่สมบูรณ์จากชื่อไฟล์
+ * Input : fileName (ชื่อไฟล์รูปภาพ)
+ * Output : URL เต็มของรูปภาพ หรือ undefined หากไม่มีชื่อไฟล์
+ */
+function getImageUrl(fileName?: string): string | undefined {
+    if (!fileName) {
+        return undefined;
+    }
+    const cleanedPath = fileName.replace(/^\/?uploads\//, "");
+    return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+}
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อผู้ใช้เป็นรูปแบบที่ปกปิดบางส่วนเพื่อความเป็นส่วนตัว
+ * Input : tourist (ข้อมูลนักท่องเที่ยวที่มีชื่อและนามสกุล)
+ * Output : ชื่อและนามสกุลที่ถูก mask ด้วยเครื่องหมาย *
+ */
+function formatFullName(tourist: Tourist): string {
+    const mask = (text: string) =>
+        text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
+    return `${mask(tourist.fname)} ${mask(tourist.lname)}`.trim();
+}
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
@@ -204,14 +234,13 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                     {displayImages.map((imageSource, index) => {
                         const isLastSlot = index === 2;
                         const hasOverlay = isLastSlot && extraCount > 0;
-
+                        const imageUrl = getImageUrl(imageSource);
                         return (
                             <div
                                 key={index}
                                 className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200"
                             >
-                                <img src={imageSource} alt="" className="w-full h-full object-cover" />
-
+                                <img src={imageUrl} alt="" className="w-full h-full object-cover" />
                                 {hasOverlay && (
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                         <span className="text-white text-xl font-bold">+{extraCount}</span>
@@ -306,7 +335,7 @@ export default function FeedbackAllPage() {
                     (bookingHistory.feedbacks ?? []).forEach((feedback) => {
                         groupFeedbacks.push({
                             id: feedback.id,
-                            userName: maskUserIdAsDisplayName(bookingHistory.touristId),
+                            userName: formatFullName(bookingHistory.tourist),
                             rating: feedback.rating ?? 0,
                             createdAt: feedback.createdAt,
                             message: feedback.message ?? "",
@@ -393,8 +422,13 @@ export default function FeedbackAllPage() {
         setIsFilterModalOpen(false);
     };
 
+    /*
+     * คำอธิบาย : Component Modal ตัวเลือกสำหรับเรียงลำดับข้อมูล
+     * Input : -
+     * Output : JSX Element Modal
+     */
     const SortFilterModal = () => (
-        <div className="absolute top-15 right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 ">
+        <div className="absolute top-[60px] right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 shadow-lg p-1">
             <button
                 className={`w-full text-left p-2 rounded-md 
                 ${sortOrder === 'newest'

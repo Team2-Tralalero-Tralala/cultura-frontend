@@ -15,7 +15,7 @@ import {
   type PackageApiData,
 } from "@/Services/tourist-service";
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 /*
  * ฟังก์ชัน : PackagesPage
@@ -25,6 +25,7 @@ import { useSearchParams } from "react-router-dom";
  */
 export default function PackagesPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const sort = searchParams.get("sort");
 
   // กำหนดว่าเป็นหน้าแพ็กเกจยอดนิยมหรือไม่
@@ -126,7 +127,7 @@ export default function PackagesPage() {
    */
   const handlePackageClick = (packageId: number) => {
     // TODO: Navigate to package detail page
-    console.log("Package clicked:", packageId);
+    navigate(`/tourist/package/${packageId}`);
   };
 
   // กำหนดข้อความสำหรับ breadcrumb และ title

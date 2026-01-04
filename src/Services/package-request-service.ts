@@ -9,15 +9,13 @@
 import type { PackageRequestDetail } from "@/Types/package-request";
 import axios from "axios";
 
-/** ค่าฐาน URL ของ API (ควรลงท้ายโดยไม่มี /) */
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 /**
- * ฟังก์ชัน : fetchPackageRequestDetail
  * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจ (ผู้ใช้ทั่วไปหรือสิทธิ์ตามที่ backend อนุญาต)
  * Input : requestId: string (รหัสคำขอแพ็กเกจ)
  * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจ)
- */
+*/
 export async function fetchPackageRequestDetail(requestId: string): Promise<PackageRequestDetail> {
   const res = await axios.get(`${apiUrl}/super/package-requests/${requestId}`, {
     withCredentials: true,
@@ -26,11 +24,10 @@ export async function fetchPackageRequestDetail(requestId: string): Promise<Pack
 }
 
 /**
- * ฟังก์ชัน : fetchPackageRequestDetailForAdmin
  * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจ (เส้นทางสำหรับแอดมิน)
  * Input : requestId: string (รหัสคำขอแพ็กเกจ)
  * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจ)
- */
+*/
 export async function fetchPackageRequestDetailForAdmin(
   requestId: string
 ): Promise<PackageRequestDetail> {

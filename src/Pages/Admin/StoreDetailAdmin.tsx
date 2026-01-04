@@ -1,9 +1,11 @@
+/**
+* คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Admin
+*/
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit } from "lucide-react";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 
-/* Interfaces */
 interface Community {
   id: number;
   name: string;
@@ -24,7 +26,11 @@ interface Store {
   };
 }
 
-/* Fix image path */
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend
+ * Input : path ของรูปภาพจาก backend
+ * Output : URL ของรูปภาพที่สามารถนำไปแสดงผลได้
+ */
 const buildImageUrl = (imagePath?: string): string => {
   if (!imagePath) return "";
   if (imagePath.startsWith("http")) return imagePath;
@@ -36,6 +42,11 @@ const buildImageUrl = (imagePath?: string): string => {
   return `${backend}/${cleanPath}`;
 };
 
+/*
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดร้านค้า สำหรับผู้ใช้งานบทบาท Admin
+ * Input : รหัสร้านค้าจาก URL parameter
+ * Output : แสดงข้อมูลรายละเอียดร้านค้า รูปภาพ แท็ก และตำแหน่งร้านค้า
+ */
 const StoreDetailAdmin = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,23 +54,22 @@ const StoreDetailAdmin = () => {
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /** DEBUG LOG */
-  console.log("📌 PARAM ID =", id);
-
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายละเอียดร้านค้าจาก backend
+   * Input : ไม่มี (ใช้รหัสร้านค้าจาก URL)
+   * Output : ตั้งค่าข้อมูลร้านค้าเข้าสู่ state เพื่อใช้แสดงผล
+   */
   const fetchStore = async () => {
     if (!id) {
-      console.error("❌ ID is undefined");
+      console.error(" ID is undefined");
       return;
     }
 
     const url = `${import.meta.env.VITE_API_URL}/admin/stores/${id}`;
-    console.log("📌 FETCH URL =", url);
 
     try {
       const res = await fetch(url, { credentials: "include" });
       const result = await res.json();
-
-      console.log("📌 RESPONSE =", result);
 
       if (result?.data) {
         const data = result.data;
@@ -104,16 +114,19 @@ const StoreDetailAdmin = () => {
         };
 
         setStore(formatted);
-      } else {
-        console.warn("⚠️ result.data is empty");
       }
     } catch (err) {
-      console.error("❌ Fetch error:", err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  /*
+   * คำอธิบาย : เรียกใช้งานฟังก์ชันโหลดข้อมูลร้านค้า
+   * Input : ไม่มี
+   * Output : โหลดข้อมูลร้านค้าเมื่อเปิดหน้า หรือเมื่อ id เปลี่ยนแปลง
+   */
   useEffect(() => {
     fetchStore();
   }, [id]);
@@ -123,12 +136,20 @@ const StoreDetailAdmin = () => {
 
   const coverImage = store.images[0];
 
-  /** Edit button */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าแก้ไขข้อมูลร้านค้า
+   * Input : ไม่มี
+   * Output : เปลี่ยนหน้าไปยังหน้าจอแก้ไขร้านค้า
+   */
   const handleEditClick = () => {
     navigate(`/admin/community/store/${id}/edit`);
   };
 
-  /** Back button */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับนำทางกลับไปยังหน้ารายการร้านค้า
+   * Input : ไม่มี
+   * Output : เปลี่ยนหน้าไปยังหน้ารายการร้านค้าทั้งหมด
+   */
   const handleBackClick = () => {
     navigate("/admin/community/stores");
   };

@@ -350,11 +350,13 @@ export default function UploadBannerPage() {
     try {
       await uploadBanners([file]);
       await refresh();
-      setResultStatus("success");
+      setResultType("success");
+      setResultTitle("สำเร็จ");
       setResultMessage(`อัปโหลดสำเร็จ`);
       setIsResultOpen(true);
     } catch (error: any) {
-      setResultStatus("error");
+      setResultType("error");
+      setResultTitle("ไม่สำเร็จ");
       setResultMessage(error?.message || "อัปโหลดไม่สำเร็จ");
       setIsResultOpen(true);
     }
@@ -442,7 +444,8 @@ export default function UploadBannerPage() {
           const localIndex = pendingIndex - serverCount;
           setBannerFiles((previousFiles) => previousFiles.filter((_unused, index) => index !== localIndex));
         }
-        setResultStatus("success");
+        setResultType("success");
+        setResultTitle("สำเร็จ");
         setResultMessage("ลบรูปภาพสำเร็จ");
         setIsResultOpen(true);
       }
@@ -461,12 +464,14 @@ export default function UploadBannerPage() {
             return nextFiles;
           });
         }
-        setResultStatus("success");
+        setResultType("success");
+        setResultTitle("สำเร็จ");
         setResultMessage("แก้ไขรูปภาพสำเร็จ");
         setIsResultOpen(true);
       }
     } catch (error: any) {
-      setResultStatus("error");
+      setResultType("error");
+      setResultTitle("ไม่สำเร็จ");
       setResultMessage(error?.message || "ไม่สำเร็จ");
       setIsResultOpen(true);
     }

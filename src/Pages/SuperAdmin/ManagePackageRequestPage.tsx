@@ -1,20 +1,15 @@
 /**
- * Component: PackageRequestsSuperAdmin
- * คำอธิบาย:
- *  - ใช้สำหรับ Super Admin เพื่อตรวจสอบและจัดการคำขออนุมัติแพ็กเกจจากชุมชน
- *  - รองรับการค้นหา, pagination, และแสดงข้อมูลผู้ดูแล/ชุมชน
- *  - สามารถ "อนุมัติ" และ "ปฏิเสธ" แพ็กเกจได้ผ่าน Modal
- *  - เมื่ออนุมัติ/ปฏิเสธ จะมีการ reload ข้อมูลในตารางทันที
+ * คำอธิบาย : หน้าจัดการคำขออนุมัติแพ็กเกจสำหรับ Super Admin รองรับการค้นหา การแบ่งหน้า และการอนุมัติ/ปฏิเสธคำขอ
  */
-
 import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-import { Link } from "react-router-dom";
 import {
   approvePackageRequest,
   fetchPackageRequests,
@@ -37,6 +32,11 @@ export type Pagination = {
   limit: number;
 };
 
+/**
+ * คำอธิบาย : แปลงสถานะภาษาอังกฤษเป็นภาษาไทยสำหรับแสดงผล
+ * Input : status (สถานะแพ็กเกจ)
+ * Output : ข้อความสถานะภาษาไทย
+ */
 const thaiApproveStatus = (status?: string | null) => {
   switch ((status || "").toUpperCase()) {
     case "PENDING_SUPER":
@@ -47,81 +47,79 @@ const thaiApproveStatus = (status?: string | null) => {
 };
 
 /**
- * ฟังก์ชัน buildPackageRequestColumns
- * คำอธิบาย:
- *  - สร้างชุด Columns สำหรับตารางคำขอแพ็กเกจ
- *  - รองรับปุ่มอนุมัติ / ปฏิเสธ
- *  - รับ callback จาก parent เพื่อส่ง event การคลิกในแต่ละแถว
+ * คำอธิบาย : สร้างชุด Columns สำหรับตารางคำขอแพ็กเกจ รองรับปุ่มอนุมัติและปฏิเสธ
+ * Input : onApprove (ฟังก์ชันอนุมัติ), onReject (ฟังก์ชันปฏิเสธ)
+ * Output : Array ของ Column Configuration
  */
 const buildPackageRequestColumns = (
   onApprove: (row: PackageRequestRow) => void,
   onReject: (row: PackageRequestRow) => void
 ): Column<PackageRequestRow>[] => [
-  {
-    key: "name",
-    header: "ชื่อแพ็กเกจ",
-    className: "min-w-[220px]",
-    render: (r) => (
-      <Link
-        to={`/super/package-requests/${r.id}`}
-        className="font-medium text-dark-green hover:underline focus:underline"
-      >
-        {r.name}
-      </Link>
-    ),
-  },
-  {
-    key: "community",
-    header: "ชื่อชุมชน",
-    className: "min-w-[220px]",
-    render: (r) => <div>{r.community.name}</div>,
-  },
-  {
-    key: "overseer",
-    header: "ผู้ดูแล",
-    className: "min-w-[160px]",
-    render: (r) => <div>{r.overseer.username}</div>,
-  },
-  {
-    key: "statusApprove",
-    header: "สถานะคำขอ",
-    render: (r) => <div>{thaiApproveStatus(r.statusApprove)}</div>,
-  },
-  {
-    key: "actions",
-    header: "จัดการ",
-    className: "w-[160px] text-left pr-3",
-    render: (r) => {
-      const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
-      return (
-        <div className="flex items-center justify-end gap-2 pr-2">
-          {!approved && (
-            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="cancel" onClick={() => onReject(r)}>
-                ปฏิเสธ
-              </Button>
-            </div>
-          )}
-          {!approved && (
-            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin" onClick={() => onApprove(r)}>
-                อนุมัติ
-              </Button>
-            </div>
-          )}
-          {approved && (
-            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin">อนุมัติ</Button>
-            </div>
-          )}
-        </div>
-      );
+    {
+      key: "name",
+      header: "ชื่อแพ็กเกจ",
+      className: "min-w-[220px]",
+      render: (packageRequestRow) => (
+        <Link
+          to={`/super/package-requests/${packageRequestRow.id}`}
+          className="font-medium text-dark-green hover:underline focus:underline"
+        >
+          {packageRequestRow.name}
+        </Link>
+      ),
     },
-  },
-];
+    {
+      key: "community",
+      header: "ชื่อชุมชน",
+      className: "min-w-[220px]",
+      render: (packageRequestRow) => <div>{packageRequestRow.community.name}</div>,
+    },
+    {
+      key: "overseer",
+      header: "ผู้ดูแล",
+      className: "min-w-[160px]",
+      render: (packageRequestRow) => <div>{packageRequestRow.overseer.username}</div>,
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะคำขอ",
+      render: (packageRequestRow) => <div>{thaiApproveStatus(packageRequestRow.statusApprove)}</div>,
+    },
+    {
+      key: "actions",
+      header: "จัดการ",
+      className: "w-[160px] text-left pr-3",
+      render: (packageRequestRow) => {
+        const approved = String(packageRequestRow.statusApprove).toUpperCase() === "APPROVE";
+        return (
+          <div className="flex items-center justify-end gap-2 pr-2">
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="cancel" onClick={() => onReject(packageRequestRow)}>
+                  ปฏิเสธ
+                </Button>
+              </div>
+            )}
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin" onClick={() => onApprove(packageRequestRow)}>
+                  อนุมัติ
+                </Button>
+              </div>
+            )}
+            {approved && (
+              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin">อนุมัติ</Button>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
 export default function PackageRequestsSuperAdmin() {
-  const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
+  const [packageRequestRows, setPackageRequestRows] = React.useState<PackageRequestRow[]>([]);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState<number>(10);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -139,19 +137,16 @@ export default function PackageRequestsSuperAdmin() {
   const [selectedRow, setSelectedRow] = React.useState<PackageRequestRow | null>(null);
 
   /**
-   * ฟังก์ชัน reload
-   * คำอธิบาย:
-   *  - โหลดข้อมูลคำขอแพ็กเกจจาก API
-   *  - อัปเดตตาราง + pagination
-   *  - ใช้ร่วมกับ useEffect เพื่อโหลดข้อมูลตาม page / pageSize / searchQuery
+   * คำอธิบาย : โหลดข้อมูลคำขอแพ็กเกจจาก API และอัปเดตข้อมูลในตาราง
+   * Input : -
+   * Output : -
    */
-
   const reload = React.useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
       const { data } = await fetchPackageRequests(currentPage, pageSize, searchQuery);
-      setRows(data?.data?.data ?? []);
+      setPackageRequestRows(data?.data?.data ?? []);
       setPagination(
         data?.data?.pagination ?? {
           currentPage: 1,
@@ -160,54 +155,41 @@ export default function PackageRequestsSuperAdmin() {
           limit: pageSize,
         }
       );
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
   }, [currentPage, pageSize, searchQuery]);
 
-  /**
-   * useEffect:
-   * คำอธิบาย:
-   *  - เรียก reload() ทุกครั้งที่ currentPage, pageSize หรือ searchQuery เปลี่ยน
-   */
   React.useEffect(() => {
     reload();
   }, [reload, currentPage, pageSize, searchQuery]);
 
-  /**
-   * useEffect:
-   * คำอธิบาย:
-   *  - เมื่อ searchQuery เปลี่ยน ให้กลับไปหน้าแรกของตาราง
-   */
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
   /**
-   * ฟังก์ชัน handleApprove
-   * คำอธิบาย:
-   *  - ส่งคำขออนุมัติไปยัง backend
-   *  - เมื่อสำเร็จ จะ reload ข้อมูลตารางใหม่
-   *  - ถ้าเกิด error จะเก็บข้อความ error ลง state
+   * คำอธิบาย : ส่งคำขออนุมัติแพ็กเกจไปยัง API และโหลดข้อมูลใหม่เมื่อสำเร็จ
+   * Input : row (ข้อมูลแถวที่ต้องการอนุมัติ)
+   * Output : -
    */
   const handleApprove = async (row: PackageRequestRow) => {
     try {
       setIsLoading(true);
       await approvePackageRequest(row.id);
       await reload();
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "ไม่สามารถอนุมัติได้");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "ไม่สามารถอนุมัติได้");
       setIsLoading(false);
     }
   };
 
   /**
-   * ฟังก์ชัน openRejectModal
-   * คำอธิบาย:
-   *  - เปิด Modal ปฏิเสธคำขอ (RejectModal)
-   *  - เซ็ต row ที่ถูกเลือกลงใน selectedRow
+   * คำอธิบาย : เปิด Modal ปฏิเสธคำขอและกำหนดแถวที่เลือก
+   * Input : row (ข้อมูลแถวที่เลือก)
+   * Output : -
    */
   const openRejectModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
@@ -215,10 +197,9 @@ export default function PackageRequestsSuperAdmin() {
   };
 
   /**
-   * ฟังก์ชัน openApproveModal
-   * คำอธิบาย:
-   *  - เปิด Modal ยืนยันการอนุมัติแพ็กเกจ
-   *  - เซ็ต row ที่ผู้ใช้เลือกลง selectedRow
+   * คำอธิบาย : เปิด Modal ยืนยันการอนุมัติและกำหนดแถวที่เลือก
+   * Input : row (ข้อมูลแถวที่เลือก)
+   * Output : -
    */
   const openApproveModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
@@ -226,19 +207,12 @@ export default function PackageRequestsSuperAdmin() {
   };
 
   /**
-   * handleReject:
-   * คำอธิบาย:
-   *  - alias ของฟังก์ชัน openRejectModal
-   *  - ใช้ส่งเข้าไปใน column renderer เพื่อเรียกปฏิเสธคำขอ
+   * คำอธิบาย : ตัวแปร Alias สำหรับฟังก์ชัน openRejectModal เพื่อใช้ส่งเป็น Callback
    */
   const handleReject = openRejectModal;
 
   /**
-   * useEffect:
-   * คำอธิบาย:
-   *  - เมื่อ Modal อนุมัติถูกปิด (isConfirmOpen = false)
-   *  - รีเซ็ต selectedRow ให้กลับเป็น null
-   *  - ใช้ setTimeout เพื่อหลีกเลี่ยง state update ระหว่าง render
+   * คำอธิบาย : รีเซ็ตค่า selectedRow เมื่อ Modal ปิดลง (ใช้ setTimeout เพื่อรอให้ Animation จบ)
    */
   useEffect(() => {
     if (!isConfirmOpen) {
@@ -272,9 +246,11 @@ export default function PackageRequestsSuperAdmin() {
 
       {/* ตาราง */}
       <DataTable<PackageRequestRow>
-        data={rows}
+        data={packageRequestRows}
         columns={buildPackageRequestColumns(openApproveModal, handleReject)}
-        getKey={(r: PackageRequestRow) => String(r.id)}
+        getKey={(packageRequestRow: PackageRequestRow) =>
+          String(packageRequestRow.id)
+        }
         selectable={false}
         theme="brand"
         isLoading={isLoading}
@@ -285,9 +261,9 @@ export default function PackageRequestsSuperAdmin() {
           totalCount: pagination.totalCount,
           limit: pagination.limit,
         }}
-        onPageChange={(p) => setCurrentPage(p)}
-        onPageSizeChange={(s) => {
-          setPageSize(s);
+        onPageChange={(page) => setCurrentPage(page)}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
           setCurrentPage(1);
         }}
       />
@@ -339,8 +315,8 @@ export default function PackageRequestsSuperAdmin() {
               setIsLoading(true);
               await rejectPackageRequest(selectedRow.id, reason);
               await reload();
-            } catch (e: any) {
-              setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");
+            } catch (error: any) {
+              setErrorMessage(error?.message ?? "ไม่สามารถปฏิเสธได้");
             } finally {
               setIsLoading(false);
               setRejectOpen(false);

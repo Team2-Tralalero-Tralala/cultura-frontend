@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย: component สำหรับหน้ารายของ Member
+ * คำอธิบาย: page สำหรับหน้า Dashboard ของ Member
  * แสดงข้อมูลสรุปต่างๆประกอบด้วย
  * 1. ข้อมูลสรุป (summary) - แพ็กเกจทั้งหมด รายได้ทั้งหมด การจองสำเร็จ ยกเลิกการจอง
  * 2. ข้อมูลกราฟ (graph) - แสดงกราฟการจองและรายได้ตามวันที่
@@ -18,8 +18,7 @@ import { BarChart } from "@/Components/Graph/BarChart";
 import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
 
 /**
- * Component: DashboardPage
- * วัตถุประสงค์: ใช้สำหรับแสดงข้อมูลสรุปผล Dashboard ของสมาชิกภายในชุมชน
+ * คำอธิบาย: หน้า Dashboard ของ Member
  */
 export function DashboardPage() {
   const [dashboardData, setDashboardData] = React.useState<MemberDashboardResponse>();
@@ -28,7 +27,6 @@ export function DashboardPage() {
 
   type PeriodType = "weekly" | "monthly" | "yearly";
   /**
-   * ฟังก์ชัน: calculateInitialDateRange
    * คำอธิบาย: คำนวณช่วงวันที่เริ่มต้นตามประเภทช่วงเวลา (รายสัปดาห์, รายเดือน, รายปี)
    * Input: periodType (PeriodType) - ประเภทของช่วงเวลาที่ต้องการคำนวณ
    * Output: Object ที่ประกอบด้วยวันเริ่มต้น (start), วันสิ้นสุด (end), รายการวันที่ (dates), และประเภทช่วงเวลา (periodType)
@@ -95,7 +93,6 @@ export function DashboardPage() {
   }>(initialDateRange);
 
   /**
-   * ฟังก์ชัน: fetchDashboardData
    * คำอธิบาย: ดึงข้อมูล Dashboard จาก API ตาม filter ที่กำหนด
    * Input: - (ใช้ state ภายใน ฟังก์ชัน)
    * Output: - (อัปเดต state dashboardData)
@@ -105,7 +102,6 @@ export function DashboardPage() {
       setIsLoading(true);
 
       /**
-       * ฟังก์ชัน: getFormattedDates
        * คำอธิบาย: แปลงวันที่เป็น format yyyy-MM-dd และเรียงลำดับ
        * Input: dates (Date[]) - รายการวันที่
        * Output: Array<string> - รายการวันที่ที่ถูก format และเรียงลำดับ
@@ -138,7 +134,6 @@ export function DashboardPage() {
   }, [fetchDashboardData]);
 
   /**
-   * ฟังก์ชัน: handleBookingDateChange
    * คำอธิบาย: อัปเดต state ช่วงเวลาสำหรับการจองเมื่อมีการเปลี่ยนแปลงจาก CalendarTrigger
    * Input: range (Object containing start, end, dates, mode)
    * Output: - (อัปเดต state bookingDateRange)
@@ -158,7 +153,6 @@ export function DashboardPage() {
   };
 
   /**
-   * ฟังก์ชัน: handleRevenueDateChange
    * คำอธิบาย: อัปเดต state ช่วงเวลาสำหรับรายได้เมื่อมีการเปลี่ยนแปลงจาก CalendarTrigger
    * Input: range (Object containing start, end, dates, mode)
    * Output: - (อัปเดต state revenueDateRange)
@@ -178,7 +172,6 @@ export function DashboardPage() {
   };
 
   /**
-   * ฟังก์ชัน: handlePackageDateChange
    * คำอธิบาย: อัปเดต state ช่วงเวลาสำหรับแพ็กเกจเมื่อมีการเปลี่ยนแปลงจาก CalendarTrigger
    * Input: range (Object containing start, end, dates, mode)
    * Output: - (อัปเดต state packageDateRange)

@@ -2,13 +2,6 @@
  * คำอธิบาย : Component สำหรับเลือกสมาชิก (Member) ของวิสาหกิจชุมชน
  * ใช้ร่วมกับ MUI Autocomplete แบบ multiple selection เพื่อเลือกสมาชิกหลายคนได้ในครั้งเดียว
  * โดยจะดึงข้อมูลสมาชิกที่ยังไม่ถูกมอบหมายจาก API และรวมกับสมาชิกที่มีอยู่แล้วในชุมชน
- * Input :
- *   - value (number[]) : id ของสมาชิกที่ถูกเลือกในปัจจุบัน
- *   - member (Member[]) : รายการสมาชิกที่อยู่ในชุมชนเดิม (ใช้เมื่อแก้ไขข้อมูล)
- *   - onChange (function) : ฟังก์ชัน callback สำหรับส่ง id ของสมาชิกที่เลือกกลับไปยัง parent component
- * Output :
- *   - แสดง Autocomplete dropdown สำหรับเลือกสมาชิก
- *   - ส่ง id ของสมาชิกทั้งหมดที่เลือกกลับไปยัง parent component ผ่าน onChange()
  */
 
 import * as React from "react";

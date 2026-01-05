@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
+import { api } from "./account-services";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export type Role = "member" | "admin" | "superadmin";
@@ -7,7 +8,7 @@ export type Role = "member" | "admin" | "superadmin";
 const roleToPrefix = (role: Role) => (role === "superadmin" ? "super" : role);
 
 export async function fetchPackagesByRole(role: Role, page: number, limit: number) {
-  const prefix = roleToPrefix(role);             // <-- แปลงตรงนี้
+  const prefix = roleToPrefix(role); // <-- แปลงตรงนี้
   const res = await axios.get(`${apiUrl}/${prefix}/packages`, {
     params: { page, limit },
     withCredentials: true,
@@ -23,7 +24,8 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
     const fullName = `${ov?.fname ?? ""} ${ov?.lname ?? ""}`.trim();
     const ownerName =
       ov?.name?.trim?.() ||
-      (fullName || undefined) ||
+      fullName ||
+      undefined ||
       ov?.username ||
       (p.overseerMemberId ? `ID ${p.overseerMemberId}` : "-");
 
@@ -39,7 +41,6 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
 
   return { rows, total, page, limit };
 }
-
 
 // // Services/package/package-service.ts
 
@@ -60,10 +61,10 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
 //  }
 
 /*
-  * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลแพ็กเกจ (Soft Delete)
-  * Input : id - รหัสของแพ็กเกจที่ต้องการลบ
-  * Output : ผลลัพธ์จากการเรียก API เพื่อลบแพ็กเกจ
-  */
+ * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลแพ็กเกจ (Soft Delete)
+ * Input : id - รหัสของแพ็กเกจที่ต้องการลบ
+ * Output : ผลลัพธ์จากการเรียก API เพื่อลบแพ็กเกจ
+ */
 export async function deletePackageAdmin(id: number) {
   const res = await axios.patch(`${apiUrl}/admin/package/${id}`, null, {
     withCredentials: true,
@@ -72,29 +73,59 @@ export async function deletePackageAdmin(id: number) {
 }
 
 /*
-  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
-  * Input : page, limit
-  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
-  */
+ * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
+ * Input : page, limit
+ * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
+ */
 export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
   const params = { page, limit };
   const res = await axios.get(`${apiUrl}/admin/package/histories/all`, {
     params,
-    withCredentials: true, 
+    withCredentials: true,
   });
   return res.data;
 }
 
 /*
-  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ member
-  * Input : page, limit
-  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
-  */
+ * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ member
+ * Input : page, limit
+ * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
+ */
 export async function getHistoriesPackageMember(page = 1, limit = 50) {
   const params = { page, limit };
   const res = await axios.get(`${apiUrl}/member/packages/histories/all`, {
     params,
-    withCredentials: true, 
+    withCredentials: true,
   });
   return res.data;
+}
+
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลผู้ที่เข้าร่วมแพ็กเกจ
+ * Input : packageId, page, limit, searchName
+ * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลผู้ที่เข้าร่วมแพ็กเกจ (Promise)
+ */
+export async function getParticipantsInPackage(
+  packageId: number,
+  page: number,
+  limit: number,
+  searchName?: string
+) {
+  const res = await api.get(`/shared/participants/package/${packageId}`, {
+    params: {
+      page,
+      limit,
+      searchName,
+    },
+  });
+  return res.data?.data;
+}
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตสถานะผู้ที่เข้าร่วมแพ็กเกจ
+ * Input : bookingHistoryId, isParticipate
+ * Output : ผลลัพธ์จากการเรียก API เพื่ออัปเดตสถานะผู้ที่เข้าร่วมแพ็กเกจ (Promise)
+ */
+export async function updateParticipantStatus(bookingHistoryId: number, isParticipate: boolean) {
+  const res = await api.post(`/shared/participate/${bookingHistoryId}/status`, { isParticipate });
+  return res.data.data;
 }

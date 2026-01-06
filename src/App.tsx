@@ -21,6 +21,7 @@ import ChangePassword from "./Pages/Tourist/ChangePassword";
 
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
+import { DetailBookingHistory } from "./Pages/Tourist/DetailBookingHistory";
 import { DashboardPage } from "./Pages/Tourist/DashboardPage";
 import BookingHistoryTourist from "./Pages/Tourist/BookingHistoryTourist";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
@@ -44,6 +45,7 @@ function App() {
         />
         <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
+        <Route path="/tourist/booking-history/detail" element={<DetailBookingHistory />} />
         <Route path="/tourist/dashboard" element={<DashboardPage />} />
         <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
         <Route

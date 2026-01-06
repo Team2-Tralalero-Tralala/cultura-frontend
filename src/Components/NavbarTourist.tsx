@@ -18,11 +18,11 @@ const NavbarTourist = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับเข้าสู่ระบบ
- * Input : ไม่มี
- * Output : void
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับเข้าสู่ระบบ
+   * Input : ไม่มี
+   * Output : void
+   */
   const login = () => {
     navigate("/guest/login");
   };
@@ -34,7 +34,7 @@ const NavbarTourist = () => {
    */
   const logout = async () => {
     await logoutAuth();
-    setIsOpen(false); 
+    setIsOpen(false);
   };
 
   /*
@@ -66,7 +66,7 @@ const NavbarTourist = () => {
         </div>
 
         <div className="ml-auto flex flex-col items-center gap-6 lg:flex-row lg:gap-6">
-          {user ? (
+          {user && user.role === "tourist" ? (
             <div className="relative">
               {/* ปุ่มโปรไฟล์ */}
               <button

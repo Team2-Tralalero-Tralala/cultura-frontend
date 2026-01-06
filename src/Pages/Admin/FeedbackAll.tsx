@@ -1,15 +1,12 @@
-/**
- * คำอธิบาย : Component สำหรับแสดง "ข้อเสนอแนะทั้งหมด" ของแพ็กเกจภายในชุมชน โดยมีการจัดกลุ่มเป็นรายแพ็กเกจ
+/*
+ * Component: FeedbackAllPage
+ * Responsibility: แสดง “ข้อเสนอแนะทั้งหมด” ของแพ็กเกจภายในชุมชน (group เป็นรายแพ็กเกจ)
  */
-
-import React from "react";
-import axios from "axios";
-import { Icon } from "@iconify/react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Icon } from "@iconify/react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-
-const apiBaseUrl = import.meta.env.VITE_API_URL;
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+import api from "@/Libs/api";
 
 type ApiFeedbackImage = {
     id: number;
@@ -82,6 +79,12 @@ type PackageGroup = {
 
 type SortOrder = 'newest' | 'oldest';
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว
+ * Input : userId
+ * Output : String (ชื่อที่ถูก Mask แล้ว)
+ */
+const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL รูปภาพที่สมบูรณ์จากชื่อไฟล์
@@ -108,9 +111,9 @@ function formatFullName(tourist: Tourist): string {
 }
 
 /*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงวันที่จาก ISO String เป็นรูปแบบภาษาไทย
- * Input : isoDateString (วันที่ในรูปแบบ String)
- * Output : วันที่ในรูปแบบภาษาไทย (เช่น 25 ธ.ค. 2025)
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
+ * Input : isoDateString
+ * Output : String (วันที่รูปแบบไทย)
  */
 const formatDateThai = (isoDateString: string) => {
     const date = new Date(isoDateString);
@@ -122,9 +125,9 @@ const formatDateThai = (isoDateString: string) => {
 };
 
 /*
- * คำอธิบาย : ฟังก์ชันสำหรับสร้างสตริงดาวตามคะแนน Rating
- * Input : rating (คะแนนเต็ม 5)
- * Output : สตริงรูปดาว (เช่น ★★★☆☆)
+ * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
+ * Input    : rating (number) - คะแนนระหว่าง 1–5
+ * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
  */
 function renderStars(rating: number): string {
     return Array.from({ length: 5 })
@@ -132,11 +135,10 @@ function renderStars(rating: number): string {
         .join("");
 }
 
-
 /*
- * คำอธิบาย : Component ส่วนควบคุมด้านบน แสดงสรุปจำนวน ช่องค้นหา และปุ่มตัวกรอง
- * Input : Props (totalItems, totalPackages, searchQuery, sortOrder, handlers)
- * Output : JSX Element UI ส่วนควบคุม
+ * คำอธิบาย : Component ส่วนควบคุมด้านบน (สรุปรายการ, ค้นหา, ตัวกรอง)
+ * Input : Props (totalItems, totalPackages, searchQuery, etc.)
+ * Output : JSX Element
  */
 const TopControls: React.FC<{
     totalItems: number;
@@ -186,7 +188,7 @@ const TopControls: React.FC<{
                             type="button"
                             onClick={onFilterClick}
                             className="inline-flex w-[150px] items-center justify-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                            aria-label={`เรียงตาม: ${sortDisplay}`}
+                            aria-label={`เรียงตาม: ${sortDisplay} (เปิดตัวเลือก)`}
                         >
                             <Icon icon="hugeicons:filter" width={18} height={18} />
                             {sortDisplay}
@@ -199,8 +201,8 @@ const TopControls: React.FC<{
 
 /*
  * คำอธิบาย : Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ
- * Input : feedback (ข้อมูลข้อเสนอแนะ)
- * Output : JSX Element การ์ดข้อเสนอแนะ
+ * Input : feedback object
+ * Output : JSX Element
  */
 const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) => {
     const displayImages = feedback.images.slice(0, 3);
@@ -254,9 +256,9 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
 };
 
 /*
- * คำอธิบาย : Component แสดงกลุ่มแพ็กเกจและรายการข้อเสนอแนะภายใน
- * Input : group (ข้อมูลกลุ่มแพ็กเกจ), onViewAllClick (ฟังก์ชันเมื่อกดดูทั้งหมด)
- * Output : JSX Element Section ของแพ็กเกจ
+ * คำอธิบาย : Component แสดงกลุ่มข้อเสนอแนะแยกตามแพ็กเกจ
+ * Input : group data, onViewAllClick callback
+ * Output : JSX Element
  */
 const PackageGroupSection: React.FC<{
     group: PackageGroup;
@@ -294,39 +296,35 @@ const PackageGroupSection: React.FC<{
 };
 
 /*
- * คำอธิบาย : หน้าหลักสำหรับแสดงรายการข้อเสนอแนะทั้งหมด (Admin)
+ * คำอธิบาย : หน้าแสดงข้อเสนอแนะทั้งหมดสำหรับ Admin (Main Page)
  * Input : -
- * Output : JSX Element หน้าจอจัดการข้อเสนอแนะ
+ * Output : JSX Element
  */
-export default function FeedbackAll() {
-    const [packageGroups, setPackageGroups] = React.useState<PackageGroup[]>([]);
-    const [totalItems, setTotalItems] = React.useState<number>(0);
-    const [totalPackages, setTotalPackages] = React.useState<number>(0);
+export default function FeedbackAllPage() {
+    const [packageGroups, setPackageGroups] = useState<PackageGroup[]>([]);
+    const [totalItems, setTotalItems] = useState<number>(0);
+    const [totalPackages, setTotalPackages] = useState<number>(0);
 
-    const [isLoading, setIsLoading] = React.useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = React.useState("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const navigate = useNavigate();
 
-    const [sortOrder, setSortOrder] = React.useState<SortOrder>('newest');
-    const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
+    const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     /*
-     * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะจาก API และแปลงโครงสร้างข้อมูล
+     * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะทั้งหมดจาก Server
      * Input : -
-     * Output : void (อัปเดต State ภายใน)
+     * Output : - (Update State)
      */
-    const fetchAllFeedbacks = React.useCallback(async () => {
+    const fetchAllFeedbacks = useCallback(async () => {
         try {
             setIsLoading(true);
             setErrorMessage(null);
 
-            const response = await axios.get<ApiResponse>(
-                `${apiBaseUrl}/admin/package/feedbacks/all`,
-                { withCredentials: true }
-            );
-
+            const response = await api.get(`/admin/package/feedbacks/all`);
             const communityData = response.data?.data;
             const packageList: ApiPackage[] = communityData?.packages ?? [];
 
@@ -367,11 +365,16 @@ export default function FeedbackAll() {
         }
     }, []);
 
-    React.useEffect(() => {
+    useEffect(() => {
         fetchAllFeedbacks();
     }, [fetchAllFeedbacks]);
 
-    const filteredGroups = React.useMemo(() => {
+    /*
+     * คำอธิบาย : คำนวณกลุ่มข้อเสนอแนะที่ผ่านการกรองและการเรียงลำดับ
+     * Input : packageGroups, searchQuery, sortOrder
+     * Output : PackageGroup[]
+     */
+    const filteredGroups = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
 
         let groups = packageGroups
@@ -386,7 +389,7 @@ export default function FeedbackAll() {
                 const sortedFeedbacks = [...filteredFeedbacks].sort((a, b) => {
                     const dateA = new Date(a.createdAt).getTime();
                     const dateB = new Date(b.createdAt).getTime();
-                    return dateB - dateA; 
+                    return dateB - dateA;
                 });
 
                 return {
@@ -401,17 +404,17 @@ export default function FeedbackAll() {
             );
 
         const sortedPackageGroups = groups.sort((a, b) => {
-            const getTimestamp = (group: PackageGroup) =>
-                group.feedbacks.length > 0 ? new Date(group.feedbacks[0].createdAt).getTime() : 0;
+            const dateA = a.feedbacks.length > 0
+                ? new Date(a.feedbacks[0].createdAt).getTime()
+                : 0;
 
-            const timeA = getTimestamp(a);
-            const timeB = getTimestamp(b);
-
-            return sortOrder === 'newest' ? timeA - timeB : timeB - timeA;
+            const dateB = b.feedbacks.length > 0
+                ? new Date(b.feedbacks[0].createdAt).getTime()
+                : 0;
+            return sortOrder === 'newest' ? dateA - dateB : dateB - dateA;
         });
 
         return sortedPackageGroups;
-
     }, [packageGroups, searchQuery, sortOrder]);
 
     const handleSortChange = (newSort: SortOrder) => {
@@ -427,9 +430,10 @@ export default function FeedbackAll() {
     const SortFilterModal = () => (
         <div className="absolute top-[60px] right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 shadow-lg p-1">
             <button
-                className={`w-full text-left p-2 rounded-md ${sortOrder === 'newest'
-                    ? 'bg-emerald-100 font-medium text-emerald-700'
-                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                className={`w-full text-left p-2 rounded-md 
+                ${sortOrder === 'newest'
+                        ? 'bg-emerald-100 font-medium text-emerald-700'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                     }`}
                 onClick={() => handleSortChange('newest')}
             >
@@ -437,9 +441,10 @@ export default function FeedbackAll() {
                 ล่าสุด
             </button>
             <button
-                className={`w-full text-left p-2 rounded-md ${sortOrder === 'oldest'
-                    ? 'bg-emerald-100 font-medium text-emerald-700'
-                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                className={`w-full text-left p-2 rounded-md 
+                ${sortOrder === 'oldest'
+                        ? 'bg-emerald-100 font-medium text-emerald-700'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                     }`}
                 onClick={() => handleSortChange('oldest')}
             >

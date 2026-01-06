@@ -110,7 +110,7 @@ export function DetailBookingHistory() {
     if (bookingHistories.length > 0) {
       const bookingId = searchParams.get("bookingId");
       if (bookingId) {
-        const found = bookingHistories.find((b) => b.id.toString() === bookingId);
+        const found = bookingHistories.find((booking) => booking.id.toString() === bookingId);
         if (found) {
           setSelectedBooking(found);
         } else {

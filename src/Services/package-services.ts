@@ -7,37 +7,37 @@ export type Role = "member" | "admin" | "superadmin";
 const roleToPrefix = (role: Role) => (role === "superadmin" ? "super" : role);
 
 export async function fetchPackagesByRole(role: Role, page: number, limit: number) {
-    const prefix = roleToPrefix(role);             // <-- แปลงตรงนี้
-    const res = await axios.get(`${apiUrl}/${prefix}/packages`, {
-        params: { page, limit },
-        withCredentials: true,
-    });
+  const prefix = roleToPrefix(role);             // <-- แปลงตรงนี้
+  const res = await axios.get(`${apiUrl}/${prefix}/packages`, {
+    params: { page, limit },
+    withCredentials: true,
+  });
 
-    const obj = res.data?.data?.data ?? {};
-    const list: any[] = Array.isArray(obj) ? obj : Object.values(obj);
+  const obj = res.data?.data?.data ?? {};
+  const list: any[] = Array.isArray(obj) ? obj : Object.values(obj);
 
-    const total = Number(res.data?.data?.pagination?.totalCount ?? list.length) || 0;
+  const total = Number(res.data?.data?.pagination?.totalCount ?? list.length) || 0;
 
-    const rows = list.map((p: any) => {
-        const ov = p.overseerPackage ?? p.owner ?? p.overseer ?? null;
-        const fullName = `${ov?.fname ?? ""} ${ov?.lname ?? ""}`.trim();
-        const ownerName =
-            ov?.name?.trim?.() ||
-            (fullName || undefined) ||
-            ov?.username ||
-            (p.overseerMemberId ? `ID ${p.overseerMemberId}` : "-");
+  const rows = list.map((p: any) => {
+    const ov = p.overseerPackage ?? p.owner ?? p.overseer ?? null;
+    const fullName = `${ov?.fname ?? ""} ${ov?.lname ?? ""}`.trim();
+    const ownerName =
+      ov?.name?.trim?.() ||
+      (fullName || undefined) ||
+      ov?.username ||
+      (p.overseerMemberId ? `ID ${p.overseerMemberId}` : "-");
 
-        return {
-            id: Number(p.id),
-            title: p.name ?? p.title ?? "(ไม่มีชื่อ)",
-            community: p.community?.name ?? (p.communityId ? `ID ${p.communityId}` : "-"),
-            owner: ownerName ?? "-",
-            published: p.statusPackage === "PUBLISH" || !!p.published,
-            approved: p.statusApprove === "APPROVE" || !!p.approved,
-        };
-    });
+    return {
+      id: Number(p.id),
+      title: p.name ?? p.title ?? "(ไม่มีชื่อ)",
+      community: p.community?.name ?? (p.communityId ? `ID ${p.communityId}` : "-"),
+      owner: ownerName ?? "-",
+      published: p.statusPackage === "PUBLISH" || !!p.published,
+      approved: p.statusApprove === "APPROVE" || !!p.approved,
+    };
+  });
 
-    return { rows, total, page, limit };
+  return { rows, total, page, limit };
 }
 
 
@@ -59,6 +59,17 @@ export async function fetchPackagesByRole(role: Role, page: number, limit: numbe
 //      return new Date(y, (m - 1), d, hh, mm, ss, 0);
 //  }
 
+/*
+  * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลแพ็กเกจ (Soft Delete)
+  * Input : id - รหัสของแพ็กเกจที่ต้องการลบ
+  * Output : ผลลัพธ์จากการเรียก API เพื่อลบแพ็กเกจ
+  */
+export async function deletePackageAdmin(id: number) {
+  const res = await axios.patch(`${apiUrl}/admin/package/${id}`, null, {
+    withCredentials: true,
+  });
+  return res.data;
+}
 
 /*
   * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
@@ -69,7 +80,7 @@ export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
   const params = { page, limit };
   const res = await axios.get(`${apiUrl}/admin/package/histories/all`, {
     params,
-    withCredentials: true, // ส่ง cookie/token ไปด้วย
+    withCredentials: true, 
   });
   return res.data;
 }
@@ -83,7 +94,7 @@ export async function getHistoriesPackageMember(page = 1, limit = 50) {
   const params = { page, limit };
   const res = await axios.get(`${apiUrl}/member/packages/histories/all`, {
     params,
-    withCredentials: true, // ส่ง cookie/token ไปด้วย
+    withCredentials: true, 
   });
   return res.data;
 }

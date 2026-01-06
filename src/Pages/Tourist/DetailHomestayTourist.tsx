@@ -46,7 +46,6 @@ interface OtherHomestay {
  */
 export default function DetailHomestayTourist() {
   const { communityId, homestayId } = useParams<{ communityId: string; homestayId: string }>();
-
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
   const [otherHomestays, setOtherHomestays] = useState<OtherHomestay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,8 +123,6 @@ export default function DetailHomestayTourist() {
   return (
     <div className="bg-white min-h-screen flex flex-col font-prompt">
       <NavbarTourist />
-
-      {/* Breadcrumb Section */}
       <div className="container mx-auto py-2">
         <BreadcrumbNavigation
           current={{
@@ -136,10 +133,7 @@ export default function DetailHomestayTourist() {
       </div>
 
       <div className="container mx-auto px-4 max-w-7xl pb-2 mt-6">
-        {/* Title */}
         <h1 className="text-xl font-bold text-black mb-6">{homestay.name}</h1>
-
-        {/* Tags */}
         {homestay.tagHomestays && homestay.tagHomestays.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-8">
             {homestay.tagHomestays.map((tag, index) => (
@@ -151,8 +145,6 @@ export default function DetailHomestayTourist() {
             ))}
           </div>
         )}
-
-        {/* Info Section */}
         <div className="mb-12 text-base text-gray-800 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-start gap-2">
             <span className="font-bold min-w-[180px]">ประเภทที่พัก :</span>
@@ -174,8 +166,6 @@ export default function DetailHomestayTourist() {
             </div>
           </div>
 
-
-          {/* Address */}
           <a
             href={`https://www.google.com/maps?q=${homestay.location.latitude},${homestay.location.longitude}`}
             target="_blank"
@@ -188,22 +178,18 @@ export default function DetailHomestayTourist() {
             </span>
           </a>
 
-          {/* Description */}
           <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-4">
             <span className="font-bold min-w-[180px]">คำอธิบายที่อยู่ :</span>
             <span className="whitespace-pre-line">{homestay.location.detail || "ที่พักตรงข้ามร้านค้าอย่างสุขภาพดี และห่างจากไร้ปันสุข 200 เมตร"}</span>
           </div>
         </div>
 
-        {/* Gallery */}
         <div className="mb-16">
           <Thumbnails items={galleryItems} className="!max-w-6xl" />
         </div>
 
-        {/* Line Separator */}
         <div className="h-px bg-gray-200 w-full mb-10 text-[#00BF6A]"></div>
 
-        {/* Other Homestays Section */}
         {otherHomestays.length > 0 && (
           <div className="mb-10">
             <h2 className="text-2xl font-bold text-black mb-8">ที่พักอื่นของชุมชน</h2>
@@ -226,7 +212,6 @@ export default function DetailHomestayTourist() {
               })}
             </div>
 
-            {/* Pagination */}
             <div className="flex justify-end mt-6">
               <Pagination
                 totalData={totalOtherHomestays}

@@ -9,28 +9,32 @@ import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
 
 /*
- * คำอธิบาย : สำหรับแสดง Navbar ของผู้ใช้กลุ่ม Sam (Super Admin, Admin, Member)
- * Input : -
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Navbar ของผู้ใช้กลุ่ม Sam (Super Admin, Admin, Member)
+ * Input : ไม่มี
  * Output : ส่วนแสดงผล Navbar
  */
 const NavbarSam = () => {
-  // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
-  // ฟังก์ชันสลับสถานะการเปิด-ปิด dropdown
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
+
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับออกจากระบบโดยเรียกใช้ logout จาก AuthContext
+   * Input : ไม่มี
+   * Output : void
+   */
   const logOut = async () => {
     try {
-      await logout(); // เรียก context logout (ล้าง token / session)
+      await logout(); 
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
   /*
-   * คำอธิบาย : จัดรูปแบบข้อความ Role ให้สวยงาม (เช่น superadmin -> Super Admin)
+   * คำอธิบาย : ฟังก์ชันจัดรูปแบบข้อความ Role ให้สวยงาม (เช่น superadmin -> Super Admin)
    * Input : role (string) - บทบาทของผู้ใช้
    * Output : ข้อความ Role ที่จัดรูปแบบแล้ว
    */
@@ -55,7 +59,10 @@ const NavbarSam = () => {
         <div className="relative ml-auto">
           {/* ปุ่มโปรไฟล์ */}
           <button onClick={toggleDropdown} className="flex items-center justify-between gap-3 p-2">
-            <img src={imgUser} className="w-9 h-9 rounded-full" />
+            <img
+              src={user?.profile_picture || imgUser}
+              className="w-9 h-9 rounded-full object-cover"
+            />
             <span className="font-medium text-base max-w-[180px] truncate">
               {user?.fname} {user?.lname}
             </span>
@@ -67,7 +74,10 @@ const NavbarSam = () => {
             <ul className="absolute bg-white rounded-lg w-[320px] max-w-[90vw] shadow-md p-4 right-0 top-full mt-2 z-10 text-base-semibold">
               {/* แสดงข้อมูล profile */}
               <div className="flex items-center gap-3 mb-3">
-                <img src={imgUser} className="w-10 h-10 rounded-full" />
+                <img
+                  src={user?.profile_picture || imgUser}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-base font-medium truncate">
@@ -97,9 +107,6 @@ const NavbarSam = () => {
                         return "/admin/profile-me";
                       case "member":
                         return "/member/profile-me";
-                      // ถ้ามี role อื่น เช่น tourist แล้วมีหน้าโปรไฟล์ ก็ใส่เพิ่มได้
-                      // case "tourist":
-                      //   return "/tourist/profile-me";
                       default:
                         return "#";
                     }

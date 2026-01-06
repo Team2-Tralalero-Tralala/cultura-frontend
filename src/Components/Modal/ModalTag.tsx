@@ -1,18 +1,5 @@
 /*
- * คำอธิบาย : Component Modal สำหรับการเพิ่มหรือแก้ไข "ประเภทกิจกรรม"
- * หน้าที่ :
- *   - แสดง Modal UI สำหรับกรอกชื่อประเภท
- *   - ตรวจสอบชื่อที่กรอกว่าซ้ำกับประเภทที่มีอยู่หรือไม่
- *   - แสดง error ทั้งจาก validation ภายในและ error จากภายนอก (เช่น API response)
- *   - ส่งค่ากลับไปยัง parent เมื่อยืนยัน
- * Input  :
- *   - isOpen: boolean => เปิด/ปิด Modal
- *   - onClose: () => void => ปิด Modal
- *   - onConfirm: (name: string) => void => ส่งชื่อประเภทที่ยืนยันแล้วกลับไปให้ parent
- *   - initialValue?: string => ค่าที่ใช้กรอกตอนเริ่ม (ใช้ในกรณี "แก้ไข")
- *   - existingTags?: string[] => รายชื่อประเภททั้งหมด เพื่อใช้ตรวจสอบว่าซ้ำหรือไม่
- *   - errorMessage?: string => error message จาก parent เช่น validation หรือ API
- * Output : Modal UI component ที่ใช้งานภายในหน้า "จัดการประเภทกิจกรรม"
+ * คำอธิบาย : Component Modal Tag สำหรับการเพิ่มหรือแก้ไข "ประเภทกิจกรรม" ด้วย Modal Popup
  */
 
 import React, { useEffect, useState } from 'react';
@@ -35,12 +22,11 @@ const Modal: React.FC<ModalProps> = ({
   existingTags = [],
   errorMessage,
 }) => {
-  const [tagName, setTagName] = useState(initialValue);        // เก็บค่าชื่อประเภทที่ผู้ใช้พิมพ์
-  const [localError, setLocalError] = useState('');            // เก็บข้อความ error ภายใน modal
+  const [tagName, setTagName] = useState(initialValue);       
+  const [localError, setLocalError] = useState('');   
 
-  /**
-   * เมื่อ modal ถูกเปิดหรือค่า initialValue เปลี่ยน
-   * รีเซ็ตค่าฟอร์มและเคลียร์ error ภายใน
+  /*
+   * คำอธิบาย : สำหรับตั้งค่าเริ่มต้นเมื่อ modal ถูกเปิด
    */
   useEffect(() => {
     setTagName(initialValue);
@@ -48,10 +34,7 @@ const Modal: React.FC<ModalProps> = ({
   }, [initialValue, isOpen]);
 
   /**
-   * เมื่อผู้ใช้กด "ยืนยัน" จะ:
-   *   - ตรวจสอบว่าชื่อว่างหรือไม่
-   *   - ตรวจสอบชื่อซ้ำกับที่มีอยู่หรือไม่
-   *   - หากผ่าน validation จะส่งค่าชื่อกลับไปให้ parent
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อผู้ใช้กดปุ่มยืนยัน ตรวจสอบความถูกต้องของข้อมูล เรียกฟังก์ชัน onConfirm พร้อมส่งค่าชื่อประเภทกลับไป
    */
   const handleSubmit = () => {
     const trimmedName = tagName.trim();
@@ -61,8 +44,11 @@ const Modal: React.FC<ModalProps> = ({
       return;
     }
 
+  /*
+   * คำอธิบาย : สำหรับตรวจสอบว่าชื่อประเภทที่กรอกซ้ำกับที่มีอยู่แล้วหรือไม่
+   */
     const isDuplicate = existingTags
-      .filter((tag) => tag !== initialValue) // ข้ามชื่อเดิมหากแก้ไข
+      .filter((tag) => tag !== initialValue)
       .some((tag) => tag.toLowerCase() === trimmedName.toLowerCase());
 
     if (isDuplicate) {
@@ -70,15 +56,13 @@ const Modal: React.FC<ModalProps> = ({
       return;
     }
 
-    onConfirm(trimmedName);  // ส่งค่ากลับ
+    onConfirm(trimmedName); 
     setTagName('');
     setLocalError('');
   };
 
-  // ถ้า modal ไม่ถูกเปิด จะไม่ render อะไรเลย
   if (!isOpen) return null;
 
-  // ส่วนแสดงผล UI Modal
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white p-6 rounded-lg w-[591px] h-[277px] shadow-lg flex flex-col items-center justify-center text-center gap-4">

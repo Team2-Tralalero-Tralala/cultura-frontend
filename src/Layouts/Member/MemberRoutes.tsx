@@ -1,11 +1,6 @@
 /**
- * Component: MemberRoutes
- * คำอธิบาย:
- * กำหนดเส้นทาง (Routes) ทั้งหมดที่สมาชิก (Member) ใช้งานได้
- * โดยจะใช้ร่วมกับ MemberLayout ผ่าน <Outlet />
- * หน้าที่:
- * - รวมทุกหน้าในหมวดหมู่ "สมาชิก"
- * - ระบุ path และ component ที่ควรแสดงเมื่อเข้าหน้านั้น
+ * คำอธิบาย : Component สำหรับ Route ของสมาชิก (Member)
+ * เป็น Route ย่อยที่ใช้ร่วมกับ MemberLayout
  */
 import React from "react";
 import { Routes, Route } from "react-router-dom";
@@ -26,6 +21,12 @@ import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
 import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 import BookingHistoryMember from "@/Pages/Member/HistoryBookingMember";
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Member
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Route
+ */
 export default function MemberRoutes() {
   return (
     <Routes>

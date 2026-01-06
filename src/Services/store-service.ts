@@ -6,6 +6,11 @@ import type { StoreData } from "@/Types/Store";
 import api from "@/Libs/api";
 const apiUrl = import.meta.env.VITE_API_URL;
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าทั้งหมดของชุมชนที่อยู่ในชุมชนของ super admin
+ * Input : page, limit
+ * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
+ */
 export async function getAllStore(communityId: number, page: number, limit: number) {
   const params = { page, limit };
   return axios.get(`${apiUrl}/super/community/${communityId}/store`, {

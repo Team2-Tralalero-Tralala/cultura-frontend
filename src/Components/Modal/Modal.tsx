@@ -1,16 +1,6 @@
 /*
- * คำอธิบาย : Component
+ * คำอธิบาย : Component Modal สำหรับยืนยันการทำรายการต่างๆ
  * โดยใช้ SweetAlert2 ในการแสดงกล่องข้อความยืนยัน
- * Input :
- *   - open (boolean) : ควบคุมการเปิด/ปิด Modal
- *   - onConfirm (function) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยืนยัน
- *   - onCancel (function, optional) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยกเลิก
- *   - title (string, optional) : ข้อความหัวข้อของ Modal
- *   - text (string, optional) : ข้อความอธิบายเพิ่มเติม
- *   - confirmText (string, optional) : ข้อความปุ่มยืนยัน
- *   - cancelText (string, optional) : ข้อความปุ่มยกเลิก
- * Output :
- *   - แสดง SweetAlert popup เพื่อให้ผู้ใช้ยืนยันหรือยกเลิก
  */
 
 import React, { useEffect } from "react";
@@ -29,7 +19,20 @@ type ModalProps = {
 };
 
 const sweetAlert = withReactContent(Swal);
-
+/**
+ * คำอธิบาย : Component Modal สำหรับยืนยันการทำรายการต่างๆ
+ * โดยใช้ SweetAlert2 ในการแสดงกล่องข้อความยืนยัน
+ * Input :
+ *   - open (boolean) : ควบคุมการเปิด/ปิด Modal
+ *   - onConfirm (function) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยืนยัน
+ *   - onCancel (function, optional) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยกเลิก
+ *   - title (string, optional) : ข้อความหัวข้อของ Modal
+ *   - text (string, optional) : ข้อความอธิบายเพิ่มเติม
+ *   - confirmText (string, optional) : ข้อความปุ่มยืนยัน
+ *   - cancelText (string, optional) : ข้อความปุ่มยกเลิก
+ * Output :
+ *   - แสดง SweetAlert popup เพื่อให้ผู้ใช้ยืนยันหรือยกเลิก
+ */
 export const Modal: React.FC<ModalProps> = ({
   open,
   onConfirm,
@@ -57,7 +60,7 @@ export const Modal: React.FC<ModalProps> = ({
           width: 612,
           color: "#0f172a",
           padding: "1.5rem",
-          showCancelButton: true,
+          showCancelButton: !!cancelText,
           showConfirmButton: true,
           confirmButtonText: confirmText,
           cancelButtonText: cancelText,

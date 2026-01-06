@@ -15,12 +15,13 @@ import LoginTourist from "@/Pages/LoginTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
-import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage"
+import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";
 import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
 import ChangePassword from "./Pages/Tourist/ChangePassword";
 
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
+import { DashboardPage } from "./Pages/Tourist/DashboardPage";
 import BookingHistoryTourist from "./Pages/Tourist/BookingHistoryTourist";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
 
@@ -33,13 +34,22 @@ function App() {
         <Route path="/tourist/home" element={<Home />} />
         <Route path="/tourist/package/:packageId" element={<DetailPackagePage />} />
         <Route path="/tourist/edit-profile" element={<EditProfileTourist />} />
-        <Route path="/tourist/community/:communityId/detail/store/:storeId" element={<StoreDetailPage />}/>
-        <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />
+        <Route
+          path="/tourist/community/:communityId/detail/store/:storeId"
+          element={<StoreDetailPage />}
+        />
+        <Route
+          path="/tourist/community/:communityId/detail/homestay/:homestayId"
+          element={<HomestayDetailTourist />}
+        />
         <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
+        <Route path="/tourist/dashboard" element={<DashboardPage />} />
         <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
-        <Route path="/tourist/booking-history/:bookingId/feedback" element={<CreateFeedbackPage />} />
-
+        <Route
+          path="/tourist/booking-history/:bookingId/feedback"
+          element={<CreateFeedbackPage />}
+        />
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

@@ -5,22 +5,23 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
-import Feedback from '@/Pages/Member/Feedback';
+import Feedback from "@/Pages/Member/Feedback";
 
-import ManagePackagePage from '@/Pages/Member/ManagePackagePage';
-import { EditPackagePage } from '@/Pages/Member/EditPackagePage';
-import CreatePackagePage from '@/Pages/Member/CreatePackagePage';
-import { ManageRefundBookingMember } from '@/Pages/Member/ManageRefundBookingPage';
+import ManagePackagePage from "@/Pages/Member/ManagePackagePage";
+import { EditPackagePage } from "@/Pages/Member/EditPackagePage";
+import CreatePackagePage from "@/Pages/Member/CreatePackagePage";
+import { ManageRefundBookingMember } from "@/Pages/Member/ManageRefundBookingPage";
 
-import ManageBookingMember from '@/Pages/Member/ManageBookingMember';
+import ManageBookingMember from "@/Pages/Member/ManageBookingMember";
 import { DashboardPage } from "@/Pages/Member/DashboardPage";
 import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
-import PackageHistoryMember from '@/Pages/Member/HistoryPackageMember';
-import DetailPackageMember from '@/Pages/Member/DetailPackageMember';
+import PackageHistoryMember from "@/Pages/Member/HistoryPackageMember";
+import DetailPackageMember from "@/Pages/Member/DetailPackageMember";
 import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
 import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 import BookingHistoryMember from "@/Pages/Member/HistoryBookingMember";
+import { ManageParticipant } from "@/Pages/Admin/ManageParticipant";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Member
@@ -39,17 +40,18 @@ export default function MemberRoutes() {
       <Route path="package/create" element={<CreatePackagePage />} />
 
       {/* แพ็กเกจ */}
-      <Route path="package/:id" element={<DetailPackageMember/>} />
+      <Route path="package/:id" element={<DetailPackageMember />} />
       <Route path="bookings/all" element={<ManageBookingMember />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="bookings-histories" element={<BookingHistoryMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
+      <Route path="participants/package/:packageId" element={<ManageParticipant />} />
 
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
-      
+
       <Route path="profile-me" element={<EditProfile />} />
     </Routes>
   );

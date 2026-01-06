@@ -8,37 +8,47 @@ import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./Search/SearchBar";
 import { Icon } from "@iconify/react";
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Navbar ของผู้ใช้กลุ่ม Tourist
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Navbar
+ */
 const NavbarTourist = () => {
-  // ดึงข้อมูล authentication จาก AuthContext
   const { user, logout: logoutAuth } = useAuth();
-  // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
-
   const navigate = useNavigate();
 
-  // ฟังก์ชันสำหรับเข้าสู่ระบบและออกจากระบบ
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับเข้าสู่ระบบ
+ * Input : ไม่มี
+ * Output : void
+ */
   const login = () => {
     navigate("/guest/login");
   };
+
   /*
-   * ฟังก์ชัน : logout
-   * คำอธิบาย : ออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
+   * คำอธิบาย : ฟังก์ชันสำหรับออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
    * Input : ไม่มี
    * Output : void
    */
   const logout = async () => {
     await logoutAuth();
-    setIsOpen(false); // ปิด dropdown ตอน logout
+    setIsOpen(false); 
   };
 
-  // ฟังก์ชันสลับสถานะการเปิด-ปิด dropdown
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับสลับสถานะการเปิด-ปิด dropdown
+   * Input : ไม่มี
+   * Output : void
+   */
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
   return (
-    <header className=" container mx-auto">
-      <nav className="flex items-center justify-between m-80px px-6 h-16 lg:gap-6">
+    <header className="border-b border-gray-200 bg-white">
+      <nav className="container mx-auto flex items-center justify-between px-6 h-16 lg:gap-6">
         <div className="flex items-center gap-10">
           <a href="/">
             <img
@@ -47,7 +57,6 @@ const NavbarTourist = () => {
               alt="Cultura logo"
             />
           </a>
-
 
           {/* กล่องค้นหา */}
           <SearchBar
@@ -65,7 +74,11 @@ const NavbarTourist = () => {
                 className="flex items-center justify-between gap-3 hover:text-green-500 p-2"
               >
                 {user.fname} {user.lname}
-                <img src={"/profile.png"} className="w-9 h-9" />
+                <img
+                  src={user.profile_picture || "/profile.png"}
+                  className="w-9 h-9 rounded-full object-cover"
+                  alt="Profile"
+                />
               </button>
 
               {/* Dropdown แสดงเมื่อคลิก */}
@@ -79,15 +92,16 @@ const NavbarTourist = () => {
                   </li>
 
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
-                    <Link to="/tourist/booking-history" className="flex items-center gap-2">
+                    <Link to="/tourist/booking-histories" className="flex items-center gap-2">
                       <Icon icon="material-symbols:history-rounded" className="text-xl" />
                       ประวัติการจอง
                     </Link>
                   </li>
                   <li
-                    className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
+                    className="flex items-center gap-2 block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
                     onClick={() => navigate("/tourist/change-password")}
                   >
+                    <Icon icon="material-symbols:lock" className="text-xl" />
                     เปลี่ยนรหัสผ่าน
                   </li>
 

@@ -1,14 +1,17 @@
+/**
+ * คำอธิบาย : Component สำหรับ Layout ของผู้ใช้งานระดับซูเปอร์แอดมิน (Super Admin)
+ * ใช้สำหรับแสดง Sidebar และพื้นที่คอนเทนต์ของหน้าซูเปอร์แอดมินทั้งหมด
+ */
 import { Outlet } from "react-router-dom";
 import SidebarSuperAdmin from "../../Components/SidebarSuperAdmin";
 import NavbarSuperAdmin from "../../Components/NavbarSam";
 import { ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 
 
-/**
- * Layout หลักของ Super Admin
- * - แสดง Sidebar (เมนูซ้าย)
- * - Navbar (ด้านบน)
- * - พื้นที่เนื้อหา (Outlet)
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Layout ของผู้ใช้กลุ่ม Super Admin
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Layout
  */
 export default function SuperAdminLayout() {
   return (
@@ -16,12 +19,12 @@ export default function SuperAdminLayout() {
       {/* Sidebar */}
       <SidebarSuperAdmin />
 
-      {/* 🔹 พื้นที่หลัก */}
+      {/* พื้นที่หลัก */}
       <div className="flex flex-col flex-1 h-full">
         {/* Navbar ด้านบน */}
         <NavbarSuperAdmin />
 
-        {/* 🔸 พื้นที่เนื้อหา */}
+        {/* พื้นที่เนื้อหา */}
         <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-6 pr-6 py-6">
           <Outlet />
         </main>

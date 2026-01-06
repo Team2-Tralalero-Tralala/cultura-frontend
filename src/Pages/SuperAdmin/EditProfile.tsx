@@ -1,15 +1,6 @@
-/*
- * Component: EditProfile
- * Description:
- *   - หน้าสำหรับผู้ใช้งานที่ล็อกอินอยู่ แก้ไขข้อมูลส่วนตัวของตัวเอง
- *   - ใช้งานร่วมกับ API กลาง (/shared/profile)
- *   - ใช้ได้กับทุก Role ที่มีบัญชีในระบบ
- *
- * Behavior:
- *   - โหลดข้อมูลโปรไฟล์จากระบบเมื่อเปิดหน้า
- *   - แสดง Modal ยืนยันก่อนบันทึก
- *   - แสดง Modal แจ้งผลลัพธ์ (สำเร็จ / ไม่สำเร็จ)
- *   - เมื่อบันทึกสำเร็จ จะ reload หน้าเพื่ออัปเดตข้อมูลใน Navbar
+/**
+ * คำอธิบาย : หน้าสำหรับหน้าแก้ไขข้อมูลส่วนตัวของผู้ใช้งานที่ล็อกอินอยู่
+ * ใช้งานร่วมกับ API กลาง (/shared/profile) รองรับทุก Role
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,12 +13,10 @@ import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { editProfile } from "@/Services/account-services";
 
 /*
- * Interface: UserProfile
- * Description:
- *   - โครงสร้างข้อมูลโปรไฟล์ที่ใช้ควบคุมฟอร์มแก้ไขข้อมูลส่วนตัว
- *   - mapping จากข้อมูลที่ได้จาก API /shared/profile
+ * คำอธิบาย : Interface สำหรับโครงสร้างข้อมูลโปรไฟล์
  */
 interface UserProfile {
   profileImage: string | null;
@@ -41,10 +30,7 @@ interface UserProfile {
 export const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  /*
-   * State: formData
-   * ใช้เก็บค่าข้อมูลจากฟอร์มแก้ไขโปรไฟล์
-   */
+
   const [formData, setFormData] = useState<UserProfile>({
     profileImage: null,
     username: "",
@@ -54,9 +40,6 @@ export const EditProfile: React.FC = () => {
     phone: "",
   });
 
-  /*
-   * State สำหรับจัดการรูปโปรไฟล์และ modal ต่าง ๆ
-   */
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -64,12 +47,10 @@ export const EditProfile: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorModal, setShowErrorModal] = useState(false);
 
-
   /*
-   * Function: fetchData
-   * Description:
-   *   - ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่จากระบบ
-   *   - นำข้อมูลมา set ลง form และ avatar
+   * คำอธิบาย : ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่จากระบบ นำข้อมูลมา set ลง form และจัดการ URL รูปภาพ
+   * Input : -
+   * Output : -
    */
   const fetchData = async () => {
     try {
@@ -87,9 +68,20 @@ export const EditProfile: React.FC = () => {
         phone: profile.phone ?? "",
       });
 
-      setAvatarUrl(profile.profileImageUrl || profile.profileImage || null);
+      // จัดการ URL รูปภาพ
+      const backendUrl = import.meta.env.VITE_API_URL_BASE || "http://localhost:3000";
+
+      let imageUrl = null;
+      if (profile.profileImage) {
+        if (profile.profileImage.startsWith("http")) {
+           imageUrl = profile.profileImage;
+        } else {
+           imageUrl = `${backendUrl}${profile.profileImage}`;
+        }
+      }
+      setAvatarUrl(imageUrl);
+
     } catch (error: any) {
-      console.error("❌ Error fetching profile:", error);
       toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
       navigate(-1);
     }
@@ -100,10 +92,9 @@ export const EditProfile: React.FC = () => {
   }, []);
 
   /*
-   * Function: handleChange
-   * Description:
-   *   - จัดการการเปลี่ยนแปลงค่าของ input ในฟอร์ม
-   *   - ใช้ id ของ input เป็นตัว map field ใน state
+   * คำอธิบาย : จัดการการเปลี่ยนแปลงค่าของ input ในฟอร์ม
+   * Input : event
+   * Output : -
    */
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -113,37 +104,36 @@ export const EditProfile: React.FC = () => {
   };
 
   /*
-   * Function: handleSubmit
-   * Description:
-   *   - ส่งข้อมูลแก้ไขโปรไฟล์ไปยัง BE
-   *   - แสดง Modal แจ้งสำเร็จ หรือ Modal แจ้งข้อผิดพลาด
+   * คำอธิบาย : ส่งข้อมูลโปรไฟล์และรูปภาพไปบันทึกผ่าน Service แบบ One-Step
+   * Input : -
+   * Output : -
    */
   const handleSubmit = async () => {
-  try {
-    const body = {
-      fname: formData.fname,
-      lname: formData.lname,
-      username: formData.username,
-      email: formData.email,
-      phone: formData.phone,
-    };
+    try {
+      // เตรียมข้อมูล Text
+      const payload = {
+        fname: formData.fname,
+        lname: formData.lname,
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+        profileImage: formData.profileImage,
+      };
 
-    await api.put("/shared/profile", body);
+      // เรียก Service (ส่ง payload คู่กับ file object)
+      await editProfile(payload, profileImage);
 
-    // ไม่ต้อง toast แล้ว ให้โชว์แค่ modal
-    setShowSuccessModal(true);
-  } catch (error: any) {
-  console.error("❌ Error updating profile:", error);
+      // แสดงผลสำเร็จ
+      setShowSuccessModal(true);
 
-  const message =
-    error?.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้";
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้";
 
-  setErrorMessage(message);
-  setShowErrorModal(true);
-}
-
-};
-
+      setErrorMessage(message);
+      setShowErrorModal(true);
+    }
+  };
 
   return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
@@ -279,23 +269,21 @@ export const EditProfile: React.FC = () => {
         title="แก้ไขข้อมูลส่วนตัวสำเร็จ"
         message="ข้อมูลส่วนตัวของคุณถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-  setShowSuccessModal(false);
-  // รีโหลดทั้งหน้า เพื่อให้ Navbar ไปโหลดชื่อใหม่จาก BE/AuthProvider
-  window.location.reload();
-}}
-
+          setShowSuccessModal(false);
+          // รีโหลดทั้งหน้า เพื่อให้ Navbar ไปโหลดชื่อใหม่และรูปใหม่จาก BE
+          window.location.reload();
+        }}
       />
       <ModalAlert
-  open={showErrorModal}
-  type="error"
-  title="ไม่สามารถบันทึกข้อมูลได้"
-  message={errorMessage}
-  onClose={() => {
-    setShowErrorModal(false);
-    setErrorMessage("");
-  }}
-/>
-
+        open={showErrorModal}
+        type="error"
+        title="ไม่สามารถบันทึกข้อมูลได้"
+        message={errorMessage}
+        onClose={() => {
+          setShowErrorModal(false);
+          setErrorMessage("");
+        }}
+      />
     </div>
   );
 };

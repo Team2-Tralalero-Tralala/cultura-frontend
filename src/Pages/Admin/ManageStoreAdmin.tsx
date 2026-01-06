@@ -1,25 +1,20 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /*
- * คำอธิบาย : หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
+ * คำอธิบาย : Component หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
 import React, { useState, useMemo } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-
-// Components
+import { Link, useNavigate } from "react-router-dom";
 import Button from "@/Components/Button";
 import DataTable from "@/Components/Tables/Index";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-
-// Services
 import { getAllStoreAdmin } from "@/Services/store-service";
 import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
-// Types
 import type {
   Column,
   DataTableActionsConfig,
@@ -28,7 +23,6 @@ import type {
 } from "@/Components/Tables/Types";
 import axios from "axios";
 
-// ประเภทข้อมูลร้านค้าในตาราง
 type StoreRow = {
   id: number;
   name: string;
@@ -36,7 +30,6 @@ type StoreRow = {
   tagStores: string;
 };
 
-// ประเภทข้อมูลร้านค้าที่ได้รับจาก API
 type StoreFromApi = {
   id: number;
   name: string;
@@ -44,10 +37,19 @@ type StoreFromApi = {
   tagStores: { tag: { id: number; name: string } }[];
 };
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
+ * Input : string
+ * Output : string ที่ผ่านการ normalize แล้ว
+ */
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-// กำหนดคอลัมน์ของตาราง
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางร้านค้า
+ * Input : ไม่มี
+ * Output : รายการคอลัมน์ของตาราง
+ */
 const columns: Column<StoreRow>[] = [
   {
     key: "name",
@@ -66,11 +68,13 @@ const columns: Column<StoreRow>[] = [
   { key: "tagStores", header: "ประเภท" },
 ];
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดงหน้า Manage Store Admin
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผลของหน้า Manage Store Admin
+ */
 export default function ManageStoreAdmin() {
   const navigate = useNavigate();
-  const { storeId } = useParams<{ storeId: string }>();
-
-  // State
   const [communityName, setCommunityName] = useState<string>("");
   const [rows, setRows] = useState<StoreRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,6 +94,8 @@ export default function ManageStoreAdmin() {
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
+   * Input : ไม่มี
+   * Output : อัปเดต state rows และ pagination
    */
   const loadStores = async () => {
     try {
@@ -104,7 +110,6 @@ export default function ManageStoreAdmin() {
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
       const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
 
-      // แปลงข้อมูลให้เข้ากับตาราง
       const mapped: StoreRow[] = resultData.map((store) => {
         const tagNames = store.tagStores?.map((tag) => tag.tag?.name).filter(Boolean) ?? [];
         return {
@@ -123,15 +128,28 @@ export default function ManageStoreAdmin() {
       setIsLoading(false);
     }
   };
-
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+ * Input : ไม่มี
+ * Output : อัปเดต state communityName
+ */
   React.useEffect(() => {
     loadStores();
   }, [pagination.currentPage, pagination.limit]);
-
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+ * Input : ไม่มี
+ * Output : อัปเดต state communityName
+ */
   React.useEffect(() => {
     fetchCommunityName();
   }, []);
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+ * Input : ไม่มี
+ * Output : อัปเดต state communityName
+ */
   const fetchCommunityName = async () => {
     try {
       const res = await getCommunityDetailByAdmin();
@@ -141,7 +159,11 @@ export default function ManageStoreAdmin() {
     }
   };
 
-  // Actions ของแต่ละแถว
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำในแต่ละแถวของตาราง
+ * Input : ไม่มี
+ * Output : การกระทำที่สามารถทำได้ในแต่ละแถว
+ */
   const rowActions: DataTableActionsConfig<StoreRow> = {
     header: "จัดการ",
     align: "left",
@@ -175,6 +197,7 @@ export default function ManageStoreAdmin() {
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
    * Input : storeID
+   * Output : void
    */
   const handleDelete = async (storeId: number) => {
     try {
@@ -190,6 +213,7 @@ export default function ManageStoreAdmin() {
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
    * Input : rows
+   * Output : void
    */
   const bulkActions: BulkAction<StoreRow>[] = [
     {
@@ -199,21 +223,16 @@ export default function ManageStoreAdmin() {
       intent: "neutral",
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        const storeIds = rows.map((row) => row.id);
-        setDeleteIds(storeIds);
+        const storeId = rows.map((row) => row.id);
+        setDeleteIds(storeId);
         setIsOpenConfirm(true);
       },
     },
   ];
 
-  /*
-   * คำอธิบาย : ฟังก์ชันหลักของหน้า manage store admin
-   */
   return (
     <div className="space-y-4">
-      {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
-        {/* Breadcrumb */}
         <div className="flex flex-col gap-2 w-full">
           <Breadcrumb
             current={{
@@ -226,7 +245,6 @@ export default function ManageStoreAdmin() {
         <h1 className="text-xl font-bold "> จัดการร้านค้า </h1>
 
         <div className="flex items-center justify-between w-full ">
-          {/* Section: Search */}
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
@@ -234,7 +252,6 @@ export default function ManageStoreAdmin() {
             />
           </div>
 
-          {/* Section: Add Store */}
           <div>
             <Button
               onClick={() => navigate("/admin/community/store/create")}
@@ -248,7 +265,8 @@ export default function ManageStoreAdmin() {
       </div>
 
       <div className="pb-10">
-        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
+        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}
+      </div>}
 
         <DataTable<StoreRow>
           data={filteredRows}
@@ -277,7 +295,6 @@ export default function ManageStoreAdmin() {
         />
       </div>
 
-      {/* Modal สำหรับยืนยันการลบร้านค้า */}
       <Modal
         open={isOpenConfirm}
         title="ยืนยันการลบร้านค้า"

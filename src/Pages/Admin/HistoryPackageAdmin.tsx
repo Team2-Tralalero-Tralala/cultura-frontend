@@ -1,3 +1,7 @@
+/**
+ * คำอธิบาย : Component สำหรับหน้าประวัติแพ็กเกจของผู้ดูแลระบบระดับวิสาหกิจชุมชน (Admin)
+ * ใช้สำหรับแสดงตารางประวัติแพ็กเกจทั้งหมดที่เคยสร้างในชุมชน
+ */
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
@@ -6,7 +10,7 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type { Column, Pagination, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
-import { getHistoriesPackageAdmin } from "@/Services/package-services";
+import { getHistoriesPackageAdmin, deletePackageAdmin } from "@/Services/package-services";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { getCommunityDetailByAdmin } from "@/Services/community-service";
 
@@ -56,17 +60,21 @@ const formatThaiDateTime = (iso: string) => {
 };
 
 /*
- * คำอธิบาย : คอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบคอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
+ * Input : ไม่มี
+ * Output : คอลัมน์ที่ใช้ในตาราง DataTable
  */
 const columns: Column<PackageHistoryRow>[] = [
-  { key: "name", header: "ชื่อแพ็กเกจ", className: "min-w-[220px]" , render: (row) => (
+  {
+    key: "name", header: "ชื่อแพ็กเกจ", className: "min-w-[220px]", render: (row) => (
       <Link
         to={`/admin/packages/history/${row.id}`}
         className="hover:text-dark-green hover:underline"
       >
         {row.name}
       </Link>
-    ),},
+    ),
+  },
   { key: "community", header: "ชื่อชุมชน", className: "min-w-[200px]" },
   { key: "overseer", header: "ผู้ดูแล", className: "min-w-[140px]" },
   { key: "status", header: "สถานะแพ็กเกจ", className: "min-w-[160px]" },
@@ -78,7 +86,9 @@ const columns: Column<PackageHistoryRow>[] = [
 ];
 
 /*
- * คำอธิบาย : Component หลักสำหรับหน้า “ประวัติแพ็กเกจ” ของแอดมิน
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดงหน้าประวัติแพ็กเกจของผู้ดูแลระบบระดับวิสาหกิจชุมชน (Admin)
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผลหน้าเว็บ (UI)
  */
 export default function PackageHistoryAdmin() {
   const navigate = useNavigate();
@@ -99,6 +109,7 @@ export default function PackageHistoryAdmin() {
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
+   * Input : -
    * Output : อัปเดต state rows และ pagination
    */
   const fetchData = async () => {
@@ -111,10 +122,8 @@ export default function PackageHistoryAdmin() {
         pagination.limit
       );
 
-      console.log("📦 API Response:", res);
-
       const list = res?.data?.data ?? [];
-      const pag = res?.data?.pagination ?? {};
+      const packages = res?.data?.pagination ?? {};
 
       const mapped = list.map((pkg: any) => ({
         id: pkg.id,
@@ -127,10 +136,10 @@ export default function PackageHistoryAdmin() {
 
       setRows(mapped);
       setPagination({
-        currentPage: pag.currentPage ?? 1,
-        totalPages: pag.totalPages ?? 1,
-        totalCount: pag.totalCount ?? mapped.length,
-        limit: pag.limit ?? pagination.limit,
+        currentPage: packages.currentPage ?? 1,
+        totalPages: packages.totalPages ?? 1,
+        totalCount: packages.totalCount ?? mapped.length,
+        limit: packages.limit ?? pagination.limit,
       });
     } catch (error: any) {
       console.error("Failed to fetch packages:", error);
@@ -141,16 +150,28 @@ export default function PackageHistoryAdmin() {
   };
 
   /*
-   * คำอธิบาย : โหลดข้อมูลเมื่อมีการเปลี่ยนหน้า (pagination)
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า หรือจำนวนเรคอร์ดต่อหน้า
+   * Input : pagination.currentPage, pagination.limit
+   * Output : เรียก fetchData เพื่อโหลดข้อมูลใหม่
    */
   useEffect(() => {
     fetchData();
   }, [pagination.currentPage, pagination.limit]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
+   * Input : ไม่มี
+   * Output : เรียก fetchCommunityName เพื่อโหลดชื่อชุมชน
+   */
   useEffect(() => {
     fetchCommunityName();
   }, []);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับโหลดชื่อชุมชน
+   * Input : ไม่มี
+   * Output : อัปเดต state communityName
+   */
   const fetchCommunityName = async () => {
     try {
       const res = await getCommunityDetailByAdmin();
@@ -161,7 +182,9 @@ export default function PackageHistoryAdmin() {
   };
 
   /*
-   * คำอธิบาย : การตั้งค่า Action สำหรับแต่ละแถว เช่น แก้ไข หรือ ลบ
+   * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำที่สามารถทำได้ในแต่ละแถวของตาราง
+   * Input : -
+   * Output : การกระทำที่สามารถทำได้ในแต่ละแถวของตาราง
    */
   const rowActions: DataTableActionsConfig<PackageHistoryRow> = {
     header: "จัดการ",
@@ -171,7 +194,7 @@ export default function PackageHistoryAdmin() {
     items: () => ["copy", "delete"],
 
     callbacks: {
-      copy: (row) => navigate(``), //ตะวันแก้
+      copy: (row) => navigate(``),
       delete: (row) => {
         setDeleteId(row.id);
         setOpenConfirm(true);
@@ -198,14 +221,31 @@ export default function PackageHistoryAdmin() {
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
    * Input : id (number)
+   * Output : void
    */
   const handleDelete = async (id: number) => {
-    console.log("🗑 ลบ package:", id);
+    try {
+      await deletePackageAdmin(id);
+      setOpenConfirm(false);
+      setDeleteId(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error("Failed to delete package:", error);
+      alert(
+        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "unknown error"
+        }`
+      );
+      setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
+    }
   };
 
   /*
-   * คำอธิบาย : การลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
+   * คำอธิบาย : ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
    * Input : rows (รายการแพ็กเกจที่เลือก)
+   * Output : void
    */
   const bulkActions: BulkAction<PackageHistoryRow>[] = [
     {
@@ -222,14 +262,9 @@ export default function PackageHistoryAdmin() {
     },
   ];
 
-  /*
-   * คำอธิบาย : ส่วนแสดงผลหน้าเว็บ (UI)
-   */
   return (
     <div className="space-y-4">
-      {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
-        {/* Breadcrumb */}
         <div>
           <Breadcrumb
             current={{
@@ -242,12 +277,10 @@ export default function PackageHistoryAdmin() {
         <h1 className="text-xl font-bold "> ประวัติแพ็กเกจ </h1>
 
         <div className="flex items-center justify-between w-full ">
-          {/* Section: Search */}
           <div className="w-[260px]">
             <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
           </div>
 
-          {/* Section: Add Package */}
           <div>
             <Button onClick={() => navigate("/admin/package/create")} aria-label="สร้างแพ็กเกจ">
               <span className="text-lg leading-none">＋</span>
@@ -280,7 +313,6 @@ export default function PackageHistoryAdmin() {
         />
       </div>
 
-      {/* Modal ยืนยันลบ */}
       <Modal
         open={openConfirm}
         title="ยืนยันการลบแพ็กเกจ"

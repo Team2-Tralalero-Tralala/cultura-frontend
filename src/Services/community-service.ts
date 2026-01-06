@@ -1,10 +1,3 @@
-/*
- * คำอธิบาย : Service สำหรับเชื่อมต่อ API ของข้อมูลวิสาหกิจชุมชน (Community)
- * ใช้สำหรับจัดการข้อมูลของวิสาหกิจชุมชน เช่น การสร้าง แก้ไข ลบ และดึงข้อมูลตามรหัส
- * โดยเชื่อมต่อผ่าน REST API จากฝั่ง Backend (SuperAdmin)
- *
- * Base URL: ${VITE_API_URL}/super/community
- */
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -16,9 +9,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
  *   - data (CommunityFormData | FormData) : ข้อมูลฟอร์มที่ต้องการสร้าง
  * Output :
  *   - Promise<Response> : คำตอบจาก API หลังจากสร้างข้อมูลสำเร็จหรือเกิดข้อผิดพลาด
- * หมายเหตุ :
- *   - ใช้ header "multipart/form-data" เพื่อรองรับการอัปโหลดไฟล์ (เช่น รูปภาพหรือวิดีโอ)
- *   - เปิดใช้ withCredentials:true เพื่อส่ง cookie/token สำหรับการยืนยันตัวตนร่วมด้วย
  */
 export async function createCommunity(data: CommunityFormData | FormData) {
   return await axios.post(`${apiUrl}/super/community`, data, {
@@ -45,8 +35,6 @@ export async function getCommunityById(id: number) {
  *   - data (CommunityFormData | FormData) : ข้อมูลที่ต้องการอัปเดต
  * Output :
  *   - Promise<Response> : คำตอบจาก API หลังอัปเดตข้อมูลสำเร็จ
- * หมายเหตุ :
- *   - ใช้ header "multipart/form-data" เพื่อรองรับการอัปโหลดไฟล์ใหม่หรือไฟล์ที่แก้ไข
  */
 export async function updateCommunity(id: number, data: CommunityFormData | FormData) {
   return await axios.put(`${apiUrl}/super/community/${id}`, data, {
@@ -141,8 +129,6 @@ export async function getCommunityOwn() {
  *   - data (CommunityFormData | FormData) : ข้อมูลที่ต้องการอัปเดต
  * Output :
  *   - Promise<Response> : คำตอบจาก API หลังอัปเดตข้อมูลสำเร็จ
- * หมายเหตุ :
- *   - ใช้ header "multipart/form-data" เพื่อรองรับการอัปโหลดไฟล์ใหม่หรือไฟล์ที่แก้ไข
  */
 export async function updateCommunityOwn(data: CommunityFormData | FormData) {
   return await axios.put(`${apiUrl}/admin/community/own`, data, {

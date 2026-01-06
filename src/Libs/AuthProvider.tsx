@@ -21,6 +21,7 @@ export type AuthUser = {
   fname: string;
   lname: string;
   email: string;
+  profile_picture?: string;
 };
 
 
@@ -56,11 +57,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const fetchUser = useCallback(async () => {
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const res = await axios.get(`${apiUrl}/auth/me`, {
-          withCredentials: true,
-        });
-      const { id, username, role, fname, lname, email } = res.data.data;
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+      const res = await axios.get(`${apiUrl}/auth/me`, {
+        withCredentials: true,
+      });
+      const { id, username, role, fname, lname, email, profileImage } = res.data.data;
+
+      let profile_picture = profileImage;
+      if (profileImage && !profileImage.startsWith("http")) {
+        const cleanPath = profileImage.startsWith("/") ? profileImage.substring(1) : profileImage;
+        const baseUrl = apiUrl.replace(/\/api$/, "");
+        profile_picture = `${baseUrl}/${cleanPath}`;
+      }
+
       const authUser: AuthUser = {
         id: id,
         username: username,
@@ -68,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         fname: fname,
         lname: lname,
         email: email,
+        profile_picture: profile_picture,
       };
       setUser(authUser);
       return authUser;

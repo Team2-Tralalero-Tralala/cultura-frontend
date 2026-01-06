@@ -1,3 +1,7 @@
+/*
+ * คำอธิบาย : Component สำหรับหน้า “ประวัติแพ็กเกจ” ของสมาชิก
+ * แสดงรายการแพ็กเกจที่สมาชิกได้สร้างและสิ้นสุดไปแล้ว
+ */
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
@@ -6,7 +10,7 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type { Column, Pagination, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
-import { getHistoriesPackageMember } from "@/Services/package-services";
+import { getHistoriesPackageMember, deletePackageAdmin } from "@/Services/package-services";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 type PackageHistoryRow = {
@@ -55,7 +59,9 @@ const formatThaiDateTime = (iso: string) => {
 };
 
 /*
- * คำอธิบาย : คอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
+ * คำอธิบาย : ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางประวัติแพ็กเกจ
+ * Input : ไม่มี
+ * Output : รายการคอลัมน์ของตาราง
  */
 const columns: Column<PackageHistoryRow>[] = [
   {
@@ -82,7 +88,9 @@ const columns: Column<PackageHistoryRow>[] = [
 ];
 
 /*
- * คำอธิบาย : Component หลักสำหรับหน้า “ประวัติแพ็กเกจ” ของแอดมิน
+ * คำอธิบาย : ฟังก์ชันหลักของหน้า ประวัติแพ็กเกจ สมาชิก
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผลของหน้า ประวัติแพ็กเกจ สมาชิก
  */
 export default function PackageHistoryMember() {
   const navigate = useNavigate();
@@ -103,6 +111,7 @@ export default function PackageHistoryMember() {
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
+   * Input : ไม่มี
    * Output : อัปเดต state rows และ pagination
    */
   const fetchData = async () => {
@@ -115,10 +124,8 @@ export default function PackageHistoryMember() {
         pagination.limit
       );
 
-      console.log("📦 API Response:", res);
-
       const list = res?.data?.data ?? [];
-      const pag = res?.data?.pagination ?? {};
+      const packages = res?.data?.pagination ?? {};
 
       const mapped = list.map((pkg: any) => ({
         id: pkg.id,
@@ -135,10 +142,10 @@ export default function PackageHistoryMember() {
 
       setRows(mapped);
       setPagination({
-        currentPage: pag.currentPage ?? 1,
-        totalPages: pag.totalPages ?? 1,
-        totalCount: pag.totalCount ?? mapped.length,
-        limit: pag.limit ?? pagination.limit,
+        currentPage: packages.currentPage ?? 1,
+        totalPages: packages.totalPages ?? 1,
+        totalCount: packages.totalCount ?? mapped.length,
+        limit: packages.limit ?? pagination.limit,
       });
     } catch (error: any) {
       console.error("Failed to fetch packages:", error);
@@ -149,14 +156,18 @@ export default function PackageHistoryMember() {
   };
 
   /*
-   * คำอธิบาย : โหลดข้อมูลเมื่อมีการเปลี่ยนหน้า (pagination)
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า หรือจำนวนเรคอร์ดต่อหน้า
+   * Input : pagination.currentPage, pagination.limit
+   * Output : เรียก fetchData เพื่อโหลดข้อมูลใหม่
    */
   useEffect(() => {
     fetchData();
   }, [pagination.currentPage, pagination.limit]);
 
   /*
-   * คำอธิบาย : การตั้งค่า Action สำหรับแต่ละแถว เช่น แก้ไข หรือ ลบ
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
+   * Input : -
+   * Output : อัปเดต state communityName
    */
   const rowActions: DataTableActionsConfig<PackageHistoryRow> = {
     header: "จัดการ",
@@ -165,7 +176,7 @@ export default function PackageHistoryMember() {
     variant: "icons",
     items: () => ["copy", "delete"],
     callbacks: {
-      copy: (row) => navigate(``), //ตะวันแก้
+      copy: (row) => navigate(``),
       delete: (row) => {
         setDeleteId(row.id);
         setOpenConfirm(true);
@@ -191,14 +202,32 @@ export default function PackageHistoryMember() {
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
    * Input : id (number)
+   * Output : void
    */
   const handleDelete = async (id: number) => {
-    console.log("🗑 ลบ package:", id);
+    try {
+      await deletePackageAdmin(id);
+      setOpenConfirm(false);
+      setDeleteId(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error("Failed to delete package:", error);
+      alert(
+        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "unknown error"
+        }`
+      );
+      setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
+    }
   };
 
+
   /*
-   * คำอธิบาย : การลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
+   * คำอธิบาย : ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
    * Input : rows (รายการแพ็กเกจที่เลือก)
+   * Output : void
    */
   const bulkActions: BulkAction<PackageHistoryRow>[] = [
     {
@@ -215,14 +244,9 @@ export default function PackageHistoryMember() {
     },
   ];
 
-  /*
-   * คำอธิบาย : ส่วนแสดงผลหน้าเว็บ (UI)
-   */
   return (
     <div className="space-y-4">
-      {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
-        {/* Breadcrumb */}
         <div>
           <Breadcrumb
             current={{
@@ -235,12 +259,10 @@ export default function PackageHistoryMember() {
         <h1 className="text-xl font-bold "> ประวัติแพ็กเกจ </h1>
 
         <div className="flex items-center justify-between w-full ">
-          {/* Section: Search */}
           <div className="w-[260px]">
             <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
           </div>
 
-          {/* Section: Add Package */}
           <div>
             <Button onClick={() => navigate("/member/package/create")} aria-label="สร้างแพ็กเกจ">
               <span className="text-lg leading-none">＋</span>
@@ -273,7 +295,6 @@ export default function PackageHistoryMember() {
         />
       </div>
 
-      {/* Modal ยืนยันลบ */}
       <Modal
         open={openConfirm}
         title="ยืนยันการลบแพ็กเกจ"

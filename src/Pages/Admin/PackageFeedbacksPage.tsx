@@ -1,18 +1,15 @@
+/**
+ * คำอธิบาย : Component สำหรับแสดงรายการ Feedback ของแพ็กเกจตาม packageId
+ * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
+ * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
+*/
 import React from "react";
 import { useParams } from "react-router-dom";
-
-import {
-  getPackageFeedbacksByPackageId,
-  replyPackageFeedbackAdmin,
-} from "@/Services/package-feedbacks-service";
+import * as PackageFeedbackService from "@/Services/package-feedbacks-service";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 
-/**
- * ค่าคงที่   : BACKEND_BASE_URL
- * คำอธิบาย : Base URL สำหรับประกอบลิงก์รูปภาพที่เสิร์ฟจาก Backend
- */
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -54,11 +51,10 @@ type Feedback = {
 type SortOrder = "newest" | "oldest";
 
 /**
- * ฟังก์ชัน : getImageUrl
  * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
  * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
  * Output   : string | undefined - URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
- */
+*/
 function getImageUrl(fileName?: string): string | undefined {
   if (!fileName) {
     return undefined;
@@ -69,11 +65,10 @@ function getImageUrl(fileName?: string): string | undefined {
 }
 
 /**
- * ฟังก์ชัน : formatDateThai
  * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
  * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
  * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
- */
+*/
 const formatDateThai = (isoDateString: string) => {
     const date = new Date(isoDateString);
     return date.toLocaleDateString('th-TH', {
@@ -84,11 +79,10 @@ const formatDateThai = (isoDateString: string) => {
 };
 
 /**
- * ฟังก์ชัน : formatFullName
  * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
  * Input : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
  * Output: string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
- */
+*/
 function formatFullName(tourist: Tourist): string {
   const mask = (text: string) =>
     text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
@@ -96,11 +90,10 @@ function formatFullName(tourist: Tourist): string {
 }
 
 /**
- * ฟังก์ชัน : renderStars
  * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
  * Input    : rating (number) - คะแนนระหว่าง 1–5
  * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
- */
+*/
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
     .map((_, starIndex) => (starIndex < rating ? "★" : "☆"))
@@ -108,11 +101,12 @@ function renderStars(rating: number): string {
 }
 
 /**
- * คอมโพเนนต์ : PackageFeedbacksPage
- * คำอธิบาย   : แสดงรายการ Feedback ของแพ็กเกจ พร้อมความสามารถในการตอบกลับแต่ละรายการ
- * Input      : ไม่มี (ใช้ useParams ดึง packageId จาก URL)
- * Output     : JSX ของหน้าแสดงผล Feedback
- */
+ * คำอธิบาย : Feedback ของแพ็กเกจตาม packageId
+ * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
+ * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
+ * Input : packageId (string) : รับจาก URL parameter เพื่อใช้ดึง feedback ของแพ็กเกจนั้น
+ * Output : JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
+*/
 export default function PackageFeedbacksPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
@@ -140,7 +134,7 @@ export default function PackageFeedbacksPage() {
 
     setIsLoading(true);
 
-    getPackageFeedbacksByPackageId(packageIdNumber).then((response) => {
+    PackageFeedbackService.getPackageFeedbacksByPackageId(packageIdNumber).then((response) => {
       const typedResponse = response as { data?: Feedback[] } | Feedback[];
       const feedbackResponseLists = Array.isArray(typedResponse)
         ? typedResponse
@@ -152,9 +146,8 @@ export default function PackageFeedbacksPage() {
   }, [packageIdNumber]);
 
   /**
-   * ฟังก์ชัน : getSortedFeedbackLists
    * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
-   */
+  */
   const sortedFeedbackLists = React.useMemo(() => {
     return [...feedbackLists]
       .map((feedbackItem) => ({
@@ -179,12 +172,11 @@ export default function PackageFeedbacksPage() {
   ];
 
   /**
-   * ฟังก์ชัน : handleChangeReplyText
    * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId ที่กำหนด
    * Input    : feedbackId (number) - รหัสของ feedback
    *            value (string) - ข้อความที่ผู้ใช้พิมพ์
    * Output   : void
-   */
+  */
   function handleChangeReplyText(feedbackId: number, value: string): void {
     setReplyTexts((previousReplyTexts) => ({
       ...previousReplyTexts,
@@ -193,11 +185,10 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * ฟังก์ชัน : handleOpenReplyModal
    * คำอธิบาย : เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
    * Input    : feedbackId (number) - รหัสของ feedback ที่ต้องการตอบ
    * Output   : void
-   */
+  */
   function handleOpenReplyModal(feedbackId: number): void {
     const replyMessage = replyTexts[feedbackId]?.trim();
 
@@ -210,20 +201,18 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * ฟังก์ชัน : handleCloseReplyModal
    * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
-   */
+  */
   function handleCloseReplyModal(): void {
     setIsReplyModalOpen(false);
     setSelectedFeedbackId(null);
   }
 
   /**
-   * ฟังก์ชัน : sendReply
    * คำอธิบาย : ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
    * Input    : feedbackId (number) - รหัส feedback ที่ต้องการตอบกลับ
    * Output   : Promise<void>
-   */
+  */
   async function sendReply(feedbackId: number): Promise<void> {
     const replyMessage = replyTexts[feedbackId]?.trim();
 
@@ -231,7 +220,7 @@ export default function PackageFeedbacksPage() {
       return;
     }
 
-    await replyPackageFeedbackAdmin(feedbackId, { replyMessage });
+    await PackageFeedbackService.replyPackageFeedbackAdmin(feedbackId, { replyMessage });
 
     setFeedbackLists((previousFeedbacks) =>
       previousFeedbacks.map((feedbackItem) =>
@@ -264,8 +253,7 @@ export default function PackageFeedbacksPage() {
           <p className="text-sm font-semibold text-gray-800">
             ทั้งหมด : {feedbackLists.length} รายการ
           </p>
-
-          {/* ซ่อนไอคอนตัวกรอง (svg ตัวแรก) แต่คงลูกศรสามเหลี่ยมไว้ และบังคับฟอนต์ 16px */}
+          
           <div className="[&_svg:first-of-type]:hidden [&_*]:text-base">
             <FilterDropdown
               options={filterOptions}

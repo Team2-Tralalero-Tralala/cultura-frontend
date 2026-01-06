@@ -27,7 +27,11 @@ export default function FilterDropdown({ sections, selected, onChange, label, ic
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  /**
+   * คำอธิบาย: ตรวจสอบการคลิกพื้นที่อื่นนอกจาก Dropdown เพื่อปิดเมนู
+   * Input: -
+   * Output: - (อัปเดต state open)
+   */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {

@@ -1,21 +1,21 @@
-/**
- * Component: MemberFeedbacks (Client)
- * Responsibility:
- * - แสดงข้อเสนอแนะทั้งหมดของแพ็กเกจที่สมาชิกเป็นเจ้าของ
+/*
+ * Component: MemberFeedbacks
+ * Responsibility: แสดง “ข้อเสนอแนะทั้งหมด” ของแพ็กเกจที่สมาชิกเป็นเจ้าของ
  */
-import React from "react";
-import axios from "axios";
-import { Icon } from "@iconify/react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Icon } from "@iconify/react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import api from "@/Libs/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL as string;
+// --- Types (อิงตาม Structure ของ Admin แต่ปรับให้รองรับ Response ของ Member) ---
 
-/**
- * Types (API)
- * คำอธิบาย: ประเภทข้อมูลที่คาดว่าจะได้รับจาก backend สำหรับโครงสร้างข้อมูลแพ็กเกจและข้อเสนอแนะ
- */
-type ApiFeedbackImage = { id: number; feedbackId: number; image: string };
+type ApiFeedbackImage = {
+    id: number;
+    feedbackId: number;
+    image: string;
+};
+
 type ApiFeedback = {
     id: number;
     bookingHistoryId: number;
@@ -27,6 +27,7 @@ type ApiFeedback = {
     replyMessage: string | null;
     feedbackImages: ApiFeedbackImage[];
 };
+
 type ApiBookingHistory = {
     id: number;
     touristId: number;
@@ -35,6 +36,7 @@ type ApiBookingHistory = {
     totalParticipant: number;
     feedbacks: ApiFeedback[];
 };
+
 type ApiPackage = {
     id: number;
     name: string;
@@ -61,6 +63,7 @@ type FeedbackCard = {
     images: string[];
     replied?: { at: string; message: string } | null;
 };
+
 type PackageGroup = {
     id: number | string;
     title: string;
@@ -68,52 +71,56 @@ type PackageGroup = {
     feedbacks: FeedbackCard[];
 };
 
-type SortOrder = 'newest' | 'oldest'; // เพิ่ม Type สำหรับสถานะการเรียงลำดับ
+type SortOrder = 'newest' | 'oldest';
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว (id จริง)
+// --- Helper Functions (เหมือน Admin) ---
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว
+ * Input : userId
+ * Output : String (ชื่อที่ถูก Mask แล้ว)
  */
-const maskUserIdAsDisplayName = (userId: number) =>
-    `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
+const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
+ * Input : isoDateString
+ * Output : String (วันที่รูปแบบไทย)
  */
 const formatDateThai = (isoDateString: string) => {
     const date = new Date(isoDateString);
-    return date.toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+    return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
     });
 };
 
-/**
- * คำอธิบาย: Component สำหรับแสดงไอคอนดาวตามคะแนน (Rating) ที่ได้รับ
+/*
+ * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
+ * Input    : rating (number) - คะแนนระหว่าง 1–5
+ * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
  */
-const Stars: React.FC<{ rating: number }> = ({ rating }) => (
-    <div className="flex items-center gap-0.5">
-        {Array.from({ length: 5 }).map((_, index) => (
-            <Icon
-                key={index}
-                icon="ic:twotone-star"
-                className={index < rating ? "text-black" : "text-slate-300"}
-                width={18}
-                height={18}
-            />
-        ))}
-    </div>
-);
+function renderStars(rating: number): string {
+    return Array.from({ length: 5 })
+        .map((_, starIndex) => (starIndex < rating ? "★" : "☆"))
+        .join("");
+}
 
-/**
- * คำอธิบาย: Component ส่วนควบคุมด้านบน แสดงสรุปจำนวนรายการ ช่องค้นหา ปุ่มตัวกรอง
+// --- Sub-Components (เหมือน Admin) ---
+
+/*
+ * คำอธิบาย : Component ส่วนควบคุมด้านบน (สรุปรายการ, ค้นหา, ตัวกรอง)
+ * Input : Props (totalItems, totalPackages, searchQuery, etc.)
+ * Output : JSX Element
  */
 const TopControls: React.FC<{
     totalItems: number;
     totalPackages: number;
     searchQuery: string;
     onSearchChange: (value: string) => void;
-    currentSort: SortOrder; // เพิ่ม prop สำหรับสถานะการเรียงลำดับ
+    currentSort: SortOrder;
+    onSortChange: (sort: SortOrder) => void;
     onFilterClick: () => void;
     onRefreshClick: () => void;
     isLoading?: boolean;
@@ -122,12 +129,10 @@ const TopControls: React.FC<{
     totalPackages,
     searchQuery,
     onSearchChange,
-    currentSort, // รับค่าสถานะการเรียงลำดับ
+    currentSort,
     onFilterClick,
-    onRefreshClick,
-    isLoading = false,
 }) => {
-        const sortDisplay = currentSort === 'newest' ? 'ล่าสุด' : 'เก่าสุด'; // ใช้เพื่อแสดงผลบนปุ่ม
+        const sortDisplay = currentSort === 'newest' ? 'ล่าสุด' : 'เก่าสุด';
         return (
             <section className="rounded-xl bg-white border-slate-200 mb-5">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -157,11 +162,9 @@ const TopControls: React.FC<{
                             type="button"
                             onClick={onFilterClick}
                             className="inline-flex w-[150px] items-center justify-center gap-2 h-[51px] px-4 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                            // เปลี่ยนข้อความบนปุ่ม
                             aria-label={`เรียงตาม: ${sortDisplay} (เปิดตัวเลือก)`}
                         >
                             <Icon icon="hugeicons:filter" width={18} height={18} />
-                            {/* แสดงสถานะการเรียงลำดับปัจจุบัน */}
                             {sortDisplay}
                         </button>
                     </div>
@@ -170,8 +173,10 @@ const TopControls: React.FC<{
         );
     };
 
-/**
- * คำอธิบาย: Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ รวมถึงรูปภาพประกอบ
+/*
+ * คำอธิบาย : Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ
+ * Input : feedback object
+ * Output : JSX Element
  */
 const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) => {
     const displayImages = feedback.images.slice(0, 3);
@@ -188,7 +193,7 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                         <div className="text-lg font-medium text-slate-800">{feedback.userName}</div>
                     </div>
                     <div className="flex flex-col gap-1 text-sm items-end text-slate-500">
-                        <Stars rating={feedback.rating} />
+                        {renderStars(feedback.rating)}
                         <span>{formatDateThai(feedback.createdAt)}</span>
                     </div>
                 </div>
@@ -209,7 +214,8 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
                                 key={index}
                                 className="relative w-full h-[110px] rounded-lg overflow-hidden border border-slate-200"
                             >
-                                <img src={imageSource} alt={`feedback-image-${index}`} className="w-full h-full object-cover" />
+                                <img src={imageSource} alt="" className="w-full h-full object-cover" />
+
                                 {hasOverlay && (
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                         <span className="text-white text-xl font-bold">+{extraCount}</span>
@@ -224,8 +230,10 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
     );
 };
 
-/**
- * คำอธิบาย: Component แสดงกลุ่มข้อเสนอแนะแยกตามแพ็กเกจ พร้อมส่วนหัวและรายการภายในการ์ด
+/*
+ * คำอธิบาย : Component แสดงกลุ่มข้อเสนอแนะแยกตามแพ็กเกจ
+ * Input : group data, onViewAllClick callback
+ * Output : JSX Element
  */
 const PackageGroupSection: React.FC<{
     group: PackageGroup;
@@ -262,67 +270,37 @@ const PackageGroupSection: React.FC<{
     );
 };
 
-// Component สำหรับ Modal ตัวกรอง/เรียงลำดับ
-const SortFilterModal: React.FC<{
-    sortOrder: SortOrder;
-    onSortChange: (newSort: SortOrder) => void;
-    onClose: () => void;
-}> = ({ sortOrder, onSortChange, onClose }) => (
-    <div className="absolute top-15 right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 ">
-        <button
-            className={`w-full text-left p-2 rounded-md transition duration-150 ease-in-out
-                ${sortOrder === 'newest'
-                    ? 'bg-emerald-100 font-medium text-emerald-700'
-                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
-                }`}
-            onClick={() => { onSortChange('newest'); onClose(); }}
+/*
+ * คำอธิบาย : หน้าแสดงข้อเสนอแนะทั้งหมดสำหรับ Member (Main Page)
+ * Input : -
+ * Output : JSX Element
+ */
+export default function MemberFeedbacks() {
+    const [packageGroups, setPackageGroups] = useState<PackageGroup[]>([]);
+    const [totalItems, setTotalItems] = useState<number>(0);
+    const [totalPackages, setTotalPackages] = useState<number>(0);
 
-        >
-            <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2" />
-            ล่าสุด
-        </button>
-        <button
-            className={`w-full text-left p-2 rounded-md transition duration-150 ease-in-out
-                ${sortOrder === 'oldest'
-                    ? 'bg-emerald-100 font-medium text-emerald-700'
-                    : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
-                }`}
-            onClick={() => { onSortChange('oldest'); onClose(); }}
-        >
-            <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2 transform rotate-180" />
-            เก่าสุด
-        </button>
-    </div>
-);
-
-
-export default function Feedback() {
-    const [packageGroups, setPackageGroups] = React.useState<PackageGroup[]>([]);
-    const [totalItems, setTotalItems] = React.useState<number>(0);
-    const [totalPackages, setTotalPackages] = React.useState<number>(0);
-
-    const [isLoading, setIsLoading] = React.useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = React.useState<string>("");
-
-    const [sortOrder, setSortOrder] = React.useState<SortOrder>('newest'); // เพิ่ม State สำหรับการเรียงลำดับ
-    const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false); // เพิ่ม State สำหรับ Modal
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const navigate = useNavigate();
 
-    /**
-     * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะทั้งหมดจาก Server แปลงโครงสร้างข้อมูล และอัปเดต State เพื่อแสดงผล
+    const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+    /*
+     * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะทั้งหมดจาก Server
+     * Input : -
+     * Output : - (Update State)
      */
-    const fetchAllFeedbacks = React.useCallback(async () => {
+    const fetchAllFeedbacks = useCallback(async () => {
         try {
             setIsLoading(true);
             setErrorMessage(null);
 
-            const response = await axios.get<ApiResponse>(`${API_BASE_URL}/member/feedbacks/all`, {
-                withCredentials: true,
-            });
-
-            // Backend returns { data: { packages: [...] } }
+            // [Member] ใช้ Endpoint สำหรับดึงข้อมูลของ Member
+            const response = await api.get<ApiResponse>(`/member/feedbacks/all`);
             const responseData = response.data?.data;
             const packageList: ApiPackage[] = responseData?.packages ?? [];
 
@@ -337,7 +315,7 @@ export default function Feedback() {
                             rating: feedback.rating ?? 0,
                             createdAt: feedback.createdAt,
                             message: feedback.message ?? "",
-                            images: (feedback.feedbackImages ?? []).map((feedbackImage) => feedbackImage.image),
+                            images: (feedback.feedbackImages ?? []).map((imageItem) => imageItem.image),
                             replied: feedback.replyMessage
                                 ? { at: feedback.replyAt ?? "", message: feedback.replyMessage }
                                 : null,
@@ -357,24 +335,24 @@ export default function Feedback() {
             setTotalItems(nextGroups.reduce((sum, packageGroup) => sum + packageGroup.totalInGroup, 0));
             setTotalPackages(nextGroups.length);
         } catch (error: any) {
-            console.error(error);
             setErrorMessage(error?.response?.data?.message || error?.message || "โหลดข้อมูลไม่สำเร็จ");
         } finally {
             setIsLoading(false);
         }
     }, []);
 
-    React.useEffect(() => {
+    useEffect(() => {
         fetchAllFeedbacks();
     }, [fetchAllFeedbacks]);
 
-    /**
-     * คำอธิบาย: กรองและเรียงลำดับกลุ่มข้อเสนอแนะ
+    /*
+     * คำอธิบาย : คำนวณกลุ่มข้อเสนอแนะที่ผ่านการกรองและการเรียงลำดับ
+     * Input : packageGroups, searchQuery, sortOrder
+     * Output : PackageGroup[]
      */
-    const filteredGroups = React.useMemo(() => {
+    const filteredGroups = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
 
-        // 1. กรองตามคำค้นหาและเรียง Feedback ภายในกลุ่ม
         let groups = packageGroups
             .map((packageGroup) => {
                 const filteredFeedbacks = packageGroup.feedbacks.filter(
@@ -384,11 +362,10 @@ export default function Feedback() {
                         packageGroup.title.toLowerCase().includes(query)
                 );
 
-                // เรียง Feedback ภายในกลุ่มจากใหม่สุดไปเก่าสุดเสมอ (เหมือนต้นฉบับ Admin)
                 const sortedFeedbacks = [...filteredFeedbacks].sort((a, b) => {
                     const dateA = new Date(a.createdAt).getTime();
                     const dateB = new Date(b.createdAt).getTime();
-                    return dateB - dateA; // ใหม่สุดมาก่อน
+                    return dateB - dateA;
                 });
 
                 return {
@@ -397,11 +374,12 @@ export default function Feedback() {
                     totalInGroup: sortedFeedbacks.length,
                 };
             })
-            .filter((packageGroup) => packageGroup.feedbacks.length > 0 || packageGroup.title.toLowerCase().includes(query));
+            .filter((packageGroup) =>
+                packageGroup.feedbacks.length > 0 ||
+                packageGroup.title.toLowerCase().includes(query)
+            );
 
-        // 2. เรียงลำดับกลุ่มแพ็กเกจ (ใช้ Feedback ล่าสุดในกลุ่มเป็นเกณฑ์)
         const sortedPackageGroups = groups.sort((a, b) => {
-            // ดึงวันที่ของ Feedback ที่ใหม่ที่สุดในแต่ละกลุ่มมาใช้ในการเรียง
             const dateA = a.feedbacks.length > 0
                 ? new Date(a.feedbacks[0].createdAt).getTime()
                 : 0;
@@ -409,72 +387,83 @@ export default function Feedback() {
             const dateB = b.feedbacks.length > 0
                 ? new Date(b.feedbacks[0].createdAt).getTime()
                 : 0;
-
-            // เรียงตามสถานะ sortOrder
-            //return sortOrder === 'newest' ? dateB - dateA : dateA - dateB; // ล่าสุด: dateB - dateA, เก่าสุด: dateA - dateB
             return sortOrder === 'newest' ? dateA - dateB : dateB - dateA;
         });
-
 
         return sortedPackageGroups;
     }, [packageGroups, searchQuery, sortOrder]);
 
-
-    // ฟังก์ชันจัดการการเปลี่ยนสถานะการเรียงลำดับ
     const handleSortChange = (newSort: SortOrder) => {
         setSortOrder(newSort);
-        setIsFilterModalOpen(false); // ปิด Modal หลังจากเลือก
+        setIsFilterModalOpen(false);
     };
 
+    // [Structure] ย้าย Modal มาไว้ใน Component เหมือน Admin
+    const SortFilterModal = () => (
+        <div className="absolute top-15 right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 ">
+            <button
+                className={`w-full text-left p-2 rounded-md 
+                ${sortOrder === 'newest'
+                        ? 'bg-emerald-100 font-medium text-emerald-700'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                    }`}
+                onClick={() => handleSortChange('newest')}
+            >
+                <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2" />
+                ล่าสุด
+            </button>
+            <button
+                className={`w-full text-left p-2 rounded-md 
+                ${sortOrder === 'oldest'
+                        ? 'bg-emerald-100 font-medium text-emerald-700'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
+                    }`}
+                onClick={() => handleSortChange('oldest')}
+            >
+                <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2 transform rotate-180" />
+                เก่าสุด
+            </button>
+        </div>
+    );
 
     return (
         <>
             <Breadcrumb
                 current={{
                     label: "ข้อเสนอแนะ",
-                    to: `/member/feedbacks`,
+                    to: `/member/feedbacks`, // [Member] Path
                 }}
             />
-            <main className="min-h-screen bg-white py-8 px-6 space-y-6 shadow-md border rounded-xl">
+            <main className="min-h-screen bg-white py-6 px-6 space-y-6 shadow-md border rounded-xl">
                 <div className="mx-auto bg-white rounded-xl">
-                    <div className="relative"> {/* เพิ่ม div relative เพื่อวาง Modal */}
+                    <div className="relative">
                         <TopControls
                             totalItems={totalItems}
                             totalPackages={totalPackages}
                             searchQuery={searchQuery}
                             onSearchChange={setSearchQuery}
-                            currentSort={sortOrder} // ส่งสถานะปัจจุบัน
-                            onFilterClick={() => setIsFilterModalOpen(!isFilterModalOpen)} // สลับเปิด/ปิด Modal
+                            currentSort={sortOrder}
+                            onSortChange={setSortOrder}
+                            onFilterClick={() => setIsFilterModalOpen(prev => !prev)}
                             onRefreshClick={fetchAllFeedbacks}
                             isLoading={isLoading}
                         />
-
-                        {/* แสดง Modal เมื่อ isFilterModalOpen เป็น true */}
-                        {isFilterModalOpen && (
-                            <SortFilterModal
-                                sortOrder={sortOrder}
-                                onSortChange={handleSortChange}
-                                onClose={() => setIsFilterModalOpen(false)}
-                            />
-                        )}
+                        {isFilterModalOpen && <SortFilterModal />}
                     </div>
 
-
                     {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
-
-                    {filteredGroups.length === 0 && !isLoading && !errorMessage && (
-                        <div className="text-center text-slate-500 py-10">ไม่พบข้อมูลข้อเสนอแนะ</div>
-                    )}
 
                     {filteredGroups.map((packageGroup) => (
                         <PackageGroupSection
                             key={packageGroup.id}
                             group={packageGroup}
-                            onViewAllClick={(group) => navigate(`/member/feedbacks/${group.id}`)}
+                            onViewAllClick={(g) => navigate(`/member/feedbacks/${g.id}`)} // [Member] Navigate Path
                         />
                     ))}
 
-                    {isLoading && <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>}
+                    {isLoading && (
+                        <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>
+                    )}
                 </div>
             </main>
         </>

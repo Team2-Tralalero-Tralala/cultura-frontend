@@ -32,6 +32,9 @@ export interface ParticipantsInPackage {
     lname: string;
     phone: string;
   };
+  package: {
+    dueDate: string;
+  };
   isParticipate: boolean;
   [key: string]: any;
 }

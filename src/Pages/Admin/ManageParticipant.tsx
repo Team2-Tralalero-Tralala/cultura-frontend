@@ -36,13 +36,17 @@ const normalizeDate = (dateObj: Date | string) => {
 /**
  * คำอธิบาย: ฟังก์ชันที่ใช้ในการแสดง dropdown ของสถานะ
  * input: status - สถานะที่ต้องการแสดง
+ *        disabled - สถานะของ dropdown
+ *        onChange - ฟังก์ชันที่จะถูกเรียกเมื่อสถานะเปลี่ยนแปลง
  * output: dropdown ของสถานะ
  */
 const StatusDropdown = ({
   status,
+  disabled,
   onChange,
 }: {
   status: boolean;
+  disabled?: boolean;
   onChange: (val: boolean) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,17 +54,24 @@ const StatusDropdown = ({
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-white shadow-sm text-sm hover:bg-gray-50 transition-colors w-32 justify-between"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+        className={`flex items-center gap-2 px-3 py-1.5 border rounded-md shadow-sm text-sm transition-colors w-32 justify-between ${
+          disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white hover:bg-gray-50"
+        }`}
       >
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${status ? "bg-green-500" : "bg-red-500"}`}></div>
+          <div
+            className={`w-2 h-2 rounded-full ${status ? "bg-green-500" : "bg-red-500"} ${
+              disabled ? "opacity-50" : ""
+            }`}
+          ></div>
           <span>{status ? "เข้าร่วม" : "ไม่เข้าร่วม"}</span>
         </div>
-        <Icon icon="lucide:chevron-down" className="w-4 h-4 text-gray-400" />
+        {!disabled && <Icon icon="lucide:chevron-down" className="w-4 h-4 text-gray-400" />}
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
           <div className="absolute top-full left-0 mt-1 w-full bg-white border rounded-md shadow-lg z-20 py-1">
@@ -219,22 +230,32 @@ export function ManageParticipant() {
         header: "จัดการ",
         className: "min-w-[100px]",
         align: "center",
-        render: (object) => (
-          <div className="flex justify-start">
-            <StatusDropdown
-              status={object.isParticipate}
-              onChange={async (val) => {
-                try {
-                  await updateParticipantStatus(object.id, val);
-                  await fetchData();
-                } catch (err) {
-                  console.error(err);
-                  setErrorMessage("อัปเดตสถานะไม่สำเร็จ");
-                }
-              }}
-            />
-          </div>
-        ),
+        render: (object) => {
+          const dueDate = new Date(object.package.dueDate);
+          const now = new Date();
+          // Logic: disable if (dueDate + 1 day) < now
+          const oneDayAfterDue = new Date(dueDate);
+          oneDayAfterDue.setDate(oneDayAfterDue.getDate() + 1);
+          const isExpired = now > oneDayAfterDue;
+
+          return (
+            <div className="flex justify-start">
+              <StatusDropdown
+                status={object.isParticipate}
+                disabled={isExpired}
+                onChange={async (val) => {
+                  try {
+                    await updateParticipantStatus(object.id, val);
+                    await fetchData();
+                  } catch (err) {
+                    console.error(err);
+                    setErrorMessage("อัปเดตสถานะไม่สำเร็จ");
+                  }
+                }}
+              />
+            </div>
+          );
+        },
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps

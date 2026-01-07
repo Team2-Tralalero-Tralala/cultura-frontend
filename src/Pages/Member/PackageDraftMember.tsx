@@ -55,7 +55,7 @@ const PackageDraftMember: React.FC = () => {
 
   const [selectedRows, setSelectedRows] = useState<PackageItem[]>([]);
 
-  const [deleteModal, setDeleteModal] = useState<{
+  const [isDeleteModal, setIsDeleteModal] = useState<{
     open: boolean;
     pkg: PackageItem | null;
   }>({
@@ -63,7 +63,7 @@ const PackageDraftMember: React.FC = () => {
     pkg: null,
   });
 
-  const [bulkDeleteModal, setBulkDeleteModal] = useState<{
+  const [isBulkDeleteModal, setIsBulkDeleteModal] = useState<{
     open: boolean;
     rows: PackageItem[];
   }>({
@@ -79,22 +79,30 @@ const PackageDraftMember: React.FC = () => {
   const fetchPackages = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/member/packages/draft`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${API_BASE}/member/packages/draft`,
+        {
+          withCredentials: true,
+        }
+      );
 
-      const data = Array.isArray(res.data?.data) ? res.data.data : [];
+      const data = Array.isArray(response.data?.data)
+        ? response.data.data
+        : [];
 
-      const formatted: PackageItem[] = data.map((pkg: any) => ({
-        id: pkg.id ?? 0,
-        name: pkg.name ?? "-",
-        community: pkg.community?.name ?? "-",
-        overseer: pkg.overseerPackage?.username ?? "-",
-        status:
-          pkg.statusPackage === "DRAFT"
-            ? "ฉบับร่าง"
-            : pkg.statusPackage ?? "-",
-      }));
+      const formatted: PackageItem[] = data.map(
+        (packageItem: any) => ({
+          id: packageItem.id ?? 0,
+          name: packageItem.name ?? "-",
+          community: packageItem.community?.name ?? "-",
+          overseer:
+            packageItem.overseerPackage?.username ?? "-",
+          status:
+            packageItem.statusPackage === "DRAFT"
+              ? "ฉบับร่าง"
+              : packageItem.statusPackage ?? "-",
+        })
+      );
 
       setItems(formatted);
       setPagination((prev) => ({
@@ -123,15 +131,17 @@ const PackageDraftMember: React.FC = () => {
     const query = normalizeText(searchTerm);
     if (!query) return items;
 
-    return items.filter((pkg) => {
+    return items.filter((packageItem) => {
       const values = [
-        pkg.name,
-        pkg.community,
-        pkg.overseer,
-        pkg.status,
+        packageItem.name,
+        packageItem.community,
+        packageItem.overseer,
+        packageItem.status,
       ].map(normalizeText);
 
-      return values.some((v) => v.includes(query));
+      return values.some((value) =>
+        value.includes(query)
+      );
     });
   }, [items, searchTerm]);
 
@@ -153,9 +163,18 @@ const PackageDraftMember: React.FC = () => {
    * Output : รายการแพ็กเกจตามหน้าที่เลือก
    */
   const paginatedRows = useMemo(() => {
-    const start = (pagination.currentPage - 1) * pagination.limit;
-    return filteredRows.slice(start, start + pagination.limit);
-  }, [filteredRows, pagination.currentPage, pagination.limit]);
+    const start =
+      (pagination.currentPage - 1) *
+      pagination.limit;
+    return filteredRows.slice(
+      start,
+      start + pagination.limit
+    );
+  }, [
+    filteredRows,
+    pagination.currentPage,
+    pagination.limit,
+  ]);
 
   /*
    * คำอธิบาย : ฟังก์ชันลบแพ็กเกจฉบับร่างแบบรายการเดียว
@@ -163,10 +182,10 @@ const PackageDraftMember: React.FC = () => {
    * Output : ลบแพ็กเกจและโหลดข้อมูลใหม่
    */
   const handleConfirmDelete = useCallback(async () => {
-    if (!deleteModal.pkg) return;
+    if (!isDeleteModal.pkg) return;
 
-    const idToDelete = deleteModal.pkg.id;
-    setDeleteModal({ open: false, pkg: null });
+    const idToDelete = isDeleteModal.pkg.id;
+    setIsDeleteModal({ open: false, pkg: null });
 
     try {
       await axios.delete(
@@ -175,29 +194,34 @@ const PackageDraftMember: React.FC = () => {
       );
       void fetchPackages();
     } catch {}
-  }, [deleteModal, fetchPackages]);
+  }, [isDeleteModal, fetchPackages]);
 
   /*
    * คำอธิบาย : ฟังก์ชันลบแพ็กเกจฉบับร่างหลายรายการพร้อมกัน
    * Input : bulkDeleteModal.rows
    * Output : ลบแพ็กเกจทั้งหมดที่เลือกและโหลดข้อมูลใหม่
    */
-  const handleConfirmBulkDelete = useCallback(async () => {
-    const ids = bulkDeleteModal.rows.map((r) => r.id);
-    setBulkDeleteModal({ open: false, rows: [] });
-
-    if (ids.length === 0) return;
-
-    try {
-      await axios.patch(
-        `${API_BASE}/member/packages/draft/bulk-delete`,
-        { ids },
-        { withCredentials: true }
+  const handleConfirmBulkDelete = useCallback(
+    async () => {
+      const ids = isBulkDeleteModal.rows.map(
+        (row) => row.id
       );
-      setSelectedRows([]);
-      void fetchPackages();
-    } catch {}
-  }, [bulkDeleteModal, fetchPackages]);
+      setIsBulkDeleteModal({ open: false, rows: [] });
+
+      if (ids.length === 0) return;
+
+      try {
+        await axios.patch(
+          `${API_BASE}/member/packages/draft/bulk-delete`,
+          { ids },
+          { withCredentials: true }
+        );
+        setSelectedRows([]);
+        void fetchPackages();
+      } catch {}
+    },
+    [isBulkDeleteModal, fetchPackages]
+  );
 
   const bulkActions: BulkAction<PackageItem>[] = [
     {
@@ -208,7 +232,7 @@ const PackageDraftMember: React.FC = () => {
       confirm: (rows) =>
         `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: (rows) =>
-        setBulkDeleteModal({ open: true, rows }),
+        setIsBulkDeleteModal({ open: true, rows }),
     },
   ];
 
@@ -216,14 +240,14 @@ const PackageDraftMember: React.FC = () => {
     {
       key: "name",
       header: "ชื่อแพ็กเกจ",
-      render: (pkg) => (
+      render: (packageItem) => (
         <span
           className="cursor-pointer hover:text-gray-800"
           onClick={() =>
-            (window.location.href = `/member/package/${pkg.id}`)
+            (window.location.href = `/member/package/${packageItem.id}`)
           }
         >
-          {pkg.name}
+          {packageItem.name}
         </span>
       ),
     },
@@ -233,12 +257,12 @@ const PackageDraftMember: React.FC = () => {
     {
       key: "setting",
       header: "จัดการ",
-      render: (pkg) => (
+      render: (packageItem) => (
         <div className="flex space-x-2">
           <span
             className="cursor-pointer"
             onClick={() =>
-              (window.location.href = `/member/package/${pkg.id}/edit`)
+              (window.location.href = `/member/package/${packageItem.id}/edit`)
             }
           >
             <PencilIcon className="w-4 h-4" />
@@ -246,7 +270,10 @@ const PackageDraftMember: React.FC = () => {
           <span
             className="cursor-pointer"
             onClick={() =>
-              setDeleteModal({ open: true, pkg })
+              setIsDeleteModal({
+                open: true,
+                pkg: packageItem,
+              })
             }
           >
             <TrashIcon className="w-4 h-4" />
@@ -259,20 +286,26 @@ const PackageDraftMember: React.FC = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
       <Breadcrumb
-        current={{ label: "ฉบับร่าง", to: "/member/packages/draft" }}
+        current={{
+          label: "ฉบับร่าง",
+          to: "/member/packages/draft",
+        }}
       />
 
       <div className="flex justify-between mb-4">
         <SearchBarTable
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(event) =>
+            setSearchTerm(event.target.value)
+          }
         />
 
         <button
           className="px-3 py-2 border rounded-form text-white flex items-center hover:bg-green-900"
           style={{ backgroundColor: "#055035" }}
           onClick={() =>
-            (window.location.href = "/member/packages/create")
+            (window.location.href =
+              "/member/packages/create")
           }
         >
           <Plus size={18} className="mr-2" />
@@ -283,10 +316,16 @@ const PackageDraftMember: React.FC = () => {
       <DataTable<PackageItem>
         data={paginatedRows}
         columns={columns}
-        getKey={(pkg) => pkg.id.toString()}
-        bulkActions={selectedRows.length > 0 ? bulkActions : []}
+        getKey={(packageItem) =>
+          packageItem.id.toString()
+        }
+        bulkActions={
+          selectedRows.length > 0 ? bulkActions : []
+        }
         selectable
-        onSelectedChange={(rows) => setSelectedRows(rows)}
+        onSelectedChange={(rows) =>
+          setSelectedRows(rows)
+        }
         pagination={pagination}
         onPageChange={(page) =>
           setPagination((prev) => ({
@@ -306,26 +345,29 @@ const PackageDraftMember: React.FC = () => {
       />
 
       <Modal
-        open={deleteModal.open}
+        open={isDeleteModal.open}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         confirmText="ลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}
         onCancel={() =>
-          setDeleteModal({ open: false, pkg: null })
+          setIsDeleteModal({ open: false, pkg: null })
         }
       />
 
       <Modal
-        open={bulkDeleteModal.open}
+        open={isBulkDeleteModal.open}
         title="ลบแพ็กเกจหลายรายการ"
-        text={`คุณต้องการลบทั้งหมด ${bulkDeleteModal.rows.length} รายการหรือไม่?`}
+        text={`คุณต้องการลบทั้งหมด ${isBulkDeleteModal.rows.length} รายการหรือไม่?`}
         confirmText="ลบทั้งหมด"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmBulkDelete}
         onCancel={() =>
-          setBulkDeleteModal({ open: false, rows: [] })
+          setIsBulkDeleteModal({
+            open: false,
+            rows: [],
+          })
         }
       />
     </div>

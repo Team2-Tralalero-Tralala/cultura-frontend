@@ -3,14 +3,6 @@
  * ใช้ข้อมูลจากไฟล์ geography.json บน GitHub เพื่อสร้าง dropdown แบบเชื่อมโยงกัน
  * โดยจะโหลดข้อมูลจังหวัดทั้งหมด และเมื่อเลือกจังหวัด จะกรองอำเภอ และตำบลตามลำดับ
  * ใช้ร่วมกับ Component TextField และ Material UI Autocomplete
- *
- * ฟังก์ชันหลัก:
- * 1. loadLocationData() — โหลดข้อมูลจังหวัด/อำเภอ/ตำบลจาก API
- * 2. handleProvinceChange(), handleDistrictChange(), handleSubdistrictChange() — จัดการอีเวนต์เมื่อผู้ใช้เลือกข้อมูล
- * 3. renderCustomInput() — สร้าง input แบบ custom ให้กับ Autocomplete
- *
- * Output: ส่งข้อมูล ThailandLocation (province, district, subdistrict, postalCode)
- * กลับไปยัง component แม่ผ่าน props.onChange()
  */
 
 import Autocomplete from "@mui/material/Autocomplete";

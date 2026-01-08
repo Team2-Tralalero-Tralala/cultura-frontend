@@ -16,7 +16,9 @@ import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
-* คำอธิบาย : ดึงข้อมูลแท็กทั้งหมดใช้ใน Tag Selector
+* คำอธิบาย : ฟังก์ชันดึงข้อมูลแท็กทั้งหมดใช้ใน Tag Selector
+* Input : ไม่มี
+* Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแท็ก (Promise)
 */
 export async function getTags() {
   return await axios.get(`${apiUrl}/shared/tags`, {
@@ -25,7 +27,12 @@ export async function getTags() {
 }
 
 /**
-* คำอธิบาย : ดึงข้อมูลแท็กทั้งหมด
+* คำอธิบาย : ฟังก์ชันดึงข้อมูลแท็กทั้งหมด
+* Input :
+*   - page (number) : หมายเลขหน้าปัจจุบัน
+*   - limit (number) : จำนวนรายการต่อหน้า
+*   - search (string | undefined) : คำค้นหา (ถ้ามี)
+* Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแท็ก (Promise)
 */
 export async function fetchTags(
   page: number,
@@ -41,23 +48,30 @@ export async function fetchTags(
   return res.data;
 }
 
-
 /**
-* คำอธิบาย : สร้างแท็กใหม่
+* คำอธิบาย : ฟังก์ชันสร้างแท็กใหม่
+* Input : name - ชื่อของแท็กที่ต้องการสร้าง
+* Output : ผลลัพธ์จากการเรียก API เพื่อสร้างแท็ก (Promise)
 */
 export async function createTag(name: string) {
   return await axios.post(`${apiUrl}/super/tag`, { name }, { withCredentials: true });
 }
 
 /**
-* คำอธิบาย : แก้ไขแท็ก
+* คำอธิบาย : ฟังก์ชันแก้ไขแท็ก
+* Input :
+*   - id (number) : รหัสของแท็กที่ต้องการแก้ไข
+*   - name (string) : ชื่อใหม่ของแท็ก
+* Output : ผลลัพธ์จากการเรียก API เพื่อแก้ไขแท็ก (Promise)
 */
 export async function updateTag(id: number, name: string) {
   return await axios.put(`${apiUrl}/super/tag/${id}`, { name }, { withCredentials: true });
 }
 
 /**
-* คำอธิบาย : ลบแท็ก
+* คำอธิบาย : ฟังก์ชันลบแท็ก
+* Input : id - รหัสของแท็กที่ต้องการลบ
+* Output : ผลลัพธ์จากการเรียก API เพื่อลบแท็ก (Promise)
 */
 export async function deleteTag(id: number) {
   return await axios.patch(`${apiUrl}/super/tag/${id}`, { isDeleted: true }, { withCredentials: true });

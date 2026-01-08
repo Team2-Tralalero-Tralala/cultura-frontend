@@ -1,3 +1,7 @@
+/**
+ * คำอธิบาย : Component สำหรับเลือกแท็ก (Tag) ของชุมชน
+ * โดยใช้ Autocomplete ที่สามารถเลือกหลายรายการได้ (multiple select)
+ */
 import { getTags } from "@/Services/tag-service";
 import Autocomplete from "@mui/material/Autocomplete";
 import Checkbox from "@mui/material/Checkbox";
@@ -32,6 +36,8 @@ interface TagSelectorProps {
  *   - value : ค่าของแท็กที่ถูกเลือก (array ของ id)
  *   - tag : รายการแท็กทั้งหมด (array ของ Tag)
  *   - onChange : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของแท็กที่ถูกเลือก
+ * output :
+ *   - คืนค่า TagSelectorProps
  */
 export function TagSelector({
   value = [],
@@ -57,7 +63,14 @@ export function TagSelector({
     };
   }, []);
 
-  // ซิงค์ selectedTags กับ value ที่ได้รับจาก props
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของแท็กที่ถูกเลือก
+   * Input :
+   *   - tags : รายการแท็กทั้งหมด (array ของ Tag)
+   *   - value : ค่าของแท็กที่ถูกเลือก (array ของ id)
+   * Output :
+   *   - อัปเดตรายการแท็กที่ถูกเลือกใน state 'selectedTags'
+   */
   React.useEffect(() => {
     if (tags.length === 0) return;
     const selected = tags.filter((t) => value.includes(t.id));
@@ -72,7 +85,7 @@ export function TagSelector({
    */
   const handleChange = (_: any, newValue: Tag[]) => {
     setSelectedTags(newValue);
-    onChange(newValue.map((v) => v.id));
+    onChange(newValue.map((tag) => tag.id));
   };
 
   return (

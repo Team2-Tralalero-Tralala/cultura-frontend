@@ -32,7 +32,7 @@ import Stack from "@mui/material/Stack";
 import Switch from "@/Components/Switch";
 import * as React from "react";
 import { Link, useNavigate } from "react-router";
-import z from "zod";
+import zod from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
@@ -44,30 +44,30 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
  * Input : object ของข้อมูลฟอร์มทั้งหมด
  * Output : หากไม่ผ่าน validation จะคืนข้อความ error ของแต่ละ field
  */
-const communitySchema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
-  type: z.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
-  registerNumber: z.string().min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
-  registerDate: z
-    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+const communitySchema = zod.object({
+  name: zod.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+  type: zod.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  registerNumber: zod.string().min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
+  registerDate: zod
+    .union([zod.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), zod.date()])
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
-  bankName: z.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
-  accountName: z.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-  accountNumber: z.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
-  description: z.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
-  mainActivityName: z.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
-  mainActivityDescription: z.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
-  houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
-  latitude: z.string().min(1, "กรุณากรอกละติจูด"),
-  longitude: z.string().min(1, "กรุณากรอกลองจิจูด"),
-  phone: z.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
-  email: z.string().min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
-  mainAdmin: z.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
-  mainAdminPhone: z.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
+  bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
+  accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+  description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
+  houseNumber: zod.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  latitude: zod.string().min(1, "กรุณากรอกละติจูด"),
+  longitude: zod.string().min(1, "กรุณากรอกลองจิจูด"),
+  phone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
+  email: zod.string().min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  mainAdmin: zod.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdminPhone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
 });
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
@@ -252,6 +252,7 @@ export function EditCommunity() {
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isMapLoading, setIsMapLoading] = React.useState(false);
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
@@ -343,6 +344,7 @@ export function EditCommunity() {
         setVideoFiles(video);
         const memberIds = data.communityMembers?.map((member: any) => member.user.id) ?? [];
         setSelectedMembers(memberIds);
+        setIsMapLoading(true);
 
         // Set Initial States for Dirty Check
       } catch (error) {
@@ -888,7 +890,7 @@ export function EditCommunity() {
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
-              {position[0] !== 0 && position[1] !== 0 && (
+              {isMapLoading && (
                 <MapPicker startingPosition={position} startingZoom={13} onChange={setPosition} />
               )}
             </div>

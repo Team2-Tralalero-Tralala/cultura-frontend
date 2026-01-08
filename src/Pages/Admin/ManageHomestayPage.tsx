@@ -1,12 +1,16 @@
 /**
- * หน้า: จัดการที่พัก (Admin)
+ * Page: ManageHomestayAdmin
+ *
  * คำอธิบาย:
- * - แสดงตารางรายการที่พักในชุมชน
- * - breadcrumb: จัดการชุมชน > [ชื่อชุมชน] > จัดการที่พัก
- * - ปุ่มย้อนกลับไปหน้ารายละเอียดชุมชน
- * - ชิดขอบ content ให้สม่ำเสมอกับหน้า "จัดการชุมชน"
+ *  - หน้าจัดการข้อมูลที่พักสำหรับผู้ดูแลระบบ (Admin)
+ *  - แสดงตารางรายการที่พักภายในชุมชน
+ *  - แสดง Breadcrumb: จัดการชุมชน > [ชื่อชุมชน] > จัดการที่พัก
+ *  - รองรับการค้นหา เพิ่ม แก้ไข และลบข้อมูลที่พัก
+ *
+ * Responsibilities:
+ *  - แสดงข้อมูลที่พักในรูปแบบตาราง
+ *  - จัดการการลบแบบรายรายการ และแบบหลายรายการ (Bulk Delete)
  */
-
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -21,17 +25,29 @@ import type { HomestayRow, HomestayDtoFromApi } from "@/Types/Homestay";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 /**
- * ฟังก์ชัน: normalizeText
- * วัตถุประสงค์: แปลงข้อความให้เป็นตัวพิมพ์เล็ก ลบช่องว่างเกิน และ normalize สำหรับค้นหา
- * Input: text (string)
- * Output: string ที่ normalize แล้ว
+ * คำอธิบาย:
+ *  - แปลงข้อความให้อยู่ในรูปแบบมาตรฐานสำหรับการค้นหา
+ *  - แปลงเป็นตัวพิมพ์เล็ก และลบช่องว่างส่วนเกิน
+ *
+ * Input:
+ *  - text: string
+ *
+ * Output:
+ *  - string ข้อความที่ถูก normalize แล้ว
  */
 const normalizeText = (text: string) =>
   (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * Component: ManageHomestayAdmin
- * วัตถุประสงค์: ใช้สำหรับแสดงตารางข้อมูลที่พัก (Admin)
+ *
+ * คำอธิบาย:
+ *  - Component หลักสำหรับหน้าแสดงและจัดการข้อมูลที่พัก (Admin)
+ *
+ * Responsibilities:
+ *  - โหลดข้อมูลที่พักจากระบบ
+ *  - แสดงข้อมูลในรูปแบบตาราง
+ *  - รองรับการค้นหา และการลบข้อมูล
  */
 export default function ManageHomestayAdmin() {
   const navigate = useNavigate();
@@ -50,8 +66,13 @@ export default function ManageHomestayAdmin() {
 
   /**
    * ฟังก์ชัน: reload
-   * วัตถุประสงค์: โหลดข้อมูลที่พักทั้งหมดในชุมชน
-   * Output: เซตข้อมูลที่พักลงใน state rows
+   *
+   * คำอธิบาย:
+   *  - ดึงข้อมูลที่พักทั้งหมดสำหรับผู้ดูแลระบบจาก API
+   *  - แปลงข้อมูลให้อยู่ในรูปแบบที่ใช้กับตาราง
+   *
+   * Output:
+   *  - อัปเดต state: rows, totalItems, isLoading, errorMessage
    */
   const reload = useCallback(async () => {
     try {
@@ -86,8 +107,10 @@ export default function ManageHomestayAdmin() {
   }, [reload]);
 
   /**
-   * ฟังก์ชัน: columns
-   * วัตถุประสงค์: กำหนดคอลัมน์ของตารางข้อมูลที่พัก
+   * Constant: columns
+   *
+   * คำอธิบาย:
+   *  - กำหนดโครงสร้างคอลัมน์ของตารางข้อมูลที่พัก
    */
   const columns: Column<HomestayRow>[] = [
     {
@@ -106,9 +129,12 @@ export default function ManageHomestayAdmin() {
 
   /**
    * ฟังก์ชัน: rowActions
-   * วัตถุประสงค์: กำหนดปุ่มจัดการต่อแถวในตาราง เช่น แก้ไข / ลบ
-   * Input: row (HomestayRow)
-   * Output: trigger action ตามปุ่มที่เลือก
+   * คำอธิบาย:
+   *  - กำหนด action ที่สามารถทำได้ในแต่ละแถวของตาราง
+   * Input:
+   *  - row: HomestayRow
+   * Output:
+   *  - เรียกใช้งาน navigation หรือเปิด modal ตาม action ที่เลือก
    */
   const rowActions: DataTableActionsConfig<HomestayRow> = {
     header: "จัดการ",
@@ -128,9 +154,9 @@ export default function ManageHomestayAdmin() {
 
   /**
    * ฟังก์ชัน: filteredRows
-   * วัตถุประสงค์: กรองข้อมูลในตารางตามคำค้นหา
-   * Input: searchQuery (string)
-   * Output: แสดงเฉพาะรายการที่ตรงกับคำค้นหา
+   * คำอธิบาย:
+   *  - กรองข้อมูลที่พักจาก rows ตามคำค้นหา
+   *  - ใช้สำหรับแสดงผลในตาราง
    */
   const filteredRows = useMemo(() => {
     const normalizedQuery = normalizeText(searchQuery);
@@ -143,7 +169,9 @@ export default function ManageHomestayAdmin() {
 
   /**
    * ฟังก์ชัน: bulkActions
-   * วัตถุประสงค์: ปุ่มลบแบบเลือกหลายแถว (bulk delete) ใช้ modal ยืนยัน
+   * คำอธิบาย:
+   *  - กำหนด action สำหรับการจัดการหลายแถวพร้อมกัน
+   *  - ใช้สำหรับลบข้อมูลที่พักแบบหลายรายการ
    */
   const bulkActions: BulkAction<HomestayRow>[] = [
     {
@@ -162,7 +190,11 @@ export default function ManageHomestayAdmin() {
 
   /**
    * ฟังก์ชัน: handleDelete
-   * วัตถุประสงค์: ลบแถวเดียว
+   * คำอธิบาย:
+   *  - ลบข้อมูลที่พัก 1 รายการ
+   *
+   * Output:
+   *  - รีโหลดข้อมูลตารางใหม่
    */
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -176,8 +208,16 @@ export default function ManageHomestayAdmin() {
 
   /**
    * ฟังก์ชัน: handleBulkDelete
-   * วัตถุประสงค์: ลบหลายแถว
+   *
+   * คำอธิบาย:
+   *  - ลบข้อมูลที่พักหลายรายการตามรายการที่ถูกเลือก
+   *  - ใช้ bulkDeleteIds ในการเรียก API ลบข้อมูล
+   *
+   * Output:
+   *  - ปิด modal ยืนยันการลบ
+   *  - รีโหลดข้อมูลตารางใหม่
    */
+
   const handleBulkDelete = async () => {
     if (bulkDeleteIds.length === 0) return;
 
@@ -190,8 +230,11 @@ export default function ManageHomestayAdmin() {
   };
 
   /**
-   * ส่วน Render:
-   * แสดงตารางข้อมูลที่พัก พร้อม Breadcrumb, Toolbar
+   * Render Section
+   *
+   * คำอธิบาย:
+   *  - แสดงหน้าแสดงข้อมูลที่พัก
+   *  - ประกอบด้วย Breadcrumb, Header, Toolbar, Table และ Modal
    */
   return (
     <div className="space-y-4">
@@ -214,10 +257,7 @@ export default function ManageHomestayAdmin() {
           </div>
 
           <div className="ml-auto">
-            <Button
-              type="confirm-admin"
-              onClick={() => navigate(`/admin/community/homestay`)}
-            >
+            <Button type="confirm-admin" onClick={() => navigate(`/admin/community/homestay`)}>
               <span>+ เพิ่มที่พัก</span>
             </Button>
           </div>

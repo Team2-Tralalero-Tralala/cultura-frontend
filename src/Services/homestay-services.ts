@@ -98,7 +98,7 @@ export async function deleteHomestayBySuperAdmin(homestayId: number) {
 
 
 /* 
- * อธิบาย : ดึงข้อมูลรายละเอียดที่พักและที่พักอื่น ๆ ในชุมชน
+ * อธิบาย : ฟังก์ชันดึงข้อมูลรายละเอียดที่พักและที่พักอื่น ๆ ในชุมชน
  * Input : communityId, homestayId
  * Output : ข้อมูลที่พัก (homestay) และรายการที่พักอื่น (otherHomestays)
  */

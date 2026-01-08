@@ -26,6 +26,8 @@ import BookingPaymentPage from "./Pages/Tourist/BookingPaymentPage";
 import BookingSummaryPage from "./Pages/Tourist/BookingSummaryPage";
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
+import { DashboardPage } from "./Pages/Tourist/DashboardPage";
+import { DetailBookingHistory } from "./Pages/Tourist/DetailBookingHistory";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 
 function App() {
@@ -39,10 +41,18 @@ function App() {
         <Route path="/guest/search" element={<SearchPage />} />
         <Route path="/tourist/package/:packageId" element={<DetailPackagePage />} />
         <Route path="/tourist/edit-profile" element={<EditProfileTourist />} />
-        <Route path="/tourist/community/:communityId/detail/store/:storeId" element={<StoreDetailPage />}/>
-        <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />
+        <Route
+          path="/tourist/community/:communityId/detail/store/:storeId"
+          element={<StoreDetailPage />}
+        />
+        <Route
+          path="/tourist/community/:communityId/detail/homestay/:homestayId"
+          element={<HomestayDetailTourist />}
+        />
         <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
+        <Route path="/tourist/booking-history/detail" element={<DetailBookingHistory />} />
+        <Route path="/tourist/dashboard" element={<DashboardPage />} />
         <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
         <Route path="/tourist/booking-history/:bookingId/feedback" element={<CreateFeedbackPage />} />
         <Route
@@ -69,7 +79,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

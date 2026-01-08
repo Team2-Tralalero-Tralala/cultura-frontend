@@ -1,12 +1,12 @@
 /*
  * Filter ใช้สำหรับ Role: Tourists
-*/
+ */
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 
 export type FilterOption = {
   label: string;
-  value: string;
+  value: string | string[];
 };
 
 export type FilterSection = {
@@ -17,14 +17,14 @@ export type FilterSection = {
 
 type FilterProps = {
   sections: FilterSection[];
-  selected: Record<string, string>;
-  onChange: (key: string, value: string) => void;
+  selected: Record<string, string | string[]>;
+  onChange: (key: string, value: string | string[]) => void;
   label?: string;
   icon?: string;
 };
 
 export default function FilterDropdown({ sections, selected, onChange, label, icon }: FilterProps) {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -35,7 +35,7 @@ export default function FilterDropdown({ sections, selected, onChange, label, ic
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        setIsOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -48,7 +48,7 @@ export default function FilterDropdown({ sections, selected, onChange, label, ic
     <div className="relative inline-block" ref={dropdownRef}>
       {/* Trigger Button */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between gap-2 px-3 py-2 border border-black rounded-lg bg-white text-black hover:bg-gray-50"
       >
         <span>{label || "ตัวกรอง"}</span>
@@ -60,34 +60,45 @@ export default function FilterDropdown({ sections, selected, onChange, label, ic
       </button>
 
       {/* Dropdown Menu */}
-      {open && (
+      {isOpen && (
         <div className="absolute top-full left-0 mt-2 min-w-[200px] w-max rounded-lg border border-black bg-white p-4 shadow-lg z-20">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold">ตัวกรอง</h3>
             <Icon icon="heroicons:bars-3-bottom-right" width={24} height={24} />
           </div>
 
-          {sections.map((section, idx) => (
-            <div key={section.key} className={idx > 0 ? "mt-4" : ""}>
+          {sections.map((section, index) => (
+            <div key={section.key} className={index > 0 ? "mt-4" : ""}>
               <h4 className="mb-2 font-bold text-base">{section.title}</h4>
               <div className="flex flex-col gap-2">
-                {section.options.map((opt) => {
-                  const isSelected = selected[section.key] === opt.value;
+                {section.options.map((option, index) => {
+                  const isSelected =
+                    JSON.stringify(selected[section.key]) === JSON.stringify(option.value);
                   return (
                     <button
-                      key={opt.value}
-                      onClick={() => onChange(section.key, opt.value)}
+                      key={index}
+                      onClick={() => onChange(section.key, option.value)}
                       className="flex items-center gap-3 text-left hover:bg-gray-50 rounded-md p-1"
                     >
                       {/* Radio Icon */}
                       <div className={`flex items-center justify-center`}>
                         {isSelected ? (
-                          <Icon icon="mdi:radiobox-marked" className="text-[#00BF6A]" width={20} height={20} />
+                          <Icon
+                            icon="mdi:radiobox-marked"
+                            className="text-[#00BF6A]"
+                            width={20}
+                            height={20}
+                          />
                         ) : (
-                          <Icon icon="mdi:radiobox-blank" className="text-[#00BF6A]" width={20} height={20} />
+                          <Icon
+                            icon="mdi:radiobox-blank"
+                            className="text-[#00BF6A]"
+                            width={20}
+                            height={20}
+                          />
                         )}
                       </div>
-                      <span className="text-black">{opt.label}</span>
+                      <span className="text-black">{option.label}</span>
                     </button>
                   );
                 })}

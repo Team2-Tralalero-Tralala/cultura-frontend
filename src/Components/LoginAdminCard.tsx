@@ -5,9 +5,8 @@
  */
 import TextField from "./TextField";
 import Button from "./Button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../Libs/AuthProvider";
-// import ModalBlocked from "./ModalBlocked";
 import CircularProgress from "@mui/material/CircularProgress";
 import React, { useContext, useState } from "react";
 import { z } from "zod";
@@ -37,9 +36,10 @@ export function LoginAdminCard() {
   }>({});
 
   /*
-   * ฟังก์ชัน : validateField
    * คำอธิบาย : ตรวจสอบค่าของ field เดียว (username หรือ password)
    * โดยใช้ Zod และ update state formErrors
+   * Input : field: "username" | "password", value: string
+   * Output : -
    */
 
   const validateField = (field: "username" | "password", value: string) => {
@@ -51,39 +51,42 @@ export function LoginAdminCard() {
       ...prev,
       [field]: result.success
         ? undefined
-        : result.error.issues.find((i) => i.path[0] === field)?.message,
+        : result.error.issues.find((issue) => issue.path[0] === field)?.message,
     }));
   };
 
   type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-  // Handler เมื่อกรอก username
-  const handleUsernameChange = (e: React.ChangeEvent<FormElement>) => {
-    const value = e.target.value;
+  /**
+   * คำอธิบาย : Handler เมื่อกรอก username
+   * Input : React.ChangeEvent<FormElement>
+   * Output : -
+   */
+  const handleUsernameChange = (event: React.ChangeEvent<FormElement>) => {
+    const value = event.target.value;
     setUsername(value);
     validateField("username", value);
   };
-  // Handler เมื่อกรอกรหัสผ่าน
-  const handlePasswordChange = (e: React.ChangeEvent<FormElement>) => {
-    const value = e.target.value;
+  /**
+   * คำอธิบาย : Handler เมื่อกรอกรหัสผ่าน
+   * Input : React.ChangeEvent<FormElement>
+   * Output : -
+   */
+  const handlePasswordChange = (event: React.ChangeEvent<FormElement>) => {
+    const value = event.target.value;
     setPassword(value);
     validateField("password", value);
   };
   /*
    * ฟังก์ชัน : handleLogin
    * คำอธิบาย : จัดการ event เมื่อผู้ใช้ submit ฟอร์ม
-   * ขั้นตอน:
-   *   1) Validate input ด้วย Zod
-   *   2) เรียก AuthContext.login
-   *   3) ตรวจสอบ role และ error message จาก backend
+   * Input : React.FormEvent
    * Output : redirect หรือแสดง error/modal
    */
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
     setFormErrors({});
     setIsLoading(true);
-
-    console.log('1')
 
     // Validate with Zod
     const result = loginSchema.safeParse({ username, password });
@@ -97,11 +100,8 @@ export function LoginAdminCard() {
       setIsLoading(false);
       return;
     }
-    console.log('2')
     try {
-      console.log('3')
       const loggedInUser = await login(username, password); // ให้ login return user
-      console.log('4')
 
       if (loggedInUser.user.role === "tourist") {
         setError("ไม่พบบัญชี");
@@ -109,7 +109,6 @@ export function LoginAdminCard() {
         loggedInUser.navigateToFirstPage();
       }
     } catch (error: any) {
-      console.log('loginerr', 1, error)
       const blockedMsg = error?.response?.data?.message ?? "";
       const isBlocked = blockedMsg.includes("ผู้ใช้ถูกบล็อก");
 
@@ -164,19 +163,13 @@ export function LoginAdminCard() {
 
         <div className="flex items-center justify-between mb-3 mt-3 min-h-[24px]">
           {/* Error message: always reserve space, align right */}
-          <p className="text-sm text-red-600 min-h-[24px]">
-            {error ? error : "\u00A0"}
-          </p>
+          <p className="text-sm text-red-600 min-h-[24px]">{error ? error : "\u00A0"}</p>
           <Link to="/forgot-password" className="text-right whitespace-nowrap">
             ลืมรหัสผ่าน
           </Link>
         </div>
         <Button type="confirm-admin" htmlType="submit">
-          {isLoading ? (
-            <CircularProgress color="inherit" size="28px" />
-          ) : (
-            "เข้าสู่ระบบ"
-          )}
+          {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}
         </Button>
       </form>
       <ModalBlocked open={showBlocked} onClose={() => setShowBlocked(false)} />

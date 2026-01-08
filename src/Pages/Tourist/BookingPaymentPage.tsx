@@ -115,11 +115,11 @@ export default function BookingPaymentPage() {
 
   /*
    * คำอธิบาย : จัดการเมื่อเลือกไฟล์หลักฐานการชำระเงิน
-   * Input : e (React.ChangeEvent<HTMLInputElement>)
+   * Input : changeEvent (React.ChangeEvent<HTMLInputElement>)
    * Output : อัพเดท state ของ paymentProof
    */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
+    const file = changeEvent.target.files?.[0];
     if (file) {
       setPaymentProof(file);
     }

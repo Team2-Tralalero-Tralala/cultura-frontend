@@ -1,19 +1,22 @@
 /**
- * Component: BookingDetailAdmin
+ * Component: BookingDetailMember
+ *
  * คำอธิบาย:
- *  - สำหรับแสดงรายละเอียดการจอง (Booking) ของสมาชิก (member)
- *  - ใช้สำหรับอนุมัติหรือปฏิเสธการจอง
- *  - แสดงข้อมูลนักท่องเที่ยว แพ็กเกจ ทริป และหลักฐานการโอนเงิน
+ *  Component สำหรับแสดงรายละเอียดการจอง (Booking)
+ *  ใช้สำหรับการพิจารณาอนุมัติหรือปฏิเสธการจอง
+ *  พร้อมแสดงข้อมูลนักท่องเที่ยว แพ็กเกจทัวร์ และหลักฐานการโอนเงิน
  *
- * เส้นทางที่ดึงข้อมูล:
- *   GET /member/booking-history/:bookingId
+ * Input:
+ *  - bookingId: string (รับจาก URL parameter)
  *
- * ฟีเจอร์:
- *   - แสดงข้อมูลการจอง
- *   - Modal ยืนยันอนุมัติการจอง
- *   - Modal กรอกเหตุผลสำหรับปฏิเสธการจอง
+ * Output:
+ *  - แสดงรายละเอียดการจอง
+ *  - รองรับการอนุมัติการจองผ่าน Modal
+ *  - รองรับการปฏิเสธการจองพร้อมระบุเหตุผล
+ *
+ * API Endpoint:
+ *  - GET    /member/booking-history/:bookingId
  */
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -22,6 +25,18 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import ModalReject from "@/Components/Modal/ModalReject";
 
+/**
+ * Type: ApiBooking
+ *
+ * คำอธิบาย:
+ *  โครงสร้างข้อมูลการจอง (Booking) ที่ได้จาก API
+ *  ใช้สำหรับแสดงรายละเอียดการจองของนักท่องเที่ยว
+ *  รวมถึงข้อมูลแพ็กเกจทัวร์และผู้จอง
+ *
+ * Usage:
+ *  - ใช้เป็น type ของ response จาก Booking API
+ *  - ใช้ในหน้าแสดงรายละเอียด / ประวัติการจอง
+ */
 type ApiBooking = {
   id: number;
   touristId: number;
@@ -49,6 +64,12 @@ type ApiBooking = {
   };
 };
 
+/**
+ * Constant: BOOKING_STATUS
+ * คำอธิบาย:
+ *  กำหนดค่าคงที่ของสถานะการจอง
+ *  ใช้สำหรับอ้างอิงสถานะจากระบบ Backend
+ */
 const BOOKING_STATUS = {
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
@@ -57,6 +78,17 @@ const BOOKING_STATUS = {
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
+/**
+ * คำอธิบาย:
+ *  หน้ารายละเอียดการจองสำหรับผู้ดูแลชุมชน (Member)
+ *
+ * Input:
+ *  - bookingId: string (จาก useParams)
+ *
+ * Output:
+ *  - Render รายละเอียดการจอง
+ *  - ควบคุม Modal สำหรับอนุมัติและปฏิเสธการจอง
+ */
 export default function BookingDetailAdmin() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<ApiBooking | null>(null);
@@ -68,15 +100,18 @@ export default function BookingDetailAdmin() {
   const token = localStorage.getItem("token");
 
   /**
-   * ฟังก์ชัน: fetchBooking
    * คำอธิบาย:
-   *  - ดึงข้อมูลรายละเอียดการจองจาก API
-   *  - ใช้ bookingId จาก URL
+   *  ดึงข้อมูลรายละเอียดการจองจาก API ตาม bookingId
+   *
+   * Input:
+   *  - bookingId: string (จาก URL parameter)
    *
    * Output:
-   *  - อัปเดต state: booking, loading, error
+   *  - อัปเดต state:
+   *    - booking
+   *    - loading
+   *    - error
    */
-
   const fetchBooking = useCallback(async () => {
     if (!bookingId) return;
     setLoading(true);
@@ -113,15 +148,18 @@ export default function BookingDetailAdmin() {
   }, [fetchBooking]);
 
   /**
-   * ฟังก์ชัน: confirmApprove
    * คำอธิบาย:
-   *  - สำหรับอนุมัติการจอง
+   *  - อนุมัติการจองแพ็กเกจทัวร์และอัปเดตสถานะการจองผ่าน API
    *  - เรียก API: POST /member/bookings/:bookingId/status
+   *
+   * Input:
+   *  - bookingId: string
+   *  - booking: ApiBooking
    *
    * Output:
    *  - อัปเดตสถานะ booking เป็น "BOOKED"
+   *  - ปิด Modal การอนุมัติ
    */
-
   const confirmApprove = async () => {
     if (!booking || !bookingId) return;
 
@@ -143,18 +181,19 @@ export default function BookingDetailAdmin() {
   };
 
   /**
-   * ฟังก์ชัน: confirmReject
    * คำอธิบาย:
-   *  - สำหรับปฏิเสธการจอง พร้อมเหตุผล
+   *  - ปฏิเสธการจองแพ็กเกจทัวร์ พร้อมระบุเหตุผล และอัปเดตสถานะการจองผ่าน API
    *  - เรียก API: POST /member/bookings/:bookingId/status
    *
    * Input:
-   *  - reason: string → เหตุผลที่ปฏิเสธจาก modal
+   *  - reason: string (เหตุผลในการปฏิเสธจาก Modal)
+   *  - bookingId: string
    *
    * Output:
    *  - อัปเดตสถานะ booking เป็น "REJECTED"
+   *  - บันทึกเหตุผลการปฏิเสธ
+   *  - ปิด Modal การปฏิเสธ
    */
-
   const confirmReject = async (reason: string) => {
     if (!booking || !bookingId) return;
 
@@ -280,11 +319,19 @@ export default function BookingDetailAdmin() {
 }
 
 /**
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงวันที่ให้เป็นรูปแบบภาษาไทย
- * Input : inputDate - วันที่ในรูปแบบ string หรือ null
- * Output : วันที่และเวลาในรูปแบบภาษาไทย หรือ "-" หากไม่มีข้อมูลหรือรูปแบบไม่ถูกต้อง
+ * ฟังก์ชัน: formatDate
+ *
+ * คำอธิบาย:
+ *  แปลงวันที่จากรูปแบบ ISO string
+ *  ให้เป็นวันที่และเวลาในรูปแบบภาษาไทย
+ *
+ * Input:
+ *  - inputDate?: string | null
+ *
+ * Output:
+ *  - string: วันที่และเวลาในรูปแบบภาษาไทย
+ *  - "-" หากไม่มีข้อมูลหรือรูปแบบไม่ถูกต้อง
  */
-
 function formatDate(inputDate?: string | null) {
   if (!inputDate) return "-";
   const parsedDate = new Date(inputDate);

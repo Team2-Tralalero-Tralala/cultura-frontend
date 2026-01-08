@@ -14,16 +14,16 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { CommunityFormData } from "@/Types/CommunityForm";
-import z from "zod";
+import zod from "zod";
 import Stack from "@mui/material/Stack";
-
-import Switch from "@/Components/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 import { getCommunityById, updateCommunity } from "@/Services/community-service";
 import Backdrop from "@mui/material/Backdrop";
+import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
+import Switch from "@/Components/Switch";
 import TextArea from "@/Components/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
@@ -31,7 +31,6 @@ import Button from "@/Components/Button";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
-import { Icon } from "@iconify/react";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 import { BankSelector } from "@/Components/Selector/BankSelector";
@@ -45,30 +44,30 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
  * Input : object ของข้อมูลฟอร์มทั้งหมด
  * Output : หากไม่ผ่าน validation จะคืนข้อความ error ของแต่ละ field
  */
-const communitySchema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
-  type: z.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
-  registerNumber: z.string().min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
-  registerDate: z
-    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+const communitySchema = zod.object({
+  name: zod.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+  type: zod.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  registerNumber: zod.string().min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
+  registerDate: zod
+    .union([zod.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), zod.date()])
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
-  bankName: z.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
-  accountName: z.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-  accountNumber: z.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
-  description: z.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
-  mainActivityName: z.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
-  mainActivityDescription: z.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
-  houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
-  latitude: z.string().min(1, "กรุณากรอกละติจูด"),
-  longitude: z.string().min(1, "กรุณากรอกลองจิจูด"),
-  phone: z.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
-  email: z.string().min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
-  mainAdmin: z.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
-  mainAdminPhone: z.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
+  bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
+  accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+  description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
+  houseNumber: zod.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  latitude: zod.string().min(1, "กรุณากรอกละติจูด"),
+  longitude: zod.string().min(1, "กรุณากรอกลองจิจูด"),
+  phone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
+  email: zod.string().min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  mainAdmin: zod.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdminPhone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
 });
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
@@ -247,6 +246,7 @@ export function EditCommunity() {
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
   const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   const navigate = useNavigate();
 
@@ -328,6 +328,7 @@ export function EditCommunity() {
         setVideoFiles(video);
         const memberIds = data.communityMembers?.map((m: any) => m.user.id) ?? [];
         setSelectedMembers(memberIds);
+        setIsLoaded(true);
       } catch (error) {
         console.error(error);
       } finally {
@@ -868,7 +869,7 @@ export function EditCommunity() {
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
-              {position[0] !== 0 && position[1] !== 0 && (
+              {isLoaded && (
                 <MapPicker startingPosition={position} startingZoom={13} onChange={setPosition} />
               )}
             </div>
@@ -876,7 +877,7 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0 mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
         sx={{ "&:before": { display: "none" } }}

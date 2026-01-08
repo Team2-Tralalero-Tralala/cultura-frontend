@@ -1,5 +1,5 @@
 /**
- * Bank Selector Component
+ * คำอธิบาย: Bank Selector Component
  * ใช้สำหรับเลือกธนาคารจากรายการที่ดึงมาจาก API
  */
 import Autocomplete from "@mui/material/Autocomplete";
@@ -17,8 +17,7 @@ interface BankSelectorProps {
   helperText?: string;
 }
 /**
- * ฟังก์ชัน: BankSelector
- * ใช้สำหรับเลือกธนาคารจากรายการที่ดึงมาจาก API
+ * คำอธิบาย : ใช้สำหรับเลือกธนาคารจากรายการที่ดึงมาจาก API
  * Input :
  *   - value : ชื่อธนาคารที่ถูกเลือก
  *   - bank : ข้อมูลธนาคารปัจจุบัน (ใช้เมื่อแก้ไข)
@@ -39,8 +38,7 @@ export function BankSelector({
   const [banks, setBanks] = useState<Bank[]>([]);
 
   /**
-   * ฟังก์ชันภายใน: useEffect
-   * ใช้สำหรับดึงรายชื่อธนาคารจาก API เมื่อ component ถูก mount
+   * คำอธิบาย : ใช้สำหรับดึงรายชื่อธนาคารจาก API เมื่อ component ถูก mount
    * Input : none
    * Output : อัปเดตรายการธนาคารใน state 'banks'
    */
@@ -58,8 +56,7 @@ export function BankSelector({
 
   const selectedBanks = banks.find((bank) => bank.name === value) || bank || null;
   /**
-   * ฟังก์ชันภายใน: renderCustomInput
-   * ใช้สำหรับกำหนดรูปแบบของ input field ใน Autocomplete
+   * คำอธิบาย : ใช้สำหรับกำหนดรูปแบบของ input field ใน Autocomplete
    * Input :
    *   - id : รหัสของ input field
    *   - label : ป้ายชื่อของ input field

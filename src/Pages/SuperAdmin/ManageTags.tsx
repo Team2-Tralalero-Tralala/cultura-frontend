@@ -20,11 +20,11 @@ export type TagRow = { id: number; name: string };
 
 
 /*
- * คำอธิบาย : Component หน้าจัดการประเภท
- * แสดงตารางรายการแท็ก พร้อมฟังก์ชันการค้นหา เพิ่ม แก้ไข และลบแท็ก
+ * คำอธิบาย : ฟังก์ชันหลักของหน้าจัดการประเภท
+ิ * Input : ไม่มี
+ * Output : JSX.Element สำหรับการจัดการแท็ก
  */
 export function ManageTags() {
-  // table state
   const [rows, setRows] = useState<TagRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function ManageTags() {
   const [pendingTagName, setPendingTagName] = useState("");
 
   /*
-   * คำอธิบาย : สำหรับดึงข้อมูลแท็กทั้งหมดจาก API
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลแท็กทั้งหมดจาก API
    * Input :
    *   - page : หน้าที่ต้องการแสดง
    *   - limit : จำนวนรายการต่อหน้า
@@ -82,7 +82,9 @@ export function ManageTags() {
   };
 
   /*
-   * คำอธิบาย : โหลดข้อมูลเมื่อเปลี่ยนแปลง page, limit, หรือ searchQuery 
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า จำนวนเรคอร์ดต่อหน้า หรือคำค้นหา
+   * Input : pagination.currentPage, pagination.limit, searchQuery
+   * Output : เรียก fetchData เพื่อโหลดข้อมูลใหม่
    */
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -93,7 +95,7 @@ export function ManageTags() {
   }, [pagination.currentPage, pagination.limit, searchQuery]);
 
   /*
-   * คำอธิบาย : เปิด modal สำหรับ create/edit
+   * คำอธิบาย : ฟังก์ชันเปิด modal สำหรับ create/edit
    * Input :
    *   - type : ประเภท modal "create" และ "edit"
    *   - tag : ข้อมูล tag ที่เลือก (ถ้ามี)
@@ -107,7 +109,9 @@ export function ManageTags() {
   };
 
   /*
-   * คำอธิบาย : ปิด modal และ reset state
+   * คำอธิบาย : ฟังก์ชันปิด modal และ reset state
+   * Input : ไม่มี
+   * Output : อัปเดต state modal
    */
   const closeInputModal = () => {
     setModalType(null);
@@ -117,9 +121,8 @@ export function ManageTags() {
   };
 
   /*
-   * คำอธิบาย : เรียก modal ยืนยันการลบ tag
-   * Input :
-   *   - tag : ข้อมูล tag ที่ต้องการลบ
+   * คำอธิบาย : ฟังก์ชันเรียก modal ยืนยันการลบ tag
+   * Input : tag : ข้อมูล tag ที่ต้องการลบ
    * Output : เปิด modal ยืนยัน
    */
   const handleDelete = (tag: TagRow) => {
@@ -129,7 +132,9 @@ export function ManageTags() {
   };
 
   /*
-   * คำอธิบาย : ยืนยัน action ของ modal (create/edit/delete)
+   * คำอธิบาย : ฟังก์ชันยืนยัน action ของ modal (create/edit/delete)
+   * Input : ไม่มี
+   * Output : ดำเนินการตาม action ที่เลือกและรีเฟรชข้อมูล
    */
   const handleFinalConfirm = async () => {
     try {
@@ -146,7 +151,9 @@ export function ManageTags() {
   };
 
   /*
-   * คำอธิบาย : กำหนด columns ของ DataTable
+   * คำอธิบาย : ฟังก์ชันกำหนด columns ของ DataTable
+   * Input : ไม่มี
+   * Output : รายการคอลัมน์สำหรับ DataTable
    */
   const columns: Column<TagRow>[] = [
     {
@@ -164,7 +171,9 @@ export function ManageTags() {
   ];
 
   /*
-   * คำอธิบาย : กำหนด actions ต่อ row
+   * คำอธิบาย : ฟังก์ชันกำหนดการกระทำของแต่ละแถวในตาราง
+   * Input : ไม่มี
+   * Output : การกำหนดค่าการกระทำของแต่ละแถว
    */
   const rowActions: DataTableActionsConfig<TagRow> = {
     header: "จัดการ",
@@ -179,7 +188,9 @@ export function ManageTags() {
   };
 
   /*
-   * คำอธิบาย : กำหนด bulk actions สำหรับ rows ที่เลือก
+   * คำอธิบาย : ฟังก์ชันกำหนด bulk actions สำหรับ rows ที่เลือก
+   * Input : ไม่มี
+   * Output : รายการการกระทำแบบกลุ่ม
    */
   const bulkActions: BulkAction<TagRow>[] = [
     {
@@ -195,14 +206,9 @@ export function ManageTags() {
     },
   ];
 
-  /*
-   * คำอธิบาย : render component
-   */
   return (
     <div className="space-y-4 cursor-default">
-      {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
-        {/* Breadcrumb */}
         <div>
           <Breadcrumb
             current={{
@@ -216,7 +222,6 @@ export function ManageTags() {
         <h1 className="text-xl font-bold ">จัดการประเภท</h1>
 
         <div className="flex items-center justify-between w-full ">
-          {/* Section: Search */}
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
@@ -226,8 +231,6 @@ export function ManageTags() {
               }}
             />
           </div>
-
-          {/* Section: Add Tag */}
           <div>
             <Button onClick={() => openInputModal("create")}>
               <span className="text-lg leading-none">＋</span>
@@ -257,7 +260,6 @@ export function ManageTags() {
         />
       </div>
 
-      {/* Confirm Modal */}
       <ModalConfirm
         open={showConfirmModal}
         onConfirm={handleFinalConfirm}
@@ -283,7 +285,6 @@ export function ManageTags() {
         cancelText="ยกเลิก"
       />
 
-      {/* Input Modal */}
       <ModalTag
         isOpen={showInputModal}
         onClose={closeInputModal}

@@ -29,10 +29,10 @@ apiClient.interceptors.request.use((config) => {
 });
 
 /*
-* คำอธิบาย : ฟังก์ชันสำหรับแปลง area ที่ crop ให้เป็น File object
-* Input : file (ต้นฉบับ), area (พิกัด x,y,w,h), mime, quality
-* Output : File (ที่ถูก crop แล้ว)
-*/
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลง area ที่ crop ให้เป็น File object
+ * Input : file (ต้นฉบับ), area (พิกัด x,y,w,h), mime, quality
+ * Output : File (ที่ถูก crop แล้ว)
+ */
 async function cropImageToFile(
   file: File,
   area: { x: number; y: number; width: number; height: number },
@@ -72,17 +72,17 @@ async function cropImageToFile(
 }
 
 /*
-* คำอธิบาย : ตรวจสอบว่าเป็น URL แบบ Absolute หรือไม่
-* Input : urlString
-* Output : boolean
-*/
+ * คำอธิบาย : ตรวจสอบว่าเป็น URL แบบ Absolute หรือไม่
+ * Input : urlString
+ * Output : boolean
+ */
 const isAbsUrl = (urlString?: string) => !!urlString && /^https?:\/\//i.test(urlString);
 
 /*
-* คำอธิบาย : สร้าง URL สำหรับพรีวิว Banner
-* Input : item (path, url)
-* Output : string (URL สมบูรณ์)
-*/
+ * คำอธิบาย : สร้าง URL สำหรับพรีวิว Banner
+ * Input : item (path, url)
+ * Output : string (URL สมบูรณ์)
+ */
 const bannerPreviewUrl = (item: { path: string; url?: string }) => {
   if (isAbsUrl(item.url)) return item.url as string;
   const rawPath = item.path || "";
@@ -105,19 +105,19 @@ type BannerItem = {
 };
 
 /*
-* คำอธิบาย : ดึงข้อมูล Banner ทั้งหมดจาก API
-* Input : -
-* Output : BannerItem[]
-*/
+ * คำอธิบาย : ดึงข้อมูล Banner ทั้งหมดจาก API
+ * Input : -
+ * Output : BannerItem[]
+ */
 async function fetchBanners(): Promise<BannerItem[]> {
   const response = await apiClient.get(`${API_PREFIX}/super/banner`, { params: { _: Date.now() } });
   const rawList = Array.isArray(response.data?.data)
     ? response.data.data
     : Array.isArray(response.data?.banners)
-      ? response.data.banners
-      : Array.isArray(response.data)
-        ? response.data
-        : [];
+    ? response.data.banners
+    : Array.isArray(response.data)
+    ? response.data
+    : [];
 
   return (rawList as RawBannerItem[]).map((rawItem, index) => {
     const bannerItem: BannerItem = {
@@ -133,10 +133,10 @@ async function fetchBanners(): Promise<BannerItem[]> {
 }
 
 /*
-* คำอธิบาย : อัปโหลด Banner ไปยัง Server
-* Input : files[]
-* Output : Response data
-*/
+ * คำอธิบาย : อัปโหลด Banner ไปยัง Server
+ * Input : files[]
+ * Output : Response data
+ */
 async function uploadBanners(files: File[]) {
   const formData = new FormData();
   files.forEach((file) => formData.append("banner", file, file.name));
@@ -147,19 +147,19 @@ async function uploadBanners(files: File[]) {
 }
 
 /*
-* คำอธิบาย : ลบ Banner ตาม ID
-* Input : id
-* Output : -
-*/
+ * คำอธิบาย : ลบ Banner ตาม ID
+ * Input : id
+ * Output : -
+ */
 async function deleteBanner(id: number) {
   await apiClient.delete(`${API_PREFIX}/super/banner/${id}`);
 }
 
 /*
-* คำอธิบาย : แทนที่ไฟล์ Banner เดิม
-* Input : id, file
-* Output : Response data
-*/
+ * คำอธิบาย : แทนที่ไฟล์ Banner เดิม
+ * Input : id, file
+ * Output : Response data
+ */
 async function replaceBanner(id: number, file: File) {
   const formData = new FormData();
   formData.append("banner", file, file.name);
@@ -168,10 +168,10 @@ async function replaceBanner(id: number, file: File) {
 }
 
 /*
-* คำอธิบาย : หน้าจัดการรูป Banner หน้าแรก รองรับการ Crop ก่อนอัปโหลด
-* Input : -
-* Output : JSX Element
-*/
+ * คำอธิบาย : หน้าจัดการรูป Banner หน้าแรก รองรับการ Crop ก่อนอัปโหลด
+ * Input : -
+ * Output : JSX Element
+ */
 export default function UploadBannerPage() {
   // Server banners
   const [serverBanners, setServerBanners] = useState<BannerItem[]>([]);
@@ -225,10 +225,10 @@ export default function UploadBannerPage() {
   );
 
   /*
-  * คำอธิบาย : ดึงข้อมูลใหม่และรีเซ็ต State
-  * Input : -
-  * Output : -
-  */
+   * คำอธิบาย : ดึงข้อมูลใหม่และรีเซ็ต State
+   * Input : -
+   * Output : -
+   */
   const refresh = async () => {
     try {
       const items = await fetchBanners();
@@ -418,7 +418,9 @@ export default function UploadBannerPage() {
           await refresh();
         } else {
           const localIndex = pendingIndex - serverCount;
-          setBannerFiles((previousFiles) => previousFiles.filter((_unused, index) => index !== localIndex));
+          setBannerFiles((previousFiles) =>
+            previousFiles.filter((_unused, index) => index !== localIndex)
+          );
         }
         setResultType("success");
         setResultTitle("สำเร็จ");
@@ -569,7 +571,10 @@ export default function UploadBannerPage() {
         />
 
         {cropModalOpen && cropImageSource && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80" role="dialog">
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80"
+            role="dialog"
+          >
             <div className="bg-white rounded-2xl p-4 w-[90vw] max-w-[640px] h-[80vh] flex flex-col gap-3">
               <h3 className="text-lg font-bold text-gray-800">ปรับขนาดรูปภาพ (Crop)</h3>
 
@@ -609,7 +614,6 @@ export default function UploadBannerPage() {
             </div>
           </div>
         )}
-
       </main>
     </>
   );

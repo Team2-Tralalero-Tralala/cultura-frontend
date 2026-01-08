@@ -2,13 +2,6 @@
  * คำอธิบาย : Component สำหรับเลือกผู้ดูแล (Admin) ของวิสาหกิจชุมชน
  * ใช้ร่วมกับ MUI Autocomplete เพื่อแสดงรายชื่อผู้ดูแลที่ยังไม่ถูกมอบหมายให้กับชุมชนอื่น
  * และสามารถรวมผู้ดูแลปัจจุบันของชุมชนเข้าในรายการได้โดยไม่ซ้ำ
- * Input :
- *   - value (number | undefined) : id ของผู้ดูแลที่ถูกเลือกในปัจจุบัน
- *   - admin (Admin | null) : ข้อมูลผู้ดูแลปัจจุบันจากชุมชน (ใช้เมื่อแก้ไข)
- *   - onChange (function) : ฟังก์ชัน callback ที่ส่งค่า id ของผู้ดูแลเมื่อมีการเลือกใหม่
- * Output :
- *   - ส่งค่า id ของผู้ดูแล (number) กลับไปยัง parent component ผ่าน onChange
- *   - แสดง Autocomplete dropdown ของผู้ดูแลทั้งหมดที่สามารถเลือกได้
  */
 
 import { getUnassignedAdmins } from "@/Services/community-service";

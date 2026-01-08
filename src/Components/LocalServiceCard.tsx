@@ -13,8 +13,7 @@ interface LocalServiceCardProps {
 }
 
 /*
- * ฟังก์ชัน : LocalServiceCard
- * คำอธิบาย : Component สำหรับแสดงการ์ดบริการ 
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดงการ์ดบริการ 
  * Input : props (LocalServiceCardProps)
  * Output : ส่วนแสดงผล ของการ์ด
  */

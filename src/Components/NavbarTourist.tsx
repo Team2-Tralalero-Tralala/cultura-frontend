@@ -8,30 +8,40 @@ import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./Search/SearchBar";
 import { Icon } from "@iconify/react";
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Navbar ของผู้ใช้กลุ่ม Tourist
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผล Navbar
+ */
 const NavbarTourist = () => {
-  // ดึงข้อมูล authentication จาก AuthContext
   const { user, logout: logoutAuth } = useAuth();
-  // State สำหรับจัดการการเปิด-ปิด dropdown
   const [isOpen, setIsOpen] = useState(false);
-
   const navigate = useNavigate();
 
-  // ฟังก์ชันสำหรับเข้าสู่ระบบและออกจากระบบ
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับเข้าสู่ระบบ
+   * Input : ไม่มี
+   * Output : void
+   */
   const login = () => {
     navigate("/guest/login");
   };
+
   /*
-   * ฟังก์ชัน : logout
-   * คำอธิบาย : ออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
+   * คำอธิบาย : ฟังก์ชันสำหรับออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
    * Input : ไม่มี
    * Output : void
    */
   const logout = async () => {
     await logoutAuth();
-    setIsOpen(false); // ปิด dropdown ตอน logout
+    setIsOpen(false);
   };
 
-  // ฟังก์ชันสลับสถานะการเปิด-ปิด dropdown
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับสลับสถานะการเปิด-ปิด dropdown
+   * Input : ไม่มี
+   * Output : void
+   */
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
@@ -48,7 +58,6 @@ const NavbarTourist = () => {
             />
           </a>
 
-
           {/* กล่องค้นหา */}
           <SearchBar
             onSearch={(text) => {
@@ -61,7 +70,7 @@ const NavbarTourist = () => {
         </div>
 
         <div className="ml-auto flex flex-col items-center gap-6 lg:flex-row lg:gap-6">
-          {user ? (
+          {user && user.role === "tourist" ? (
             <div className="relative">
               {/* ปุ่มโปรไฟล์ */}
               <button
@@ -87,7 +96,7 @@ const NavbarTourist = () => {
                   </li>
 
                   <li className="block w-max hover:text-green-500 py-2 px-3 cursor-pointer">
-                    <Link to="/tourist/booking-history" className="flex items-center gap-2">
+                    <Link to="/tourist/booking-histories" className="flex items-center gap-2">
                       <Icon icon="material-symbols:history-rounded" className="text-xl" />
                       ประวัติการจอง
                     </Link>

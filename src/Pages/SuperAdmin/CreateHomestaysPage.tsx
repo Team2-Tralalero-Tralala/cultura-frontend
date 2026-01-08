@@ -1,18 +1,12 @@
 /**
- * หน้าที่: หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Super Admin
- * คุณสมบัติ:
- * - ตรวจความถูกต้องด้วย zod
- * - ยืนยันก่อนบันทึกผ่าน Modal
- * - แนบไฟล์รูป (cover / gallery)
- * - ส่งข้อมูลแบบ multipart/form-data:
- * { data: JSON(HomestayDto + tagHomestays), cover[], gallery[] }
- * - เมื่อสำเร็จ กลับไปหน้าแก้ไขชุมชน
+ * คำอธิบาย : หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Super Admin ทำหน้าที่จัดการฟอร์ม ตรวจสอบข้อมูล ยืนยัน และส่งข้อมูลแบบ multipart/form-data ไปยัง API
  */
 import React from "react";
 import * as z from "zod";
 import axios from "axios";
 import { Icon } from "@iconify/react";
 import { useNavigate, useParams } from "react-router-dom";
+
 import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
@@ -27,10 +21,8 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
-/** ประเภทไฟล์ที่แนบมากับฟอร์ม */
 type FileLike = File;
 
-/** โครงสร้างข้อมูลฟอร์มของที่พักหนึ่งรายการ */
 type HomestayForm = {
   name: string;
   type: string;
@@ -49,7 +41,6 @@ type HomestayForm = {
   placeQuery: string;
 };
 
-/** ค่าเริ่มต้นของฟอร์มที่พัก */
 const initialHomestay: HomestayForm = {
   name: "",
   type: "",
@@ -68,7 +59,6 @@ const initialHomestay: HomestayForm = {
   placeQuery: "",
 };
 
-/** schema ตรวจสอบข้อมูลฟอร์มของแต่ละรายการ */
 const homestaySchema = z.object({
   name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
   type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
@@ -78,7 +68,6 @@ const homestaySchema = z.object({
   totalRoom: z
     .string().min(1).refine((value) => Number(value) >= 1 && Number.isInteger(Number(value)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  // villageNumber: z.string().min(1, "กรุณากรอกหมู่ที่"),
   province: z.string().min(1, "กรุณาเลือกจังหวัด"),
   district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
   subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
@@ -87,10 +76,13 @@ const homestaySchema = z.object({
   placeQuery: z.string().optional().default(""),
 });
 
-/** type ของ error ต่อฟิลด์ในหนึ่งรายการ */
-type HSFormErrors = Partial<Record<keyof HomestayForm, string>>;
+type HomestayFormErrors = Partial<Record<keyof HomestayForm, string>>;
 
-/** ตัดช่องว่างและคืน fallback หากว่าง */
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับตัดช่องว่างและคืนค่า default หากเป็นค่าว่าง
+ * Input : value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าเริ่มต้นถ้าเป็นค่าว่าง)
+ * Output : ข้อมูล string ที่ผ่านการตัดช่องว่างแล้ว
+ */
 function normalizeOrDefault(value: string, fallback = "") {
   const trimmed = (value ?? "").toString().trim();
   return trimmed.length ? trimmed : fallback;
@@ -139,7 +131,7 @@ export default function CreateHomestaysPage() {
   const { communityId } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = React.useState<HomestayForm>(initialHomestay);
-  const [errors, setErrors] = React.useState<HSFormErrors>({});
+  const [errors, setErrors] = React.useState<HomestayFormErrors>({});
   const [coverFiles, setCoverFiles] = React.useState<FileLike[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<FileLike[]>([]);
   const [tagIds, setTagIds] = React.useState<number[]>([]);
@@ -183,7 +175,7 @@ export default function CreateHomestaysPage() {
   function validateAll(): boolean {
     const result = homestaySchema.safeParse(form);
     if (!result.success) {
-      const validationErrors: HSFormErrors = {};
+      const validationErrors: HomestayFormErrors = {};
       for (const issue of result.error.issues) {
         validationErrors[issue.path[0] as keyof HomestayForm] = issue.message;
       }
@@ -209,10 +201,10 @@ export default function CreateHomestaysPage() {
       return;
     }
 
-    const latStr = (form.latitude ?? "").trim();
-    const lngStr = (form.longitude ?? "").trim();
-    const latNum = latStr === "" ? null : Number(latStr);
-    const lngNum = lngStr === "" ? null : Number(lngStr);
+    const latitudeString = (form.latitude ?? "").trim();
+    const longitudeString = (form.longitude ?? "").trim();
+    const latitudeNumber = latitudeString === "" ? null : Number(latitudeString);
+    const longitudeNumber = longitudeString === "" ? null : Number(longitudeString);
     const singlePayload = {
       base: {
         name: normalizeOrDefault(form.name),
@@ -228,8 +220,8 @@ export default function CreateHomestaysPage() {
           province: normalizeOrDefault(form.province),
           postalCode: normalizeOrDefault(String(form.postalCode ?? "")),
           detail: normalizeOrDefault(form.addressDetail),
-          latitude: latNum,
-          longitude: lngNum,
+          latitude: latitudeNumber,
+          longitude: longitudeNumber,
         },
         tagHomestays: Array.isArray(tagIds) ? tagIds : [],
       },
@@ -247,11 +239,11 @@ export default function CreateHomestaysPage() {
    */
   const onMapChange = React.useCallback(
     (position: [number, number]) => {
-      const [lat, lng] = position;
+      const [latitude, longitude] = position;
       setForm((prev) => ({
         ...prev,
-        latitude: String(lat),
-        longitude: String(lng),
+        latitude: String(latitude),
+        longitude: String(longitude),
       }));
     }, []
   );
@@ -283,8 +275,8 @@ export default function CreateHomestaysPage() {
         }
 
         if (Array.isArray(pendingPayload.galleryFiles)) {
-          for (const gf of pendingPayload.galleryFiles) {
-            formData.append("gallery", gf);
+          for (const galleryFile of pendingPayload.galleryFiles) {
+            formData.append("gallery", galleryFile);
           }
         }
 
@@ -302,16 +294,16 @@ export default function CreateHomestaysPage() {
   };
 
   const startingPosition = React.useMemo<[number, number]>(() => {
-    const nlat = Number(form.latitude);
-    const nlng = Number(form.longitude);
+    const numberLatitude = Number(form.latitude);
+    const numberLongitude = Number(form.longitude);
     return [
-      !Number.isNaN(nlat) && form.latitude !== "" ? nlat : 13.7563,
-      !Number.isNaN(nlng) && form.longitude !== "" ? nlng : 100.5018,
+      !Number.isNaN(numberLatitude) && form.latitude !== "" ? numberLatitude : 13.7563,
+      !Number.isNaN(numberLongitude) && form.longitude !== "" ? numberLongitude : 100.5018,
     ];
   }, [form.latitude, form.longitude]);
 
   return (
-    <div className="w-full max-w-none px-8">
+    <div className="w-full max-w-none">
       <div>
         <Breadcrumb
           current={{
@@ -428,12 +420,12 @@ export default function CreateHomestaysPage() {
                     subdistrict: form.subDistrict,
                     postalCode: form.postalCode,
                   }}
-                  onChange={(loc: ThailandLocation) => {
-                    setField("province", loc.province ?? "");
-                    setField("district", loc.district ?? "");
-                    setField("subDistrict", loc.subdistrict ?? "");
+                  onChange={(location: ThailandLocation) => {
+                    setField("province", location.province ?? "");
+                    setField("district", location.district ?? "");
+                    setField("subDistrict", location.subdistrict ?? "");
                     setField(
-                      "postalCode", (loc.postalCode ?? "").toString());
+                      "postalCode", (location.postalCode ?? "").toString());
                   }}
                   error={{
                     province: !!errors.province,

@@ -22,34 +22,33 @@ import { Icon } from "@iconify/react";
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import z from "zod";
+import zod from "zod";
 
 /**
  * Schema สำหรับตรวจสอบข้อมูลร้านค้าด้วย Zod
  */
-const storeSchema = z.object({
-  name: z.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
-  detail: z.string("กรุณากรอกรายละเอียดของร้านค้า").min(1, "กรุณากรอกรายละเอียดของร้านค้า"),
-  houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
-  province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
-  subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
-  latitude: z.union([
-    z.string().min(1, "กรุณากรอกละติจูด"),
-    z.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
+const storeSchema = zod.object({
+  name: zod.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
+  detail: zod.string("กรุณากรอกรายละเอียดของร้านค้า").min(1, "กรุณากรอกรายละเอียดของร้านค้า"),
+  houseNumber: zod.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  latitude: zod.union([
+    zod.string().min(1, "กรุณากรอกละติจูด"),
+    zod.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
   ]),
-  longitude: z.union([
-    z.string().min(1, "กรุณากรอกลองจิจูด"),
-    z.number().refine((n) => !isNaN(n), "กรุณากรอกลองจิจูด"),
+  longitude: zod.union([
+    zod.string().min(1, "กรุณากรอกลองจิจูด"),
+    zod.number().refine((n) => !isNaN(n), "กรุณากรอกลองจิจูด"),
   ]),
-  tagStores: z
-    .array(z.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
+  tagStores: zod
+    .array(zod.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
     .min(1, "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ"),
 });
 
 /**
- * ฟังก์ชัน: urlToFile
  * คำอธิบาย : แปลง URL ของไฟล์จาก backend ให้เป็น File object เพื่อใช้กับ UploadCard ได้
  * Input : url - ที่อยู่ของไฟล์ / filename - ชื่อไฟล์
  * Output : File object (พร้อม type และ flag isFromServer)
@@ -62,7 +61,7 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   const ext = filename.split(".").pop() || "jpg";
   const type = blob.type || `image/${ext}`;
   const file = new File([blob], filename, { type });
-  (file as any).isFromServer = true; // ✅ เพิ่ม flag สำหรับแยกไฟล์จาก server
+  (file as any).isFromServer = true;
   return file;
 }
 /**
@@ -84,7 +83,7 @@ export function EditStore() {
 
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>([0, 0]);
-  const [openConfirm, setOpenConfirm] = useState(false);
+  const [isOpenConfirm, setIsisOpenConfirm] = useState(false);
   const { storeId } = useParams();
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [formData, setFormData] = React.useState<Partial<StoreData>>({
@@ -95,11 +94,15 @@ export function EditStore() {
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [openCancelConfirm, setOpenCancelConfirm] = useState(false);
+  const [isOpenCancelConfirm, setIsisOpenCancelConfirm] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const navigate = useNavigate();
 
   /**
-   * โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
+   * คำอธิบาย : โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
+   * Input : storeId - ID ของร้านค้าที่ต้องการโหลดข้อมูล
+   * Output : ข้อมูลร้านค้าที่โหลดมา
    */
   React.useEffect(() => {
     async function loadData() {
@@ -143,7 +146,7 @@ export function EditStore() {
         );
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+        const backendUrl = apiUrl.replace("/api", "/uploads") || "http://localhost:3000/uploads";
         const coverFilesFetched: File[] = await Promise.all(
           (data.storeImage || [])
             .filter((img: any) => img.type === "COVER")
@@ -167,6 +170,7 @@ export function EditStore() {
 
         const tagIds = data.tagStores?.map((ts: any) => ts.tag.id) ?? [];
         setSelectedTagIds(tagIds);
+        setIsLoaded(true);
       } catch (error) {
         console.error(error);
       }
@@ -439,7 +443,7 @@ export function EditStore() {
           </div>
 
           <div className="col-span-2">
-            {position[0] !== 0 && position[1] !== 0 && (
+            {isLoaded && (
               <MapPicker
                 startingPosition={position}
                 startingZoom={startingZoom}
@@ -505,12 +509,12 @@ export function EditStore() {
         {/* ปุ่ม action */}
         <div className="flex justify-end mt-5">
           <div className="w-32 mr-2.5">
-            <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+            <Button type="cancel" onClick={() => setIsisOpenCancelConfirm(true)}>
               ยกเลิก
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+            <Button type="confirm-admin" onClick={() => setIsisOpenConfirm(true)}>
               บันทึก
             </Button>
           </div>
@@ -518,24 +522,24 @@ export function EditStore() {
 
         {/* Modal Confirm */}
         <Modal
-          open={openConfirm}
+          open={isOpenConfirm}
           title="ยืนยันการแก้ไขร้านค้า"
           text="คุณต้องการยืนยันการแก้ไขร้านค้านี้หรือไม่"
           onConfirm={async () => {
-            setOpenConfirm(false);
+            setIsisOpenConfirm(false);
             await handleSubmit();
           }}
-          onCancel={() => setOpenConfirm(false)}
+          onCancel={() => setIsisOpenConfirm(false)}
         />
         <Modal
-          open={openCancelConfirm}
+          open={isOpenCancelConfirm}
           title="ยืนยันการยกเลิก"
           text="ต้องการยกเลิกการแก้ไขร้านค้าหรือไม่"
           onConfirm={() => {
-            setOpenCancelConfirm(false);
+            setIsisOpenCancelConfirm(false);
             navigate(-1);
           }}
-          onCancel={() => setOpenCancelConfirm(false)}
+          onCancel={() => setIsisOpenCancelConfirm(false)}
         />
         <ModalAlert
           open={alertOpen}

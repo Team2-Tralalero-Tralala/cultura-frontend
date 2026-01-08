@@ -1,18 +1,14 @@
-/*
- * คำอธิบาย : Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
- * - ดึงข้อมูลแพ็กเกจเดิมมาแสดงในฟอร์ม
- * - รองรับการอัปเดตข้อมูล, รูปภาพ (Cover/Gallery), และที่พักที่เกี่ยวข้อง
- * - ส่งข้อมูลแบบ multipart/form-data
- * Input: (via URL params) id - ID ของแพ็กเกจที่ต้องการแก้ไข
- * Output: หน้าฟอร์มสำหรับแก้ไขข้อมูลแพ็กเกจ
+/**
+ * คำอธิบาย : หน้าแก้ไขข้อมูลแพ็กเกจสำหรับ Superadmin รองรับการดึงข้อมูลเดิม แก้ไขรายละเอียด รูปภาพ และที่พักที่เกี่ยวข้อง
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
+import { Icon } from "@iconify/react";
+
 import TextField from "../../Components/TextField";
 import MapPicker from "../../Components/MapPicker";
-import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
@@ -29,9 +25,9 @@ import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
 
-const apiUrl = import.meta.env.VITE_API_URL as string;
+const API_URL = import.meta.env.VITE_API_URL as string;
 
-/*
+/**
  * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
  * Input: inputValue - สตริงที่ต้องการตรวจสอบ, fallback - ค่าที่จะคืนหากสตริงว่าง (default: "-")
  * Output : สตริงที่ตัดช่องว่างแล้ว หรือค่า fallback
@@ -41,7 +37,7 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
   return trimmed.length ? trimmed : fallback;
 }
 
-/*
+/**
  * คำอธิบาย : แปลงค่าใดๆ เป็น number หรือ null
  * Input: value - ค่าที่ต้องการแปลง
  * Output : number หรือ null
@@ -53,7 +49,7 @@ function toIntOrNull(value: any): number | null {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
-/*
+/**
  * คำอธิบาย : แปลง Date object หรือ string วันที่/เวลา เป็น format "HH:mm"
  * Input: input - วันที่/เวลา
  * Output : สตริง "HH:mm" หรือ ""
@@ -67,16 +63,16 @@ function toTimeInput(input?: string | Date | null) {
     return `${hours}:${minutes}`;
   }
   if (typeof input === "string") {
-    const m = input.match(/^(\d{2}):(\d{2})/);
-    if (m) {
-      return `${m[1].padStart(2, "0")}:${m[2].padStart(2, "0")}`;
+    const matchResult = input.match(/^(\d{2}):(\d{2})/);
+    if (matchResult) {
+      return `${matchResult[1].padStart(2, "0")}:${matchResult[2].padStart(2, "0")}`;
     }
   }
 
   return "";
 }
 
-/*
+/**
  * คำอธิบาย : แปลง Date object หรือ string วันที่ เป็น format "YYYY-MM-DD"
  * Input: input - วันที่
  * Output : สตริง "YYYY-MM-DD" หรือ ""
@@ -95,7 +91,7 @@ function toDateOnly(input?: string | Date | null) {
   return `${year}-${month}-${day}`;
 }
 
-/*
+/**
  * คำอธิบาย : แปลง URL ของรูปภาพเป็น File object
  * Input: url - URL ของรูปภาพ, filename - ชื่อไฟล์
  * Output : Promise<File>
@@ -113,7 +109,7 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   return file;
 }
 
-/*
+/**
  * คำอธิบาย : สร้างรายการ URL ที่เป็นไปได้สำหรับ path ของรูปภาพ
  * Input: rawPath - path ของรูปภาพ
  * Output : Array ของ URL string
@@ -123,7 +119,7 @@ function buildImageCandidates(rawPath: string): string[] {
   if (/^https?:\/\//i.test(rawPath)) return [rawPath];
   const origin = (() => {
     try {
-      return new URL(apiUrl).origin;
+      return new URL(API_URL).origin;
     } catch {
       return window.location.origin;
     }
@@ -144,7 +140,7 @@ function buildImageCandidates(rawPath: string): string[] {
   return Array.from(candidates);
 }
 
-/*
+/**
  * คำอธิบาย : พยายามแปลง path ของรูปภาพเป็น File object โดยลองจาก URL ที่เป็นไปได้
  * Input: rawPath - path ของรูปภาพ, filename - ชื่อไฟล์
  * Output : Promise<File>
@@ -244,14 +240,14 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-/*
+/**
  * คำอธิบาย : ฟังก์ชันสำหรับหน้าแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
  * Input: -
  * Output : JSX.Element (หน้าฟอร์มแก้ไขข้อมูลแพ็กเกจ)
  */
 export const EditPackagePage = () => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const { id: packageId } = useParams<{ id: string }>();
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
   const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
@@ -264,13 +260,13 @@ export const EditPackagePage = () => {
   const [coverFiles, setCoverFiles] = useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [videoFiles, setVideoFiles] = useState<File[]>([])
-  const [startDateObj, setStartDateObj] = useState<Date | null>(null);
-  const [endDateObj, setEndDateObj] = useState<Date | null>(null);
-  const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
-  const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
-  const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
-  const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
-
+  const [startDateObject, setStartDateObject] = useState<Date | null>(null);
+  const [endDateObject, setEndDateObject] = useState<Date | null>(null);
+  const [openDateObject, setOpenDateObject] = useState<Date | null>(null);
+  const [closeDateObject, setCloseDateObject] = useState<Date | null>(null);
+  const [homestayCheckInDateObject, setHomestayCheckInDateObject] = useState<Date | null>(null);
+  const [homestayCheckOutDateObject, setHomestayCheckOutDateObject] = useState<Date | null>(null);
+  const [initialStatus, setInitialStatus] = useState<PackageStatus | null>(null);
 
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
@@ -323,20 +319,20 @@ export const EditPackagePage = () => {
       isValid = false;
     }
     if (selectedHomestay) {
-      if (!hsCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
+      if (!homestayCheckInDate) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
         isValid = false;
       }
-      if (!hsCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
+      if (!homestayCheckInTime) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
         isValid = false;
       }
-      if (!hsCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
+      if (!homestayCheckOutDate) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
         isValid = false;
       }
-      if (!hsCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
+      if (!homestayCheckOutTime) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
         isValid = false;
       }
     }
@@ -432,7 +428,7 @@ export const EditPackagePage = () => {
     }
 
     try {
-      const response = await axios.get(`${apiUrl}/super/homestay-select/${id}`, {
+      const response = await axios.get(`${API_URL}/super/homestay-select/${packageId}`, {
         params: { q: trimmedQuery, limit: 8 },
         withCredentials: true,
       });
@@ -449,7 +445,7 @@ export const EditPackagePage = () => {
       setHomestayOptions([]);
       setOpenHomestayBox(false);
     }
-  }, [id]);
+  }, [packageId]);
 
   React.useEffect(() => {
     const timerId = setTimeout(() => {
@@ -487,26 +483,26 @@ export const EditPackagePage = () => {
     [validateField]
   );
 
-  const [hsCheckInDate, setHsCheckInDate] = useState("");
-  const [hsCheckInTime, setHsCheckInTime] = useState("");
-  const [hsCheckOutDate, setHsCheckOutDate] = useState("");
-  const [hsCheckOutTime, setHsCheckOutTime] = useState("");
-  const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
+  const [homestayCheckInDate, setHomestayCheckInDate] = useState("");
+  const [homestayCheckInTime, setHomestayCheckInTime] = useState("");
+  const [homestayCheckOutDate, setHomestayCheckOutDate] = useState("");
+  const [homestayCheckOutTime, setHomestayCheckOutTime] = useState("");
+  const [homestayBookedRoom, setHomestayBookedRoom] = useState<string>("1");
 
   /*
    * คำอธิบาย : ล้างข้อมูลที่พักที่เลือกไว้
    * Input: -
-   * Output : (void)
+   * Output : -
    */
   const clearHomestay = () => {
     setSelectedHomestay(null);
-    setHsCheckInDateObj(null);
-    setHsCheckInDate("");
-    setHsCheckInTime("");
-    setHsCheckOutDateObj(null);
-    setHsCheckOutDate("");
-    setHsCheckOutTime("");
-    setHsBookedRoom("1");
+    setHomestayCheckInDateObject(null);
+    setHomestayCheckInDate("");
+    setHomestayCheckInTime("");
+    setHomestayCheckOutDateObject(null);
+    setHomestayCheckOutDate("");
+    setHomestayCheckOutTime("");
+    setHomestayBookedRoom("1");
   };
 
   useEffect(() => {
@@ -515,12 +511,12 @@ export const EditPackagePage = () => {
     /*
      * คำอธิบาย : โหลดข้อมูลแพ็กเกจจาก API
      * Input: -
-     * Output : (void) - อัปเดต state ต่างๆ ของหน้า
+     * Output : -
      */
     async function loadPackageData() {
       try {
         setLoading(true);
-        const response = await axios.get(`${apiUrl}/super/package/${id}`, {
+        const response = await axios.get(`${API_URL}/super/package/${packageId}`, {
           withCredentials: true,
         });
         const packageData = response?.data?.data;
@@ -553,10 +549,10 @@ export const EditPackagePage = () => {
         const openParsed = bookingOpenRaw ? new Date(bookingOpenRaw) : null;
         const closeParsed = bookingCloseRaw ? new Date(bookingCloseRaw) : null;
 
-        setStartDateObj(startParsed && !isNaN(startParsed.getTime()) ? startParsed : null);
-        setEndDateObj(dueParsed && !isNaN(dueParsed.getTime()) ? dueParsed : null);
-        setOpenDateObj(openParsed && !isNaN(openParsed.getTime()) ? openParsed : null);
-        setCloseDateObj(closeParsed && !isNaN(closeParsed.getTime()) ? closeParsed : null);
+        setStartDateObject(startParsed && !isNaN(startParsed.getTime()) ? startParsed : null);
+        setEndDateObject(dueParsed && !isNaN(dueParsed.getTime()) ? dueParsed : null);
+        setOpenDateObject(openParsed && !isNaN(openParsed.getTime()) ? openParsed : null);
+        setCloseDateObject(closeParsed && !isNaN(closeParsed.getTime()) ? closeParsed : null);
 
         setFormState({
           name: packageData.name ?? "",
@@ -652,19 +648,19 @@ export const EditPackagePage = () => {
           });
         }
         if (homestayHistory?.checkInTime) {
-          const d = new Date(homestayHistory.checkInTime);
-          setHsCheckInDateObj(!isNaN(d.getTime()) ? d : null);
-          setHsCheckInDate(toDateOnly(homestayHistory.checkInTime));
-          setHsCheckInTime(toTimeInput(homestayHistory.checkInTime));
+          const dateObject = new Date(homestayHistory.checkInTime);
+          setHomestayCheckInDateObject(!isNaN(dateObject.getTime()) ? dateObject : null);
+          setHomestayCheckInDate(toDateOnly(homestayHistory.checkInTime));
+          setHomestayCheckInTime(toTimeInput(homestayHistory.checkInTime));
         }
         if (homestayHistory?.checkOutTime) {
-          const d = new Date(homestayHistory.checkOutTime);
-          setHsCheckOutDateObj(!isNaN(d.getTime()) ? d : null);
-          setHsCheckOutDate(toDateOnly(homestayHistory.checkOutTime));
-          setHsCheckOutTime(toTimeInput(homestayHistory.checkOutTime));
+          const dateObject = new Date(homestayHistory.checkOutTime);
+          setHomestayCheckOutDateObject(!isNaN(dateObject.getTime()) ? dateObject : null);
+          setHomestayCheckOutDate(toDateOnly(homestayHistory.checkOutTime));
+          setHomestayCheckOutTime(toTimeInput(homestayHistory.checkOutTime));
         }
         if (homestayHistory?.bookedRoom) {
-          setHsBookedRoom(String(homestayHistory.bookedRoom));
+          setHomestayBookedRoom(String(homestayHistory.bookedRoom));
         }
       } catch (error: any) {
       } finally {
@@ -676,7 +672,7 @@ export const EditPackagePage = () => {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [packageId]);
 
   /*
    * คำอธิบาย : (Callback) Handler เมื่อ MapPicker มีการเปลี่ยนแปลงตำแหน่ง
@@ -698,7 +694,7 @@ export const EditPackagePage = () => {
    */
   const handleConfirmSave = async () => {
     setIsConfirmModalOpen(false);
-    if (!id || isSaving) return;
+    if (!packageId || isSaving) return;
     setIsSaving(true);
 
     try {
@@ -718,11 +714,11 @@ export const EditPackagePage = () => {
         bookingCloseDate: normalizeOrDefault(formState.closeDate),
         ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-        ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
-        ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
-        ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
-        ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
-        ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
+        ...(selectedHomestay && homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
+        ...(selectedHomestay && homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
+        ...(selectedHomestay && homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
+        ...(selectedHomestay && homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
+        ...(selectedHomestay && homestayBookedRoom && { bookedRoom: Number(homestayBookedRoom) }),
         facility: normalizeOrDefault(formState.facility),
         tagIds,
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
@@ -744,7 +740,7 @@ export const EditPackagePage = () => {
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
       videoFiles.forEach((file: any) => formData.append("video", file));
-      await axios.put(`${apiUrl}/super/package/${id}`, formData, {
+      await axios.put(`${API_URL}/super/package/${packageId}`, formData, {
         withCredentials: true,
       });
 
@@ -765,7 +761,7 @@ export const EditPackagePage = () => {
    */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!id || isSaving) return;
+    if (!packageId || isSaving) return;
     if (!validateAll()) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -784,14 +780,14 @@ export const EditPackagePage = () => {
 
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
-       <div>
-              <Breadcrumb
-                current={{
-                  label: "แก้ไขรายละเอียดแพ็กเกจ",
-                  to: `/super/package/${id}/edit`,
-                }}
-              />
-            </div>
+      <div>
+        <Breadcrumb
+          current={{
+            label: "แก้ไขรายละเอียดแพ็กเกจ",
+            to: `/super/package/${packageId}/edit`,
+          }}
+        />
+      </div>
       <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
         <button
           type="button"
@@ -825,6 +821,7 @@ export const EditPackagePage = () => {
             <PackageStatusDropdown
               value={formState.statusPackage}
               onChange={(status) => setFormField("statusPackage", status)}
+              exclude={initialStatus === "DRAFT" ? [] : ["DRAFT"]}
             />
           </div>
 
@@ -1013,9 +1010,9 @@ export const EditPackagePage = () => {
             id="startDate"
             label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
             required
-            value={startDateObj}
+            value={startDateObject}
             onChange={(date) => {
-              setStartDateObj(date);
+              setStartDateObject(date);
               if (date) {
                 setFormField("startDate", date.toISOString().split("T")[0] as any);
               } else {
@@ -1037,9 +1034,9 @@ export const EditPackagePage = () => {
             id="endDate"
             label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุด"
             required
-            value={endDateObj}
+            value={endDateObject}
             onChange={(date) => {
-              setEndDateObj(date);
+              setEndDateObject(date);
               if (date) {
                 setFormField("endDate", date.toISOString().split("T")[0] as any);
               } else {
@@ -1061,9 +1058,9 @@ export const EditPackagePage = () => {
             id="openDate"
             label="วัน/เดือน/ปี (พ.ศ.) ที่เปิดจอง"
             required
-            value={openDateObj}
+            value={openDateObject}
             onChange={(date) => {
-              setOpenDateObj(date);
+              setOpenDateObject(date);
               if (date) {
                 setFormField("openDate", date.toISOString().split("T")[0] as any);
               } else {
@@ -1085,9 +1082,9 @@ export const EditPackagePage = () => {
             id="closeDate"
             label="วัน/เดือน/ปี (พ.ศ.) ที่ปิดจอง"
             required
-            value={closeDateObj}
+            value={closeDateObject}
             onChange={(date) => {
-              setCloseDateObj(date);
+              setCloseDateObject(date);
               if (date) {
                 setFormField("closeDate", date.toISOString().split("T")[0] as any);
               } else {
@@ -1255,48 +1252,48 @@ export const EditPackagePage = () => {
                 <BoxDateInput
                   id="hsCheckInDate"
                   label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กอินพัก (หากมีที่พัก)"
-                  value={hsCheckInDateObj}
+                  value={homestayCheckInDateObject}
                   onChange={(date) => {
-                    setHsCheckInDateObj(date);
+                    setHomestayCheckInDateObject(date);
                     if (date) {
-                      setHsCheckInDate(date.toISOString().split("T")[0]);
+                      setHomestayCheckInDate(date.toISOString().split("T")[0]);
                     } else {
-                      setHsCheckInDate("");
+                      setHomestayCheckInDate("");
                     }
                   }}
                   minDate={new Date("1900-01-01")}
                   maxDate={new Date("2100-12-31")}
-                  errorText={(formErrors as any).hsCheckInDate}
+                  errorText={(formErrors as any).homestayCheckInDate}
                 />
                 <BoxTimeInput
                   label="เวลาเช็กอิน"
-                  value={hsCheckInTime}
-                  onChange={(time) => setHsCheckInTime(time)}
+                  value={homestayCheckInTime}
+                  onChange={(time) => setHomestayCheckInTime(time)}
                   required
-                  errorText={(formErrors as any).hsCheckInTime}
+                  errorText={(formErrors as any).homestayCheckInTime}
                 />
                 <BoxDateInput
                   id="hsCheckOutDate"
                   label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กเอาท์ (หากมีที่พัก)"
-                  value={hsCheckOutDateObj}
+                  value={homestayCheckOutDateObject}
                   onChange={(date) => {
-                    setHsCheckOutDateObj(date);
+                    setHomestayCheckOutDateObject(date);
                     if (date) {
-                      setHsCheckOutDate(date.toISOString().split("T")[0]);
+                      setHomestayCheckOutDate(date.toISOString().split("T")[0]);
                     } else {
-                      setHsCheckOutDate("");
+                      setHomestayCheckOutDate("");
                     }
                   }}
                   minDate={new Date("1900-01-01")}
                   maxDate={new Date("2100-12-31")}
-                  errorText={(formErrors as any).hsCheckOutDate}
+                  errorText={(formErrors as any).homestayCheckOutDate}
                 />
                 <BoxTimeInput
                   label="เวลาเช็กเอาท์"
-                  value={hsCheckOutTime}
-                  onChange={(time) => setHsCheckOutTime(time)}
+                  value={homestayCheckOutTime}
+                  onChange={(time) => setHomestayCheckOutTime(time)}
                   required
-                  errorText={(formErrors as any).hsCheckOutTime}
+                  errorText={(formErrors as any).homestayCheckOutTime}
                 />
 
               </div>
@@ -1317,7 +1314,7 @@ export const EditPackagePage = () => {
                       className="w-full h-40 object-cover rounded-lg"
                       src={
                         selectedHomestay.images?.[0]?.image
-                          ? `${new URL(apiUrl).origin}/uploads/${selectedHomestay.images[0].image}`
+                          ? `${new URL(API_URL).origin}/uploads/${selectedHomestay.images[0].image}`
                           : "https://placehold.co/640x480?text=Homestay"
                       }
                       alt={selectedHomestay.name}

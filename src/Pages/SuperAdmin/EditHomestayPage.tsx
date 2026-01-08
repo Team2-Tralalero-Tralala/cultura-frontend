@@ -1,18 +1,12 @@
 /**
- * Component: EditHomestayPage
- * คำอธิบาย: หน้าแก้ไขข้อมูลที่พักของ Super Admin
- * ข้อกำหนด:
- *  - ใช้วิธีจัดการรูป (cover/gallery) เหมือนหน้า Store ทุกประการ
- *  - โหลดรูปจาก backend → แปลงเป็น File เพื่อใช้กับ UploadCard
- *  - บันทึกเป็น multipart/form-data: data(JSON) + cover[] + gallery[]
- * หมายเหตุ: ปรับเฉพาะรูปแบบโค้ดและคอมเมนต์ให้เป็นไปตาม Coding Standard เท่านั้น
+ * คำอธิบาย : หน้าแก้ไขข้อมูลที่พักของ Super Admin ทำหน้าที่โหลดข้อมูลเดิม แสดงฟอร์ม จัดการรูปภาพ และบันทึกการแก้ไข
  */
-
 import React from "react";
 import * as z from "zod";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
+
 import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
@@ -96,30 +90,27 @@ const schema = z.object({
 });
 
 /**
- * ฟังก์ชัน: urlToFile
- * คำอธิบาย: ดึงไฟล์จาก URL แล้วแปลงเป็น File object (ใช้กับ UploadCard)
- * Input : url, filename
- * Output: File object (กำหนด MIME type และเติม flag isFromServer)
+ * คำอธิบาย : ดึงไฟล์จาก URL แล้วแปลงเป็น File object เพื่อใช้กับ UploadCard
+ * Input : url (ที่อยู่ไฟล์), filename (ชื่อไฟล์)
+ * Output : File object (กำหนด MIME type และเติม flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     credentials: "include",
   });
-  if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
-  const blob = await res.blob();
-  const ext = filename.split(".").pop() || "jpg";
-  const type = blob.type || `image/${ext}`;
+  if (!response.ok) throw new Error(`fetch ${url} -> ${response.status}`);
+  const blob = await response.blob();
+  const fileExtension = filename.split(".").pop() || "jpg";
+  const type = blob.type || `image/${fileExtension}`;
   const file = new File([blob], filename, { type });
   (file as any).isFromServer = true;
   return file;
 }
 
 /**
- * ฟังก์ชัน: buildImageCandidates
- * คำอธิบาย: สร้างรายการ URL ผู้สมัครโหลดภาพจากค่า image ใน DB
- * เหตุผล: ป้องกันปัญหา 404 จาก path ที่ต่างกัน (เช่น มี/ไม่มี /api/)
- * Input : raw (path/filename จากฐานข้อมูล)
- * Output: รายการ URL ที่เป็นไปได้ (เรียงตามความเป็นไปได้)
+ * คำอธิบาย : สร้างรายการ URL ผู้สมัครโหลดภาพจากค่า image ใน DB เพื่อป้องกันปัญหา 404 จาก path ที่ต่างกัน
+ * Input : rawImagePath (path หรือ filename จากฐานข้อมูล)
+ * Output : รายการ URL ที่เป็นไปได้ (เรียงตามความเป็นไปได้)
  */
 function buildImageCandidates(rawImagePath: string): string[] {
   if (!rawImagePath) return [];
@@ -148,13 +139,12 @@ function buildImageCandidates(rawImagePath: string): string[] {
 }
 
 /**
- * ฟังก์ชัน: bestEffortUrlToFile
- * คำอธิบาย: ทดลองโหลดภาพตาม candidate URL ไปทีละรายการจนกว่าจะสำเร็จ
- * Input : rawPath, filename
- * Output: File object ที่แปลงสำเร็จ
+ * คำอธิบาย : ทดลองโหลดภาพตาม candidate URL ไปทีละรายการจนกว่าจะสำเร็จ
+ * Input : rawImagePath (path หรือ filename ของรูปภาพ), filename (ชื่อไฟล์ปลายทาง)
+ * Output : File object ที่แปลงสำเร็จ
  */
-async function bestEffortUrlToFile(rawPath: string, filename: string): Promise<File> {
-  const candidates = buildImageCandidates(rawPath);
+async function bestEffortUrlToFile(rawImagePath: string, filename: string): Promise<File> {
+  const candidates = buildImageCandidates(rawImagePath);
   let lastError: unknown = null;
   for (const candidateUrl of candidates) {
     try {
@@ -190,7 +180,9 @@ export default function EditHomestayPage() {
   const [tagIds, setTagIds] = React.useState<number[]>([]);
 
   /**
-   * Effect: โหลดข้อมูลที่พักและแปลงรูปเป็น File
+   * คำอธิบาย : โหลดข้อมูลที่พักจาก API และแปลง URL รูปภาพเป็น File Object
+   * Input : -
+   * Output : -
    */
   React.useEffect(() => {
     (async () => {
@@ -198,20 +190,23 @@ export default function EditHomestayPage() {
         setIsLoading(true);
         setErrorMessage(null);
 
-        const id = Number(homestayId);
-        if (!id) throw new Error("homestayId ไม่ถูกต้อง");
+        const homestayIdNumber = Number(homestayId);
+        if (!homestayIdNumber) throw new Error("homestayId ไม่ถูกต้อง");
 
-        const response = await axios.get(`${API_URL}/super/homestays/${id}`, {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          `${API_URL}/super/homestays/${homestayIdNumber}`,
+          {
+            withCredentials: true,
+          }
+        );
         const homestayData = response?.data?.data ?? response?.data;
         if (!homestayData) throw new Error("ไม่พบข้อมูลที่พัก");
 
         setCommunityId(homestayData.community?.id ?? null);
 
-        const lat = Number(homestayData.location?.latitude ?? 13.7563);
-        const lng = Number(homestayData.location?.longitude ?? 100.5018);
-        setPosition([lat, lng]);
+        const latitude = Number(homestayData.location?.latitude ?? 13.7563);
+        const longitude = Number(homestayData.location?.longitude ?? 100.5018);
+        setPosition([latitude, longitude]);
 
         setForm({
           name: homestayData.name ?? "",
@@ -226,28 +221,34 @@ export default function EditHomestayPage() {
           subDistrict: homestayData.location?.subDistrict ?? "",
           postalCode: homestayData.location?.postalCode ?? "",
           addressDetail: homestayData.location?.detail ?? "",
-          latitude: String(lat),
-          longitude: String(lng),
+          latitude: String(latitude),
+          longitude: String(longitude),
           placeQuery: "",
         });
 
-        const imgs: any[] = Array.isArray(homestayData?.homestayImage)
+        const homestayImages: any[] = Array.isArray(homestayData?.homestayImage)
           ? homestayData.homestayImage
           : [];
 
         const coverFilesFetched: File[] = await Promise.all(
-          imgs
-            .filter((img) => img.type === "COVER")
-            .map((img) =>
-              bestEffortUrlToFile(String(img.image || ""), String(img.image || "cover.jpg"))
+          homestayImages
+            .filter((imageItem) => imageItem.type === "COVER")
+            .map((imageItem) =>
+              bestEffortUrlToFile(
+                String(imageItem.image || ""),
+                String(imageItem.image || "cover.jpg")
+              )
             )
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
-          imgs
-            .filter((img) => img.type === "GALLERY")
-            .map((img) =>
-              bestEffortUrlToFile(String(img.image || ""), String(img.image || "gallery.jpg"))
+          homestayImages
+            .filter((imageItem) => imageItem.type === "GALLERY")
+            .map((imageItem) =>
+              bestEffortUrlToFile(
+                String(imageItem.image || ""),
+                String(imageItem.image || "gallery.jpg")
+              )
             )
         );
 
@@ -255,17 +256,17 @@ export default function EditHomestayPage() {
         setGalleryFiles(galleryFilesFetched);
         const currentTagIds: number[] = Array.isArray(homestayData?.tagHomestays)
           ? homestayData.tagHomestays
-              .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
-              .filter((tagId: any) => typeof tagId === "number")
+            .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
+            .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(currentTagIds);
       } catch (err: any) {
         console.error("Load homestay error:", err?.response?.data || err);
         setErrorMessage(
           err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            err?.message ||
-            "โหลดข้อมูลไม่สำเร็จ"
+          err?.response?.data?.error ||
+          err?.message ||
+          "โหลดข้อมูลไม่สำเร็จ"
         );
       } finally {
         setIsLoading(false);
@@ -274,8 +275,9 @@ export default function EditHomestayPage() {
   }, [homestayId]);
 
   /**
-   * ฟังก์ชัน: validateField
-   * คำอธิบาย: ตรวจสอบความถูกต้องของฟิลด์เดี่ยวด้วย Zod แล้วบันทึก error
+   * คำอธิบาย : ตรวจสอบความถูกต้องของฟิลด์เดี่ยวด้วย Zod แล้วบันทึก Error ลงใน State
+   * Input : key (ชื่อฟิลด์), value (ค่าของฟิลด์นั้น)
+   * Output : -
    */
   const validateField = (key: keyof HomestayForm, value: any) => {
     const formWithNewValue = { ...form, [key]: value };
@@ -289,8 +291,9 @@ export default function EditHomestayPage() {
   };
 
   /**
-   * ฟังก์ชัน: validateAll
-   * คำอธิบาย: ตรวจสอบทั้งฟอร์ม หากไม่ผ่านจะสะสม error ของแต่ละฟิลด์
+   * คำอธิบาย : ตรวจสอบข้อมูลในฟอร์มทั้งหมดตาม Schema
+   * Input : -
+   * Output : Boolean (true หากข้อมูลถูกต้อง, false หากมีข้อผิดพลาด)
    */
   const validateAll = () => {
     const validationResult = schema.safeParse(form);
@@ -319,8 +322,9 @@ export default function EditHomestayPage() {
   };
 
   /**
-   * ฟังก์ชัน: normalizeOrDefault
-   * คำอธิบาย: trim และคืนค่า fallback หากเป็นค่าว่าง
+   * คำอธิบาย : ตัดช่องว่างและคืนค่า Default หากข้อมูลเป็นค่าว่าง
+   * Input : value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าเริ่มต้นถ้าเป็นค่าว่าง)
+   * Output : ข้อมูล String ที่ผ่านการตัดช่องว่างแล้ว
    */
   const normalizeOrDefault = (value: string, fallback = "") => {
     const trimmedValue = (value ?? "").toString().trim();
@@ -328,8 +332,9 @@ export default function EditHomestayPage() {
   };
 
   /**
-   * ฟังก์ชัน: handleMapChange
-   * คำอธิบาย: อัปเดต position เมื่อผู้ใช้เลื่อนพินบนแผนที่
+   * คำอธิบาย : อัปเดตตำแหน่ง (Position) เมื่อผู้ใช้เลื่อนหมุดบนแผนที่
+   * Input : newPosition (พิกัดใหม่ Latitude และ Longitude)
+   * Output : -
    */
   const handleMapChange = React.useCallback((newPosition: [number, number]) => {
     setPosition((previousPosition) =>
@@ -340,8 +345,9 @@ export default function EditHomestayPage() {
   }, []);
 
   /**
-   * ฟังก์ชัน: handleSubmit
-   * คำอธิบาย: ตรวจสอบฟอร์มและเปิด Modal เพื่อยืนยันการบันทึก
+   * คำอธิบาย : ตรวจสอบความถูกต้องของฟอร์มและเปิด Modal เพื่อยืนยันการบันทึก
+   * Input : event (เหตุการณ์จาก Form Submit)
+   * Output : -
    */
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -358,12 +364,9 @@ export default function EditHomestayPage() {
   };
 
   /**
-   * ฟังก์ชัน: onConfirmSave
-   * คำอธิบาย: เมื่อยืนยันบันทึก → สร้าง FormData และส่ง PUT ไปยัง API
-   * รูปแบบข้อมูล:
-   *  - data: JSON (string) รวมข้อมูล text และ tagHomestays
-   *  - cover: File(s)
-   *  - gallery: File(s)
+   * คำอธิบาย : สร้าง FormData และส่ง Request แบบ PUT ไปยัง API เพื่อบันทึกข้อมูล
+   * Input : -
+   * Output : -
    */
   const onConfirmSave = async () => {
     setConfirmOpen(false);
@@ -373,8 +376,8 @@ export default function EditHomestayPage() {
       setErrorMessage(null);
       setSuccessMessage(null);
 
-      const id = Number(homestayId);
-      if (!id) throw new Error("homestayId ไม่ถูกต้อง");
+      const homestayIdNumber = Number(homestayId);
+      if (!homestayIdNumber) throw new Error("homestayId ไม่ถูกต้อง");
 
       const payload = {
         name: normalizeOrDefault(form.name),
@@ -401,7 +404,7 @@ export default function EditHomestayPage() {
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
 
-      await axios.put(`${API_URL}/super/homestay/edit/${id}`, formData, {
+      await axios.put(`${API_URL}/super/homestay/edit/${homestayIdNumber}`, formData, {
         withCredentials: true,
       });
 
@@ -412,9 +415,9 @@ export default function EditHomestayPage() {
       console.error("Update homestay error:", error?.response?.data || error);
       setErrorMessage(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "อัปเดตที่พักไม่สำเร็จ"
+        error?.response?.data?.error ||
+        error?.message ||
+        "อัปเดตที่พักไม่สำเร็จ"
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -423,7 +426,7 @@ export default function EditHomestayPage() {
   };
 
   return (
-    <div className="w-full max-w-none px-8">
+    <div className="w-full max-w-none">
       {/* breadcrump */}
       <div>
         <Breadcrumb
@@ -544,18 +547,18 @@ export default function EditHomestayPage() {
                     subdistrict: form.subDistrict,
                     postalCode: form.postalCode,
                   }}
-                  onChange={(loc: ThailandLocation) => {
+                  onChange={(location: ThailandLocation) => {
                     setForm((prev) => ({
                       ...prev,
-                      province: loc.province ?? "",
-                      district: loc.district ?? "",
-                      subDistrict: loc.subdistrict ?? "",
-                      postalCode: loc.postalCode ?? "",
+                      province: location.province ?? "",
+                      district: location.district ?? "",
+                      subDistrict: location.subdistrict ?? "",
+                      postalCode: location.postalCode ?? "",
                     }));
-                    validateField("province", loc.province ?? "");
-                    validateField("district", loc.district ?? "");
-                    validateField("subDistrict", loc.subdistrict ?? "");
-                    validateField("postalCode", loc.postalCode ?? "");
+                    validateField("province", location.province ?? "");
+                    validateField("district", location.district ?? "");
+                    validateField("subDistrict", location.subdistrict ?? "");
+                    validateField("postalCode", location.postalCode ?? "");
                   }}
                   error={{
                     province: !!formErrors.province,

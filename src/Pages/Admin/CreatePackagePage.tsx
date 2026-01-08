@@ -1,13 +1,7 @@
 /**
- * คำอธิบาย : Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
- * - ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ (หน้าตาเหมือนหน้าแก้ไข)
- * - รองรับการอัปโหลดรูปภาพ (Cover/Gallery/Video)
- * - ส่งข้อมูลแบบ multipart/form-data
- * Input: -
- * Output: หน้าฟอร์มสำหรับสร้างแพ็กเกจ
+ * คำอธิบาย : หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ รองรับการอัปโหลดรูปภาพและวิดีโอ
  */
-
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
@@ -34,6 +28,8 @@ const apiUrl = import.meta.env.VITE_API_URL as string;
 
 /*
  * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
+ * Input: inputValue (ค่าที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนกลับถ้าว่าง)
+ * Output: ค่า string ที่ตัดช่องว่างแล้ว หรือค่า fallback
  */
 function normalizeOrDefault(inputValue: string, fallback = "-") {
   const trimmed = (inputValue ?? "").toString().trim();
@@ -42,6 +38,8 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
 
 /*
  * คำอธิบาย : แปลงค่าใดๆ เป็น number หรือ null
+ * Input: value (ค่าที่ต้องการแปลง)
+ * Output: ค่าตัวเลข หรือ null หากแปลงไม่ได้
  */
 function toIntOrNull(value: any): number | null {
   const trimmed = String(value ?? "").trim();
@@ -153,8 +151,8 @@ export const CreatePackagePage = () => {
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
-  const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
-  const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
+  const [homestayCheckInDateObject, setHomestayCheckInDateObject] = useState<Date | null>(null);
+  const [homestayCheckOutDateObject, setHomestayCheckOutDateObject] = useState<Date | null>(null);
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
@@ -207,20 +205,20 @@ export const CreatePackagePage = () => {
       isValid = false;
     }
     if (selectedHomestay) {
-      if (!hsCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
+      if (!homestayCheckInDate) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
         isValid = false;
       }
-      if (!hsCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
+      if (!homestayCheckInTime) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
         isValid = false;
       }
-      if (!hsCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
+      if (!homestayCheckOutDate) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
         isValid = false;
       }
-      if (!hsCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
+      if (!homestayCheckOutTime) {
+        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
         isValid = false;
       }
     }
@@ -230,7 +228,7 @@ export const CreatePackagePage = () => {
   type MemberOption = { id: number; fname: string; lname: string };
   const [memberQuery, setMemberQuery] = useState("");
   const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
-  const showMemberBox = memberQuery.trim().length >= 1 && memberOptions.length > 0;
+  const isShowMemberBox = memberQuery.trim().length >= 1 && memberOptions.length > 0;
 
   React.useEffect(() => {
     const query = memberQuery.trim();
@@ -280,9 +278,9 @@ export const CreatePackagePage = () => {
         const response = await axios.get(`${apiUrl}/admin/community`, {
           withCredentials: true
         });
-        const myCommId = response.data?.data?.id;
-        if (myCommId) {
-          setCommunityId(Number(myCommId));
+        const myCommunityId = response.data?.data?.id;
+        if (myCommunityId) {
+          setCommunityId(Number(myCommunityId));
         }
       } catch (error) {
         console.error("Failed to fetch my community:", error);
@@ -360,11 +358,11 @@ export const CreatePackagePage = () => {
     [validateField]
   );
 
-  const [hsCheckInDate, setHsCheckInDate] = useState("");
-  const [hsCheckInTime, setHsCheckInTime] = useState("");
-  const [hsCheckOutDate, setHsCheckOutDate] = useState("");
-  const [hsCheckOutTime, setHsCheckOutTime] = useState("");
-  const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
+  const [homestayCheckInDate, setHomestayCheckInDate] = useState("");
+  const [homestayCheckInTime, setHomestayCheckInTime] = useState("");
+  const [homestayCheckOutDate, setHomestayCheckOutDate] = useState("");
+  const [homestayCheckOutTime, setHomestayCheckOutTime] = useState("");
+  const [homestayBookedRoom, setHomestayBookedRoom] = useState<string>("1");
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
@@ -373,13 +371,13 @@ export const CreatePackagePage = () => {
    */
   const clearHomestay = () => {
     setSelectedHomestay(null);
-    setHsCheckInDateObj(null);
-    setHsCheckInDate("");
-    setHsCheckInTime("");
-    setHsCheckOutDateObj(null);
-    setHsCheckOutDate("");
-    setHsCheckOutTime("");
-    setHsBookedRoom("1");
+    setHomestayCheckInDateObject(null);
+    setHomestayCheckInDate("");
+    setHomestayCheckInTime("");
+    setHomestayCheckOutDateObject(null);
+    setHomestayCheckOutDate("");
+    setHomestayCheckOutTime("");
+    setHomestayBookedRoom("1");
   };
 
   /*
@@ -398,49 +396,64 @@ export const CreatePackagePage = () => {
    * Input: -
    * Output: -
    */
-  const handleConfirmSave = async () => {
+const handleConfirmSave = async () => {
     setIsConfirmModalOpen(false);
     if (isSaving) return;
     setIsSaving(true);
 
     try {
+      const overseerIdVal = Number(formState.overseerMemberId);
+      const safeOverseerId = overseerIdVal > 0 ? overseerIdVal : null;
+
       const payload = {
-        overseerMemberId: Number(formState.overseerMemberId),
+        overseerMemberId: safeOverseerId,
+
         name: normalizeOrDefault(formState.name),
-        description: normalizeOrDefault(formState.description),
+        description: formState.description || "", // Draft อนุญาตให้ว่าง
         statusPackage: formState.statusPackage,
+
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
-        warning: normalizeOrDefault(formState.facility),
-        startDate: normalizeOrDefault(formState.startDate),
-        dueDate: normalizeOrDefault(formState.endDate),
+        warning: formState.facility || "",
+
+        // วันที่ต้องส่งเป็น null ถ้าไม่มีค่า (ห้ามส่ง "-")
+        startDate: formState.startDate || null,
+        dueDate: formState.endDate || null,
+        bookingOpenDate: formState.openDate || null,
+        bookingCloseDate: formState.closeDate || null,
+
+        // ... (เวลา คงเดิม) ...
         ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
         ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
-        bookingOpenDate: normalizeOrDefault(formState.openDate),
-        bookingCloseDate: normalizeOrDefault(formState.closeDate),
         ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-        ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
-        ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
-        ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
-        ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
-        ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-        facility: normalizeOrDefault(formState.facility),
-        tagIds,
+
+        // Homestay
+        ...(selectedHomestay && homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
+        ...(selectedHomestay && homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
+        ...(selectedHomestay && homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
+        ...(selectedHomestay && homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
+        ...(selectedHomestay && homestayBookedRoom && { bookedRoom: Number(homestayBookedRoom) }),
+
+        facility: formState.facility || "",
+
+        // [จุดสำคัญ] ต้องแปลง tagIds เป็น number array ไม่งั้นจะ Error 400
+        tagIds: tagIds.map(tagIdValue => Number(tagIdValue)),
+
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
+
         location: {
-          houseNumber: normalizeOrDefault(formState.houseNumber),
+          houseNumber: formState.houseNumber || "",
           villageNumber: toIntOrNull(formState.villageNumber),
-          subDistrict: normalizeOrDefault(formState.subDistrict),
-          district: normalizeOrDefault(formState.district),
-          province: normalizeOrDefault(formState.province),
-          postalCode: normalizeOrDefault(formState.postalCode),
-          detail: normalizeOrDefault(formState.addressDetail),
-          latitude: Number(formState.latitude),
-          longitude: Number(formState.longitude),
+          subDistrict: formState.subDistrict || "",
+          district: formState.district || "",
+          province: formState.province || "",
+          postalCode: formState.postalCode || "",
+          detail: formState.addressDetail || "",
+          latitude: Number(formState.latitude) || 0,
+          longitude: Number(formState.longitude) || 0,
         },
       };
-
       const formData = new FormData();
       formData.append("data", JSON.stringify(payload));
       coverFiles.forEach((file: any) => formData.append("cover", file));
@@ -449,7 +462,6 @@ export const CreatePackagePage = () => {
       await axios.post(`${apiUrl}/admin/package`, formData, {
         withCredentials: true,
       });
-
       navigate("/admin/packages/all");
     } catch (error: any) {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -466,18 +478,20 @@ export const CreatePackagePage = () => {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSaving) return;
-    if (!validateAll()) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+    if (formState.statusPackage === "DRAFT") {
+      if (!formState.name.trim()) {
+        setFormErrors((prev) => ({ ...prev, name: "กรุณากรอกชื่อแพ็กเกจ" }));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      setFormErrors({});
+    } else {
+      if (!validateAll()) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
     }
-    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+
     setIsConfirmModalOpen(true);
   }
 
@@ -769,7 +783,7 @@ export const CreatePackagePage = () => {
         <section className="grid md:grid-cols-2 gap-5">
           <div className="md:col-span-1">
             <div ref={searchBoxRef}>
-              <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
+              <TagSelector value={tagIds} onChange={(selectedTagIds) => setTagIds(selectedTagIds)} />
             </div>
           </div>
 
@@ -907,42 +921,42 @@ export const CreatePackagePage = () => {
                 <BoxDateInput
                   id="hsCheckInDate"
                   label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กอินพัก"
-                  value={hsCheckInDateObj}
+                  value={homestayCheckInDateObject}
                   onChange={(date) => {
-                    setHsCheckInDateObj(date);
-                    if (date) setHsCheckInDate(date.toISOString().split("T")[0]);
-                    else setHsCheckInDate("");
+                    setHomestayCheckInDateObject(date);
+                    if (date) setHomestayCheckInDate(date.toISOString().split("T")[0]);
+                    else setHomestayCheckInDate("");
                   }}
                   minDate={new Date()}
                   maxDate={new Date("2100-12-31")}
-                  errorText={(formErrors as any).hsCheckInDate}
+                  errorText={(formErrors as any).homestayCheckInDate}
                 />
                 <BoxTimeInput
                   label="เวลาเช็กอิน"
-                  value={hsCheckInTime}
-                  onChange={(time) => setHsCheckInTime(time)}
+                  value={homestayCheckInTime}
+                  onChange={(time) => setHomestayCheckInTime(time)}
                   required
-                  errorText={(formErrors as any).hsCheckInTime}
+                  errorText={(formErrors as any).homestayCheckInTime}
                 />
                 <BoxDateInput
                   id="hsCheckOutDate"
                   label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กเอาท์"
-                  value={hsCheckOutDateObj}
+                  value={homestayCheckOutDateObject}
                   onChange={(date) => {
-                    setHsCheckOutDateObj(date);
-                    if (date) setHsCheckOutDate(date.toISOString().split("T")[0]);
-                    else setHsCheckOutDate("");
+                    setHomestayCheckOutDateObject(date);
+                    if (date) setHomestayCheckOutDate(date.toISOString().split("T")[0]);
+                    else setHomestayCheckOutDate("");
                   }}
                   minDate={new Date()}
                   maxDate={new Date("2100-12-31")}
-                  errorText={(formErrors as any).hsCheckOutDate}
+                  errorText={(formErrors as any).homestayCheckOutDate}
                 />
                 <BoxTimeInput
                   label="เวลาเช็กเอาท์"
-                  value={hsCheckOutTime}
-                  onChange={(time) => setHsCheckOutTime(time)}
+                  value={homestayCheckOutTime}
+                  onChange={(time) => setHomestayCheckOutTime(time)}
                   required
-                  errorText={(formErrors as any).hsCheckOutTime}
+                  errorText={(formErrors as any).homestayCheckOutTime}
                 />
 
               </div>

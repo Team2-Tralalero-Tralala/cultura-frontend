@@ -422,7 +422,7 @@ export default function EditHomestayAdminPage() {
   };
 
   return (
-    <div className="w-full max-w-none px-8">
+    <div className="w-full max-w-none">
       {/* breadcrump */}
       <div>
         <Breadcrumb

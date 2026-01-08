@@ -1,15 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * จัดการร้านค้า (Super Admin)
- * - แสดงรายการร้านค้าทั้งหมดในชุมชน
- * - สามารถค้นหา เพิ่ม แก้ไข ลบ ร้านค้าได้
- * - ใช้งานร่วมกับ Modal ยืนยันและฟอร์มเพิ่ม/แก้ไข
+ * คำอธิบาย : Component หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Super Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
+ * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
-
-// component
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
@@ -17,12 +13,9 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import DataTable from "@/Components/Tables/Index";
 import { Icon } from "@iconify/react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-
-// service
 import { getCommunityById } from "@/Services/community-service";
 import { getAllStore } from "@/Services/store-service";
 
-// Types
 import type {
   BulkAction,
   Column,
@@ -31,7 +24,6 @@ import type {
 } from "@/Components/Tables/Types";
 import axios from "axios";
 
-// Type ของตาราง
 type StoreRow = {
   id: number;
   name: string;
@@ -39,7 +31,6 @@ type StoreRow = {
   tagStores: string;
 };
 
-//Type ของข้อมูลร้านค้า
 type StoreFromApi = {
   id: number;
   name: string;
@@ -52,11 +43,19 @@ type StoreFromApi = {
   }[];
 };
 
-
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
+ * Input : string
+ * Output : string ที่ผ่านการ normalize แล้ว
+ */
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-// ตารางจัดการร้านค้า
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางร้านค้า
+ * Input : ไม่มี
+ * Output : รายการคอลัมน์ของตาราง
+ */
 const columns: Column<StoreRow>[] = [
   {
     key: "name",
@@ -72,12 +71,15 @@ const columns: Column<StoreRow>[] = [
   { key: "tagStores", header: "ประเภท" },
 ];
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดงหน้า Manage Store Super Admin
+ * Input : ไม่มี
+ * Output : ส่วนแสดงผลของหน้า Manage Store Super Admin
+ */
 export default function ManageStores() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // state
   const [communityName, setCommunityName] = useState<string>("");
   const [rows, setRows] = useState<StoreRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -90,13 +92,16 @@ export default function ManageStores() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-
-  //ดึงชื่อชุมชน
+/*
+ * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
+ * Input : string
+ * Output : void
+ */
   useEffect(() => {
     async function fetchCommunity() {
       try {
@@ -110,7 +115,6 @@ export default function ManageStores() {
     fetchCommunity();
   }, [communityId]);
 
-  //โหลดข้อมูลร้านค้า
   const loadStores = async () => {
     if (!communityId) return;
 
@@ -126,7 +130,6 @@ export default function ManageStores() {
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
       const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
 
-      // แปลงข้อมูลให้เข้ากับตาราง
       const mapped: StoreRow[] = resultData.map((store) => {
         const tagNames =
           store.tagStores?.map((tagStore) => tagStore.tag?.name).filter(Boolean) ?? [];
@@ -147,11 +150,20 @@ export default function ManageStores() {
     }
   };
 
+/*
+ * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage หรือ limit เปลี่ยนแปลง
+ * Input : communityId, pagination.currentPage, pagination.limit
+ * Output : void
+ */
   React.useEffect(() => {
     loadStores();
   }, [Number(communityId), pagination.currentPage, pagination.limit]);
 
-  //action แต่ละแถว ลบ แก้ไข
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำของแต่ละแถวในตารางร้านค้า
+ * Input : ไม่มี
+ * Output : การกำหนดค่าการกระทำของแต่ละแถว
+ */
   const rowActions: DataTableActionsConfig<StoreRow> = {
     header: "จัดการ",
     align: "left",
@@ -161,13 +173,17 @@ export default function ManageStores() {
     callbacks: {
       edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
-        setDeleteId(row.id);
+        setDeleteIds([row.id]);
         setIsOpenConfirm(true);
       },
     },
   };
 
-  //กรองข้อมูลที่แสดง
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับกรองแถวร้านค้าตามข้อความค้นหา
+ * Input : string
+ * Output : string ที่ผ่านการ normalize แล้ว
+ */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
     return rows.filter((row) => {
@@ -180,11 +196,21 @@ export default function ManageStores() {
   }, [rows, searchQuery]);
 
   const handleDelete = async (storeId: number) => {
-    await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
-      withCredentials: true,
-    });
+    try {
+      await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error("Failed to delete store:", error);
+      setErrorMessage("ลบร้านค้าไม่สำเร็จ");
+    }
   };
 
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำแบบกลุ่ม (Bulk Actions) ในตารางร้านค้า
+ * Input : ไม่มี
+ * Output : รายการการกระทำแบบกลุ่ม
+ */
   const bulkActions: BulkAction<StoreRow>[] = [
     {
       id: "bulk-delete",
@@ -194,17 +220,15 @@ export default function ManageStores() {
       confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
         const storeIds = rows.map((row) => row.id);
-        alert("bulk delete: " + storeIds);
-        await loadStores();
+        setDeleteIds(storeIds);
+        setIsOpenConfirm(true);
       },
     },
   ];
 
   return (
     <div className="space-y-4">
-      {/* Section: Header */}
       <div className="flex flex-col gap-2 w-full">
-        {/* Breadcrumb */}
         <div>
           <Breadcrumb
             current={{
@@ -213,8 +237,6 @@ export default function ManageStores() {
             }}
           />
         </div>
-
-        {/* <-- หัวข้อ */}
         <Link
           to={`/super/community/detail/${communityId}`}
           className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
@@ -224,7 +246,6 @@ export default function ManageStores() {
         </Link>
 
         <div className="flex items-center justify-between w-full mt-2">
-          {/* Section: Search */}
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
@@ -232,7 +253,6 @@ export default function ManageStores() {
             />
           </div>
 
-          {/* Section: Add Store */}
           <div className="flex items-center gap-2">
             <Button
               onClick={() => navigate(`/super/community/${communityId}/store/create`)}
@@ -247,7 +267,6 @@ export default function ManageStores() {
       <div className="pb-10">
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
-        {/* Table */}
         <DataTable<StoreRow>
           data={filteredRows}
           getKey={(row) => row.id.toString()}
@@ -275,23 +294,28 @@ export default function ManageStores() {
         />
       </div>
 
-      {/* Modal สำหรับยืนยันการลบร้านค้า */}
-            <Modal
-              open={isOpenConfirm}
-              title="ยืนยันการลบร้านค้า"
-              text="คุณต้องการลบร้านค้านี้หรือไม่?"
-              onConfirm={async () => {
-                if (!deleteId) return;
-                await handleDelete(deleteId);
-                setIsOpenConfirm(false);
-                setDeleteId(null);
-                await loadStores();
-              }}
-              onCancel={() => {
-                setIsOpenConfirm(false);
-                setDeleteId(null);
-              }}
-            />
+      <Modal
+        open={isOpenConfirm}
+        title="ยืนยันการลบร้านค้า"
+        text={
+          deleteIds?.length > 1
+            ? `คุณต้องการลบร้านค้านี้ทั้งหมด ${deleteIds.length} รายการหรือไม่?`
+            : "คุณต้องการลบร้านค้านี้หรือไม่?"
+        }
+        onConfirm={async () => {
+          if (!deleteIds?.length) return;
+
+          await Promise.all(deleteIds.map((id) => handleDelete(id)));
+
+          setIsOpenConfirm(false);
+          setDeleteIds([]);
+          await loadStores();
+        }}
+        onCancel={() => {
+          setIsOpenConfirm(false);
+          setDeleteIds([]);
+        }}
+      />
     </div>
   );
 }

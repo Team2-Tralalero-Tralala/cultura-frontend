@@ -18,7 +18,6 @@ const loginSchema = z.object({
   password: z.string().min(1, "กรุณากรอกรหัสผ่าน"),
 });
 /*
- * ฟังก์ชัน : LoginTouristCard
  * คำอธิบาย : ฟอร์มเข้าสู่ระบบสำหรับ Tourist
  * Input : -
  * Output : React Component ที่แสดงฟอร์ม login และจัดการ redirect/error
@@ -37,9 +36,9 @@ export function LoginTouristCard() {
   }>({});
 
   /*
-   * ฟังก์ชัน : validateField
-   * คำอธิบาย : ตรวจสอบค่าของฟิลด์เดียว (username หรือ password)
-   * และอัปเดต formErrors
+   * คำอธิบาย : ตรวจสอบค่าของฟิลด์เดียว (username หรือ password) และอัปเดต formErrors
+   * Input : field ("username" | "password"), value (string)
+   * Output : - (อัปเดต state formErrors)
    */
   const validateField = (field: "username" | "password", value: string) => {
     const result = loginSchema.safeParse({
@@ -50,37 +49,41 @@ export function LoginTouristCard() {
       ...prev,
       [field]: result.success
         ? undefined
-        : result.error.issues.find((i) => i.path[0] === field)?.message,
+        : result.error.issues.find((issue) => issue.path[0] === field)?.message,
     }));
   };
 
   type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-  // Handler เมื่อกรอก username
-  const handleUsernameChange = (e: React.ChangeEvent<FormElement>) => {
-    const value = e.target.value;
+  /**
+   * คำอธิบาย : Handler เมื่อกรอก username
+   * Input : event (React.ChangeEvent<FormElement>)
+   * Output : -
+   */
+  const handleUsernameChange = (event: React.ChangeEvent<FormElement>) => {
+    const value = event.target.value;
     setUsername(value);
     validateField("username", value);
   };
-  // Handler เมื่อกรอกรหัสผ่าน
-  const handlePasswordChange = (e: React.ChangeEvent<FormElement>) => {
-    const value = e.target.value;
+  /**
+   * คำอธิบาย : Handler เมื่อกรอกรหัสผ่าน
+   * Input : event (React.ChangeEvent<FormElement>)
+   * Output : -
+   */
+  const handlePasswordChange = (event: React.ChangeEvent<FormElement>) => {
+    const value = event.target.value;
     setPassword(value);
     validateField("password", value);
   };
 
   /*
-   * ฟังก์ชัน : handleLogin
    * คำอธิบาย : จัดการ event เมื่อผู้ใช้กด submit
-   * ขั้นตอน:
-   *   1) validate input ด้วย Zod
-   *   2) เรียก login จาก AuthContext
-   *   3) ตรวจสอบ role และ error จาก backend
+   * Input : event (React.FormEvent)
    * Output :
    *   - redirect → /tourist ถ้า role == tourist
    *   - setError หรือ ModalBlocked ถ้าไม่ผ่าน
    */
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
     setFormErrors({});
     setIsLoading(true);
@@ -160,19 +163,13 @@ export function LoginTouristCard() {
 
         <div className="flex items-center justify-between mb-3 min-h-[24px]">
           {/* Error message: always reserve space, align right */}
-          <p className="text-sm text-red-600 min-h-[24px]">
-            {error ? error : "\u00A0"}
-          </p>
+          <p className="text-sm text-red-600 min-h-[24px]">{error ? error : "\u00A0"}</p>
           <Link to="/forgot-password" className="text-right whitespace-nowrap">
             ลืมรหัสผ่าน
           </Link>
         </div>
         <Button type="confirm-tourist" htmlType="submit">
-          {isLoading ? (
-            <CircularProgress color="inherit" size="28px" />
-          ) : (
-            "เข้าสู่ระบบ"
-          )}
+          {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}
         </Button>
       </form>
       <ModalBlocked open={showBlocked} onClose={() => setShowBlocked(false)} />

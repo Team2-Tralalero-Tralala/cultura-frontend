@@ -177,3 +177,43 @@ export async function getAccountInCommunity(
   });
   return res.data?.data;
 }
+
+/**
+ * คำอธิบาย: ดึงข้อมูลโปรไฟล์ปัจจุบันของผู้ใช้งาน
+ * Input: -
+ * Output: ข้อมูลโปรไฟล์ของผู้ใช้งาน
+ */
+export async function getMe() {
+  const res = await api.get('/shared/profile');
+  return res.data?.data;
+}
+
+/**
+ * คำอธิบาย: แก้ไขข้อมูลโปรไฟล์และอัปโหลดรูปภาพ (ถ้ามี) ในครั้งเดียว (Multipart)
+ * Input:
+ * - data: ข้อมูลโปรไฟล์ที่จะแก้ไข (Object)
+ * - file: ไฟล์รูปภาพโปรไฟล์ใหม่ (File | null)
+ * Output: ข้อมูลโปรไฟล์ที่อัปเดตแล้ว
+ */
+export async function editProfile(
+  data: {
+    fname?: string;
+    lname?: string;
+    username?: string;
+    email?: string;
+    phone?: string;
+    profileImage?: string | null; // รูปเดิม
+  },
+  file?: File | null // รับไฟล์รูปภาพเข้ามาด้วย (Optional)
+) {
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(data));
+  if (file) {
+    formData.append("file", file);
+  }
+  const res = await api.put('/shared/profile', formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return res.data?.data;
+}

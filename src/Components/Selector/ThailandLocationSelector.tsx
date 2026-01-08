@@ -3,14 +3,6 @@
  * ใช้ข้อมูลจากไฟล์ geography.json บน GitHub เพื่อสร้าง dropdown แบบเชื่อมโยงกัน
  * โดยจะโหลดข้อมูลจังหวัดทั้งหมด และเมื่อเลือกจังหวัด จะกรองอำเภอ และตำบลตามลำดับ
  * ใช้ร่วมกับ Component TextField และ Material UI Autocomplete
- *
- * ฟังก์ชันหลัก:
- * 1. loadLocationData() — โหลดข้อมูลจังหวัด/อำเภอ/ตำบลจาก API
- * 2. handleProvinceChange(), handleDistrictChange(), handleSubdistrictChange() — จัดการอีเวนต์เมื่อผู้ใช้เลือกข้อมูล
- * 3. renderCustomInput() — สร้าง input แบบ custom ให้กับ Autocomplete
- *
- * Output: ส่งข้อมูล ThailandLocation (province, district, subdistrict, postalCode)
- * กลับไปยัง component แม่ผ่าน props.onChange()
  */
 
 import Autocomplete from "@mui/material/Autocomplete";
@@ -51,6 +43,8 @@ interface ThailandLocationSelectProps {
   value?: ThailandLocation;
   onChange: (value: ThailandLocation) => void;
   labelPrefix?: string;
+  gapY?: string;
+  gapX?: string;
   disabled?: boolean;
   error?: {
     province?: boolean;
@@ -64,6 +58,7 @@ interface ThailandLocationSelectProps {
     subdistrict?: string;
     postalCode?: string;
   };
+  className?: string; // เพิ่ม className
 }
 
 /*
@@ -126,6 +121,9 @@ export default function ThailandLocationSelector({
     subdistrict: "",
     postalCode: "",
   },
+  gapY = "24px",
+  gapX = "30px",
+  className,
 }: ThailandLocationSelectProps) {
   const [geoData, setGeoData] = useState<Record<string, Province>>({});
   const [ready, setReady] = useState(false);
@@ -281,7 +279,7 @@ export default function ThailandLocationSelector({
     );
   };
   return (
-    <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
+    <div className={`grid grid-cols-2 gap-y-[${gapY}] gap-x-[${gapX}] ${className ?? ""}`}>
       <Autocomplete
         id="province"
         disablePortal

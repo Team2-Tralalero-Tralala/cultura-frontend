@@ -1,4 +1,4 @@
-/*
+/**
  * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Community)
  * โดยแสดงแบบฟอร์มแบบ Accordion แบ่งเป็น 3 ส่วนหลัก ได้แก่
  * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, กิจกรรมหลัก, บัญชีธนาคาร)
@@ -14,16 +14,16 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { CommunityFormData } from "@/Types/CommunityForm";
-import z from "zod";
+import zod from "zod";
 import Stack from "@mui/material/Stack";
-
-import Switch from "@/Components/Switch";
 import CircularProgress from "@mui/material/CircularProgress";
 import { getCommunityById, updateCommunity } from "@/Services/community-service";
 import Backdrop from "@mui/material/Backdrop";
+import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
+import Switch from "@/Components/Switch";
 import TextArea from "@/Components/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
@@ -31,7 +31,6 @@ import Button from "@/Components/Button";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import TextField from "@/Components/TextField";
 import { Modal } from "@/Components/Modal/Modal";
-import { Icon } from "@iconify/react";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
 import { BankSelector } from "@/Components/Selector/BankSelector";
@@ -45,99 +44,58 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
  * Input : object ของข้อมูลฟอร์มทั้งหมด
  * Output : หากไม่ผ่าน validation จะคืนข้อความ error ของแต่ละ field
  */
-const communitySchema = z.object({
-  name: z.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
-
-  type: z.string("กรุณากรอกประเภทวิสาหกิจชุมชน").min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
-
-  registerNumber: z
-    .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
-
-  registerDate: z
-    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
-    .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
-
-  bankName: z
-    .string("กรุณาเลือกธนาคาร")
-    .min(1, "กรุณาเลือกธนาคาร")
-    .max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
-
-  accountName: z.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-
-  accountNumber: z.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
-
-  description: z.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
-
-  mainActivityName: z.string("กรุณากรอกชื่อกิจกรรมหลัก").min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
-
-  mainActivityDescription: z
-    .string("กรุณากรอกรายละเอียดกิจกรรมหลัก")
-    .min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
-
-  houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
-
-  province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
-
-  district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
-
-  subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
-
-  latitude: z
-    .string("กรุณากรอกละติจูด")
-    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
-
-  longitude: z
-    .string("กรุณากรอกลองจิจูด")
-    .min(1, "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"),
-
-  phone: z
-    .string("กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน")
-    .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
-
-  email: z.string("กรุณากรอกอีเมลของวิสาหกิจชุมชน").min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
-
-  mainAdmin: z.string("กรุณากรอกชื่อผู้ดูแลหลัก").min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
-
-  mainAdminPhone: z
-    .string("กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก")
-    .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
-
-  adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
+const communitySchema = zod.object({
+  name: zod.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+  type: zod.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  registerNumber: zod.string().min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
+  registerDate: zod
+    .union([zod.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), zod.date()])
+    .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
+  bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
+  accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+  description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
+  houseNumber: zod.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  latitude: zod.string().min(1, "กรุณากรอกละติจูด"),
+  longitude: zod.string().min(1, "กรุณากรอกลองจิจูด"),
+  phone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
+  email: zod.string().min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  mainAdmin: zod.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdminPhone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
 });
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
- * ใช้สำหรับโหลดไฟล์ (เช่น รูปภาพหรือวิดีโอ) จาก server แล้วจำลองให้เหมือนผู้ใช้อัปโหลดจากเครื่อง
- * Input :
- *   - url (string) : URL ของไฟล์ที่ต้องการโหลด
- *   - filename (string) : ชื่อไฟล์ที่ต้องการตั้งให้กับไฟล์ที่สร้างขึ้น
- * Output :
- *   - Promise<File> : วัตถุไฟล์ (File object) ที่สามารถใช้กับ input type="file" หรือ FormData ได้
- * หมายเหตุ :
- *   - เพิ่ม property isFromServer = true เพื่อระบุว่าไฟล์นี้มาจาก server (ไม่ใช่ไฟล์ใหม่ที่ผู้ใช้อัปโหลด)
+ * Input : url, filename, defaultMimeType
+ * Output : File object
  */
-async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url, {
+async function urlToFile(url: string, filename: string, defaultMimeType?: string): Promise<File> {
+  const response = await fetch(url, {
     credentials: "include",
   });
-  const blob = await res.blob();
-  const ext = filename.split(".").pop() || "jpg";
-  const type = blob.type || `image/${ext}`;
-  const file = new File([blob], filename, { type });
-  (file as any).isFromServer = true; // ✅ เพิ่ม flag สำหรับแยกไฟล์จาก server
+  const blob = await response.blob();
+
+  let type = blob.type;
+  if (!type || (defaultMimeType && !type.startsWith(defaultMimeType.split("/")[0]))) {
+    type = defaultMimeType || `image/${filename.split(".").pop() || "jpg"}`;
+  }
+
+  const finalBlob = blob.type === type ? blob : new Blob([blob], { type });
+  const file = new File([finalBlob], filename, { type: finalBlob.type });
+
+  (file as any).isFromServer = true;
   return file;
 }
+
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL พรีวิวไฟล์ (เช่น รูปภาพหรือวิดีโอ) จากวัตถุ File
- * ใช้เพื่อแสดงตัวอย่างไฟล์ในหน้าเว็บ โดยไม่ต้องอัปโหลดไปยังเซิร์ฟเวอร์ก่อน
- * Input :
- *   - file (File | null) : วัตถุไฟล์ที่ต้องการสร้างพรีวิว หรือ null หากไม่มีไฟล์
- * Output :
- *   - string | null : URL สำหรับใช้แสดงพรีวิวไฟล์ หรือ null หากไม่มีไฟล์
- * หมายเหตุ :
- *   - ถ้าไฟล์มี property isFromServer หมายถึงไฟล์นั้นถูกโหลดมาจากเซิร์ฟเวอร์แล้ว
- *     จะสร้าง URL ชั่วคราวจาก object URL เช่นเดียวกับไฟล์ที่ผู้ใช้อัปโหลดใหม่
+ * Input : file
+ * Output : URL string หรือ null
  */
 const getFilePreview = (file: File | null): string | null => {
   if (!file) return null;
@@ -146,6 +104,108 @@ const getFilePreview = (file: File | null): string | null => {
     return URL.createObjectURL(file);
   }
   return URL.createObjectURL(file);
+};
+
+/*
+ * คำอธิบาย : ดึงไฟล์รูปภาพและวิดีโอจากรายการภาพของชุมชนตามประเภท
+ * Input :
+ * - communityImages (array) : รายการรูปภาพจาก API
+ * - backendUrl (string) : URL ของ Backend
+ * Output : object ที่ประกอบด้วย logo, cover, gallery, video (File[])
+ */
+const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) => {
+  const getFiles = (type: string, defaultMimeType?: string) =>
+    Promise.all(
+      (communityImages || [])
+        .filter((image: any) => image.type === type)
+        .map((image: any) =>
+          urlToFile(`${backendUrl}/${image.image}`, image.image, defaultMimeType)
+        )
+    );
+
+  const [logo, cover, gallery, video] = await Promise.all([
+    getFiles("LOGO"),
+    getFiles("COVER"),
+    getFiles("GALLERY"),
+    getFiles("VIDEO", "video/mp4"),
+  ]);
+
+  return { logo, cover, gallery, video };
+};
+
+/*
+ * คำอธิบาย : เตรียมข้อมูล FormData สำหรับส่งไปยัง Server
+ * Input : object ที่รวมข้อมูล formData, selectedMembers, location, position, registerDate, isVisibleRating, files
+ * Output : FormData object ที่พร้อมส่ง
+ */
+const prepareSubmitData = ({
+  formData,
+  location,
+  position,
+  selectedMembers,
+  registerDate,
+  isVisibleRating,
+  logoFile,
+  coverFiles,
+  galleryFiles,
+  videoFiles,
+}: {
+  formData: any;
+  location: any;
+  position: any;
+  selectedMembers: any;
+  registerDate: any;
+  isVisibleRating: any;
+  logoFile: any;
+  coverFiles: any;
+  galleryFiles: any;
+  videoFiles: any;
+}) => {
+  const {
+    id,
+    locationId,
+    detail,
+    houseNumber,
+    longitude,
+    latitude,
+    villageNumber,
+    province,
+    district,
+    bankName,
+    subDistrict,
+    postalCode,
+    ...cleanForm
+  } = formData;
+
+  const payload = {
+    ...cleanForm,
+    communityMembers: selectedMembers,
+    bankName: formData.bankName,
+    registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
+    isRatingVisible: isVisibleRating,
+    location: {
+      houseNumber: formData.houseNumber,
+      villageNumber: formData.villageNumber! > 0 ? Number(formData.villageNumber) : null,
+      province: location.province,
+      district: location.district,
+      subDistrict: location.subdistrict,
+      postalCode: String(location.postalCode),
+      detail: formData.detail,
+      latitude: Number(position[0]),
+      longitude: Number(position[1]),
+    },
+  };
+
+  const formDataToSend = new FormData();
+  formDataToSend.append("data", JSON.stringify(payload));
+
+  if (logoFile) formDataToSend.append("logo", logoFile);
+  if (coverFiles) formDataToSend.append("cover", coverFiles);
+
+  galleryFiles.forEach((file: File) => formDataToSend.append("gallery", file));
+  videoFiles.forEach((file: File) => formDataToSend.append("video", file));
+
+  return formDataToSend;
 };
 
 /*
@@ -175,7 +235,6 @@ export function EditCommunity() {
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
-  const [isSubmitting, setIsSubmitting] = React.useState(false); // สำหรับตอนกดบันทึก
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
@@ -187,22 +246,14 @@ export function EditCommunity() {
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
   const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   const navigate = useNavigate();
 
   /*
    * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
-   * Input : ไม่มี (ใช้ communityId จาก useParams)
-   * Output :
-   * - เซ็ตค่า state formData, location, admin, members
-   * - เซ็ตค่าพิกัดตำแหน่ง (position) สำหรับแผนที่
-   */
-  /*
-   * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
-   * Input : ไม่มี (ใช้ communityId จาก useParams)
-   * Output :
-   * - เซ็ตค่า state formData, location, admin, members
-   * - เซ็ตค่าพิกัดตำแหน่ง (position) สำหรับแผนที่
+   * Input : -
+   * Output : -
    */
   React.useEffect(() => {
     async function fetchData() {
@@ -218,8 +269,8 @@ export function EditCommunity() {
         if (data.registerDate) {
           data.registerDate = new Date(data.registerDate).toISOString().split("T")[0];
         }
-        const lat = Number(data.location?.latitude ?? 13.736717);
-        const lng = Number(data.location?.longitude ?? 100.523186);
+        const latitude = Number(data.location?.latitude ?? 13.736717);
+        const longitude = Number(data.location?.longitude ?? 100.523186);
         setFormData({
           ...data,
           adminId: data.admin.id,
@@ -252,66 +303,32 @@ export function EditCommunity() {
           lname: data.admin.lname,
         });
         setMembers(
-          data.communityMembers?.map((m: any) => ({
-            id: m.user.id,
-            fname: m.user.fname,
-            lname: m.user.lname,
+          data.communityMembers?.map((member: any) => ({
+            id: member.user.id,
+            fname: member.user.fname,
+            lname: member.user.lname,
           })) ?? []
         );
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
-        setPosition([lat, lng]);
+        setPosition([latitude, longitude]);
         setChecked(data.status === "OPEN" ? true : false);
         setIsVisibleRating(data.isRatingVisible);
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
-        const logoFileFetch: File[] = await Promise.all(
-          (data.communityImage || [])
-            .filter((img: any) => img.type === "LOGO")
-            .map(async (img: any) => {
-              const fullUrl = `${backendUrl}/${img.image}`;
-              return await urlToFile(fullUrl, img.image);
-            })
+        const backendUrl = apiUrl.replace("/api", "/uploads/") || "http://localhost:3000";
+
+        const { logo, cover, gallery, video } = await fetchCommunityFiles(
+          data.communityImage,
+          backendUrl
         );
-        const coverFileFetched: File[] = await Promise.all(
-          (data.communityImage || [])
-            .filter((img: any) => img.type === "COVER")
-            .map(async (img: any) => {
-              const fullUrl = `${backendUrl}/${img.image}`;
-              return await urlToFile(fullUrl, img.image);
-            })
-        );
-        const galleryFilesFetched: File[] = await Promise.all(
-          (data.communityImage || [])
-            .filter((img: any) => img.type === "GALLERY")
-            .map(async (img: any) => {
-              const fullUrl = `${backendUrl}/${img.image}`;
-              return await urlToFile(fullUrl, img.image);
-            })
-        );
-        const videoFileFetch: File[] = await Promise.all(
-          (data.communityImage || [])
-            .filter((img: any) => img.type === "VIDEO")
-            .map(async (img: any) => {
-              const fullUrl = `${backendUrl}/${img.image}`;
-              const response = await fetch(fullUrl, {
-                credentials: "include",
-              });
-              const blob = await response.blob();
-              const fixedBlob =
-                blob.type && blob.type.startsWith("video/")
-                  ? blob
-                  : new Blob([blob], { type: "video/mp4" });
-              const file = new File([fixedBlob], img.image, { type: fixedBlob.type });
-              return file;
-            })
-        );
-        setLogoFile(logoFileFetch[0] || null);
-        setCoverFiles(coverFileFetched[0] || null);
-        setGalleryFiles(galleryFilesFetched);
-        setVideoFiles(videoFileFetch);
+
+        setLogoFile(logo[0] || null);
+        setCoverFiles(cover[0] || null);
+        setGalleryFiles(gallery);
+        setVideoFiles(video);
         const memberIds = data.communityMembers?.map((m: any) => m.user.id) ?? [];
         setSelectedMembers(memberIds);
+        setIsLoaded(true);
       } catch (error) {
         console.error(error);
       } finally {
@@ -323,19 +340,15 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
-   * Input : panel (string) — รหัสของ panel ที่ต้องการเปิด/ปิด
-   * Output : อัปเดต state expanded เพื่อควบคุมการเปิด/ปิด Accordion
+   * Input : panel
+   * Output : -
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
     setExpanded(isExpanded ? panel : false);
   /*
    * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
-   * Input :
-   * - field (string) : ชื่อฟิลด์ที่ต้องการตรวจสอบ
-   * - value (any) : ค่าของฟิลด์นั้น
-   * Output :
-   * - คืนค่า boolean (true = ผ่าน, false = ไม่ผ่าน)
-   * - อัปเดต state formErrors ให้แสดงข้อความ error ของฟิลด์ที่ไม่ผ่าน
+   * Input : field, value
+   * Output : boolean
    */
   const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -368,8 +381,8 @@ export function EditCommunity() {
   };
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้เปลี่ยนสถานะชุมชน (เปิด/ปิด)
-   * Input : event (React.ChangeEvent<HTMLInputElement>)
-   * Output : อัปเดตค่า checked และ status ("OPEN" / "CLOSED") ใน formData
+   * Input : event
+   * Output : -
    */
   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
@@ -380,6 +393,11 @@ export function EditCommunity() {
     }));
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้เปิด/ปิดการแสดงคะแนนชุมชน
+   * Input : event
+   * Output : -
+   */
   const handleCheckRating = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
     setIsVisibleRating(newChecked);
@@ -391,8 +409,8 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
-   * Input : e (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
-   * Output : อัปเดตค่าใน formData และเรียก validateField() เพื่อตรวจสอบข้อมูล
+   * Input : e
+   * Output : -
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -402,10 +420,8 @@ export function EditCommunity() {
   };
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ
-   * Input :
-   * - field (keyof typeof formData) : ชื่อฟิลด์ที่ต้องอัปเดต
-   * - value (any) : ค่าที่ต้องการเซ็ตลงใน formData
-   * Output : อัปเดตค่าใน formData และเรียก validateField เพื่อเช็กความถูกต้อง
+   * Input : field, value
+   * Output : -
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     let newValue = value;
@@ -421,8 +437,9 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
+   * Input : -
+   * Output : -
    */
-
   const handleSubmit = async () => {
     const isFormValid = validateField();
 
@@ -434,61 +451,20 @@ export function EditCommunity() {
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const {
-        id,
-        locationId,
-        detail,
-        houseNumber,
-        longitude,
-        latitude,
-        villageNumber,
-        province,
-        district,
-        bankName,
-        subDistrict,
-        postalCode,
-        ...cleanForm
-      } = formData;
-
-      const payload = {
-        ...cleanForm,
-        communityMembers: selectedMembers,
-        isRatingVisible: isVisibleRating,
-        bankName: formData.bankName,
-        registerDate: registerDate ? new Date(registerDate).toISOString() : undefined,
-        location: {
-          houseNumber: formData.houseNumber,
-          villageNumber: formData.villageNumber! > 0 ? Number(formData.villageNumber) : null,
-          province: location.province,
-          district: location.district,
-          subDistrict: location.subdistrict,
-          postalCode: String(location.postalCode),
-          detail: formData.detail,
-          latitude: Number(position[0]),
-          longitude: Number(position[1]),
-        },
-      };
-
-      const formDataToSend = new FormData();
-
-      formDataToSend.append("data", JSON.stringify(payload));
-
-      if (logoFile) {
-        formDataToSend.append("logo", logoFile);
-      }
-      if (coverFiles) {
-        formDataToSend.append("cover", coverFiles);
-      }
-
-      galleryFiles.forEach((file) => {
-        formDataToSend.append("gallery", file);
+      const formDataToSend = prepareSubmitData({
+        formData,
+        location,
+        position,
+        selectedMembers,
+        registerDate,
+        isVisibleRating,
+        logoFile,
+        coverFiles,
+        galleryFiles,
+        videoFiles,
       });
 
-      videoFiles.forEach((file) => {
-        formDataToSend.append("video", file);
-      });
       await updateCommunity(Number(communityId), formDataToSend);
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
@@ -500,8 +476,6 @@ export function EditCommunity() {
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
       setAlertOpen(true);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -895,7 +869,7 @@ export function EditCommunity() {
           </div>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div className="col-span-2">
-              {position[0] !== 0 && position[1] !== 0 && (
+              {isLoaded && (
                 <MapPicker startingPosition={position} startingZoom={13} onChange={setPosition} />
               )}
             </div>
@@ -903,7 +877,7 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        className="!rounded-lg !bg-transparent !shadow-none !border-0 mt-3"
         expanded={expanded === "panel4"}
         onChange={handleChange("panel4")}
         sx={{ "&:before": { display: "none" } }}

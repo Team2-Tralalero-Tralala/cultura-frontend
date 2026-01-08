@@ -1,11 +1,6 @@
 /**
- * Component: AdminRoutes
- * คำอธิบาย:
- * เส้นทาง (Routing) สำหรับผู้ดูแลระดับวิสาหกิจชุมชน (Admin)
+ * คำอธิบาย : Component สำหรับ Route ของผู้ดูแลระดับวิสาหกิจชุมชน (Admin)
  * เป็น Route ย่อยที่ใช้ร่วมกับ AdminLayout
- * หน้าที่:
- * - กำหนดหน้า/Route ที่ Admin สามารถเข้าถึงได้
- * - แสดง Component ที่ตรงกับแต่ละ path
  */
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -40,6 +35,14 @@ import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import DetailPackageAdmin from "@/Pages/Admin/DetailPackageAdmin";
 import CreateMemberPage from "@/Pages/Admin/CreateMemberPage";
 import EditMemberPage from "@/Pages/Admin/EditMemberPage";
+import AuthentionLogAdmin from "@/Pages/Admin/AuthentionLogAdmin";
+import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
+
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
+ * Input : -
+ * Output : ส่วนแสดงผล Route
+ */
 export default function AdminRoutes() {
   return (
     <Routes>
@@ -64,8 +67,8 @@ export default function AdminRoutes() {
       <Route path="/booking/:bookingId" element={<BookingDetailAdmin />} />
 
       <Route path="/community/homestays" element={<ManageHomestayAdmin />} />
-      
- 
+
+
 
       <Route path="/community/own" element={<CommunityDetailAdmin />} />
       <Route path="package-requests/:requestId" element={<DetailPackageRequiredPage />} />
@@ -98,6 +101,9 @@ export default function AdminRoutes() {
       <Route path="package/:id/edit" element={<EditPackagePage />} />
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="package/:id" element={<DetailPackageAdmin />} />
+      <Route path="logs" element={<AuthentionLogAdmin />} />
+
+      <Route path="profile-me" element={<EditProfile />} />
     </Routes>
   );
 }

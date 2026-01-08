@@ -23,5 +23,13 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    optimizeDeps: {
+      include: ['pdfmake/build/pdfmake', 'pdfmake/build/vfs_fonts'],
+    },
+    build: {
+      commonjsOptions: {
+        include: [/pdfmake/, /node_modules/],
+      },
+    },
   };
 });

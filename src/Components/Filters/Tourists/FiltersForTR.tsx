@@ -1,56 +1,109 @@
 /*
  * Filter ใช้สำหรับ Role: Tourists
-*/
+ */
+import { useState, useRef, useEffect } from "react";
+import { Icon } from "@iconify/react";
 
-import { useState } from "react";
-
-// type ของแต่ละ option ใน dropdown
-type FilterOption = {
-  label: string; // ข้อความที่จะแสดงในเมนู เช่น "สมาชิก"
-  value: string; // ค่าที่จะส่งกลับ เช่น "member"
+export type FilterOption = {
+  label: string;
+  value: string | string[];
 };
 
-// type ของ props ที่ component นี้จะรับจาก parent
+export type FilterSection = {
+  title: string;
+  key: string; // Key for the state object (e.g., 'status', 'period')
+  options: FilterOption[];
+};
+
 type FilterProps = {
-  options: FilterOption[];         // รายการตัวเลือกทั้งหมด
-  selected: string;                // ค่าที่เลือกอยู่ปัจจุบัน
-  onChange: (value: string) => void; // ฟังก์ชัน callback เวลาเลือกค่าใหม่
+  sections: FilterSection[];
+  selected: Record<string, string | string[]>;
+  onChange: (key: string, value: string | string[]) => void;
+  label?: string;
+  icon?: string;
 };
 
-export default function FilterDropdown({ options, selected, onChange }: FilterProps) {
-  const [open, setOpen] = useState(false); // state สำหรับเก็บว่าเมนูเปิด/ปิดอยู่หรือไม่
+export default function FilterDropdown({ sections, selected, onChange, label, icon }: FilterProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ฟังก์ชันเวลามีการเลือก option
-  const handleSelect = (value: string) => {
-    onChange(value);  // ส่งค่าที่เลือกกลับไปให้ parent ผ่าน props
-    setOpen(false);   // ปิด dropdown หลังเลือกเสร็จ
-  };
+  /**
+   * คำอธิบาย: ตรวจสอบการคลิกพื้นที่อื่นนอกจาก Dropdown เพื่อปิดเมนู
+   * Input: -
+   * Output: - (อัปเดต state open)
+   */
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className="relative inline-block">
-      {/* ปุ่มหลัก กดเพื่อเปิด/ปิด dropdown */}
+    <div className="relative inline-block" ref={dropdownRef}>
+      {/* Trigger Button */}
       <button
-        onClick={() => setOpen(!open)} // toggle เปิด/ปิด
-        className="flex items-center justify-between w-35 h-12 gap-2 px-3 py-2 border border-black rounded-lg bg-white text-black hover:bg-gray-50"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between gap-2 px-3 py-2 border border-black rounded-lg bg-white text-black hover:bg-gray-50"
       >
-        {/* แสดงชื่อ option ที่เลือกอยู่ */}
-        <span>{options.find(opt => opt.value === selected)?.label}</span>
-        {/* ไอคอนลูกศร ขึ้น/ลง */}
-        <svg className="text-black items-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m12 15l-5-5h10z"/></svg>
+        <span>{label || "ตัวกรอง"}</span>
+        {icon ? (
+          <Icon icon={icon} width={24} height={24} className="text-black" />
+        ) : (
+          <Icon icon="mdi:filter-variant" width={24} height={24} className="text-black" />
+        )}
       </button>
 
-      {/* เมนู dropdown */}
-      {open && (
-        <div className="absolute w-35 mt-2 items-center text-center border border-black rounded-lg bg-white text-black hover:bg-gray-50">
-          {options.map((opt) => (
-            <button
-              key={opt.value} // key ต้องไม่ซ้ำ
-              onClick={() => handleSelect(opt.value)} // เมื่อเลือกจะเรียก handleSelect
-              className={`block w-full text-left px-5 py-2 hover:bg-green-200 hover:rounded-md
-              }`}
-            >
-              {opt.label}
-            </button>
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 min-w-[200px] w-max rounded-lg border border-black bg-white p-4 shadow-lg z-20">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold">ตัวกรอง</h3>
+            <Icon icon="heroicons:bars-3-bottom-right" width={24} height={24} />
+          </div>
+
+          {sections.map((section, index) => (
+            <div key={section.key} className={index > 0 ? "mt-4" : ""}>
+              <h4 className="mb-2 font-bold text-base">{section.title}</h4>
+              <div className="flex flex-col gap-2">
+                {section.options.map((option, index) => {
+                  const isSelected =
+                    JSON.stringify(selected[section.key]) === JSON.stringify(option.value);
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => onChange(section.key, option.value)}
+                      className="flex items-center gap-3 text-left hover:bg-gray-50 rounded-md p-1"
+                    >
+                      {/* Radio Icon */}
+                      <div className={`flex items-center justify-center`}>
+                        {isSelected ? (
+                          <Icon
+                            icon="mdi:radiobox-marked"
+                            className="text-[#00BF6A]"
+                            width={20}
+                            height={20}
+                          />
+                        ) : (
+                          <Icon
+                            icon="mdi:radiobox-blank"
+                            className="text-[#00BF6A]"
+                            width={20}
+                            height={20}
+                          />
+                        )}
+                      </div>
+                      <span className="text-black">{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
       )}

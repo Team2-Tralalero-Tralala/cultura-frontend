@@ -17,10 +17,12 @@ import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import SearchPage from "@/Pages/Tourist/SearchPage";
-import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";
+import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";;
 import ChangePassword from "./Pages/Tourist/ChangePassword";
 
 import BookingConfirmedPage from "./Pages/Tourist/BookingConfirmedPage";
+import { DetailBookingHistory } from "./Pages/Tourist/DetailBookingHistory";
+import { DashboardPage } from "./Pages/Tourist/DashboardPage";
 import BookingHistoryTourist from "./Pages/Tourist/BookingHistoryTourist";
 import BookingPaymentPage from "./Pages/Tourist/BookingPaymentPage";
 import BookingSummaryPage from "./Pages/Tourist/BookingSummaryPage";
@@ -39,12 +41,23 @@ function App() {
         <Route path="/guest/search" element={<SearchPage />} />
         <Route path="/tourist/package/:packageId" element={<DetailPackagePage />} />
         <Route path="/tourist/edit-profile" element={<EditProfileTourist />} />
-        <Route path="/tourist/community/:communityId/detail/store/:storeId" element={<StoreDetailPage />}/>
-        <Route path="/tourist/community/:communityId/detail/homestay/:homestayId" element={<HomestayDetailTourist />} />
+        <Route
+          path="/tourist/community/:communityId/detail/store/:storeId"
+          element={<StoreDetailPage />}
+        />
+        <Route
+          path="/tourist/community/:communityId/detail/homestay/:homestayId"
+          element={<HomestayDetailTourist />}
+        />
         <Route path="/tourist/change-password" element={<ChangePassword />} />
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
+        <Route path="/tourist/booking-history/detail" element={<DetailBookingHistory />} />
+        <Route path="/tourist/dashboard" element={<DashboardPage />} />
         <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
-        <Route path="/tourist/booking-history/:bookingId/feedback" element={<CreateFeedbackPage />} />
+        <Route
+          path="/tourist/booking-history/:bookingId/feedback"
+          element={<CreateFeedbackPage />}
+        />
         <Route
           path="/tourist/booking/package/:packageId/summary"
           element={
@@ -69,7 +82,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
 
         <Route path="/guest/*">
           <Route path="login" element={<LoginTourist />} />

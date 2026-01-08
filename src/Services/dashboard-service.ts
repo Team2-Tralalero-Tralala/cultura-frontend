@@ -257,3 +257,58 @@ export async function fetchMemberDashboardData(
 
   return res.data.data;
 }
+export interface TouristDashboardFilters {
+  bookingPeriodType: PeriodType;
+  bookingDates: string[];
+}
+export interface TouristDashboardSummaryItem {
+  totalBooking: number;
+  successBookingCount: number;
+  cancelledBookingCount: number;
+  totalSpend: number;
+}
+export interface TouristDashboardPackage {
+  data: TouristDashboardSummaryItem[];
+  lastBookingLists: {
+    bookingAt: Date;
+    totalParticipant: number;
+    status: string;
+    package: {
+      name: string;
+      price: number;
+    };
+  }[];
+}
+export interface TouristDashboardResponse {
+  summary: TouristDashboardSummaryItem;
+  graph: AdminDashboardGraph;
+  package: TouristDashboardPackage;
+}
+/*
+ * ฟังก์ชัน : fetchMemberDashboardData
+ * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
+ * Input :
+ *   - filters (MemberDashboardFilters) : พารามิเตอร์สำหรับดึงข้อมูลและกรองผลลัพธ์
+ * Output :
+ *    - คืนค่า Promise ของ AdminDashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ package
+ */
+export async function fetchTouristDashboardData(
+  filters: TouristDashboardFilters
+): Promise<TouristDashboardResponse> {
+  const { bookingPeriodType, bookingDates } = filters;
+
+  const params = new URLSearchParams();
+  if (Array.isArray(bookingDates)) {
+    bookingDates.forEach((date) => params.append("bookingDates", date));
+  }
+
+  params.append("bookingPeriodType", bookingPeriodType);
+
+  const url = `/tourist/dashboard?${params.toString()}`;
+
+  const res = await api.get(url, {
+    withCredentials: true,
+  });
+
+  return res.data.data;
+}

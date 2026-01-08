@@ -1,3 +1,7 @@
+/*
+ * คำอธิบาย :
+ * Component ModalAlert ใช้ SweetAlert2 แสดงข้อความแจ้งเตือน
+ */
 import React, { useEffect } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -14,6 +18,14 @@ interface ModalAlertProps {
 /*
  * คำอธิบาย :
  * Component ModalAlert ใช้ SweetAlert2 แสดงข้อความแจ้งเตือน
+ * Input :
+ *   - open (boolean) : ควบคุมการเปิด/ปิด Modal
+ *   - type (string, optional) : ประเภทของ Modal
+ *   - title (string, optional) : ข้อความหัวข้อของ Modal
+ *   - message (string, optional) : ข้อความอธิบายเพิ่มเติม
+ *   - onClose (function) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดปิด Modal
+ * Output :
+ *   - แสดง SweetAlert popup เพื่อให้ผู้ใช้ยืนยันหรือยกเลิก
  */
 export const ModalAlert: React.FC<ModalAlertProps> = ({
   open,

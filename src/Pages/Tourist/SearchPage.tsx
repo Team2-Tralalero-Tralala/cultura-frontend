@@ -13,8 +13,9 @@ import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
 import { type PackageData } from "@/Components/PackageSection";
 import PriceRangeSlider from "@/Components/PriceRangeSlider";
-import { fetchSearchOverview, type PackageApiData } from "@/Services/tourist-service";
+import { fetchHomeData, fetchSearchOverview, type PackageApiData } from "@/Services/tourist-service";
 import { Icon } from "@iconify/react";
+import Autocomplete from "@mui/material/Autocomplete";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -72,7 +73,7 @@ export default function SearchPage() {
     activityType: null,
     startDate: null,
     endDate: null,
-    minPrice: 100,
+    minPrice: 0,
     maxPrice: 50000,
     tags: tagParam ? [tagParam] : [],
   });
@@ -92,7 +93,7 @@ export default function SearchPage() {
   }, [tagParam]);
 
   // State สำหรับการค้นหาแท็ก
-  const [tagSearchInput, setTagSearchInput] = useState("");
+  const [tagOptions, setTagOptions] = useState<string[]>([]);
 
   // State สำหรับสถานะการโหลดข้อมูล
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -403,6 +404,26 @@ export default function SearchPage() {
     sortBy,
   ]);
 
+  // โหลดรายการแท็กทั้งหมด เพื่อให้ผู้ใช้ "ค้นหาแล้วเลือกจากแท็กที่มีอยู่"
+  useEffect(() => {
+    let active = true;
+    fetchHomeData()
+      .then((resp) => {
+        if (!active) return;
+        const names = (resp?.activityTags ?? [])
+          .map((name) => String(name ?? "").trim())
+          .filter((name) => name.length > 0);
+        setTagOptions(Array.from(new Set(names)).sort((a, b) => a.localeCompare(b)));
+      })
+      .catch((err) => {
+        console.error("Failed to load tags:", err);
+        setTagOptions([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Ref สำหรับเก็บ timeout ID ของ debounce
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -469,15 +490,7 @@ export default function SearchPage() {
    * Input : ไม่มี
    * Output : void
    */
-  const handleTagAdd = () => {
-    if (tagSearchInput.trim() && !filters.tags.includes(tagSearchInput.trim())) {
-      setFilters((prev) => ({
-        ...prev,
-        tags: [...prev.tags, tagSearchInput.trim()],
-      }));
-      setTagSearchInput("");
-    }
-  };
+  // NOTE: Tag input ถูกเปลี่ยนเป็น Autocomplete จากแท็กที่มีอยู่แล้ว
 
   /*
    * ฟังก์ชัน : handleTagRemove
@@ -499,8 +512,7 @@ export default function SearchPage() {
    * Output : void
    */
   const handlePackageClick = (packageId: number) => {
-    // TODO: Navigate to package detail page
-    console.log("Package clicked:", packageId);
+    navigate(`/tourist/package/${packageId}`);
   };
 
   /*
@@ -510,8 +522,7 @@ export default function SearchPage() {
    * Output : void
    */
   const handleCommunityClick = (communityId: number) => {
-    // TODO: Navigate to community detail page
-    console.log("Community clicked:", communityId);
+    navigate(`/tourist/community/${communityId}/detail`);
   };
 
   // กำหนดข้อความสำหรับ breadcrumb และ title
@@ -615,12 +626,12 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border-2 border-gray-300 p-6 space-y-6">
+              <div className="rounded-lg border-2 border-gray-300 p-4 space-y-4">
                 {/* Price Range */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">ช่วงราคา</label>
                   <PriceRangeSlider
-                    min={100}
+                    min={0}
                     max={50000}
                     value={[filters.minPrice, filters.maxPrice]}
                     onChange={(range) =>
@@ -640,24 +651,46 @@ export default function SearchPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   ค้นหาเพื่อเพิ่มแท็ก
                 </label>
-                <div className="flex items-center rounded-md border border-gray-300 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500">
-                  <div className="flex items-center flex-1 relative">
-                    <Icon
-                      icon="mdi:magnify"
-                      className="absolute left-3 w-5 h-5 z-10 cursor-pointer"
-                      style={{ color: "#00BF6A" }}
-                      onClick={handleTagAdd}
-                    />
-                    <input
-                      type="text"
-                      value={tagSearchInput}
-                      onChange={(e) => setTagSearchInput(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleTagAdd()}
-                      placeholder="ค้นหาเพื่อเพิ่มแท็ก"
-                      className="w-full pl-10 pr-3 py-2.5 border-0 focus:outline-none bg-white text-gray-700 placeholder-gray-400"
-                    />
-                  </div>
-                </div>
+                <Autocomplete
+                  multiple
+                  disablePortal
+                  disableClearable
+                  options={tagOptions}
+                  value={filters.tags}
+                  onChange={(_, newValue) => {
+                    // newValue เป็น string[] ของแท็กที่เลือกจากรายการ
+                    setFilters((prev) => ({ ...prev, tags: newValue }));
+                  }}
+                  isOptionEqualToValue={(option, value) => option === value}
+                  renderTags={() => null}
+                  renderInput={(params) => {
+                    const { InputProps, inputProps } = params;
+                    const { ref: InputRef } = InputProps;
+                    const { ref: InputElementRef, ...inputPropsRest } = inputProps;
+                    return (
+                      <div ref={InputRef} className="w-full">
+                        <div className="flex items-center rounded-md border border-gray-300 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500 bg-white">
+                          <div className="flex items-center flex-1 relative">
+                            <Icon
+                              icon="mdi:magnify"
+                              className="absolute left-3 w-5 h-5 z-10 pointer-events-none"
+                              style={{ color: "#00BF6A" }}
+                            />
+                            <input
+                              {...inputPropsRest}
+                              ref={InputElementRef}
+                              type="text"
+                              placeholder="ค้นหาแท็ก แล้วเลือกจากรายการ"
+                              className="w-full pl-10 pr-3 py-2.5 border-0 focus:outline-none bg-white text-gray-700 placeholder-gray-400"
+                            />
+                          </div>
+                          {/* ปิด endAdornment ของ MUI (กัน UI ซ้อน) */}
+                          {InputProps.endAdornment && <div className="hidden">{InputProps.endAdornment}</div>}
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
                 {/* Display Tags */}
                 {filters.tags.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">

@@ -164,7 +164,7 @@ export function LoginTouristCard() {
         <div className="flex items-center justify-between mb-3 min-h-[24px]">
           {/* Error message: always reserve space, align right */}
           <p className="text-sm text-red-600 min-h-[24px]">{error ? error : "\u00A0"}</p>
-          <Link to="/forgot-password" className="text-right whitespace-nowrap">
+          <Link to="/guest/forget-password" className="text-right whitespace-nowrap">
             ลืมรหัสผ่าน
           </Link>
         </div>

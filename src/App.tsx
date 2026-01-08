@@ -12,19 +12,20 @@ import ProtectedRoute from "@/Libs/ProtectedRoute";
 import Home from "@/Pages/Home";
 import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
-import PackagesPage from "@/Pages/Tourist/PackagesPage";
+import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
 import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
+import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";
-import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
 import ChangePassword from "./Pages/Tourist/ChangePassword";
 
-import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
-import { RegisterPage } from "./Pages/Tourist/RegisterPage";
-import { DetailBookingHistory } from "./Pages/Tourist/DetailBookingHistory";
-import { DashboardPage } from "./Pages/Tourist/DashboardPage";
 import BookingHistoryTourist from "./Pages/Tourist/BookingHistoryTourist";
+import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
+import { DashboardPage } from "./Pages/Tourist/DashboardPage";
+import { DetailBookingHistory } from "./Pages/Tourist/DetailBookingHistory";
+import ForgetPasswordPage from "./Pages/Tourist/ForgetPasswordPage";
+import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           <Route path="partner/login" element={<LoginAdmin />} />
           <Route path="community/:communityId/detail" element={<CommunityDetailUser />} />
           <Route path="signup" element={<RegisterPage />} />
+          <Route path="forget-password" element={<ForgetPasswordPage />} />
         </Route>
 
         <Route

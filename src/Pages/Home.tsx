@@ -7,10 +7,11 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import HeroCarousel from "@/Components/HeroCarousel";
+import ServerMaintenanceModal from "@/Components/Modal/ServerMaintenanceModal";
 import NavbarTourist from "@/Components/NavbarTourist";
 import PackageSection, { type PackageData } from "@/Components/PackageSection";
-import ServerMaintenanceModal from "@/Components/ServerMaintenanceModal";
 import TagsSection from "@/Components/TagsSection";
+import { useAuth } from "@/Libs/useAuth";
 import { fetchServerStatus } from "@/Services/server-service";
 import {
   fetchHomeData,
@@ -19,6 +20,7 @@ import {
   type CarouselImage,
   type PackageApiData,
 } from "@/Services/tourist-service";
+import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,6 +32,7 @@ import { useNavigate } from "react-router-dom";
  */
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // State สำหรับข้อมูล carousel images
   const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
@@ -51,6 +54,8 @@ export default function Home() {
 
   // State สำหรับสถานะ maintenance modal
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
+  // State สำหรับแสดงประกาศ maintenance แบบ banner (สำหรับ guest)
+  const [isMaintenanceBannerVisible, setIsMaintenanceBannerVisible] = useState<boolean>(false);
 
   /*
    * ฟังก์ชัน : formatLocation
@@ -152,27 +157,42 @@ export default function Home() {
   /*
    * คำอธิบาย : ตรวจสอบสถานะเซิร์ฟเวอร์
    * Input : ไม่มี
-   * Output : อัพเดท state ของ isMaintenanceModalOpen
+   * Output :
+   *   - ถ้า login แล้ว → เปิด modal
+   *   - ถ้ายังไม่ login (guest) → แสดง banner (ไม่บล็อกการกด login)
    */
   const checkServerStatus = async () => {
     try {
       const statusResponse = await fetchServerStatus();
-      // ถ้า serverOnline = false แสดง modal
-      if (!statusResponse.data.serverOnline) {
-        setIsMaintenanceModalOpen(true);
+      const isOffline = !statusResponse.data.serverOnline;
+
+      if (!isOffline) {
+        setIsMaintenanceModalOpen(false);
+        setIsMaintenanceBannerVisible(false);
+        return;
       }
+
+      // server offline
+      if (user) setIsMaintenanceModalOpen(true);
+      else setIsMaintenanceBannerVisible(true);
     } catch (error) {
       console.error("Error checking server status:", error);
-      // ถ้าเกิด error อาจเป็นเพราะ server offline ก็แสดง modal
-      setIsMaintenanceModalOpen(true);
+      // ถ้าเกิด error อาจเป็นเพราะ server offline:
+      // - login แล้ว → modal
+      // - guest → banner
+      if (user) setIsMaintenanceModalOpen(true);
+      else setIsMaintenanceBannerVisible(true);
     }
   };
 
   // useEffect สำหรับโหลดข้อมูลเมื่อ component mount
   useEffect(() => {
     loadHomeData();
+    // ตรวจสอบสถานะเซิร์ฟเวอร์เสมอ:
+    // - guest: แสดง banner
+    // - login: แสดง modal
     checkServerStatus();
-  }, []);
+  }, [user]);
 
   /*
    * ฟังก์ชัน : handleViewMoreNew
@@ -214,6 +234,16 @@ export default function Home() {
 
       {/* <Navbar /> */}
       <NavbarTourist />
+
+      {/* Maintenance Announcement (Guest only) */}
+      {isMaintenanceBannerVisible && !user && (
+        <div className="w-full bg-[#00BF6A] text-white">
+          <div className="container mx-auto px-6 py-3 flex items-center gap-3">
+            <Icon icon="mdi:bullhorn-variant-outline" className="w-6 h-6" />
+            <span className="font-medium">ปิดปรับปรุงระบบชั่วคราว</span>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {errorMessage && (

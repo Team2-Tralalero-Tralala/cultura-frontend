@@ -486,7 +486,7 @@ export default function FeedbackAll() {
               key={packageGroup.id}
               group={packageGroup}
               onViewAllClick={(packageGroup) =>
-                navigate(`/admin/package/feedbacks/${packageGroup.id}`)
+                navigate(`/member/package/feedbacks/${packageGroup.id}`)
               }
             />
           ))}

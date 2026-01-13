@@ -327,6 +327,9 @@ export default function DetailPackagePage() {
     );
   }
 
+  const isActivityStarted =
+    !!packageDetail.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
+
   const isHasHomestay = packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
   const currentHistory = isHasHomestay ? packageDetail.homestayHistories[0] : null;
   const currentHomestay = currentHistory ? currentHistory.homestay : null;
@@ -656,9 +659,15 @@ export default function DetailPackagePage() {
                 <Button
                   type="confirm-tourist"
                   onClick={() => handleConfirmClick(packageDetail.id)}
+                  disabled={isActivityStarted}
                 >
-                  จองเลย
+                  {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : "จองเลย"}
                 </Button>
+                {isActivityStarted && (
+                  <p className="mt-2 text-xs text-red-600">
+                    ไม่สามารถจองได้ เนื่องจากเวลาเริ่มกิจกรรมผ่านไปแล้ว
+                  </p>
+                )}
               </div>
             </div>
           </div>

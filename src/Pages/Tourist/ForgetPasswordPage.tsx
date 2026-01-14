@@ -4,28 +4,64 @@
  * Flow: ระบุตัวตน -> ตั้งรหัสผ่านใหม่ -> สำเร็จ
  */
 
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import AuthLayout from "@/Layouts/AuthLayout";
 import Button from "@/Components/Button";
+import { SuccessCard } from "@/Components/SuccessCard";
 import TextField from "@/Components/TextField";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import AuthLayout from "@/Layouts/AuthLayout";
 import api from "@/Libs/api";
-import { SuccessCard } from "@/Components/SuccessCard";
 import { Icon } from "@iconify/react";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router";
 
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
 type Step = "identify" | "set" | "success";
 
-function formatToBEString(dateAD: Date) {
-  const pad2 = (n: number) => n.toString().padStart(2, "0");
-  const dd = pad2(dateAD.getDate());
-  const mm = pad2(dateAD.getMonth() + 1);
-  const yyyyBE = String(dateAD.getFullYear() + 543);
-  return `${dd}/${mm}/${yyyyBE}`;
+/*
+ * คำอธิบาย : แปลงวันที่ ค.ศ. (AD) เป็นรูปแบบวัน/เดือน/ปี พ.ศ. เพื่อส่งให้ API
+ * Input : gregorianDate (Date) - วันที่รูปแบบ ค.ศ.
+ * Output : string รูปแบบ "dd/mm/yyyy" (พ.ศ.)
+ */
+function formatGregorianDateToBuddhistEraString(gregorianDate: Date) {
+  const toTwoDigitString = (value: number) => value.toString().padStart(2, "0");
+  const dayOfMonthString = toTwoDigitString(gregorianDate.getDate());
+  const monthString = toTwoDigitString(gregorianDate.getMonth() + 1);
+  const buddhistYearString = String(gregorianDate.getFullYear() + 543);
+  return `${dayOfMonthString}/${monthString}/${buddhistYearString}`;
 }
 
+/*
+ * คำอธิบาย : แปลง error จาก API/Runtime ให้เป็นข้อความสำหรับแสดงผล
+ * Input : error (unknown) - error ที่ catch ได้จาก try/catch
+ * Output : string ข้อความที่เหมาะสมสำหรับแสดงผล
+ */
+function getErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null) {
+    const errorObject = error as {
+      response?: { data?: { message?: unknown } };
+      message?: unknown;
+    };
+
+    const apiMessage = errorObject.response?.data?.message;
+    if (typeof apiMessage === "string" && apiMessage.trim().length > 0) {
+      return apiMessage;
+    }
+
+    const runtimeMessage = errorObject.message;
+    if (typeof runtimeMessage === "string" && runtimeMessage.trim().length > 0) {
+      return runtimeMessage;
+    }
+  }
+
+  return "เกิดข้อผิดพลาด กรุณาลองใหม่";
+}
+
+/*
+ * คำอธิบาย : หน้า TOURIST ลืมรหัสผ่าน (Guest flow)
+ * Route: /guest/forget-password
+ * Flow: ระบุตัวตน -> ตั้งรหัสผ่านใหม่ -> สำเร็จ
+ */
 export default function ForgetPasswordPage() {
   const navigate = useNavigate();
 
@@ -43,6 +79,11 @@ export default function ForgetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /*
+   * คำอธิบาย : แสดงคำแนะนำความปลอดภัยของรหัสผ่านตามเงื่อนไข (passwordRule)
+   * Input : newPassword (string) - รหัสผ่านใหม่จาก state
+   * Output : ReactNode สำหรับ hint หรือ null หากยังไม่ต้องแสดง
+   */
   const strengthHint = useMemo(() => {
     if (!newPassword) return null;
     if (!passwordRule.test(newPassword)) {
@@ -65,10 +106,20 @@ export default function ForgetPasswordPage() {
     );
   }, [newPassword]);
 
+  /*
+   * คำอธิบาย : ตรวจสอบความพร้อมของฟอร์มขั้นตอน "ระบุตัวตน"
+   * Input : contact (string), birthDate (Date | null)
+   * Output : boolean - true เมื่อกรอกข้อมูลครบ
+   */
   const canSubmitIdentify = useMemo(() => {
     return contact.trim().length > 0 && birthDate instanceof Date;
   }, [contact, birthDate]);
 
+  /*
+   * คำอธิบาย : ตรวจสอบความพร้อมของฟอร์มขั้นตอน "ตั้งรหัสผ่านใหม่"
+   * Input : changePasswordCode, newPassword, confirmNewPassword
+   * Output : boolean - true เมื่อข้อมูลครบ/รหัสผ่านผ่านเงื่อนไข/ยืนยันตรงกัน
+   */
   const canSubmitSet = useMemo(() => {
     if (!changePasswordCode) return false;
     if (!newPassword || !confirmNewPassword) return false;
@@ -77,8 +128,15 @@ export default function ForgetPasswordPage() {
     return true;
   }, [changePasswordCode, newPassword, confirmNewPassword]);
 
-  async function handleIdentifySubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /*
+   * คำอธิบาย : ส่งข้อมูลระบุตัวตนเพื่อขอรหัสยืนยันสำหรับเปลี่ยนรหัสผ่าน (changePasswordCode)
+   * Input : event (React.FormEvent) - event จากการ submit form
+   * Output :
+   *    - เรียก API /auth/forget-password
+   *    - บันทึก changePasswordCode ลง sessionStorage และเปลี่ยน step ไป "set"
+   */
+  async function handleIdentifySubmit(event: React.FormEvent) {
+    event.preventDefault();
     if (isSubmitting) return;
     setError(null);
     if (!canSubmitIdentify || !birthDate) {
@@ -88,28 +146,36 @@ export default function ForgetPasswordPage() {
 
     try {
       setIsSubmitting(true);
-      const res = await api.post("/auth/forget-password", {
+      const response = await api.post("/auth/forget-password", {
         contact: contact.trim(),
-        birthDateBE: formatToBEString(birthDate),
+        birthDateBE: formatGregorianDateToBuddhistEraString(birthDate),
       });
 
-      const code = res?.data?.data?.changePasswordCode as string | undefined;
-      if (!code) throw new Error("ไม่พบ changePasswordCode จากระบบ");
+      const changePasswordCodeFromApi = response?.data?.data
+        ?.changePasswordCode as string | undefined;
+      if (!changePasswordCodeFromApi) {
+        throw new Error("ไม่พบ changePasswordCode จากระบบ");
+      }
 
-      sessionStorage.setItem("changePasswordCode", code);
-      setChangePasswordCode(code);
+      sessionStorage.setItem("changePasswordCode", changePasswordCodeFromApi);
+      setChangePasswordCode(changePasswordCodeFromApi);
       setStep("set");
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่"
-      );
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function handleSetPasswordSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /*
+   * คำอธิบาย : ส่งข้อมูลตั้งรหัสผ่านใหม่ด้วย changePasswordCode
+   * Input : event (React.FormEvent) - event จากการ submit form
+   * Output :
+   *    - เรียก API /auth/set-password
+   *    - ลบ changePasswordCode จาก sessionStorage และเปลี่ยน step ไป "success"
+   */
+  async function handleSetPasswordSubmit(event: React.FormEvent) {
+    event.preventDefault();
     if (isSubmitting) return;
     setError(null);
     if (!canSubmitSet || !changePasswordCode) {
@@ -127,10 +193,8 @@ export default function ForgetPasswordPage() {
       sessionStorage.removeItem("changePasswordCode");
       setChangePasswordCode(null);
       setStep("success");
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่"
-      );
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -168,7 +232,7 @@ export default function ForgetPasswordPage() {
                   placeholder="ป้อนอีเมลหรือเบอร์โทรศัพท์"
                   type="text"
                   value={contact}
-                  onChange={(e) => setContact(e.target.value)}
+                  onChange={(event) => setContact(event.target.value)}
                 />
 
                 <BoxDateInput
@@ -208,7 +272,7 @@ export default function ForgetPasswordPage() {
                   placeholder="ป้อนรหัสผ่านใหม่"
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(event) => setNewPassword(event.target.value)}
                   error={!!newPassword && !passwordRule.test(newPassword)}
                 />
                 <div
@@ -230,7 +294,7 @@ export default function ForgetPasswordPage() {
                   placeholder="ป้อนรหัสผ่านใหม่อีกครั้ง"
                   type="password"
                   value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  onChange={(event) => setConfirmNewPassword(event.target.value)}
                   error={!!confirmNewPassword && newPassword !== confirmNewPassword}
                   helperText={
                     !!confirmNewPassword && newPassword !== confirmNewPassword

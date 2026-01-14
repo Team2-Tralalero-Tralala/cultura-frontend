@@ -7,7 +7,6 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import HeroCarousel from "@/Components/HeroCarousel";
-import ServerMaintenanceModal from "@/Components/Modal/ServerMaintenanceModal";
 import NavbarTourist from "@/Components/NavbarTourist";
 import PackageSection, { type PackageData } from "@/Components/PackageSection";
 import TagsSection from "@/Components/TagsSection";
@@ -52,8 +51,6 @@ export default function Home() {
   // State สำหรับข้อความ error
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // State สำหรับสถานะ maintenance modal
-  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState<boolean>(false);
   // State สำหรับแสดงประกาศ maintenance แบบ banner (สำหรับ guest)
   const [isMaintenanceBannerVisible, setIsMaintenanceBannerVisible] = useState<boolean>(false);
 
@@ -167,21 +164,17 @@ export default function Home() {
       const isOffline = !statusResponse.data.serverOnline;
 
       if (!isOffline) {
-        setIsMaintenanceModalOpen(false);
         setIsMaintenanceBannerVisible(false);
         return;
       }
 
       // server offline
-      if (user) setIsMaintenanceModalOpen(true);
-      else setIsMaintenanceBannerVisible(true);
+      setIsMaintenanceBannerVisible(true);
     } catch (error) {
       console.error("Error checking server status:", error);
       // ถ้าเกิด error อาจเป็นเพราะ server offline:
-      // - login แล้ว → modal
       // - guest → banner
-      if (user) setIsMaintenanceModalOpen(true);
-      else setIsMaintenanceBannerVisible(true);
+      setIsMaintenanceBannerVisible(true);
     }
   };
 
@@ -226,17 +219,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Server Maintenance Modal */}
-      <ServerMaintenanceModal
-        isOpen={isMaintenanceModalOpen}
-        onClose={() => setIsMaintenanceModalOpen(false)}
-      />
-
       {/* <Navbar /> */}
       <NavbarTourist />
 
       {/* Maintenance Announcement (Guest only) */}
-      {isMaintenanceBannerVisible && !user && (
+      {isMaintenanceBannerVisible && (
         <div className="w-full bg-[#00BF6A] text-white">
           <div className="container mx-auto px-6 py-3 flex items-center gap-3">
             <Icon icon="mdi:bullhorn-variant-outline" className="w-6 h-6" />

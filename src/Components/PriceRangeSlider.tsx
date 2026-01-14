@@ -27,7 +27,7 @@ type PriceRangeSliderProps = {
  * Output : React Component ที่ render slider และ input fields
  */
 export default function PriceRangeSlider({
-  min = 100,
+  min = 0,
   max = 50000,
   value,
   onChange,
@@ -83,7 +83,7 @@ export default function PriceRangeSlider({
   }, [value]);
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {/* Slider */}
       <Slider
         value={localValue}
@@ -119,19 +119,19 @@ export default function PriceRangeSlider({
       />
 
       {/* Price Input Fields */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0">
         <input
           type="text"
           value={`฿ ${localValue[0].toLocaleString()}`}
           onChange={handleMinInputChange}
-          className="flex-1 px-3 py-2 border border-emerald-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 min-w-0 px-2.5 py-1.5 border border-emerald-500 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         <span className="text-gray-500">-</span>
         <input
           type="text"
           value={`฿ ${localValue[1].toLocaleString()}`}
           onChange={handleMaxInputChange}
-          className="flex-1 px-3 py-2 border border-emerald-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 min-w-0 px-2.5 py-1.5 border border-emerald-500 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
     </div>

@@ -42,9 +42,23 @@ const thaiWeekdayShortMap: Record<string, string> = {
  * คอมโพเนนต์: DailyDate
  * คำอธิบาย: ปฏิทินรายวันอินไลน์ พร้อมเดือนไทยและปี พ.ศ. (ผ่านการแพตช์ dropdown)
  */
-export const DailyDate: React.FC = () => {
-    // วันที่ที่เลือก (ค่าเริ่มต้น: วันนี้)
-    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+export type DailyDateProps = {
+    /** ค่าปัจจุบัน (controlled) */
+    value?: Date | null;
+    /** ค่าเริ่มต้น (uncontrolled) */
+    defaultValue?: Date | null;
+    /** callback เมื่อเลือกวัน (ส่งออกเป็น "YYYY-MM-DD" ตามวันใน local time) */
+    onSelect?: (dStr: string) => void;
+};
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const toLocalYmd = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+export const DailyDate: React.FC<DailyDateProps> = ({ value, defaultValue = null, onSelect }) => {
+    const isControlled = value !== undefined;
+    // วันที่ที่เลือก (uncontrolled) ค่าเริ่มต้น: null (ให้ parent คุมได้)
+    const [innerDate, setInnerDate] = useState<Date | null>(defaultValue);
+    const selectedDate = isControlled ? (value ?? null) : innerDate;
 
     // อ้างอิง "วันนี้" แบบคงที่ตลอดอายุคอมโพเนนต์
     const today = useMemo(() => new Date(), []);
@@ -91,7 +105,10 @@ export const DailyDate: React.FC = () => {
                 <DatePicker
                     inline
                     selected={selectedDate ?? undefined}
-                    onChange={(nextDate: Date | null) => setSelectedDate(nextDate)}
+                    onChange={(nextDate: Date | null) => {
+                        if (!isControlled) setInnerDate(nextDate);
+                        if (nextDate) onSelect?.(toLocalYmd(nextDate));
+                    }}
                     dateFormat="dd/MM/yyyy"
                     isClearable={false}
                     shouldCloseOnSelect={false}

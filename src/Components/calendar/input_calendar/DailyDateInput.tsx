@@ -50,8 +50,21 @@ export type DailyDateInputProps = {
 
 /** ---------- Bridge type เพื่อส่ง onSelect ไป DailyDate โดยไม่แก้ไฟล์ DailyDate.tsx ---------- */
 type DDBaseProps = React.ComponentProps<typeof DailyDate>;
-type DDWithSelectProps = DDBaseProps & { onSelect?: (dStr: string) => void };
-const DailyDateWithSelect = DailyDate as unknown as React.ComponentType<DDWithSelectProps>;
+const DailyDateWithSelect = DailyDate as unknown as React.ComponentType<DDBaseProps>;
+
+/*
+ * ฟังก์ชัน: parseYmdToLocalDate
+ * คำอธิบาย: แปลง "YYYY-MM-DD" → Date (local time) เพื่อใช้แสดง selected ใน DatePicker
+ */
+const parseYmdToLocalDate = (ymd: string): Date | null => {
+    const match = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const monthIndex = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || !Number.isFinite(day)) return null;
+    return new Date(year, monthIndex, day);
+};
 
 export const DailyDateInput: React.FC<DailyDateInputProps> = ({
     width = 255,
@@ -91,6 +104,14 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
     // ---------- Memo: resolve size ----------
     const resolvedWidth = useMemo(() => (typeof width === "number" ? `${width}px` : width), [width]);
     const resolvedHeight = useMemo(() => (typeof height === "number" ? `${height}px` : height), [height]);
+
+    // แปลง selected string → Date เพื่อให้ปฏิทิน highlight วันเดิมได้
+    const selectedDateObj = useMemo(() => {
+        if (!selected) return null;
+        // รองรับทั้ง "YYYY-MM-DD" และ ISO date-time
+        const ymd = selected.includes("T") ? selected.split("T")[0] : selected;
+        return parseYmdToLocalDate(ymd) ?? new Date(selected);
+    }, [selected]);
 
     /*
      * ฟังก์ชัน: setValueSafe
@@ -197,6 +218,7 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
                 <div className={`absolute top-full left-0 mt-2 z-20 ${popoverClassName ?? ""}`} role="dialog" aria-modal="false">
                     {/* หาก DailyDate รองรับ onSelect(dStr) โค้ดด้านล่างจะทำงานได้ทันที */}
                     <DailyDateWithSelect
+                        value={selectedDateObj}
                         onSelect={(dStr: string) => {
                             setValueSafe(dStr);
                             onSelect?.(dStr);

@@ -13,6 +13,7 @@ import Home from "@/Pages/Home";
 import LoginAdmin from "@/Pages/LoginAdmin";
 import LoginTourist from "@/Pages/LoginTourist";
 import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
+import SearchPage from "@/Pages/Tourist/SearchPage";
 import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
@@ -34,6 +35,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/tourist/packages" element={<PackagesPage />} />
         <Route path="/tourist/home" element={<Home />} />
+        <Route path="/tourist/search" element={<SearchPage />} />
+        <Route path="/guest/search" element={<SearchPage />} />
         <Route path="/tourist/package/:packageId" element={<DetailPackagePage />} />
         <Route path="/tourist/edit-profile" element={<EditProfileTourist />} />
         <Route

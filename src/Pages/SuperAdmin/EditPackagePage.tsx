@@ -1005,104 +1005,100 @@ export const EditPackagePage = () => {
         </section>
 
         {/* วันเวลา */}
-        <section className="grid md:grid-cols-4 gap-5">
-          <BoxDateInput
-            id="startDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
-            required
-            value={startDateObject}
-            onChange={(date) => {
-              setStartDateObject(date);
-              if (date) {
-                setFormField("startDate", date.toISOString().split("T")[0] as any);
-              } else {
-                setFormField("startDate", "" as any);
-              }
-            }}
-            minDate={new Date("1900-01-01")}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.startDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่เริ่ม"
-            value={formState.startTime}
-            onChange={(time) => setFormField("startTime", time)}
-            required
-            errorText={formErrors.startTime}
-          />
-          <BoxDateInput
-            id="endDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุด"
-            required
-            value={endDateObject}
-            onChange={(date) => {
-              setEndDateObject(date);
-              if (date) {
-                setFormField("endDate", date.toISOString().split("T")[0] as any);
-              } else {
-                setFormField("endDate", "" as any);
-              }
-            }}
-            minDate={new Date("1900-01-01")}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.endDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่สิ้นสุด"
-            value={formState.endTime}
-            onChange={(time) => setFormField("endTime", time)}
-            required
-            errorText={formErrors.endTime}
-          />
-          <BoxDateInput
-            id="openDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่เปิดจอง"
-            required
-            value={openDateObject}
-            onChange={(date) => {
-              setOpenDateObject(date);
-              if (date) {
-                setFormField("openDate", date.toISOString().split("T")[0] as any);
-              } else {
-                setFormField("openDate", "" as any);
-              }
-            }}
-            minDate={new Date("1900-01-01")}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.openDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่เปิดจอง"
-            value={formState.openTime}
-            onChange={(time) => setFormField("openTime", time)}
-            required
-            errorText={formErrors.openTime}
-          />
-          <BoxDateInput
-            id="closeDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่ปิดจอง"
-            required
-            value={closeDateObject}
-            onChange={(date) => {
-              setCloseDateObject(date);
-              if (date) {
-                setFormField("closeDate", date.toISOString().split("T")[0] as any);
-              } else {
-                setFormField("closeDate", "" as any);
-              }
-            }}
-            minDate={new Date("1900-01-01")}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.closeDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่ปิดจอง"
-            value={formState.closeTime}
-            onChange={(time) => setFormField("closeTime", time)}
-            required
-            errorText={formErrors.closeTime}
-          />
-        </section>
+        <div className="space-y-8">
+          <div>
+            <p className="text-base font-bold mb-4">
+              กำหนดการจัดกิจกรรม <span className="text-red-500">*</span>
+            </p>
+            <section className="grid md:grid-cols-4 gap-5">
+              <BoxDateInput
+                id="startDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่มแพ็กเกจ"
+                value={startDateObject}
+                onChange={(date) => {
+                  setStartDateObject(date);
+                  if (date) setFormField("startDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("startDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.startDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่เริ่ม"
+                value={formState.startTime}
+                onChange={(time) => setFormField("startTime", time)}
+                errorText={formErrors.startTime}
+              />
+              <BoxDateInput
+                id="endDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุดแพ็กเกจ"
+                value={endDateObject}
+                onChange={(date) => {
+                  setEndDateObject(date);
+                  if (date) setFormField("endDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("endDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.endDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่สิ้นสุด"
+                value={formState.endTime}
+                onChange={(time) => setFormField("endTime", time)}
+                errorText={formErrors.endTime}
+              />
+            </section>
+          </div>
+
+          {/* ส่วนที่ 2: กำหนดการเปิดจองแพ็กเกจ */}
+          <div>
+            <p className="text-base font-bold mb-4">
+              กำหนดการเปิดจองแพ็กเกจ <span className="text-red-500">*</span>
+            </p>
+            <section className="grid md:grid-cols-4 gap-5">
+              <BoxDateInput
+                id="openDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่มเปิดจอง"
+                value={openDateObject}
+                onChange={(date) => {
+                  setOpenDateObject(date);
+                  if (date) setFormField("openDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("openDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.openDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่เริ่ม"
+                value={formState.openTime}
+                onChange={(time) => setFormField("openTime", time)}
+                errorText={formErrors.openTime}
+              />
+              <BoxDateInput
+                id="closeDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุดการปิดจอง"
+                value={closeDateObject}
+                onChange={(date) => {
+                  setCloseDateObject(date);
+                  if (date) setFormField("closeDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("closeDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.closeDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่สิ้นสุด"
+                value={formState.closeTime}
+                onChange={(time) => setFormField("closeTime", time)}
+                errorText={formErrors.closeTime}
+              />
+            </section>
+          </div>
+        </div>
 
         {/* แท็ก / ราคา (แท็กใช้ TagSelector เหมือน EditHomestay) */}
         <section className="grid md:grid-cols-2 gap-5">

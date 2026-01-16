@@ -20,4 +20,5 @@ export interface BaseButtonProps {
   htmlType?: "button" | "submit" | "reset";
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }

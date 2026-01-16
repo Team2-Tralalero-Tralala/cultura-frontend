@@ -120,10 +120,7 @@ export default function DetailPackagePage() {
   const minLng = lng !== undefined ? lng - delta : undefined;
   const maxLng = lng !== undefined ? lng + delta : undefined;
 
-  const latLng =
-    lat !== undefined && lng !== undefined
-      ? `${lat} ${lng}`
-      : "";
+  const latLng = lat !== undefined && lng !== undefined ? `${lat} ${lng}` : "";
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการแปลง path รูปภาพให้เป็น URL ที่สมบูรณ์
@@ -156,10 +153,10 @@ export default function DetailPackagePage() {
    */
   const galleryItems: MediaItem[] = packageDetail?.packageFiles
     ? packageDetail.packageFiles.map((file) => ({
-      type: "image",
-      src: generateImageUrl(file.filePath),
-      alt: packageDetail.name,
-    }))
+        type: "image",
+        src: generateImageUrl(file.filePath),
+        alt: packageDetail.name,
+      }))
     : [];
 
   /*
@@ -242,10 +239,7 @@ export default function DetailPackagePage() {
    */
   const handleIncreaseQuantity = () => {
     if (!packageDetail) return;
-    if (
-      packageDetail.capacity &&
-      bookingQuantity >= packageDetail.capacity
-    ) {
+    if (packageDetail.capacity && bookingQuantity >= packageDetail.capacity) {
       return;
     }
     setBookingQuantity((previousQuantity) => previousQuantity + 1);
@@ -257,9 +251,7 @@ export default function DetailPackagePage() {
    * Output : bookingQuantity ลดลง 1
    */
   const handleDecreaseQuantity = () => {
-    setBookingQuantity((previousQuantity) =>
-      Math.max(1, previousQuantity - 1)
-    );
+    setBookingQuantity((previousQuantity) => Math.max(1, previousQuantity - 1));
   };
 
   useEffect(() => {
@@ -330,7 +322,8 @@ export default function DetailPackagePage() {
   const isActivityStarted =
     !!packageDetail.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
 
-  const isHasHomestay = packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
+  const isHasHomestay =
+    packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
   const currentHistory = isHasHomestay ? packageDetail.homestayHistories[0] : null;
   const currentHomestay = currentHistory ? currentHistory.homestay : null;
 
@@ -376,7 +369,8 @@ export default function DetailPackagePage() {
 
         <div className="mb-4 mt-2">
           <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)} - {formatDateWithTime(packageDetail.bookingCloseDate)}
+            เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)} -{" "}
+            {formatDateWithTime(packageDetail.bookingCloseDate)}
           </p>
         </div>
 
@@ -419,7 +413,8 @@ export default function DetailPackagePage() {
         <div className="flex items-center gap-2 mb-4 mt-2">
           <span className="font-medium text-black">วันที่เริ่ม - วันที่สิ้นสุด : </span>
           <span className="text-black">
-            {formatDateWithTime(packageDetail.startDate)} - {formatDateWithTime(packageDetail.dueDate)}
+            {formatDateWithTime(packageDetail.startDate)} -{" "}
+            {formatDateWithTime(packageDetail.dueDate)}
           </span>
         </div>
 
@@ -539,7 +534,10 @@ export default function DetailPackagePage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {currentHomestay.homestayImage && currentHomestay.homestayImage.length > 0 ? (
                       currentHomestay.homestayImage.slice(0, 5).map((image, index) => (
-                        <div key={index} className="h-28 rounded-lg overflow-hidden border border-gray-200">
+                        <div
+                          key={index}
+                          className="h-28 rounded-lg overflow-hidden border border-gray-200"
+                        >
                           <img
                             src={generateImageUrl(image.image)}
                             alt="homestay"
@@ -573,9 +571,7 @@ export default function DetailPackagePage() {
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Icon icon="healthicons:travel" className="text-black text-2xl" />
-            <h2 className="text-xl font-bold text-black0">
-              สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)
-            </h2>
+            <h2 className="text-xl font-bold text-black0">สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)</h2>
           </div>
 
           <div className="border border-gray-200 rounded-xl p-6 bg-white">

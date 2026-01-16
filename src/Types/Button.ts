@@ -10,7 +10,7 @@
  *   - ไม่มีการคืนค่า (ใช้ใน JSX เพื่อ render ปุ่ม)
  */
 
-export type ButtonType = "confirm-tourist" | "confirm-admin" | "cancel";
+export type ButtonType = "confirm-tourist" | "confirm-admin" | "cancel" | "request";
 
 export interface BaseButtonProps {
   children?: React.ReactNode;

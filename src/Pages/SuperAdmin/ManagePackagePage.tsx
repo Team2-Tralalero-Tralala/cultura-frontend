@@ -12,6 +12,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +23,8 @@ type PackageRowData = {
   owner: string;
   isPublished: boolean;
   isApproved: boolean;
+  bookedCount: number;
+  capacity: number;
 };
 
 /**
@@ -60,9 +63,11 @@ export default function ManagePackageSuperAdmin() {
       render: (packageData) => (packageData.isPublished ? "เผยแพร่" : "ไม่เผยแพร่"),
     },
     {
-      key: "isApproved",
-      header: "สถานะการอนุมัติ",
-      render: (packageData) => (packageData.isApproved ? "อนุมัติ" : "รออนุมัติ"),
+      key: "bookingStats",
+      header: "จำนวนการจอง",
+      render: (packageData: any) => {
+        return `${packageData.bookedCount || 0}/${packageData.capacity || 0}`;
+      },
     },
   ];
 
@@ -74,6 +79,7 @@ export default function ManagePackageSuperAdmin() {
   const [packageToDelete, setPackageToDelete] = useState<PackageRowData | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [packagesToBulkDelete, setPackagesToBulkDelete] = useState<PackageRowData[]>([]);
+  const [filters, setFilters] = useState({ packageStatus: "ทั้งหมด", approvalStatus: "ทั้งหมด" });
 
   /**
    * คำอธิบาย : โหลดข้อมูลแพ็กเกจจาก API ตาม page และ limit ปัจจุบัน
@@ -84,7 +90,11 @@ export default function ManagePackageSuperAdmin() {
     try {
       setIsLoading(true);
       const response = await axios.get(`${API_URL}/super/packages`, {
-        params: { page: currentPage, limit: pageSize },
+        params: {
+          page: currentPage, limit: pageSize,
+          status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
+          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
+        },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
       });
@@ -114,11 +124,10 @@ export default function ManagePackageSuperAdmin() {
           title: packageItem?.name ?? packageItem?.title ?? "-",
           community: packageItem?.community?.name ?? packageItem?.communityName ?? "-",
           owner: packageItem?.overseerPackage
-            ? `${packageItem.overseerPackage.fname ?? ""} ${
-                packageItem.overseerPackage.lname ?? ""
+            ? `${packageItem.overseerPackage.fname ?? ""} ${packageItem.overseerPackage.lname ?? ""
               }`.trim() ||
-              packageItem.overseerPackage.username ||
-              "-"
+            packageItem.overseerPackage.username ||
+            "-"
             : packageItem?.ownerName ?? "-",
           isPublished:
             packageItem?.statusPackage === "PUBLISH" ||
@@ -128,6 +137,8 @@ export default function ManagePackageSuperAdmin() {
             packageItem?.statusApprove === "APPROVE" ||
             packageItem?.approved === true ||
             packageItem?.isApproved === true,
+          bookedCount: packageItem?.bookingHistories?.length ?? 0,
+          capacity: packageItem?.capacity ?? 0,
         })
       );
 
@@ -140,7 +151,7 @@ export default function ManagePackageSuperAdmin() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, filters]);
 
   /**
    * คำอธิบาย : Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันการลบจาก Modal
@@ -307,19 +318,29 @@ export default function ManagePackageSuperAdmin() {
       {/* หัวข้อและช่องค้นหา */}
       <div className="flex flex-col gap-2 -mt-3">
         <h1 className="text-xl font-bold">จัดการแพ็กเกจ</h1>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 max-w-md">
+              <SearchBarTable
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </div>
+
+            <PackageFilter
+              currentFilters={filters}
+              onFilterChange={(type: string, value: string) => {
+                setFilters(prev => ({ ...prev, [type]: value }));
+                setCurrentPage(1);
+              }}
             />
           </div>
-
           <div className="ml-auto flex items-center gap-3">
             <Button type="confirm-admin" onClick={navigateToApprovalRequests}>
               คำขออนุมัติ
             </Button>
           </div>
+
         </div>
       </div>
 

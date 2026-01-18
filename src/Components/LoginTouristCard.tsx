@@ -4,14 +4,12 @@
  * และเรียกใช้งาน AuthContext เพื่อทำการ login
  */
 
-import TextField from "./TextField";
-import Button from "./Button";
-import { Link } from "react-router-dom";
-import { AuthContext } from "../Libs/AuthProvider";
-import ModalBlocked from "./Modal/ModalBlocked";
 import CircularProgress from "@mui/material/CircularProgress";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
+import Button from "./Button";
+import TextField from "./TextField";
 
 const loginSchema = z.object({
   username: z.string().min(1, "กรุณากรอกชื่อผู้ใช้หรืออีเมล"),
@@ -23,8 +21,7 @@ const loginSchema = z.object({
  * Output : React Component ที่แสดงฟอร์ม login และจัดการ redirect/error
  */
 export function LoginTouristCard() {
-  const [showBlocked, setShowBlocked] = useState(false);
-  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
   // State สำหรับควบคุม input และ error
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -82,55 +79,17 @@ export function LoginTouristCard() {
    *   - redirect → /tourist ถ้า role == tourist
    *   - setError หรือ ModalBlocked ถ้าไม่ผ่าน
    */
-  const handleLogin = async (event: React.FormEvent) => {
+  const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     setFormErrors({});
+
+    // Tourist ถูกปิดการใช้งานการเข้าสู่ระบบชั่วคราว:
+    // ให้ redirect ไปหน้า / (Home จะแสดง maintenance modal ทันทีเมื่อโหลดหน้า)
     setIsLoading(true);
+    navigate("/");
+    setIsLoading(false);
 
-    // Validate with Zod
-    const result = loginSchema.safeParse({ username, password });
-    if (!result.success) {
-      const errors: { username?: string; password?: string } = {};
-      result.error.issues.forEach((err) => {
-        if (err.path[0] === "username") errors.username = err.message;
-        if (err.path[0] === "password") errors.password = err.message;
-      });
-      setFormErrors(errors);
-      setIsLoading(false);
-      return;
-    }
-    try {
-      const loggedInUser = await login(username, password); // ให้ login return user
-
-      if (loggedInUser.user.role !== "tourist") {
-        setError("ไม่พบบัญชี");
-      } else {
-        loggedInUser.navigateToFirstPage();
-      }
-    } catch (error: any) {
-      const blockedMsg = error?.response?.data?.message;
-      const isBlocked = blockedMsg.includes("is blocked");
-
-      // กรณี User is blocked
-      if (isBlocked) {
-        if (blockedMsg && !blockedMsg.includes("tourist")) {
-          setError("ไม่พบบัญชี");
-        } else {
-          setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
-          setShowBlocked(true);
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // ส่ง error ภาษาไทยมาแสดง
-      const backendMsg = error?.response?.data?.message;
-      setError(backendMsg);
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -172,7 +131,6 @@ export function LoginTouristCard() {
           {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}
         </Button>
       </form>
-      <ModalBlocked open={showBlocked} onClose={() => setShowBlocked(false)} />
     </div>
   );
 }

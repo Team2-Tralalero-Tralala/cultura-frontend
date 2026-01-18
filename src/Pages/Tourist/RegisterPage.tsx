@@ -210,7 +210,7 @@ export function RegisterPage() {
    * input: date (วันที่ที่เลือก)
    * output: -
    */
-  function handleDateChange(date: Date | null) {
+  function handleDateChange(date: Date) {
     setFormData((prevData) => ({ ...prevData, birthDate: date }));
     console.log(date);
     validateField("birthDate", date);
@@ -370,7 +370,7 @@ export function RegisterPage() {
               <BoxDateInput
                 required
                 value={formData.birthDate || null}
-                onChange={handleDateChange}
+                onChange={() => handleDateChange}
               />
             </div>
           </div>

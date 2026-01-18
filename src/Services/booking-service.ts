@@ -5,9 +5,10 @@
  * Base URL: ${VITE_API_URL}/admin/booking/refunds
  */
 
+import api from "@/Libs/api";
 import axios from "axios";
 
-export const api = axios.create({
+export const apiRefund = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
@@ -19,7 +20,7 @@ export const api = axios.create({
  * Output : PaginationResponse<Refund>
  */
 export async function fetchRefundRequests(page = 1, limit = 10) {
-  return api.get(`/admin/booking/refunds/all`, { params: { page, limit } });
+  return apiRefund.get(`/admin/booking/refunds/all`, { params: { page, limit } });
 }
 
 /*
@@ -27,7 +28,7 @@ export async function fetchRefundRequests(page = 1, limit = 10) {
  * Mapping : PATCH /admin/booking/refunds/:bookingId/approve
  */
 export async function approveRefund(bookingId: number) {
-  return api.patch(`/admin/booking/refunds/${bookingId}/approve`);
+  return apiRefund.patch(`/admin/booking/refunds/${bookingId}/approve`);
 }
 
 /*
@@ -37,7 +38,7 @@ export async function approveRefund(bookingId: number) {
  * Input : reason (string)
  */
 export async function rejectRefund(bookingId: number, reason: string) {
-  return api.patch(`/admin/booking/refunds/${bookingId}/reject`, { reason });
+  return apiRefund.patch(`/admin/booking/refunds/${bookingId}/reject`, { reason });
 }
 
 
@@ -47,7 +48,7 @@ export async function rejectRefund(bookingId: number, reason: string) {
  * Output : PaginationResponse<Refund>
  */
 export async function fetchRefundRequestsMember(page = 1, limit = 10) {
-  return api.get(`/member/booking-history`, { params: { page, limit } });
+  return apiRefund.get(`/member/booking-history`, { params: { page, limit } });
 }
 
 /*
@@ -55,7 +56,7 @@ export async function fetchRefundRequestsMember(page = 1, limit = 10) {
  * Mapping : PATCH /member/booking-history/:bookingId/approve-refund
  */
 export async function approveRefundMember(bookingId: number) {
-  return api.patch(`/member/booking-history/${bookingId}/approve-refund`);
+  return apiRefund.patch(`/member/booking-history/${bookingId}/approve-refund`);
 }
 
 /*
@@ -65,7 +66,7 @@ export async function approveRefundMember(bookingId: number) {
  * Input : reason (string)
  */
 export async function rejectRefundMember(bookingId: number, reason: string) {
-  return api.patch(`/member/booking-history/${bookingId}/reject-refund`, { reason });
+  return apiRefund.patch(`/member/booking-history/${bookingId}/reject-refund`, { reason });
 }
 
 /**
@@ -74,8 +75,8 @@ export async function rejectRefundMember(bookingId: number, reason: string) {
  * Output : Promise ข้อมูลรายการจองและข้อมูล Pagination
  */
 export async function getMemberBookingHistories(
-  page = 1, 
-  limit = 10, 
+  page = 1,
+  limit = 10,
   status = "ALL"
 ) {
   /**
@@ -86,11 +87,93 @@ export async function getMemberBookingHistories(
    *  - limit  : จำนวนรายการต่อหน้า
    *  - status : สถานะการจอง (ALL, PENDING, BOOKED, REFUNDED ฯลฯ)
    */
-  return api.get(`/member/booking-histories`, { 
-    params: { 
-      page, 
-      limit, 
+  return apiRefund.get(`/member/booking-histories`, {
+    params: {
+      page,
+      limit,
       status // ส่ง status ไปเพื่อให้ Backend ตัวใหม่ทำงาน (Dispatcher)
-    } 
+    }
   });
+}
+
+/*
+ * Interface สำหรับข้อมูลการจอง
+ */
+export interface BookingData {
+  packageId: number;
+  totalParticipant: number;
+  transferSlip?: string;
+  touristBankId?: number;
+}
+
+/*
+ * Interface สำหรับ Response จากการสร้างการจอง
+ */
+export interface CreateBookingResponse {
+  status: number;
+  error: boolean;
+  message: string;
+  data: {
+    id: number;
+    touristId: number;
+    packageId: number;
+    totalParticipant: number;
+    status: string;
+    bookingAt: string;
+    transferSlip?: string;
+    touristBankId?: number;
+    package: {
+      id: number;
+      name: string;
+      price: number;
+    };
+    tourist: {
+      id: number;
+      fname: string;
+      lname: string;
+    };
+  };
+}
+
+/*
+ * Interface สำหรับ Response จากการอัปโหลดไฟล์
+ */
+export interface UploadFileResponse {
+  status: number;
+  error: boolean;
+  message: string;
+  data: {
+    filePath: string;
+  };
+}
+
+/*
+ * คำอธิบาย : อัปโหลดหลักฐานการชำระเงิน
+ * Input :
+ *   - paymentProof (File) - ไฟล์หลักฐานการชำระเงิน
+ * Output : Promise<string> - path ของไฟล์ที่อัปโหลดแล้ว
+ */
+export async function uploadPaymentProof(paymentProof: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("paymentProof", paymentProof);
+
+  const response = await api.post<UploadFileResponse>("/tourist/upload/payment-proof", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data.data.filePath;
+}
+
+/*
+ * คำอธิบาย : สร้างการจองแพ็กเกจใหม่
+ * Input :
+ *   - bookingId (number) - รหัสการจอง (reference ID, อาจใช้ placeholder หรือ generate จาก frontend)
+ *   - bookingData (BookingData) - ข้อมูลการจอง
+ * Output : Promise<CreateBookingResponse> - ข้อมูลการจองที่สร้างแล้ว
+ */
+export async function createBooking(bookingId: number, bookingData: BookingData): Promise<CreateBookingResponse> {
+  const response = await api.post<CreateBookingResponse>(`/tourist/booking/${bookingId}`, bookingData);
+  return response.data;
 }

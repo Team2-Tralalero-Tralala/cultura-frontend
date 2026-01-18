@@ -10,6 +10,8 @@ import HeroCarousel from "@/Components/HeroCarousel";
 import NavbarTourist from "@/Components/NavbarTourist";
 import PackageSection, { type PackageData } from "@/Components/PackageSection";
 import TagsSection from "@/Components/TagsSection";
+import { useAuth } from "@/Libs/useAuth";
+import { fetchServerStatus } from "@/Services/server-service";
 import {
   fetchHomeData,
   fetchNewestPackages,
@@ -17,6 +19,7 @@ import {
   type CarouselImage,
   type PackageApiData,
 } from "@/Services/tourist-service";
+import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -28,6 +31,7 @@ import { useNavigate } from "react-router-dom";
  */
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // State สำหรับข้อมูล carousel images
   const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
@@ -46,6 +50,9 @@ export default function Home() {
 
   // State สำหรับข้อความ error
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // State สำหรับแสดงประกาศ maintenance แบบ banner (สำหรับ guest)
+  const [isMaintenanceBannerVisible, setIsMaintenanceBannerVisible] = useState<boolean>(false);
 
   /*
    * ฟังก์ชัน : formatLocation
@@ -144,10 +151,41 @@ export default function Home() {
     }
   };
 
+  /*
+   * คำอธิบาย : ตรวจสอบสถานะเซิร์ฟเวอร์
+   * Input : ไม่มี
+   * Output :
+   *   - ถ้า login แล้ว → เปิด modal
+   *   - ถ้ายังไม่ login (guest) → แสดง banner (ไม่บล็อกการกด login)
+   */
+  const checkServerStatus = async () => {
+    try {
+      const statusResponse = await fetchServerStatus();
+      const isOffline = !statusResponse.data.serverOnline;
+
+      if (!isOffline) {
+        setIsMaintenanceBannerVisible(false);
+        return;
+      }
+
+      // server offline
+      setIsMaintenanceBannerVisible(true);
+    } catch (error) {
+      console.error("Error checking server status:", error);
+      // ถ้าเกิด error อาจเป็นเพราะ server offline:
+      // - guest → banner
+      setIsMaintenanceBannerVisible(true);
+    }
+  };
+
   // useEffect สำหรับโหลดข้อมูลเมื่อ component mount
   useEffect(() => {
     loadHomeData();
-  }, []);
+    // ตรวจสอบสถานะเซิร์ฟเวอร์เสมอ:
+    // - guest: แสดง banner
+    // - login: แสดง modal
+    checkServerStatus();
+  }, [user]);
 
   /*
    * ฟังก์ชัน : handleViewMoreNew
@@ -176,14 +214,23 @@ export default function Home() {
    * Output : void
    */
   const handleTagClick = (tag: string) => {
-    console.log("Tag clicked:", tag);
-    // TODO: Navigate to filtered packages by tag
+    navigate(`/tourist/search?tag=${encodeURIComponent(tag)}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* <Navbar /> */}
       <NavbarTourist />
+
+      {/* Maintenance Announcement (Guest only) */}
+      {isMaintenanceBannerVisible && (
+        <div className="w-full bg-[#00BF6A] text-white">
+          <div className="container mx-auto px-6 py-3 flex items-center gap-3">
+            <Icon icon="mdi:bullhorn-variant-outline" className="w-6 h-6" />
+            <span className="font-medium">ปิดปรับปรุงระบบชั่วคราว</span>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {errorMessage && (

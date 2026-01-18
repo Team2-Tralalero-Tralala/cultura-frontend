@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "@/Libs/useAuth";
 
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -103,6 +104,7 @@ interface ApiResponse {
 
 export default function DetailPackagePage() {
   const { packageId } = useParams<{ packageId: string }>();
+  const { user } = useAuth();
   const [packageDetail, setPackageDetail] = useState<PackageDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -120,10 +122,7 @@ export default function DetailPackagePage() {
   const minLng = lng !== undefined ? lng - delta : undefined;
   const maxLng = lng !== undefined ? lng + delta : undefined;
 
-  const latLng =
-    lat !== undefined && lng !== undefined
-      ? `${lat} ${lng}`
-      : "";
+  const latLng = lat !== undefined && lng !== undefined ? `${lat} ${lng}` : "";
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการแปลง path รูปภาพให้เป็น URL ที่สมบูรณ์
@@ -156,10 +155,10 @@ export default function DetailPackagePage() {
    */
   const galleryItems: MediaItem[] = packageDetail?.packageFiles
     ? packageDetail.packageFiles.map((file) => ({
-      type: "image",
-      src: generateImageUrl(file.filePath),
-      alt: packageDetail.name,
-    }))
+        type: "image",
+        src: generateImageUrl(file.filePath),
+        alt: packageDetail.name,
+      }))
     : [];
 
   /*
@@ -183,10 +182,24 @@ export default function DetailPackagePage() {
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการนำทางไปยังหน้าสรุปการจอง
    * Input: packageId
-   * Output : นำทางไปที่ Route /tourist/booking/package/:packageId/summary
+   * Output : นำทางไปที่ Route /tourist/booking/package/:packageId/summary พร้อมตรวจสอบการล็อกอิน
    */
   const handleConfirmClick = (packageId: number) => {
-    navigate(`/tourist/booking/package/${packageId}/summary`);
+    // ตรวจสอบว่าผู้ใช้ล็อกอินแล้วหรือยัง
+    if (!user) {
+      // ถ้ายังไม่ล็อกอิน ให้ redirect ไปหน้า login พร้อมส่ง state เพื่อกลับมาหน้านี้
+      navigate("/guest/login", {
+        state: { from: location.pathname },
+      });
+      return;
+    }
+
+    // ถ้าล็อกอินแล้ว ให้ไปหน้าสรุปการจอง
+    navigate(`/tourist/booking/package/${packageId}/summary`, {
+      state: {
+        numberOfPeople: bookingQuantity,
+      },
+    });
   };
 
   /*
@@ -242,10 +255,7 @@ export default function DetailPackagePage() {
    */
   const handleIncreaseQuantity = () => {
     if (!packageDetail) return;
-    if (
-      packageDetail.capacity &&
-      bookingQuantity >= packageDetail.capacity
-    ) {
+    if (packageDetail.capacity && bookingQuantity >= packageDetail.capacity) {
       return;
     }
     setBookingQuantity((previousQuantity) => previousQuantity + 1);
@@ -257,9 +267,7 @@ export default function DetailPackagePage() {
    * Output : bookingQuantity ลดลง 1
    */
   const handleDecreaseQuantity = () => {
-    setBookingQuantity((previousQuantity) =>
-      Math.max(1, previousQuantity - 1)
-    );
+    setBookingQuantity((previousQuantity) => Math.max(1, previousQuantity - 1));
   };
 
   useEffect(() => {
@@ -327,7 +335,11 @@ export default function DetailPackagePage() {
     );
   }
 
-  const isHasHomestay = packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
+  const isActivityStarted =
+    !!packageDetail.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
+
+  const isHasHomestay =
+    packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
   const currentHistory = isHasHomestay ? packageDetail.homestayHistories[0] : null;
   const currentHomestay = currentHistory ? currentHistory.homestay : null;
 
@@ -373,7 +385,8 @@ export default function DetailPackagePage() {
 
         <div className="mb-4 mt-2">
           <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)} - {formatDateWithTime(packageDetail.bookingCloseDate)}
+            เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)} -{" "}
+            {formatDateWithTime(packageDetail.bookingCloseDate)}
           </p>
         </div>
 
@@ -416,7 +429,8 @@ export default function DetailPackagePage() {
         <div className="flex items-center gap-2 mb-4 mt-2">
           <span className="font-medium text-black">วันที่เริ่ม - วันที่สิ้นสุด : </span>
           <span className="text-black">
-            {formatDateWithTime(packageDetail.startDate)} - {formatDateWithTime(packageDetail.dueDate)}
+            {formatDateWithTime(packageDetail.startDate)} -{" "}
+            {formatDateWithTime(packageDetail.dueDate)}
           </span>
         </div>
 
@@ -536,7 +550,10 @@ export default function DetailPackagePage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {currentHomestay.homestayImage && currentHomestay.homestayImage.length > 0 ? (
                       currentHomestay.homestayImage.slice(0, 5).map((image, index) => (
-                        <div key={index} className="h-28 rounded-lg overflow-hidden border border-gray-200">
+                        <div
+                          key={index}
+                          className="h-28 rounded-lg overflow-hidden border border-gray-200"
+                        >
                           <img
                             src={generateImageUrl(image.image)}
                             alt="homestay"
@@ -570,9 +587,7 @@ export default function DetailPackagePage() {
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <Icon icon="healthicons:travel" className="text-black text-2xl" />
-            <h2 className="text-xl font-bold text-black0">
-              สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)
-            </h2>
+            <h2 className="text-xl font-bold text-black0">สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)</h2>
           </div>
 
           <div className="border border-gray-200 rounded-xl p-6 bg-white">
@@ -656,9 +671,15 @@ export default function DetailPackagePage() {
                 <Button
                   type="confirm-tourist"
                   onClick={() => handleConfirmClick(packageDetail.id)}
+                  disabled={isActivityStarted}
                 >
-                  จองเลย
+                  {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : "จองเลย"}
                 </Button>
+                {isActivityStarted && (
+                  <p className="mt-2 text-xs text-red-600">
+                    ไม่สามารถจองได้ เนื่องจากเวลาเริ่มกิจกรรมผ่านไปแล้ว
+                  </p>
+                )}
               </div>
             </div>
           </div>

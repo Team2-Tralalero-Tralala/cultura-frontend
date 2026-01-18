@@ -50,8 +50,21 @@ export type DailyDateInputProps = {
 
 /** ---------- Bridge type เพื่อส่ง onSelect ไป DailyDate โดยไม่แก้ไฟล์ DailyDate.tsx ---------- */
 type DDBaseProps = React.ComponentProps<typeof DailyDate>;
-type DDWithSelectProps = DDBaseProps & { onSelect?: (dStr: string) => void };
-const DailyDateWithSelect = DailyDate as unknown as React.ComponentType<DDWithSelectProps>;
+const DailyDateWithSelect = DailyDate as unknown as React.ComponentType<DDBaseProps>;
+
+/*
+ * ฟังก์ชัน: parseYmdToLocalDate
+ * คำอธิบาย: แปลง "YYYY-MM-DD" → Date (local time) เพื่อใช้แสดง selected ใน DatePicker
+ */
+const parseYmdToLocalDate = (ymd: string): Date | null => {
+    const match = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const monthIndex = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || !Number.isFinite(day)) return null;
+    return new Date(year, monthIndex, day);
+};
 
 export const DailyDateInput: React.FC<DailyDateInputProps> = ({
     width = 255,
@@ -91,6 +104,14 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
     // ---------- Memo: resolve size ----------
     const resolvedWidth = useMemo(() => (typeof width === "number" ? `${width}px` : width), [width]);
     const resolvedHeight = useMemo(() => (typeof height === "number" ? `${height}px` : height), [height]);
+
+    // แปลง selected string → Date เพื่อให้ปฏิทิน highlight วันเดิมได้
+    const selectedDateObj = useMemo(() => {
+        if (!selected) return null;
+        // รองรับทั้ง "YYYY-MM-DD" และ ISO date-time
+        const ymd = selected.includes("T") ? selected.split("T")[0] : selected;
+        return parseYmdToLocalDate(ymd) ?? new Date(selected);
+    }, [selected]);
 
     /*
      * ฟังก์ชัน: setValueSafe
@@ -141,6 +162,14 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
             )}
 
             <div className="relative mt-1">
+                {/* ไอคอนปฏิทิน (แสดงในช่องเหมือนตัวอย่าง UI) */}
+                <Icon
+                    icon="quill:calendar"
+                    className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-[18px] h-[18px] ${
+                        disabled ? "text-gray-400" : "text-gray-500"
+                    }`}
+                />
+
                 {/* ช่องแสดงค่าปัจจุบันแบบ readOnly สำหรับฟอร์ม/การโฟกัสที่ชัดเจน */}
                 <input
                     id={inputId}
@@ -153,8 +182,14 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
                     aria-describedby={errorText ? errorId : undefined}
                     placeholder={placeholder}
                     style={{ height: resolvedHeight }}
-                    className={`w-full rounded-2xl border bg-white px-12 text-center text-gray-700 outline-none transition
-                                ${errorText ? "border-red-500 focus:border-red-500" : "border-gray-500 focus:border-emerald-400"}
+                    className={`w-full rounded-lg border bg-white pl-10 pr-10 text-left text-gray-700 outline-none transition
+                                placeholder:text-gray-400
+                                ${disabled ? "cursor-not-allowed bg-gray-50" : "cursor-pointer"}
+                                ${
+                                    errorText
+                                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                                        : "border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                                }
                                 ${inputClassName ?? ""}`}
                     onClick={toggleOpen}
                 />
@@ -164,25 +199,12 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
                     <button
                         type="button"
                         onClick={() => setValueSafe(null)}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         aria-label="ล้างค่า"
                     >
                         <Icon icon="material-symbols:close" className="w-[20px] h-[20px]" />
                     </button>
                 )}
-
-                {/* ปุ่มเปิดปฏิทิน */}
-                <button
-                    type="button"
-                    onClick={toggleOpen}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 ${buttonClassName ?? ""}`}
-                    aria-label="เปิดปฏิทิน"
-                    aria-haspopup="dialog"
-                    aria-expanded={isOpen}
-                    disabled={disabled}
-                >
-                    <Icon icon="quill:calendar" className="w-[26px] h-[26px]" />
-                </button>
             </div>
 
             {/* แสดง error A11y */}
@@ -197,6 +219,7 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
                 <div className={`absolute top-full left-0 mt-2 z-20 ${popoverClassName ?? ""}`} role="dialog" aria-modal="false">
                     {/* หาก DailyDate รองรับ onSelect(dStr) โค้ดด้านล่างจะทำงานได้ทันที */}
                     <DailyDateWithSelect
+                        value={selectedDateObj}
                         onSelect={(dStr: string) => {
                             setValueSafe(dStr);
                             onSelect?.(dStr);

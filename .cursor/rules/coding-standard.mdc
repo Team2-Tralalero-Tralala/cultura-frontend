@@ -1,6 +1,10 @@
 ---
-description: This is a Tourism Community Management System (Cultura) backend built with Express.js and TypeScript following Three-Tier Architecture (TTA)
-globs: src/**/*.ts
+description: This is a Tourism Community Management System (Cultura) frontend built with React.js and TypeScript, and backend built with Express.js and TypeScript following Three-Tier Architecture (TTA). This document contains the complete Coding Standard (CS) version 1.2.0.
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
 alwaysApply: true
 ---
 
@@ -10,8 +14,8 @@ alwaysApply: true
 ตารางที่ 0-1 การควบคุมการเปลี่ยนแปลงเอกสาร
 
 **ชื่อเอกสาร**: Coding Standard (CS)
-**เวอร์ชันปัจจุบัน**: 1.1.1
-**วันที่แก้ไขเวอร์ชันล่าสุด**: 29 สิงหาคม 2568
+**เวอร์ชันปัจจุบัน**: 1.2.0
+**วันที่แก้ไขเวอร์ชันล่าสุด**: 11 พฤศจิกายน 2568
 **ผู้จัดทำเอกสารนี้**: ณัฏฐนันท์ สิริสุรยุทธ
 
 ### ประวัติการแก้ไข
@@ -24,6 +28,7 @@ alwaysApply: true
 - **1.0.2** (21 กรกฎาคม 2568): แก้ไขเอกสาร — ณัฏฐนันท์
 - **1.1.0** (20 สิงหาคม 2568): เพิ่มโครงสร้างโปรเจกต์, เพิ่มสารบัญรูปภาพ — ณัฏฐนันท์
 - **1.1.1** (29 สิงหาคม 2568): แก้ไขเอกสาร — ณัฏฐนันท์
+- **1.2.0** (11 พฤศจิกายน 2568): เพิ่มในส่วนที่ 3 และ 4 — ณัฏฐนันท์
 
 ## บทนำ
 การพัฒนาระบบซอฟต์แวร์อย่างเป็นระบบและมีประสิทธิภาพ จำเป็นต้องกำหนดแนวทางในการเขียนโปรแกรมให้เป็นมาตรฐานเดียวกัน เอกสารมาตรฐานการเขียนโปรแกรม (Coding Standard) ฉบับนี้จัดทำขึ้นเพื่อเป็นแนวทางปฏิบัติที่ชัดเจนสำหรับนักพัฒนาในการเขียนโปรแกรมให้มีความถูกต้อง เป็นระเบียบ สอดคล้องกัน และสามารถบำรุงรักษาได้ในระยะยาว วัตถุประสงค์หลักเพื่อส่งเสริมความเข้าใจร่วมกันในการพัฒนา ลดความซับซ้อนในการทำงานร่วมกัน และยกระดับคุณภาพของซอฟต์แวร์ให้มีความน่าเชื่อถือ อ่านง่าย และพร้อมสำหรับการขยายระบบในอนาคต รวมถึงกำหนดรูปแบบการตั้งชื่อ โครงสร้างโปรเจกต์ และการเขียนคำอธิบาย (คอมเมนต์)
@@ -335,27 +340,60 @@ JSON
 ### 4) การจัดการ Error Response
 (ระบุแนวทางสอดคล้องกับมาตรฐานทีม/ระบบ)
 
-## Git Workflow และ Commit Message Convention
-### 1) Git Workflow (Git Flow)
-- **main**: โค้ดพร้อมใช้งานจริง (production) — เสถียร/พร้อม deploy ทุก commit
-- **develop**: รวมงานจาก feature เพื่อทดสอบ/บูรณาการก่อน release
-- **feature/***: พัฒนา feature ใหม่ แตกจาก develop → PR กลับเข้า develop
-- **hotfix/***: แก้ไขเร่งด่วนบน production แตกจาก main → รวมกลับเข้า main และ develop
+## ส่วนที่ 3 Git Workflow และ Commit Message Convention
 
-### 2) Commit Message (Conventional Commits)
+### 1) Git Workflow (Git Flow)
+
+ระบบใช้ Git Flow เป็นมาตรฐานในการจัดการ branch และการพัฒนาโปรเจกต์ โดยมี branch หลักดังนี้:
+
+1) **main**: โค้ดพร้อมใช้งานจริง (production) — เสถียร/พร้อม deploy ทุก commit
+   - Branch นี้ต้องพร้อมใช้งานจริงเสมอ
+   - ทุก commit บน main ต้องผ่านการทดสอบและตรวจสอบแล้ว
+   - ห้าม commit โดยตรงบน main ต้องผ่าน Pull Request เท่านั้น
+
+2) **develop**: รวมงานจาก feature เพื่อทดสอบ/บูรณาการก่อน release
+   - Branch หลักสำหรับการพัฒนา
+   - รวมงานจาก feature branch ต่างๆ
+   - ทดสอบและบูรณาการก่อน release ไปยัง main
+
+3) **feature/***: พัฒนา feature ใหม่
+   - แตก branch จาก develop
+   - เมื่อพัฒนาเสร็จสิ้นให้รวมกลับไปที่ develop ผ่านกระบวนการ Pull Request
+   - ตัวอย่าง: feature/user-authentication, feature/booking-system
+
+4) **hotfix/***: แก้ไขข้อผิดพลาดเร่งด่วนที่เกิดขึ้นบน Production
+   - แตก branch จาก main
+   - เมื่อแก้ไขเสร็จสิ้นต้องรวมกลับเข้าที่ทั้ง main และ develop
+   - ใช้สำหรับแก้ไข bug ที่ต้องแก้ไขเร่งด่วนบน production
+   - ตัวอย่าง: hotfix/payment-gateway-error, hotfix/security-patch
+
+5) **bugfix/***: แก้ไขข้อผิดพลาดที่เกิดจาก Branch develop
+   - แตก branch จาก develop
+   - เมื่อแก้ไขเสร็จสิ้นต้องรวมกลับเข้า develop
+   - ใช้สำหรับแก้ไข bug ที่พบระหว่างการพัฒนา
+   - ตัวอย่าง: bugfix/form-validation-error, bugfix/api-response-handling
+
+### 2) Git Commit Message
+
+เพื่อให้การบันทึกประวัติการเปลี่ยนแปลงของซอร์สโค้ดมีความชัดเจน สามารถตรวจสอบย้อนหลังได้ง่าย และเอื้อต่อการทำงานร่วมกันในทีม ได้กำหนดมาตรฐานการเขียนข้อความ Commit ดังนี้
+
+#### 2.1 รูปแบบมาตรฐาน (Conventional Commits)
+
 **รูปแบบ**: `<type>(optional scope): <description>`
 
-**ประเภทที่อนุญาต**:
-- **feat**: เพิ่มฟีเจอร์ใหม่
-- **fix**: แก้ไข bug
-- **docs**: เอกสาร
-- **style**: รูปแบบโค้ด (ไม่กระทบ logic)
-- **refactor**: ปรับโครงสร้าง (ไม่เปลี่ยนพฤติกรรม)
-- **test**: เพิ่ม/แก้ไขชุดทดสอบ
-- **chore**: งานทั่วไป (dependencies/config)
-- **perf**: ประสิทธิภาพ
+#### 2.2 ประเภท (Type) ที่อนุญาตให้ใช้
 
-**ตัวอย่าง**:
+1) **feat**: เพิ่มฟีเจอร์ใหม่
+2) **fix**: แก้ไขข้อผิดพลาด
+3) **docs**: ปรับปรุงหรือแก้ไขเอกสาร
+4) **style**: แก้ไขรูปแบบโค้ด เช่น การจัดวาง การเว้นวรรค โดยไม่กระทบต่อ logic
+5) **refactor**: ปรับปรุงโครงสร้างโค้ด โดยไม่เปลี่ยนพฤติกรรมการทำงาน
+6) **test**: เพิ่มหรือแก้ไขชุดการทดสอบ
+7) **chore**: งานทั่วไป เช่น การปรับ dependency หรือ configuration
+8) **perf**: ปรับปรุงประสิทธิภาพของระบบ
+
+#### 2.3 ตัวอย่าง Commit Message
+
 - feat(auth): add email and password login functionality
 - fix(user): resolve issue where user data failed to save
 - docs(readme): add setup instructions for development environment
@@ -364,3 +402,102 @@ JSON
 - test(auth): add test case for invalid password login
 - chore(deps): update Prisma to version 5.12.0
 - perf(query): optimize data retrieval by using select instead of include
+
+## ส่วนที่ 4 Pull Request
+
+### 1) การตั้งชื่อ Pull Request
+
+#### 1.1 รูปแบบการตั้งชื่อ
+
+**รูปแบบ**: `[type]: <short description>`
+
+#### 1.2 ข้อบังคับ
+
+1) ตั้งชื่อด้วยภาษาอังกฤษหรือภาษาไทยเท่านั้น
+2) ประเภท (Type) ต้องสอดคล้องกับประเภทของการเปลี่ยนแปลง โดยประเภทที่อนุญาตให้ใช้มีดังนี้:
+   - **feat**: เพิ่มฟีเจอร์ใหม่
+   - **fix**: แก้ไขข้อผิดพลาด
+   - **refactor**: ปรับปรุงโครงสร้างโค้ด โดยไม่เปลี่ยนพฤติกรรมการทำงาน
+   - **style**: แก้ไขรูปแบบโค้ด เช่น การจัดวาง การเว้นวรรค โดยไม่กระทบต่อ logic
+   - **docs**: ปรับปรุงหรือแก้ไขเอกสาร
+   - **test**: เพิ่มหรือแก้ไขชุดการทดสอบ
+   - **chore**: งานทั่วไป เช่น การปรับ dependency หรือ configuration
+   - **perf**: ปรับปรุงประสิทธิภาพของระบบ
+
+#### 1.3 ตัวอย่างชื่อ Pull Request
+
+- feat: เพิ่มหน้าแก้ไขข้อมูลร้านค้า (EditStore)
+- fix: แก้ไข MapPicker ให้บันทึกตำแหน่งได้ถูกต้อง
+- refactor: ปรับ service layer ของ community ให้แยกเป็นโมดูลย่อย
+- style: จัดรูปแบบโค้ดใน component UserProfile
+- docs: อัพเดท README เพิ่มคำแนะนำการติดตั้ง
+- test: เพิ่ม unit test สำหรับ authentication service
+- chore: อัพเดท dependencies และแก้ไข configuration
+- perf: ปรับปรุงประสิทธิภาพการดึงข้อมูล package ด้วย pagination
+
+### 2) คำอธิบาย Pull Request
+
+ในส่วนของคำอธิบาย Pull Request ต้องมีข้อมูลดังต่อไปนี้:
+
+#### 2.1 รายละเอียดของการเปลี่ยนแปลง
+
+อธิบายสิ่งที่เพิ่ม แก้ไข หรือลบอย่างชัดเจน พร้อมเหตุผลในการปรับปรุง
+
+**ตัวอย่าง**:
+- เพิ่มหน้า EditStore สำหรับแก้ไขข้อมูลร้านค้า
+- แก้ไข MapPicker component ให้สามารถบันทึกตำแหน่ง latitude และ longitude ได้ถูกต้อง
+- ปรับโครงสร้าง community service ให้แยกเป็นโมดูลย่อยเพื่อเพิ่มความอ่านง่ายและง่ายต่อการบำรุงรักษา
+
+#### 2.2 ระบุชื่อ Branch ที่เกี่ยวข้อง
+
+ระบุ branch ที่เชื่อมโยงกับ Pull Request นี้ เช่น feature/edit-store, bugfix/fix-map-picker และระบุว่าเป็น Backend หรือ Frontend
+
+**ตัวอย่าง**:
+- Branch: feature/edit-store (Frontend)
+- Branch: bugfix/fix-map-picker (Frontend)
+- Branch: refactor/community-service (Backend)
+
+#### 2.3 ภาพผลลัพธ์ (ถ้ามี)
+
+แนบภาพหน้าจอหรือผลลัพธ์การทำงานหลังจากแก้ไข เพื่อให้ reviewer เห็นผลลัพธ์ที่ได้
+
+**ตัวอย่าง**:
+- ภาพหน้าจอหน้า EditStore ที่สร้างใหม่
+- ภาพแสดงการทำงานของ MapPicker ที่แก้ไขแล้ว
+- ภาพแสดงผลการทดสอบ (test results)
+
+### 3) ข้อบังคับในการส่ง Pull Request
+
+#### 3.1 Branch Target
+
+1) ทุก Pull Request ต้องทำการรวมโค้ด (Merge) เข้าสู่ Branch develop เท่านั้น
+   - ห้าม merge เข้า main โดยตรง
+   - main จะรับ merge จาก develop ผ่าน release process เท่านั้น
+
+#### 3.2 Code Review
+
+2) Pull Request จะต้องผ่านการตรวจสอบ (Code Review) อย่างน้อย 1 คน ก่อนจะได้รับอนุญาตให้รวมโค้ด (Merge)
+   - Reviewer ต้องตรวจสอบโค้ดตามมาตรฐาน Coding Standard
+   - Reviewer ต้องตรวจสอบว่าโค้ดทำงานได้ถูกต้อง
+   - Reviewer ต้องตรวจสอบว่าไม่มี breaking changes (ถ้ามีต้องระบุชัดเจน)
+
+#### 3.3 การแก้ไขตาม Feedback
+
+3) Developer ต้องแก้ไขโค้ดตาม feedback จาก reviewer
+   - ตอบกลับทุก comment จาก reviewer
+   - แก้ไขโค้ดตามที่ reviewer แนะนำ
+   - ถ้ามีข้อสงสัยให้สอบถาม reviewer
+
+#### 3.4 การทดสอบ
+
+4) Developer ต้องทดสอบโค้ดก่อนส่ง Pull Request
+   - ทดสอบว่าโค้ดทำงานได้ถูกต้อง
+   - ทดสอบว่าไม่มี breaking changes
+   - ทดสอบ edge cases ที่เกี่ยวข้อง
+
+#### 3.5 การอัพเดท Branch
+
+5) Developer ต้องอัพเดท branch ให้เป็นปัจจุบันก่อนส่ง Pull Request
+   - Pull branch develop ล่าสุดมา merge หรือ rebase
+   - แก้ไข conflict (ถ้ามี)
+   - ทดสอบอีกครั้งหลังจากอัพเดท

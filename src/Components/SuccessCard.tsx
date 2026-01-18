@@ -25,7 +25,7 @@ export function SuccessCard({
       </div>
       <h2 className="text-2xl font-bold mb-6">{message}</h2>
       <Link to={link} className="w-full">
-        <Button type="confirm-tourist" htmlType="button">
+        <Button type="confirm-tourist" className="px-36" htmlType="button">
           เข้าสู่ระบบ
         </Button>
       </Link>

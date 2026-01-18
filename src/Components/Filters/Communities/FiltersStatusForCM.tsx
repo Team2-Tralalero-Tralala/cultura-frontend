@@ -8,6 +8,11 @@ import { Filter } from "lucide-react";
 type statusOption = "ทั้งหมด" | "เผยแพร่" | "ไม่เผยแพร่";
 type approvalOption = "ทั้งหมด" | "อนุมัติ" | "รออนุมัติ" | "ถูกปฏิเสธ";
 
+/*
+ * คำอธิบาย : ฟังก์ชันหลักของ Component สำหรับจัดการการแสดงผล UI ของตัวกรอง
+ * Input : currentFilters (ค่าตัวกรองปัจจุบัน), onFilterChange (ฟังก์ชัน Callback สำหรับส่งค่าการกรองกลับไป)
+ * Output : ส่วนการแสดงผล (JSX) ของปุ่มตัวกรองและเมนู Dropdown
+ */
 export default function PackageFilter({
 currentFilters,
   onFilterChange

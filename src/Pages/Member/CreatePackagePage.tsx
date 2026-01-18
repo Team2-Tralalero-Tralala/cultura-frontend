@@ -409,7 +409,7 @@ export const CreatePackagePage = () => {
    * Input: -
    * Output: -
    */
-const handleConfirmSave = async () => {
+  const handleConfirmSave = async () => {
     setIsConfirmModalOpen(false);
     if (isSaving) return;
     setIsSaving(true);
@@ -417,11 +417,11 @@ const handleConfirmSave = async () => {
       const payload = {
         ...(formState.overseerMemberId ? { overseerMemberId: Number(formState.overseerMemberId) } : {}),
         name: normalizeOrDefault(formState.name),
-        description: formState.description || "", 
+        description: formState.description || "",
         statusPackage: formState.statusPackage,
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
-        warning: formState.facility || "", 
+        warning: formState.facility || "",
         startDate: formState.startDate || null,
         dueDate: formState.endDate || null,
         bookingOpenDate: formState.openDate || null,
@@ -435,7 +435,7 @@ const handleConfirmSave = async () => {
         ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
         ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
         ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
-        
+
         facility: formState.facility || "",
         tagIds,
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
@@ -457,7 +457,7 @@ const handleConfirmSave = async () => {
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
       videoFiles.forEach((file: any) => formData.append("video", file));
-      
+
       await axios.post(`${apiUrl}/member/package`, formData, {
         withCredentials: true,
       });
@@ -622,7 +622,6 @@ const handleConfirmSave = async () => {
               <TextArea
                 id="addressDetail"
                 label="คำอธิบายที่อยู่"
-                required
                 placeholder="คำอธิบายที่อยู่"
                 value={formState.addressDetail}
                 onChange={(event) => setFormField("addressDetail", event.target.value)}
@@ -648,7 +647,6 @@ const handleConfirmSave = async () => {
           <TextField
             id="capacity"
             label="เปิดรับจำนวน"
-            required
             type="number"
             placeholder="จำนวนคนที่เปิดรับ"
             value={formState.capacity}
@@ -663,7 +661,6 @@ const handleConfirmSave = async () => {
             <TextArea
               id="facility"
               label="สิ่งอำนวยความสะดวก"
-              required
               placeholder="สิ่งอำนวยความสะดวก"
               value={formState.facility}
               onChange={(event) => setFormField("facility", event.target.value)}
@@ -672,94 +669,100 @@ const handleConfirmSave = async () => {
             />
           </div>
         </section>
+        <div className="space-y-8">
+          <div>
+            <p className="text-base font-bold mb-4">
+              กำหนดการจัดกิจกรรม <span className="text-red-500">*</span>
+            </p>
+            <section className="grid md:grid-cols-4 gap-5">
+              <BoxDateInput
+                id="startDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่มแพ็กเกจ"
+                value={startDateObj}
+                onChange={(date) => {
+                  setStartDateObj(date);
+                  if (date) setFormField("startDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("startDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.startDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่เริ่ม"
+                value={formState.startTime}
+                onChange={(time) => setFormField("startTime", time)}
+                errorText={formErrors.startTime}
+              />
+              <BoxDateInput
+                id="endDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุดแพ็กเกจ"
+                value={endDateObj}
+                onChange={(date) => {
+                  setEndDateObj(date);
+                  if (date) setFormField("endDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("endDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.endDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่สิ้นสุด"
+                value={formState.endTime}
+                onChange={(time) => setFormField("endTime", time)}
+                errorText={formErrors.endTime}
+              />
+            </section>
+          </div>
 
-        {/* วันเวลา */}
-        <section className="grid md:grid-cols-4 gap-5">
-          <BoxDateInput
-            id="startDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่ม"
-            required
-            value={startDateObj}
-            onChange={(date) => {
-              setStartDateObj(date);
-              if (date) setFormField("startDate", date.toISOString().split("T")[0] as any);
-              else setFormField("startDate", "" as any);
-            }}
-            minDate={new Date()}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.startDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่เริ่ม"
-            value={formState.startTime}
-            onChange={(time) => setFormField("startTime", time)}
-            required
-            errorText={formErrors.startTime}
-          />
-          <BoxDateInput
-            id="endDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุด"
-            required
-            value={endDateObj}
-            onChange={(date) => {
-              setEndDateObj(date);
-              if (date) setFormField("endDate", date.toISOString().split("T")[0] as any);
-              else setFormField("endDate", "" as any);
-            }}
-            minDate={new Date()}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.endDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่สิ้นสุด"
-            value={formState.endTime}
-            onChange={(time) => setFormField("endTime", time)}
-            required
-            errorText={formErrors.endTime}
-          />
-          <BoxDateInput
-            id="openDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่เปิดจอง"
-            required
-            value={openDateObj}
-            onChange={(date) => {
-              setOpenDateObj(date);
-              if (date) setFormField("openDate", date.toISOString().split("T")[0] as any);
-              else setFormField("openDate", "" as any);
-            }}
-            minDate={new Date()}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.openDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่เปิดจอง"
-            value={formState.openTime}
-            onChange={(time) => setFormField("openTime", time)}
-            required
-            errorText={formErrors.openTime}
-          />
-          <BoxDateInput
-            id="closeDate"
-            label="วัน/เดือน/ปี (พ.ศ.) ที่ปิดจอง"
-            required
-            value={closeDateObj}
-            onChange={(date) => {
-              setCloseDateObj(date);
-              if (date) setFormField("closeDate", date.toISOString().split("T")[0] as any);
-              else setFormField("closeDate", "" as any);
-            }}
-            minDate={new Date()}
-            maxDate={new Date("2100-12-31")}
-            errorText={formErrors.closeDate}
-          />
-          <BoxTimeInput
-            label="เวลาที่ปิดจอง"
-            value={formState.closeTime}
-            onChange={(time) => setFormField("closeTime", time)}
-            required
-            errorText={formErrors.closeTime}
-          />
-        </section>
+          {/* ส่วนที่ 2: กำหนดการเปิดจองแพ็กเกจ */}
+          <div>
+            <p className="text-base font-bold mb-4">
+              กำหนดการเปิดจองแพ็กเกจ <span className="text-red-500">*</span>
+            </p>
+            <section className="grid md:grid-cols-4 gap-5">
+              <BoxDateInput
+                id="openDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่มเปิดจอง"
+                value={openDateObj}
+                onChange={(date) => {
+                  setOpenDateObj(date);
+                  if (date) setFormField("openDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("openDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.openDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่เริ่ม"
+                value={formState.openTime}
+                onChange={(time) => setFormField("openTime", time)}
+                errorText={formErrors.openTime}
+              />
+              <BoxDateInput
+                id="closeDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุดการปิดจอง"
+                value={closeDateObj}
+                onChange={(date) => {
+                  setCloseDateObj(date);
+                  if (date) setFormField("closeDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("closeDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.closeDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่สิ้นสุด"
+                value={formState.closeTime}
+                onChange={(time) => setFormField("closeTime", time)}
+                errorText={formErrors.closeTime}
+              />
+            </section>
+          </div>
+        </div>
 
         {/* แท็ก / ราคา */}
         <section className="grid md:grid-cols-2 gap-5">

@@ -21,7 +21,9 @@ import type { ParticipantsInPackage } from "@/Types/Package";
  */
 const normalizeDate = (dateObj: Date | string) => {
   if (!dateObj) return "";
-  const date = new Date(dateObj);
+  const dateValue = typeof dateObj === "string" ? dateObj.replace("Z", "") : dateObj;
+  const date = new Date(dateValue);
+
   const formattedDate = date.toLocaleDateString("th-TH", {
     year: "numeric",
     month: "numeric",

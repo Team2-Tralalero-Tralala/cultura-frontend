@@ -54,7 +54,11 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการเหตุการณ์การคลิกภายนอก Component (Click Outside) เพื่อปิดส่วนแสดงผลของ Picker
+   * Input : event (MouseEvent จากการคลิกของผู้ใช้งาน)
+   * Output : ทำการซ่อนส่วนแสดงผล (setShowPicker(false)) เมื่อมีการคลิกนอกพื้นที่ของ pickerRef
+   */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
@@ -68,6 +72,12 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
   const hasError = Boolean(errorText);
   const hasValue = Boolean(hour || minute);
   const resolvedHeight = toCssSize(height) ?? "44px";
+
+  /*
+  * คำอธิบาย : ฟังก์ชันสำหรับจัดการแยกข้อมูลเวลา (ชั่วโมงและนาที) จากสตริงเพื่อนำไปกำหนดค่าให้กับ State ภายในคอมโพเนนต์
+  * Input : value (ข้อมูลเวลา), defaultValue (ค่าเวลาเริ่มต้น)
+  * Output : กำหนดค่าชั่วโมง (hh) และนาที (mm) ลงใน State ของระบบ
+  */
   useEffect(() => {
     const time = (value ?? defaultValue ?? "") as string;
     if (!time) {

@@ -373,23 +373,32 @@ export default function DetailPackageMember() {
 
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex flex-row">
+        <div className="flex justify-between items-center mb-10">
+          <div className="flex item-center gap-3">
             {/* ปุ่มย้อนกลับ */}
             <div
-              className="mt-1 mr-3 cursor-pointer"
+              className="p-1 rounded cursor-pointer"
               onClick={() => navigate(`/member/packages/all`)}
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
-            <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
+            <h1 className="text-xl font-bold">รายละเอียดแพ็กเกจ</h1>
           </div>
-          <div className="w-60">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ (สำหรับ Member) */}
-            <Button onClick={() => navigate(`/member/package/${id}/edit`)}>
-              <EditIcon />
-              แก้ไขรายละเอียดแพ็กเกจ
-            </Button>
+          <div className="flex gap-2">
+            <div className="w-35">
+              {/* ปุ่มรายชื่อผู้จอง */}
+              <Button onClick={() => navigate(`/member/participants/package/${id}`)}>
+                <Icon icon="icon-park-solid:people" className="w-5 h-5 mr-1" />
+                รายชื่อผู้จอง
+              </Button>
+            </div>
+            <div className="w-55">
+              {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ (สำหรับ Member) */}
+              <Button onClick={() => navigate(`/member/package/${id}/edit`)}>
+                <EditIcon />
+                แก้ไขรายละเอียดแพ็กเกจ
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -406,7 +415,7 @@ export default function DetailPackageMember() {
           <div className="flex flex-row items-center gap-5">
             <p className="text-md text-black">
               <strong>สถานะแพ็กเกจ :</strong>
-              </p>
+            </p>
 
             {/* Badge สถานะ */}
             <span

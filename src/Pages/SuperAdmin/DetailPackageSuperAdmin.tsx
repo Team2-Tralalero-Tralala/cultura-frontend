@@ -365,23 +365,32 @@ export default function DetailPackageSuperAdmin() {
 
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex flex-row">
+        <div className="flex justify-between items-center mb-10">
+          <div className="flex item-center gap-3">
             {/* ปุ่มย้อนกลับ */}
             <div
-              className="mt-1 mr-3 cursor-pointer"
+              className="p-1 rounded cursor-pointer"
               onClick={() => navigate(`/super/packages/all`)}
             >
               <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             </div>
-            <h1 className="text-xl font-bold mb-10">รายละเอียดแพ็กเกจ</h1>
+            <h1 className="text-xl font-bold">รายละเอียดแพ็กเกจ</h1>
           </div>
-          <div className="w-60">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
-            <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
-              <EditIcon />
-              แก้ไขรายละเอียดแพ็กเกจ
-            </Button>
+          <div className="flex gap-2">
+            <div className="w-35">
+              {/* ปุ่มรายชื่อผู้จอง */}
+              <Button onClick={() => navigate(`/super/participants/package/${id}`)}>
+                <Icon icon="icon-park-solid:people" className="w-5 h-5 mr-1" />
+                รายชื่อผู้จอง
+              </Button>
+            </div>
+            <div className="w-55">
+              {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
+              <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
+                <EditIcon />
+                แก้ไขรายละเอียดแพ็กเกจ
+              </Button>
+            </div>
           </div>
         </div>
 

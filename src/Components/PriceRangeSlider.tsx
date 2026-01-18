@@ -49,12 +49,13 @@ export default function PriceRangeSlider({
 
   /*
    * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนค่า input ราคาต่ำสุด
-   * Input : e (React.ChangeEvent<HTMLInputElement>)
+   * Input : changeEvent (React.ChangeEvent<HTMLInputElement>)
    * Output : void
    */
-  const handleMinInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMinInputChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     // แยกตัวเลขจาก "฿ 1,000" format
-    const numericValue = parseInt(e.target.value.replace(/[฿,\s]/g, "")) || min;
+    const numericValue =
+      parseInt(changeEvent.target.value.replace(/[฿,\s]/g, "")) || min;
     const newMin = Math.min(Math.max(numericValue, min), localValue[1]);
     const newValue: [number, number] = [newMin, localValue[1]];
     setLocalValue(newValue);
@@ -63,12 +64,13 @@ export default function PriceRangeSlider({
 
   /*
    * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนค่า input ราคาสูงสุด
-   * Input : e (React.ChangeEvent<HTMLInputElement>)
+   * Input : changeEvent (React.ChangeEvent<HTMLInputElement>)
    * Output : void
    */
-  const handleMaxInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMaxInputChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     // แยกตัวเลขจาก "฿ 50,000" format
-    const numericValue = parseInt(e.target.value.replace(/[฿,\s]/g, "")) || max;
+    const numericValue =
+      parseInt(changeEvent.target.value.replace(/[฿,\s]/g, "")) || max;
     const newMax = Math.max(Math.min(numericValue, max), localValue[0]);
     const newValue: [number, number] = [localValue[0], newMax];
     setLocalValue(newValue);

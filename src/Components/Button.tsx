@@ -18,6 +18,7 @@ function Button({
   htmlType = "button",
   onClick,
   className,
+  disabled,
 }: BaseButtonProps) {
   const isCancel = type == "cancel";
 
@@ -28,6 +29,7 @@ function Button({
    * Output : สีปุ่มตาม type
    */
   function getBgColor() {
+    if (disabled) return "bg-gray-400 cursor-not-allowed";
     switch (type) {
       case "cancel":
         return "bg-white hover:bg-gray-100";
@@ -46,7 +48,10 @@ function Button({
         <button
           type={htmlType}
           onClick={onClick}
-          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form text-white text-base ${getBgColor()} ${className || ""}`}
+          disabled={disabled}
+          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form text-white text-base ${getBgColor()} ${
+            className || ""
+          }`}
         >
           {children || "ConfirmAdmin"}
         </button>
@@ -56,7 +61,10 @@ function Button({
         <button
           type={htmlType}
           onClick={onClick}
-          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form  border-black text-black text-base ${getBgColor()} ${className || ""}`}
+          disabled={disabled}
+          className={`flex items-center justify-center w-full px-3 py-2 border rounded-form  border-black text-black text-base ${getBgColor()} ${
+            className || ""
+          }`}
         >
           {children || "Cancel"}
         </button>

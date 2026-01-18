@@ -10,8 +10,7 @@ import api from "@/Libs/api";
  * Interface สำหรับข้อมูลภาพ Carousel
  */
 export interface CarouselImage {
-  src: string;
-  alt: string;
+  image: string;
 }
 
 /*
@@ -96,12 +95,12 @@ export async function fetchHomeData(): Promise<HomeData> {
   const data = response.data.data;
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   // ลบ /api ออกจาก URL เพื่อใช้สำหรับ static files
-  const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+  const backendBaseUrl = apiUrl.replace("/api", "/") || "http://localhost:3000/uploads/";
 
   // แปลง image URLs เป็น full URLs
   const transformedCarouselImages = data.carouselImages.map((image) => ({
     ...image,
-    src: backendBaseUrl + image.src,
+    image: backendBaseUrl + image.image,
   }));
 
   return {

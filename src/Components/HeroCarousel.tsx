@@ -8,8 +8,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 
 export type CarouselItem = {
-  src: string;
-  alt?: string;
+  image: string;
 };
 
 interface HeroCarouselProps {
@@ -27,11 +26,7 @@ interface HeroCarouselProps {
  * Input : HeroCarouselProps (items, options, className)
  * Output : React Component ที่ render carousel พร้อม navigation controls
  */
-export default function HeroCarousel({
-  items,
-  options,
-  className,
-}: HeroCarouselProps) {
+export default function HeroCarousel({ items, options, className }: HeroCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, ...options });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -101,8 +96,7 @@ export default function HeroCarousel({
             <div key={index} className="min-w-0 flex-[0_0_100%]">
               <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px]">
                 <img
-                  src={item.src}
-                  alt={item.alt ?? `Slide ${index + 1}`}
+                  src={item.image}
                   className="h-full w-full object-cover"
                   loading={index === 0 ? "eager" : "lazy"}
                 />
@@ -131,11 +125,7 @@ export default function HeroCarousel({
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
@@ -155,11 +145,7 @@ export default function HeroCarousel({
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5l7 7-7 7"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </>
@@ -174,9 +160,7 @@ export default function HeroCarousel({
               type="button"
               onClick={() => scrollTo(index)}
               className={`w-2.5 h-2.5 rounded-full transition-all ${
-                index === selectedIndex
-                  ? "bg-white w-3 h-3"
-                  : "bg-white/50 hover:bg-white/75"
+                index === selectedIndex ? "bg-white w-3 h-3" : "bg-white/50 hover:bg-white/75"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />

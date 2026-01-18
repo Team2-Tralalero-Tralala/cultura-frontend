@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "@/Libs/useAuth";
 
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -103,6 +104,7 @@ interface ApiResponse {
 
 export default function DetailPackagePage() {
   const { packageId } = useParams<{ packageId: string }>();
+  const { user } = useAuth();
   const [packageDetail, setPackageDetail] = useState<PackageDetail | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -180,10 +182,24 @@ export default function DetailPackagePage() {
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการนำทางไปยังหน้าสรุปการจอง
    * Input: packageId
-   * Output : นำทางไปที่ Route /tourist/booking/package/:packageId/summary
+   * Output : นำทางไปที่ Route /tourist/booking/package/:packageId/summary พร้อมตรวจสอบการล็อกอิน
    */
   const handleConfirmClick = (packageId: number) => {
-    navigate(`/tourist/booking/package/${packageId}/summary`);
+    // ตรวจสอบว่าผู้ใช้ล็อกอินแล้วหรือยัง
+    if (!user) {
+      // ถ้ายังไม่ล็อกอิน ให้ redirect ไปหน้า login พร้อมส่ง state เพื่อกลับมาหน้านี้
+      navigate("/guest/login", {
+        state: { from: location.pathname },
+      });
+      return;
+    }
+
+    // ถ้าล็อกอินแล้ว ให้ไปหน้าสรุปการจอง
+    navigate(`/tourist/booking/package/${packageId}/summary`, {
+      state: {
+        numberOfPeople: bookingQuantity,
+      },
+    });
   };
 
   /*

@@ -15,8 +15,8 @@ function SearchBar({ onSearch, placeholder = "ค้นหา" }: SearchBarProps
   const [text, setText] = useState("");
 
   // ฟังก์ชันเรียกเมื่อมีการพิมพ์ใน input
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setText(e.target.value);
+  const handleChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
+    setText(changeEvent.target.value);
   };
 
   // ฟังก์ชันเรียกเมื่อกด Enter หรือคลิกปุ่มค้นหา
@@ -27,8 +27,8 @@ function SearchBar({ onSearch, placeholder = "ค้นหา" }: SearchBarProps
   };
 
   // ฟังก์ชันเรียกเมื่อกด Enter
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const handleKeyPress = (keyboardEvent: React.KeyboardEvent<HTMLInputElement>) => {
+    if (keyboardEvent.key === "Enter") {
       handleSearch();
     }
   };

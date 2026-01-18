@@ -54,9 +54,30 @@ function App() {
         <Route path="/tourist/booking-history/detail" element={<DetailBookingHistory />} />
         <Route path="/tourist/dashboard" element={<DashboardPage />} />
         <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
+        <Route path="/tourist/booking-history/:bookingId/feedback" element={<CreateFeedbackPage />} />
         <Route
-          path="/tourist/booking-history/:bookingId/feedback"
-          element={<CreateFeedbackPage />}
+          path="/tourist/booking/package/:packageId/summary"
+          element={
+            <ProtectedRoute allow={["tourist"]} redirectTo="/guest/login">
+              <BookingSummaryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tourist/booking/package/:packageId/payment"
+          element={
+            <ProtectedRoute allow={["tourist"]} redirectTo="/guest/login">
+              <BookingPaymentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tourist/booking/package/:packageId/confirmed"
+          element={
+            <ProtectedRoute allow={["tourist"]} redirectTo="/guest/login">
+              <BookingConfirmedPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/tourist/booking/package/:packageId/summary"

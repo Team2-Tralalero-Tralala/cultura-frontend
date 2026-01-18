@@ -162,6 +162,14 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
             )}
 
             <div className="relative mt-1">
+                {/* ไอคอนปฏิทิน (แสดงในช่องเหมือนตัวอย่าง UI) */}
+                <Icon
+                    icon="quill:calendar"
+                    className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-[18px] h-[18px] ${
+                        disabled ? "text-gray-400" : "text-gray-500"
+                    }`}
+                />
+
                 {/* ช่องแสดงค่าปัจจุบันแบบ readOnly สำหรับฟอร์ม/การโฟกัสที่ชัดเจน */}
                 <input
                     id={inputId}
@@ -174,8 +182,14 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
                     aria-describedby={errorText ? errorId : undefined}
                     placeholder={placeholder}
                     style={{ height: resolvedHeight }}
-                    className={`w-full rounded-2xl border bg-white px-12 text-center text-gray-700 outline-none transition
-                                ${errorText ? "border-red-500 focus:border-red-500" : "border-gray-500 focus:border-emerald-400"}
+                    className={`w-full rounded-lg border bg-white pl-10 pr-10 text-left text-gray-700 outline-none transition
+                                placeholder:text-gray-400
+                                ${disabled ? "cursor-not-allowed bg-gray-50" : "cursor-pointer"}
+                                ${
+                                    errorText
+                                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                                        : "border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                                }
                                 ${inputClassName ?? ""}`}
                     onClick={toggleOpen}
                 />
@@ -185,25 +199,12 @@ export const DailyDateInput: React.FC<DailyDateInputProps> = ({
                     <button
                         type="button"
                         onClick={() => setValueSafe(null)}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         aria-label="ล้างค่า"
                     >
                         <Icon icon="material-symbols:close" className="w-[20px] h-[20px]" />
                     </button>
                 )}
-
-                {/* ปุ่มเปิดปฏิทิน */}
-                <button
-                    type="button"
-                    onClick={toggleOpen}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 ${buttonClassName ?? ""}`}
-                    aria-label="เปิดปฏิทิน"
-                    aria-haspopup="dialog"
-                    aria-expanded={isOpen}
-                    disabled={disabled}
-                >
-                    <Icon icon="quill:calendar" className="w-[26px] h-[26px]" />
-                </button>
             </div>
 
             {/* แสดง error A11y */}

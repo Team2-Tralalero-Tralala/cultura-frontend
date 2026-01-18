@@ -17,7 +17,6 @@ import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
-
 /**
  * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
  * คำอธิบาย : URL ของ Backend สำหรับติดต่อ API
@@ -204,11 +203,14 @@ export default function DetailPackageAdmin() {
               }
             : null,
           files: packageRawData.packageFile
-            ? packageRawData.packageFile.map((fileItem: any) => ({
-                id: fileItem.id,
-                path: fileItem.filePath,
-                type: (fileItem.type),
-              } as PackageFile))
+            ? packageRawData.packageFile.map(
+                (fileItem: any) =>
+                  ({
+                    id: fileItem.id,
+                    path: fileItem.filePath,
+                    type: fileItem.type,
+                  } as PackageFile)
+              )
             : [],
           homestayHistories: packageRawData.homestayHistories
             ? packageRawData.homestayHistories.map(
@@ -372,20 +374,20 @@ export default function DetailPackageAdmin() {
             <h1 className="text-xl font-bold">รายละเอียดแพ็กเกจ</h1>
           </div>
           <div className="flex gap-2">
-             <div className="w-35">
+            <div className="w-35">
               {/* ปุ่มรายชื่อผู้จอง */}
-              <Button onClick={() => navigate(`/admin/paticipants/package/${id}`)}>
+              <Button onClick={() => navigate(`/admin/participants/package/${id}`)}>
                 <Icon icon="icon-park-solid:people" className="w-5 h-5 mr-1" />
                 รายชื่อผู้จอง
               </Button>
             </div>
-          <div className="w-55">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ สำหรับ Admin */}
-            <Button onClick={() => navigate(`/admin/package/${id}/edit`)}>
-              <EditIcon />
-              แก้ไขรายละเอียดแพ็กเกจ
-            </Button>
-          </div>
+            <div className="w-55">
+              {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ สำหรับ Admin */}
+              <Button onClick={() => navigate(`/admin/package/${id}/edit`)}>
+                <EditIcon />
+                แก้ไขรายละเอียดแพ็กเกจ
+              </Button>
+            </div>
           </div>
         </div>
 

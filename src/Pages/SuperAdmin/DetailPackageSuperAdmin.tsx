@@ -378,18 +378,18 @@ export default function DetailPackageSuperAdmin() {
           </div>
           <div className="flex gap-2">
             <div className="w-35">
-            {/* ปุ่มรายชื่อผู้จอง */}
-            <Button onClick={() => navigate(`/super/paticipants/package/${id}`)}>
-              <Icon icon="icon-park-solid:people" className="w-5 h-5 mr-1" />
-              รายชื่อผู้จอง
-            </Button>
+              {/* ปุ่มรายชื่อผู้จอง */}
+              <Button onClick={() => navigate(`/super/participants/package/${id}`)}>
+                <Icon icon="icon-park-solid:people" className="w-5 h-5 mr-1" />
+                รายชื่อผู้จอง
+              </Button>
             </div>
             <div className="w-55">
-            {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
-            <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
-              <EditIcon />
-              แก้ไขรายละเอียดแพ็กเกจ
-            </Button>
+              {/* ปุ่มแก้ไขรายละเอียดแพ็กเกจ */}
+              <Button onClick={() => navigate(`/super/package/${id}/edit`)}>
+                <EditIcon />
+                แก้ไขรายละเอียดแพ็กเกจ
+              </Button>
             </div>
           </div>
         </div>

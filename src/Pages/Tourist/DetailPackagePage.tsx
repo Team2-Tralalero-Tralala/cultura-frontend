@@ -392,24 +392,42 @@ export default function DetailPackagePage() {
 
         {/* Location & Date Info Bar */}
         {lat && lng ? (
-          <a
-            href={`https://www.openstreetmap.org/search?${new URLSearchParams({
-              query: latLng,
-              ...(minLat !== undefined && { minlat: String(minLat) }),
-              ...(maxLat !== undefined && { maxlat: String(maxLat) }),
-              ...(minLng !== undefined && { minlon: String(minLng) }),
-              ...(maxLng !== undefined && { maxlon: String(maxLng) }),
-              zoom: "16",
-            }).toString()}#map=16/${lat}/${lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 mb-4 mt-2 cursor-pointer hover:text-green-600 transition-colors"
+          <button
+            onClick={() => {
+              if (packageDetail?.location?.latitude && packageDetail?.location?.longitude) {
+                const destLat = packageDetail.location.latitude;
+                const destLng = packageDetail.location.longitude;
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                      const originLat = position.coords.latitude;
+                      const originLng = position.coords.longitude;
+                      window.open(
+                        `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
+                        "_blank"
+                      );
+                    },
+                    (error) => {
+                      console.error("Error getting location:", error);
+                      window.open(
+                        `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                        "_blank"
+                      );
+                    }
+                  );
+                } else {
+                  window.open(
+                    `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                    "_blank"
+                  );
+                }
+              }
+            }}
+            className="flex items-center gap-2 mb-4 mt-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left"
           >
-            <Icon icon="mdi:location" className="text-black text-lg" />
-            <span className="text-inherit">
-              อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
-            </span>
-          </a>
+            <Icon icon="mdi:map-marker-radius-outline" className="text-black text-lg" />
+            <span className="text-inherit">ระบบนำทาง</span>
+          </button>
         ) : (
           /* กรณีไม่มีพิกัด แสดงเป็น div เหมือนเดิม */
           <div className="flex items-center gap-2 mb-4 mt-2">

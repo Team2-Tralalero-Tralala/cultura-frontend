@@ -17,7 +17,7 @@ import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import SearchPage from "@/Pages/Tourist/SearchPage";
-import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";;
+import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";
 import ChangePassword from "./Pages/Tourist/ChangePassword";
 
 import BookingConfirmedPage from "./Pages/Tourist/BookingConfirmedPage";
@@ -29,6 +29,7 @@ import BookingSummaryPage from "./Pages/Tourist/BookingSummaryPage";
 import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
+import ForgetPasswordPage from "./Pages/Tourist/ForgetPasswordPage";
 
 function App() {
   return (
@@ -54,7 +55,10 @@ function App() {
         <Route path="/tourist/booking-history/detail" element={<DetailBookingHistory />} />
         <Route path="/tourist/dashboard" element={<DashboardPage />} />
         <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
-        <Route path="/tourist/booking-history/:bookingId/feedback" element={<CreateFeedbackPage />} />
+        <Route
+          path="/tourist/booking-history/:bookingId/feedback"
+          element={<CreateFeedbackPage />}
+        />
         <Route
           path="/tourist/booking/package/:packageId/summary"
           element={
@@ -109,6 +113,7 @@ function App() {
           <Route path="partner/login" element={<LoginAdmin />} />
           <Route path="community/:communityId/detail" element={<CommunityDetailUser />} />
           <Route path="signup" element={<RegisterPage />} />
+          <Route path="forget-password" element={<ForgetPasswordPage />} />
         </Route>
 
         <Route

@@ -33,6 +33,8 @@ function Button({
     switch (type) {
       case "cancel":
         return "bg-white hover:bg-gray-100";
+      case "request":
+        return "bg-[#989898] hover:bg-gray-400";
       case "confirm-tourist":
         return "bg-light-green hover:bg-emerald-500";
       case "confirm-admin":

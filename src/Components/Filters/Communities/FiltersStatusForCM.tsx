@@ -8,23 +8,25 @@ import { Filter } from "lucide-react";
 type statusOption = "ทั้งหมด" | "เผยแพร่" | "ไม่เผยแพร่";
 type approvalOption = "ทั้งหมด" | "อนุมัติ" | "รออนุมัติ" | "ถูกปฏิเสธ";
 
-export default function PackageFilter() {
+/*
+ * คำอธิบาย : ฟังก์ชันหลักของ Component สำหรับจัดการการแสดงผล UI ของตัวกรอง
+ * Input : currentFilters (ค่าตัวกรองปัจจุบัน), onFilterChange (ฟังก์ชัน Callback สำหรับส่งค่าการกรองกลับไป)
+ * Output : ส่วนการแสดงผล (JSX) ของปุ่มตัวกรองและเมนู Dropdown
+ */
+export default function PackageFilter({
+currentFilters,
+  onFilterChange
+}: any) {
   const [open, setOpen] = useState<boolean>(false);
-  const [packageStatus, setPackageStatus] = useState<statusOption>("ทั้งหมด");
-  const [approvalStatus, setApprovalStatus] = useState<approvalOption>("ทั้งหมด");
 
   // กรองข้อมูลของสถานะแพ็กเกจ
    const handleShareChange = (value: string) => {
-    setPackageStatus(value as statusOption);
-    console.log("กรองตามสถานะการเผยแพร่:", value);
-    //ยังไม่ได้เขียนโค้ดกรองข้อมูลจริง
+    onFilterChange("packageStatus", value);
   };
 
   // กรองข้อมูลของสถานะการอนุมัติ
   const handleApprovalChange = (value: string) => {
-    setApprovalStatus(value as approvalOption);
-    console.log("กรองตามสถานะอนุมัติ:", value);
-    //ยังไม่ได้เขียนโค้ดกรองข้อมูลจริง
+    onFilterChange("approvalStatus", value);
   };
 
   return (
@@ -54,7 +56,7 @@ export default function PackageFilter() {
                     type="radio"
                     name="packageStatus"
                     value={item}
-                    checked={packageStatus === item}
+                    checked={currentFilters.packageStatus === item}
                     onChange={() => handleShareChange(item)}
                     className="text-green-500 focus:ring-green-500"
                   />
@@ -75,7 +77,7 @@ export default function PackageFilter() {
                       type="radio"
                       name="approvalStatus"
                       value={item}
-                      checked={approvalStatus === item}
+                      checked={currentFilters.approvalStatus === item}
                       onChange={() => handleApprovalChange(item)}
                       className="text-green-600 focus:ring-green-500"
                     />

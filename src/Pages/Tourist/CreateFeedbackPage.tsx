@@ -174,7 +174,7 @@ export function CreateFeedbackPage() {
       );
 
       showAlertModal("สำเร็จ", "ส่งข้อเสนอแนะของคุณเรียบร้อยแล้ว");
-      navigate("/tourist/booking-history");
+      navigate("/tourist/booking-histories");
     } catch (requestError: any) {
       const errorMessage = requestError.response?.data?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล";
       if (requestError.response?.status === 401) {
@@ -229,7 +229,7 @@ export function CreateFeedbackPage() {
             }}
           />
         </div>
-        <h1 className="text-[32px] font-bold text-black">ประวัติการจอง</h1>
+        <h1 className="text-3xl font-bold text-black">ประวัติการจอง</h1>
       </div>
 
 
@@ -358,7 +358,7 @@ export function CreateFeedbackPage() {
         onConfirm={() => {
           setIsAlertModalOpen(false);
           if (alertModalTitle === "สำเร็จ") {
-            navigate("/tourist/booking-history");
+            navigate("/tourist/booking-histories");
           }
         }}
         cancelText=""

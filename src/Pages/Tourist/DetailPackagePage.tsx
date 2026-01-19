@@ -378,80 +378,104 @@ export default function DetailPackagePage() {
           </div>
         )}
 
-        {/* Description */}
-        <div className="mb-4 mt-2">
-          <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            {packageDetail.description || "-"}
-          </p>
-        </div>
+        {/* Detail Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4 mt-2">
+          {/* Left Column: Description, Location, Activity Date */}
+          <div className="space-y-4">
+            {/* Description */}
+            <div>
+              <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+                {packageDetail.description || "-"}
+              </p>
+            </div>
 
-        <div className="mb-4 mt-2">
-          <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)} -{" "}
-            {formatDateWithTime(packageDetail.bookingCloseDate)}
-          </p>
-        </div>
-
-        {/* Location & Date Info Bar */}
-        {lat && lng ? (
-          <button
-            onClick={() => {
-              if (packageDetail?.location?.latitude && packageDetail?.location?.longitude) {
-                const destLat = packageDetail.location.latitude;
-                const destLng = packageDetail.location.longitude;
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                      const originLat = position.coords.latitude;
-                      const originLng = position.coords.longitude;
-                      window.open(
-                        `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                        "_blank"
-                      );
-                    },
-                    (error) => {
-                      console.error("Error getting location:", error);
-                      window.open(
-                        `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                        "_blank"
-                      );
+            {/* Location */}
+            <div>
+              {lat && lng ? (
+                <button
+                  onClick={() => {
+                    if (
+                      packageDetail?.location?.latitude &&
+                      packageDetail?.location?.longitude
+                    ) {
+                      const destLat = packageDetail.location.latitude;
+                      const destLng = packageDetail.location.longitude;
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (position) => {
+                            const originLat = position.coords.latitude;
+                            const originLng = position.coords.longitude;
+                            window.open(
+                              `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
+                              "_blank"
+                            );
+                          },
+                          (error) => {
+                            console.error("Error getting location:", error);
+                            window.open(
+                              `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                              "_blank"
+                            );
+                          }
+                        );
+                      } else {
+                        window.open(
+                          `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                          "_blank"
+                        );
+                      }
                     }
-                  );
-                } else {
-                  window.open(
-                    `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                    "_blank"
-                  );
-                }
-              }
-            }}
-            className="flex items-center gap-2 mb-4 mt-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left"
-          >
-            <Icon icon="mdi:map-marker-radius-outline" className="text-black text-lg" />
-            <span className="text-inherit">ระบบนำทาง</span>
-          </button>
-        ) : (
-          /* กรณีไม่มีพิกัด แสดงเป็น div เหมือนเดิม */
-          <div className="flex items-center gap-2 mb-4 mt-2">
-            <Icon icon="mdi:location" className="text-black text-lg" />
-            <span className="text-black">
-              อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
-            </span>
+                  }}
+                  className="flex items-center gap-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left"
+                >
+                  <Icon
+                    icon="mdi:map-marker-radius-outline"
+                    className="text-black text-lg"
+                  />
+                  <span className="text-inherit">
+                    อำเภอ{packageDetail.location.district} จังหวัด
+                    {packageDetail.location.province}
+                  </span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Icon icon="mdi:location" className="text-black text-lg" />
+                  <span className="text-black">
+                    อำเภอ{packageDetail.location.subDistrict} จังหวัด
+                    {packageDetail.location.province}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Start - End Date */}
+            <div className="flex items-center gap-2">
+              <span className="text-black text-sm md:text-base">
+                วันที่เริ่ม - วันที่สิ้นสุด :{" "}
+                {formatDateWithTime(packageDetail.startDate)} -{" "}
+                {formatDateWithTime(packageDetail.dueDate)}
+              </span>
+            </div>
           </div>
-        )}
 
-        <div className="mb-4 mt-2">
-          <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            จำนวนการจอง {packageDetail.capacity || "-"} คน
-          </p>
-        </div>
+          {/* Right Column: Booking Info */}
+          <div className="space-y-4 md:pl-8">
+            {/* Booking Open Date */}
+            <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+              เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)}{" "}
+              - {formatDateWithTime(packageDetail.bookingCloseDate)}
+            </p>
 
-        <div className="flex items-center gap-2 mb-4 mt-2">
-          <span className="font-medium text-black">วันที่เริ่ม - วันที่สิ้นสุด : </span>
-          <span className="text-black">
-            {formatDateWithTime(packageDetail.startDate)} -{" "}
-            {formatDateWithTime(packageDetail.dueDate)}
-          </span>
+            {/* Booked Count */}
+            <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+              จำนวนการจอง 0 คน
+            </p>
+
+            {/* Total Capacity */}
+            <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+              เปิดจองจำนวน {packageDetail.capacity || "-"} คน
+            </p>
+          </div>
         </div>
 
         {/* Image Gallery */}

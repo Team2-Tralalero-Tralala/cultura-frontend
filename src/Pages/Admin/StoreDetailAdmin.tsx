@@ -1,6 +1,6 @@
 /**
-* คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Admin
-*/
+ * คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Admin
+ */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit } from "lucide-react";
@@ -65,7 +65,7 @@ const StoreDetailAdmin = () => {
       return;
     }
 
-    const url = `${import.meta.env.VITE_API_URL}/admin/stores/${id}`;
+    const url = `${import.meta.env.VITE_API_URL}/admin/store/${id}`;
 
     try {
       const res = await fetch(url, { credentials: "include" });
@@ -74,10 +74,9 @@ const StoreDetailAdmin = () => {
       if (result?.data) {
         const data = result.data;
 
-        const images =
-          data.storeImage?.map((img: any) =>
-            buildImageUrl(img.image)
-          ) || [buildImageUrl("uploads/store-main.jpg")];
+        const images = data.storeImage?.map((img: any) => buildImageUrl(img.image)) || [
+          buildImageUrl("uploads/store-main.jpg"),
+        ];
 
         const formatted: Store = {
           id: data.id,
@@ -95,9 +94,7 @@ const StoreDetailAdmin = () => {
             ? {
                 address: [
                   data.location.houseNumber,
-                  data.location.villageNumber
-                    ? `หมู่ ${data.location.villageNumber}`
-                    : null,
+                  data.location.villageNumber ? `หมู่ ${data.location.villageNumber}` : null,
                   data.location.alley ? `ซอย ${data.location.alley}` : null,
                   data.location.subDistrict,
                   data.location.district,
@@ -246,13 +243,9 @@ const StoreDetailAdmin = () => {
                 title="store-map"
                 src={`https://www.openstreetmap.org/export/embed.html?bbox=${
                   store.location.longitude - 0.005
-                },${store.location.latitude - 0.005},${
-                  store.location.longitude + 0.005
-                },${
+                },${store.location.latitude - 0.005},${store.location.longitude + 0.005},${
                   store.location.latitude + 0.005
-                }&layer=mapnik&marker=${store.location.latitude},${
-                  store.location.longitude
-                }`}
+                }&layer=mapnik&marker=${store.location.latitude},${store.location.longitude}`}
                 className="w-full h-full border-0"
               ></iframe>
             </div>
@@ -263,8 +256,7 @@ const StoreDetailAdmin = () => {
                   <strong>ที่อยู่:</strong> {store.location.address}
                 </p>
                 <p>
-                  <strong>พิกัด:</strong>{" "}
-                  {store.location.latitude}, {store.location.longitude}
+                  <strong>พิกัด:</strong> {store.location.latitude}, {store.location.longitude}
                 </p>
                 <a
                   href={`https://www.google.com/maps?q=${store.location.latitude},${store.location.longitude}`}

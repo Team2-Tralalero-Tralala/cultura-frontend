@@ -1,6 +1,6 @@
 /**
-* คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Super Admin
-*/
+ * คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Super Admin
+ */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronRight, Edit, ArrowLeft } from "lucide-react";
@@ -65,7 +65,7 @@ const StoreDetailPage = () => {
    */
   const fetchStore = async () => {
     try {
-      const res = await fetch(`${API_URL}/super/stores/${id}`, {
+      const res = await fetch(`${API_URL}/super/store/${id}`, {
         credentials: "include",
       });
 
@@ -74,12 +74,9 @@ const StoreDetailPage = () => {
       if (result?.data) {
         const data = result.data;
 
-        const images: string[] =
-          data.storeImage?.map((img: any) =>
-            img.image
-              ? buildImageUrl(img.image)
-              : buildImageUrl("uploads/store-main.jpg")
-          ) || [buildImageUrl("uploads/store-main.jpg")];
+        const images: string[] = data.storeImage?.map((img: any) =>
+          img.image ? buildImageUrl(img.image) : buildImageUrl("uploads/store-main.jpg"),
+        ) || [buildImageUrl("uploads/store-main.jpg")];
 
         const formatted: Store = {
           id: data.id,
@@ -145,7 +142,7 @@ const StoreDetailPage = () => {
     if (!id) return;
     navigate(`/super/community/${store.community?.id}/store/${id}/edit`);
   };
-  
+
   return (
     <div className="font-sarabun bg-[#F0F0F0] min-h-screen">
       {/* Breadcrumb Navigation */}

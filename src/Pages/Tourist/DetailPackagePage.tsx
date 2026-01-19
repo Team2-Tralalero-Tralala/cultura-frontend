@@ -16,6 +16,7 @@ import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
 import Button from "@/Components/Button";
 import { Tag } from "@/Components/Tag";
 import { Icon } from "@iconify/react";
+import SideThumbnails from "@/Components/SideThumbnails";
 
 interface PackageFile {
   id: number;
@@ -153,9 +154,10 @@ export default function DetailPackagePage() {
    * Output :
    *  - galleryItems (MediaItem[])
    */
-  const galleryItems: MediaItem[] = packageDetail?.packageFiles
+  const galleryItems: any[] = packageDetail?.packageFiles
     ? packageDetail.packageFiles.map((file) => ({
-        type: "image",
+        // แก้ไข: เช็คถ้า type เป็น VIDEO ให้ส่งค่า "video" ถ้าไม่ใช่ให้เป็น "image"
+        type: file.type === "VIDEO" ? "video" : "image",
         src: generateImageUrl(file.filePath),
         alt: packageDetail.name,
       }))
@@ -456,7 +458,8 @@ export default function DetailPackagePage() {
         <div className="mb-10">
           <div className="mb-10">
             {galleryItems.length > 0 ? (
-              <Thumbnails items={galleryItems} />
+              // แก้ตรงนี้: เรียกใช้ SideThumbnails แทน
+              <SideThumbnails items={galleryItems} />
             ) : (
               <div className="w-full h-[300px] bg-gray-100 rounded-lg flex items-center justify-center text-black">
                 ไม่มีรูปภาพ

@@ -90,6 +90,7 @@ interface PackageDetail {
   dueDate: string | null;
   facility: string | null;
   warning: string | null;
+  bookedCount: number;
   location: LocationData;
   packageFiles: PackageFile[];
   tagPackages: { tag: Tag }[];
@@ -360,7 +361,7 @@ export default function DetailPackagePage() {
 
       <div className="container mx-auto px-4">
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 -mt-5">
+        <h1 className="text-3xl md:text-3xl font-bold text-black mb-4 -mt-5">
           {packageDetail.name}
         </h1>
 
@@ -468,7 +469,7 @@ export default function DetailPackagePage() {
 
             {/* Booked Count */}
             <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-              จำนวนการจอง 0 คน
+              จำนวนการจอง {packageDetail.bookedCount || 0} คน
             </p>
 
             {/* Total Capacity */}

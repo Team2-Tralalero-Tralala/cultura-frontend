@@ -17,7 +17,7 @@ import { EditStore } from "@/Pages/Admin/EditStorePage";
 import CommunityDetailAdmin from "@/Pages/Admin/DetailCommunityPage";
 import PackageRequestsAdmin from "@/Pages/Admin/ManagePackageRequestPage";
 import { ManageRefundBooking } from "@/Pages/Admin/ManageRefundPage";
-import PackageHistoryAdmin from "@/Pages/Admin/HistoryPackageAdmin";
+import PackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryPage";
 import PackageFeedbacksPage from "@/Pages/Admin/DetailFeedbackPage";
 import { DashboardPage } from "@/Pages/Admin/DashboardPage";
 import ManageBooking from "@/Pages/Admin/ManageBookingPage";

@@ -32,7 +32,7 @@ export default function PackagesPage() {
   const isPopular = sort === "popular";
 
   // State สำหรับข้อมูลแพ็กเกจ
-  const [packages, setPackages] = useState<(PackageData)[]>([]);
+  const [packages, setPackages] = useState<PackageData[]>([]);
 
   // State สำหรับสถานะการโหลดข้อมูล
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -47,7 +47,7 @@ export default function PackagesPage() {
    * Output : string - ข้อมูล location ที่จัดรูปแบบแล้ว
    */
   const formatLocation = (
-    location: { province: string; district: string; subDistrict: string } | null
+    location: { province: string; district: string; subDistrict: string } | null,
   ): string => {
     if (!location) return "ไม่ระบุสถานที่";
     const parts = [location.subDistrict, location.district, location.province].filter(Boolean);

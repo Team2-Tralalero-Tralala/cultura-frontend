@@ -2,7 +2,7 @@
  * คำอธิบาย : Component สำหรับ navigation bar (Navbar) มีปุ่มโปรไฟล์และเมนู dropdown ของ ผู้ใช้ทั่วไป (Tourist)
  * โดยมีการแสดงเมนูต่าง ๆ ใน dropdown ได้แก่ แก้ไขข้อมูลส่วนตัว, ประวัติการจอง, เปลี่ยนรหัสผ่าน, ดูรายงาน และออกจากระบบ
  */
-import { useAuth } from "@/Libs/useAuth";
+import { useAuth } from "@/Libs/UseAuth";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./Search/SearchBar";
@@ -51,11 +51,7 @@ const NavbarTourist = () => {
       <nav className="container mx-auto flex items-center justify-between px-6 h-16 lg:gap-6">
         <div className="flex items-center gap-10">
           <a href="/">
-            <img
-              src={"/public/logo-black.png"}
-              className="w-40.25 h-7.93"
-              alt="Cultura logo"
-            />
+            <img src={"/public/logo-black.png"} className="w-40.25 h-7.93" alt="Cultura logo" />
           </a>
 
           {/* กล่องค้นหา */}

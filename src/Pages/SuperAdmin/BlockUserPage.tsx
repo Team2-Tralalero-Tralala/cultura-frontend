@@ -25,7 +25,7 @@ import {
   fetchBlockedAccounts,
   unblockAccountById,
   unblockMultipleAccounts,
-} from "@/Services/account-services";
+} from "@/Libs/AccountService";
 
 /**
  * ฟังก์ชัน: thaiRoleName
@@ -55,9 +55,7 @@ const columns: Column<BlockedAccountRow>[] = [
     key: "fullname",
     header: "ชื่อจริง-นามสกุล",
     className: "min-w-[240px]",
-    render: (r) => (
-      <div>{`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}</div>
-    ),
+    render: (r) => <div>{`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}</div>,
   },
   {
     key: "role",
@@ -88,12 +86,7 @@ const columns: Column<BlockedAccountRow>[] = [
  * วัตถุประสงค์: ทำให้ค้นหาลื่นและไม่สนตัวพิมพ์ใหญ่/เล็ก
  */
 const normalizeText = (s: string) =>
-  (s ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (s ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * Component: BlockedAccountPage
@@ -116,7 +109,7 @@ export function BlockedAccountPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
 
   /**
    * ฟังก์ชัน: openModal
@@ -192,9 +185,7 @@ export function BlockedAccountPage() {
       const email = r.email ?? "";
       const role = r.role?.name ?? "";
       const community =
-        r.communityAdmin?.[0]?.name ??
-        r.communityMembers?.[0]?.Community?.name ??
-        "";
+        r.communityAdmin?.[0]?.name ?? r.communityMembers?.[0]?.Community?.name ?? "";
 
       return (
         normalizeText(name).includes(q) ||
@@ -224,7 +215,7 @@ export function BlockedAccountPage() {
           async () => {
             await unblockAccountById(row.id);
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -247,7 +238,7 @@ export function BlockedAccountPage() {
           async () => {
             await unblockMultipleAccounts(rows.map((r) => r.id));
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -262,20 +253,14 @@ export function BlockedAccountPage() {
             current={{
               label: "การระงับบัญชี",
               to: "/super/users/blocked",
-
             }}
           />
         </div>
-        <h1 className="text-[20px] font-bold text-black">
-          การระงับบัญชี
-        </h1>
+        <h1 className="text-[20px] font-bold text-black">การระงับบัญชี</h1>
 
         <div className="flex items-center justify-between w-full mt-2">
           <div className="w-[260px]">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
       </div>
@@ -289,12 +274,8 @@ export function BlockedAccountPage() {
         selectable
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(page) =>
-          setPagination((prev) => ({ ...prev, currentPage: page }))
-        }
-        onPageSizeChange={(limit) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
-        }
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+        onPageSizeChange={(limit) => setPagination((prev) => ({ ...prev, currentPage: 1, limit }))}
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}

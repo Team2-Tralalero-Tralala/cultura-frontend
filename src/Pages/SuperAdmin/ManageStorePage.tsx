@@ -13,8 +13,8 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import DataTable from "@/Components/Tables/Index";
 import { Icon } from "@iconify/react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { getCommunityById } from "@/Services/community-service";
-import { getAllStore } from "@/Services/store-service";
+import { getCommunityById } from "@/Libs/CommunityService";
+import { getAllStore } from "@/Libs/StoreService";
 
 import type {
   BulkAction,
@@ -97,11 +97,11 @@ export default function ManageStores() {
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-/*
- * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
- * Input : string
- * Output : void
- */
+  /*
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
+   * Input : string
+   * Output : void
+   */
   useEffect(() => {
     async function fetchCommunity() {
       try {
@@ -150,20 +150,20 @@ export default function ManageStores() {
     }
   };
 
-/*
- * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage หรือ limit เปลี่ยนแปลง
- * Input : communityId, pagination.currentPage, pagination.limit
- * Output : void
- */
+  /*
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage หรือ limit เปลี่ยนแปลง
+   * Input : communityId, pagination.currentPage, pagination.limit
+   * Output : void
+   */
   React.useEffect(() => {
     loadStores();
   }, [Number(communityId), pagination.currentPage, pagination.limit]);
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำของแต่ละแถวในตารางร้านค้า
- * Input : ไม่มี
- * Output : การกำหนดค่าการกระทำของแต่ละแถว
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำของแต่ละแถวในตารางร้านค้า
+   * Input : ไม่มี
+   * Output : การกำหนดค่าการกระทำของแต่ละแถว
+   */
   const rowActions: DataTableActionsConfig<StoreRow> = {
     header: "จัดการ",
     align: "left",
@@ -179,16 +179,16 @@ export default function ManageStores() {
     },
   };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกรองแถวร้านค้าตามข้อความค้นหา
- * Input : string
- * Output : string ที่ผ่านการ normalize แล้ว
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับกรองแถวร้านค้าตามข้อความค้นหา
+   * Input : string
+   * Output : string ที่ผ่านการ normalize แล้ว
+   */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
     return rows.filter((row) => {
       const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
-        normalizeText(String(value ?? ""))
+        normalizeText(String(value ?? "")),
       );
       const passSearch = !query || haystacks.some((haystack) => haystack.includes(query));
       return passSearch;
@@ -206,11 +206,11 @@ export default function ManageStores() {
     }
   };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำแบบกลุ่ม (Bulk Actions) ในตารางร้านค้า
- * Input : ไม่มี
- * Output : รายการการกระทำแบบกลุ่ม
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำแบบกลุ่ม (Bulk Actions) ในตารางร้านค้า
+   * Input : ไม่มี
+   * Output : รายการการกระทำแบบกลุ่ม
+   */
   const bulkActions: BulkAction<StoreRow>[] = [
     {
       id: "bulk-delete",

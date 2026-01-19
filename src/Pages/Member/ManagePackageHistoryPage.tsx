@@ -9,8 +9,13 @@ import DataTable from "@/Components/Tables/DataTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
-import type { Column, Pagination, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
-import { getHistoriesPackageMember, deletePackageAdmin } from "@/Services/package-services";
+import type {
+  Column,
+  Pagination,
+  DataTableActionsConfig,
+  BulkAction,
+} from "@/Components/Tables/Types";
+import { getHistoriesPackageMember, deletePackageAdmin } from "@/Libs/PackageService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 type PackageHistoryRow = {
@@ -28,12 +33,7 @@ type PackageHistoryRow = {
  * Output : string ที่ผ่านการ normalize แล้ว
  */
 const normalizeText = (str: string) =>
-  (str ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
@@ -46,8 +46,18 @@ const formatThaiDateTime = (iso: string) => {
 
   const day = date.getUTCDate().toString().padStart(2, "0");
   const monthNames = [
-    "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
-    "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย.",
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
   ];
   const month = monthNames[date.getUTCMonth()];
   const year = date.getUTCFullYear() + 543;
@@ -69,10 +79,7 @@ const columns: Column<PackageHistoryRow>[] = [
     header: "ชื่อแพ็กเกจ",
     className: "min-w-[220px]",
     render: (row) => (
-      <Link
-        to={`/member/package/${row.id}`}
-        className="hover:underline"
-      >
+      <Link to={`/member/package/${row.id}`} className="hover:underline">
         {row.name}
       </Link>
     ),
@@ -119,10 +126,7 @@ export default function PackageHistoryMember() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const res = await getHistoriesPackageMember(
-        pagination.currentPage,
-        pagination.limit
-      );
+      const res = await getHistoriesPackageMember(pagination.currentPage, pagination.limit);
 
       const list = res?.data?.data ?? [];
       const packages = res?.data?.pagination ?? {};
@@ -132,7 +136,10 @@ export default function PackageHistoryMember() {
         name: pkg.name ?? "-",
         community: pkg.community?.name ?? "-",
         overseer: `${pkg.overseerPackage?.fname ?? ""} ${pkg.overseerPackage?.lname ?? ""}`.trim(),
-        status: (pkg.statusPackage === "PUBLISH" || pkg.statusPackage === "UNPUBLISH") ? "จบแล้ว" : pkg.statusPackage,
+        status:
+          pkg.statusPackage === "PUBLISH" || pkg.statusPackage === "UNPUBLISH"
+            ? "จบแล้ว"
+            : pkg.statusPackage,
         dueDate: pkg.dueDate,
       }));
 
@@ -193,7 +200,7 @@ export default function PackageHistoryMember() {
     const query = normalizeText(searchQuery);
     return rows.filter((row) => {
       const haystacks = [row.name, row.community, row.overseer, row.dueDate].map((value) =>
-        normalizeText(String(value ?? ""))
+        normalizeText(String(value ?? "")),
       );
       return !query || haystacks.some((haystack) => haystack.includes(query));
     });
@@ -213,16 +220,16 @@ export default function PackageHistoryMember() {
     } catch (error: any) {
       console.error("Failed to delete package:", error);
       alert(
-        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "unknown error"
-        }`
+        `ลบไม่สำเร็จ: ${
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "unknown error"
+        }`,
       );
       setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
     }
   };
-
 
   /*
    * คำอธิบาย : ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
@@ -260,7 +267,10 @@ export default function PackageHistoryMember() {
 
         <div className="flex items-center justify-between w-full ">
           <div className="w-[260px]">
-            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
           </div>
 
           <div>
@@ -284,9 +294,7 @@ export default function PackageHistoryMember() {
           selectable
           isLoading={isLoading}
           pagination={pagination}
-          onPageChange={(page) =>
-            setPagination((prev) => ({ ...prev, currentPage: page }))
-          }
+          onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
           onPageSizeChange={(limit) =>
             setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
           }

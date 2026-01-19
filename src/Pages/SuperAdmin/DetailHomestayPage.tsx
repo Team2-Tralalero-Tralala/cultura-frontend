@@ -10,7 +10,7 @@ import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Tag } from "@/Components/Tag"; // นำเข้า Tag Component
 import type { HomestayDetail } from "@/Types/HomestayDetail";
-import { fetchHomestayDetail } from "@/Services/homestay-services";
+import { fetchHomestayDetail } from "@/Libs/HomestayService";
 
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const BACKEND_BASE_URL = apiUrl.replace(/\/api$/, "") || "http://localhost:3000";
@@ -47,19 +47,14 @@ export default function HomestayDetailPage() {
       .catch((err) => console.error(err));
   }, [homestayId]);
 
-  if (!homestay)
-    return <div className="p-8 text-gray-500">กำลังโหลดข้อมูลที่พัก...</div>;
+  if (!homestay) return <div className="p-8 text-gray-500">กำลังโหลดข้อมูลที่พัก...</div>;
 
   const displayText = (value: any) => (value ? value : "-");
-  
+
   const googleMapLink = `https://maps.google.com/?q=${homestay.location?.latitude},${homestay.location?.longitude}`;
 
-  const mainImage = homestay.homestayImage?.find(
-    (img: any) => img.type === "COVER"
-  );
-  const extraImages = homestay.homestayImage?.filter(
-    (img: any) => img.type === "GALLERY"
-  );
+  const mainImage = homestay.homestayImage?.find((img: any) => img.type === "COVER");
+  const extraImages = homestay.homestayImage?.filter((img: any) => img.type === "GALLERY");
 
   return (
     <div className="px-1 space-y-3">
@@ -80,11 +75,7 @@ export default function HomestayDetailPage() {
           <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
             <ArrowLeft
               className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
-              onClick={() =>
-                navigate(
-                  `/super/community/${homestay.community.id}/homestay/all`
-                )
-              }
+              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)}
             />
             รายละเอียดที่พัก
           </h1>
@@ -123,42 +114,32 @@ export default function HomestayDetailPage() {
 
           {/* ข้อมูลที่พัก (จัด Layout แบบ Grid เหมือน Admin) */}
           <div className="text-[16px] leading-relaxed pl-2">
-            <h3 className="text-[20px] font-bold text-black mb-4">
-              ข้อมูลที่พัก
-            </h3>
+            <h3 className="text-[20px] font-bold text-black mb-4">ข้อมูลที่พัก</h3>
 
             <div className="space-y-4">
               {/* ชื่อที่พัก */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
                 <span className="font-bold text-black">ชื่อที่พัก</span>
                 <span className="font-bold text-black">:</span>
-                <span className="whitespace-pre-line text-black">
-                  {displayText(homestay.name)}
-                </span>
+                <span className="whitespace-pre-line text-black">{displayText(homestay.name)}</span>
               </div>
 
               {/* ประเภทที่พัก */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
                 <span className="font-bold text-black">ประเภทที่พัก</span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">
-                  {displayText(homestay.type)}
-                </span>
+                <span className="text-black">{displayText(homestay.type)}</span>
               </div>
 
               {/* สิ่งอำนวยความสะดวก */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">
-                  สิ่งอำนวยความสะดวก
-                </span>
+                <span className="font-bold text-black">สิ่งอำนวยความสะดวก</span>
                 <span className="font-bold text-black">:</span>
                 {homestay.facility ? (
                   <ul className="list-disc list-inside space-y-1 text-black">
-                    {homestay.facility
-                      .split(",")
-                      .map((item: string, i: number) => (
-                        <li key={i}>{item.trim()}</li>
-                      ))}
+                    {homestay.facility.split(",").map((item: string, i: number) => (
+                      <li key={i}>{item.trim()}</li>
+                    ))}
                   </ul>
                 ) : (
                   <span className="text-black">-</span>
@@ -167,24 +148,16 @@ export default function HomestayDetailPage() {
 
               {/* จำนวนห้องพักทั้งหมด */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">
-                  จำนวนห้องพักทั้งหมด
-                </span>
+                <span className="font-bold text-black">จำนวนห้องพักทั้งหมด</span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">
-                  {displayText(homestay.totalRoom)} ห้อง
-                </span>
+                <span className="text-black">{displayText(homestay.totalRoom)} ห้อง</span>
               </div>
 
               {/* จำนวนผู้เข้าพักต่อห้อง */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">
-                  จำนวนผู้เข้าพักต่อห้อง
-                </span>
+                <span className="font-bold text-black">จำนวนผู้เข้าพักต่อห้อง</span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">
-                  {displayText(homestay.guestPerRoom)} คน ต่อ ห้อง
-                </span>
+                <span className="text-black">{displayText(homestay.guestPerRoom)} คน ต่อ ห้อง</span>
               </div>
 
               {/* แท็ก (ใช้ Tag Component) */}
@@ -214,9 +187,7 @@ export default function HomestayDetailPage() {
 
         {/* รูปภาพเพิ่มเติม (Gallery Grid + Modal Trigger) */}
         <div className="mt-10">
-          <h3 className="text-[20px] font-bold text-black mb-3">
-            รูปภาพเพิ่มเติม
-          </h3>
+          <h3 className="text-[20px] font-bold text-black mb-3">รูปภาพเพิ่มเติม</h3>
 
           {extraImages?.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -286,19 +257,14 @@ export default function HomestayDetailPage() {
                   <span className="font-bold text-black">ที่อยู่</span>
                   <span className="font-bold text-black">:</span>
                   <span className="text-black">
-                    {homestay.location.houseNumber}{" "}
-                    {homestay.location.villageNumber}{" "}
-                    {homestay.location.subDistrict}{" "}
-                    {homestay.location.district}{" "}
-                    {homestay.location.province}{" "}
-                    {homestay.location.postalCode}
+                    {homestay.location.houseNumber} {homestay.location.villageNumber}{" "}
+                    {homestay.location.subDistrict} {homestay.location.district}{" "}
+                    {homestay.location.province} {homestay.location.postalCode}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                  <span className="font-bold text-black">
-                    ละติจูด / ลองจิจูด
-                  </span>
+                  <span className="font-bold text-black">ละติจูด / ลองจิจูด</span>
                   <span className="font-bold text-black">:</span>
                   <span className="text-black">
                     {homestay.location.latitude}, {homestay.location.longitude}

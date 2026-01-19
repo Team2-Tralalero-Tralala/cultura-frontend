@@ -16,7 +16,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import TextField from "@/Components/TextField";
-import { editStore, getStoreById } from "@/Services/store-service";
+import { editStore, getStoreById } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 import { Icon } from "@iconify/react";
 import React from "react";
@@ -142,7 +142,7 @@ export function EditStore() {
           data.tagStores?.map((t: any) => ({
             id: t.tag.id,
             name: t.tag.name,
-          })) ?? []
+          })) ?? [],
         );
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -153,7 +153,7 @@ export function EditStore() {
             .map(async (img: any) => {
               const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
-            })
+            }),
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
@@ -162,7 +162,7 @@ export function EditStore() {
             .map(async (img: any) => {
               const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
-            })
+            }),
         );
 
         setCoverFiles(coverFilesFetched);

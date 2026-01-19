@@ -17,7 +17,7 @@ import type { CommunityFormData } from "@/Types/CommunityForm";
 import zod from "zod";
 import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getCommunityById, updateCommunity } from "@/Services/community-service";
+import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
 import Backdrop from "@mui/material/Backdrop";
 import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
@@ -119,8 +119,8 @@ const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) =
       (communityImages || [])
         .filter((image: any) => image.type === type)
         .map((image: any) =>
-          urlToFile(`${backendUrl}/${image.image}`, image.image, defaultMimeType)
-        )
+          urlToFile(`${backendUrl}/${image.image}`, image.image, defaultMimeType),
+        ),
     );
 
   const [logo, cover, gallery, video] = await Promise.all([
@@ -307,7 +307,7 @@ export function EditCommunity() {
             id: member.user.id,
             fname: member.user.fname,
             lname: member.user.lname,
-          })) ?? []
+          })) ?? [],
         );
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([latitude, longitude]);
@@ -319,7 +319,7 @@ export function EditCommunity() {
 
         const { logo, cover, gallery, video } = await fetchCommunityFiles(
           data.communityImage,
-          backendUrl
+          backendUrl,
         );
 
         setLogoFile(logo[0] || null);

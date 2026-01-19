@@ -9,10 +9,15 @@ import DataTable from "@/Components/Tables/DataTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
-import type { Column, Pagination, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
-import { getHistoriesPackageAdmin, deletePackageAdmin } from "@/Services/package-services";
+import type {
+  Column,
+  Pagination,
+  DataTableActionsConfig,
+  BulkAction,
+} from "@/Components/Tables/Types";
+import { getHistoriesPackageAdmin, deletePackageAdmin } from "@/Libs/PackageService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { getCommunityDetailByAdmin } from "@/Services/community-service";
+import { getCommunityDetailByAdmin } from "@/Libs/CommunityService";
 
 type PackageHistoryRow = {
   id: number;
@@ -29,12 +34,7 @@ type PackageHistoryRow = {
  * Output : string ที่ผ่านการ normalize แล้ว
  */
 const normalizeText = (str: string) =>
-  (str ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
@@ -47,8 +47,18 @@ const formatThaiDateTime = (iso: string) => {
 
   const day = date.getUTCDate().toString().padStart(2, "0");
   const monthNames = [
-    "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
-    "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย.",
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
   ];
   const month = monthNames[date.getUTCMonth()];
   const year = date.getUTCFullYear() + 543;
@@ -66,7 +76,10 @@ const formatThaiDateTime = (iso: string) => {
  */
 const columns: Column<PackageHistoryRow>[] = [
   {
-    key: "name", header: "ชื่อแพ็กเกจ", className: "min-w-[220px]", render: (row) => (
+    key: "name",
+    header: "ชื่อแพ็กเกจ",
+    className: "min-w-[220px]",
+    render: (row) => (
       <Link
         to={`/admin/packages/history/${row.id}`}
         className="hover:text-dark-green hover:underline"
@@ -117,10 +130,7 @@ export default function PackageHistoryAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const res = await getHistoriesPackageAdmin(
-        pagination.currentPage,
-        pagination.limit
-      );
+      const res = await getHistoriesPackageAdmin(pagination.currentPage, pagination.limit);
 
       const list = res?.data?.data ?? [];
       const packages = res?.data?.pagination ?? {};
@@ -200,7 +210,6 @@ export default function PackageHistoryAdmin() {
         setOpenConfirm(true);
       },
     },
-
   };
 
   /*
@@ -212,7 +221,7 @@ export default function PackageHistoryAdmin() {
     const query = normalizeText(searchQuery);
     return rows.filter((row) => {
       const haystacks = [row.name, row.community, row.overseer, row.dueDate].map((value) =>
-        normalizeText(String(value ?? ""))
+        normalizeText(String(value ?? "")),
       );
       return !query || haystacks.some((haystack) => haystack.includes(query));
     });
@@ -232,11 +241,12 @@ export default function PackageHistoryAdmin() {
     } catch (error: any) {
       console.error("Failed to delete package:", error);
       alert(
-        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "unknown error"
-        }`
+        `ลบไม่สำเร็จ: ${
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "unknown error"
+        }`,
       );
       setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
     }
@@ -278,7 +288,10 @@ export default function PackageHistoryAdmin() {
 
         <div className="flex items-center justify-between w-full ">
           <div className="w-[260px]">
-            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
           </div>
 
           <div>
@@ -302,9 +315,7 @@ export default function PackageHistoryAdmin() {
           selectable
           isLoading={isLoading}
           pagination={pagination}
-          onPageChange={(page) =>
-            setPagination((prev) => ({ ...prev, currentPage: page }))
-          }
+          onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
           onPageSizeChange={(limit) =>
             setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
           }

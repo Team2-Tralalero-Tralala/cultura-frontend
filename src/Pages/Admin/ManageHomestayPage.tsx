@@ -20,7 +20,7 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { TrashIcon } from "@/Components/Tables/Icon";
-import { getHomestaysAllAdmin, HomestayAdminDelete } from "@/Services/homestay-services";
+import { getHomestaysAllAdmin, HomestayAdminDelete } from "@/Libs/HomestayService";
 import type { HomestayRow, HomestayDtoFromApi } from "@/Types/Homestay";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
@@ -162,8 +162,8 @@ export default function ManageHomestayAdmin() {
     const normalizedQuery = normalizeText(searchQuery);
     return rows.filter((row) =>
       [row.name, row.facility, row.type].some((value) =>
-        normalizeText(value).includes(normalizedQuery)
-      )
+        normalizeText(value).includes(normalizedQuery),
+      ),
     );
   }, [rows, searchQuery]);
 

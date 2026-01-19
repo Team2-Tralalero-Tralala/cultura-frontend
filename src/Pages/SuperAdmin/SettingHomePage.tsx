@@ -9,7 +9,7 @@
  * ใช้ร่วมกับ Service สำหรับตรวจสอบสถานะเซิร์ฟเวอร์
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { fetchServerStatus } from "@/Services/server-status-service";
+import { fetchServerStatus } from "@/Libs/ServerStatusService";
 import { Icon } from "@iconify/react";
 import React from "react";
 

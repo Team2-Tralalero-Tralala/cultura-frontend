@@ -13,7 +13,7 @@ import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
 import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { editProfile } from "@/Services/account-services";
+import { editProfile } from "@/Libs/AccountService";
 
 /*
  * คำอธิบาย : Interface สำหรับโครงสร้างข้อมูลโปรไฟล์
@@ -74,13 +74,12 @@ export const EditProfile: React.FC = () => {
       let imageUrl = null;
       if (profile.profileImage) {
         if (profile.profileImage.startsWith("http")) {
-           imageUrl = profile.profileImage;
+          imageUrl = profile.profileImage;
         } else {
-           imageUrl = `${backendUrl}${profile.profileImage}`;
+          imageUrl = `${backendUrl}${profile.profileImage}`;
         }
       }
       setAvatarUrl(imageUrl);
-
     } catch (error: any) {
       toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
       navigate(-1);
@@ -96,9 +95,7 @@ export const EditProfile: React.FC = () => {
    * Input : event
    * Output : -
    */
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
@@ -125,10 +122,8 @@ export const EditProfile: React.FC = () => {
 
       // แสดงผลสำเร็จ
       setShowSuccessModal(true);
-
     } catch (error: any) {
-      const message =
-        error?.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้";
+      const message = error?.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้";
 
       setErrorMessage(message);
       setShowErrorModal(true);
@@ -168,9 +163,7 @@ export const EditProfile: React.FC = () => {
             <path d="M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">
-          แก้ไขข้อมูลส่วนตัว
-        </h1>
+        <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขข้อมูลส่วนตัว</h1>
       </div>
 
       <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200">

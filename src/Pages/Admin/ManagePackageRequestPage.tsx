@@ -18,7 +18,7 @@ import {
   approvePackageRequestForAdmin,
   fetchPackageRequests,
   rejectPackageRequestForAdmin,
-} from "@/Services/package-request-service";
+} from "@/Libs/PackageService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type PackageRequestRow = {
@@ -54,70 +54,70 @@ const thaiApproveStatus = (status?: string | null) => {
  */
 const buildPackageRequestColumns = (
   onApprove: (row: PackageRequestRow) => void,
-  onReject: (row: PackageRequestRow) => void
+  onReject: (row: PackageRequestRow) => void,
 ): Column<PackageRequestRow>[] => [
-    {
-      key: "name",
-      header: "ชื่อแพ็กเกจ",
-      className: "min-w-[220px]",
-      render: (r) => (
-        <Link
-          to={`/admin/package-requests/${r.id}`}
-          className="font-medium text-dark-green hover:underline focus:underline"
-        >
-          {r.name}
-        </Link>
-      ),
+  {
+    key: "name",
+    header: "ชื่อแพ็กเกจ",
+    className: "min-w-[220px]",
+    render: (r) => (
+      <Link
+        to={`/admin/package-requests/${r.id}`}
+        className="font-medium text-dark-green hover:underline focus:underline"
+      >
+        {r.name}
+      </Link>
+    ),
+  },
+  {
+    key: "community",
+    header: "ชื่อชุมชน",
+    className: "min-w-[220px]",
+    render: (r) => <div>{r.community.name}</div>,
+  },
+  {
+    key: "overseer",
+    header: "ผู้ดูแล",
+    className: "min-w-[160px]",
+    render: (r) => <div>{r.overseer.username}</div>,
+  },
+  {
+    key: "statusApprove",
+    header: "สถานะคำขอ",
+    render: (r) => <div>{thaiApproveStatus(r.statusApprove)}</div>,
+  },
+  {
+    key: "actions",
+    header: "จัดการ",
+    className: "w-[160px] text-left pr-3",
+    render: (r) => {
+      const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
+      return (
+        <div className="flex items-center justify-end gap-2 pr-2">
+          {!approved && (
+            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="cancel" onClick={() => onReject(r)}>
+                ปฏิเสธ
+              </Button>
+            </div>
+          )}
+          {!approved && (
+            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="confirm-admin" onClick={() => onApprove(r)}>
+                อนุมัติ
+              </Button>
+            </div>
+          )}
+          {approved && (
+            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="confirm-admin">อนุมัติ</Button>
+            </div>
+          )}
+        </div>
+      );
     },
-    {
-      key: "community",
-      header: "ชื่อชุมชน",
-      className: "min-w-[220px]",
-      render: (r) => <div>{r.community.name}</div>,
-    },
-    {
-      key: "overseer",
-      header: "ผู้ดูแล",
-      className: "min-w-[160px]",
-      render: (r) => <div>{r.overseer.username}</div>,
-    },
-    {
-      key: "statusApprove",
-      header: "สถานะคำขอ",
-      render: (r) => <div>{thaiApproveStatus(r.statusApprove)}</div>,
-    },
-    {
-      key: "actions",
-      header: "จัดการ",
-      className: "w-[160px] text-left pr-3",
-      render: (r) => {
-        const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
-        return (
-          <div className="flex items-center justify-end gap-2 pr-2">
-            {!approved && (
-              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="cancel" onClick={() => onReject(r)}>
-                  ปฏิเสธ
-                </Button>
-              </div>
-            )}
-            {!approved && (
-              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="confirm-admin" onClick={() => onApprove(r)}>
-                  อนุมัติ
-                </Button>
-              </div>
-            )}
-            {approved && (
-              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="confirm-admin">อนุมัติ</Button>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-  ];
+  },
+];
 
 export default function PackageRequestsAdminPage() {
   const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
@@ -135,8 +135,7 @@ export default function PackageRequestsAdminPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isConfirmOpen, setConfirmOpen] = React.useState<boolean>(false);
   const [isRejectOpen, setRejectOpen] = React.useState(false);
-  const [selectedRow, setSelectedRow] =
-    React.useState<PackageRequestRow | null>(null);
+  const [selectedRow, setSelectedRow] = React.useState<PackageRequestRow | null>(null);
 
   /**
    * ฟังก์ชัน reload
@@ -149,12 +148,7 @@ export default function PackageRequestsAdminPage() {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const { data } = await fetchPackageRequests(
-        currentPage,
-        pageSize,
-        searchQuery,
-        "PENDING"
-      );
+      const { data } = await fetchPackageRequests(currentPage, pageSize, searchQuery, "PENDING");
       setRows(data?.data?.data ?? []);
       setPagination(
         data?.data?.pagination ?? {
@@ -162,7 +156,7 @@ export default function PackageRequestsAdminPage() {
           totalPages: 1,
           totalCount: 0,
           limit: pageSize,
-        }
+        },
       );
     } catch (e: any) {
       setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -269,10 +263,7 @@ export default function PackageRequestsAdminPage() {
 
         <div className="flex items-center gap-2 w-full">
           <div className="w-[260px]">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
       </div>

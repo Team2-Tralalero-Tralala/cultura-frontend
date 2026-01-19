@@ -11,7 +11,7 @@ import { TrashIcon } from "@/Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import type { CommunityRow } from "@/Types/Community";
-import { getCommunities, deleteCommunity } from "@/Services/community-service";
+import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -82,7 +82,7 @@ export default function ManageCommunitySuperAdmin() {
         { label: "เปิด", value: "open" },
         { label: "ปิด", value: "closed" },
       ] as const,
-    []
+    [],
   );
 
   /*
@@ -98,7 +98,9 @@ export default function ManageCommunitySuperAdmin() {
       const response = await getCommunities(currentPage, pageSize);
       const communityPayload = response.data?.data;
 
-      const communityLists: ApiCommunity[] = Array.isArray(communityPayload?.data) ? communityPayload.data : [];
+      const communityLists: ApiCommunity[] = Array.isArray(communityPayload?.data)
+        ? communityPayload.data
+        : [];
       const paginationData = communityPayload?.pagination ?? {};
 
       const mappedCommunities: CommunityRow[] = communityLists.map((community) => ({
@@ -106,7 +108,9 @@ export default function ManageCommunitySuperAdmin() {
         name: community.name ?? "-",
         province: community.location?.province ?? "-",
         status: community.status ?? "CLOSED",
-        admin: community.admin ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim() : "-",
+        admin: community.admin
+          ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
+          : "-",
       }));
 
       setCommunityRows(mappedCommunities);
@@ -138,9 +142,11 @@ export default function ManageCommunitySuperAdmin() {
 
     return communityRows.filter((row) => {
       const haystacks = [row.name, row.province, row.admin, row.status].map((fieldValue) =>
-        normalizeText(String(fieldValue ?? ""))
+        normalizeText(String(fieldValue ?? "")),
       );
-      const passSearch = !normalizedSearchQuery || haystacks.some((haystack) => haystack.includes(normalizedSearchQuery));
+      const passSearch =
+        !normalizedSearchQuery ||
+        haystacks.some((haystack) => haystack.includes(normalizedSearchQuery));
 
       const statusUpper = (row.status ?? "").toString().toUpperCase();
       const passStatus =
@@ -210,7 +216,7 @@ export default function ManageCommunitySuperAdmin() {
         },
       },
     ],
-    []
+    [],
   );
 
   const rowActions: DataTableActionsConfig<CommunityRow> = {
@@ -246,7 +252,10 @@ export default function ManageCommunitySuperAdmin() {
         <h1 className="text-xl font-bold">จัดการชุมชน</h1>
         <div className="flex items-center gap-3">
           <div className="max-w-md">
-            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
           </div>
           <FilterDropdown
             options={statusOptions as unknown as { label: string; value: string }[]}

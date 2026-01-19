@@ -2,16 +2,15 @@
  * คำอธิบาย : Component สำหรับแสดงรายการ Feedback ของแพ็กเกจตาม packageId
  * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
  * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
-*/
+ */
 import React from "react";
 import { useParams } from "react-router-dom";
-import * as PackageFeedbackService from "@/Services/package-feedbacks-service";
+import * as PackageFeedbackService from "@/Libs/FeedbackService";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 type FeedbackImage = {
   image: string;
@@ -54,7 +53,7 @@ type SortOrder = "newest" | "oldest";
  * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
  * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
  * Output   : string | undefined - URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
-*/
+ */
 function getImageUrl(fileName?: string): string | undefined {
   if (!fileName) {
     return undefined;
@@ -68,24 +67,23 @@ function getImageUrl(fileName?: string): string | undefined {
  * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
  * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
  * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
-*/
+ */
 const formatDateThai = (isoDateString: string) => {
-    const date = new Date(isoDateString);
-    return date.toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+  const date = new Date(isoDateString);
+  return date.toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 /**
  * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
  * Input : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
  * Output: string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
-*/
+ */
 function formatFullName(tourist: Tourist): string {
-  const mask = (text: string) =>
-    text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "";
+  const mask = (text: string) => (text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "");
   return `${mask(tourist.fname)} ${mask(tourist.lname)}`.trim();
 }
 
@@ -93,7 +91,7 @@ function formatFullName(tourist: Tourist): string {
  * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
  * Input    : rating (number) - คะแนนระหว่าง 1–5
  * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
-*/
+ */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
     .map((_, starIndex) => (starIndex < rating ? "★" : "☆"))
@@ -106,7 +104,7 @@ function renderStars(rating: number): string {
  * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
  * Input : packageId (string) : รับจาก URL parameter เพื่อใช้ดึง feedback ของแพ็กเกจนั้น
  * Output : JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
-*/
+ */
 export default function PackageFeedbacksPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
@@ -115,15 +113,10 @@ export default function PackageFeedbacksPage() {
 
   const [sortOrder, setSortOrder] = React.useState<SortOrder>("newest");
 
-  const [replyTexts, setReplyTexts] = React.useState<Record<number, string>>(
-    {}
-  );
+  const [replyTexts, setReplyTexts] = React.useState<Record<number, string>>({});
 
-  const [isReplyModalOpen, setIsReplyModalOpen] =
-    React.useState<boolean>(false);
-  const [selectedFeedbackId, setSelectedFeedbackId] = React.useState<
-    number | null
-  >(null);
+  const [isReplyModalOpen, setIsReplyModalOpen] = React.useState<boolean>(false);
+  const [selectedFeedbackId, setSelectedFeedbackId] = React.useState<number | null>(null);
 
   const packageIdNumber = Number(packageId);
 
@@ -134,20 +127,22 @@ export default function PackageFeedbacksPage() {
 
     setIsLoading(true);
 
-    PackageFeedbackService.getPackageFeedbacksByPackageIdMember(packageIdNumber).then((response) => {
-      const typedResponse = response as { data?: Feedback[] } | Feedback[];
-      const feedbackResponseLists = Array.isArray(typedResponse)
-        ? typedResponse
-        : typedResponse.data ?? [];
+    PackageFeedbackService.getPackageFeedbacksByPackageIdMember(packageIdNumber).then(
+      (response) => {
+        const typedResponse = response as { data?: Feedback[] } | Feedback[];
+        const feedbackResponseLists = Array.isArray(typedResponse)
+          ? typedResponse
+          : (typedResponse.data ?? []);
 
-      setFeedbackLists(feedbackResponseLists);
-      setIsLoading(false);
-    });
+        setFeedbackLists(feedbackResponseLists);
+        setIsLoading(false);
+      },
+    );
   }, [packageIdNumber]);
 
   /**
    * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
-  */
+   */
   const sortedFeedbackLists = React.useMemo(() => {
     return [...feedbackLists]
       .map((feedbackItem) => ({
@@ -163,8 +158,7 @@ export default function PackageFeedbacksPage() {
       .map((item) => item.feedbackItem);
   }, [feedbackLists, sortOrder]);
 
-  const packageName =
-    feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
+  const packageName = feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
 
   const filterOptions: { label: string; value: SortOrder }[] = [
     { label: "ใหม่สุด", value: "newest" },
@@ -176,7 +170,7 @@ export default function PackageFeedbacksPage() {
    * Input    : feedbackId (number) - รหัสของ feedback
    *            value (string) - ข้อความที่ผู้ใช้พิมพ์
    * Output   : void
-  */
+   */
   function handleChangeReplyText(feedbackId: number, value: string): void {
     setReplyTexts((previousReplyTexts) => ({
       ...previousReplyTexts,
@@ -188,7 +182,7 @@ export default function PackageFeedbacksPage() {
    * คำอธิบาย : เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
    * Input    : feedbackId (number) - รหัสของ feedback ที่ต้องการตอบ
    * Output   : void
-  */
+   */
   function handleOpenReplyModal(feedbackId: number): void {
     const replyMessage = replyTexts[feedbackId]?.trim();
 
@@ -202,7 +196,7 @@ export default function PackageFeedbacksPage() {
 
   /**
    * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
-  */
+   */
   function handleCloseReplyModal(): void {
     setIsReplyModalOpen(false);
     setSelectedFeedbackId(null);
@@ -212,7 +206,7 @@ export default function PackageFeedbacksPage() {
    * คำอธิบาย : ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
    * Input    : feedbackId (number) - รหัส feedback ที่ต้องการตอบกลับ
    * Output   : Promise<void>
-  */
+   */
   async function sendReply(feedbackId: number): Promise<void> {
     const replyMessage = replyTexts[feedbackId]?.trim();
 
@@ -229,8 +223,8 @@ export default function PackageFeedbacksPage() {
               ...feedbackItem,
               replyMessage,
             }
-          : feedbackItem
-      )
+          : feedbackItem,
+      ),
     );
 
     setReplyTexts((previousReplyTexts) => ({
@@ -270,14 +264,11 @@ export default function PackageFeedbacksPage() {
           </div>
 
           <div className="p-6 space-y-6">
-            {isLoading && (
-              <div className="text-gray-500 text-sm">ไม่มีข้อเสนอแนะในแพ็กเกจนี้</div>
-            )}
+            {isLoading && <div className="text-gray-500 text-sm">ไม่มีข้อเสนอแนะในแพ็กเกจนี้</div>}
 
             {sortedFeedbackLists.map((feedbackItem) => {
               const hasReply =
-                !!feedbackItem.replyMessage &&
-                feedbackItem.replyMessage.trim() !== "";
+                !!feedbackItem.replyMessage && feedbackItem.replyMessage.trim() !== "";
 
               const feedbackTimeLabel = formatDateThai(feedbackItem.createdAt);
 
@@ -302,9 +293,8 @@ export default function PackageFeedbacksPage() {
                     <div className="flex items-center space-x-3">
                       <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-gray-500 text-sm font-semibold">
-                          {feedbackItem.bookingHistory.tourist.fname
-                            ?.charAt(0)
-                            ?.toUpperCase() || "U"}
+                          {feedbackItem.bookingHistory.tourist.fname?.charAt(0)?.toUpperCase() ||
+                            "U"}
                         </span>
                       </div>
 
@@ -314,45 +304,37 @@ export default function PackageFeedbacksPage() {
                     </div>
 
                     <div className="text-right">
-                      <div className="text-sm text-black">
-                        {renderStars(feedbackItem.rating)}
-                      </div>
+                      <div className="text-sm text-black">{renderStars(feedbackItem.rating)}</div>
                       {feedbackTimeLabel && (
-                        <div className="text-xs text-gray-500">
-                          {feedbackTimeLabel}
-                        </div>
+                        <div className="text-xs text-gray-500">{feedbackTimeLabel}</div>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-gray-800 text-sm leading-relaxed">
-                    {feedbackItem.message}
-                  </p>
+                  <p className="text-gray-800 text-sm leading-relaxed">{feedbackItem.message}</p>
 
                   {feedbackItem.feedbackImages?.length > 0 && (
                     <div className="flex flex-wrap gap-3">
-                      {feedbackItem.feedbackImages.map(
-                        (feedbackImage, imageIndex) => {
-                          const imageUrl = getImageUrl(feedbackImage.image);
+                      {feedbackItem.feedbackImages.map((feedbackImage, imageIndex) => {
+                        const imageUrl = getImageUrl(feedbackImage.image);
 
-                          if (!imageUrl) {
-                            return null;
-                          }
-
-                          return (
-                            <div
-                              key={imageIndex}
-                              className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
-                            >
-                              <img
-                                src={imageUrl}
-                                alt={`feedback-${feedbackItem.id}-${imageIndex}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          );
+                        if (!imageUrl) {
+                          return null;
                         }
-                      )}
+
+                        return (
+                          <div
+                            key={imageIndex}
+                            className="w-32 h-24 bg-gray-100 rounded-md overflow-hidden"
+                          >
+                            <img
+                              src={imageUrl}
+                              alt={`feedback-${feedbackItem.id}-${imageIndex}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -366,9 +348,7 @@ export default function PackageFeedbacksPage() {
                             </span>
                           </div>
 
-                          <span className="font-semibold text-gray-800 text-sm">
-                            {replyName}
-                          </span>
+                          <span className="font-semibold text-gray-800 text-sm">{replyName}</span>
                         </div>
 
                         {replyTimeLabel && (
@@ -393,10 +373,7 @@ export default function PackageFeedbacksPage() {
                           className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
                           value={replyTexts[feedbackItem.id] ?? ""}
                           onChange={(event) =>
-                            handleChangeReplyText(
-                              feedbackItem.id,
-                              event.target.value
-                            )
+                            handleChangeReplyText(feedbackItem.id, event.target.value)
                           }
                         />
                         <button

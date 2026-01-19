@@ -13,7 +13,7 @@ import { AdminSelector } from "@/Components/Selector/AdminSelector";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
-import { createCommunity } from "@/Services/community-service";
+import { createCommunity } from "@/Libs/CommunityService";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -84,7 +84,7 @@ const communitySchema = z.object({
     .transform((value) => String(value))
     .refine(
       (latitude) => latitude.length > 0 && latitude !== "0",
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
+      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด",
     ),
 
   longitude: z
@@ -92,7 +92,7 @@ const communitySchema = z.object({
     .transform((value) => String(value))
     .refine(
       (longitude) => longitude.length > 0 && longitude !== "0",
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
+      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด",
     ),
 
   phone: z
@@ -170,7 +170,7 @@ const prepareSubmitData = ({
         latitude: Number(position[0]),
         longitude: Number(position[1]),
       },
-    })
+    }),
   );
 
   if (logoFile) {
@@ -285,7 +285,7 @@ export default function CreateCommuninityPage() {
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded((prev) =>
-      isExpanded ? [...prev, panel] : prev.filter((activePanel) => activePanel !== panel)
+      isExpanded ? [...prev, panel] : prev.filter((activePanel) => activePanel !== panel),
     );
   };
 
@@ -366,7 +366,7 @@ export default function CreateCommuninityPage() {
         fname: "",
         lname: "",
       })),
-    [formData.communityMembers]
+    [formData.communityMembers],
   );
 
   /*

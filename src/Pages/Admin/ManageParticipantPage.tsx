@@ -11,7 +11,7 @@ import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import type { Column, Pagination } from "@/Components/Tables/Types";
-import { getParticipantsInPackage, updateParticipantStatus } from "@/Services/package-services";
+import { getParticipantsInPackage, updateParticipantStatus } from "@/Libs/PackageService";
 import type { ParticipantsInPackage } from "@/Types/Package";
 
 /**
@@ -136,7 +136,7 @@ export function ManageParticipant() {
         Number(params.packageId),
         pagination.currentPage,
         pagination.limit,
-        searchQuery
+        searchQuery,
       );
       setRows(resultData);
       setPagination(resultPagination);
@@ -163,7 +163,7 @@ export function ManageParticipant() {
           Number(params.packageId),
           pagination.currentPage,
           pagination.limit,
-          searchQuery
+          searchQuery,
         );
 
         if (!isCancelled) {
@@ -261,7 +261,7 @@ export function ManageParticipant() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rows]
+    [rows],
   );
 
   // Section: Render Layout

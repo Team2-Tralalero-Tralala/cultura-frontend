@@ -1,15 +1,15 @@
-/** 
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจทั้งหมด 
- * เช่น ข้อมูลแพ็กเกจ, ที่อยู่, สิ่งอำนวยความสะดวก, แผนที่, 
+/**
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจทั้งหมด
+ * เช่น ข้อมูลแพ็กเกจ, ที่อยู่, สิ่งอำนวยความสะดวก, แผนที่,
  * ที่พักในแพ็กเกจ, ภาพประกอบ และสถานะการอนุมัติ/ปฏิเสธ
-*/
+ */
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "@/Components/Button";
 import Thumbnails from "@/Components/Thumbnails";
 import type { PackageRequestDetail } from "@/Types/package-request";
-import * as PackageRequestService from "@/Services/package-request-service";
+import * as PackageRequestService from "@/Libs/PackageService";
 import MapPicker from "@/Components/MapPicker";
 import "leaflet/dist/leaflet.css";
 import { Modal } from "@/Components/Modal/Modal";
@@ -32,7 +32,7 @@ const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
  * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend เป็น URL ดาวน์โหลดเต็ม
  * Input : fileName?: string
  * Output: string | undefined (URL สำหรับดาวน์โหลดไฟล์)
-*/
+ */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
   const cleaned = fileName.replace(/^\/?uploads\//, "");
@@ -43,7 +43,7 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
  * คำอธิบาย : แปลงวันที่ ISO เป็นรูปแบบไทย dd/mm/yyyy
  * Input : isoString?: string
  * Output: string (วันที่ในรูปแบบไทย หรือ "-")
-*/
+ */
 function formatDate(isoString?: string): string {
   if (!isoString) return "-";
   return new Date(isoString).toLocaleDateString("th-TH", {
@@ -56,8 +56,8 @@ function formatDate(isoString?: string): string {
 /**
  * คำอธิบาย : แปลงวันที่ ISO เป็นรูปแบบไทย dd/mm/yyyy
  * Input : isoString?: string
- * Output: วันที่ในรูปแบบไทย วันพุธที่ 1 ตุลาคม พ.ศ. 2568  เวลา 14:00   
-*/
+ * Output: วันที่ในรูปแบบไทย วันพุธที่ 1 ตุลาคม พ.ศ. 2568  เวลา 14:00
+ */
 export function formatThaiDate(dateString: string) {
   if (!dateString) return "-";
 
@@ -101,13 +101,13 @@ export function formatThaiDate(dateString: string) {
  *             รองรับการคั่นด้วย \n, comma (,), หรือสัญลักษณ์ bullet (•)
  * Input : text?: string (ข้อความสิ่งอำนวยความสะดวกจาก backend)
  * Output: string[] (รายการสิ่งอำนวยความสะดวกแต่ละบรรทัด)
-*/
+ */
 function parseFacilityText(text?: string): string[] {
   if (!text) return [];
 
   return text
     .split(/\r?\n|,|•/g)
-    .map(item => item.trim())
+    .map((item) => item.trim())
     .filter(Boolean);
 }
 
@@ -115,7 +115,7 @@ function parseFacilityText(text?: string): string[] {
  * คำอธิบาย : ดึงเวลา (HH:mm) จาก ISO string
  * Input : isoString?: string
  * Output: string (เวลา HH:mm หรือ "-")
-*/
+ */
 function extractTimeFromISO(isoString?: string): string {
   if (!isoString) return "-";
   const timePart = isoString.split("T")[1];
@@ -126,7 +126,7 @@ function extractTimeFromISO(isoString?: string): string {
  * คำอธิบาย : รวมฟิลด์ address ใน PackageRequestDetail เป็นข้อความเดียวเพื่อแสดงผล
  * Input : detail?: PackageRequestDetail | null
  * Output: string (ที่อยู่แบบบรรทัดเดียว หรือ "-")
-*/
+ */
 function buildAddressLine(detail?: PackageRequestDetail | null): string {
   const text = [
     detail?.location?.houseNumber,
@@ -146,12 +146,12 @@ function buildAddressLine(detail?: PackageRequestDetail | null): string {
  * คำอธิบาย : React Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจ พร้อมปุ่มอนุมัติ/ปฏิเสธ
  * Input : - (ใช้ useParams รับ requestId จาก URL)
  * Output: JSX.Element (UI ของหน้าแสดงรายละเอียดแพ็กเกจ)
-*/
+ */
 export default function DetailPackageRequiredPage() {
   const navigate = useNavigate();
   const { requestId } = useParams<{ requestId: string }>();
   const [packageRequestDetail, setPackageRequestDetail] = useState<PackageRequestDetail | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -173,7 +173,7 @@ export default function DetailPackageRequiredPage() {
    * คำอธิบาย : คำนวณพิกัดศูนย์กลางแผนที่จากข้อมูลแพ็กเกจ หรือใช้ fallback เป็นกรุงเทพฯ
    * Input : - (อิง state packageRequestDetail)
    * Output: [number, number] (ละติจูด, ลองจิจูด)
-  */
+   */
   const mapCenter = useMemo<[number, number]>(() => {
     const lat = packageRequestDetail?.location?.latitude ?? 13.7563;
     const lng = packageRequestDetail?.location?.longitude ?? 100.5018;
@@ -182,33 +182,33 @@ export default function DetailPackageRequiredPage() {
 
   /**
    * คำอธิบาย : คีย์สำหรับบังคับรีเรนเดอร์ MapPicker เมื่อพิกัดเปลี่ยน
-  */
+   */
   const mapKey = `${mapCenter[0]},${mapCenter[1]}`;
 
   /**
    * คำอธิบาย : เปิด Modal สำหรับยืนยันการอนุมัติคำขอแพ็กเกจ
-  */
+   */
   function openApproveModal() {
     setIsApproveModalOpen(true);
   }
 
   /**
    * คำอธิบาย : ปิด Modal ยืนยันการอนุมัติคำขอแพ็กเกจ
-  */
+   */
   function closeApproveModal() {
     setIsApproveModalOpen(false);
   }
 
   /**
    * คำอธิบาย : เปิด Modal สำหรับกรอกเหตุผลในการปฏิเสธคำขอแพ็กเกจ
-  */
+   */
   function openRejectModal() {
     setIsRejectModalOpen(true);
   }
 
   /**
    * คำอธิบาย : ปิด Modal ปฏิเสธคำขอแพ็กเกจ
-  */
+   */
   function closeRejectModal() {
     setIsRejectModalOpen(false);
   }
@@ -217,7 +217,7 @@ export default function DetailPackageRequiredPage() {
 
   /**
    * คำอธิบาย : ดำเนินการอนุมัติคำขอแพ็กเกจตาม requestId
-  */
+   */
   async function approveCurrentRequest() {
     if (approveClicked) return;
     setApproveClicked(true);
@@ -242,12 +242,11 @@ export default function DetailPackageRequiredPage() {
     }
   }
 
-
   /**
    * คำอธิบาย : ดำเนินการปฏิเสธคำขอ พร้อมเหตุผล และกลับไปหน้ารายการเมื่อสำเร็จ
    * Input : reason: string
    * Output: Promise<void>
-  */
+   */
   async function rejectCurrentRequest(reason: string) {
     if (!requestId) return;
     try {
@@ -266,21 +265,21 @@ export default function DetailPackageRequiredPage() {
 
   /**
    * คำอธิบาย : เปิดโมดัลยืนยันการอนุมัติเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
-  */
+   */
   function handleApproveClick() {
     openApproveModal();
   }
 
   /**
    * คำอธิบาย : เปิดโมดัลระบุเหตุผลการปฏิเสธเมื่อผู้ใช้กดปุ่ม "ปฏิเสธ"
-  */
+   */
   function handleRejectClick() {
     openRejectModal();
   }
 
   /**
    * คำอธิบาย : ตรวจว่าสถานะอนุมัติแล้วหรือไม่เพื่อซ่อนปุ่ม
-  */
+   */
   const isApproved = String((packageRequestDetail as any)?.statusApprove || "")
     .toUpperCase()
     .startsWith("APPROVE");
@@ -465,8 +464,7 @@ export default function DetailPackageRequiredPage() {
               mapOnly
               startingPosition={mapCenter}
               startingZoom={13}
-              onChange={(_latlng) => {
-              }}
+              onChange={(_latlng) => {}}
             />
           </div>
 
@@ -500,27 +498,24 @@ export default function DetailPackageRequiredPage() {
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">เช็คอิน :</span>{" "}
               <span className="font-normal">
-                {formatThaiDate(
-                  packageRequestDetail.homestayHistories[0].checkInTime
-                )} เวลา {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkInTime)}
+                {formatThaiDate(packageRequestDetail.homestayHistories[0].checkInTime)} เวลา{" "}
+                {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkInTime)}
               </span>
             </p>
 
             <p className="text-[16px] text-gray-900">
               <span className="font-semibold">เช็คเอาท์ :</span>{" "}
               <span className="font-normal">
-                {formatThaiDate(
-                  packageRequestDetail.homestayHistories[0].checkOutTime
-                )} เวลา {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkOutTime)}
+                {formatThaiDate(packageRequestDetail.homestayHistories[0].checkOutTime)} เวลา{" "}
+                {extractTimeFromISO(packageRequestDetail.homestayHistories[0].checkOutTime)}
               </span>
             </p>
 
             <div className="col-span-2 w-full min-h-[200px] border border-gray-300 rounded-xl p-4 shadow-sm bg-white mt-2 flex items-start gap-16">
-
               {packageRequestDetail?.homestayHistories?.[0]?.homestay?.homestayImage?.length ? (
                 <img
                   src={resolveBackendUploadUrl(
-                    packageRequestDetail.homestayHistories[0].homestay.homestayImage[0].image
+                    packageRequestDetail.homestayHistories[0].homestay.homestayImage[0].image,
                   )}
                   alt="homestay"
                   className="w-[356px] h-[183px] object-cover rounded-lg"
@@ -532,30 +527,24 @@ export default function DetailPackageRequiredPage() {
               )}
 
               <div className="flex-1">
-
                 <p className="text-[16px] font-semibold text-gray-900">
                   {packageRequestDetail?.homestayHistories?.[0]?.homestay?.name ?? "-"}
                 </p>
 
-                <p className="text-[16px] font-semibold mt-2">
-                  สิ่งอำนวยความสะดวก
-                </p>
+                <p className="text-[16px] font-semibold mt-2">สิ่งอำนวยความสะดวก</p>
 
                 <ul className="list-disc ml-6 text-[16px] text-gray-800 mt-1">
                   {parseFacilityText(
-                    packageRequestDetail?.homestayHistories?.[0]?.homestay?.facility
+                    packageRequestDetail?.homestayHistories?.[0]?.homestay?.facility,
                   ).map((item, idx) => (
                     <li key={idx}>{item}</li>
                   ))}
                 </ul>
-
               </div>
             </div>
           </div>
         ) : null}
-
       </section>
-
 
       {!isApproved && (
         <div className="flex justify-end gap-3 mt-4">

@@ -15,7 +15,7 @@ import {
   fetchAdminDashboardData,
   type AdminDashboardResponse,
   type MemberDashboardFilters,
-} from "@/Services/dashboard-service";
+} from "@/Libs/DashboardService";
 import { BarChart } from "@/Components/Graph/BarChart";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
@@ -269,8 +269,8 @@ export function DashboardPage() {
                     bookingDateRange.periodType === "weekly"
                       ? "วัน"
                       : bookingDateRange.periodType === "monthly"
-                      ? "เดือน"
-                      : "ปี"
+                        ? "เดือน"
+                        : "ปี"
                   }
                 />
               </div>
@@ -297,8 +297,8 @@ export function DashboardPage() {
                 revenueDateRange.periodType === "weekly"
                   ? "วัน"
                   : revenueDateRange.periodType === "monthly"
-                  ? "เดือน"
-                  : "ปี"
+                    ? "เดือน"
+                    : "ปี"
               }
             />
           </div>

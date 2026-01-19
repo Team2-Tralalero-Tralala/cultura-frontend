@@ -13,7 +13,7 @@ import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
 import { type PackageData } from "@/Components/PackageSection";
 import PriceRangeSlider from "@/Components/PriceRangeSlider";
-import { fetchHomeData, fetchSearchOverview, type PackageApiData } from "@/Services/tourist-service";
+import { fetchHomeData, fetchSearchOverview, type PackageApiData } from "@/Libs/TouristService";
 import { Icon } from "@iconify/react";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useEffect, useRef, useState } from "react";
@@ -123,7 +123,7 @@ export default function SearchPage() {
    * Output : string - ข้อมูล location ที่จัดรูปแบบแล้ว
    */
   const formatLocation = (
-    location: { province: string; district: string; subDistrict: string } | null
+    location: { province: string; district: string; subDistrict: string } | null,
   ): string => {
     if (!location) return "ไม่ระบุสถานที่";
     const parts = [location.subDistrict, location.district, location.province].filter(Boolean);
@@ -138,8 +138,9 @@ export default function SearchPage() {
    */
   const transformPackageData = (packageData: PackageApiData): PackageData => {
     // ตรวจสอบว่า coverImage เป็น full URL อยู่แล้วหรือไม่
-    const isFullUrl = packageData.coverImage?.startsWith("http://") ||
-                      packageData.coverImage?.startsWith("https://");
+    const isFullUrl =
+      packageData.coverImage?.startsWith("http://") ||
+      packageData.coverImage?.startsWith("https://");
 
     let imageUrl: string;
     if (!packageData.coverImage) {
@@ -317,7 +318,7 @@ export default function SearchPage() {
         (pkg) =>
           pkg.title.toLowerCase().includes(query) ||
           pkg.location.toLowerCase().includes(query) ||
-          (pkg.tags || []).some((t) => t.toLowerCase().includes(query))
+          (pkg.tags || []).some((t) => t.toLowerCase().includes(query)),
       );
     }
 
@@ -348,7 +349,7 @@ export default function SearchPage() {
           endDate: filters.endDate,
           tags: filters.tags.length > 0 ? filters.tags : undefined,
           sort: sortBy,
-        }
+        },
       );
 
       // แปลงข้อมูลแพ็กเกจ (packages is already an array from service)
@@ -529,8 +530,8 @@ export default function SearchPage() {
   const searchTitle = tagParam
     ? `ผลลัพธ์ที่ตรงกับการค้นหา "${tagParam}"`
     : queryParam
-    ? `ผลลัพธ์ที่ตรงกับการค้นหา "${queryParam}"`
-    : "ผลการค้นหา";
+      ? `ผลลัพธ์ที่ตรงกับการค้นหา "${queryParam}"`
+      : "ผลการค้นหา";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -685,7 +686,9 @@ export default function SearchPage() {
                             />
                           </div>
                           {/* ปิด endAdornment ของ MUI (กัน UI ซ้อน) */}
-                          {InputProps.endAdornment && <div className="hidden">{InputProps.endAdornment}</div>}
+                          {InputProps.endAdornment && (
+                            <div className="hidden">{InputProps.endAdornment}</div>
+                          )}
                         </div>
                       </div>
                     );

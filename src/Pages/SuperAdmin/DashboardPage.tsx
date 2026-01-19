@@ -14,12 +14,12 @@ import { LineGraph } from "@/Components/LineGraph";
 import { PieGraph } from "@/Components/PieGraph";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
-import type { DashboardResponse } from "@/Services/dashboard-service";
+import type { DashboardResponse } from "@/Libs/DashboardService";
 import {
   fetchDashboardData,
   type DashboardFilters,
   type DashboardStatsItem,
-} from "@/Services/dashboard-service";
+} from "@/Libs/DashboardService";
 import { Icon } from "@iconify/react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
@@ -27,7 +27,6 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import axios from "axios";
 import React from "react";
-
 
 /*
  * คำอธิบาย : คอลัมน์ตารางสำหรับแสดงสถิติตามจังหวัด
@@ -89,7 +88,7 @@ interface GeographyItem {
 async function loadProvinces(): Promise<string[]> {
   try {
     const response = await axios.get(
-      "https://raw.githubusercontent.com/thailand-geography-data/thailand-geography-json/main/src/geography.json"
+      "https://raw.githubusercontent.com/thailand-geography-data/thailand-geography-json/main/src/geography.json",
     );
     const data: GeographyItem[] = response.data;
     const provincesSet = new Set<string>();
@@ -133,7 +132,7 @@ export default function DashboardPage() {
 
   const [calendarMode, setCalendarMode] = React.useState<"weekly" | "monthly" | "yearly">("weekly");
   const [dateRange, setDateRange] = React.useState<[Date | null, Date | null]>(() =>
-    getCurrentWeek()
+    getCurrentWeek(),
   );
   const [dateList, setDateList] = React.useState<Date[]>(() => {
     const [start, end] = getCurrentWeek();
@@ -149,7 +148,7 @@ export default function DashboardPage() {
   const [filterRegion, setFilterRegion] = React.useState<string>("all");
   const [selectedProvince, setSelectedProvince] = React.useState<string>("");
   const [provinceOptions, setProvinceOptions] = React.useState<{ value: string; label: string }[]>(
-    []
+    [],
   );
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
@@ -167,7 +166,7 @@ export default function DashboardPage() {
       { label: "ภาคตะวันออกเฉียงเหนือ", value: "northeast" },
       { label: "ภาคใต้", value: "south" },
     ],
-    []
+    [],
   );
 
   // ====== โหลดข้อมูลจังหวัด ======
@@ -187,7 +186,6 @@ export default function DashboardPage() {
     }
     fetchProvinces();
   }, []);
-
 
   // ====== Debounce search query ======
   /*
@@ -327,9 +325,7 @@ export default function DashboardPage() {
         },
         // Date Range
         {
-          text: `ช่วงวันที่: ${formatDateToThai(dateRange[0])} - ${formatDateToThai(
-            dateRange[1]
-          )}`,
+          text: `ช่วงวันที่: ${formatDateToThai(dateRange[0])} - ${formatDateToThai(dateRange[1])}`,
           style: "subheader",
           margin: [0, 0, 0, 20],
         },
@@ -377,7 +373,12 @@ export default function DashboardPage() {
               // Header row
               [
                 { text: "จังหวัด", style: "tableHeader", bold: true },
-                { text: "จำนวนวิสาหกิจชุมชน", style: "tableHeader", bold: true, alignment: "right" },
+                {
+                  text: "จำนวนวิสาหกิจชุมชน",
+                  style: "tableHeader",
+                  bold: true,
+                  alignment: "right",
+                },
                 { text: "จำนวนแพ็กเกจ", style: "tableHeader", bold: true, alignment: "right" },
                 { text: "การจองทั้งหมด", style: "tableHeader", bold: true, alignment: "right" },
                 { text: "การจองสำเร็จ", style: "tableHeader", bold: true, alignment: "right" },
@@ -448,11 +449,13 @@ export default function DashboardPage() {
       },
     };
 
-    pdfMake.createPdf(docDefinition as any).download(
-      `รายงานข้อมูลจังหวัด_${formatDateToThai(dateRange[0])}_${formatDateToThai(
-        dateRange[1]
-      )}.pdf`
-    );
+    pdfMake
+      .createPdf(docDefinition as any)
+      .download(
+        `รายงานข้อมูลจังหวัด_${formatDateToThai(dateRange[0])}_${formatDateToThai(
+          dateRange[1],
+        )}.pdf`,
+      );
   };
 
   /*

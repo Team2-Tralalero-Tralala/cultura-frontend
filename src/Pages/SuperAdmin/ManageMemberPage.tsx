@@ -32,7 +32,7 @@ import {
   deleteAccountById,
   deleteMultipleAccounts,
   getAccountInCommunity,
-} from "@/Services/account-services";
+} from "@/Libs/AccountService";
 import { Icon } from "@iconify/react";
 
 /**
@@ -138,7 +138,7 @@ export function ManageAccountCommunity() {
         Number(params.communityId),
         pagination.currentPage,
         pagination.limit,
-        searchQuery
+        searchQuery,
       );
       setRows(resultData);
       setPagination(resultPagination);
@@ -163,7 +163,7 @@ export function ManageAccountCommunity() {
           Number(params.communityId),
           pagination.currentPage,
           pagination.limit,
-          searchQuery
+          searchQuery,
         );
 
         if (!isCancelled) {
@@ -224,7 +224,7 @@ export function ManageAccountCommunity() {
           async () => {
             await blockAccountById(row.id);
             await fetchData();
-          }
+          },
         );
       },
       edit: (row) => navigate(`/super/account/${row.role.name}/${row.id}/edit`),
@@ -235,7 +235,7 @@ export function ManageAccountCommunity() {
           async () => {
             await deleteAccountById(row.id);
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -257,7 +257,7 @@ export function ManageAccountCommunity() {
           async () => {
             await blockMultipleAccounts(rows.map((r) => r.id));
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -273,7 +273,7 @@ export function ManageAccountCommunity() {
           async () => {
             await deleteMultipleAccounts(rows.map((r) => r.id));
             await fetchData();
-          }
+          },
         );
       },
     },

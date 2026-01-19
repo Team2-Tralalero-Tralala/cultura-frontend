@@ -9,7 +9,7 @@ import {
   fetchTouristDashboardData,
   type TouristDashboardFilters,
   type TouristDashboardResponse,
-} from "@/Services/dashboard-service";
+} from "@/Libs/DashboardService";
 import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
@@ -250,8 +250,8 @@ export function DashboardPage() {
                         bookingDateRange.periodType === "weekly"
                           ? "วัน"
                           : bookingDateRange.periodType === "monthly"
-                          ? "เดือน"
-                          : "ปี"
+                            ? "เดือน"
+                            : "ปี"
                       }
                     />
                   </div>

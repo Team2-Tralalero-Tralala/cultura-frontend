@@ -11,7 +11,7 @@ import Button from "../Components/Button";
 import { LoginTouristCard } from "../Components/LoginTouristCard";
 import ServerMaintenanceModal from "../Components/Modal/ServerMaintenanceModal";
 import AuthLayout from "../Layouts/AuthLayout";
-import { fetchServerStatus } from "@/Services/server-service";
+import { fetchServerStatus } from "@/Libs/ServerService";
 /*
  * ฟังก์ชัน : LoginTourist
  * คำอธิบาย : แสดงหน้าเข้าสู่ระบบสำหรับ Tourist

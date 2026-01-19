@@ -54,7 +54,7 @@ export async function HomestayAdminDelete(homestayId: number) {
     {},
     {
       withCredentials: true,
-    }
+    },
   );
   return res.data;
 }
@@ -96,17 +96,21 @@ export async function deleteHomestayBySuperAdmin(homestayId: number) {
   return api.patch(`/super/community/homestay/${homestayId}`);
 }
 
-
-/* 
+/*
  * อธิบาย : ฟังก์ชันดึงข้อมูลรายละเอียดที่พักและที่พักอื่น ๆ ในชุมชน
  * Input : communityId, homestayId
  * Output : ข้อมูลที่พัก (homestay) และรายการที่พักอื่น (otherHomestays)
  */
-export async function getHomestayDetailAndOtherHomestay(communityId: number, homestayId: number, page = 1, limit = 12) {
+export async function getHomestayDetailAndOtherHomestay(
+  communityId: number,
+  homestayId: number,
+  page = 1,
+  limit = 12,
+) {
   const res = await axios.get(`${apiUrl}/shared/community/${communityId}/homestay/${homestayId}`, {
     params: { page, limit },
     withCredentials: false,
-    headers: { Authorization: '' }
+    headers: { Authorization: "" },
   });
   return res.data?.data;
 }

@@ -58,7 +58,7 @@ export async function deleteCommunity(communityId: number) {
     {},
     {
       withCredentials: true,
-    }
+    },
   );
 }
 /*
@@ -174,7 +174,29 @@ export async function getCommunityDetailPublic(
     storeLimit?: number;
     homestayPage?: number;
     homestayLimit?: number;
-  }
+  },
 ) {
   return axios.get(`${apiUrl}/shared/community/${communityId}`, { params });
+}
+/**
+ * ฟังก์ชัน : deleteCommunityMember
+ * คำอธิบาย : ลบ (soft delete) สมาชิกในชุมชน โดยอ้างอิง userId
+ * Input : memberId: number - รหัสสมาชิกที่ต้องการลบ
+ * Output: Promise<AxiosResponse> (ผลลัพธ์จาก backend)
+ */
+export async function deleteCommunityMember(memberId: number) {
+  const res = await axios.patch(
+    `${apiUrl}/admin/member/${memberId}`,
+    {},
+    { withCredentials: true },
+  );
+
+  return res.data;
+}
+
+type MemberQuery = { q?: string; limit?: number };
+
+export async function getCommunityMembers(communityId: number, params?: MemberQuery) {
+  const { q = "", limit = 20 } = params ?? {};
+  return api.get(`/super/community/${communityId}/members`, { params: { q, limit } });
 }

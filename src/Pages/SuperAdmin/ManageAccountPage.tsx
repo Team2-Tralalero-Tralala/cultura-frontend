@@ -33,7 +33,7 @@ import {
   blockMultipleAccounts,
   deleteAccountById,
   deleteMultipleAccounts,
-} from "@/Services/account-services";
+} from "@/Libs/AccountService";
 
 /**
  * ฟังก์ชัน: thaiRoleName
@@ -254,7 +254,7 @@ export function ManageAccountPage() {
           async () => {
             await blockAccountById(row.id);
             await fetchData();
-          }
+          },
         );
       },
       edit: (row) => navigate(`/super/account/${row.role.name}/${row.id}/edit`),
@@ -265,7 +265,7 @@ export function ManageAccountPage() {
           async () => {
             await deleteAccountById(row.id);
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -287,7 +287,7 @@ export function ManageAccountPage() {
           async () => {
             await blockMultipleAccounts(rows.map((r) => r.id));
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -303,7 +303,7 @@ export function ManageAccountPage() {
           async () => {
             await deleteMultipleAccounts(rows.map((r) => r.id));
             await fetchData();
-          }
+          },
         );
       },
     },

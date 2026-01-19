@@ -4,7 +4,7 @@
  * และสามารถรวมผู้ดูแลปัจจุบันของชุมชนเข้าในรายการได้โดยไม่ซ้ำ
  */
 
-import { getUnassignedAdmins } from "@/Services/community-service";
+import { getUnassignedAdmins } from "@/Libs/CommunityService";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useState, useEffect } from "react";
 

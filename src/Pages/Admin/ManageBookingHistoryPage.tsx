@@ -1,9 +1,8 @@
-
 /**
  * คำอธิบาย : Component สำหรับแสดงประวัติการจองของผู้ใช้งานฝั่งผู้ดูแล (Admin / Member)
  * โดยรองรับการดึงข้อมูลจาก backend ตาม role,
  * การแบ่งหน้า (pagination), การค้นหา และการกรองสถานะการจอง
-*/
+ */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/Components/Button";
@@ -12,7 +11,7 @@ import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
 import type { BookingHistoryItem } from "../../Types/BookingHistory";
-import * as BookingHistoriesService from "../../Services/booking-history-service";
+import * as BookingHistoriesService from "@/Libs/BookingHistoryService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const STATUS_LABEL_TH: Record<string, string> = {
@@ -70,7 +69,7 @@ const columns: Column<BookingRow>[] = [
  *     - status : สถานะการจอง (ข้อความภาษาไทย)
  *     - evidence : หลักฐานการโอนเงิน
  *     - bookedAt : วันที่และเวลาที่ทำการจอง (รูปแบบภาษาไทย)
-*/
+ */
 const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
   const firstName = item?.tourist?.fname ?? "";
   const lastName = item?.tourist?.lname ?? "";
@@ -85,12 +84,12 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
   const evidence = item?.transferSlip ?? "-";
   const bookedAt = item?.bookingAt
     ? new Date(item.bookingAt).toLocaleString("th-TH", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "-";
   return { customerName, activityTitle, price, status, evidence, bookedAt };
 };
@@ -103,7 +102,7 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
  *   - ไม่มี (อาศัยข้อมูลจาก service และ state ภายใน component)
  * Output :
  *   - React.ReactElement : หน้าแสดงผลตารางประวัติการจอง พร้อมตัวกรองและการแบ่งหน้า
-*/
+ */
 export default function BookingHistoryAdmin(): React.ReactElement {
   const navigate = useNavigate();
   const [tableRows, setTableRows] = useState<BookingRow[]>([]);
@@ -121,12 +120,14 @@ export default function BookingHistoryAdmin(): React.ReactElement {
    * คำอธิบาย : เรียก service เพื่อโหลดข้อมูลตามหน้า/จำนวนเรคอร์ด และแมปเป็นแถวสำหรับตาราง
    * Input : p: number (หน้า), l?: number (จำนวนต่อหน้า)
    * Output: Promise<void>
-  */
+   */
   const loadPageData = useCallback(async (p: number, l?: number) => {
     setIsLoading(true);
     try {
       const resp: BookingHistoryResp =
-        typeof l === "number" ? await BookingHistoriesService.fetchBookingHistoriesByRole(p, l) : await BookingHistoriesService.fetchBookingHistoriesByRole(p);
+        typeof l === "number"
+          ? await BookingHistoriesService.fetchBookingHistoriesByRole(p, l)
+          : await BookingHistoriesService.fetchBookingHistoriesByRole(p);
 
       const mappedRows = (resp.list ?? []).map(mapApiToRow);
       setTableRows(mappedRows);
@@ -134,7 +135,8 @@ export default function BookingHistoryAdmin(): React.ReactElement {
       const serverLimit = resp.limit ?? l ?? (mappedRows.length > 0 ? mappedRows.length : 10);
       const serverPage = resp.page ?? p;
       const serverTotalPages =
-        resp.totalPages ?? (resp.hasNext !== undefined ? (resp.hasNext ? serverPage + 1 : serverPage) : serverPage);
+        resp.totalPages ??
+        (resp.hasNext !== undefined ? (resp.hasNext ? serverPage + 1 : serverPage) : serverPage);
       const serverTotalCount =
         resp.totalCount ??
         (resp.hasNext !== undefined
@@ -155,7 +157,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
 
   /*
    * คำอธิบาย : กรองแถวตามสถานะที่เลือก และค้นหาด้วยข้อความ (client-side)
-  */
+   */
   const filteredRows = useMemo(() => {
     const q = (searchQuery ?? "").toLowerCase().trim();
 
@@ -163,8 +165,8 @@ export default function BookingHistoryAdmin(): React.ReactElement {
       selectedStatus === "ALL"
         ? tableRows
         : tableRows.filter(
-          (r) => r.status === STATUS_LABEL_TH[selectedStatus as keyof typeof STATUS_LABEL_TH]
-        );
+            (r) => r.status === STATUS_LABEL_TH[selectedStatus as keyof typeof STATUS_LABEL_TH],
+          );
 
     if (!q) return subset;
     return subset.filter((r) => Object.values(r).join(" ").toLowerCase().includes(q));
@@ -174,13 +176,13 @@ export default function BookingHistoryAdmin(): React.ReactElement {
    * คำอธิบาย : สร้างคีย์สตริงที่มีเสถียรภาพต่อแถวสำหรับ DataTable
    * Input : r: BookingRow
    * Output: string
-  */
+   */
   const getRowKey = (r: BookingRow) =>
     `${r.customerName}|${r.activityTitle}|${r.price}|${r.bookedAt}|${r.evidence}`;
 
   /**
    * คำอธิบาย : กำหนดค่าการแบ่งหน้าให้ DataTable
-  */
+   */
   const pagination: Pagination = {
     currentPage: page,
     totalPages,

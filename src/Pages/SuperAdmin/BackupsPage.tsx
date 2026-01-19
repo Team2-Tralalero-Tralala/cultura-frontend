@@ -22,8 +22,8 @@ import {
   deleteBulkBackups,
   downloadBackup,
   fetchBackups,
-} from "@/Services/backup-service";
-import { fetchServerStatus } from "@/Services/server-status-service";
+} from "@/Libs/BackupService";
+import { fetchServerStatus } from "@/Libs/ServerStatusService";
 import type { BackupRow } from "@/Types/Backup";
 import { Icon } from "@iconify/react";
 

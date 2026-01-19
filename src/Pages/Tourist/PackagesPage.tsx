@@ -13,7 +13,7 @@ import {
   fetchNewestPackages,
   fetchPopularPackages,
   type PackageApiData,
-} from "@/Services/tourist-service";
+} from "@/Libs/TouristService";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 

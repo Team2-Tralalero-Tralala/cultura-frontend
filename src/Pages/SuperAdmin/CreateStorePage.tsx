@@ -14,7 +14,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import TextField from "@/Components/TextField";
-import { createStore } from "@/Services/store-service";
+import { createStore } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 import { Icon } from "@iconify/react";
 import React from "react";
@@ -133,7 +133,7 @@ export function CreateStore() {
   };
   const tagList = React.useMemo<Tag[]>(
     () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
-    [formData.tagStores]
+    [formData.tagStores],
   );
 
   /**
@@ -226,7 +226,7 @@ export function CreateStore() {
             latitude: Number(position[0]),
             longitude: Number(position[1]),
           },
-        })
+        }),
       );
 
       coverFiles.forEach((file) => {

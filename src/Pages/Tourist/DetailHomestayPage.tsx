@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getHomestayDetailAndOtherHomestay } from "@/Services/homestay-services";
+import { getHomestayDetailAndOtherHomestay } from "@/Libs/HomestayService";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
@@ -75,7 +75,7 @@ export default function DetailHomestayTourist() {
           Number(communityId),
           Number(homestayId),
           page,
-          limit
+          limit,
         );
 
         if (data && data.homestay) {
@@ -197,21 +197,21 @@ export default function DetailHomestayTourist() {
                       const originLng = position.coords.longitude;
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                        "_blank"
+                        "_blank",
                       );
                     },
                     (error) => {
                       console.error("Error getting location:", error);
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                        "_blank"
+                        "_blank",
                       );
-                    }
+                    },
                   );
                 } else {
                   window.open(
                     `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                    "_blank"
+                    "_blank",
                   );
                 }
               }

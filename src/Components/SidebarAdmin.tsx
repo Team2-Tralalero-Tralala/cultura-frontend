@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/Libs/useAuth";
+import { useAuth } from "@/Libs/UseAuth";
 
 type MenuKey =
   | "community"
@@ -132,8 +132,9 @@ const SidebarAdmin = () => {
     <Link
       to={`${basePath}${to}`}
       onClick={() => handleClick(key, parentKey)}
-      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive(key) ? "bg-[#0D845A]" : ""
-        }`}
+      className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+        isActive(key) ? "bg-[#0D845A]" : ""
+      }`}
     >
       <Icon icon={icon} className="text-xl" />
       {label}
@@ -156,8 +157,9 @@ const SidebarAdmin = () => {
           <Link
             to={`${basePath}/community/own`}
             onClick={() => handleClick("community")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("community") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("community") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="ri:community-line" className="text-xl" />
@@ -172,14 +174,14 @@ const SidebarAdmin = () => {
                 "/community/stores",
                 "mdi:store-outline",
                 "community-stores",
-                "community"
+                "community",
               )}
               {menuLink(
                 "จัดการที่พัก",
                 "/community/homestays",
                 "mdi:home-city-outline",
                 "community-homestays",
-                "community"
+                "community",
               )}
             </div>
           )}
@@ -191,8 +193,9 @@ const SidebarAdmin = () => {
           <Link
             to={`${basePath}/packages/all`}
             onClick={() => handleClick("packages")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("packages") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -207,28 +210,28 @@ const SidebarAdmin = () => {
                 "/package-requests",
                 "mdi:file-document-outline",
                 "packages-requests",
-                "packages"
+                "packages",
               )}
               {menuLink(
                 "ฉบับร่าง",
                 "/packages/drafts",
                 "mdi:file-edit-outline",
                 "packages-draft",
-                "packages"
+                "packages",
               )}
               {menuLink(
                 "ประวัติแพ็กเกจ",
                 "/packages/histories",
                 "mdi:history",
                 "packages-histories",
-                "packages"
+                "packages",
               )}
               {menuLink(
                 "ข้อเสนอแนะ",
                 "/packages/feedbacks",
                 "mdi:comment-text-outline",
                 "packages-feedbacks",
-                "packages"
+                "packages",
               )}
             </div>
           )}
@@ -237,8 +240,9 @@ const SidebarAdmin = () => {
           <Link
             to={`${basePath}/bookings`}
             onClick={() => handleClick("booking")}
-            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("booking") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <span className="flex items-center gap-3">
               <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -253,14 +257,14 @@ const SidebarAdmin = () => {
                 "/booking/refunds",
                 "mdi:cash-refund",
                 "booking-refunds",
-                "booking"
+                "booking",
               )}
               {menuLink(
                 "ประวัติการจอง",
                 "/bookings-histories/all",
                 "mdi:history",
                 "booking-histories",
-                "booking"
+                "booking",
               )}
             </div>
           )}
@@ -278,8 +282,9 @@ const SidebarAdmin = () => {
             handleClick("logout");
             logout();
           }}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${isActive("logout") ? "bg-[#0D845A]" : ""
-            }`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${
+            isActive("logout") ? "bg-[#0D845A]" : ""
+          }`}
         >
           <Icon icon="solar:logout-2-outline" className="text-xl" />
           ออกจากระบบ

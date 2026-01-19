@@ -14,15 +14,8 @@ import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-import {
-  fetchBookingsByMember,
-  updateBookingStatusByMember,
-} from "@/Services/booking-history-service";
-import type {
-  BookingRow,
-  Pagination,
-  BookingAdminDtoFromApi,
-} from "@/Types/BookingAdmin";
+import { fetchBookingsByMember, updateBookingStatusByMember } from "@/Libs/BookingHistoryService";
+import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/BookingAdmin";
 import type { PaginationResponse } from "@/Types/Community";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
@@ -40,7 +33,7 @@ const makeColumns = (
   onApprove: (row: BookingRow) => void,
   onReject: (row: BookingRow) => void,
   onNavigate: (id: number) => void,
-  onOpenSlip: (url: string) => void
+  onOpenSlip: (url: string) => void,
 ): Column<BookingRow>[] => [
   {
     key: "touristName",
@@ -212,42 +205,33 @@ export default function ManageBookingMember() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response: PaginationResponse<BookingAdminDtoFromApi> =
-        await fetchBookingsByMember(
-          currentPage,
-          pageSize,
-          statusFilter === "all" ? undefined : statusFilter
-        );
-
-      const mappedRows: BookingRow[] = response.data.map(
-        (bookingItem: BookingAdminDtoFromApi) => {
-          let normalizedSlipPath =
-            (bookingItem.transferSlip ?? "").replace(/\\/g, "/");
-
-          if (
-            normalizedSlipPath &&
-            !normalizedSlipPath.startsWith("http")
-          ) {
-            normalizedSlipPath = `${import.meta.env.VITE_FILE_URL}/${normalizedSlipPath}`;
-          }
-
-          return {
-            id: bookingItem.id,
-            touristName: `${bookingItem.tourist.fname} ${bookingItem.tourist.lname}`,
-            packageName: bookingItem.package.name,
-            totalPrice: `฿${bookingItem.totalPrice.toLocaleString()}`,
-            status: bookingItem.status,
-            transferSlip: normalizedSlipPath || "-",
-          };
-        }
+      const response: PaginationResponse<BookingAdminDtoFromApi> = await fetchBookingsByMember(
+        currentPage,
+        pageSize,
+        statusFilter === "all" ? undefined : statusFilter,
       );
+
+      const mappedRows: BookingRow[] = response.data.map((bookingItem: BookingAdminDtoFromApi) => {
+        let normalizedSlipPath = (bookingItem.transferSlip ?? "").replace(/\\/g, "/");
+
+        if (normalizedSlipPath && !normalizedSlipPath.startsWith("http")) {
+          normalizedSlipPath = `${import.meta.env.VITE_FILE_URL}/${normalizedSlipPath}`;
+        }
+
+        return {
+          id: bookingItem.id,
+          touristName: `${bookingItem.tourist.fname} ${bookingItem.tourist.lname}`,
+          packageName: bookingItem.package.name,
+          totalPrice: `฿${bookingItem.totalPrice.toLocaleString()}`,
+          status: bookingItem.status,
+          transferSlip: normalizedSlipPath || "-",
+        };
+      });
 
       setBookingRows(mappedRows);
       setPagination(response.pagination);
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ"
-      );
+      setErrorMessage(error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -271,8 +255,7 @@ export default function ManageBookingMember() {
       setIsLoading(true);
 
       const currentStatus = row.status?.toUpperCase();
-      const newStatus: "BOOKED" | "REFUNDED" =
-        currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
+      const newStatus: "BOOKED" | "REFUNDED" = currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
 
       await updateBookingStatusByMember(row.id, newStatus);
       await reload();
@@ -323,8 +306,8 @@ export default function ManageBookingMember() {
 
     const searchedRows = bookingRows.filter((row) =>
       [row.touristName, row.packageName, row.status].some((value) =>
-        value.toLowerCase().includes(keyword)
-      )
+        value.toLowerCase().includes(keyword),
+      ),
     );
 
     if (statusFilter === "all") return searchedRows;
@@ -370,9 +353,7 @@ export default function ManageBookingMember() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<BookingRow>
         data={filteredRows}
@@ -389,7 +370,7 @@ export default function ManageBookingMember() {
           (url) => {
             setSlipUrl(url);
             setIsSlipModalOpen(true);
-          }
+          },
         )}
         getKey={(row) => String(row.id)}
         selectable
@@ -533,7 +514,6 @@ export default function ManageBookingMember() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

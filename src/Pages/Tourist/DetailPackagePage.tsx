@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import axios from "axios";
-import { useAuth } from "@/Libs/useAuth";
+import { useAuth } from "@/Libs/UseAuth";
 
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -406,21 +406,21 @@ export default function DetailPackagePage() {
                       const originLng = position.coords.longitude;
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                        "_blank"
+                        "_blank",
                       );
                     },
                     (error) => {
                       console.error("Error getting location:", error);
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                        "_blank"
+                        "_blank",
                       );
-                    }
+                    },
                   );
                 } else {
                   window.open(
                     `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                    "_blank"
+                    "_blank",
                   );
                 }
               }
@@ -590,7 +590,7 @@ export default function DetailPackagePage() {
                     <button
                       onClick={() =>
                         navigate(
-                          `/tourist/community/${currentHomestay.communityId}/detail/homestay/${currentHomestay.id}`
+                          `/tourist/community/${currentHomestay.communityId}/detail/homestay/${currentHomestay.id}`,
                         )
                       }
                       className="px-4 py-1.5 border border-gray-400 rounded-lg text-black text-sm font-medium hover:bg-gray-50 transition-colors"
@@ -646,7 +646,7 @@ export default function DetailPackagePage() {
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
                         <span className="leading-relaxed">{line.trim()}</span>
                       </li>
-                    )
+                    ),
                 )}
               </ul>
             ) : (

@@ -7,8 +7,8 @@
  * ใช้ร่วมกับ Service สำหรับจัดการการเปิด/ปิดระบบ
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { fetchServerStatus } from "@/Services/server-status-service";
-import { disableSystem, enableSystem } from "@/Services/system-toggle-service";
+import { fetchServerStatus } from "@/Libs/ServerStatusService";
+import { disableSystem, enableSystem } from "@/Libs/SystemToggleService";
 import { Icon } from "@iconify/react";
 import React from "react";
 
@@ -90,9 +90,7 @@ export default function ToggleSystemPage() {
               <div
                 className={`w-6 h-6 rounded-full ${serverStatus ? "bg-green-500" : "bg-red-500"}`}
               ></div>
-              <span className="font-medium pr-4">
-                {serverStatus ? "ออนไลน์" : "ออฟไลน์"}
-              </span>
+              <span className="font-medium pr-4">{serverStatus ? "ออนไลน์" : "ออฟไลน์"}</span>
             </div>
           </div>
         </div>
@@ -114,7 +112,10 @@ export default function ToggleSystemPage() {
             </div>
 
             <h2 className="text-2xl font-medium flex items-center gap-2">
-              <Icon icon="streamline-pixel:coding-apps-websites-setting-computer" className="w-5 h-5" />
+              <Icon
+                icon="streamline-pixel:coding-apps-websites-setting-computer"
+                className="w-5 h-5"
+              />
               คลิกปุ่มหากต้องการ{serverStatus ? "ปิด" : "เปิด"}ระบบ
             </h2>
           </div>

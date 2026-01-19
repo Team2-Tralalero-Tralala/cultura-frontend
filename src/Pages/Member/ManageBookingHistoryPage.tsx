@@ -1,6 +1,6 @@
 /**
  * คำอธิบาย: Component สำหรับแสดงประวัติการจองของผู้ใช้งานในระบบ (Booking History)
- * ประกอบด้วยตารางแสดงรายละเอียดการจอง, ระบบการค้นหา (Search), การกรองสถานะ (Filter) 
+ * ประกอบด้วยตารางแสดงรายละเอียดการจอง, ระบบการค้นหา (Search), การกรองสถานะ (Filter)
  * และการจัดการการแบ่งหน้า (Pagination) รวมถึง Modal สำหรับดูสลิปหลักฐาน
  */
 
@@ -16,7 +16,7 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import type { Column, Pagination } from "@/Components/Tables/Types";
 
 // Service
-import { getMemberBookingHistories } from "@/Services/booking-service";
+import { getMemberBookingHistories } from "@/Libs/BookingService";
 
 /* --- Constants & Types --- */
 
@@ -32,7 +32,7 @@ const statusLabelTh: Record<string, string> = {
   REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
 };
 
-// Dropdown options 
+// Dropdown options
 const statusOptions = [
   { label: "ทั้งหมด", value: "ALL" },
   { label: "จองสำเร็จ", value: "BOOKED" },
@@ -47,11 +47,11 @@ type BookingRow = {
   bookerName: string;
   eventName: string;
   totalPrice: string;
-  status: string;    
-  evidence: string;   
-  fullSlipUrl: string | null; 
-  bookedAt: string;   
-  rawStatus: string;  
+  status: string;
+  evidence: string;
+  fullSlipUrl: string | null;
+  bookedAt: string;
+  rawStatus: string;
 };
 
 /* --- Helpers --- */
@@ -96,10 +96,10 @@ const getSlipImageUrl = (path: string | null): string | null => {
 
   // ใช้ Env Variable ถ้ามี หรือใช้ Default Localhost
   const fileBaseUrl = import.meta.env.VITE_FILE_URL;
-  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000"; 
+  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   if (fileBaseUrl) return `${fileBaseUrl}/${cleanPath}`;
-  
+
   // Logic การต่อ Path
   const prefix = cleanPath.startsWith("uploads") ? "" : "uploads/";
   return `${apiBaseUrl}/${prefix}${cleanPath}`;
@@ -111,17 +111,18 @@ const getSlipImageUrl = (path: string | null): string | null => {
  * Output : BookingRow
  */
 const mapApiToRow = (item: any): BookingRow => {
-  const bookerName = item.bookerName ?? `${item.tourist?.fname ?? ''} ${item.tourist?.lname ?? ''}`.trim();
-  const eventName = item.eventName ?? item.package?.name ?? '-';
+  const bookerName =
+    item.bookerName ?? `${item.tourist?.fname ?? ""} ${item.tourist?.lname ?? ""}`.trim();
+  const eventName = item.eventName ?? item.package?.name ?? "-";
   const totalPrice = formatCurrency(item.totalPrice || 0);
-  
+
   const rawStatus = (item.status ?? "").toUpperCase();
   const statusLabel = statusLabelTh[rawStatus] ?? rawStatus;
 
   // Slip logic
   const slipPath = item.slipUrl ?? item.transferSlip;
-  const evidence = slipPath ? slipPath.split('/').pop() || "view_slip" : "-";
-  
+  const evidence = slipPath ? slipPath.split("/").pop() || "view_slip" : "-";
+
   // สร้าง URL เต็มเตรียมไว้
   const fullSlipUrl = getSlipImageUrl(slipPath);
 
@@ -136,7 +137,7 @@ const mapApiToRow = (item: any): BookingRow => {
     evidence,
     fullSlipUrl,
     bookedAt,
-    rawStatus
+    rawStatus,
   };
 };
 
@@ -153,8 +154,8 @@ export default function HistoryBookingMember() {
   // Data State
   const [tableRows, setTableRows] = useState<BookingRow[]>([]);
   const [isLoading, setIsLoading] = useState(false); // is... ตาม Standard 4.5
-  
-  // Modal State 
+
+  // Modal State
   const [isSlipOpen, setSlipOpen] = useState(false);
   const [previewSlipUrl, setPreviewSlipUrl] = useState<string | null>(null);
 
@@ -173,63 +174,67 @@ export default function HistoryBookingMember() {
    * Input : -
    * Output : Column Definition Array
    */
-  const columns = useMemo<Column<BookingRow>[]>(() => [
-    { key: "bookerName", header: "ชื่อผู้จอง", className: "min-w-[150px]" },
-    { key: "eventName", header: "ชื่อกิจกรรม", className: "min-w-[200px]" },
-    { key: "totalPrice", header: "ราคา", className: "min-w-[100px]" },
-    { key: "status", header: "สถานะ", className: "min-w-[140px]" },
-    { 
-      key: "evidence", 
-      header: "หลักฐาน", 
-      className: "min-w-[120px]",
-      render: (row: BookingRow) => (
-        row.fullSlipUrl ? (
-          <button
-            type="button"
-            onClick={() => {
-              setPreviewSlipUrl(row.fullSlipUrl);
-              setSlipOpen(true);
-            }}
-            className="text-[#4A816F] underline underline-offset-2 hover:text-[#2f5b49] cursor-pointer"
-            title={row.evidence}
-          >
-            {row.evidence}
-          </button>
-        ) : (
-          <span>-</span>
-        )
-      )
-    },
-    { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
-  ], []);
+  const columns = useMemo<Column<BookingRow>[]>(
+    () => [
+      { key: "bookerName", header: "ชื่อผู้จอง", className: "min-w-[150px]" },
+      { key: "eventName", header: "ชื่อกิจกรรม", className: "min-w-[200px]" },
+      { key: "totalPrice", header: "ราคา", className: "min-w-[100px]" },
+      { key: "status", header: "สถานะ", className: "min-w-[140px]" },
+      {
+        key: "evidence",
+        header: "หลักฐาน",
+        className: "min-w-[120px]",
+        render: (row: BookingRow) =>
+          row.fullSlipUrl ? (
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewSlipUrl(row.fullSlipUrl);
+                setSlipOpen(true);
+              }}
+              className="text-[#4A816F] underline underline-offset-2 hover:text-[#2f5b49] cursor-pointer"
+              title={row.evidence}
+            >
+              {row.evidence}
+            </button>
+          ) : (
+            <span>-</span>
+          ),
+      },
+      { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
+    ],
+    [],
+  );
 
   /**
    * คำอธิบาย : โหลดข้อมูลประวัติการจองจาก API
    * Input : targetPage, currentLimit
    * Output : void
    */
-  const loadPageData = useCallback(async (targetPage: number, currentLimit: number) => {
-    setIsLoading(true);
-    try {
-      const statusParam = selectedStatus === "ALL" ? "ALL" : selectedStatus;
-      
-      const res = await getMemberBookingHistories(targetPage, currentLimit, statusParam);
-      
-      const rawList = res.data?.data?.data ?? [];
-      const paginationData = res.data?.data?.pagination ?? {};
+  const loadPageData = useCallback(
+    async (targetPage: number, currentLimit: number) => {
+      setIsLoading(true);
+      try {
+        const statusParam = selectedStatus === "ALL" ? "ALL" : selectedStatus;
 
-      const mappedRows = rawList.map(mapApiToRow);
-      setTableRows(mappedRows);
+        const res = await getMemberBookingHistories(targetPage, currentLimit, statusParam);
 
-      setTotalPages(paginationData.totalPages ?? 1);
-      setTotalCount(paginationData.totalCount ?? 0);
+        const rawList = res.data?.data?.data ?? [];
+        const paginationData = res.data?.data?.pagination ?? {};
 
-    } catch (error) {
-      console.error("Failed to load bookings", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedStatus]);
+        const mappedRows = rawList.map(mapApiToRow);
+        setTableRows(mappedRows);
+
+        setTotalPages(paginationData.totalPages ?? 1);
+        setTotalCount(paginationData.totalCount ?? 0);
+      } catch (error) {
+        console.error("Failed to load bookings", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [selectedStatus],
+  );
 
   useEffect(() => {
     loadPageData(page, limit);
@@ -243,8 +248,8 @@ export default function HistoryBookingMember() {
   const filteredRows = useMemo(() => {
     const searchTerm = searchQuery.toLowerCase().trim();
     if (!searchTerm) return tableRows;
-    return tableRows.filter((row) => 
-      Object.values(row).join(" ").toLowerCase().includes(searchTerm)
+    return tableRows.filter((row) =>
+      Object.values(row).join(" ").toLowerCase().includes(searchTerm),
     );
   }, [tableRows, searchQuery]);
 
@@ -254,18 +259,18 @@ export default function HistoryBookingMember() {
         <Breadcrumb
           current={{
             label: "ประวัติการจอง",
-            to: `/member/bookings-histories`, 
+            to: `/member/bookings-histories`,
           }}
         />
         <h1 className="text-xl font-semibold text-gray-800">ประวัติการจอง</h1>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <SearchBarTable 
-              value={searchQuery} 
-              onChange={(event) => setSearchQuery(event.target.value)} 
+            <SearchBarTable
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
             />
-            
+
             <FilterDropdown
               options={statusOptions as any}
               selected={selectedStatus}

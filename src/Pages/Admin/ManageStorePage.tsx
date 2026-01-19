@@ -12,8 +12,8 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { getAllStoreAdmin } from "@/Services/store-service";
-import { getCommunityDetailByAdmin } from "@/Services/community-service";
+import { getAllStoreAdmin } from "@/Libs/StoreService";
+import { getCommunityDetailByAdmin } from "@/Libs/CommunityService";
 
 import type {
   Column,
@@ -128,28 +128,28 @@ export default function ManageStoreAdmin() {
       setIsLoading(false);
     }
   };
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
- * Input : ไม่มี
- * Output : อัปเดต state communityName
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+   * Input : ไม่มี
+   * Output : อัปเดต state communityName
+   */
   React.useEffect(() => {
     loadStores();
   }, [pagination.currentPage, pagination.limit]);
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
- * Input : ไม่มี
- * Output : อัปเดต state communityName
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+   * Input : ไม่มี
+   * Output : อัปเดต state communityName
+   */
   React.useEffect(() => {
     fetchCommunityName();
   }, []);
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
- * Input : ไม่มี
- * Output : อัปเดต state communityName
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+   * Input : ไม่มี
+   * Output : อัปเดต state communityName
+   */
   const fetchCommunityName = async () => {
     try {
       const res = await getCommunityDetailByAdmin();
@@ -159,11 +159,11 @@ export default function ManageStoreAdmin() {
     }
   };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำในแต่ละแถวของตาราง
- * Input : ไม่มี
- * Output : การกระทำที่สามารถทำได้ในแต่ละแถว
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำในแต่ละแถวของตาราง
+   * Input : ไม่มี
+   * Output : การกระทำที่สามารถทำได้ในแต่ละแถว
+   */
   const rowActions: DataTableActionsConfig<StoreRow> = {
     header: "จัดการ",
     align: "left",
@@ -188,7 +188,7 @@ export default function ManageStoreAdmin() {
     const query = normalizeText(searchQuery);
     return rows.filter((row) => {
       const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
-        normalizeText(String(value ?? ""))
+        normalizeText(String(value ?? "")),
       );
       return !query || haystacks.some((haystack) => haystack.includes(query));
     });
@@ -265,8 +265,7 @@ export default function ManageStoreAdmin() {
       </div>
 
       <div className="pb-10">
-        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}
-      </div>}
+        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<StoreRow>
           data={filteredRows}

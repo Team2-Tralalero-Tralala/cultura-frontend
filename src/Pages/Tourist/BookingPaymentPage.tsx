@@ -8,7 +8,7 @@ import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
-import { createBooking, uploadPaymentProof } from "@/Services/booking-service";
+import { createBooking, uploadPaymentProof } from "@/Libs/BookingService";
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -44,7 +44,7 @@ export default function BookingPaymentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [packageData, setPackageData] = useState<PackageData | null>(
-    location.state?.packageData || null
+    location.state?.packageData || null,
   );
   const [bookingInfo, setBookingInfo] = useState<BookingInfo>({
     bookingId: null,
@@ -306,28 +306,28 @@ export default function BookingPaymentPage() {
             </div>
             <div className="bg-gray-300 rounded-b-lg p-6 flex flex-col items-center justify-center">
               <div>
-              <label className="block">
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="payment-proof"
-                />
-                <button
-                  onClick={() => document.getElementById("payment-proof")?.click()}
-                  className="flex items-center justify-center gap-2 px-6 py-2 border-2 bg-white border-gray-400 rounded-lg text-black font-medium hover:bg-gray-50 transition-colors"
-                >
-                  <Icon icon="mdi:download" className="w-8 h-8" />
-                  แนบหลักฐานการชำระเงิน
-                </button>
-              </label>
+                <label className="block">
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="payment-proof"
+                  />
+                  <button
+                    onClick={() => document.getElementById("payment-proof")?.click()}
+                    className="flex items-center justify-center gap-2 px-6 py-2 border-2 bg-white border-gray-400 rounded-lg text-black font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    <Icon icon="mdi:download" className="w-8 h-8" />
+                    แนบหลักฐานการชำระเงิน
+                  </button>
+                </label>
 
-              {paymentProof ? (
-                <p className="mt-1 text-sm text-green-600">✓ ไฟล์ที่เลือก: {paymentProof.name}</p>
-              ) : (
-                <p className="mt-1 text-sm text-black">*กรุณาแนบไฟล์</p>
-              )}
+                {paymentProof ? (
+                  <p className="mt-1 text-sm text-green-600">✓ ไฟล์ที่เลือก: {paymentProof.name}</p>
+                ) : (
+                  <p className="mt-1 text-sm text-black">*กรุณาแนบไฟล์</p>
+                )}
               </div>
             </div>
           </div>
@@ -395,7 +395,11 @@ export default function BookingPaymentPage() {
             >
               ยกเลิก
             </button>
-            <Button type="confirm-tourist" className="px-6 py-3 rounded-lg cursor-pointer" onClick={handleConfirm}>
+            <Button
+              type="confirm-tourist"
+              className="px-6 py-3 rounded-lg cursor-pointer"
+              onClick={handleConfirm}
+            >
               {isSubmitting ? "กำลังดำเนินการ..." : "ยืนยันการจอง"}
             </Button>
           </div>

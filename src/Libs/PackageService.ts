@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
-import { api } from "./account-services";
+import { api } from "./AccountService";
+import type { PackageRequestDetail } from "@/Types/package-request";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export type Role = "member" | "admin" | "superadmin";
@@ -109,7 +110,7 @@ export async function getParticipantsInPackage(
   packageId: number,
   page: number,
   limit: number,
-  searchName?: string
+  searchName?: string,
 ) {
   const res = await api.get(`/shared/participants/package/${packageId}`, {
     params: {
@@ -128,4 +129,109 @@ export async function getParticipantsInPackage(
 export async function updateParticipantStatus(bookingHistoryId: number, isParticipate: boolean) {
   const res = await api.post(`/shared/participate/${bookingHistoryId}/status`, { isParticipate });
   return res.data.data;
+}
+
+/**
+ * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจ (ผู้ใช้ทั่วไปหรือสิทธิ์ตามที่ backend อนุญาต)
+ * Input : requestId: string (รหัสคำขอแพ็กเกจ)
+ * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจ)
+ */
+export async function fetchPackageRequestDetail(requestId: string): Promise<PackageRequestDetail> {
+  const res = await axios.get(`${apiUrl}/super/package-requests/${requestId}`, {
+    withCredentials: true,
+  });
+  return (res.data?.data ?? res.data) as PackageRequestDetail;
+}
+
+/**
+ * คำอธิบาย : ดึงรายละเอียดคำขอแพ็กเกจ (เส้นทางสำหรับแอดมิน)
+ * Input : requestId: string (รหัสคำขอแพ็กเกจ)
+ * Output: Promise<PackageRequestDetail> (ข้อมูลรายละเอียดคำขอแพ็กเกจ)
+ */
+export async function fetchPackageRequestDetailForAdmin(
+  requestId: string,
+): Promise<PackageRequestDetail> {
+  const res = await axios.get(`${apiUrl}/admin/package-requests/${requestId}`, {
+    withCredentials: true,
+  });
+  return (res.data?.data ?? res.data) as PackageRequestDetail;
+}
+
+/**
+ * ฟังก์ชัน : fetchPackageRequests
+ * คำอธิบาย : ดึงรายการคำขอแพ็กเกจทั้งหมด (สำหรับ Super User) พร้อมระบบ pagination และการกรอง
+ * Input : page: number (default 1) - หมายเลขหน้าที่ต้องการ
+ * Input : limit: number (default 10) - จำนวนรายการต่อหน้า
+ * Input : search?: string (optional) - คำค้นหาสำหรับชื่อแพ็กเกจ
+ * Input : statusApprove?: string (optional) - สถานะการอนุมัติที่ต้องการกรอง
+ * Output: Promise<AxiosResponse> (Axios response ที่มีข้อมูลรายการคำขอแพ็กเกจ)
+ */
+export async function fetchPackageRequests(
+  page = 1,
+  limit = 10,
+  search?: string,
+  statusApprove?: string,
+) {
+  return axios.get(`${apiUrl}/super/package-requests`, {
+    withCredentials: true,
+    params: { page, limit, search, statusApprove },
+  });
+}
+
+/**
+ * ฟังก์ชัน : approvePackageRequest
+ * คำอธิบาย : อนุมัติคำขอแพ็กเกจ (สำหรับ Super User)
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการอนุมัติ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการอนุมัติ)
+ */
+export async function approvePackageRequest(packageId: number) {
+  return axios.patch(
+    `${apiUrl}/super/package-requests/${packageId}/approve`,
+    {},
+    { withCredentials: true },
+  );
+}
+
+/**
+ * ฟังก์ชัน : rejectPackageRequest
+ * คำอธิบาย : ปฏิเสธคำขอแพ็กเกจ (สำหรับ Super User) พร้อมระบุเหตุผล
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการปฏิเสธ
+ * Input : reason: string - เหตุผลในการปฏิเสธ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการปฏิเสธ)
+ */
+export async function rejectPackageRequest(packageId: number, reason: string) {
+  return axios.patch(
+    `${apiUrl}/super/package-requests/${packageId}/reject`,
+    { reason },
+    { withCredentials: true },
+  );
+}
+
+/**
+ * ฟังก์ชัน : approvePackageRequestForAdmin
+ * คำอธิบาย : อนุมัติคำขอแพ็กเกจ (สำหรับ Admin)
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการอนุมัติ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการอนุมัติ)
+ */
+export async function approvePackageRequestForAdmin(packageId: number) {
+  return axios.patch(
+    `${apiUrl}/admin/package-requests/${packageId}/approve`,
+    {},
+    { withCredentials: true },
+  );
+}
+
+/**
+ * ฟังก์ชัน : rejectPackageRequestForAdmin
+ * คำอธิบาย : ปฏิเสธคำขอแพ็กเกจ (สำหรับ Admin) พร้อมระบุเหตุผล
+ * Input : packageId: number - รหัสของแพ็กเกจที่ต้องการปฏิเสธ
+ * Input : reason: string - เหตุผลในการปฏิเสธ
+ * Output: Promise<AxiosResponse> (Axios response ยืนยันผลการปฏิเสธ)
+ */
+export async function rejectPackageRequestForAdmin(packageId: number, reason: string) {
+  return axios.patch(
+    `${apiUrl}/admin/package-requests/${packageId}/reject`,
+    { reason },
+    { withCredentials: true },
+  );
 }

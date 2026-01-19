@@ -16,15 +16,8 @@ import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
-import {
-  fetchBookingsByAdmin,
-  updateBookingStatus,
-} from "@/Services/booking-history-service";
-import type {
-  BookingRow,
-  Pagination,
-  BookingAdminDtoFromApi,
-} from "@/Types/BookingAdmin";
+import { fetchBookingsByAdmin, updateBookingStatus } from "@/Libs/BookingHistoryService";
+import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/BookingAdmin";
 import type { PaginationResponse } from "@/Types/Community";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
@@ -42,7 +35,7 @@ const makeColumns = (
   onApprove: (row: BookingRow) => void,
   onReject: (row: BookingRow) => void,
   onNavigate: (id: number) => void,
-  onOpenSlip: (url: string) => void
+  onOpenSlip: (url: string) => void,
 ): Column<BookingRow>[] => [
   {
     key: "touristName",
@@ -110,8 +103,8 @@ const makeColumns = (
       return (
         <button
           type="button"
-          onClick={() => onOpenSlip(slipPath)}   // ใช้ path เต็ม เปิดรูป
-          title={fileName}                  // hover ดูชื่อเต็ม
+          onClick={() => onOpenSlip(slipPath)} // ใช้ path เต็ม เปิดรูป
+          title={fileName} // hover ดูชื่อเต็ม
           className="
           text-[#4A816F]
           underline underline-offset-2
@@ -129,11 +122,7 @@ const makeColumns = (
   },
   {
     key: "actions",
-    header: (
-      <div className="text-center w-full flex justify-center items-center">
-        จัดการ
-      </div>
-    ),
+    header: <div className="text-center w-full flex justify-center items-center">จัดการ</div>,
     className: "w-[200px] text-center pr-2",
     render: (bookingRow) => (
       <div className="flex justify-center items-center gap-3">
@@ -246,10 +235,7 @@ export default function ManageBookingAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const {
-        data,
-        pagination: paginationData,
-      }: PaginationResponse<BookingAdminDtoFromApi> =
+      const { data, pagination: paginationData }: PaginationResponse<BookingAdminDtoFromApi> =
         await fetchBookingsByAdmin(currentPage, pageSize);
 
       const mappedBookings: BookingRow[] = data.map((booking) => {
@@ -269,7 +255,7 @@ export default function ManageBookingAdmin() {
           packageName: booking.package?.name ?? "-",
           totalPrice: `฿${(booking.totalPrice ?? 0).toLocaleString()}`,
           status: booking.status ?? "-",
-          transferSlip: normalizedPath || "-",   // ใช้ path ที่จัดการแล้ว
+          transferSlip: normalizedPath || "-", // ใช้ path ที่จัดการแล้ว
         };
       });
 
@@ -302,8 +288,7 @@ export default function ManageBookingAdmin() {
       setIsLoading(true);
 
       const currentStatus = row.status?.toUpperCase();
-      const newStatus: "BOOKED" | "REFUNDED" =
-        currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
+      const newStatus: "BOOKED" | "REFUNDED" = currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
 
       await updateBookingStatus(row.id, newStatus);
       await reload();
@@ -359,8 +344,8 @@ export default function ManageBookingAdmin() {
 
     const filtered = bookingRows.filter((row) =>
       [row.touristName, row.packageName, row.status].some((val) =>
-        val.toLowerCase().includes(normalizedSearchQuery)
-      )
+        val.toLowerCase().includes(normalizedSearchQuery),
+      ),
     );
 
     if (statusFilter === "all") return filtered;
@@ -402,10 +387,7 @@ export default function ManageBookingAdmin() {
 
           {/* ปุ่มคำขอคืนเงิน */}
           <div className="ml-auto">
-            <Button
-              type="confirm-admin"
-              onClick={() => navigate("/admin/booking/refunds")}
-            >
+            <Button type="confirm-admin" onClick={() => navigate("/admin/booking/refunds")}>
               คำขอคืนเงิน
             </Button>
           </div>
@@ -413,9 +395,7 @@ export default function ManageBookingAdmin() {
       </div>
 
       {/* ข้อความผิดพลาด */}
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       {/* ตาราง */}
       <DataTable<BookingRow>
@@ -424,7 +404,7 @@ export default function ManageBookingAdmin() {
           openApproveModal,
           openRejectModal,
           (id) => navigate(`/admin/booking/${id}`),
-          openSlipModal
+          openSlipModal,
         )}
         getKey={(row: BookingRow) => String(row.id)}
         selectable
@@ -566,7 +546,6 @@ export default function ManageBookingAdmin() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

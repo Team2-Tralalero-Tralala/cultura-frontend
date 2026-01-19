@@ -11,7 +11,7 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Link } from "react-router-dom";
 import { Tag } from "@/Components/Tag";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
-import { fetchHomestayDetailByAdmin } from "@/Services/homestay-services";
+import { fetchHomestayDetailByAdmin } from "@/Libs/HomestayService";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -59,17 +59,16 @@ export default function DetailHomestayAdmin() {
       .catch((error) => console.error(error));
   }, [homestayId]);
 
-  if (!homestayDetail)
-    return <div className="p-8 text-gray-500">กำลังโหลดข้อมูลที่พัก...</div>;
+  if (!homestayDetail) return <div className="p-8 text-gray-500">กำลังโหลดข้อมูลที่พัก...</div>;
 
   const googleMapLink = `https://maps.google.com/?q=${homestayDetail.location?.latitude},${homestayDetail.location?.longitude}`;
 
   const coverImage = homestayDetail.homestayImage?.find(
-    (imageItem: any) => imageItem.type === "COVER"
+    (imageItem: any) => imageItem.type === "COVER",
   );
 
   const galleryImageLists = homestayDetail.homestayImage?.filter(
-    (imageItem: any) => imageItem.type === "GALLERY"
+    (imageItem: any) => imageItem.type === "GALLERY",
   );
 
   return (
@@ -129,9 +128,7 @@ export default function DetailHomestayAdmin() {
 
           {/* ข้อมูลที่พัก */}
           <div className="text-[16px] leading-relaxed pl-2">
-            <h3 className="text-[20px] font-bold text-black mb-4">
-              ข้อมูลที่พัก
-            </h3>
+            <h3 className="text-[20px] font-bold text-black mb-4">ข้อมูลที่พัก</h3>
 
             <div className="space-y-4">
               {/* ชื่อที่พัก */}
@@ -147,16 +144,12 @@ export default function DetailHomestayAdmin() {
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
                 <span className="font-bold text-black">ประเภทที่พัก</span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">
-                  {displayText(homestayDetail.type)}
-                </span>
+                <span className="text-black">{displayText(homestayDetail.type)}</span>
               </div>
 
               {/* สิ่งอำนวยความสะดวก */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">
-                  สิ่งอำนวยความสะดวก
-                </span>
+                <span className="font-bold text-black">สิ่งอำนวยความสะดวก</span>
                 <span className="font-bold text-black">:</span>
                 {homestayDetail.facility ? (
                   <ul className="list-disc list-inside space-y-1 text-black">
@@ -173,20 +166,14 @@ export default function DetailHomestayAdmin() {
 
               {/* จำนวนห้องพักทั้งหมด */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">
-                  จำนวนห้องพักทั้งหมด
-                </span>
+                <span className="font-bold text-black">จำนวนห้องพักทั้งหมด</span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">
-                  {displayText(homestayDetail.totalRoom)} ห้อง
-                </span>
+                <span className="text-black">{displayText(homestayDetail.totalRoom)} ห้อง</span>
               </div>
 
               {/* จำนวนผู้เข้าพักต่อห้อง */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">
-                  จำนวนผู้เข้าพักต่อห้อง
-                </span>
+                <span className="font-bold text-black">จำนวนผู้เข้าพักต่อห้อง</span>
                 <span className="font-bold text-black">:</span>
                 <span className="text-black">
                   {displayText(homestayDetail.guestPerRoom)} คน ต่อ ห้อง
@@ -200,17 +187,15 @@ export default function DetailHomestayAdmin() {
 
                 <div className="flex flex-wrap gap-2 text-black">
                   {homestayDetail.tagHomestays && homestayDetail.tagHomestays.length > 0 ? (
-                    homestayDetail.tagHomestays.map(
-                      (tagItem: any, index: number) => (
-                        <Tag
-                          key={index}
-                          label={tagItem.tag.name}
-                          sizeClass="px-3 h-8"
-                          className="border-gray-300 text-black"
-                          title={tagItem.tag.name}
-                        />
-                      )
-                    )
+                    homestayDetail.tagHomestays.map((tagItem: any, index: number) => (
+                      <Tag
+                        key={index}
+                        label={tagItem.tag.name}
+                        sizeClass="px-3 h-8"
+                        className="border-gray-300 text-black"
+                        title={tagItem.tag.name}
+                      />
+                    ))
                   ) : (
                     <span>-</span>
                   )}
@@ -222,9 +207,7 @@ export default function DetailHomestayAdmin() {
 
         {/* รูปภาพเพิ่มเติม */}
         <div className="mt-10">
-          <h3 className="text-[20px] font-bold text-black mb-3">
-            รูปภาพเพิ่มเติม
-          </h3>
+          <h3 className="text-[20px] font-bold text-black mb-3">รูปภาพเพิ่มเติม</h3>
 
           {galleryImageLists && galleryImageLists.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -274,9 +257,11 @@ export default function DetailHomestayAdmin() {
                 const zoomDelta = 0.0025;
 
                 // สร้าง URL สำหรับฝัง OpenStreetMap
-                const openStreetMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - zoomDelta
-                  }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${latitude + zoomDelta
-                  }&layer=mapnik&marker=${latitude}%2C${longitude}`;
+                const openStreetMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
+                  longitude - zoomDelta
+                }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${
+                  latitude + zoomDelta
+                }&layer=mapnik&marker=${latitude}%2C${longitude}`;
 
                 return (
                   <iframe
@@ -303,12 +288,9 @@ export default function DetailHomestayAdmin() {
                   <span className="font-bold text-black">ที่อยู่</span>
                   <span className="font-bold text-black">:</span>
                   <span className="text-black">
-                    {homestayDetail.location.houseNumber}{" "}
-                    {homestayDetail.location.villageNumber}{" "}
-                    {homestayDetail.location.subDistrict}{" "}
-                    {homestayDetail.location.district}{" "}
-                    {homestayDetail.location.province}{" "}
-                    {homestayDetail.location.postalCode}
+                    {homestayDetail.location.houseNumber} {homestayDetail.location.villageNumber}{" "}
+                    {homestayDetail.location.subDistrict} {homestayDetail.location.district}{" "}
+                    {homestayDetail.location.province} {homestayDetail.location.postalCode}
                   </span>
                 </div>
 
@@ -348,7 +330,6 @@ export default function DetailHomestayAdmin() {
                 </div>
               </div>
             </div>
-
           </div>
         )}
 

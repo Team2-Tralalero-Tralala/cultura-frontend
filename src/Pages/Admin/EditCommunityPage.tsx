@@ -7,7 +7,7 @@
  * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
-import { getCommunityOwn, updateCommunityOwn } from "@/Services/community-service";
+import { getCommunityOwn, updateCommunityOwn } from "@/Libs/CommunityService";
 import type { CommunityFormData } from "@/Types/CommunityForm";
 import Button from "@/Components/Button";
 import MapPicker from "@/Components/MapPicker";
@@ -110,19 +110,19 @@ const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) =
   const logoPromise = Promise.all(
     (communityImages || [])
       .filter((image: any) => image.type === "LOGO")
-      .map(async (image: any) => await urlToFile(`${backendUrl}/${image.image}`, image.image))
+      .map(async (image: any) => await urlToFile(`${backendUrl}/${image.image}`, image.image)),
   );
 
   const coverPromise = Promise.all(
     (communityImages || [])
       .filter((image: any) => image.type === "COVER")
-      .map(async (image: any) => await urlToFile(`${backendUrl}/${image.image}`, image.image))
+      .map(async (image: any) => await urlToFile(`${backendUrl}/${image.image}`, image.image)),
   );
 
   const galleryPromise = Promise.all(
     (communityImages || [])
       .filter((image: any) => image.type === "GALLERY")
-      .map(async (image: any) => await urlToFile(`${backendUrl}/${image.image}`, image.image))
+      .map(async (image: any) => await urlToFile(`${backendUrl}/${image.image}`, image.image)),
   );
 
   const videoPromise = Promise.all(
@@ -137,7 +137,7 @@ const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) =
             ? blob
             : new Blob([blob], { type: "video/mp4" });
         return new File([fixedBlob], image.image, { type: fixedBlob.type });
-      })
+      }),
   );
 
   const [logo, cover, gallery, video] = await Promise.all([
@@ -323,7 +323,7 @@ export function EditCommunity() {
             id: member.user.id,
             fname: member.user.fname,
             lname: member.user.lname,
-          })) ?? []
+          })) ?? [],
         );
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([latitude, longitude]);
@@ -335,7 +335,7 @@ export function EditCommunity() {
 
         const { logo, cover, gallery, video } = await fetchCommunityFiles(
           data.communityImage,
-          backendUrl
+          backendUrl,
         );
 
         setLogoFile(logo[0] || null);

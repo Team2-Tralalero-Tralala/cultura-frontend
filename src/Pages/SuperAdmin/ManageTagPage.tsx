@@ -11,13 +11,17 @@ import Button from "@/Components/Button";
 import ModalTag from "@/Components/Modal/ModalTag";
 import { Modal as ModalConfirm } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
-import * as TagService from "@/Services/tag-service";
+import * as TagService from "@/Libs/TagService";
 
-import type { Column, DataTableActionsConfig, BulkAction, Pagination } from "@/Components/Tables/Types";
+import type {
+  Column,
+  DataTableActionsConfig,
+  BulkAction,
+  Pagination,
+} from "@/Components/Tables/Types";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
-
 
 /*
  * คำอธิบาย : ฟังก์ชันหลักของหน้าจัดการประเภท
@@ -73,7 +77,6 @@ export function ManageTags() {
 
       setRows(mappedRows);
       setPagination(resultPagination);
-
     } catch (error: any) {
       setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
@@ -139,7 +142,8 @@ export function ManageTags() {
   const handleFinalConfirm = async () => {
     try {
       if (modalType === "create") await TagService.createTag(pendingTagName);
-      else if (modalType === "edit" && selectedTag) await TagService.updateTag(selectedTag.id, pendingTagName);
+      else if (modalType === "edit" && selectedTag)
+        await TagService.updateTag(selectedTag.id, pendingTagName);
       else if (modalType === "delete" && selectedTag) await TagService.deleteTag(selectedTag.id);
 
       closeInputModal();
@@ -254,7 +258,9 @@ export function ManageTags() {
           actions={rowActions}
           bulkActions={bulkActions}
           onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
-          onPageSizeChange={(pageSize) => setPagination((prev) => ({ ...prev, currentPage: 1, limit: pageSize }))}
+          onPageSizeChange={(pageSize) =>
+            setPagination((prev) => ({ ...prev, currentPage: 1, limit: pageSize }))
+          }
           pageSizeOptions={[10, 30, 50]}
           theme="brand"
         />

@@ -11,7 +11,7 @@ import { Icon } from "@iconify/react";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { getCommunityDetailPublic } from "@/Services/community-service";
+import { getCommunityDetailPublic } from "@/Libs/CommunityService";
 import CardPackage from "@/Components/CardPackage";
 import PaginationRoundedForCardPackage from "@/Components/Pagination/PaginationRoundedForCardPackage";
 import Footer from "@/Components/Footer";
@@ -52,9 +52,7 @@ const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
  * Input : fileName (string | null)
  * Output : string | undefined (URL เต็มของไฟล์)
  */
-function resolveBackendUploadUrl(
-  fileName?: string | null
-): string | undefined {
+function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
   const normalizedPath = fileName.replace(/\\/g, "/");
   const cleanedPath = normalizedPath.replace(/^\/?uploads\//, "");
@@ -68,11 +66,7 @@ function resolveBackendUploadUrl(
  */
 function pickImagePath(imageObject: any): string | null {
   return (
-    imageObject?.url ??
-    imageObject?.image ??
-    imageObject?.ci_image ??
-    imageObject?.filePath ??
-    null
+    imageObject?.url ?? imageObject?.image ?? imageObject?.ci_image ?? imageObject?.filePath ?? null
   );
 }
 
@@ -83,8 +77,7 @@ function pickImagePath(imageObject: any): string | null {
  */
 function findImage(communityData: any, imageType: string): string | null {
   const imageItem = communityData?.communityImage?.find(
-    (imageObject: any) =>
-      String(imageObject.type).toUpperCase() === imageType.toUpperCase()
+    (imageObject: any) => String(imageObject.type).toUpperCase() === imageType.toUpperCase(),
   );
   return pickImagePath(imageItem);
 }
@@ -96,8 +89,7 @@ function findImage(communityData: any, imageType: string): string | null {
  */
 function listImagesByType(communityData: any, imageType: string): string[] {
   const imageArray = (communityData?.communityImage || []).filter(
-    (imageObject: any) =>
-      String(imageObject.type).toUpperCase() === imageType.toUpperCase()
+    (imageObject: any) => String(imageObject.type).toUpperCase() === imageType.toUpperCase(),
   );
 
   return imageArray.map(pickImagePath).filter(Boolean) as string[];
@@ -108,20 +100,12 @@ function listImagesByType(communityData: any, imageType: string): string[] {
  * Input : label (string), children (ReactNode)
  * Output : React Element
  */
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-bold text-black text-base">{label}</div>
       <div className="text-black font-regular text-base">:</div>
-      <div className="text-black font-regular break-words text-base">
-        {children ?? "-"}
-      </div>
+      <div className="text-black font-regular break-words text-base">{children ?? "-"}</div>
     </div>
   );
 }
@@ -167,14 +151,7 @@ function LogoCircle({ src, name, size = 240 }: any) {
  */
 function CoverRect({ src, height = 300 }: any) {
   if (src) {
-    return (
-      <img
-        src={src}
-        alt="Cover"
-        style={{ height }}
-        className="w-full object-cover"
-      />
-    );
+    return <img src={src} alt="Cover" style={{ height }} className="w-full object-cover" />;
   }
 
   return (
@@ -238,8 +215,7 @@ export default function CommunityDetailUser() {
    */
   function getPackageCover(tourPackage: any): string | undefined {
     const coverFile = tourPackage?.packageFile?.find(
-      (packageFileItem: any) =>
-        String(packageFileItem.type).toUpperCase() === "COVER"
+      (packageFileItem: any) => String(packageFileItem.type).toUpperCase() === "COVER",
     );
     return resolveBackendUploadUrl(coverFile?.filePath);
   }
@@ -266,8 +242,7 @@ export default function CommunityDetailUser() {
    */
   function getStoreCover(store: any): string | undefined {
     const storeCoverImage = store?.storeImage?.find(
-      (storeImageItem: any) =>
-        String(storeImageItem.type).toUpperCase() === "COVER"
+      (storeImageItem: any) => String(storeImageItem.type).toUpperCase() === "COVER",
     );
     return resolveBackendUploadUrl(storeCoverImage?.image);
   }
@@ -279,8 +254,7 @@ export default function CommunityDetailUser() {
    */
   function getHomestayCover(homestay: any): string | undefined {
     const homestayCoverImage = homestay?.homestayImage?.find(
-      (homestayImageItem: any) =>
-        String(homestayImageItem.type).toUpperCase() === "COVER"
+      (homestayImageItem: any) => String(homestayImageItem.type).toUpperCase() === "COVER",
     );
     return resolveBackendUploadUrl(homestayCoverImage?.image);
   }
@@ -332,25 +306,25 @@ export default function CommunityDetailUser() {
 
   const coverImage = useMemo(
     () => resolveBackendUploadUrl(findImage(community, "COVER")),
-    [community]
+    [community],
   );
   const logoImage = useMemo(
     () => resolveBackendUploadUrl(findImage(community, "LOGO")),
-    [community]
+    [community],
   );
   const galleryImageLists = useMemo(
     () =>
       (listImagesByType(community, "GALLERY") || [])
         .map(resolveBackendUploadUrl)
         .filter(Boolean) as string[],
-    [community]
+    [community],
   );
   const videoLists = useMemo(
     () =>
       (listImagesByType(community, "VIDEO") || [])
         .map(resolveBackendUploadUrl)
         .filter(Boolean) as string[],
-    [community]
+    [community],
   );
 
   /* ส่วน : Loading / Error Guard */
@@ -395,10 +369,7 @@ export default function CommunityDetailUser() {
                 <CoverRect src={coverImage} height={coverHeight} />
 
                 <div className="relative px-6 md:px-8 pt-4 pb-8">
-                  <div
-                    className="absolute left-6 md:left-8 -translate-y-1/2"
-                    style={{ top: 0 }}
-                  >
+                  <div className="absolute left-6 md:left-8 -translate-y-1/2" style={{ top: 0 }}>
                     <LogoCircle src={logoImage} name={community?.name} size={logoSize} />
                   </div>
 
@@ -411,10 +382,11 @@ export default function CommunityDetailUser() {
 
                       {!!community.status && (
                         <span
-                          className={`px-2.5 py-0.5 text-sm rounded-full ${isStatusOpen
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-100 text-slate-700"
-                            }`}
+                          className={`px-2.5 py-0.5 text-sm rounded-full ${
+                            isStatusOpen
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-slate-100 text-slate-700"
+                          }`}
                         >
                           {isStatusOpen ? "เปิด" : "ปิด"}
                         </span>
@@ -437,26 +409,19 @@ export default function CommunityDetailUser() {
 
                     {/* Location */}
                     <div className="mt-3 flex items-start gap-2 text-black">
-                      <Icon
-                        icon="mdi:map-marker"
-                        className="mt-1 shrink-0 text-[21px]"
-                      />
+                      <Icon icon="mdi:map-marker" className="mt-1 shrink-0 text-[21px]" />
                       <span className="leading-relaxed">
                         {displayText(community.location?.detail)}{" "}
                         {displayText(community.location?.subDistrict)}{" "}
                         {displayText(community.location?.district)}{" "}
                         {displayText(community.location?.province)}{" "}
-                        {community.location?.postalCode
-                          ? `(${community.location.postalCode})`
-                          : ""}
+                        {community.location?.postalCode ? `(${community.location.postalCode})` : ""}
                       </span>
                     </div>
 
                     {/* Description */}
                     <div className="mt-3 flex items-start gap-2 text-black max-w-4xl">
-                      <p className="leading-relaxed">
-                        {displayText(community.description)}
-                      </p>
+                      <p className="leading-relaxed">{displayText(community.description)}</p>
                     </div>
                   </div>
                 </div>
@@ -481,13 +446,10 @@ export default function CommunityDetailUser() {
             <Row label="ที่อยู่">
               <span className="whitespace-pre-line break-words">
                 {`${displayText(community.location?.detail)} ${displayText(
-                  community.location?.subDistrict
+                  community.location?.subDistrict,
                 )} ${displayText(community.location?.district)} ${displayText(
-                  community.location?.province
-                )} ${community.location?.postalCode
-                  ? `${community.location.postalCode}`
-                  : ""
-                  }`}
+                  community.location?.province,
+                )} ${community.location?.postalCode ? `${community.location.postalCode}` : ""}`}
               </span>
             </Row>
 
@@ -496,9 +458,7 @@ export default function CommunityDetailUser() {
                 ? `${community.location.latitude}, ${community.location.longitude}`
                 : "-"}
             </Row>
-            <Row label="คำอธิบายที่อยู่">
-              {displayText(community.location?.detailMore)}
-            </Row>
+            <Row label="คำอธิบายที่อยู่">{displayText(community.location?.detailMore)}</Row>
 
             <Row label="ชื่อกิจกรรมหลัก">{displayText(community.mainActivityName)}</Row>
             <Row label="รายละเอียดกิจกรรมหลัก">
@@ -522,28 +482,22 @@ export default function CommunityDetailUser() {
 
             {Array.isArray(community.communityMembers) && (
               <Row label="จำนวนสมาชิก">
-                {(community.communityMembers?.length || 0) +
-                  (community.admin ? 1 : 0)}{" "}
-                คน
+                {(community.communityMembers?.length || 0) + (community.admin ? 1 : 0)} คน
               </Row>
             )}
 
             <Row label="ชื่อผู้ดูแลหลัก">{displayText(community.mainAdmin)}</Row>
 
-            <Row label="เบอร์โทรผู้ดูแลหลัก">
-              {displayText(community.mainAdminPhone)}
-            </Row>
+            <Row label="เบอร์โทรผู้ดูแลหลัก">{displayText(community.mainAdminPhone)}</Row>
 
             <Row label="ผู้ประสานงาน">{displayText(community.coordinatorName)}</Row>
-            <Row label="เบอร์โทรผู้ประสานงาน">
-              {displayText(community.coordinatorPhone)}
-            </Row>
+            <Row label="เบอร์โทรผู้ประสานงาน">{displayText(community.coordinatorPhone)}</Row>
 
             <Row label="ผู้ดูแล">
               {displayText(
                 community.admin
                   ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
-                  : null
+                  : null,
               )}
             </Row>
             <div />
@@ -662,9 +616,11 @@ export default function CommunityDetailUser() {
                 const longitude = community.location.longitude;
                 const zoomDelta = 0.0025;
 
-                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - zoomDelta
-                  }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${latitude + zoomDelta
-                  }&layer=mapnik&marker=${latitude}%2C${longitude}`;
+                const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
+                  longitude - zoomDelta
+                }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${
+                  latitude + zoomDelta
+                }&layer=mapnik&marker=${latitude}%2C${longitude}`;
 
                 return (
                   <iframe
@@ -705,8 +661,9 @@ export default function CommunityDetailUser() {
                       <CardPackage
                         image={getPackageCover(tourPackage) || ""}
                         title={tourPackage.name || "-"}
-                        location={`${community?.location?.district || ""} ${community?.location?.province || ""
-                          }`.trim()}
+                        location={`${community?.location?.district || ""} ${
+                          community?.location?.province || ""
+                        }`.trim()}
                         bookingStart={tourPackage.bookingOpenDate}
                         bookingEnd={tourPackage.bookingCloseDate}
                         bookingStatus={status}

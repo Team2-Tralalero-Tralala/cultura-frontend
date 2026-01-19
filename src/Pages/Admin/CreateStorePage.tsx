@@ -14,7 +14,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import TextField from "@/Components/TextField";
-import { createStoreByAdmin } from "@/Services/store-service";
+import { createStoreByAdmin } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 import { Icon } from "@iconify/react";
 import React from "react";
@@ -175,7 +175,7 @@ export function CreateStore() {
   };
   const tagList = React.useMemo<Tag[]>(
     () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
-    [formData.tagStores]
+    [formData.tagStores],
   );
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มไปยัง backend เพื่อสร้างร้านค้าใหม่
@@ -229,7 +229,7 @@ export function CreateStore() {
             latitude: Number(position[0]),
             longitude: Number(position[1]),
           },
-        })
+        }),
       );
 
       coverFiles.forEach((file) => {

@@ -20,7 +20,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import TextField from "@/Components/TextField";
-import { editStore, getStoreById } from "@/Services/store-service";
+import { editStore, getStoreById } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 
 /**
@@ -137,7 +137,7 @@ export function EditStore() {
           data.tagStores?.map((tag: any) => ({
             id: tag.id,
             name: tag.name,
-          })) ?? []
+          })) ?? [],
         );
 
         // โหลดภาพจาก backend แล้วแปลงเป็น File จริง เพื่อให้ UploadCard แสดง preview ได้
@@ -149,7 +149,7 @@ export function EditStore() {
             .map(async (img: any) => {
               const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
-            })
+            }),
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
@@ -158,7 +158,7 @@ export function EditStore() {
             .map(async (img: any) => {
               const fullUrl = `${backendUrl}/${img.image}`;
               return await urlToFile(fullUrl, img.image);
-            })
+            }),
         );
 
         setCoverFiles(coverFilesFetched);
@@ -257,7 +257,7 @@ export function EditStore() {
    */
   const tagList = React.useMemo<Tag[]>(
     () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
-    [formData.tagStores]
+    [formData.tagStores],
   );
   /**
    * คำอธิบาย : ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก

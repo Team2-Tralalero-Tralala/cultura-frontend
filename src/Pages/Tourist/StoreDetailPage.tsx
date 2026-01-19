@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { getStoreWithOtherStoresInCommunity } from "@/Services/store-service";
+import { getStoreWithOtherStoresInCommunity } from "@/Libs/StoreService";
 import { Tag } from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import Thumbnails from "@/Components/Thumbnails";
@@ -113,7 +113,7 @@ export default function StoreDetailPage() {
         Number(communityId),
         Number(storeId),
         page,
-        limit
+        limit,
       );
       setStore(res.data.store);
       setOtherStores(res.data.otherStores?.data || []);
@@ -179,21 +179,21 @@ export default function StoreDetailPage() {
                     const originLng = position.coords.longitude;
                     window.open(
                       `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                      "_blank"
+                      "_blank",
                     );
                   },
                   (error) => {
                     console.error("Error getting location:", error);
                     window.open(
                       `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                      "_blank"
+                      "_blank",
                     );
-                  }
+                  },
                 );
               } else {
                 window.open(
                   `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                  "_blank"
+                  "_blank",
                 );
               }
             }

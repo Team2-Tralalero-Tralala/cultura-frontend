@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/Libs/useAuth";
+import { useAuth } from "@/Libs/UseAuth";
 
 type MenuKey =
   | "communities"
@@ -36,11 +36,11 @@ const SidebarSuperAdmin: React.FC = () => {
   const [activeMenuKey, setActiveMenuKey] = useState<MenuKey>(null);
   const [openDropdown, setOpenDropdown] = useState<MenuKey | null>(null);
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับตั้งเมนูที่ใช้งานอยู่ตามเส้นทางปัจจุบัน
- * Input : pathname, basePath
- * Output : -
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตั้งเมนูที่ใช้งานอยู่ตามเส้นทางปัจจุบัน
+   * Input : pathname, basePath
+   * Output : -
+   */
   useEffect(() => {
     let subPath = pathname;
     if (basePath) {
@@ -86,11 +86,11 @@ const SidebarSuperAdmin: React.FC = () => {
     }
   }, [pathname, basePath]);
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดการการคลิกเมนู
- * Input : key, parentKey
- * Output : -
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการคลิกเมนู
+   * Input : key, parentKey
+   * Output : -
+   */
   const handleClick = (key: MenuKey, parentKey?: MenuKey) => {
     setActiveMenuKey(key);
     if (parentKey) {
@@ -100,11 +100,11 @@ const SidebarSuperAdmin: React.FC = () => {
     }
   };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่าเมนูใดที่กำลังใช้งานอยู่
- * Input : key
- * Output : boolean
- */
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่าเมนูใดที่กำลังใช้งานอยู่
+   * Input : key
+   * Output : boolean
+   */
   const isActive = (key: MenuKey) => activeMenuKey === key;
 
   return (
@@ -121,8 +121,9 @@ const SidebarSuperAdmin: React.FC = () => {
           <Link
             to={`${basePath}/communities/all`}
             onClick={() => handleClick("communities")}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("communities") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("communities") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <Icon icon="ri:community-line" className="text-xl" />
             จัดการชุมชน
@@ -133,8 +134,9 @@ const SidebarSuperAdmin: React.FC = () => {
             <Link
               to={`${basePath}/accounts/all`}
               onClick={() => handleClick("accounts")}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("accounts") ? "bg-[#0D845A]" : ""
-                }`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                isActive("accounts") ? "bg-[#0D845A]" : ""
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="mdi:account-cog-outline" className="text-xl" />
@@ -148,8 +150,9 @@ const SidebarSuperAdmin: React.FC = () => {
                 <Link
                   to={`${basePath}/users/blocked`}
                   onClick={() => handleClick("users-blocked", "accounts")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("users-blocked") ? "bg-[#0D845A]" : ""
-                    }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
+                    isActive("users-blocked") ? "bg-[#0D845A]" : ""
+                  }`}
                 >
                   การระงับบัญชี
                 </Link>
@@ -162,8 +165,9 @@ const SidebarSuperAdmin: React.FC = () => {
             <Link
               to={`${basePath}/packages/all`}
               onClick={() => handleClick("packages")}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
-                }`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
+                isActive("packages") ? "bg-[#0D845A]" : ""
+              }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -176,8 +180,9 @@ const SidebarSuperAdmin: React.FC = () => {
                 <Link
                   to={`${basePath}/package-requests`}
                   onClick={() => handleClick("package-requests", "packages")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("package-requests") ? "bg-[#0D845A]" : ""
-                    }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
+                    isActive("package-requests") ? "bg-[#0D845A]" : ""
+                  }`}
                 >
                   คำขออนุมัติ
                 </Link>
@@ -189,8 +194,9 @@ const SidebarSuperAdmin: React.FC = () => {
           <Link
             to={`${basePath}/tags`}
             onClick={() => handleClick("tags")}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("tags") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("tags") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <Icon icon="bi:tags" className="text-xl" />
             จัดการประเภท
@@ -200,8 +206,9 @@ const SidebarSuperAdmin: React.FC = () => {
           <Link
             to={`${basePath}/dashboard`}
             onClick={() => handleClick("dashboard")}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("dashboard") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("dashboard") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <Icon icon="mdi:view-dashboard-outline" className="text-xl" />
             รายงาน
@@ -211,8 +218,9 @@ const SidebarSuperAdmin: React.FC = () => {
           <Link
             to={`${basePath}/logs`}
             onClick={() => handleClick("logs")}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("logs") ? "bg-[#0D845A]" : ""
-              }`}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+              isActive("logs") ? "bg-[#0D845A]" : ""
+            }`}
           >
             <Icon icon="ix:log" className="text-xl" />
             ประวัติการเข้าใช้งาน
@@ -225,8 +233,9 @@ const SidebarSuperAdmin: React.FC = () => {
         <Link
           to={`${basePath}/setting`}
           onClick={() => handleClick("setting")}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("setting") ? "bg-[#0D845A]" : ""
-            }`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
+            isActive("setting") ? "bg-[#0D845A]" : ""
+          }`}
         >
           <Icon icon="mdi:cog-outline" className="text-xl" />
           การตั้งค่า
@@ -237,8 +246,9 @@ const SidebarSuperAdmin: React.FC = () => {
             handleClick("logout");
             logout();
           }}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${isActive("logout") ? "bg-[#0D845A]" : ""
-            }`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${
+            isActive("logout") ? "bg-[#0D845A]" : ""
+          }`}
         >
           <Icon icon="mdi:logout" className="text-xl" />
           ออกจากระบบ

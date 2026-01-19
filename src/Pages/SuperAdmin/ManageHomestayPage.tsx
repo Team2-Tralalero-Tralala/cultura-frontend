@@ -15,8 +15,8 @@ import { Modal } from "@/Components/Modal/Modal";
 import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { TrashIcon } from "@/Components/Tables/Icon";
-import { getHomestaysAll, deleteHomestayBySuperAdmin } from "@/Services/homestay-services";
-import { getCommunityById } from "@/Services/community-service";
+import { getHomestaysAll, deleteHomestayBySuperAdmin } from "@/Libs/HomestayService";
+import { getCommunityById } from "@/Libs/CommunityService";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 /**
@@ -123,7 +123,7 @@ export default function ManageHomestaySuperAdmin() {
       const { data: responseData } = await getHomestaysAll(
         Number(communityId),
         currentPage,
-        pageSize
+        pageSize,
       );
       const homestayPayload = responseData?.data;
       const homestayLists = Array.isArray(homestayPayload?.data) ? homestayPayload.data : [];
@@ -134,7 +134,7 @@ export default function ManageHomestaySuperAdmin() {
           name: homestay.name ?? "-",
           facility: homestay.facility ?? "-",
           type: homestay.type ?? "-",
-        }))
+        })),
       );
 
       setTotalPages(homestayPayload?.pagination?.totalPages ?? 1);
@@ -164,8 +164,8 @@ export default function ManageHomestaySuperAdmin() {
     if (!normalizedSearchQuery) return homestayRows;
     return homestayRows.filter((row) =>
       [row.name, row.facility, row.type].some((fieldValue) =>
-        normalizeText(fieldValue).includes(normalizedSearchQuery)
-      )
+        normalizeText(fieldValue).includes(normalizedSearchQuery),
+      ),
     );
   }, [homestayRows, searchQuery]);
 
@@ -280,7 +280,7 @@ export default function ManageHomestaySuperAdmin() {
         header: "ประเภทห้อง",
       },
     ],
-    [communityId]
+    [communityId],
   );
 
   /*
@@ -303,7 +303,7 @@ export default function ManageHomestaySuperAdmin() {
         },
       },
     }),
-    [communityId, navigate]
+    [communityId, navigate],
   );
 
   /*
@@ -325,7 +325,7 @@ export default function ManageHomestaySuperAdmin() {
         },
       },
     ],
-    []
+    [],
   );
 
   /*

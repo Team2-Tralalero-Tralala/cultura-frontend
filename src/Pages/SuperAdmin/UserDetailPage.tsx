@@ -3,7 +3,7 @@ import { SquarePen, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { fetchUserDetail } from "../../Services/account-services";
+import { fetchUserDetail } from "@/Libs/AccountService";
 import Button from "@/Components/Button";
 
 export function UserDetailPage() {
@@ -79,15 +79,11 @@ export function UserDetailPage() {
 
         {/* Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
-
           {/* ส่วนปุ่มจัดการ */}
           <div className="absolute top-6 right-6 flex items-center gap-3">
             {/* ปุ่มตั้งรหัสผ่าน */}
             <div className="w-32">
-              <Button
-                type="cancel"
-                onClick={() => navigate(`/super/reset-password/${id}`)}
-              >
+              <Button type="cancel" onClick={() => navigate(`/super/reset-password/${id}`)}>
                 <span className="text-base">ตั้งรหัสผ่าน</span>
               </Button>
             </div>

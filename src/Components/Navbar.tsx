@@ -5,7 +5,7 @@
  * 2. แถบนำทางหลัก (โลโก้, ช่องค้นหา, ปุ่มลงทะเบียน/เข้าสู่ระบบ หรือโปรไฟล์ผู้ใช้)
  */
 
-import { useAuth } from "@/Libs/useAuth";
+import { useAuth } from "@/Libs/UseAuth";
 import { Link } from "react-router";
 
 /*
@@ -26,11 +26,7 @@ export default function Navbar() {
       <nav className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <img
-            src="/logo-black.png"
-            alt="Cultura Logo"
-            className="h-8 w-auto"
-          />
+          <img src="/logo-black.png" alt="Cultura Logo" className="h-8 w-auto" />
         </Link>
 
         {/* Search Bar */}

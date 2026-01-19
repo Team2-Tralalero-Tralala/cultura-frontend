@@ -15,7 +15,7 @@ import React, { useState } from "react";
 import type { Column, Pagination } from "../../Components/Tables/Types";
 
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
-import { fetchAuthenticationLog } from "@/Services/authenticationLog-services";
+import { fetchAuthenticationLog } from "@/Libs/AuthenticationLogService";
 import type { AuthenticationLogRow } from "@/Types/AuthenticationLog";
 
 /*
@@ -128,7 +128,7 @@ export default function AuthentionLogAdmin() {
         pagination.currentPage,
         pagination.limit,
         searchQuery,
-        filterRole
+        filterRole,
       );
       setRows(resultData);
       setPagination(resultPagination);

@@ -36,7 +36,7 @@ import DetailPackageAdmin from "@/Pages/Admin/DetailPackagePage";
 import CreateMemberPage from "@/Pages/Admin/CreateMemberPage";
 import EditMemberPage from "@/Pages/Admin/EditMemberPage";
 import AuthentionLogAdmin from "@/Pages/Admin/AuthentionLogPage";
-import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
+import { EditProfile } from "@/Pages/SuperAdmin/EditProfilePage";
 import { ManageParticipant } from "@/Pages/Admin/ManageParticipantPage";
 
 /*

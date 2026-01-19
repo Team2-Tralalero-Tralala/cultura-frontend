@@ -5,24 +5,24 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
-import Feedback from "@/Pages/Member/Feedback";
+import Feedback from "@/Pages/Member/FeedbackPage";
 
 import ManagePackagePage from "@/Pages/Member/ManagePackagePage";
 import { EditPackagePage } from "@/Pages/Member/EditPackagePage";
 import CreatePackagePage from "@/Pages/Member/CreatePackagePage";
-import { ManageRefundBookingMember } from "@/Pages/Member/ManageRefundBookingPage";
+import { ManageRefundBookingMember } from "@/Pages/Member/ManageRefundPage";
 
 import ManageBookingMember from "@/Pages/Member/ManageBookingMember";
 import { DashboardPage } from "@/Pages/Member/DashboardPage";
-import CommunityDetailMember from "@/Pages/Member/CommunityDetailMember";
-import PackageHistoryMember from "@/Pages/Member/HistoryPackageMember";
-import DetailPackageMember from "@/Pages/Member/DetailPackageMember";
-import PackageFeedbacksPage from "@/Pages/Member/PackageFeedbacksPage";
-import BookingDetailMember from "@/Pages/Member/BookingDetailMember";
+import CommunityDetailMember from "@/Pages/Member/DetailCommunityPage";
+import PackageHistoryMember from "@/Pages/Member/ManagePackageHistoryPage";
+import DetailPackageMember from "@/Pages/Member/DetailPackagePage";
+import PackageFeedbacksPage from "@/Pages/Member/DetailFeedbackPage";
+import BookingDetailMember from "@/Pages/Member/DetailBookingPage";
 import PackageDraftAdmin from "@/Pages/Admin/MangeDraftPackagePage";
-import PackageDraftMember from "@/Pages/Member/PackageDraftMember";
-import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
-import BookingHistoryMember from "@/Pages/Member/HistoryBookingMember";
+import PackageDraftMember from "@/Pages/Member/ManageDraftPackage";
+import { EditProfile } from "@/Pages/SuperAdmin/EditProfilePage";
+import BookingHistoryMember from "@/Pages/Member/ManageBookingHistoryPage";
 import { ManageParticipant } from "@/Pages/Admin/ManageParticipantPage";
 
 /*

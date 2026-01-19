@@ -3,7 +3,7 @@
  * ใช้สำหรับแสดง Sidebar และพื้นที่คอนเทนต์ของหน้าซูเปอร์แอดมินทั้งหมด
  */
 import { Route, Routes } from "react-router-dom";
-import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogSuperAdmin";
+import AuthentionLogSuperAdmin from "@/Pages/SuperAdmin/AuthentionLogPage";
 import CreateCommuninityPage from "@/Pages/SuperAdmin/CreateCommuninityPage";
 import { EditCommunity } from "@/Pages/SuperAdmin/EditCommunityPage";
 import ManagePackagePage from "@/Pages/SuperAdmin/ManagePackagePage";
@@ -14,20 +14,20 @@ import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
 import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
 
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
-import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/CommunityDetailSuperAdmin";
+import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/DetailCommunityPage";
 import ManagePackageRequestPage from "@/Pages/SuperAdmin/ManagePackageRequestPage";
 
 import CreateHomestaysPage from "@/Pages/SuperAdmin/CreateHomestaysPage";
-import { CreateStore } from "@/Pages/SuperAdmin/CreateStore";
+import { CreateStore } from "@/Pages/SuperAdmin/CreateStorePage";
 import HomestayDetailPage from "@/Pages/SuperAdmin/DetailHomestayPage";
 import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredPage";
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
-import { EditStore } from "@/Pages/SuperAdmin/EditStore";
-import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunitySuperAdmin";
-import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestaySuperAdmin";
-import ManageStores from "@/Pages/SuperAdmin/ManageStoreSuperAdmin";
-import { ResetPassword } from "@/Pages/SuperAdmin/ResetPassword";
+import { EditStore } from "@/Pages/SuperAdmin/EditStorePage";
+import ManageCommunitySuperAdmin from "@/Pages/SuperAdmin/ManageCommunityPage";
+import ManageHomestaySuperAdmin from "@/Pages/SuperAdmin/ManageHomestayPage";
+import ManageStores from "@/Pages/SuperAdmin/ManageStorePage";
+import { ResetPassword } from "@/Pages/SuperAdmin/ResetPasswordPage";
 
 import BackupsPage from "@/Pages/SuperAdmin/BackupsPage";
 import SettingHomePage from "@/Pages/SuperAdmin/SettingHomePage";
@@ -36,11 +36,11 @@ import CreateAccountPage from "@/Pages/SuperAdmin/CreateAccountPage";
 import EditAccountPage from "@/Pages/SuperAdmin/EditAccountPage";
 
 import DashboardPage from "@/Pages/SuperAdmin/DashboardPage";
-import { ManageTags } from "@/Pages/SuperAdmin/ManageTags";
-import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin";
-import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageAccountCommunity";
-import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperAdmin";
-import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
+import { ManageTags } from "@/Pages/SuperAdmin/ManageTagPage";
+import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackagePage";
+import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageMemberPage";
+import StoreDetailPage from "@/Pages/SuperAdmin/DetailStorePage";
+import { EditProfile } from "@/Pages/SuperAdmin/EditProfilePage";
 import { ManageParticipant } from "@/Pages/Admin/ManageParticipantPage";
 
 /*

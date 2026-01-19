@@ -15,6 +15,7 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import UploadCard from "@/Components/calendar/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -461,7 +462,7 @@ export default function EditHomestayPage() {
                 id="name"
                 label="ชื่อที่พัก"
                 required
-                placeholder="พิมพ์ชื่อที่พัก"
+                placeholder="กรอกชื่อที่พัก"
                 value={form.name}
                 onChange={(event) => setField("name", event.target.value)}
                 error={!!formErrors.name}
@@ -471,7 +472,7 @@ export default function EditHomestayPage() {
                 id="type"
                 label="ประเภทที่พัก"
                 required
-                placeholder="พิมพ์ประเภทของที่พัก"
+                placeholder="กรอกประเภทของที่พัก"
                 value={form.type}
                 onChange={(event) => setField("type", event.target.value)}
                 error={!!formErrors.type}
@@ -482,7 +483,7 @@ export default function EditHomestayPage() {
                   id="facility"
                   label="สิ่งอำนวยความสะดวก"
                   required
-                  placeholder="ใส่รายละเอียดความสะดวกสบายของที่พัก"
+                  placeholder="กรอกสิ่งอำนวยความสะดวก"
                   value={form.facility}
                   onChange={(event) => setField("facility", event.target.value)}
                   error={!!formErrors.facility}
@@ -523,7 +524,7 @@ export default function EditHomestayPage() {
                 id="houseNumber"
                 label="บ้านเลขที่"
                 required
-                placeholder="บ้านเลขที่"
+                placeholder="กรอกบ้านเลขที่ของที่พัก"
                 value={form.houseNumber}
                 onChange={(event) => setField("houseNumber", event.target.value)}
                 error={!!formErrors.houseNumber}
@@ -532,7 +533,7 @@ export default function EditHomestayPage() {
               <TextField
                 id="villageNumber"
                 label="หมู่ที่"
-                placeholder="หมู่ที่"
+                placeholder="กรอกหมู่ที่ของที่พัก"
                 value={form.villageNumber}
                 onChange={(event) => setField("villageNumber", event.target.value)}
                 error={!!formErrors.villageNumber}
@@ -626,7 +627,7 @@ export default function EditHomestayPage() {
 
             {/* อัปโหลดรูปภาพ */}
             <section className="mt-4">
-              <h3 className="font-semibold text-base mb-2">
+              <h3 className="font-bold text-base mb-2">
                 ภาพหน้าปก (COVER) <span className="text-red-600">*</span>
               </h3>
               <UploadCard
@@ -646,7 +647,7 @@ export default function EditHomestayPage() {
                 iconSizeCls="w-10 h-10"
               />
 
-              <h3 className="font-semibold text-base mt-6 mb-2">
+              <h3 className="font-bold text-base mt-6 mb-2">
                 รูปเพิ่มเติม (GALLERY) <span className="text-red-600">*</span>
               </h3>
               <UploadCard

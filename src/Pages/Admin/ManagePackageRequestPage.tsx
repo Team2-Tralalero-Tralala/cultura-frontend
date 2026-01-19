@@ -8,6 +8,7 @@
  */
 import React, { useEffect } from "react";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
+import { useNavigate } from "react-router-dom";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
@@ -20,6 +21,7 @@ import {
   rejectPackageRequestForAdmin,
 } from "@/Services/package-request-service";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Icon } from "@iconify/react";
 
 export type PackageRequestRow = {
   id: number;
@@ -137,7 +139,14 @@ export default function PackageRequestsAdminPage() {
   const [isRejectOpen, setRejectOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] =
     React.useState<PackageRequestRow | null>(null);
+  const navigate = useNavigate();
 
+  /*
+    * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าสร้างแพ็กเกจของผู้ดูแลระบบ
+    * Input : -
+    * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/admin/package/create"
+    */
+  const goToCreatePackage = () => navigate("/admin/package/create");
   /**
    * ฟังก์ชัน reload
    * คำอธิบาย:
@@ -263,16 +272,32 @@ export default function PackageRequestsAdminPage() {
           }}
         />
       </div>
-      {/* ส่วนหัว + ค้นหา */}
+{/* ส่วนหัว + ค้นหา */}
       <div className="flex flex-col gap-2 w-full">
         <h1 className="font-bold text-xl">คำขออนุมัติ</h1>
 
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center justify-between w-full">
+          {/* ฝั่งซ้าย: ช่องค้นหา */}
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+
+          {/* ฝั่งขวา: ปุ่มเพิ่มแพ็กเกจ (ย้ายมาตรงนี้) */}
+          <div>
+            <Button type="confirm-admin" onClick={goToCreatePackage}>
+              <div className="flex items-center justify-center gap-2 px-1">
+                <Icon
+                  icon="material-symbols:add-rounded"
+                  className="text-2xl"
+                />
+                <span className="whitespace-nowrap text-base">
+                  เพิ่มแพ็กเกจ
+                </span>
+              </div>
+            </Button>
           </div>
         </div>
       </div>

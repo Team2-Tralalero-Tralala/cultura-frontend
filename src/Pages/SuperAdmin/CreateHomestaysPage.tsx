@@ -17,6 +17,7 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
@@ -140,7 +141,10 @@ export default function CreateHomestaysPage() {
     null
   );
   const [isSaving, setIsSaving] = React.useState(false);
-
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
   /**
    * คำอธิบาย: อัปเดตฟิลด์ในฟอร์ม และ validate ฟิลด์นั้นทันที
    * Input: key ของฟอร์ม, value ใหม่
@@ -188,48 +192,13 @@ export default function CreateHomestaysPage() {
 
   /**
    * จัดการ submit ฟอร์มเพิ่มที่พัก
-   * - ป้องกันการ reload หน้า
-   * - ตรวจสอบค่า (validateAll)
-   * - แสดง error หรือเปิด modal ยืนยันตามผลลัพธ์
+   * - ตรวจสอบค่า (validateAll) และไฟล์รูปภาพ
+   * - แสดง ModalAlert หากข้อมูลไม่ครบ
+   * - หากครบถ้วน เปิด Modal ยืนยัน
    */
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (isSaving) return;
-
-    if (!validateAll()) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    const latitudeString = (form.latitude ?? "").trim();
-    const longitudeString = (form.longitude ?? "").trim();
-    const latitudeNumber = latitudeString === "" ? null : Number(latitudeString);
-    const longitudeNumber = longitudeString === "" ? null : Number(longitudeString);
-    const singlePayload = {
-      base: {
-        name: normalizeOrDefault(form.name),
-        type: normalizeOrDefault(form.type),
-        guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
-        totalRoom: Math.max(1, Number(form.totalRoom || 0)),
-        facility: normalizeOrDefault(form.facility),
-        location: {
-          houseNumber: normalizeOrDefault(form.houseNumber),
-          villageNumber: Number(form.villageNumber) || null,
-          subDistrict: normalizeOrDefault(form.subDistrict),
-          district: normalizeOrDefault(form.district),
-          province: normalizeOrDefault(form.province),
-          postalCode: normalizeOrDefault(String(form.postalCode ?? "")),
-          detail: normalizeOrDefault(form.addressDetail),
-          latitude: latitudeNumber,
-          longitude: longitudeNumber,
-        },
-        tagHomestays: Array.isArray(tagIds) ? tagIds : [],
-      },
-      coverFiles: coverFiles,
-      galleryFiles: galleryFiles,
-    };
-
-    setPendingPayloads([singlePayload]);
     setIsConfirmOpen(true);
   }
 
@@ -248,34 +217,67 @@ export default function CreateHomestaysPage() {
     }, []
   );
 
-  /**
-   * ฟังก์ชันยืนยันการบันทึก
-   * - ส่งข้อมูลฟอร์มไปยัง API
-   * - อัปโหลดรูปภาพตาม payload ที่ค้างอยู่
-   * - แสดงผลลัพธ์สำเร็จ/ล้มเหลวและนำผู้ใช้กลับไปหน้ารายการที่พัก
+/**
+   * ฟังก์ชันยืนยันการบันทึก (ทำงานเมื่อกดปุ่ม "ยืนยัน" ใน Modal)
+   * - ตรวจสอบข้อมูล (Validate)
+   * - หากข้อมูลผิดพลาด: ปิด Modal ยืนยัน -> แสดง ModalAlert แจ้งเตือน
+   * - หากข้อมูลถูกต้อง: สร้าง Payload -> ส่ง API
    */
   const onConfirmSave = async () => {
     setIsConfirmOpen(false);
-    if (!pendingPayloads || pendingPayloads.length === 0) return;
-
+    const isFormValid = validateAll()
+    const isFilesValid = coverFiles.length > 0 && galleryFiles.length > 0;
+    if (!isFormValid || !isFilesValid) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ครบถ้วน");
+      setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
+      setAlertOpen(true);
+      return;
+    }
     try {
       setIsSaving(true);
       const communityIdNumber = Number(communityId);
       if (!communityIdNumber) throw new Error("communityId ไม่ถูกต้อง");
+      const latitudeString = (form.latitude ?? "").trim();
+      const longitudeString = (form.longitude ?? "").trim();
+      const latitudeNumber = latitudeString === "" ? null : Number(latitudeString);
+      const longitudeNumber = longitudeString === "" ? null : Number(longitudeString);
 
-      for (const pendingPayload of pendingPayloads) {
-        const dataPayload = {
-          ...pendingPayload.base,
-        };
+      const singlePayload = {
+        base: {
+          name: normalizeOrDefault(form.name),
+          type: normalizeOrDefault(form.type),
+          guestPerRoom: Math.max(1, Number(form.guestPerRoom || 0)),
+          totalRoom: Math.max(1, Number(form.totalRoom || 0)),
+          facility: normalizeOrDefault(form.facility),
+          location: {
+            houseNumber: normalizeOrDefault(form.houseNumber),
+            villageNumber: Number(form.villageNumber) || null,
+            subDistrict: normalizeOrDefault(form.subDistrict),
+            district: normalizeOrDefault(form.district),
+            province: normalizeOrDefault(form.province),
+            postalCode: normalizeOrDefault(String(form.postalCode ?? "")),
+            detail: normalizeOrDefault(form.addressDetail),
+            latitude: latitudeNumber,
+            longitude: longitudeNumber,
+          },
+          tagHomestays: Array.isArray(tagIds) ? tagIds : [],
+        },
+        coverFiles: coverFiles,
+        galleryFiles: galleryFiles,
+      };
+      const payloadsToSave = [singlePayload];
 
+      for (const payload of payloadsToSave) {
         const formData = new FormData();
-        formData.append("data", JSON.stringify(dataPayload));
-        if (pendingPayload.coverFiles?.length) {
-          formData.append("cover", pendingPayload.coverFiles[0]);
+        formData.append("data", JSON.stringify(payload.base));
+
+        if (payload.coverFiles?.length) {
+          formData.append("cover", payload.coverFiles[0]);
         }
 
-        if (Array.isArray(pendingPayload.galleryFiles)) {
-          for (const galleryFile of pendingPayload.galleryFiles) {
+        if (Array.isArray(payload.galleryFiles)) {
+          for (const galleryFile of payload.galleryFiles) {
             formData.append("gallery", galleryFile);
           }
         }
@@ -284,9 +286,19 @@ export default function CreateHomestaysPage() {
           withCredentials: true,
         });
       }
+
+      setAlertType("success");
+      setAlertTitle("สร้างที่พักสำเร็จ");
+      setAlertMessage("ข้อมูลที่พักถูกบันทึกเรียบร้อยแล้ว");
+      setAlertOpen(true);
+
       navigate(`/super/community/${communityId}/homestay/all`);
+
     } catch (error: any) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setAlertOpen(true);
     } finally {
       setIsSaving(false);
       setPendingPayloads(null);
@@ -333,7 +345,7 @@ export default function CreateHomestaysPage() {
                 id="name"
                 label="ชื่อที่พัก"
                 required
-                placeholder="พิมพ์ชื่อที่พัก"
+                placeholder="กรอกชื่อที่พัก"
                 value={form.name}
                 onChange={(event) => setField("name", event.target.value)}
                 error={!!errors.name}
@@ -343,7 +355,7 @@ export default function CreateHomestaysPage() {
                 id="type"
                 label="ประเภทที่พัก"
                 required
-                placeholder="พิมพ์ประเภทของที่พัก"
+                placeholder="กรอกประเภทของที่พัก"
                 value={form.type}
                 onChange={(event) => setField("type", event.target.value)}
                 error={!!errors.type}
@@ -354,7 +366,7 @@ export default function CreateHomestaysPage() {
                   id="facility"
                   label="สิ่งอำนวยความสะดวก"
                   required
-                  placeholder="ใส่รายละเอียดความสะดวกสบายของที่พัก"
+                  placeholder="กรอกสิ่งอำนวยความสะดวก"
                   value={form.facility}
                   onChange={(event) => setField("facility", event.target.value)}
                   error={!!errors.facility}
@@ -395,7 +407,7 @@ export default function CreateHomestaysPage() {
                 id="houseNumber"
                 label="บ้านเลขที่"
                 required
-                placeholder="บ้านเลขที่"
+                placeholder="กรอกบ้านเลขที่ของที่พัก"
                 value={form.houseNumber}
                 onChange={(event) => setField("houseNumber", event.target.value)}
                 error={!!errors.houseNumber}
@@ -405,7 +417,7 @@ export default function CreateHomestaysPage() {
               <TextField
                 id="villageNumber"
                 label="หมู่ที่"
-                placeholder="หมู่ที่"
+                placeholder="กรอกหมู่ที่ของที่พัก"
                 value={form.villageNumber}
                 onChange={(event) => setField("villageNumber", event.target.value)}
                 error={!!errors.villageNumber}
@@ -486,7 +498,7 @@ export default function CreateHomestaysPage() {
             {/* อัปโหลดรูป */}
             <div className="grid md:grid-cols-1 gap-6">
               <div className="space-y-2">
-                <label className="block text-base font-semibold">
+                <label className="block text-base font-bold">
                   อัปโหลดภาพหน้าปก <span className="text-red-600">*</span>
                 </label>
                 <UploadCard
@@ -508,7 +520,7 @@ export default function CreateHomestaysPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-base font-semibold">
+                <label className="block text-base font-bold">
                   อัปโหลดรูปภาพเพิ่มเติม{" "}
                   <span className="text-red-600">*</span>
                 </label>
@@ -541,7 +553,7 @@ export default function CreateHomestaysPage() {
             </div>
             <div className="w-36">
               <Button type="confirm-admin" htmlType="submit">
-                {isSaving ? "กำลังบันทึก..." : "บันทึก"}
+                {isSaving ? "กำลังบันทึก..." : "สร้าง"}
               </Button>
             </div>
           </div>
@@ -553,9 +565,8 @@ export default function CreateHomestaysPage() {
       {/* Modal ยืนยัน */}
       <Modal
         open={isConfirmOpen}
-        title="ยืนยันการบันทึกที่พัก"
-        text={`คุณต้องการบันทึกที่พักจำนวน ${pendingPayloads?.length ?? 0
-          } รายการหรือไม่`}
+        title="ยืนยันการสร้างที่พัก"
+        text={`คุณต้องการยืนยันการสร้างที่พักหรือไม่`}
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={onConfirmSave}
@@ -563,6 +574,15 @@ export default function CreateHomestaysPage() {
           setIsConfirmOpen(false);
           setPendingPayloads(null);
         }}
+      />
+
+      {/* Modal Alert */}
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

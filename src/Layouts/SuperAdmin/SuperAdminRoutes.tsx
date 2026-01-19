@@ -41,7 +41,7 @@ import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackageSuperAdmin"
 import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageAccountCommunity";
 import StoreDetailPage from "@/Pages/SuperAdmin/StoreDetailSuperAdmin";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
-import { ManageParticipant } from "@/Pages/Admin/ManageParticipant";
+import { ManageParticipant } from "@/Pages/Admin/ManageParticipantPage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Super Admin

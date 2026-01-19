@@ -10,7 +10,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
@@ -106,7 +106,7 @@ const EditAccountPage: React.FC = () => {
   });
 
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
@@ -146,14 +146,14 @@ const EditAccountPage: React.FC = () => {
           role === "Admin"
             ? "Admin"
             : role === "Member"
-            ? "Member"
-            : role === "Tourist"
-            ? "Tourist"
-            : user.role?.name === "superadmin"
-            ? "Admin"
-            : user.role?.name === "member"
-            ? "Member"
-            : "Tourist",
+              ? "Member"
+              : role === "Tourist"
+                ? "Tourist"
+                : user.role?.name === "superadmin"
+                  ? "Admin"
+                  : user.role?.name === "member"
+                    ? "Member"
+                    : "Tourist",
       }));
       setAvatarUrl(user.profileImageUrl || null);
 
@@ -292,8 +292,8 @@ const EditAccountPage: React.FC = () => {
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
-            ? "FEMALE"
-            : "NONE";
+              ? "FEMALE"
+              : "NONE";
         requestBody.birthDate = roleSpecificData.birthDate
           ? new Date(roleSpecificData.birthDate).toISOString().split("T")[0]
           : null;
@@ -464,7 +464,7 @@ const EditAccountPage: React.FC = () => {
                     getOptionLabel={(option) => option.name}
                     value={
                       communityOptions.find(
-                        (c) => String(c.id) === String(roleSpecificData.communityId)
+                        (c) => String(c.id) === String(roleSpecificData.communityId),
                       ) || null
                     }
                     onChange={(_, newValue) => {

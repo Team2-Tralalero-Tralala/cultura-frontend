@@ -9,7 +9,7 @@ import { SuccessCard } from "@/Components/SuccessCard";
 import TextField from "@/Components/TextField";
 import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
 import AuthLayout from "@/Layouts/AuthLayout";
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 import { Icon } from "@iconify/react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
@@ -70,7 +70,7 @@ export default function ForgetPasswordPage() {
   const [contact, setContact] = useState("");
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [changePasswordCode, setChangePasswordCode] = useState<string | null>(
-    sessionStorage.getItem("changePasswordCode")
+    sessionStorage.getItem("changePasswordCode"),
   );
 
   const [newPassword, setNewPassword] = useState("");
@@ -151,8 +151,9 @@ export default function ForgetPasswordPage() {
         birthDateBE: formatGregorianDateToBuddhistEraString(birthDate),
       });
 
-      const changePasswordCodeFromApi = response?.data?.data
-        ?.changePasswordCode as string | undefined;
+      const changePasswordCodeFromApi = response?.data?.data?.changePasswordCode as
+        | string
+        | undefined;
       if (!changePasswordCodeFromApi) {
         throw new Error("ไม่พบ changePasswordCode จากระบบ");
       }
@@ -219,11 +220,7 @@ export default function ForgetPasswordPage() {
         ) : (
           <div className="flex shadow-auth-card p-10 rounded-auth-card bg-white">
             {step === "identify" && (
-              <form
-                className="w-sm space-y-4"
-                onSubmit={handleIdentifySubmit}
-                noValidate
-              >
+              <form className="w-sm space-y-4" onSubmit={handleIdentifySubmit} noValidate>
                 <div className="text-26 text-center">ลืมรหัสผ่าน</div>
                 <TextField
                   id="contact"
@@ -246,9 +243,7 @@ export default function ForgetPasswordPage() {
                 />
 
                 <div className="flex items-center justify-between min-h-[24px]">
-                  <p className="text-sm text-red-600 min-h-[24px]">
-                    {error ? error : "\u00A0"}
-                  </p>
+                  <p className="text-sm text-red-600 min-h-[24px]">{error ? error : "\u00A0"}</p>
                 </div>
 
                 <Button type="confirm-tourist" htmlType="submit">
@@ -258,11 +253,7 @@ export default function ForgetPasswordPage() {
             )}
 
             {step === "set" && (
-              <form
-                className="w-sm space-y-4"
-                onSubmit={handleSetPasswordSubmit}
-                noValidate
-              >
+              <form className="w-sm space-y-4" onSubmit={handleSetPasswordSubmit} noValidate>
                 <div className="text-26 text-center">สร้างรหัสผ่านใหม่</div>
 
                 <TextField
@@ -304,9 +295,7 @@ export default function ForgetPasswordPage() {
                 />
 
                 <div className="flex items-center justify-between min-h-[24px]">
-                  <p className="text-sm text-red-600 min-h-[24px]">
-                    {error ? error : "\u00A0"}
-                  </p>
+                  <p className="text-sm text-red-600 min-h-[24px]">{error ? error : "\u00A0"}</p>
                 </div>
 
                 <div className="flex gap-3">
@@ -351,5 +340,3 @@ export default function ForgetPasswordPage() {
     </AuthLayout>
   );
 }
-
-

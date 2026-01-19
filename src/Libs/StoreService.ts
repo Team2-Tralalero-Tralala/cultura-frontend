@@ -3,7 +3,7 @@
  */
 import axios from "axios";
 import type { StoreData } from "@/Types/Store";
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /*
@@ -66,10 +66,7 @@ export async function getStoreById(storeId: number) {
  * Input : page, limit
  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
  */
-export async function getAllStoreAdmin(
-  page: number,
-  limit: number
-) {
+export async function getAllStoreAdmin(page: number, limit: number) {
   const params = { page, limit };
   return axios.get(`${apiUrl}/admin/community/own/stores/all`, {
     params,
@@ -117,12 +114,15 @@ export async function deleteStore(storeId: number) {
  * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลร้านค้าตามและร้านค้าอื่นๆในชุมชนเดียวกัน
  * Input : communityId, storeId
  * Output : ข้อมูลร้านค้าตามและร้านค้าอื่นๆในชุมชนเดียวกัน
-*/
-export async function getStoreWithOtherStoresInCommunity(communityId: number, storeId: number, page: number, limit: number) {
-  const response = await axios.get(`${apiUrl}/shared/community/${communityId}/store/${storeId}`,
-    {
-      params: { page, limit },
-    }
-  );
+ */
+export async function getStoreWithOtherStoresInCommunity(
+  communityId: number,
+  storeId: number,
+  page: number,
+  limit: number,
+) {
+  const response = await axios.get(`${apiUrl}/shared/community/${communityId}/store/${storeId}`, {
+    params: { page, limit },
+  });
   return response.data;
 }

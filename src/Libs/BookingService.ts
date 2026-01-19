@@ -5,7 +5,7 @@
  * Base URL: ${VITE_API_URL}/admin/booking/refunds
  */
 
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 import axios from "axios";
 
 export const apiRefund = axios.create({
@@ -41,7 +41,6 @@ export async function rejectRefund(bookingId: number, reason: string) {
   return apiRefund.patch(`/admin/booking/refunds/${bookingId}/reject`, { reason });
 }
 
-
 /*
  * คำอธิบาย : ฟังก์ชันดึงรายการคำขอคืนเงินทั้งหมด
  * Mapping : GET /member/booking-history/refunds
@@ -74,11 +73,7 @@ export async function rejectRefundMember(bookingId: number, reason: string) {
  * Input : page (เลขหน้าปัจจุบัน), limit (จำนวนรายการต่อหน้า), status (สถานะที่ต้องการกรอง)
  * Output : Promise ข้อมูลรายการจองและข้อมูล Pagination
  */
-export async function getMemberBookingHistories(
-  page = 1,
-  limit = 10,
-  status = "ALL"
-) {
+export async function getMemberBookingHistories(page = 1, limit = 10, status = "ALL") {
   /**
    * คำอธิบาย : เรียก API สำหรับดึงข้อมูลประวัติการจองของสมาชิก
    * โดยรองรับการแบ่งหน้า (Pagination) และการกรองตามสถานะการจอง
@@ -91,8 +86,8 @@ export async function getMemberBookingHistories(
     params: {
       page,
       limit,
-      status // ส่ง status ไปเพื่อให้ Backend ตัวใหม่ทำงาน (Dispatcher)
-    }
+      status, // ส่ง status ไปเพื่อให้ Backend ตัวใหม่ทำงาน (Dispatcher)
+    },
   });
 }
 
@@ -173,7 +168,13 @@ export async function uploadPaymentProof(paymentProof: File): Promise<string> {
  *   - bookingData (BookingData) - ข้อมูลการจอง
  * Output : Promise<CreateBookingResponse> - ข้อมูลการจองที่สร้างแล้ว
  */
-export async function createBooking(bookingId: number, bookingData: BookingData): Promise<CreateBookingResponse> {
-  const response = await api.post<CreateBookingResponse>(`/tourist/booking/${bookingId}`, bookingData);
+export async function createBooking(
+  bookingId: number,
+  bookingData: BookingData,
+): Promise<CreateBookingResponse> {
+  const response = await api.post<CreateBookingResponse>(
+    `/tourist/booking/${bookingId}`,
+    bookingData,
+  );
   return response.data;
 }

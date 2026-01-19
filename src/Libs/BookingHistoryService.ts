@@ -14,7 +14,7 @@
 import type { BookingHistoryItem, TouristBookingHistory } from "../Types/BookingHistory";
 import type { BookingAdminDtoFromApi, Pagination, BookingRow } from "@/Types/BookingAdmin";
 import axios from "axios";
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
@@ -24,7 +24,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
  */
 export async function fetchBookingHistoriesByRole(
   page = 1,
-  limit = 10
+  limit = 10,
 ): Promise<{
   list: BookingHistoryItem[];
   page: number;
@@ -40,7 +40,7 @@ export async function fetchBookingHistoriesByRole(
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   const data = await response.json();
@@ -61,7 +61,7 @@ export async function fetchBookingHistoriesByRole(
 
 export async function fetchBookingsByAdmin(
   page = 1,
-  limit = 10
+  limit = 10,
 ): Promise<{
   data: BookingAdminDtoFromApi[];
   pagination: Pagination;
@@ -92,7 +92,7 @@ export async function fetchBookingsByAdmin(
 export async function updateBookingStatus(
   bookingId: number,
   status: "BOOKED" | "REJECTED" | "REFUNDED" | "REFUND_REJECTED",
-  rejectReason?: string
+  rejectReason?: string,
 ): Promise<void> {
   const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -132,7 +132,7 @@ export async function updateBookingStatus(
 export async function fetchBookingsByMember(
   page = 1,
   limit = 10,
-  status?: string
+  status?: string,
 ): Promise<{
   data: BookingAdminDtoFromApi[]; // ใช้โครงเดียวกับ admin ได้เลย
   pagination: Pagination;
@@ -169,7 +169,7 @@ export async function fetchBookingsByMember(
 export async function updateBookingStatusByMember(
   bookingId: number,
   status: "BOOKED" | "REJECTED" | "REFUNDED" | "REFUND_REJECTED",
-  rejectReason?: string
+  rejectReason?: string,
 ): Promise<void> {
   const isRejectStatus = status === "REJECTED" || status === "REFUND_REJECTED";
 
@@ -208,7 +208,7 @@ export async function getTouristBookingHistory(
       from: Date;
       to: Date;
     };
-  }
+  },
 ): Promise<{
   data: TouristBookingHistory[];
   pagination: Pagination;
@@ -258,7 +258,7 @@ export async function getBookingsByTourist(
   sort = "newest",
   status?: string,
   period?: string,
-  search?: string
+  search?: string,
 ): Promise<{
   data: BookingRow[];
   pagination: Pagination;

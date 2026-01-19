@@ -2,7 +2,7 @@
  * คำอธิบาย : Service สำหรับดึงข้อมูล Dashboard ของ Super Admin
  * โดยดึงข้อมูลสรุป ข้อมูลกราฟ และสถิติต่างๆ ของระบบ
  */
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 
 /*
  * คำอธิบาย : Type definition สำหรับข้อมูลสรุปของ Dashboard
@@ -181,7 +181,7 @@ export interface MemberDashboardFilters {
  *    - คืนค่า Promise ของ DashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ stats
  */
 export async function fetchAdminDashboardData(
-  filters: MemberDashboardFilters
+  filters: MemberDashboardFilters,
 ): Promise<AdminDashboardResponse> {
   const {
     bookingPeriodType,
@@ -224,7 +224,7 @@ export async function fetchAdminDashboardData(
  *    - คืนค่า Promise ของ AdminDashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ package
  */
 export async function fetchMemberDashboardData(
-  filters: MemberDashboardFilters
+  filters: MemberDashboardFilters,
 ): Promise<MemberDashboardResponse> {
   const {
     bookingPeriodType,
@@ -293,7 +293,7 @@ export interface TouristDashboardResponse {
  *    - คืนค่า Promise ของ AdminDashboardResponse ที่ประกอบด้วยข้อมูล summary, graph และ package
  */
 export async function fetchTouristDashboardData(
-  filters: TouristDashboardFilters
+  filters: TouristDashboardFilters,
 ): Promise<TouristDashboardResponse> {
   const { bookingPeriodType, bookingDates } = filters;
 

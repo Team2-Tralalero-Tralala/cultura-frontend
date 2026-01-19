@@ -10,7 +10,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
@@ -39,7 +39,6 @@ const EditMemberPage: React.FC = () => {
   const location = useLocation();
   const { userId } = useParams();
 
-  
   /*
    * คำอธิบาย : State สำหรับเก็บค่าฟอร์มข้อมูลสมาชิก
    */
@@ -51,7 +50,7 @@ const EditMemberPage: React.FC = () => {
     phone: "",
     communityRole: "",
   });
-  
+
   /*
    * คำอธิบาย : State สำหรับเก็บไฟล์รูปโปรไฟล์ที่อัปโหลดใหม่
    */
@@ -79,7 +78,6 @@ const EditMemberPage: React.FC = () => {
    */
   const fetchMemberData = async () => {
     try {
-
       const response = await api.get(`/admin/member/${userId}`);
       const member = response.data?.data;
 
@@ -95,7 +93,6 @@ const EditMemberPage: React.FC = () => {
       });
 
       setAvatarUrl(member.profileImageUrl || null);
-
     } catch (error: any) {
       console.error("❌ Error fetching member:", error);
       toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
@@ -154,7 +151,7 @@ const EditMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        roleId: 3, 
+        roleId: 3,
         communityRole: formData.communityRole.trim(),
       };
 
@@ -166,7 +163,6 @@ const EditMemberPage: React.FC = () => {
       if (imageWasUpdated) {
         setProfileImage(null);
       }
-
     } catch (error: any) {
       console.error("❌ Error updating member:", error);
       const msg = error.response?.data?.message || error.message || "บันทึกข้อมูลไม่สำเร็จ";
@@ -272,14 +268,14 @@ const EditMemberPage: React.FC = () => {
             />
 
             <div className="flex justify-end">
-               <button
-                  type="button"
-                  onClick={() => navigate(`/admin/members/${userId}/reset-password`)} 
-                  className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
-                >
-                  <Icon icon="mdi:lock-reset" className="w-4 h-4" />
-                  เปลี่ยนรหัสผ่าน
-                </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/admin/members/${userId}/reset-password`)}
+                className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
+              >
+                <Icon icon="mdi:lock-reset" className="w-4 h-4" />
+                เปลี่ยนรหัสผ่าน
+              </button>
             </div>
 
             <TextField
@@ -300,10 +296,7 @@ const EditMemberPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton 
-                htmlType="button" 
-                onClick={() => setShowConfirm(true)}
-            >
+            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
               บันทึก
             </SubmitButton>
           </div>
@@ -330,7 +323,7 @@ const EditMemberPage: React.FC = () => {
         message="ข้อมูลสมาชิกถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
           setShowSuccessModal(false);
-          navigate("/admin/members"); 
+          navigate("/admin/members");
         }}
       />
     </div>

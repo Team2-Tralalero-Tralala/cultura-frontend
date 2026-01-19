@@ -1,11 +1,11 @@
 /**
-* คำอธิบาย : Component สำหรับแก้ไขข้อมูลส่วนตัวของ Tourist
-*/
+ * คำอธิบาย : Component สำหรับแก้ไขข้อมูลส่วนตัวของ Tourist
+ */
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -53,10 +53,10 @@ const genderOptions: { label: string; value: Exclude<Gender, ""> }[] = [
 ];
 
 /*
-* คําอธิบาย : ฟังก์ชันสำหรับแก้ไขข้อมูลส่วนตัวของ Tourist
-* Input : ไม่มี
-* Output : แสดงหน้าจอแก้ไขข้อมูลส่วนตัวของ Tourist
-*/
+ * คําอธิบาย : ฟังก์ชันสำหรับแก้ไขข้อมูลส่วนตัวของ Tourist
+ * Input : ไม่มี
+ * Output : แสดงหน้าจอแก้ไขข้อมูลส่วนตัวของ Tourist
+ */
 const EditProfileTourist: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,11 +70,11 @@ const EditProfileTourist: React.FC = () => {
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-/*
-* คําอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลส่วนตัวของ Tourist
-* Input : ไม่มี
-* Output : ข้อมูลส่วนตัวของ Tourist
-*/
+  /*
+   * คําอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลส่วนตัวของ Tourist
+   * Input : ไม่มี
+   * Output : ข้อมูลส่วนตัวของ Tourist
+   */
   const fetchProfile = useCallback(async () => {
     try {
       const { data } = await api.get("/shared/profile");
@@ -87,22 +87,18 @@ const EditProfileTourist: React.FC = () => {
         fname: profile.fname ?? "",
         lname: profile.lname ?? "",
         phone: profile.phone ?? "",
-        birthDate: profile.birthDate
-          ? new Date(profile.birthDate).toISOString().split("T")[0]
-          : "",
+        birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split("T")[0] : "",
         gender: profile.gender ?? "",
         subDistrict: profile.subDistrict ?? "",
         district: profile.district ?? "",
         province: profile.province ?? "",
         postalCode: profile.postalCode ?? "",
       });
-      
+
       if (profile.profileImage) {
         const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
         const baseUrl = apiUrl.replace(/\/api$/, "").replace(/\/$/, "");
-        setAvatarUrl(
-          `${baseUrl}/${profile.profileImage.replace(/\\/g, "/")}`
-        );
+        setAvatarUrl(`${baseUrl}/${profile.profileImage.replace(/\\/g, "/")}`);
       }
     } catch (error) {
       console.error(error);
@@ -115,23 +111,21 @@ const EditProfileTourist: React.FC = () => {
     fetchProfile();
   }, [fetchProfile]);
 
-/*
-* คําอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
-* Input : event - เหตุการณ์การเปลี่ยนแปลงในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
-* Output : อัปเดตสถานะ formData เมื่อมีการเปลี่ยนแปลงในฟอร์ม
-*/
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  /*
+   * คําอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+   * Input : event - เหตุการณ์การเปลี่ยนแปลงในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+   * Output : อัปเดตสถานะ formData เมื่อมีการเปลี่ยนแปลงในฟอร์ม
+   */
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-/*
-* คําอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงที่อยู่ในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
-* Input : location - ข้อมูลที่อยู่ที่ถูกเลือกในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
-* Output : อัปเดตสถานะ formData เมื่อมีการเปลี่ยนแปลงที่อยู่ในฟอร์ม
-*/
+  /*
+   * คําอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงที่อยู่ในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+   * Input : location - ข้อมูลที่อยู่ที่ถูกเลือกในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+   * Output : อัปเดตสถานะ formData เมื่อมีการเปลี่ยนแปลงที่อยู่ในฟอร์ม
+   */
   const handleLocationChange = (location: any) => {
     setFormData((prev) => ({
       ...prev,
@@ -142,11 +136,11 @@ const EditProfileTourist: React.FC = () => {
     }));
   };
 
-/*
-* คําอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
-* Input : ไม่มี
-* Output : ส่งคำขอไปยัง API เพื่ออัปเดตข้อมูลส่วนตัวของ Tourist
-*/
+  /*
+   * คําอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
+   * Input : ไม่มี
+   * Output : ส่งคำขอไปยัง API เพื่ออัปเดตข้อมูลส่วนตัวของ Tourist
+   */
   const handleSubmit = async () => {
     try {
       const payload = new FormData();
@@ -181,13 +175,9 @@ const EditProfileTourist: React.FC = () => {
       <NavbarTourist />
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 pt-6 pb-12">
-        <Breadcrumb
-          current={{ label: "แก้ไขข้อมูลส่วนตัว", to: location.pathname }}
-        />
+        <Breadcrumb current={{ label: "แก้ไขข้อมูลส่วนตัว", to: location.pathname }} />
 
-        <h1 className="text-3xl font-bold mt-4 mb-8">
-          แก้ไขข้อมูลส่วนตัว
-        </h1>
+        <h1 className="text-3xl font-bold mt-4 mb-8">แก้ไขข้อมูลส่วนตัว</h1>
 
         <section className="px-10 py-6 pr-20">
           <div className="grid grid-cols-[280px_1fr] gap-16">
@@ -207,17 +197,54 @@ const EditProfileTourist: React.FC = () => {
             {/* Form */}
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <TextField id="fname" label="ชื่อ (ไม่ต้องใส่คำนำหน้า)" required value={formData.fname} onChange={handleChange} />
-                <TextField id="lname" label="นามสกุล" required value={formData.lname} onChange={handleChange} />
+                <TextField
+                  id="fname"
+                  label="ชื่อ (ไม่ต้องใส่คำนำหน้า)"
+                  required
+                  value={formData.fname}
+                  onChange={handleChange}
+                />
+                <TextField
+                  id="lname"
+                  label="นามสกุล"
+                  required
+                  value={formData.lname}
+                  onChange={handleChange}
+                />
               </div>
 
-              <TextField id="username" label="ชื่อผู้ใช้" required value={formData.username} onChange={handleChange} />
-              <TextField id="email" label="อีเมล" required value={formData.email} onChange={handleChange} />
+              <TextField
+                id="username"
+                label="ชื่อผู้ใช้"
+                required
+                value={formData.username}
+                onChange={handleChange}
+              />
+              <TextField
+                id="email"
+                label="อีเมล"
+                required
+                value={formData.email}
+                onChange={handleChange}
+              />
               <div className="mr-85">
-               <TextField id="phone" label="หมายเลขโทรศัพท์" required value={formData.phone} onChange={handleChange} />
+                <TextField
+                  id="phone"
+                  label="หมายเลขโทรศัพท์"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
               </div>
               <div className="grid grid-cols-2 gap-6">
-                <TextField id="birthDate" type="date" label="วัน-เดือน-ปีเกิด" required value={formData.birthDate} onChange={handleChange} />
+                <TextField
+                  id="birthDate"
+                  type="date"
+                  label="วัน-เดือน-ปีเกิด"
+                  required
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                />
 
                 <div>
                   <label className="block mb-2 font-medium">
@@ -245,9 +272,7 @@ const EditProfileTourist: React.FC = () => {
                             }
                           />
                           <div className="w-5 h-5 rounded-full border flex items-center justify-center bg-gray-200">
-                            {isChecked && (
-                              <div className="w-3 h-3 rounded-full bg-[#00BF6A]" />
-                            )}
+                            {isChecked && <div className="w-3 h-3 rounded-full bg-[#00BF6A]" />}
                           </div>
                           <span>{option.label}</span>
                         </label>
@@ -272,10 +297,7 @@ const EditProfileTourist: React.FC = () => {
                 <Button type="cancel" onClick={() => navigate(-1)}>
                   ยกเลิก
                 </Button>
-                <Button
-                  type="confirm-tourist"
-                  onClick={() => setIsConfirmModalOpen(true)}
-                >
+                <Button type="confirm-tourist" onClick={() => setIsConfirmModalOpen(true)}>
                   บันทึก
                 </Button>
               </div>

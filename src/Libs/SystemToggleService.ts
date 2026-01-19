@@ -5,7 +5,7 @@
  * 2. ปิดระบบ (disable system)
  * 3. ตรวจสอบสถานะระบบ
  */
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 
 /*
  * คำอธิบาย : Type definition สำหรับ response ของการเปิด/ปิดระบบ
@@ -16,7 +16,7 @@ export interface SystemToggleResponse {
   message: string;
   data: {
     serverOnline: boolean;
-  }
+  };
 }
 
 /*
@@ -28,9 +28,13 @@ export interface SystemToggleResponse {
 export async function enableSystem(): Promise<SystemToggleResponse> {
   const url = `/super/server/enable`;
 
-  const res = await api.post(url, {}, {
-    withCredentials: true,
-  });
+  const res = await api.post(
+    url,
+    {},
+    {
+      withCredentials: true,
+    },
+  );
 
   return res.data;
 }
@@ -44,9 +48,13 @@ export async function enableSystem(): Promise<SystemToggleResponse> {
 export async function disableSystem(): Promise<SystemToggleResponse> {
   const url = `/super/server/disable`;
 
-  const res = await api.post(url, {}, {
-    withCredentials: true,
-  });
+  const res = await api.post(
+    url,
+    {},
+    {
+      withCredentials: true,
+    },
+  );
 
   return res.data;
 }

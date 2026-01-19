@@ -1,12 +1,17 @@
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 
-export async function fetchAuthenticationLog(page: number, limit: number, searchName: string, filterRole: string) {
+export async function fetchAuthenticationLog(
+  page: number,
+  limit: number,
+  searchName: string,
+  filterRole: string,
+) {
   const url = `/shared/logs`;
-  
+
   const res = await api.get(url, {
     params: { page, limit, searchName, filterRole },
     withCredentials: true,
   });
 
-  return res.data
+  return res.data;
 }

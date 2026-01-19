@@ -3,7 +3,7 @@
  * ใช้สำหรับตรวจสอบว่าเซิร์ฟเวอร์อยู่ในโหมด maintenance หรือไม่
  */
 
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 
 /*
  * Interface สำหรับ Response จาก API
@@ -26,4 +26,3 @@ export async function fetchServerStatus(): Promise<ServerStatusResponse> {
   const response = await api.get<ServerStatusResponse>("/shared/server-status");
   return response.data;
 }
-

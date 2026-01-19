@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 import TextField from "../../Components/TextField";
 import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
@@ -50,7 +50,7 @@ const accountSchema = z.object({
         const currentDate = new Date();
         return !isNaN(dateObject.getTime()) && dateObject <= currentDate;
       },
-      { message: "วันเกิดต้องเป็นวันที่ถูกต้อง และไม่เกินวันที่ปัจจุบัน" }
+      { message: "วันเกิดต้องเป็นวันที่ถูกต้อง และไม่เกินวันที่ปัจจุบัน" },
     )
     .optional(),
 
@@ -316,8 +316,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
-            ? "FEMALE"
-            : "NONE";
+              ? "FEMALE"
+              : "NONE";
         accountBody.birthDate = roleSpecificData.birthDate || null;
         accountBody.province = locationData.province;
         accountBody.district = locationData.district;
@@ -512,7 +512,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     getOptionLabel={(option) => option.name}
                     value={
                       communityOptions.find(
-                        (c) => String(c.id) === String(roleSpecificData.communityId)
+                        (c) => String(c.id) === String(roleSpecificData.communityId),
                       ) || null
                     }
                     onChange={(_, newValue) => {
@@ -541,24 +541,24 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                               focus:outline-none focus:ring-1 transition-shadow pr-10"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
-                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
+                            <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
                         </div>
                       );
                     }}
                   />
                 </div>
-                
+
                 <TextField
                   id="activityRole"
                   label="บทบาทในชุมชน"
                   placeholder="กรอกบทบาทในชุมชน"
                   required
                   value={roleSpecificData.activityRole}
-                  onChange={(e) => 
+                  onChange={(e) =>
                     setRoleSpecificData((prev) => ({
                       ...prev,
-                      activityRole: e.target.value
+                      activityRole: e.target.value,
                     }))
                   }
                 />
@@ -651,7 +651,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         message="บัญชีผู้ใช้ถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
           setShowSuccessModal(false);
-          navigate("/super/accounts/all"); 
+          navigate("/super/accounts/all");
         }}
       />
     </div>

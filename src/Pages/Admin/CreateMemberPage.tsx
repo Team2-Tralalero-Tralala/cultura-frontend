@@ -10,13 +10,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
-import { ModalAlert } from "@/Components/Modal/ModalAlert"; 
-import api from "@/Libs/api"; 
-import TextField from "../../Components/TextField"; 
-import Button from "../../Components/Button"; 
-import SubmitButton from "../../Components/SubmitButton"; 
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import api from "@/Libs/Api";
+import TextField from "../../Components/TextField";
+import Button from "../../Components/Button";
+import SubmitButton from "../../Components/SubmitButton";
 import AvatarUploader from "@/Components/AvatarUploader";
-import Breadcrumb from "@/Components/BreadcrumbNavigation"; 
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
@@ -38,7 +38,7 @@ const memberSchema = z.object({
 const CreateMemberPage: React.FC = () => {
   const navigate = useNavigate();
 
- /*
+  /*
    * คำอธิบาย : State สำหรับเก็บค่าข้อมูลจากฟอร์ม
    */
   const [formData, setFormData] = useState({
@@ -49,7 +49,7 @@ const CreateMemberPage: React.FC = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    communityRole: "", 
+    communityRole: "",
     profileImage: null as File | null,
   });
 
@@ -58,17 +58,17 @@ const CreateMemberPage: React.FC = () => {
    */
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
-   /*
+  /*
    * คำอธิบาย : State สำหรับควบคุมการแสดง Modal ยืนยันการสร้างบัญชี
    */
   const [showConfirm, setShowConfirm] = useState(false);
 
-   /*
+  /*
    * คำอธิบาย : State สำหรับควบคุมการแสดง Modal เมื่อสร้างบัญชีสำเร็จ
    */
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-   /*
+  /*
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
    * Input : fieldName, fieldValue
    * Output : boolean
@@ -101,7 +101,7 @@ const CreateMemberPage: React.FC = () => {
     }
   };
 
-   /*
+  /*
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
    * Input : event
    * Output : -
@@ -109,9 +109,9 @@ const CreateMemberPage: React.FC = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => {
-        const newData = { ...prev, [id]: value };
-        validateField(id, value); 
-        return newData;
+      const newData = { ...prev, [id]: value };
+      validateField(id, value);
+      return newData;
     });
   };
 
@@ -150,7 +150,7 @@ const CreateMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        password: formData.password, 
+        password: formData.password,
         communityRole: formData.communityRole.trim(),
       };
 
@@ -158,8 +158,8 @@ const CreateMemberPage: React.FC = () => {
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-         setShowSuccessModal(true);
-         return;
+        setShowSuccessModal(true);
+        return;
       }
 
       if (formData.profileImage) {
@@ -172,10 +172,10 @@ const CreateMemberPage: React.FC = () => {
       }
 
       setShowSuccessModal(true);
-
     } catch (error: any) {
       console.error("❌ Error creating member:", error);
-      const msg = error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
+      const msg =
+        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
       toast.error(`เกิดข้อผิดพลาด: ${msg}`);
     }
   };
@@ -223,11 +223,7 @@ const CreateMemberPage: React.FC = () => {
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           <div className="flex flex-col items-center">
-            <AvatarUploader 
-                avatarUrl={null} 
-                onAvatarChange={handleAvatarChange} 
-                avatarSize={270} 
-            />
+            <AvatarUploader avatarUrl={null} onAvatarChange={handleAvatarChange} avatarSize={270} />
           </div>
 
           <div className="w-full space-y-6">
@@ -320,7 +316,6 @@ const CreateMemberPage: React.FC = () => {
               error={!!formErrors.communityRole}
               helperText={formErrors.communityRole}
             />
-
           </div>
         </div>
 
@@ -331,10 +326,7 @@ const CreateMemberPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton 
-                htmlType="button" 
-                onClick={() => setShowConfirm(true)}
-            >
+            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
               สร้างบัญชี
             </SubmitButton>
           </div>
@@ -361,7 +353,7 @@ const CreateMemberPage: React.FC = () => {
         message="ข้อมูลสมาชิกถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
           setShowSuccessModal(false);
-          navigate("/admin/members"); 
+          navigate("/admin/members");
         }}
       />
     </div>

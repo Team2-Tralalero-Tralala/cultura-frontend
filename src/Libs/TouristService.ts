@@ -4,7 +4,7 @@
  * ใช้ในฝั่ง Client (Frontend)
  */
 
-import api from "@/Libs/api";
+import api from "@/Libs/Api";
 
 /*
  * Interface สำหรับข้อมูลภาพ Carousel
@@ -226,7 +226,7 @@ export async function fetchSearchOverview(
     endDate?: string | null;
     tags?: string[];
     sort?: string;
-  }
+  },
 ): Promise<TransformedSearchOverviewData> {
   const params: Record<string, string | number> = {
     page,

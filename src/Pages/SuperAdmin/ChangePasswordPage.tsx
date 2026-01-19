@@ -5,12 +5,12 @@
 
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
-import Button from "@/Components/Button"; 
-import TextField from "@/Components/TextField"; 
+import Button from "@/Components/Button";
+import TextField from "@/Components/TextField";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import api from "@/Libs/api"; 
+import api from "@/Libs/Api";
 
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
@@ -118,7 +118,7 @@ export default function ChangePasswordPage() {
       await api.post(`/shared/account/change-password/me`, {
         currentPassword,
         newPassword,
-        confirmNewPassword
+        confirmNewPassword,
       });
 
       const successMessage = "เปลี่ยนรหัสผ่านสำเร็จ";
@@ -162,10 +162,11 @@ export default function ChangePasswordPage() {
         <div className="pl-0">
           {message && (
             <div
-              className={`mb-6 rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${message.type === "success"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-                }`}
+              className={`mb-6 rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${
+                message.type === "success"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}
             >
               <Icon
                 icon={message.type === "success" ? "mdi:check-circle" : "mdi:alert-circle"}
@@ -212,7 +213,11 @@ export default function ChangePasswordPage() {
                 value={confirmNewPassword}
                 onChange={(event) => setConfirmNewPassword(event.target.value)}
                 error={!!confirmNewPassword && newPassword !== confirmNewPassword}
-                helperText={!!confirmNewPassword && newPassword !== confirmNewPassword ? "รหัสผ่านใหม่และการยืนยันไม่ตรงกัน" : ""}
+                helperText={
+                  !!confirmNewPassword && newPassword !== confirmNewPassword
+                    ? "รหัสผ่านใหม่และการยืนยันไม่ตรงกัน"
+                    : ""
+                }
               />
             </div>
 
@@ -231,10 +236,7 @@ export default function ChangePasswordPage() {
                 </Button>
               </div>
               <div className="w-32">
-                <Button
-                  type="confirm-admin"
-                  htmlType="submit"
-                >
+                <Button type="confirm-admin" htmlType="submit">
                   {isSubmitting ? "กำลังบันทึก..." : "ยืนยัน"}
                 </Button>
               </div>

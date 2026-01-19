@@ -71,7 +71,12 @@ export default function DetailHomestayTourist() {
       try {
         setIsLoading(true);
 
-        const data = await getHomestayDetailAndOtherHomestay(Number(communityId), Number(homestayId), page, limit);
+        const data = await getHomestayDetailAndOtherHomestay(
+          Number(communityId),
+          Number(homestayId),
+          page,
+          limit
+        );
 
         if (data && data.homestay) {
           const fullHomestay: HomestayDetail = {
@@ -100,23 +105,25 @@ export default function DetailHomestayTourist() {
     loadData();
   }, [homestayId, communityId, page]);
 
-  if (isLoading && !homestay) return <div className="p-10 text-center min-h-screen content-center">กำลังโหลดข้อมูล...</div>;
-  if (!homestay) return <div className="p-10 text-center min-h-screen content-center">ไม่พบข้อมูลที่พัก</div>;
+  if (isLoading && !homestay)
+    return <div className="p-10 text-center min-h-screen content-center">กำลังโหลดข้อมูล...</div>;
+  if (!homestay)
+    return <div className="p-10 text-center min-h-screen content-center">ไม่พบข้อมูลที่พัก</div>;
 
   const images = homestay.homestayImage || [];
-  const sortedImages = [...images].sort((imageA) => (imageA.type === 'COVER' ? -1 : 1));
+  const sortedImages = [...images].sort((imageA) => (imageA.type === "COVER" ? -1 : 1));
 
-  const galleryItems: MediaItem[] = sortedImages.map(img => ({
-    type: 'image',
+  const galleryItems: MediaItem[] = sortedImages.map((img) => ({
+    type: "image",
     src: resolveBackendUploadUrl(img.image) ?? "https://placehold.co/600x400?text=No+Image",
-    alt: homestay.name
+    alt: homestay.name,
   }));
 
   if (galleryItems.length === 0) {
     galleryItems.push({
-      type: 'image',
+      type: "image",
       src: "https://placehold.co/600x400?text=No+Image",
-      alt: "No Image"
+      alt: "No Image",
     });
   }
 
@@ -162,25 +169,68 @@ export default function DetailHomestayTourist() {
                     </div>
                   ))}
                 </div>
-              ) : "-"}
+              ) : (
+                "-"
+              )}
             </div>
           </div>
 
-          <a
-            href={`https://www.google.com/maps?q=${homestay.location.latitude},${homestay.location.longitude}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-start mt-4 pt-2 hover:text-[#00BF6A] transition-colors cursor-pointer"
-          >
-            <Icon icon="mdi:location" className="w-5 h-5 text-black mr-2 mt-0.5 flex-shrink-0" />
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+            <span className="font-bold min-w-[180px]">ที่อยู่ :</span>
             <span className="font-medium">
-              {homestay.location.houseNumber} {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ''} ต.{homestay.location.subDistrict} อ.{homestay.location.district} จ.{homestay.location.province} {homestay.location.postalCode}
+              {homestay.location.houseNumber}{" "}
+              {homestay.location.villageNumber ? `หมู่ ${homestay.location.villageNumber}` : ""} ต.
+              {homestay.location.subDistrict} อ.{homestay.location.district} จ.
+              {homestay.location.province} {homestay.location.postalCode}
             </span>
-          </a>
+          </div>
+
+          <button
+            onClick={() => {
+              if (homestay?.location?.latitude && homestay?.location?.longitude) {
+                const destLat = homestay.location.latitude;
+                const destLng = homestay.location.longitude;
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                      const originLat = position.coords.latitude;
+                      const originLng = position.coords.longitude;
+                      window.open(
+                        `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
+                        "_blank"
+                      );
+                    },
+                    (error) => {
+                      console.error("Error getting location:", error);
+                      window.open(
+                        `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                        "_blank"
+                      );
+                    }
+                  );
+                } else {
+                  window.open(
+                    `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                    "_blank"
+                  );
+                }
+              }
+            }}
+            className="flex items-start mt-2 hover:text-[#00BF6A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left"
+          >
+            <Icon
+              icon="mdi:map-marker-radius-outline"
+              className="w-5 h-5 text-black mr-2 mt-0.5 flex-shrink-0"
+            />
+            <span className="font-medium">ระบบนำทาง</span>
+          </button>
 
           <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-4">
             <span className="font-bold min-w-[180px]">คำอธิบายที่อยู่ :</span>
-            <span className="whitespace-pre-line">{homestay.location.detail || "ที่พักตรงข้ามร้านค้าอย่างสุขภาพดี และห่างจากไร้ปันสุข 200 เมตร"}</span>
+            <span className="whitespace-pre-line">
+              {homestay.location.detail ||
+                "ที่พักตรงข้ามร้านค้าอย่างสุขภาพดี และห่างจากไร้ปันสุข 200 เมตร"}
+            </span>
           </div>
         </div>
 
@@ -196,7 +246,9 @@ export default function DetailHomestayTourist() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {otherHomestays.map((item) => {
-                const cover = item.homestayImage?.find((img: any) => img.type === 'COVER') || item.homestayImage?.[0];
+                const cover =
+                  item.homestayImage?.find((img: any) => img.type === "COVER") ||
+                  item.homestayImage?.[0];
                 const imgUrl = resolveBackendUploadUrl(cover?.image);
 
                 return (

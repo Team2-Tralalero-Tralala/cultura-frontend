@@ -5,6 +5,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import CardPackage from "./CardPackage";
 
 export type PackageData = {
@@ -54,6 +55,7 @@ export default function PackageSection({
   });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const navigate = useNavigate();
 
   /*
    * ฟังก์ชัน : scrollPrev
@@ -107,7 +109,6 @@ export default function PackageSection({
     }
   };
 
-
   return (
     <section className="w-full py-8 ">
       <div className="container mx-auto px-4">
@@ -144,7 +145,7 @@ export default function PackageSection({
                       tags={pkg.tags}
                       priceTHB={pkg.priceTHB}
                       onClick={() => {
-                        console.log("Package clicked:", pkg.title);
+                        navigate(`/tourist/package/${pkg.id}`);
                       }}
                     />
                   </div>
@@ -170,11 +171,7 @@ export default function PackageSection({
                     stroke="currentColor"
                     strokeWidth={2}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 19l-7-7 7-7"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
@@ -193,11 +190,7 @@ export default function PackageSection({
                     stroke="currentColor"
                     strokeWidth={2}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 5l7 7-7 7"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </>

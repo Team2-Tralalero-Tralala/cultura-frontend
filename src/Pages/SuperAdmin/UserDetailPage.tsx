@@ -1,3 +1,7 @@
+/**
+ * คำอธิบาย: หน้าแสดงรายละเอียดผู้ใช้งาน (Super Admin)
+ * แสดงรายละเอียดบัญชีผู้ใช้ และตัวเลือกจัดการ (แก้ไข, ตั้งรหัสผ่าน)
+ */
 import type { UserDetail } from "@/Types/User";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -6,14 +10,21 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { fetchUserDetail } from "@/Libs/AccountService";
 import Button from "@/Components/Button";
 
+/**
+ * คำอธิบาย: Component หน้า UserDetailPage สำหรับ Super Admin
+ * Input: -
+ * Output: JSX Element หน้า UserDetailPage
+ */
 export function UserDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<UserDetail | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  /** โหลดข้อมูลผู้ใช้จาก API */
+  /**
+   * คำอธิบาย: โหลดข้อมูลผู้ใช้จาก API
+   */
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -22,14 +33,18 @@ export function UserDetailPage() {
         setUser(data);
       } catch (err: unknown) {
         const e = err as Error;
-        setError(e.message || "ไม่สามารถโหลดข้อมูลได้");
+        setErrorMessage(e.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     })();
   }, [id]);
 
-  /** แปลง path รูปจาก backend → URL */
+  /**
+   * คำอธิบาย: แปลง path รูปจาก backend → URL
+   * Input: fileName (ชื่อไฟล์)
+   * Output: URL ของรูปภาพ
+   */
   function resolveBackendUploadUrl(fileName?: string): string | undefined {
     if (!fileName) return undefined;
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -41,7 +56,11 @@ export function UserDetailPage() {
     return `${baseUrl}/${fileName}`;
   }
 
-  /** จัดรูปแบบเบอร์โทรศัพท์ ###-###-#### */
+  /**
+   * คำอธิบาย: จัดรูปแบบเบอร์โทรศัพท์ ###-###-####
+   * Input: phone (เบอร์โทรศัพท์)
+   * Output: เบอร์โทรศัพท์ที่จัดรูปแบบแล้ว
+   */
   function formatPhoneNumber(phone?: string | null): string {
     if (!phone) return "-";
     const digits = phone.replace(/\D/g, "");
@@ -52,8 +71,8 @@ export function UserDetailPage() {
   }
 
   // Section: Loading & Error
-  if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
-  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (isLoading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
+  if (errorMessage) return <div className="p-8 text-red-600">{errorMessage}</div>;
   if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
 
   // Section: Render Layout

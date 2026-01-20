@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ SuperAdmin (Detail Package SuperAdmin)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
- * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไข)
+/**
+ * คำอธิบาย: หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Super Admin
+ * ดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา และตำแหน่งแผนที่
  */
 
 import { useEffect, useState } from "react";
@@ -18,10 +16,7 @@ import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
 /**
- * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
- * คำอธิบาย : URL ของ Backend สำหรับติดต่อ API
- * Input  : -
- * Output : string | undefined (ค่า base URL จาก environment)
+ * คำอธิบาย: URL ของ Backend สำหรับติดต่อ API (ค่าจาก Env)
  */
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -102,10 +97,9 @@ interface PackageData {
 }
 
 /**
- * ฟังก์ชัน : formatDateTH
- * คำอธิบาย : แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
- * Input  : dateStr: string | null (วันที่ในรูปแบบ ISO หรือ null)
- * Output : string (วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล)
+ * คำอธิบาย: แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
+ * Input: dateStr (string | null) - วันที่ในรูปแบบ ISO หรือ null
+ * Output: string - วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล
  */
 function formatDateTH(dateStr: string | null): string {
   if (!dateStr) return "-";
@@ -117,10 +111,9 @@ function formatDateTH(dateStr: string | null): string {
 }
 
 /**
- * ฟังก์ชัน : extractDateTime
- * คำอธิบาย : แยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String (เช่น "2025-01-01T08:30:00.000Z")
- * Input  : isoString?: string | null (ข้อความวันที่-เวลาในรูปแบบ ISO 8601 หรือ null)
- * Output : วัตถุที่ประกอบด้วยวันที่ (date) และเวลา (time) เช่น { date: "2025-01-01", time: "08:30" }
+ * คำอธิบาย: แยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String
+ * Input: isoString (string | null) - ข้อความวันที่-เวลาในรูปแบบ ISO 8601
+ * Output: DateTimeField - วัตถุที่ประกอบด้วยวันที่ (date) และเวลา (time)
  */
 function extractDateTime(isoString?: string | null): DateTimeField {
   if (!isoString) return { date: null, time: null };
@@ -131,12 +124,11 @@ function extractDateTime(isoString?: string | null): DateTimeField {
 }
 
 /**
- * ฟังก์ชัน : DetailPackageSuperAdmin
- * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ SuperAdmin ดูข้อมูลเชิงลึกของแพ็กเกจ
- * Input  : - (ใช้ useParams เพื่ออ่านค่า id ของแพ็กเกจจาก URL)
- * Output : JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจ)
+ * คำอธิบาย: Component หลักสำหรับหน้าแสดงรายละเอียดแพ็กเกจของ Super Admin
+ * Input: - (ใช้ Params id จาก URL)
+ * Output: JSX Element หน้า DetailPackagePage
  */
-export default function DetailPackageSuperAdmin() {
+export default function DetailPackagePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [packageDetail, setPackageDetail] = useState<PackageData | null>(null);
@@ -144,7 +136,6 @@ export default function DetailPackageSuperAdmin() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /**
-   * ฟังก์ชัน : useEffect(fetchPackageDetail)
    * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id เมื่อ component mount หรือ id เปลี่ยน
    * Input  : -
    * Output : - (อัปเดต state packageDetail, isLoading, errorMessage)

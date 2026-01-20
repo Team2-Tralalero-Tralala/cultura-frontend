@@ -21,7 +21,7 @@ import PackageFeedbacksPage from "@/Pages/Member/DetailFeedbackPage";
 import BookingDetailMember from "@/Pages/Member/DetailBookingPage";
 import PackageDraftAdmin from "@/Pages/Admin/MangeDraftPackagePage";
 import PackageDraftMember from "@/Pages/Member/ManageDraftPackage";
-import { EditProfile } from "@/Pages/SuperAdmin/EditProfilePage";
+import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import BookingHistoryMember from "@/Pages/Member/ManageBookingHistoryPage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 
@@ -55,7 +55,7 @@ export default function MemberRoutes() {
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
 
-      <Route path="profile-me" element={<EditProfile />} />
+      <Route path="profile-me" element={<EditProfilePage />} />
     </Routes>
   );
 }

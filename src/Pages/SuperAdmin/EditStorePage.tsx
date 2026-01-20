@@ -1,7 +1,6 @@
-/*
- * คำอธิบาย : หน้าแก้ไขข้อมูลร้านค้า (Edit Store)
- * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงบนฟอร์มสำหรับแก้ไข
- * รวมถึงโหลดรูปภาพจาก backend และอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนใหม่
+/**
+ * คำอธิบาย: หน้าแก้ไขข้อมูลร้านค้า (Edit Store)
+ * ดึงข้อมูลร้านค้า แสดงฟอร์มแก้ไข และบันทึกข้อมูล
  */
 import { Icon } from "@iconify/react";
 import React from "react";
@@ -24,7 +23,7 @@ import { editStore, getStoreById } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 
 /**
- * Schema สำหรับตรวจสอบข้อมูลร้านค้าด้วย Zod
+ * คำอธิบาย: Schema สำหรับตรวจสอบข้อมูลร้านค้าด้วย Zod
  */
 const storeSchema = zod.object({
   name: zod.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
@@ -48,9 +47,9 @@ const storeSchema = zod.object({
 });
 
 /**
- * คำอธิบาย : แปลง URL ของไฟล์จาก backend ให้เป็น File object เพื่อใช้กับ UploadCard ได้
- * Input : url - ที่อยู่ของไฟล์ / filename - ชื่อไฟล์
- * Output : File object (พร้อม type และ flag isFromServer)
+ * คำอธิบาย: แปลง URL ของไฟล์จาก backend ให้เป็น File object เพื่อใช้กับ UploadCard ได้
+ * Input: url - ที่อยู่ของไฟล์, filename - ชื่อไฟล์
+ * Output: File object (พร้อม type และ flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
   const res = await fetch(url, {
@@ -64,12 +63,11 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   return file;
 }
 /**
- * คำอธิบาย : แสดงฟอร์มแก้ไขร้านค้า พร้อมโหลดข้อมูลเดิมจาก backend
- * รวมถึงจัดการการอัปโหลดรูปภาพโดยไม่ซ้ำกับไฟล์เดิมจาก server
- * Input : storeId - รหัสของร้านค้าที่ต้องการแก้ไข
- * Output : ฟอร์มแก้ไขร้านค้าพร้อมข้อมูลเดิม
+ * คำอธิบาย: แสดงฟอร์มแก้ไขร้านค้า พร้อมโหลดข้อมูลเดิมจาก backend
+ * Input: - (รับ Params storeId จาก URL)
+ * Output: JSX Element หน้า EditStorePage
  */
-export function EditStore() {
+export function EditStorePage() {
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
@@ -87,8 +85,8 @@ export function EditStore() {
     latitude: position[0],
     longitude: position[1],
   });
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [isOpenCancelConfirm, setIsOpenCancelConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = useState(false);
   const { storeId } = useParams();
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -100,7 +98,8 @@ export function EditStore() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   /**
-   * โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
+   * คำอธิบาย: โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
+   * Input: -
    */
   React.useEffect(() => {
     async function loadData() {
@@ -174,9 +173,9 @@ export function EditStore() {
     loadData();
   }, [storeId]);
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดต location ใน formData เมื่อผู้ใช้เลือกจังหวัด/อำเภอ/ตำบลใหม่
-   * Input : location - ข้อมูลจังหวัด/อำเภอ/ตำบลที่เลือก
-   * Output : อัปเดต location ใน formData
+   * คำอธิบาย: ฟังก์ชันสำหรับอัปเดต location ใน formData เมื่อผู้ใช้เลือกจังหวัด/อำเภอ/ตำบลใหม่
+   * Input: location - ข้อมูลจังหวัด/อำเภอ/ตำบลที่เลือก
+   * Output: -
    */
   React.useEffect(() => {
     if (location.province) {
@@ -194,10 +193,9 @@ export function EditStore() {
     }
   }, [location]);
   /**
-   * คำอธิบาย : ฟังก์ชัน validateField สำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
-   * หากระบุ field จะตรวจสอบเฉพาะฟิลด์นั้น, หากไม่ระบุ field จะตรวจสอบทั้งฟอร์ม
-   * Input : field (ชื่อฟิลด์ที่ต้องการตรวจสอบ), value (ค่าของฟิลด์นั้น)
-   * Output : boolean (true หากข้อมูลถูกต้อง, false หากไม่ถูกต้อง)
+   * คำอธิบาย: ฟังก์ชัน validateField สำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input: field (ชื่อฟิลด์ที่ต้องการตรวจสอบ), value (ค่าของฟิลด์นั้น)
+   * Output: boolean (true หากข้อมูลถูกต้อง, false หากไม่ถูกต้อง)
    */
   const validateField = (field?: string, value?: any) => {
     if (field) {
@@ -228,10 +226,9 @@ export function EditStore() {
     return true;
   };
   /**
-   * คำอธิบาย : ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
-   * จะอัปเดตค่าใน formData และเรียก validateField เพื่อตรวจสอบความถูกต้องทันที
-   * Input : event (React ChangeEvent จาก input หรือ textarea)
-   * Output : none (อัปเดต state formData และ formErrors)
+   * คำอธิบาย: ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
+   * Input: event (React ChangeEvent จาก input หรือ textarea)
+   * Output: -
    */
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
@@ -241,11 +238,9 @@ export function EditStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
-   * Input :
-   *   - field : ชื่อฟิลด์ที่ต้องการอัปเดต
-   *   - value : ค่าที่จะตั้งให้กับฟิลด์นั้น
-   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
+   * Input: field (ชื่อฟิลด์ที่ต้องการอัปเดต), value (ค่าที่จะตั้งให้กับฟิลด์นั้น)
+   * Output: -
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
@@ -253,17 +248,18 @@ export function EditStore() {
     validateField(field, value);
   };
   /**
-   * ฟังก์ชัน tagList สำหรับส่ง props ให้ TagSelector
+   * คำอธิบาย: ฟังก์ชัน tagList สำหรับส่ง props ให้ TagSelector
+   * Input: -
+   * Output: tagList (Array<Tag>)
    */
   const tagList = React.useMemo<Tag[]>(
     () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
     [formData.tagStores],
   );
   /**
-   * คำอธิบาย : ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
-   * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
-   * Input : none (ใช้ข้อมูลจาก state formData, files)
-   * Output : none (ส่ง request ไปยัง API หรือแสดง Error Alert)
+   * คำอธิบาย: ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
+   * Input: -
+   * Output: -
    */
   const handleSubmit = async () => {
     try {
@@ -531,12 +527,12 @@ export function EditStore() {
         {/* ปุ่ม action */}
         <div className="flex justify-end mt-5">
           <div className="w-32 mr-2.5">
-            <Button type="cancel" onClick={() => setIsOpenCancelConfirm(true)}>
+            <Button type="cancel" onClick={() => setIsCancelConfirmModalOpen(true)}>
               ยกเลิก
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setIsOpenConfirm(true)}>
+            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
               บันทึก
             </Button>
           </div>
@@ -544,24 +540,24 @@ export function EditStore() {
 
         {/* Modal Confirm */}
         <Modal
-          open={isOpenConfirm}
+          open={isConfirmModalOpen}
           title="ยืนยันการแก้ไขร้านค้า"
           text="คุณต้องการยืนยันการแก้ไขร้านค้านี้หรือไม่"
           onConfirm={async () => {
-            setIsOpenConfirm(false);
+            setIsConfirmModalOpen(false);
             await handleSubmit();
           }}
-          onCancel={() => setIsOpenConfirm(false)}
+          onCancel={() => setIsConfirmModalOpen(false)}
         />
         <Modal
-          open={isOpenCancelConfirm}
+          open={isCancelConfirmModalOpen}
           title="ยืนยันการยกเลิก"
           text="ต้องการยกเลิกการแก้ไขร้านค้าหรือไม่"
           onConfirm={() => {
-            setIsOpenCancelConfirm(false);
+            setIsCancelConfirmModalOpen(false);
             navigate(-1);
           }}
-          onCancel={() => setIsOpenCancelConfirm(false)}
+          onCancel={() => setIsCancelConfirmModalOpen(false)}
         />
         <ModalAlert
           open={isAlertOpen}

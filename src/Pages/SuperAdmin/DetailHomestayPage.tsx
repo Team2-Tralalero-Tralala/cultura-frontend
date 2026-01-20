@@ -1,7 +1,8 @@
 /**
- * หน้า : ดูรายละเอียดที่พัก (Super Admin)
- * Page : HomestayDetailPage
- * Description : แสดงรายละเอียดของที่พัก (Homestay) ปรับปรุง UI ให้เหมือนฝั่ง Admin และใช้ Tag Component
+ * คำอธิบาย: หน้าดูรายละเอียดที่พัก (Super Admin)
+ * หน้าที่: แสดงรายละเอียดของที่พัก (Homestay) โดยปรับปรุง UI ให้เหมือนฝั่ง Admin และใช้ Tag Component
+ * สิทธิ์การเข้าถึง: Super Admin
+ * เส้นทาง (Route): /super/community/:communityId/homestay/:homestayId
  */
 
 import { useEffect, useState } from "react";
@@ -15,9 +16,10 @@ import { fetchHomestayDetail } from "@/Libs/HomestayService";
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const BACKEND_BASE_URL = apiUrl.replace(/\/api$/, "") || "http://localhost:3000";
 
-/*
- * ฟังก์ชัน : resolveBackendUploadUrl
- * คำอธิบาย : จัดการ URL รูปภาพให้ถูกต้อง
+/**
+ * คำอธิบาย: ฟังก์ชันจัดการ URL รูปภาพให้ถูกต้อง (จัดการ path uploads/)
+ * Input: fileName (string | undefined) - ชื่อไฟล์หรือพาธไฟล์
+ * Output: string | undefined - URL เต็ม
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -28,14 +30,19 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
   return `${BACKEND_BASE_URL}/${cleaned}`;
 }
 
-export default function HomestayDetailPage() {
+/**
+ * คำอธิบาย: Component หลักสำหรับหน้าแสดงรายละเอียดที่พักของ Super Admin
+ * Input: - (ใช้ Params from URL)
+ * Output: JSX Element หน้า DetailHomestayPage
+ */
+export default function DetailHomestayPage() {
   const navigate = useNavigate();
   const { homestayId } = useParams<{ homestayId: string }>();
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
 
-  /*
-   * State : previewImage
-   * สำหรับ Modal ดูรูปภาพขยายใหญ่
+  /**
+   * คำอธิบาย: State สำหรับ Modal ดูรูปภาพขยายใหญ่
+   * ค่า: string (URL ของรูปภาพ) หรือ null
    */
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 

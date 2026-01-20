@@ -1,10 +1,5 @@
 /**
- * หน้า: จัดการที่พักในชุมชน (Super Admin)
- * คำอธิบาย:
- * - แสดงรายการที่พักทั้งหมดของชุมชน
- * - รองรับค้นหา / ลบทีละรายการ / ลบหลายรายการ (Bulk Delete)
- * - Breadcrumb ใช้ Component กลาง
- * - ใช้เฉพาะ Role: SuperAdmin
+ * คำอธิบาย: หน้าจัดการที่พักในชุมชน (Super Admin)
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
@@ -20,15 +15,7 @@ import { getCommunityById } from "@/Libs/CommunityService";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 /**
- * Type: HomestayRow
- *
- * คำอธิบาย:
- *  โครงสร้างข้อมูลที่พัก (Homestay) สำหรับใช้แสดงผลในตาราง
- *  ใช้ในหน้าจัดการที่พักของผู้ดูแลระบบ (Super Admin)
- *
- * Usage:
- *  - ใช้เป็น type ของข้อมูลใน DataTable
- *  - ใช้สำหรับแสดงรายการที่พัก พร้อมชื่อ สิ่งอำนวยความสะดวก และประเภทห้อง
+ * คำอธิบาย: โครงสร้างข้อมูลที่พัก (Homestay) สำหรับใช้แสดงผลในตาราง
  */
 type HomestayRow = {
   id: number;
@@ -37,30 +24,20 @@ type HomestayRow = {
   type: string;
 };
 
-/*
+/**
  * คำอธิบาย: แปลงข้อความให้อยู่ในรูปแบบมาตรฐานสำหรับการค้นหา
- * Input:
- *  - text: string | null | undefined
- * Output:
- *  - string: ข้อความตัวพิมพ์เล็ก ตัดช่องว่างส่วนเกิน และ normalize แล้ว
+ * Input: text - ข้อความที่ต้องการแปลง
+ * Output: string - ข้อความตัวพิมพ์เล็ก ตัดช่องว่างส่วนเกิน
  */
 const normalizeText = (text: string) =>
   (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-/*
- * คำอธิบาย:
- *  Component สำหรับจัดการข้อมูลที่พักในชุมชน สำหรับผู้ใช้งาน Role: SuperAdmin
- *  รองรับการแสดงรายการ ค้นหา แบ่งหน้า และลบข้อมูล (เดี่ยว / หลายรายการ)
- *
- * Input:
- *  - communityId: string
- *    รหัสชุมชนที่รับมาจาก URL parameter
- *
- * Output:
- *  - Render หน้าแสดงตารางรายการที่พัก
- *  - จัดการ state ที่เกี่ยวข้องกับข้อมูล การค้นหา การแบ่งหน้า และการลบข้อมูล
+/**
+ * คำอธิบาย: Component สำหรับจัดการข้อมูลที่พักในชุมชน
+ * Input: - (รับ Params communityId จาก URL)
+ * Output: JSX Element หน้า ManageHomestayPage
  */
-export default function ManageHomestaySuperAdmin() {
+export function ManageHomestayPage() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
   const [communityName, setCommunityName] = useState("-");
@@ -74,17 +51,14 @@ export default function ManageHomestaySuperAdmin() {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedRows, setSelectedRows] = useState<HomestayRow[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [isOpenBulkConfirm, setIsOpenBulkConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isBulkConfirmModalOpen, setIsBulkConfirmModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  /*
-   * คำอธิบาย: ดึงข้อมูลชื่อชุมชนจาก communityId
-   * ใช้สำหรับแสดงใน Header และ Breadcrumb
-   * Input
-   *  - communityId: string (จาก URL parameter)
-   * Output
-   *  - อัปเดต state: communityName
+  /**
+   * คำอธิบาย: ดึงข้อมูลชื่อชุมชนจาก communityId เพื่อแสดงใน Breadcrumb
+   * Input: -
+   * Output: -
    */
   useEffect(() => {
     async function fetchCommunity() {
@@ -99,19 +73,10 @@ export default function ManageHomestaySuperAdmin() {
     fetchCommunity();
   }, [communityId]);
 
-  /*
+  /**
    * คำอธิบาย: ดึงข้อมูลรายการที่พักทั้งหมดของชุมชนตามหน้าและจำนวนที่กำหนด
-   * Input:
-   *  - communityId: string
-   *  - currentPage: number
-   *  - pageSize: number
-   * Output:
-   *  - อัปเดต state:
-   *    - homestayRows
-   *    - totalPages
-   *    - totalCount
-   *    - isLoading
-   *    - errorMessage (กรณี error)
+   * Input: -
+   * Output: -
    */
   const fetchData = useCallback(async () => {
     if (!communityId) return;
@@ -151,13 +116,10 @@ export default function ManageHomestaySuperAdmin() {
     fetchData();
   }, [fetchData]);
 
-  /*
+  /**
    * คำอธิบาย: กรองรายการที่พักตามคำค้นหา
-   * Input:
-   *  - homestayRows: HomestayRow[]
-   *  - searchQuery: string
-   * Output:
-   *  - HomestayRow[] ที่ตรงกับคำค้นหา
+   * Input: homestayRows, searchQuery
+   * Output: HomestayRow[] ที่ตรงกับคำค้นหา
    */
   const filteredRows = useMemo(() => {
     const normalizedSearchQuery = normalizeText(searchQuery);
@@ -169,20 +131,16 @@ export default function ManageHomestaySuperAdmin() {
     );
   }, [homestayRows, searchQuery]);
 
-  /*
+  /**
    * คำอธิบาย: ลบที่พัก 1 รายการตาม deleteId
-   * Input:
-   *  - deleteId: number | null
-   * Output:
-   *  - เรียก API ลบข้อมูล
-   *  - โหลดข้อมูลใหม่
-   *  - รีเซ็ตสถานะการลบ
+   * Input: -
+   * Output: -
    */
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return;
 
     setIsDeleting(true);
-    setIsOpenConfirm(false);
+    setIsConfirmModalOpen(false);
 
     const idToDelete = deleteId;
     setDeleteId(null);
@@ -198,19 +156,16 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย: ลบที่พักหลายรายการพร้อมกัน
-   * Input:
-   *  - selectedRows: HomestayRow[]
-   * Output:
-   *  - ลบข้อมูลตาม id ที่เลือก
-   *  - อัปเดต homestayRows และ totalCount
+   * Input: -
+   * Output: -
    */
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0 || isDeleting) return;
 
     setIsDeleting(true);
-    setIsOpenBulkConfirm(false);
+    setIsBulkConfirmModalOpen(false);
 
     const homestayIds = selectedRows.map((row) => row.id);
     setSelectedRows([]);
@@ -227,31 +182,27 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย: ยกเลิกการลบรายการเดียว
    * Input: -
-   * Output:
-   *  - ปิด Confirm Modal
-   *  - รีเซ็ต deleteId
+   * Output: -
    */
   const handleCancelDelete = () => {
-    setIsOpenConfirm(false);
+    setIsConfirmModalOpen(false);
     setDeleteId(null);
   };
 
-  /*
+  /**
    * คำอธิบาย: ยกเลิกการลบหลายรายการ
    * Input: -
-   * Output:
-   *  - ปิด Bulk Confirm Modal
-   *  - ล้างรายการที่เลือก
+   * Output: -
    */
   const handleCancelBulkDelete = () => {
-    setIsOpenBulkConfirm(false);
+    setIsBulkConfirmModalOpen(false);
     setSelectedRows([]);
   };
 
-  /*
+  /**
    * คำอธิบาย: กำหนดคอลัมน์สำหรับแสดงข้อมูลในตาราง
    * Input: communityId
    * Output: Array ของ Column config
@@ -283,7 +234,7 @@ export default function ManageHomestaySuperAdmin() {
     [communityId],
   );
 
-  /*
+  /**
    * คำอธิบาย: กำหนด Actions สำหรับแต่ละแถว (แก้ไข/ลบ)
    * Input: communityId, navigate
    * Output: DataTableActionsConfig
@@ -299,14 +250,14 @@ export default function ManageHomestaySuperAdmin() {
         edit: (row) => navigate(`/super/community/${communityId}/homestay/${row.id}/edit`),
         delete: (row) => {
           setDeleteId(row.id);
-          setIsOpenConfirm(true);
+          setIsConfirmModalOpen(true);
         },
       },
     }),
     [communityId, navigate],
   );
 
-  /*
+  /**
    * คำอธิบาย: กำหนด Bulk Actions (ลบทั้งหมด)
    * Input: -
    * Output: Array ของ BulkAction
@@ -321,21 +272,17 @@ export default function ManageHomestaySuperAdmin() {
         onClick: (rows) => {
           if (rows.length === 0) return;
           setSelectedRows(rows);
-          setIsOpenBulkConfirm(true);
+          setIsBulkConfirmModalOpen(true);
         },
       },
     ],
     [],
   );
 
-  /*
+  /**
    * คำอธิบาย: จัดการเหตุการณ์จาก Pagination และ Search
-   * Input:
-   *  - page: number
-   *  - size: number
-   *  - event: ChangeEvent<HTMLInputElement>
-   * Output:
-   *  - อัปเดต state ที่เกี่ยวข้อง และรีเซ็ต currentPage
+   * Input: page, size
+   * Output: -
    */
   const handlePageChange = (page: number) => setCurrentPage(page);
   const handlePageSizeChange = (size: number) => {
@@ -414,7 +361,7 @@ export default function ManageHomestaySuperAdmin() {
 
       {/* Single Delete Modal */}
       <Modal
-        open={isOpenConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการลบที่พัก"
         text="คุณต้องการลบที่พักนี้หรือไม่?"
         onConfirm={handleDelete}
@@ -423,7 +370,7 @@ export default function ManageHomestaySuperAdmin() {
 
       {/* Bulk Delete Modal */}
       <Modal
-        open={isOpenBulkConfirm}
+        open={isBulkConfirmModalOpen}
         title="ยืนยันการลบหลายรายการ"
         text={`คุณต้องการลบที่พักจำนวน ${selectedRows.length} รายการหรือไม่?`}
         onConfirm={handleBulkDelete}

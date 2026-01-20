@@ -13,17 +13,17 @@ import { fetchServerStatus } from "@/Libs/ServerStatusService";
 import { Icon } from "@iconify/react";
 import React from "react";
 
-/*
- * คำอธิบาย : Component หลักสำหรับหน้า "การตั้งค่า"
- * ใช้จัดการ state ของสถานะเซิร์ฟเวอร์ การโหลดข้อมูล
- * รวมถึงการแสดงเมนูการตั้งค่าต่างๆ และการแจ้งเตือนผลลัพธ์
+/**
+ * คำอธิบาย: Component สำหรับหน้าแรกของการตั้งค่าระบบ (Super Admin)
+ * หน้าที่: จัดการการแสดงผลสถานะเซิร์ฟเวอร์และเมนูการตั้งค่า
+ * Input: -
+ * Output: JSX Element หน้า SettingHomePage
  */
-export default function SettingHomePage() {
+export function SettingHomePage() {
   // ====== state ตาราง ======
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  const [serverStatus, setServerStatus] = React.useState<boolean>(true);
-  // ====== โหลดข้อมูล ======
+  const [isServerOnline, setIsServerOnline] = React.useState<boolean>(true);
   /*
    * คำอธิบาย : ดึงสถานะเซิร์ฟเวอร์จาก API
    * Input : ไม่มี
@@ -36,10 +36,10 @@ export default function SettingHomePage() {
       setIsLoading(true);
       setErrorMessage(null);
       const serverStatusData = await fetchServerStatus();
-      setServerStatus(serverStatusData.serverOnline);
+      setIsServerOnline(serverStatusData.serverOnline);
     } catch (e: any) {
       setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
-      setServerStatus(false); // Set to offline if there's an error
+      setIsServerOnline(false); // Set to offline if there's an error
     } finally {
       setIsLoading(false);
     }
@@ -71,11 +71,11 @@ export default function SettingHomePage() {
                 <div className="w-6 h-6 rounded-full bg-gray-400 animate-pulse"></div>
               ) : (
                 <div
-                  className={`w-6 h-6 rounded-full ${serverStatus ? "bg-green-500" : "bg-red-500"}`}
+                  className={`w-6 h-6 rounded-full ${isServerOnline ? "bg-green-500" : "bg-red-500"}`}
                 ></div>
               )}
               <span className="font-medium pr-4">
-                {isLoading ? "กำลังตรวจสอบ..." : serverStatus ? "ออนไลน์" : "ออฟไลน์"}
+                {isLoading ? "กำลังตรวจสอบ..." : isServerOnline ? "ออนไลน์" : "ออฟไลน์"}
               </span>
             </div>
           </div>

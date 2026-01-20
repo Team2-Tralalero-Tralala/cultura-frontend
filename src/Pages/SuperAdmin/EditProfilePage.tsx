@@ -1,6 +1,7 @@
 /**
- * คำอธิบาย : หน้าสำหรับหน้าแก้ไขข้อมูลส่วนตัวของผู้ใช้งานที่ล็อกอินอยู่
- * ใช้งานร่วมกับ API กลาง (/shared/profile) รองรับทุก Role
+ * คำอธิบาย: หน้าสำหรับแก้ไขข้อมูลส่วนตัวของผู้ใช้งานที่ล็อกอินอยู่
+ * ดึงข้อมูลโปรไฟล์ แก้ไขข้อมูล และบันทึกการเปลี่ยนแปลง
+
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,8 +16,8 @@ import AvatarUploader from "@/Components/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { editProfile } from "@/Libs/AccountService";
 
-/*
- * คำอธิบาย : Interface สำหรับโครงสร้างข้อมูลโปรไฟล์
+/**
+ * คำอธิบาย: Interface สำหรับโครงสร้างข้อมูลโปรไฟล์
  */
 interface UserProfile {
   profileImage: string | null;
@@ -27,7 +28,12 @@ interface UserProfile {
   phone: string;
 }
 
-export const EditProfile: React.FC = () => {
+/**
+ * คำอธิบาย: Component สำหรับแก้ไขข้อมูลส่วนตัว
+ * Input: -
+ * Output: JSX Element หน้า EditProfilePage
+ */
+export const EditProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,15 +48,15 @@ export const EditProfile: React.FC = () => {
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
-  /*
-   * คำอธิบาย : ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่จากระบบ นำข้อมูลมา set ลง form และจัดการ URL รูปภาพ
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่จากระบบ
+   * Input: -
+   * Output: -
    */
   const fetchData = async () => {
     try {
@@ -90,20 +96,20 @@ export const EditProfile: React.FC = () => {
     fetchData();
   }, []);
 
-  /*
-   * คำอธิบาย : จัดการการเปลี่ยนแปลงค่าของ input ในฟอร์ม
-   * Input : event
-   * Output : -
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าของ input ในฟอร์ม
+   * Input: event (React.ChangeEvent)
+   * Output: -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  /*
-   * คำอธิบาย : ส่งข้อมูลโปรไฟล์และรูปภาพไปบันทึกผ่าน Service แบบ One-Step
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ส่งข้อมูลโปรไฟล์และรูปภาพไปบันทึกผ่าน Service แบบ One-Step
+   * Input: -
+   * Output: -
    */
   const handleSubmit = async () => {
     try {
@@ -121,12 +127,12 @@ export const EditProfile: React.FC = () => {
       await editProfile(payload, profileImage);
 
       // แสดงผลสำเร็จ
-      setShowSuccessModal(true);
+      setIsSuccessModalOpen(true);
     } catch (error: any) {
       const message = error?.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้";
 
       setErrorMessage(message);
-      setShowErrorModal(true);
+      setIsErrorModalOpen(true);
     }
   };
 
@@ -236,7 +242,7 @@ export const EditProfile: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
+            <SubmitButton htmlType="button" onClick={() => setIsConfirmModalOpen(true)}>
               บันทึก
             </SubmitButton>
           </div>
@@ -244,36 +250,36 @@ export const EditProfile: React.FC = () => {
       </form>
 
       <Modal
-        open={showConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขข้อมูลส่วนตัวหรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsConfirmModalOpen(false);
           handleSubmit();
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
 
       <ModalAlert
-        open={showSuccessModal}
+        open={isSuccessModalOpen}
         type="success"
         title="แก้ไขข้อมูลส่วนตัวสำเร็จ"
         message="ข้อมูลส่วนตัวของคุณถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
+          setIsSuccessModalOpen(false);
           // รีโหลดทั้งหน้า เพื่อให้ Navbar ไปโหลดชื่อใหม่และรูปใหม่จาก BE
           window.location.reload();
         }}
       />
       <ModalAlert
-        open={showErrorModal}
+        open={isErrorModalOpen}
         type="error"
         title="ไม่สามารถบันทึกข้อมูลได้"
         message={errorMessage}
         onClose={() => {
-          setShowErrorModal(false);
+          setIsErrorModalOpen(false);
           setErrorMessage("");
         }}
       />

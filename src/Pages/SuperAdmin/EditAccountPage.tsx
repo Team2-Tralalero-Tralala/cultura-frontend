@@ -1,8 +1,6 @@
-/*
- * Component: CreateAccountPage
- * Description: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+/**
+ * คำอธิบาย: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
+ * แก้ไขข้อมูลส่วนตัว, เปลี่ยนบทบาท, และจัดการข้อมูลที่เกี่ยวข้องกับบทบาทนั้น ๆ
  */
 
 import React, { useEffect, useState } from "react";
@@ -49,6 +47,11 @@ interface CommunityOption {
   name: string;
 }
 
+/**
+ * คำอธิบาย: Custom Popper Component สำหรับ Autocomplete
+ * Input: props (any)
+ * Output: JSX Element Popper ที่ปรับแต่งแล้ว
+ */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -68,12 +71,22 @@ function CustomPopper(props: any) {
   );
 }
 
+/**
+ * คำอธิบาย: Component หลักสำหรับหน้าแก้ไขบัญชีผู้ใช้ (Super Admin)
+ * Input: - (ใช้ Params จาก URL)
+ * Output: JSX Element หน้า EditAccountPage
+ */
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
+  /**
+   * คำอธิบาย: ดึง Role จาก URL path
+   * Input: -
+   * Output: RoleType ("Admin" | "Member" | "Tourist")
+   */
   const getRoleFromPath = (): RoleType => {
     if (location.pathname.includes("member")) return "Member";
     if (location.pathname.includes("tourist")) return "Tourist";
@@ -111,6 +124,11 @@ const EditAccountPage: React.FC = () => {
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
+  /**
+   * คำอธิบาย: แปลง Role string เป็น ID (Admin=2, Member=3, Tourist=4)
+   * Input: role (RoleType)
+   * Output: number
+   */
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
@@ -124,6 +142,11 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
+  /**
+   * คำอธิบาย: ดึงข้อมูลผู้ใช้จาก API ตาม Role และ ID
+   * Input: role (RoleType)
+   * Output: -
+   */
   const fetchUser = async (role: RoleType) => {
     try {
       let endpoint = "";
@@ -249,6 +272,11 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
+  /**
+   * คำอธิบาย: บันทึกข้อมูลการแก้ไขบัญชี
+   * Input: event (React.FormEvent)
+   * Output: -
+   */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 

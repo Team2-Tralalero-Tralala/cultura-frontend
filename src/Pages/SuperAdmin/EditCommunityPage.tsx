@@ -209,12 +209,11 @@ const prepareSubmitData = ({
 };
 
 /*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
- * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
+ * คำอธิบาย : ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
  * Input : communityId (ดึงจาก useParams)
  * Output : ส่งคำขออัปเดตข้อมูลวิสาหกิจชุมชนผ่าน API updateCommunity()
  */
-export function EditCommunity() {
+export function EditCommunityPage() {
   const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
     communityMembers: [],
@@ -226,26 +225,26 @@ export function EditCommunity() {
     subdistrict: "",
     postalCode: "",
   });
-  const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [expandedPanel, setExpandedPanel] = React.useState<string | false>(false);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
-  const [checked, setChecked] = React.useState(true);
+  const [isCommunityOpen, setIsCommunityOpen] = React.useState(true);
   const [isVisibleRating, setIsVisibleRating] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
-  const [openConfirm, setOpenConfirm] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
-  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
-  const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   const navigate = useNavigate();
@@ -311,7 +310,7 @@ export function EditCommunity() {
         );
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([latitude, longitude]);
-        setChecked(data.status === "OPEN" ? true : false);
+        setIsCommunityOpen(data.status === "OPEN" ? true : false);
         setIsVisibleRating(data.isRatingVisible);
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -344,11 +343,12 @@ export function EditCommunity() {
    * Output : -
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
-    setExpanded(isExpanded ? panel : false);
-  /*
-   * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
-   * Input : field, value
-   * Output : boolean
+    setExpandedPanel(isExpanded ? panel : false);
+
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
+   * Input: field (optional), value (optional)
+   * Output: boolean (valid or not)
    */
   const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -386,7 +386,7 @@ export function EditCommunity() {
    */
   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
-    setChecked(newChecked);
+    setIsCommunityOpen(newChecked);
     setFormData((prev) => ({
       ...prev,
       status: newChecked ? "OPEN" : "CLOSED",
@@ -409,11 +409,11 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
-   * Input : e
+   * Input : event
    * Output : -
    */
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
+  const handleFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = event.target;
     const updated = { ...formData, [id]: value };
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
@@ -447,7 +447,7 @@ export function EditCommunity() {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ถูกต้อง");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       return;
     }
 
@@ -469,13 +469,13 @@ export function EditCommunity() {
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       navigate("/super/communities/all");
     } catch (error: any) {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
     }
   };
 
@@ -502,13 +502,13 @@ export function EditCommunity() {
         </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <p>สถานะชุมชน</p>
-          <Switch checked={checked} onChange={handleCheck} />
+          <Switch checked={isCommunityOpen} onChange={handleCheck} />
         </Stack>
       </div>
 
       <Accordion
         className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
-        expanded={expanded === "panel2"}
+        expanded={expandedPanel === "panel2"}
         onChange={handleChange("panel2")}
         sx={{ "&:before": { display: "none" } }}
       >
@@ -771,7 +771,7 @@ export function EditCommunity() {
       </Accordion>
       <Accordion
         className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
-        expanded={expanded === "panel3"}
+        expanded={expandedPanel === "panel3"}
         onChange={handleChange("panel3")}
         sx={{ "&:before": { display: "none" } }}
       >
@@ -878,7 +878,7 @@ export function EditCommunity() {
       </Accordion>
       <Accordion
         className="!rounded-lg !bg-transparent !shadow-none !border-0 mt-3"
-        expanded={expanded === "panel4"}
+        expanded={expandedPanel === "panel4"}
         onChange={handleChange("panel4")}
         sx={{ "&:before": { display: "none" } }}
       >
@@ -1058,43 +1058,45 @@ export function EditCommunity() {
       </Accordion>
       <div className="flex justify-end mt-5 mb-10 mr-5">
         <div className="w-32 mr-2.5">
-          <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+          <Button type="cancel" onClick={() => setIsCancelConfirmModalOpen(true)}>
             ยกเลิก
           </Button>
         </div>
         <div className="w-32">
-          <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+          <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
             บันทึก
           </Button>
         </div>
       </div>
       <Modal
-        open={openConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการแก้ไขข้อมูล"
         text="คุณต้องการยืนยันการแก้ไขข้อมูลหรือไม่"
         onConfirm={async () => {
-          setOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           await handleSubmit();
         }}
-        onCancel={() => setOpenConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
       <Modal
-        open={openCancelConfirm}
+        open={isCancelConfirmModalOpen}
         title="ยืนยันการยกเลิก"
         text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
         onConfirm={() => {
-          setOpenCancelConfirm(false);
+          setIsCancelConfirmModalOpen(false);
           navigate(-1);
         }}
-        onCancel={() => setOpenCancelConfirm(false)}
+        onCancel={() => setIsCancelConfirmModalOpen(false)}
       />
       <ModalAlert
-        open={alertOpen}
+        open={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
-        onClose={() => setAlertOpen(false)}
+        onClose={() => setIsAlertOpen(false)}
       />
     </div>
   );
 }
+
+export default EditCommunityPage;

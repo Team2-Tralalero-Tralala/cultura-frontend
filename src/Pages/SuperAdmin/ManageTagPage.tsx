@@ -28,7 +28,7 @@ export type TagRow = { id: number; name: string };
 ิ * Input : ไม่มี
  * Output : JSX.Element สำหรับการจัดการแท็ก
  */
-export function ManageTags() {
+export function ManageTagPage() {
   const [rows, setRows] = useState<TagRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -44,8 +44,8 @@ export function ManageTags() {
   // modal state
   const [selectedTag, setSelectedTag] = useState<TagRow | null>(null);
   const [modalType, setModalType] = useState<"create" | "edit" | "delete" | null>(null);
-  const [showInputModal, setShowInputModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [pendingTagName, setPendingTagName] = useState("");
 
   /*
@@ -107,7 +107,7 @@ export function ManageTags() {
   const openInputModal = (type: "create" | "edit", tag: TagRow | null = null) => {
     setModalType(type);
     setSelectedTag(tag);
-    setShowInputModal(true);
+    setIsInputModalOpen(true);
     setPendingTagName(tag?.name ?? "");
   };
 
@@ -119,7 +119,7 @@ export function ManageTags() {
   const closeInputModal = () => {
     setModalType(null);
     setSelectedTag(null);
-    setShowInputModal(false);
+    setIsInputModalOpen(false);
     setPendingTagName("");
   };
 
@@ -131,7 +131,7 @@ export function ManageTags() {
   const handleDelete = (tag: TagRow) => {
     setSelectedTag(tag);
     setModalType("delete");
-    setShowConfirmModal(true);
+    setIsConfirmModalOpen(true);
   };
 
   /*
@@ -147,7 +147,7 @@ export function ManageTags() {
       else if (modalType === "delete" && selectedTag) await TagService.deleteTag(selectedTag.id);
 
       closeInputModal();
-      setShowConfirmModal(false);
+      setIsConfirmModalOpen(false);
       await fetchData(pagination.currentPage, pagination.limit, searchQuery);
     } catch (error) {
       console.error(error);
@@ -267,10 +267,10 @@ export function ManageTags() {
       </div>
 
       <ModalConfirm
-        open={showConfirmModal}
+        open={isConfirmModalOpen}
         onConfirm={handleFinalConfirm}
         onCancel={() => {
-          setShowConfirmModal(false);
+          setIsConfirmModalOpen(false);
           closeInputModal();
         }}
         title={
@@ -292,11 +292,11 @@ export function ManageTags() {
       />
 
       <ModalTag
-        isOpen={showInputModal}
+        isOpen={isInputModalOpen}
         onClose={closeInputModal}
         onConfirm={(name) => {
           setPendingTagName(name);
-          setShowConfirmModal(true);
+          setIsConfirmModalOpen(true);
         }}
         initialValue={modalType === "edit" ? selectedTag?.name : ""}
         existingTags={rows.map((tag) => tag.name)}

@@ -30,9 +30,9 @@ type PackageRowData = {
 /**
  * คำอธิบาย : ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
  * Input : -
- * Output : JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
+ * Output : JSX Element หน้า ManagePackagePage
  */
-export default function ManagePackageSuperAdmin() {
+export function ManagePackagePage() {
   const navigate = useNavigate();
 
   const columns: Column<PackageRowData>[] = [
@@ -41,9 +41,9 @@ export default function ManagePackageSuperAdmin() {
       header: "ชื่อแพ็กเกจ",
       className: "min-w-[240px]",
       /**
-       * คำอธิบาย : Render ชื่อแพ็กเกจเป็นปุ่มที่คลิกได้
-       * Input : packageData (ข้อมูลแถว)
-       * Output : JSX Element (button)
+       * คำอธิบาย: Render ชื่อแพ็กเกจเป็นปุ่มที่คลิกได้
+       * Input: packageData (ข้อมูลแถว)
+       * Output: JSX Element (button)
        */
       render: (packageData) => (
         <button
@@ -91,9 +91,22 @@ export default function ManagePackageSuperAdmin() {
       setIsLoading(true);
       const response = await axios.get(`${API_URL}/super/packages`, {
         params: {
-          page: currentPage, limit: pageSize,
-          status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
-          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
+          page: currentPage,
+          limit: pageSize,
+          status:
+            filters.packageStatus === "เผยแพร่"
+              ? "PUBLISH"
+              : filters.packageStatus === "ไม่เผยแพร่"
+                ? "UNPUBLISH"
+                : undefined,
+          approve:
+            filters.approvalStatus === "อนุมัติ"
+              ? "APPROVE"
+              : filters.approvalStatus === "รออนุมัติ"
+                ? "PENDING"
+                : filters.approvalStatus === "ถูกปฏิเสธ"
+                  ? "REJECTED"
+                  : undefined,
         },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -124,11 +137,12 @@ export default function ManagePackageSuperAdmin() {
           title: packageItem?.name ?? packageItem?.title ?? "-",
           community: packageItem?.community?.name ?? packageItem?.communityName ?? "-",
           owner: packageItem?.overseerPackage
-            ? `${packageItem.overseerPackage.fname ?? ""} ${packageItem.overseerPackage.lname ?? ""
+            ? `${packageItem.overseerPackage.fname ?? ""} ${
+                packageItem.overseerPackage.lname ?? ""
               }`.trim() ||
-            packageItem.overseerPackage.username ||
-            "-"
-            : packageItem?.ownerName ?? "-",
+              packageItem.overseerPackage.username ||
+              "-"
+            : (packageItem?.ownerName ?? "-"),
           isPublished:
             packageItem?.statusPackage === "PUBLISH" ||
             packageItem?.published === true ||
@@ -139,13 +153,11 @@ export default function ManagePackageSuperAdmin() {
             packageItem?.isApproved === true,
           bookedCount: packageItem?.bookingHistories?.length ?? 0,
           capacity: packageItem?.capacity ?? 0,
-        })
+        }),
       );
 
       setPackageRows(formattedPackageRows);
-      setTotalItems(
-        Number.isFinite(totalCount) ? Number(totalCount) : formattedPackageRows.length
-      );
+      setTotalItems(Number.isFinite(totalCount) ? Number(totalCount) : formattedPackageRows.length);
     } catch (error: any) {
       console.error("reloadPackages error:", error?.response?.data ?? error);
     } finally {
@@ -168,8 +180,8 @@ export default function ManagePackageSuperAdmin() {
           packageIdList.map((packageId) =>
             axios.patch(`${API_URL}/super/package/${packageId}`, null, {
               withCredentials: true,
-            })
-          )
+            }),
+          ),
         );
 
         await reloadPackages();
@@ -210,7 +222,7 @@ export default function ManagePackageSuperAdmin() {
         },
       },
     ],
-    []
+    [],
   );
 
   const rowActions: DataTableActionsConfig<PackageRowData> = React.useMemo(
@@ -228,7 +240,7 @@ export default function ManagePackageSuperAdmin() {
         },
       },
     }),
-    [navigate]
+    [navigate],
   );
 
   React.useEffect(() => {
@@ -238,25 +250,25 @@ export default function ManagePackageSuperAdmin() {
   const [searchQuery, setSearchQuery] = useState("");
 
   /**
-   * คำอธิบาย : แปลงสตริงเป็น lowercase, normalize, และตัดช่องว่าง
-   * Input : inputText (สตริงที่ต้องการแปลง)
-   * Output : สตริงที่แปลงแล้ว
+   * คำอธิบาย: แปลงสตริงเป็น lowercase, normalize, และตัดช่องว่าง
+   * Input: text (ข้อความที่ต้องการแปลง)
+   * Output: ข้อความที่แปลงแล้ว
    */
-  const normalizeText = (inputText: string) =>
-    (inputText ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+  const normalizeText = (text: string) =>
+    (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
   /**
-   * คำอธิบาย : แปลง boolean 'isPublished' เป็นข้อความ
-   * Input : packageData (object ข้อมูล)
-   * Output : สตริง "เผยแพร่" หรือ "ไม่เผยแพร่"
+   * คำอธิบาย: แปลง boolean 'isPublished' เป็นข้อความ
+   * Input: packageData (object ข้อมูล)
+   * Output: สตริง "เผยแพร่" หรือ "ไม่เผยแพร่"
    */
   const toPublishedText = (packageData: PackageRowData) =>
     packageData.isPublished ? "เผยแพร่" : "ไม่เผยแพร่";
 
   /**
-   * คำอธิบาย : แปลง boolean 'isApproved' เป็นข้อความ
-   * Input : packageData (object ข้อมูล)
-   * Output : สตริง "อนุมัติ" หรือ "รออนุมัติ"
+   * คำอธิบาย: แปลง boolean 'isApproved' เป็นข้อความ
+   * Input: packageData (object ข้อมูล)
+   * Output: สตริง "อนุมัติ" หรือ "รออนุมัติ"
    */
   const toApprovedText = (packageData: PackageRowData) =>
     packageData.isApproved ? "อนุมัติ" : "รออนุมัติ";
@@ -288,9 +300,9 @@ export default function ManagePackageSuperAdmin() {
   const navigateToApprovalRequests = () => navigate("/super/package-requests");
 
   /**
-   * คำอธิบาย : กำหนดออบเจกต์การแบ่งหน้า (Pagination) สำหรับส่งให้ Component DataTable
-   * Input : - (ใช้ currentPage, pageSize และ totalItems จาก state ภายใน Component)
-   * Output : ออบเจกต์ pagination ที่ประกอบด้วย currentPage, totalPages, totalCount และ limit
+   * คำอธิบาย: กำหนดออบเจกต์การแบ่งหน้า (Pagination) สำหรับส่งให้ Component DataTable
+   * Input: currentPage, pageSize, totalItems
+   * Output: ออบเจกต์ pagination
    */
   const pagination = React.useMemo(
     () => ({
@@ -299,7 +311,7 @@ export default function ManagePackageSuperAdmin() {
       totalCount: totalItems,
       limit: pageSize,
     }),
-    [currentPage, pageSize, totalItems]
+    [currentPage, pageSize, totalItems],
   );
 
   return (
@@ -330,7 +342,7 @@ export default function ManagePackageSuperAdmin() {
             <PackageFilter
               currentFilters={filters}
               onFilterChange={(type: string, value: string) => {
-                setFilters(prev => ({ ...prev, [type]: value }));
+                setFilters((prev) => ({ ...prev, [type]: value }));
                 setCurrentPage(1);
               }}
             />
@@ -340,7 +352,6 @@ export default function ManagePackageSuperAdmin() {
               คำขออนุมัติ
             </Button>
           </div>
-
         </div>
       </div>
 

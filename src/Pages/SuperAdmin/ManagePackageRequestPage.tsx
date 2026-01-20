@@ -118,7 +118,12 @@ const buildPackageRequestColumns = (
   },
 ];
 
-export default function PackageRequestsSuperAdmin() {
+/*
+ * คำอธิบาย : Component สำหรับจัดการคำขออนุมัติแพ็กเกจ
+ * Input : -
+ * Output : JSX Element หน้า ManagePackageRequestPage
+ */
+export function ManagePackageRequestPage() {
   const [packageRequestRows, setPackageRequestRows] = React.useState<PackageRequestRow[]>([]);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState<number>(10);
@@ -132,8 +137,8 @@ export default function PackageRequestsSuperAdmin() {
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  const [isConfirmOpen, setConfirmOpen] = React.useState<boolean>(false);
-  const [isRejectOpen, setRejectOpen] = React.useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<PackageRequestRow | null>(null);
 
   /**
@@ -193,7 +198,7 @@ export default function PackageRequestsSuperAdmin() {
    */
   const openRejectModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
-    setRejectOpen(true);
+    setIsRejectModalOpen(true);
   };
 
   /**
@@ -203,7 +208,7 @@ export default function PackageRequestsSuperAdmin() {
    */
   const openApproveModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
-    setConfirmOpen(true);
+    setIsConfirmModalOpen(true);
   };
 
   /**
@@ -212,15 +217,17 @@ export default function PackageRequestsSuperAdmin() {
   const handleReject = openRejectModal;
 
   /**
-   * คำอธิบาย : รีเซ็ตค่า selectedRow เมื่อ Modal ปิดลง (ใช้ setTimeout เพื่อรอให้ Animation จบ)
+   * คำอธิบาย: รีเซ็ตค่า selectedRow เมื่อ Modal ปิดลง (ใช้ setTimeout เพื่อรอให้ Animation จบ)
+   * Input : isConfirmModalOpen (สถานะ Modal ยืนยันการอนุมัติ)
+   * Output : -
    */
   useEffect(() => {
-    if (!isConfirmOpen) {
+    if (!isConfirmModalOpen) {
       setTimeout(() => {
         setSelectedRow(null);
       }, 0);
     }
-  }, [isConfirmOpen]);
+  }, [isConfirmModalOpen]);
 
   return (
     <div className="space-y-4">
@@ -270,9 +277,10 @@ export default function PackageRequestsSuperAdmin() {
                 - จะแสดงเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
                 - ใช้ selectedRow แสดงชื่อแพ็กเกจในข้อความยืนยัน
             */}
-      {isConfirmOpen && (
+
+      {isConfirmModalOpen && (
         <Modal
-          open={isConfirmOpen}
+          open={isConfirmModalOpen}
           title="ยืนยันการอนุมัติ"
           text={
             selectedRow
@@ -286,11 +294,11 @@ export default function PackageRequestsSuperAdmin() {
             try {
               await handleApprove(selectedRow);
             } finally {
-              setConfirmOpen(false);
+              setIsConfirmModalOpen(false);
             }
           }}
           onCancel={() => {
-            setConfirmOpen(false);
+            setIsConfirmModalOpen(false);
             setSelectedRow(null);
           }}
         />
@@ -300,9 +308,10 @@ export default function PackageRequestsSuperAdmin() {
                 - ให้ผู้ใช้กรอกเหตุผลการปฏิเสธ
                 - เมื่อส่งสำเร็จ จะ reload ข้อมูลใหม่
             */}
-      {isRejectOpen && (
+
+      {isRejectModalOpen && (
         <RejectModal
-          open={isRejectOpen}
+          open={isRejectModalOpen}
           title="ปฏิเสธคำขออนุมัติ"
           text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
           confirmText="ส่ง"
@@ -317,12 +326,12 @@ export default function PackageRequestsSuperAdmin() {
               setErrorMessage(error?.message ?? "ไม่สามารถปฏิเสธได้");
             } finally {
               setIsLoading(false);
-              setRejectOpen(false);
+              setIsRejectModalOpen(false);
               setSelectedRow(null);
             }
           }}
           onCancel={() => {
-            setRejectOpen(false);
+            setIsRejectModalOpen(false);
             setSelectedRow(null);
           }}
         />

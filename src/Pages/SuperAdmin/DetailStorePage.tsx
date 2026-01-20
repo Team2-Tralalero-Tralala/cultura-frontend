@@ -1,5 +1,8 @@
 /**
- * คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Super Admin
+ * คำอธิบาย: Component สำหรับเเสดงรายละเอียดร้านค้าของ Super Admin
+ * หน้าที่: แสดงข้อมูลร้านค้า รูปภาพ แท็ก และแผนที่
+ * สิทธิ์การเข้าถึง: Super Admin
+ * เส้นทาง (Route): /super/store/:id
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9,10 +12,10 @@ import Breadcrumb from "../../Components/BreadcrumbNavigation";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const BACKEND_BASE_URL = API_URL.replace(/\/api$/, "");
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้องและสามารถนำไปแสดงผลได้
- * Input : path ของรูปภาพจาก backend
- * Output : URL ของรูปภาพที่พร้อมใช้งาน
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้อง
+ * Input: imagePath (string | undefined) - path ของรูปภาพจาก backend
+ * Output: string - URL ของรูปภาพที่พร้อมใช้งาน
  */
 const buildImageUrl = (imagePath?: string): string => {
   if (!imagePath) return "";
@@ -46,12 +49,12 @@ interface Store {
   };
 }
 
-/*
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดร้านค้า สำหรับผู้ใช้งานบทบาท Super Admin
- * Input : รหัสร้านค้าจาก URL parameter
- * Output : แสดงข้อมูลรายละเอียดร้านค้า รูปภาพ แท็ก และตำแหน่งที่ตั้ง
+/**
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดร้านค้า สำหรับผู้ใช้งานบทบาท Super Admin
+ * Input: - (ใช้ Params id จาก URL)
+ * Output: JSX Element หน้า DetailStorePage
  */
-const StoreDetailPage = () => {
+const DetailStorePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -286,4 +289,4 @@ const StoreDetailPage = () => {
   );
 };
 
-export default StoreDetailPage;
+export default DetailStorePage;

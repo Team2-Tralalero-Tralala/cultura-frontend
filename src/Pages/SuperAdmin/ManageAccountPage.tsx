@@ -1,8 +1,6 @@
 /**
- * Component: ManageAccountPage (Super Admin)
- * Description: หน้าจัดการบัญชีผู้ใช้ (Super Admin)
- * - แสดงตารางบัญชีผู้ใช้
- * - มีฟังก์ชันค้นหา / กรอง / เพิ่ม / ระงับ / ลบ / ระงับทั้งหมด / ลบทั้งหมด
+ * คำอธิบาย: หน้าจัดการบัญชีผู้ใช้ (Super Admin)
+
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -36,8 +34,9 @@ import {
 } from "@/Libs/AccountService";
 
 /**
- * ฟังก์ชัน: thaiRoleName
- * วัตถุประสงค์: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
+ * คำอธิบาย: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
+ * Input: role - ชื่อ role เป็นภาษาอังกฤษ
+ * Output: ชื่อ role เป็นภาษาไทย
  */
 function thaiRoleName(role: string): string {
   switch (role) {
@@ -55,8 +54,7 @@ function thaiRoleName(role: string): string {
 }
 
 /**
- * ตัวแปร: columns
- * วัตถุประสงค์: กำหนดคอลัมน์ในตารางบัญชีผู้ใช้
+ * คำอธิบาย: กำหนดคอลัมน์ในตารางบัญชีผู้ใช้
  */
 const columns: Column<AccountRow>[] = [
   {
@@ -98,15 +96,17 @@ const columns: Column<AccountRow>[] = [
 ];
 
 /**
- * ฟังก์ชัน normalizeText
- * ใช้สำหรับทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
+ * คำอธิบาย: ทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
+ * Input: text - ข้อความที่ต้องการแปลง
+ * Output: ข้อความที่แปลงแล้ว (ตัวพิมพ์เล็ก, ตัดช่องว่าง)
  */
 const normalizeText = (text: string) =>
   (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
- * Component: ManageAccountPage
- * วัตถุประสงค์: แสดงตารางบัญชีผู้ใช้ (SuperAdmin)
+ * คำอธิบาย: Component สำหรับจัดการบัญชีผู้ใช้ของ Super Admin
+ * Input: -
+ * Output: JSX Element หน้า ManageAccountPage
  */
 export function ManageAccountPage() {
   const navigate = useNavigate();
@@ -126,20 +126,21 @@ export function ManageAccountPage() {
   const [selectedRows, setSelectedRows] = useState<AccountRow[]>([]);
 
   // Section: State สำหรับ Modal
-  const [modalOpen, setModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
 
   /**
-   * ฟังก์ชัน: openModal
-   * วัตถุประสงค์: เปิด Modal ยืนยันการทำงาน
+   * คำอธิบาย: เปิด Modal ยืนยันการทำงาน
+   * Input: title (หัวข้อ), text (ข้อความ), onConfirm (action เมื่อยืนยัน)
+   * Output: -
    */
   function openModal(title: string, text: string, onConfirm: () => void) {
     setModalTitle(title);
     setModalText(text);
     setOnConfirmAction(() => onConfirm);
-    setModalOpen(true);
+    setIsModalOpen(true);
   }
 
   /**
@@ -153,8 +154,9 @@ export function ManageAccountPage() {
   ];
 
   /**
-   * ฟังก์ชัน: fetchData
-   * วัตถุประสงค์: ดึงข้อมูลบัญชีผู้ใช้ทั้งหมดจาก API
+   * คำอธิบาย: ดึงข้อมูลบัญชีผู้ใช้ทั้งหมดจาก API
+   * Input: - (ใช้ pagination.currentPage, pagination.limit จาก state)
+   * Output: -
    */
   async function fetchData(): Promise<void> {
     try {
@@ -177,7 +179,9 @@ export function ManageAccountPage() {
   }
 
   /**
-   * useEffect: โหลดข้อมูลเมื่อเปลี่ยนหน้า
+   * คำอธิบาย: Effect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า (pagination)
+   * Input: -
+   * Output: -
    */
   useEffect(() => {
     let isCancelled = false;
@@ -207,7 +211,9 @@ export function ManageAccountPage() {
   }, [pagination.currentPage, pagination.limit]);
 
   /**
-   * ส่วนกรองข้อมูลสำหรับ Search + Filter (frontend)
+   * คำอธิบาย: ส่วนกรองข้อมูลสำหรับ Search + Filter (frontend)
+   * Input: -
+   * Output: -
    */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
@@ -236,7 +242,9 @@ export function ManageAccountPage() {
   }, [rows, searchQuery, filterRole]);
 
   /**
-   * ฟังก์ชัน: rowActions
+   * คำอธิบาย: กำหนด Action สำหรับแต่ละแถวในตาราง (Block, Edit, Delete)
+   * Input: -
+   * Output: -
    */
   const rowActions: DataTableActionsConfig<AccountRow> = {
     header: "จัดการ",
@@ -272,7 +280,7 @@ export function ManageAccountPage() {
   };
 
   /**
-   * ฟังก์ชัน: bulkActions
+   * คำอธิบาย: กำหนด Bulk Actions สำหรับหลายแถว (Block All, Delete All)
    */
   const bulkActions: BulkAction<AccountRow>[] = [
     {
@@ -376,16 +384,16 @@ export function ManageAccountPage() {
 
         {/* Section: Modal */}
         <Modal
-          open={modalOpen}
+          open={isModalOpen}
           title={modalTitle}
           text={modalText}
           confirmText="ยืนยัน"
           cancelText="ยกเลิก"
           onConfirm={() => {
             onConfirmAction();
-            setModalOpen(false);
+            setIsModalOpen(false);
           }}
-          onCancel={() => setModalOpen(false)}
+          onCancel={() => setIsModalOpen(false)}
         />
       </div>
     </div>

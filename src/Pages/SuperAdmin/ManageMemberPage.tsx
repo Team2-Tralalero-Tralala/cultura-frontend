@@ -1,8 +1,5 @@
 /**
- * Component: ManageAccountCommunity (Super Admin)
- * Description: หน้าจัดการสมาชิกในแต่ละชุมชน (Super Admin)
- * - แสดงตารางสมาชิกในแต่ละชุมชน
- * - มีฟังก์ชันค้นหา / กรอง / เพิ่ม / ระงับ / ลบ / ระงับทั้งหมด / ลบทั้งหมด
+ * คำอธิบาย: หน้าจัดการสมาชิกในแต่ละชุมชน (Super Admin)
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -36,8 +33,7 @@ import {
 import { Icon } from "@iconify/react";
 
 /**
- * ตัวแปร: columns
- * วัตถุประสงค์: กำหนดคอลัมน์ในตารางบัญชีผู้ใช้
+ * คำอธิบาย: กำหนดคอลัมน์ในตารางสมาชิกชุมชน
  */
 const columns: Column<AccountCommunityRow>[] = [
   {
@@ -69,17 +65,19 @@ const columns: Column<AccountCommunityRow>[] = [
 ];
 
 /**
- * ฟังก์ชัน normalizeText
- * ใช้สำหรับทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
+ * คำอธิบาย: ทำให้ค้นหาไม่สนพิมพ์เล็ก/ใหญ่ และช่องว่างเกิน
+ * Input: text - ข้อความที่ต้องการแปลง
+ * Output: ข้อความที่แปลงแล้ว (ตัวพิมพ์เล็ก, ตัดช่องว่าง)
  */
 const normalizeText = (text: string) =>
   (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
- * Component: ManageAccountCommunity
- * วัตถุประสงค์: แสดงตารางสมาชิกในแต่ละชุมชน (SuperAdmin)
+ * คำอธิบาย: Component สำหรับจัดการสมาชิกในชุมชน
+ * Input: - (รับ Params communityId จาก URL)
+ * Output: JSX Element หน้า ManageMemberPage
  */
-export function ManageAccountCommunity() {
+export function ManageMemberPage() {
   const navigate = useNavigate();
 
   // Section: State หลัก
@@ -96,7 +94,7 @@ export function ManageAccountCommunity() {
   const [selectedRows, setSelectedRows] = useState<AccountCommunityRow[]>([]);
 
   // Section: State สำหรับ Modal
-  const [modalOpen, setModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
@@ -104,14 +102,15 @@ export function ManageAccountCommunity() {
   const params = useParams();
 
   /**
-   * ฟังก์ชัน: openModal
-   * วัตถุประสงค์: เปิด Modal ยืนยันการทำงาน
+   * คำอธิบาย: เปิด Modal ยืนยันการทำงาน
+   * Input: title (หัวข้อ), text (ข้อความ), onConfirm (action เมื่อยืนยัน)
+   * Output: -
    */
   function openModal(title: string, text: string, onConfirm: () => void) {
     setModalTitle(title);
     setModalText(text);
     setOnConfirmAction(() => onConfirm);
-    setModalOpen(true);
+    setIsModalOpen(true);
   }
 
   /**
@@ -126,8 +125,9 @@ export function ManageAccountCommunity() {
   ];
 
   /**
-   * ฟังก์ชัน: fetchData
-   * วัตถุประสงค์: ดึงข้อมูลบัญชีผู้ใช้ทั้งหมดจาก API
+   * คำอธิบาย: ดึงข้อมูลสมาชิกในชุมชนจาก API
+   * Input: - (ใช้ pagination, params จาก state)
+   * Output: -
    */
   async function fetchData(): Promise<void> {
     try {
@@ -152,7 +152,9 @@ export function ManageAccountCommunity() {
   }
 
   /**
-   * useEffect: โหลดข้อมูลเมื่อเปลี่ยนหน้า
+   * คำอธิบาย: Effect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า (pagination)
+   * Input: - (ใช้ pagination, params จาก state)
+   * Output: -
    */
   useEffect(() => {
     let isCancelled = false;
@@ -185,7 +187,9 @@ export function ManageAccountCommunity() {
   }, [pagination.currentPage, pagination.limit]);
 
   /**
-   * ส่วนกรองข้อมูลสำหรับ Search + Filter (frontend)
+   * คำอธิบาย: ส่วนกรองข้อมูลสำหรับ Search + Filter (frontend)
+   * Input: - (ใช้ searchQuery จาก state)
+   * Output: -
    */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
@@ -206,7 +210,7 @@ export function ManageAccountCommunity() {
   }, [rows, searchQuery]);
 
   /**
-   * ฟังก์ชัน: rowActions
+   * คำอธิบาย: กำหนด Action สำหรับแต่ละแถวในตาราง (Block, Edit, Delete)
    */
   const rowActions: DataTableActionsConfig<AccountCommunityRow> = {
     header: "จัดการ",
@@ -242,7 +246,7 @@ export function ManageAccountCommunity() {
   };
 
   /**
-   * ฟังก์ชัน: bulkActions
+   * คำอธิบาย: กำหนด Bulk Actions สำหรับหลายแถว (Block All, Delete All)
    */
   const bulkActions: BulkAction<AccountCommunityRow>[] = [
     {
@@ -336,16 +340,16 @@ export function ManageAccountCommunity() {
 
       {/* Section: Modal */}
       <Modal
-        open={modalOpen}
+        open={isModalOpen}
         title={modalTitle}
         text={modalText}
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
           onConfirmAction();
-          setModalOpen(false);
+          setIsModalOpen(false);
         }}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => setIsModalOpen(false)}
       />
     </div>
   );

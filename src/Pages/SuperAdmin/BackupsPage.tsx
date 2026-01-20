@@ -80,15 +80,15 @@ const createColumns = (onDownload: (filename: string) => void): Column<BackupRow
     key: "filename",
     header: "ชื่อ",
     className: "min-w-[300px]",
-    render: (r) => (
+    render: (row) => (
       <div className="flex items-center gap-2">
         {/* <div className="text-xs bg-gray-100 px-2 py-1 rounded">ZIP</div> */}
         <button
-          onClick={() => onDownload(r.filename)}
+          onClick={() => onDownload(row.filename)}
           className="text-left hover:text-blue-600 hover:underline cursor-pointer flex items-center gap-2"
           title="คลิกเพื่อดาวน์โหลดไฟล์สำรองข้อมูล"
         >
-          <div>{r.filename}</div>
+          <div>{row.filename}</div>
           <div className="w-6 h-6">
             <Icon icon="formkit:zip" className="w-full h-full" />
           </div>
@@ -100,23 +100,22 @@ const createColumns = (onDownload: (filename: string) => void): Column<BackupRow
     key: "size",
     header: "ขนาด",
     className: "min-w-[120px]",
-    render: (r) => <div>{r.size}</div>,
+    render: (row) => <div>{row.size}</div>,
   },
   {
     key: "status",
     header: "สถานะ",
     className: "min-w-[120px]",
-    render: (r) => <div>{thaiStatusName(r.status)}</div>,
+    render: (row) => <div>{thaiStatusName(row.status)}</div>,
   },
   {
     key: "createdAt",
     header: "วัน-เวลาที่สำรองข้อมูลล่าสุด",
     className: "min-w-[200px]",
-    render: (r) => thaiBackupTime(r.createdAt),
+    render: (row) => thaiBackupTime(row.createdAt),
   },
 ];
 
-// ====== Row Actions ======
 /*
  * คำอธิบาย : สร้างรายการปุ่มดำเนินการต่อแถวในตาราง
  * Input :
@@ -134,7 +133,6 @@ const rowActions = (onDelete: (filename: string) => void): RowAction<BackupRow>[
   },
 ];
 
-// ====== Bulk Actions ======
 /*
  * คำอธิบาย : สร้างรายการปุ่มดำเนินการแบบหลายแถวในตาราง
  * Input :
@@ -152,10 +150,10 @@ const bulkActions = (onBulkDelete: (filenames: string[]) => void): BulkAction<Ba
   },
 ];
 
-/*
- * คำอธิบาย : Component หลักสำหรับหน้า "สำรองข้อมูล"
- * ใช้จัดการ state ของข้อมูลตาราง การค้นหา การลบ การดาวน์โหลดไฟล์
- * รวมถึง modal ยืนยันการลบและการแจ้งเตือนผลลัพธ์
+/**
+ * คำอธิบาย: หน้าหลักสำหรับจัดการไฟล์สำรองข้อมูล
+ * Input: -
+ * Output: React Component สำหรับแสดงผลหน้า Backups
  */
 export default function BackupsPage() {
   const navigate = useNavigate();
@@ -184,7 +182,6 @@ export default function BackupsPage() {
     type: "single",
   });
 
-  // ====== โหลดข้อมูล ======
   /*
    * คำอธิบาย : ดึงข้อมูลไฟล์สำรองข้อมูลจาก API และตรวจสอบสถานะเซิร์ฟเวอร์
    * Input : ไม่มี
@@ -210,7 +207,6 @@ export default function BackupsPage() {
     }
   };
 
-  // ====== ฟังก์ชันจัดการการลบ ======
   /*
    * คำอธิบาย : เปิด modal ยืนยันการลบไฟล์สำรองข้อมูลไฟล์เดียว
    * Input :
@@ -276,7 +272,6 @@ export default function BackupsPage() {
     setDeleteModal({ isOpen: false, type: "single" });
   };
 
-  // ====== ฟังก์ชันดาวน์โหลด ======
   /*
    * คำอธิบาย : ดาวน์โหลดไฟล์สำรองข้อมูลจากเซิร์ฟเวอร์
    * Input :
@@ -358,14 +353,14 @@ export default function BackupsPage() {
         }}
         selectable={true}
         pageSizeOptions={[10, 30, 50]}
-        onPageChange={(p) => {
-          setPagination((prev) => ({ ...prev, currentPage: p }));
+        onPageChange={(page) => {
+          setPagination((prev) => ({ ...prev, currentPage: page }));
         }}
-        onPageSizeChange={(p) => {
+        onPageSizeChange={(pageSize) => {
           setPagination((prev) => ({
             ...prev,
             currentPage: 1,
-            limit: p,
+            limit: pageSize,
           }));
         }}
         pagination={pagination}

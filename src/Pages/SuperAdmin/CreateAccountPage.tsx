@@ -1,10 +1,7 @@
-/*
- * Component: CreateAccountPage
- * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+/**
+ * คำอธิบาย: Component สำหรับหน้าสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
+ * รับข้อมูลผู้ใช้ ตรวจสอบความถูกต้อง และบันทึกลงฐานข้อมูล รองรับการสร้างบัญชีหลายบทบาท
  */
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -98,6 +95,11 @@ interface CreateAccountBody {
   postalCode?: string;
 }
 
+/**
+ * คำอธิบาย: Popper Component สำหรับ AutoComplete ของ MUI
+ * Input: props (any) - props จาก MUI Autocomplete
+ * Output: JSX Element Popper
+ */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -117,10 +119,20 @@ function CustomPopper(props: any) {
   );
 }
 
+/**
+ * คำอธิบาย: หน้าสร้างบัญชีผู้ใช้ใหม่
+ * Input: Props (CreateAccountPageProps) - defaultRole (Optional)
+ * Output: JSX Element หน้า Form สร้างบัญชี
+ */
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  /**
+   * คำอธิบาย: หา Role จาก URL path หรือ props
+   * Input: -
+   * Output: RoleType (Admin | Member | Tourist)
+   */
   const getRoleFromPath = (): RoleType => {
     if (defaultRole) return defaultRole;
     if (location.pathname.includes("member")) return "Member";
@@ -219,6 +231,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   }, [role]);
 
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลใน Form
+   * Input: fieldName (optional string), fieldValue (optional unknown) - ถ้าส่งมาจะตรวจเฉพาะ field นั้น
+   * Output: boolean (true ถ้าถูกต้อง)
+   */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
       const result = accountSchema.safeParse({
@@ -268,6 +285,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
+  /**
+   * คำอธิบาย: ส่งข้อมูลเพื่อสร้างบัญชีใหม่
+   * Input: event (React.FormEvent)
+   * Output: Promise<void>
+   */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 

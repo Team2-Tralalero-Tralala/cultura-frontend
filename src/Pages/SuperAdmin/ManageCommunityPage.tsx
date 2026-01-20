@@ -1,6 +1,5 @@
 /**
- * คำอธิบาย : Component สำหรับแสดงหน้าจัดการชุมชน (Super Admin)
- * หน้าที่ : ดึงข้อมูลชุมชน แสดงในตาราง พร้อมตัวกรอง ค้นหา และปุ่มเพิ่ม/แก้ไข/ลบ
+ * คำอธิบาย: Component สำหรับแสดงหน้าจัดการชุมชน (Super Admin)
  */
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,10 +15,10 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับปรับข้อความให้เป็นมาตรฐานเพื่อใช้ในการค้นหา
- * Input : text (string)
- * Output : string ที่ถูกตัดช่องว่างและเป็นตัวพิมพ์เล็ก
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับปรับข้อความให้เป็นมาตรฐานเพื่อใช้ในการค้นหา
+ * Input: text (string)
+ * Output: string ที่ถูกตัดช่องว่างและเป็นตัวพิมพ์เล็ก
  */
 const normalizeText = (text: string) =>
   (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
@@ -58,7 +57,12 @@ const columns: Column<CommunityRow>[] = [
   { key: "admin", header: "ผู้ดูแล" },
 ];
 
-export default function ManageCommunitySuperAdmin() {
+/**
+ * คำอธิบาย: Component สำหรับจัดการชุมชน
+ * Input: -
+ * Output: JSX Element หน้า ManageCommunityPage
+ */
+export function ManageCommunityPage() {
   const navigate = useNavigate();
 
   const [communityRows, setCommunityRows] = useState<CommunityRow[]>([]);
@@ -85,10 +89,10 @@ export default function ManageCommunitySuperAdmin() {
     [],
   );
 
-  /*
-   * คำอธิบาย : ฟังก์ชันโหลดข้อมูลจาก API
-   * Input : currentPage, pageSize
-   * Output : เซตข้อมูลชุมชนลง state communityRows
+  /**
+   * คำอธิบาย: ฟังก์ชันโหลดข้อมูลจาก API
+   * Input: currentPage, pageSize
+   * Output: -
    */
   const reload = useCallback(async () => {
     try {
@@ -132,10 +136,10 @@ export default function ManageCommunitySuperAdmin() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันกรองข้อมูลก่อนแสดงในตาราง
-   * Input : communityRows, searchQuery, statusFilter
-   * Output : ข้อมูลที่ผ่านการกรองแล้ว
+  /**
+   * คำอธิบาย: ฟังก์ชันกรองข้อมูลก่อนแสดงในตาราง
+   * Input: communityRows, searchQuery, statusFilter
+   * Output: ข้อมูลที่ผ่านการกรองแล้ว
    */
   const filteredRows = useMemo(() => {
     const normalizedSearchQuery = normalizeText(searchQuery);
@@ -158,19 +162,19 @@ export default function ManageCommunitySuperAdmin() {
     });
   }, [communityRows, searchQuery, statusFilter]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลชุมชนตาม ID
-   * Input : communityId (number)
-   * Output : ไม่มี (เรียก API ลบข้อมูล)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับลบข้อมูลชุมชนตาม ID
+   * Input: communityId (number)
+   * Output: -
    */
   const handleDelete = useCallback(async (communityId: number) => {
     await deleteCommunity(Number(communityId));
   }, []);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันยืนยันการลบข้อมูล (ทั้งแบบเดี่ยวและแบบกลุ่ม)
-   * Input : deleteId, bulkDeleteIds
-   * Output : รีโหลดข้อมูลใหม่และปิด Modal
+  /**
+   * คำอธิบาย: ฟังก์ชันยืนยันการลบข้อมูล (ทั้งแบบเดี่ยวและแบบกลุ่ม)
+   * Input: deleteId, bulkDeleteIds
+   * Output: -
    */
   const handleConfirmDelete = useCallback(async () => {
     try {
@@ -190,10 +194,10 @@ export default function ManageCommunitySuperAdmin() {
     }
   }, [deleteId, bulkDeleteIds, handleDelete, reload]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันยกเลิกการลบและล้างค่าสถานะการลบ
-   * Input : ไม่มี
-   * Output : ปิด Modal และล้างค่า deleteId, bulkDeleteIds
+  /**
+   * คำอธิบาย: ฟังก์ชันยกเลิกการลบและล้างค่าสถานะการลบ
+   * Input: -
+   * Output: -
    */
   const handleCancelDelete = useCallback(() => {
     setIsOpenConfirm(false);

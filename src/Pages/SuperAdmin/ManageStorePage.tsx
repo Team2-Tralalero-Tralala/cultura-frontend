@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * คำอธิบาย : Component หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Super Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
@@ -43,18 +42,16 @@ type StoreFromApi = {
   }[];
 };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input : string
- * Output : string ที่ผ่านการ normalize แล้ว
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
+ * Input: str (ข้อความต้นฉบับ)
+ * Output: ข้อความที่ผ่านการ normalize แล้ว
  */
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางร้านค้า
- * Input : ไม่มี
- * Output : รายการคอลัมน์ของตาราง
+/**
+ * คำอธิบาย: กำหนดคอลัมน์ของตารางร้านค้า
  */
 const columns: Column<StoreRow>[] = [
   {
@@ -76,7 +73,7 @@ const columns: Column<StoreRow>[] = [
  * Input : ไม่มี
  * Output : ส่วนแสดงผลของหน้า Manage Store Super Admin
  */
-export default function ManageStores() {
+export function ManageStorePage() {
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
 
@@ -91,16 +88,16 @@ export default function ManageStores() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteIds, setDeleteIds] = useState<number[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
-   * Input : string
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลชื่อชุมชน
+   * Input: - (ใช้ communityId จาก params)
+   * Output: อัปเดต state communityNames
    */
   useEffect(() => {
     async function fetchCommunity() {
@@ -115,6 +112,10 @@ export default function ManageStores() {
     fetchCommunity();
   }, [communityId]);
 
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลร้านค้า
+   * Input: - (ใช้ communityId, pagination จาก state)
+   */
   const loadStores = async () => {
     if (!communityId) return;
 
@@ -122,10 +123,10 @@ export default function ManageStores() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const currentPage = pagination?.currentPage ?? 1;
+      const page = pagination?.currentPage ?? 1;
       const limit = pagination?.limit ?? 10;
 
-      const response = await getAllStore(Number(communityId), currentPage, limit);
+      const response = await getAllStore(Number(communityId), page, limit);
 
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
       const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
@@ -155,9 +156,9 @@ export default function ManageStores() {
    * Input : communityId, pagination.currentPage, pagination.limit
    * Output : void
    */
-  React.useEffect(() => {
+  useEffect(() => {
     loadStores();
-  }, [Number(communityId), pagination.currentPage, pagination.limit]);
+  }, [communityId, pagination.currentPage, pagination.limit]);
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำของแต่ละแถวในตารางร้านค้า
@@ -174,7 +175,7 @@ export default function ManageStores() {
       edit: (row) => navigate(`/super/community/${communityId}/store/${row.id}/edit`),
       delete: (row) => {
         setDeleteIds([row.id]);
-        setIsOpenConfirm(true);
+        setIsConfirmModalOpen(true);
       },
     },
   };
@@ -221,7 +222,7 @@ export default function ManageStores() {
       onClick: async (rows) => {
         const storeIds = rows.map((row) => row.id);
         setDeleteIds(storeIds);
-        setIsOpenConfirm(true);
+        setIsConfirmModalOpen(true);
       },
     },
   ];
@@ -295,7 +296,7 @@ export default function ManageStores() {
       </div>
 
       <Modal
-        open={isOpenConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการลบร้านค้า"
         text={
           deleteIds?.length > 1
@@ -307,12 +308,12 @@ export default function ManageStores() {
 
           await Promise.all(deleteIds.map((id) => handleDelete(id)));
 
-          setIsOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           setDeleteIds([]);
           await loadStores();
         }}
         onCancel={() => {
-          setIsOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           setDeleteIds([]);
         }}
       />

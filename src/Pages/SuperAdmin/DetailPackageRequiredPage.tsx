@@ -1,7 +1,6 @@
 /**
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจทั้งหมด
- * เช่น ข้อมูลแพ็กเกจ, ที่อยู่, สิ่งอำนวยความสะดวก, แผนที่,
- * ที่พักในแพ็กเกจ, ภาพประกอบ และสถานะการอนุมัติ/ปฏิเสธ
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจทั้งหมด
+ * แสดงข้อมูลแพ็กเกจ ที่อยู่ สิ่งอำนวยความสะดวก แผนที่ ที่พักในแพ็กเกจ ภาพประกอบ และสถานะการอนุมัติ/ปฏิเสธ
  */
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
@@ -20,11 +19,9 @@ const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /**
- * คำอธิบาย : แปลงชื่อไฟล์ที่อยู่ใน uploads ให้กลายเป็น URL เต็มของ backend
- * Input : fileName : string | undefined (ชื่อไฟล์ เช่น "uploads/example.jpg" หรือ "/uploads/example.jpg")
- * Output :
- *  - string : URL เต็มของไฟล์บน backend
- *  - undefined : หาก fileName ไม่ถูกส่งมา
+ * คำอธิบาย: แปลงชื่อไฟล์ที่อยู่ใน uploads ให้กลายเป็น URL เต็มของ backend
+ * Input: fileName (string | undefined) - ชื่อไฟล์หรือพาธไฟล์
+ * Output: string | undefined - URL เต็มของไฟล์บน backend หรือ undefined หากไม่มีข้อมูล
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -33,11 +30,9 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
 }
 
 /**
- * คำอธิบาย : แปลง ISO date string เป็นวันที่แบบไทย (dd/mm/yyyy)
- * Input : isoString : string | undefined (วันที่แบบ ISO เช่น "2025-12-22T12:34:56Z")
- * Output :
- *  - string : วันที่ในรูปแบบ "dd/mm/yyyy"
- *  - "-" : หาก isoString ไม่ถูกส่งมา
+ * คำอธิบาย: แปลง ISO date string เป็นวันที่แบบไทย (dd/mm/yyyy)
+ * Input: isoString (string | undefined) - วันที่แบบ ISO
+ * Output: string - วันที่ในรูปแบบ "dd/mm/yyyy" หรือ "-"
  */
 function formatDate(isoString?: string): string {
   if (!isoString) return "-";
@@ -49,13 +44,9 @@ function formatDate(isoString?: string): string {
 }
 
 /**
- * คำอธิบาย :
- *  - แปลง ISO date string หรือ date string เป็นวันที่แบบไทยเต็ม
- *  - รวมชื่อวัน, วัน, เดือน และปีพุทธศักราช
- * Input : dateString : string (วันที่แบบ ISO เช่น "2025-12-22T12:34:56Z")
- * Output :
- *  - string : วันที่ในรูปแบบ "วันจันทร์ ที่ 22 ธันวาคม พ.ศ. 2568"
- *  - "-" : หาก dateString เป็นค่าว่างหรือไม่ถูกต้อง
+ * คำอธิบาย: แปลง ISO date string หรือ date string เป็นวันที่แบบไทยเต็ม (รวมชื่อวัน เดือน ปีพุทธศักราช)
+ * Input: dateString (string) - วันที่แบบ ISO
+ * Output: string - วันที่ในรูปแบบ "วันจันทร์ ที่ 22 ธันวาคม พ.ศ. 2568" หรือ "-"
  */
 export function formatThaiDate(dateString: string) {
   if (!dateString) return "-";
@@ -96,14 +87,9 @@ export function formatThaiDate(dateString: string) {
 }
 
 /**
- * คำอธิบาย :
- *  - แยกข้อความ facilities ที่เป็น string ออกเป็น array ของ string
- *  - รองรับตัวคั่นหลายแบบ เช่น new line (\n, \r\n), comma (,), bullet (•)
- *  - ลบช่องว่างรอบ ๆ และตัดค่าว่างที่เป็น empty string
- * Input : text : string | undefined (ข้อความ facilities เช่น "Wi-Fi, ที่จอดรถ\nสระว่ายน้ำ")
- * Output :
- *  - string[] : array ของ facilities แยกเป็นแต่ละรายการ
- *  - [] : หาก text เป็น undefined หรือว่าง
+ * คำอธิบาย: แยกข้อความ facilities ที่เป็น string ออกเป็น array ของ string
+ * Input: text (string | undefined) - ข้อความ facilities
+ * Output: string[] - Array ของ facilities
  */
 function parseFacilityText(text?: string): string[] {
   if (!text) return [];
@@ -115,11 +101,9 @@ function parseFacilityText(text?: string): string[] {
 }
 
 /**
- * คำอธิบาย : ดึงเวลา (ชั่วโมง:นาที) จาก ISO date string
- * Input : isoString : string | undefined (เช่น "2025-12-22T14:30:00Z")
- * Output :
- *  - string : เวลาในรูปแบบ "HH:MM"
- *  - "-" : หาก isoString เป็น undefined หรือไม่มีส่วนเวลา
+ * คำอธิบาย: ดึงเวลา (ชั่วโมง:นาที) จาก ISO date string
+ * Input: isoString (string | undefined)
+ * Output: string - เวลาในรูปแบบ "HH:MM" หรือ "-"
  */
 function extractTimeFromISO(isoString?: string): string {
   if (!isoString) return "-";
@@ -128,14 +112,9 @@ function extractTimeFromISO(isoString?: string): string {
 }
 
 /**
- * คำอธิบาย :
- *  - รวมข้อมูลที่อยู่จาก PackageRequestDetail เป็นบรรทัดเดียว
- *  - รวม houseNumber, villageNumber, alley, subDistrict, district, province, postalCode
- *  - หากไม่มีข้อมูล จะคืนค่า "-"
- * Input : detail : PackageRequestDetail | null | undefined
- * Output :
- *  - string : ข้อมูลที่อยู่รวมเป็นบรรทัดเดียว เช่น "123 หมู่ 5 ซอยสุขสวัสดิ์ ตำบลบางบัว อำเภอเมือง จังหวัดกรุงเทพ 10100"
- *  - "-" : หากไม่มีข้อมูลที่อยู่
+ * คำอธิบาย: รวมข้อมูลที่อยู่จาก PackageRequestDetail เป็นบรรทัดเดียว
+ * Input: detail (PackageRequestDetail | null | undefined)
+ * Output: string - ข้อมูลที่อยู่รวมเป็นบรรทัดเดียว หรือ "-"
  */
 function buildAddressLine(detail?: PackageRequestDetail | null): string {
   const text = [
@@ -210,25 +189,25 @@ export default function DetailPackageRequiredPage() {
   const mapKey = `${mapCenter[0]},${mapCenter[1]}`;
 
   /**
-   * คำอธิบาย : เปิด Modal สำหรับยืนยันการอนุมัติคำขอแพ็กเกจ
+   * คำอธิบาย: เปิด Modal สำหรับยืนยันการอนุมัติคำขอแพ็กเกจ
    */
   function openApproveModal() {
     setIsApproveModalOpen(true);
   }
   /**
-   * คำอธิบาย : ปิด Modal ยืนยันการอนุมัติคำขอแพ็กเกจ
+   * คำอธิบาย: ปิด Modal ยืนยันการอนุมัติคำขอแพ็กเกจ
    */
   function closeApproveModal() {
     setIsApproveModalOpen(false);
   }
   /**
-   * คำอธิบาย : เปิด Modal สำหรับกรอกเหตุผลในการปฏิเสธคำขอแพ็กเกจ
+   * คำอธิบาย: เปิด Modal สำหรับกรอกเหตุผลในการปฏิเสธคำขอแพ็กเกจ
    */
   function openRejectModal() {
     setIsRejectModalOpen(true);
   }
   /**
-   * คำอธิบาย : ปิด Modal ปฏิเสธคำขอแพ็กเกจ
+   * คำอธิบาย: ปิด Modal ปฏิเสธคำขอแพ็กเกจ
    */
   function closeRejectModal() {
     setIsRejectModalOpen(false);
@@ -237,7 +216,7 @@ export default function DetailPackageRequiredPage() {
   const [approveClicked, setApproveClicked] = useState(false);
 
   /**
-   * คำอธิบาย : ดำเนินการอนุมัติคำขอแพ็กเกจตาม requestId
+   * คำอธิบาย: ดำเนินการอนุมัติคำขอแพ็กเกจตาม requestId
    */
   async function approveCurrentRequest() {
     if (approveClicked) return;
@@ -264,8 +243,8 @@ export default function DetailPackageRequiredPage() {
   }
 
   /**
-   * คำอธิบาย : ดำเนินการปฏิเสธคำขอ พร้อมเหตุผล และกลับไปหน้ารายการเมื่อสำเร็จ
-   * Input : reason: string
+   * คำอธิบาย: ดำเนินการปฏิเสธคำขอ พร้อมเหตุผล และกลับไปหน้ารายการเมื่อสำเร็จ
+   * Input: reason (string)
    * Output: Promise<void>
    */
   async function rejectCurrentRequest(reason: string) {
@@ -285,21 +264,21 @@ export default function DetailPackageRequiredPage() {
   }
 
   /**
-   * คำอธิบาย : เปิดโมดัลยืนยันการอนุมัติเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
+   * คำอธิบาย: เปิดโมดัลยืนยันการอนุมัติเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
    */
   function handleApproveClick() {
     openApproveModal();
   }
 
   /**
-   * คำอธิบาย : เปิดโมดัลระบุเหตุผลการปฏิเสธเมื่อผู้ใช้กดปุ่ม "ปฏิเสธ"
+   * คำอธิบาย: เปิดโมดัลระบุเหตุผลการปฏิเสธเมื่อผู้ใช้กดปุ่ม "ปฏิเสธ"
    */
   function handleRejectClick() {
     openRejectModal();
   }
 
   /**
-   * คำอธิบาย : ตรวจว่าสถานะอนุมัติแล้วหรือไม่เพื่อซ่อนปุ่ม
+   * คำอธิบาย: ตรวจว่าสถานะอนุมัติแล้วหรือไม่เพื่อซ่อนปุ่ม
    */
   const isApproved = String((packageRequestDetail as any)?.statusApprove || "")
     .toUpperCase()

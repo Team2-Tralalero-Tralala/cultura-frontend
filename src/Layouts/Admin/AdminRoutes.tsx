@@ -34,10 +34,10 @@ import DetailPackageAdmin from "@/Pages/Admin/DetailPackagePage";
 import CreateMemberPage from "@/Pages/Admin/CreateMemberPage";
 import EditMemberPage from "@/Pages/Admin/EditMemberPage";
 import AuthentionLogAdmin from "@/Pages/Admin/AuthenticationLogPage";
-import { EditProfile } from "@/Pages/SuperAdmin/EditProfilePage";
+import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
-import { CreateStore } from "@/Pages/SuperAdmin/CreateStorePage";
-import { EditStore } from "@/Pages/SuperAdmin/EditStorePage";
+import { CreateStorePage } from "@/Pages/SuperAdmin/CreateStorePage";
+import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
@@ -54,8 +54,8 @@ export default function AdminRoutes() {
       <Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
 
       <Route path="community/own/edit" element={<EditCommunity />} />
-      <Route path="community/store/create" element={<CreateStore />} />
-      <Route path="community/store/:storeId/edit" element={<EditStore />} />
+      <Route path="community/store/create" element={<CreateStorePage />} />
+      <Route path="community/store/:storeId/edit" element={<EditStorePage />} />
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
       <Route path="/community/homestay/:homestayId/edit" element={<EditHomestayPage />} />
       <Route path="/bookings-histories/all" element={<BookingHistoryAdmin />} />
@@ -102,7 +102,7 @@ export default function AdminRoutes() {
       <Route path="package/:id" element={<DetailPackageAdmin />} />
       <Route path="logs" element={<AuthentionLogAdmin />} />
       <Route path="participants/package/:packageId" element={<ManageParticipantPage />} />
-      <Route path="profile-me" element={<EditProfile />} />
+      <Route path="profile-me" element={<EditProfilePage />} />
     </Routes>
   );
 }

@@ -1,6 +1,6 @@
 /**
- * ฟังก์ชันหลักของหน้า CreateStore
- * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
+ * คำอธิบาย: หน้า "เพิ่มร้านค้า" สำหรับ Super Admin
+ * แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ และส่งข้อมูลไปยัง API
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
@@ -43,10 +43,11 @@ const storeSchema = z.object({
     .min(1, "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ"),
 });
 /**
- * ฟังก์ชันหลักของหน้า CreateStore
- * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
+ * คำอธิบาย: Component สำหรับหน้าเพิ่มร้านค้า
+ * Input: - (ใช้ Params communityId จาก URL)
+ * Output: JSX Element หน้า Form เพิ่มร้านค้า
  */
-export function CreateStore() {
+export function CreateStorePage() {
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
@@ -72,6 +73,11 @@ export function CreateStore() {
   const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input: field (optional string), value (optional any), mergedData (optional any)
+   * Output: boolean (true หากข้อมูลถูกต้อง)
+   */
   const validateField = (field?: string, value?: any, mergedData?: any) => {
     const data = mergedData || formData;
 
@@ -106,10 +112,9 @@ export function CreateStore() {
     return true;
   };
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
-   * Input :
-   *   - e : เหตุการณ์การเปลี่ยนแปลงจาก input field
-   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
+   * Input: e (ChangeEvent) - เหตุการณ์การเปลี่ยนแปลงจาก input field
+   * Output: - (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -120,11 +125,9 @@ export function CreateStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
-   * Input :
-   *   - field : ชื่อฟิลด์ที่ต้องการอัปเดต
-   *   - value : ค่าที่จะตั้งให้กับฟิลด์นั้น
-   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
+   * Input: field (keyof StoreData), value (any) - ค่าที่จะตั้งให้กับฟิลด์นั้น
+   * Output: - (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
@@ -137,9 +140,9 @@ export function CreateStore() {
   );
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
-   * Input : none (ตรวจสอบจาก state formData, location, position, files)
-   * Output : boolean (true หากมีการแก้ไขข้อมูล, false หากไม่มี)
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input: - (ตรวจสอบจาก state formData, location, position, files)
+   * Output: boolean (true หากมีการแก้ไขข้อมูล, false หากไม่มี)
    */
   const checkIsDirty = () => {
     const isFormDirty =
@@ -162,10 +165,9 @@ export function CreateStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อกดปุ่มยกเลิก
-   * หากมีการแก้ไขข้อมูลจะแสดง Modal ยืนยัน, หากไม่มีจะย้อนกลับไปหน้าก่อนหน้าทันที
-   * Input : none
-   * Output : none (อาจเปลี่ยน state openCancelConfirm หรือ navigate)
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการเมื่อกดปุ่มยกเลิก หากมีการแก้ไขข้อมูลจะแสดง Modal ยืนยัน
+   * Input: -
+   * Output: - (Navigate หรือเปิด Modal Confirm)
    */
   const handleCancel = () => {
     if (checkIsDirty()) {
@@ -175,10 +177,9 @@ export function CreateStore() {
     }
   };
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มไปยัง backend เพื่อสร้างร้านค้าใหม่
-   * โดยจะจัดการแยกข้อมูล location และไฟล์รูปภาพออกจากกัน
-   * Input : none (ใช้ข้อมูลจาก state formData, location, position, coverFiles, galleryFiles)
-   * Output : none (เรียกใช้ createStore() เพื่อส่งข้อมูลไปยัง backend)
+   * คำอธิบาย: ฟังก์ชันสำหรับส่งข้อมูลฟอร์มไปยัง backend เพื่อสร้างร้านค้าใหม่
+   * Input: - (ใช้ข้อมูลจาก state formData, location, position, coverFiles, galleryFiles)
+   * Output: Promise<void> - (เรียกใช้ createStore() เพื่อส่งข้อมูลไปยัง backend)
    */
   const handleSubmit = async () => {
     try {

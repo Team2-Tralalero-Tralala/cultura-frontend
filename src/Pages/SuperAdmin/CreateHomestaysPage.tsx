@@ -1,5 +1,6 @@
 /**
- * คำอธิบาย : หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Super Admin ทำหน้าที่จัดการฟอร์ม ตรวจสอบข้อมูล ยืนยัน และส่งข้อมูลแบบ multipart/form-data ไปยัง API
+ * คำอธิบาย: หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Super Admin
+ * หน้าที่: จัดการฟอร์ม ตรวจสอบข้อมูล ยืนยัน และส่งข้อมูลแบบ multipart/form-data ไปยัง API
  */
 import React from "react";
 import * as z from "zod";
@@ -89,9 +90,9 @@ const homestaySchema = z.object({
 type HomestayFormErrors = Partial<Record<keyof HomestayForm, string>>;
 
 /**
- * คำอธิบาย : ฟังก์ชันสำหรับตัดช่องว่างและคืนค่า default หากเป็นค่าว่าง
- * Input : value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าเริ่มต้นถ้าเป็นค่าว่าง)
- * Output : ข้อมูล string ที่ผ่านการตัดช่องว่างแล้ว
+ * คำอธิบาย: ฟังก์ชันสำหรับตัดช่องว่างและคืนค่า default หากเป็นค่าว่าง
+ * Input: value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าเริ่มต้นถ้าเป็นค่าว่าง, default = "")
+ * Output: ข้อมูล string ที่ผ่านการตัดช่องว่างแล้ว
  */
 function normalizeOrDefault(value: string, fallback = "") {
   const trimmed = (value ?? "").toString().trim();
@@ -130,11 +131,9 @@ if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
 }
 
 /**
- * Component: CreateHomestaysPage
- * หน้าที่:
- * - จัดการ state ของฟอร์มที่พัก 1 ชุด
- * - ตรวจสอบข้อมูล
- * - รวม payload และส่งขึ้น API ตาม communityId
+ * คำอธิบาย: Component สำหรับหน้าเพิ่มที่พัก
+ * Input: - (ใช้ Params communityId จาก URL)
+ * Output: JSX Element หน้า Form เพิ่มที่พัก
  */
 export default function CreateHomestaysPage() {
   const { communityId } = useParams();
@@ -150,8 +149,8 @@ export default function CreateHomestaysPage() {
 
   /**
    * คำอธิบาย: อัปเดตฟิลด์ในฟอร์ม และ validate ฟิลด์นั้นทันที
-   * Input: key ของฟอร์ม, value ใหม่
-   * Output: -
+   * Input: key (keyof HomestayForm), value (any) - ข้อมูลที่ต้องการอัปเดต
+   * Output: - (Update form state)
    */
   function setField(key: keyof HomestayForm, value: any) {
     setForm((prevForm) => {
@@ -176,8 +175,8 @@ export default function CreateHomestaysPage() {
 
   /**
    * คำอธิบาย: ตรวจสอบข้อมูลฟอร์มทั้งหมด
-   * Input: -
-   * Output: boolean (true หากผ่าน, false หากไม่ผ่าน)
+   * Input: - (ใช้ form state)
+   * Output: boolean (true หากข้อมูลถูกต้องทั้งหมด, false หากมีข้อผิดพลาด)
    */
   function validateAll(): boolean {
     const result = homestaySchema.safeParse(form);
@@ -194,10 +193,9 @@ export default function CreateHomestaysPage() {
   }
 
   /**
-   * จัดการ submit ฟอร์มเพิ่มที่พัก
-   * - ป้องกันการ reload หน้า
-   * - ตรวจสอบค่า (validateAll)
-   * - แสดง error หรือเปิด modal ยืนยันตามผลลัพธ์
+   * คำอธิบาย: จัดการ submit ฟอร์มเพิ่มที่พัก ป้องกัน reload, ตรวจสอบค่า, และเปิด modal ยืนยัน
+   * Input: event (React.FormEvent)
+   * Output: - (Update state หรือ Scroll to error)
    */
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -241,8 +239,9 @@ export default function CreateHomestaysPage() {
   }
 
   /**
-   * คำอธิบาย: handler สำหรับ MapPicker
-   * - อัปเดต latitude/longitude ในฟอร์ม (ไม่ validate ทันที)
+   * คำอธิบาย: handler สำหรับ MapPicker อัปเดต latitude/longitude ในฟอร์ม
+   * Input: position ([number, number]) - พิกัดละติจูดและลองจิจูด
+   * Output: - (Update form state)
    */
   const onMapChange = React.useCallback((position: [number, number]) => {
     const [latitude, longitude] = position;
@@ -254,10 +253,9 @@ export default function CreateHomestaysPage() {
   }, []);
 
   /**
-   * ฟังก์ชันยืนยันการบันทึก
-   * - ส่งข้อมูลฟอร์มไปยัง API
-   * - อัปโหลดรูปภาพตาม payload ที่ค้างอยู่
-   * - แสดงผลลัพธ์สำเร็จ/ล้มเหลวและนำผู้ใช้กลับไปหน้ารายการที่พัก
+   * คำอธิบาย: ฟังก์ชันยืนยันการบันทึก ส่งข้อมูลฟอร์มไปยัง API และอัปโหลดไฟล์
+   * Input: -
+   * Output: Promise<void> - (Navigate เมื่อสำเร็จ)
    */
   const onConfirmSave = async () => {
     setIsConfirmOpen(false);

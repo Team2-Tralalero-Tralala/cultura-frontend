@@ -1,9 +1,5 @@
-// src/Pages/SuperAdmin/ManageCommunitySuperAdmin.tsx
 /**
- * จัดการชุมชน (Super Admin)
- * - แสดงตารางชุมชน: ชื่อชุมชน / จังหวัด / สถานะ / ผู้ดูแล
- * - ค้นหา, เลือกหลายแถว, ลบทั้งหมด
- * - ปุ่มแก้ไข/ลบ ต่อแถว
+ * คำอธิบาย: Component สำหรับแสดงหน้าประวัติการเข้าใช้งาน (Authentication Log) หน้าที่แสดงรายการและค้นหา
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
@@ -15,6 +11,11 @@ import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { fetchAuthenticationLog } from "@/Libs/AuthenticationLogService";
 import type { AuthenticationLogRow } from "@/Types/AuthenticationLog";
 
+/**
+ * คำอธิบาย: แปลงชื่อบทบาทเป็นภาษาไทย
+ * Input: role (string) - บทบาทในระบบ (superadmin, admin, member, tourist)
+ * Output: ชื่อบทบาทภาษาไทย (string)
+ */
 const thaiRoleName = (role: string) => {
   switch (role) {
     case "superadmin":
@@ -30,6 +31,11 @@ const thaiRoleName = (role: string) => {
   }
 };
 
+/**
+ * คำอธิบาย: แปลงวันที่และเวลาเป็นรูปแบบไทย
+ * Input: loginTime (string | null) - วันที่และเวลาในรูปแบบ string หรือ null
+ * Output: วันที่และเวลาในรูปแบบไทย (string) หรือ "-"
+ */
 const thaiLoginTime = (loginTime: string | null) => {
   if (!loginTime) return "-";
   return (
@@ -50,27 +56,32 @@ const columns: Column<AuthenticationLogRow>[] = [
     key: "user",
     header: "ชื่อผู้ใช้",
     className: "min-w-[240px]",
-    render: (r) => <div>{r.user.username}</div>,
+    render: (row) => <div>{row.user.username}</div>,
   },
   {
     key: "role",
     header: "บทบาท",
     className: "min-w-[240px]",
-    render: (r) => <div>{thaiRoleName(r.user.role.name)}</div>,
+    render: (row) => <div>{thaiRoleName(row.user.role.name)}</div>,
   },
   {
     key: "loginTime",
     header: "เวลาที่เข้าสู่ระบบ",
-    render: (r) => thaiLoginTime(r.loginTime),
+    render: (row) => thaiLoginTime(row.loginTime),
   },
   {
     key: "logoutTime",
     header: "เวลาที่ออกจากระบบ",
-    render: (r) => thaiLoginTime(r.logoutTime),
+    render: (row) => thaiLoginTime(row.logoutTime),
   },
 ];
 
-export default function AuthentionLogSuperAdmin() {
+/**
+ * คำอธิบาย: หน้าหลักสำหรับดูประวัติการเข้าใช้งานระบบ (Authentication Log)
+ * Input: -
+ * Output: React Component สำหรับแสดงผลหน้า Log
+ */
+export default function AuthentionLogPage() {
   // ====== state ตาราง ======
   const [rows, setRows] = React.useState<AuthenticationLogRow[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -82,18 +93,22 @@ export default function AuthentionLogSuperAdmin() {
   });
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const optionsCM = [
+  const roleOptions = [
     { label: "ทั้งหมด", value: "all" },
     { label: "ผู้ดูแลระบบ", value: "superadmin" },
     { label: "ผู้ดูแลชุมชน", value: "admin" },
     { label: "สมาชิก", value: "member" },
     { label: "นักท่องเที่ยว", value: "tourist" },
   ];
-  const [filterRole, setFilterRole] = useState(optionsCM[0].value);
+  const [filterRole, setFilterRole] = useState(roleOptions[0].value);
 
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  // ====== โหลดข้อมูล ======
+  /**
+   * คำอธิบาย: ดึงข้อมูล Authentication Log จาก API
+   * Input: - (ใช้ state ภายใน: pagination, searchQuery, filterRole)
+   * Output: - (อัปเดต state rows และ pagination)
+   */
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -108,8 +123,8 @@ export default function AuthentionLogSuperAdmin() {
       );
       setRows(resultData);
       setPagination(resultPagination);
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +159,7 @@ export default function AuthentionLogSuperAdmin() {
           </div>
           <div>
             <FiltersForCM
-              options={optionsCM}
+              options={roleOptions}
               selected={filterRole}
               onChange={(value) => {
                 setFilterRole(value);
@@ -162,14 +177,14 @@ export default function AuthentionLogSuperAdmin() {
         getKey={(row) => row.id.toString()}
         columns={columns}
         pageSizeOptions={[10, 30, 50]}
-        onPageChange={(p) => {
-          setPagination((prev) => ({ ...prev, currentPage: p }));
+        onPageChange={(page) => {
+          setPagination((prev) => ({ ...prev, currentPage: page }));
         }}
-        onPageSizeChange={(p) => {
+        onPageSizeChange={(pageSize) => {
           setPagination((prev) => ({
             ...prev,
             currentPage: 1,
-            limit: p,
+            limit: pageSize,
           }));
         }}
         pagination={pagination}

@@ -236,7 +236,7 @@ export default function ManageMembers() {
             <Modal
                 open={isOpenDeleteModal}
                 title="ยืนยันการลบสมาชิก"
-                text={`คุณต้องการลบสมาชิก “${selectedMember?.displayName ?? "-"}” ออกจากชุมชนใช่หรือไม่?`}
+                text={"คุณต้องการยืนยันการลบบัญชีสมาชิกหรือไม่"}
                 confirmText="ลบ"
                 cancelText="ยกเลิก"
                 onCancel={() => {

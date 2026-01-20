@@ -377,12 +377,13 @@ export default function CommunityDetailUser() {
             }}
           />
 
-          <h1 className="mt-4 text-[40px] font-bold leading-tight text-black">
+          <h1 className="mt-4 text-[30px] font-bold leading-tight text-black">
             {community?.name || "-"}
           </h1>
         </div>
 
-        <hr className="mb-8 w-full border-t-2 border-[#D9D9D9]" />
+        <hr className="mb-8 border-t-2 border-[#D9D9D9] w-screen relative left-1/2 -translate-x-1/2" />
+        {/* <hr className="mb-8 border-t-2 border-[#D9D9D9] w-auto -mx-4" /> */}
 
         {/* ส่วน : ภาพปก + โลโก้ */}
         {(() => {
@@ -409,7 +410,7 @@ export default function CommunityDetailUser() {
                         {displayText(community.name)}
                       </h1>
 
-                      {!!community.status && (
+                      {/* {!!community.status && (
                         <span
                           className={`px-2.5 py-0.5 text-sm rounded-full ${isStatusOpen
                             ? "bg-emerald-100 text-emerald-700"
@@ -418,7 +419,7 @@ export default function CommunityDetailUser() {
                         >
                           {isStatusOpen ? "เปิด" : "ปิด"}
                         </span>
-                      )}
+                      )} */}
                     </div>
 
                     {/* Rating */}
@@ -557,7 +558,7 @@ export default function CommunityDetailUser() {
 
         {/* ช่องทางการติดต่ออื่น ๆ */}
         <div className="mt-8">
-          <h2 className="text-xl font-semibold">ช่องทางการติดต่ออื่นๆ</h2>
+          <h2 className="text-xl font-bold">ช่องทางการติดต่ออื่นๆ</h2>
           <div className="mt-3 space-y-1 text-sm">
             <Row label="Facebook">
               {community.urlFacebook ? (
@@ -610,13 +611,13 @@ export default function CommunityDetailUser() {
 
         {/* ประวัติชุมชน */}
         <div className="mt-10">
-          <h2 className="text-xl font-semibold">ประวัติชุมชน</h2>
+          <h2 className="text-xl font-bold">ประวัติชุมชน</h2>
           <p className="mt-2 leading-relaxed">{displayText(community.description)}</p>
         </div>
 
         {/* แกลเลอรีรูปภาพเพิ่มเติม */}
         <div className="mt-10">
-          <h2 className="text-xl font-semibold">รูปภาพเพิ่มเติม</h2>
+          <h2 className="text-xl font-bold">รูปภาพเพิ่มเติม</h2>
           {galleryImageLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {galleryImageLists.map((url, index) => (
@@ -635,7 +636,7 @@ export default function CommunityDetailUser() {
 
         {/* วิดีโอเพิ่มเติม */}
         <div className="mt-10">
-          <h2 className="text-xl font-semibold">วิดีโอเพิ่มเติม</h2>
+          <h2 className="text-xl font-bold">วิดีโอเพิ่มเติม</h2>
           {videoLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {videoLists.map((url, index) => (
@@ -655,7 +656,7 @@ export default function CommunityDetailUser() {
         {/* แผนที่ตำแหน่งชุมชน (OpenStreetMap) */}
         {community.location?.latitude && community.location?.longitude && (
           <div className="mt-10 pb-10">
-            <h2 className="text-xl font-semibold">แผนที่ตำแหน่งชุมชน</h2>
+            <h2 className="text-xl font-bold">แผนที่ตำแหน่งชุมชน</h2>
             <div className="mt-4 overflow-hidden rounded-xl">
               {(() => {
                 const latitude = community.location.latitude;
@@ -686,7 +687,7 @@ export default function CommunityDetailUser() {
 
         {/* ส่วน : แพ็กเกจทั้งหมดของชุมชน */}
         <div className="mt-10 pb-10">
-          <h2 className="text-xl font-semibold">แพ็กเกจทั้งหมดของชุมชน</h2>
+          <h2 className="text-xl font-bold">แพ็กเกจทั้งหมดของชุมชน</h2>
 
           {(packagePagination?.totalCount ?? tourPackageLists.length) === 0 ? (
             <p className="mt-3 text-slate-500">ยังไม่มีแพ็กเกจ</p>
@@ -736,7 +737,7 @@ export default function CommunityDetailUser() {
 
         {/* ส่วน : ร้านค้าของชุมชน */}
         <div className="mt-10 pb-10">
-          <h2 className="text-xl font-semibold">ร้านค้าของชุมชน</h2>
+          <h2 className="text-xl font-bold">ร้านค้าของชุมชน</h2>
 
           {(storePagination?.totalCount ?? storeLists.length) === 0 ? (
             <p className="mt-3 text-slate-500">ยังไม่มีร้านค้า</p>
@@ -792,7 +793,7 @@ export default function CommunityDetailUser() {
 
         {/* ส่วน : ที่พักของชุมชน */}
         <div className="mt-10 pb-10">
-          <h2 className="text-xl font-semibold">ที่พักของชุมชน</h2>
+          <h2 className="text-xl font-bold">ที่พักของชุมชน</h2>
 
           {(homestayPagination?.totalCount ?? homestayLists.length) === 0 ? (
             <p className="mt-3 text-slate-500">ยังไม่มีที่พัก</p>

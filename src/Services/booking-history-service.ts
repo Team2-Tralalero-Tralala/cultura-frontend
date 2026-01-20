@@ -13,6 +13,7 @@
 
 import type { BookingHistoryItem, TouristBookingHistory } from "../Types/BookingHistory";
 import type { BookingAdminDtoFromApi, Pagination, BookingRow } from "@/Types/BookingAdmin";
+import type { BookingMemberDtoFromApi, BookingMemberRow } from "@/Types/BookingMember";
 import axios from "axios";
 import api from "@/Libs/api";
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -54,24 +55,28 @@ export async function fetchBookingHistoriesByRole(
     hasNext: Array.isArray(list) && list.length === limit,
   };
 }
-/*
- * คำอธิบาย : Service สำหรับดึงข้อมูลรายการการจองทั้งหมดของแอดมิน
- * Mapping: GET /admin/bookings/all
- */
 
+/*
+ * อธิบาย : ฟังก์ชันดึงรายการการจองสำหรับแอดมินชุมชน พร้อมระบบค้นหาและกรองสถานะ
+ * Input : page, limit, search, status
+ * Output : ข้อมูลรายการการจอง (data) และข้อมูลการแบ่งหน้า (pagination)
+ */
 export async function fetchBookingsByAdmin(
   page = 1,
-  limit = 10
+  limit = 10,
+  search = "",
+  status = "all"
 ): Promise<{
   data: BookingAdminDtoFromApi[];
   pagination: Pagination;
 }> {
   const res = await axios.get(`${apiUrl}/admin/bookings/all`, {
-    params: { page, limit },
+    params: { page, limit, search, status },
     withCredentials: true,
   });
 
   const payload = res.data?.data ?? {};
+
   return {
     data: payload.data ?? [],
     pagination: payload.pagination ?? {
@@ -117,39 +122,32 @@ export async function updateBookingStatus(
 }
 
 /*
- * ฟังก์ชัน : fetchBookingsByMember
- * คำอธิบาย : ดึงรายการการจองของแพ็กเกจที่ Member เป็นผู้ดูแล (overseerMember)
- * Method : GET
- * Path   : /member/booking-histories
- * Input :
- *   - page (number)   : หน้าที่ต้องการดึงข้อมูล (default 1)
- *   - limit (number)  : จำนวนรายการต่อหน้า (default 10)
- *   - status (string, optional) : ใช้กรองสถานะการจอง เช่น PENDING, REFUND_PENDING, BOOKED
- * Output :
- *   - data : รายการข้อมูลการจองของ Member
- *   - pagination : ข้อมูลการแบ่งหน้า (currentPage, totalPages, totalCount, limit)
+ * อธิบาย : ฟังก์ชันดึงรายการประวัติการจองสำหรับสมาชิก (Member) พร้อมระบบค้นหาและกรองสถานะ
+ * Input : page, limit, search, status
+ * Output : ข้อมูลรายการการจอง (data) และข้อมูลการแบ่งหน้า (pagination)
  */
 export async function fetchBookingsByMember(
   page = 1,
   limit = 10,
-  status?: string
+  search = "",
+  status = "all"
 ): Promise<{
-  data: BookingAdminDtoFromApi[]; // ใช้โครงเดียวกับ admin ได้เลย
+  data: BookingMemberDtoFromApi[];
   pagination: Pagination;
 }> {
   const res = await axios.get(`${apiUrl}/member/booking-histories`, {
-    params: { page, limit, status },
+    params: { page, limit, search, status },
     withCredentials: true,
   });
 
   const payload = res.data?.data ?? {};
   return {
-    data: (payload.data ?? []) as BookingAdminDtoFromApi[],
+    data: (payload.data ?? []) as BookingMemberDtoFromApi[],
     pagination: (payload.pagination ?? {
-      currentPage: 1,
-      totalPages: 1,
-      totalCount: 0,
-      limit,
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        limit,
     }) as Pagination,
   };
 }

@@ -13,7 +13,8 @@ import { Tag } from "@/Components/Tag";
 import type { HomestayDetail } from "@/Types/HomestayDetail";
 import { fetchHomestayDetailByAdmin } from "@/Services/homestay-services";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL || "";
+const backendBaseUrl = apiUrl.replace(/\/api$/, "");
 
 /*
  * คำอธิบาย : แปลงชื่อไฟล์หรือพาธจาก backend ให้เป็น URL เต็มสำหรับใช้งานบน frontend
@@ -22,11 +23,16 @@ const apiUrl = import.meta.env.VITE_API_URL;
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
-  const cleanedPath = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
+
+  const cleanedPath = fileName.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+
+  if (cleanedPath.startsWith("http")) return cleanedPath;
+
   if (!cleanedPath.startsWith("uploads/")) {
-    return `${apiUrl}/uploads/${cleanedPath}`;
+    return `${backendBaseUrl}/uploads/${cleanedPath}`;
   }
-  return `${apiUrl}/${cleanedPath}`;
+
+  return `${backendBaseUrl}/${cleanedPath}`;
 }
 
 /*
@@ -98,7 +104,7 @@ export default function DetailHomestayAdmin() {
           {/* ปุ่มแก้ไข */}
           <Link
             to={`/admin/community/homestay/${homestayDetail.id}/edit`}
-            className="flex items-center gap-2 bg-[#055035] hover:bg-[#155849] text-white px-6 py-2.5 rounded-lg transition text-sm font-medium shadow-sm"
+              className="bg-[#055035] hover:bg-green-900 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
             <SquarePen size={18} />
             <span>แก้ไข</span>

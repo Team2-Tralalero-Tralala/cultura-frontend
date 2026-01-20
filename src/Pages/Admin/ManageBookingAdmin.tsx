@@ -6,8 +6,7 @@
  * - รองรับค้นหา, กรองสถานะ, ปุ่มคำขอคืนเงิน
  * - ปุ่ม "อนุมัติ" และ "ปฏิเสธ" จะอัปเดตสถานะในฐานข้อมูลจริง
  */
-
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
@@ -16,6 +15,7 @@ import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import {
   fetchBookingsByAdmin,
   updateBookingStatus,
@@ -27,6 +27,25 @@ import type {
 } from "@/Types/BookingAdmin";
 import type { PaginationResponse } from "@/Types/Community";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+
+const apiUrl = import.meta.env.VITE_API_URL || "";
+const backendBaseUrl = apiUrl.replace(/\/api$/, "");
+
+/*
+ * คำอธิบาย : Custom Hook สำหรับชะลอการอัปเดตค่า (Debounce) ช่วยลดการเรียก API ถี่เกินไปในขณะที่ค่า value เปลี่ยนแปลงต่อเนื่อง (เช่น การพิมพ์ค้นหา)
+ * Input :
+ * - value (T) : ค่าที่ต้องการหน่วงเวลา
+ * - delay (number) : ระยะเวลาที่ต้องการหน่วง (หน่วย milliseconds)
+ * Output : ค่าล่าสุดที่ผ่านการหน่วงเวลาแล้ว (Debounced Value)
+ */
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 /*
  * คำอธิบาย : สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
@@ -44,192 +63,152 @@ const makeColumns = (
   onNavigate: (id: number) => void,
   onOpenSlip: (url: string) => void
 ): Column<BookingRow>[] => [
-  {
-    key: "touristName",
-    header: "ชื่อผู้จอง",
-    className: "min-w-[220px]",
-    render: (bookingRow) => (
-      <div
-        onClick={() => onNavigate(bookingRow.id)}
-        className="cursor-pointer text-dark-green hover:underline"
-      >
-        {bookingRow.touristName}
-      </div>
-    ),
-  },
-  {
-    key: "packageName",
-    header: "ชื่อกิจกรรม",
-    className: "min-w-[220px]",
-    render: (bookingRow) => (
-      <div
-        onClick={() => onNavigate(bookingRow.id)}
-        className="cursor-pointer text-dark-green hover:underline"
-      >
-        {bookingRow.packageName}
-      </div>
-    ),
-  },
-  {
-    key: "totalPrice",
-    header: "ราคา",
-    className: "min-w-[120px] text-left pl-4",
-    render: (bookingRow) => <div className="text-left">{bookingRow.totalPrice}</div>,
-  },
-  {
-    key: "status",
-    header: "สถานะ",
-    className: "min-w-[140px]",
-    render: (bookingRow) => {
-      const statusUpperCase = bookingRow.status?.toUpperCase();
-      const statusMap: Record<string, string> = {
-        PENDING: "รอตรวจสอบ",
-        REFUND_PENDING: "รอคืนเงิน",
-        BOOKED: "จองสำเร็จ",
-        REJECTED: "ปฏิเสธจอง",
-        REFUNDED: "คืนเงินแล้ว",
-        REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
-      };
-      return <div>{statusMap[statusUpperCase ?? ""] ?? "-"}</div>;
+    {
+      key: "touristName",
+      header: "ชื่อผู้จอง",
+      className: "min-w-[220px]",
+      render: (bookingRow) => (
+        <div
+          onClick={() => onNavigate(bookingRow.id)}
+          className="cursor-pointer text-black hover:underline"
+        >
+          {bookingRow.touristName}
+        </div>
+      ),
     },
-  },
-  {
-    key: "transferSlip",
-    header: "หลักฐาน",
-    className: "min-w-[180px]",
-    render: (bookingRow) => {
-      const slipPath = bookingRow.transferSlip ?? "-";
-
-      if (!slipPath || slipPath === "-") {
-        return <div>-</div>;
-      }
-
-      // ดึงชื่อไฟล์
-      const fileName = slipPath.split("/").pop() ?? slipPath;
-
-      return (
-        <button
-          type="button"
-          onClick={() => onOpenSlip(slipPath)}   // ใช้ path เต็ม เปิดรูป
-          title={fileName}                  // hover ดูชื่อเต็ม
-          className="
-          text-[#4A816F]
-          underline underline-offset-2
-          hover:text-[#2f5b49]
-          max-w-[180px]
-          truncate
-          block
-          text-left
-        "
-        >
-          {fileName}
-        </button>
-      );
+    {
+      key: "packageName",
+      header: "ชื่อกิจกรรม",
+      className: "min-w-[220px]",
+      // render: (bookingRow) => (
+      //   <div
+      //     onClick={() => onNavigate(bookingRow.id)}
+      //     className="cursor-pointer text-dark-green hover:underline"
+      //   >
+      //     {bookingRow.packageName}
+      //   </div>
+      // ),
     },
-  },
-  {
-    key: "actions",
-    header: (
-      <div className="text-center w-full flex justify-center items-center">
-        จัดการ
-      </div>
-    ),
-    className: "w-[200px] text-center pr-2",
-    render: (bookingRow) => (
-      <div className="flex justify-center items-center gap-3">
-        {/* ปุ่มปฏิเสธ */}
-        <button
-          onClick={() => onReject(bookingRow)}
-          className="
-        w-[77px]
-        h-[31px]
-        text-[16px]
-        rounded-md
-        border border-[#4A816F]
-        bg-white
-        text-[#4A816F]
-        hover:bg-[#E6F0EC]
-        transition-colors
-        duration-200
-      "
-        >
-          ปฏิเสธ
-        </button>
+    {
+      key: "totalPrice",
+      header: "ราคา",
+      className: "min-w-[120px] text-left pl-4",
+      render: (bookingRow) => <div className="text-left">{bookingRow.totalPrice}</div>,
+    },
+    {
+      key: "status",
+      header: "สถานะ",
+      className: "min-w-[140px]",
+      render: (bookingRow) => {
+        const statusUpperCase = bookingRow.status?.toUpperCase();
+        const statusMap: Record<string, string> = {
+          PENDING: "รอตรวจสอบ",
+          REFUND_PENDING: "รอคืนเงิน",
+          BOOKED: "จองสำเร็จ",
+          REJECTED: "ปฏิเสธจอง",
+          REFUNDED: "คืนเงินแล้ว",
+          REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
+        };
+        return <div>{statusMap[statusUpperCase ?? ""] ?? "-"}</div>;
+      },
+    },
+    {
+      key: "transferSlip",
+      header: "หลักฐาน",
+      className: "min-w-[180px]",
+      render: (bookingRow) => {
+        const slipPath = bookingRow.transferSlip ?? "-";
 
-        {/* ปุ่มอนุมัติ */}
-        <button
-          onClick={() => onApprove(bookingRow)}
-          className="
-        w-[77px]
-        h-[31px]
-        text-[16px]
-        rounded-md
-        bg-[#4A816F]
-        text-white
-        hover:bg-[#3B6D5D]
-        transition-colors
-        duration-200
-      "
-        >
-          อนุมัติ
-        </button>
-      </div>
-    ),
-  },
-];
+        if (!slipPath || slipPath === "-") {
+          return <div>-</div>;
+        }
 
-/*
- * คำอธิบาย : หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
- */
+        // ดึงชื่อไฟล์
+        const fileName = slipPath.split("/").pop() ?? slipPath;
+
+        return (
+          <button
+            type="button"
+            onClick={() => onOpenSlip(slipPath)}
+            title={fileName}
+            className="text-[#4A816F] underline underline-offset-2 hover:text-[#2f5b49] max-w-[180px] truncate block text-left"
+          >
+            {fileName}
+          </button>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: (
+        <div className="text-center w-full flex justify-center items-center">
+          จัดการ
+        </div>
+      ),
+      className: "w-[200px] text-center pr-2",
+      render: (bookingRow) => (
+        <div className="flex justify-center items-center gap-3">
+          <button
+            onClick={() => onReject(bookingRow)}
+            className="w-[77px] h-[31px] text-[16px] rounded-[3px] border border-[#055035] bg-white text-[#696969] hover:bg-green-50 transition-colors duration-200"
+          >
+            ปฏิเสธ
+          </button>
+
+          <button
+            onClick={() => onApprove(bookingRow)}
+            className="w-[77px] h-[31px] text-[16px] rounded-[3px] bg-[#055035] text-white hover:bg-green-900 transition-colors duration-200"
+          >
+            อนุมัติ
+          </button>
+        </div>
+      ),
+    },
+  ];
+
 export default function ManageBookingAdmin() {
   const navigate = useNavigate();
 
-  const [bookingRows, setBookingRows] = React.useState<BookingRow[]>([]); // เปลี่ยน rows เป็น bookingRows
+  const [bookingRows, setBookingRows] = React.useState<BookingRow[]>([]);
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
     totalCount: 0,
     limit: 10,
   });
+
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState<number>(10);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // Modal ยืนยันการอนุมัติ/ปฏิเสธ
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false); // เพิ่ม is นำหน้า
-  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
+  // Modal States
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<BookingRow | null>(null);
-
-  // Modal แสดงสลิปโอนเงิน
-  const [isSlipModalOpen, setIsSlipModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
+  const [isSlipModalOpen, setIsSlipModalOpen] = React.useState(false);
   const [slipUrl, setSlipUrl] = React.useState<string | null>(null);
 
-  /*
-   * คำอธิบาย : เปิด Modal แสดงสลิปโอนเงิน
-   * Input : url (string)
-   * Output : -
-   */
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
+
   const openSlipModal = (url: string) => {
-    // กันกรณีเป็น "-" หรือค่าว่าง
     if (!url || url === "-") return;
     setSlipUrl(url);
     setIsSlipModalOpen(true);
   };
 
-  /*
-   * คำอธิบาย : ปิด Modal แสดงสลิปโอนเงิน
-   * Input : -
-   * Output : -
-   */
   const closeSlipModal = () => {
     setIsSlipModalOpen(false);
     setSlipUrl(null);
   };
 
-  // ตัวเลือกสถานะใน filter
   const statusOptions = [
     { label: "ทั้งหมด", value: "all" },
     { label: "รอตรวจสอบ", value: "PENDING" },
@@ -237,11 +216,11 @@ export default function ManageBookingAdmin() {
   ];
 
   /*
-   * คำอธิบาย : โหลดข้อมูลการจองทั้งหมดจาก API
-   * Input : currentPage, pageSize
-   * Output : อัปเดต bookingRows และ pagination state
-   */
-  const reload = React.useCallback(async (): Promise<void> => {
+ * คำอธิบาย : โหลดข้อมูลการจองทั้งหมดจาก API
+ * Input : currentPage, pageSize
+ * Output : อัปเดต bookingRows และ pagination state
+ */
+  const reload = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -249,27 +228,44 @@ export default function ManageBookingAdmin() {
       const {
         data,
         pagination: paginationData,
-      }: PaginationResponse<BookingAdminDtoFromApi> =
-        await fetchBookingsByAdmin(currentPage, pageSize);
+      }: PaginationResponse<BookingAdminDtoFromApi> = await fetchBookingsByAdmin(
+        currentPage,
+        pageSize,
+        debouncedSearch,
+        statusFilter
+      );
 
       const mappedBookings: BookingRow[] = data.map((booking) => {
-        const rawSlip = booking.transferSlip ?? "";
+        const rawSlip = booking.transferSlip;
 
-        // 1) แก้ \ ให้เป็น / (จาก windows path → url path)
-        let normalizedPath = rawSlip.replace(/\\/g, "/");
-
-        // 2) ถ้าไม่ใช่ URL เต็ม (ไม่มี http) ให้เติมโดเมนจาก .env
-        if (normalizedPath && !normalizedPath.startsWith("http")) {
-          normalizedPath = `${import.meta.env.VITE_FILE_URL}/${normalizedPath}`;
+        if (!rawSlip || rawSlip === "-") {
+          return {
+            id: booking.id ?? booking.bh_id,
+            touristName: `${booking.tourist?.fname ?? ""} ${booking.tourist?.lname ?? ""}`.trim(),
+            packageName: booking.package?.name ?? "-",
+            totalPrice: `฿${(booking.totalPrice ?? 0).toLocaleString()}`,
+            status: booking.status ?? "-",
+            transferSlip: "-",
+          };
         }
 
+        let cleanedPath = rawSlip.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+        let fullUrl = cleanedPath;
+
+        if (!cleanedPath.startsWith("http")) {
+          if (!cleanedPath.startsWith("uploads/")) {
+            fullUrl = `${backendBaseUrl}/uploads/${cleanedPath}`;
+          } else {
+            fullUrl = `${backendBaseUrl}/${cleanedPath}`;
+          }
+        }
         return {
           id: booking.id ?? booking.bh_id,
           touristName: `${booking.tourist?.fname ?? ""} ${booking.tourist?.lname ?? ""}`.trim(),
           packageName: booking.package?.name ?? "-",
           totalPrice: `฿${(booking.totalPrice ?? 0).toLocaleString()}`,
           status: booking.status ?? "-",
-          transferSlip: normalizedPath || "-",   // ใช้ path ที่จัดการแล้ว
+          transferSlip: fullUrl,
         };
       });
 
@@ -281,32 +277,43 @@ export default function ManageBookingAdmin() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearch, statusFilter]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     reload();
-  }, [reload, currentPage, pageSize]);
+  }, [reload]);
 
-  React.useEffect(() => {
-    // เวลาเปลี่ยน search หรือ filter ให้รีเซ็ตไปหน้า 1
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [debouncedSearch, statusFilter]);
 
   /*
-   * คำอธิบาย : อนุมัติการจอง
-   * Input : row (BookingRow)
-   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
-   */
+  * คำอธิบาย : อนุมัติการจอง
+  * Input : row (BookingRow)
+  * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
+  */
   const handleApprove = async (row: BookingRow) => {
     try {
       setIsLoading(true);
-
       const currentStatus = row.status?.toUpperCase();
       const newStatus: "BOOKED" | "REFUNDED" =
         currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
 
       await updateBookingStatus(row.id, newStatus);
       await reload();
+
+      // ตั้งค่าและเปิด ModalAlert
+      setAlertType("success");
+      if (currentStatus === "REFUND_PENDING") {
+        setAlertTitle("อนุมัติการคืนเงินสำเร็จ");
+        // setAlertMessage("");  <-- ถ้าว่างแบบนี้ปุ่มจะเด้งขึ้น
+        setAlertMessage("\u00A0"); // ใช้อันนี้แทน (มันคือ Non-breaking space หรือเคาะวรรค 1 ที)
+      } else {
+        setAlertTitle("อนุมัติการจองสำเร็จ");
+        setAlertMessage("\u00A0");
+      }
+      setAlertOpen(true);
+
     } catch (error) {
       if (error instanceof Error) setErrorMessage(error.message);
       else setErrorMessage("ไม่สามารถอนุมัติได้");
@@ -316,14 +323,13 @@ export default function ManageBookingAdmin() {
   };
 
   /*
-   * คำอธิบาย : ปฏิเสธการจอง (ต้องมีเหตุผลเมื่อปฏิเสธ)
-   * Input : row (BookingRow), reason (string)
-   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
-   */
+  * คำอธิบาย : ปฏิเสธการจอง (ต้องมีเหตุผลเมื่อปฏิเสธ)
+  * Input : row (BookingRow), reason (string)
+  * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
+  */
   const handleReject = async (row: BookingRow, reason?: string) => {
     try {
       setIsLoading(true);
-
       const currentStatus = row.status?.toUpperCase();
       const newStatus: "REJECTED" | "REFUND_REJECTED" =
         currentStatus === "PENDING" ? "REJECTED" : "REFUND_REJECTED";
@@ -338,7 +344,6 @@ export default function ManageBookingAdmin() {
     }
   };
 
-  /** modal handler */
   const openRejectModal = (row: BookingRow) => {
     setSelectedRow(row);
     setIsRejectModalOpen(true);
@@ -349,27 +354,8 @@ export default function ManageBookingAdmin() {
     setIsConfirmModalOpen(true);
   };
 
-  /*
-   * คำอธิบาย : กรองข้อมูล bookingRows ตามคำค้นหาและสถานะ
-   * Input : bookingRows, searchQuery, statusFilter
-   * Output : Array ของ BookingRow ที่ผ่านการกรอง
-   */
-  const filteredBookingRows = React.useMemo(() => {
-    const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-
-    const filtered = bookingRows.filter((row) =>
-      [row.touristName, row.packageName, row.status].some((val) =>
-        val.toLowerCase().includes(normalizedSearchQuery)
-      )
-    );
-
-    if (statusFilter === "all") return filtered;
-    return filtered.filter((row) => row.status === statusFilter);
-  }, [bookingRows, searchQuery, statusFilter]);
-
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
       <div>
         <Breadcrumb
           current={{
@@ -412,14 +398,13 @@ export default function ManageBookingAdmin() {
         </div>
       </div>
 
-      {/* ข้อความผิดพลาด */}
       {errorMessage && (
         <div className="text-sm text-red-600">{errorMessage}</div>
       )}
 
       {/* ตาราง */}
       <DataTable<BookingRow>
-        data={filteredBookingRows}
+        data={bookingRows}
         columns={makeColumns(
           openApproveModal,
           openRejectModal,
@@ -463,13 +448,10 @@ export default function ManageBookingAdmin() {
         cancelText="ยกเลิก"
         onConfirm={async () => {
           if (!selectedRow) return;
-
           const row = selectedRow;
-
-          // ปิด modal + เคลียร์ state ก่อน
+          // ปิด Modal ยืนยันก่อน แล้วค่อยเรียก handleApprove
           setIsConfirmModalOpen(false);
           setSelectedRow(null);
-
           try {
             await handleApprove(row);
           } catch (err) {
@@ -480,6 +462,14 @@ export default function ManageBookingAdmin() {
           setIsConfirmModalOpen(false);
           setSelectedRow(null);
         }}
+      />
+
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
 
       {/* Modal: ปฏิเสธ + กรอกเหตุผล */}
@@ -499,9 +489,7 @@ export default function ManageBookingAdmin() {
         cancelText="ยกเลิก"
         onConfirm={async (reason) => {
           if (!selectedRow) return;
-
           const row = selectedRow;
-
           try {
             await handleReject(row, reason);
           } finally {
@@ -514,59 +502,28 @@ export default function ManageBookingAdmin() {
           setSelectedRow(null);
         }}
       />
-      {/* Modal: แสดงรูปหลักฐานการโอน */}
+
+      {/* Modal: แสดงรูปหลักฐาน */}
       {isSlipModalOpen && slipUrl && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
-          {/* กล่อง modal ขนาดคงที่ */}
-          <div
-            className="
-        relative
-        bg-[#E5E5E5]/70
-        rounded-[24px]
-        shadow-lg
-        w-[650px]
-        h-[650px]
-        max-w-[95vw]
-        max-h-[90vh]
-        flex
-        items-center
-        justify-center
-      "
-          >
-            {/* ปุ่มปิด */}
+          <div className="relative bg-[#E5E5E5]/70 rounded-[24px] shadow-lg w-[650px] h-[650px] max-w-[95vw] max-h-[90vh] flex items-center justify-center">
             <button
               type="button"
               onClick={closeSlipModal}
-              className="
-          absolute
-          right-4
-          top-3
-          text-2xl
-          text-gray-700
-          hover:text-black
-        "
+              className="absolute right-4 top-3 text-2xl text-gray-700 hover:text-black"
             >
               ×
             </button>
-
-            {/* โซนรูป */}
             <div className="w-full h-full p-6 flex items-center justify-center">
               <img
                 src={slipUrl}
                 alt="หลักฐานการโอน"
-                className="
-            max-w-full
-            max-h-full
-            object-contain
-            rounded-[16px]
-            bg-white
-          "
+                className="max-w-full max-h-full object-contain rounded-[16px] bg-white"
               />
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

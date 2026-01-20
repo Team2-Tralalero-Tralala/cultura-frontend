@@ -10,27 +10,27 @@ import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Ta
 import { TrashIcon } from "@/Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
-import type { CommunityRow } from "@/Types/Community";
+import type { CommunityRow, CommunityDtoFromApi } from "@/Types/Community";
 import { getCommunities, deleteCommunity } from "@/Services/community-service";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
- * คำอธิบาย : ฟังก์ชันสำหรับปรับข้อความให้เป็นมาตรฐานเพื่อใช้ในการค้นหา
- * Input : text (string)
- * Output : string ที่ถูกตัดช่องว่างและเป็นตัวพิมพ์เล็ก
+ * คำอธิบาย : Custom Hook สำหรับชะลอการอัปเดตค่า (Debounce) ช่วยลดการเรียก API ถี่เกินไปในขณะที่ค่า value เปลี่ยนแปลงต่อเนื่อง (เช่น การพิมพ์ค้นหา)
+ * Input :
+ * - value (T) : ค่าที่ต้องการหน่วงเวลา
+ * - delay (number) : ระยะเวลาที่ต้องการหน่วง (หน่วย milliseconds)
+ * Output : ค่าล่าสุดที่ผ่านการหน่วงเวลาแล้ว (Debounced Value)
  */
-const normalizeText = (text: string) =>
-  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
-
-type ApiCommunity = {
-  id: number;
-  name?: string | null;
-  status?: "OPEN" | "CLOSED" | string | null;
-  location?: { province?: string | null } | null;
-  admin?: { fname?: string | null; lname?: string | null } | null;
-};
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 type StatusFilter = "all" | "open" | "closed";
 
@@ -75,6 +75,9 @@ export default function ManageCommunitySuperAdmin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
+  // สร้างตัวแปร search ที่ผ่านการหน่วงเวลาแล้ว (500ms)
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
   const statusOptions = useMemo(
     () =>
       [
@@ -95,10 +98,19 @@ export default function ManageCommunitySuperAdmin() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await getCommunities(currentPage, pageSize);
+      const response = await getCommunities(
+        currentPage,
+        pageSize,
+        debouncedSearch,
+        statusFilter
+      );
+
       const communityPayload = response.data?.data;
 
-      const communityLists: ApiCommunity[] = Array.isArray(communityPayload?.data) ? communityPayload.data : [];
+      const communityLists: CommunityDtoFromApi[] = Array.isArray(communityPayload?.data)
+        ? communityPayload.data
+        : [];
+
       const paginationData = communityPayload?.pagination ?? {};
 
       const mappedCommunities: CommunityRow[] = communityLists.map((community) => ({
@@ -106,11 +118,13 @@ export default function ManageCommunitySuperAdmin() {
         name: community.name ?? "-",
         province: community.location?.province ?? "-",
         status: community.status ?? "CLOSED",
-        admin: community.admin ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim() : "-",
+        admin: community.admin
+          ? `${community.admin.fname ?? ""} ${community.admin.lname ?? ""}`.trim()
+          : "-",
       }));
 
       setCommunityRows(mappedCommunities);
-      setTotalItems(paginationData?.totalCount ?? mappedCommunities.length);
+      setTotalItems(paginationData?.totalCount ?? 0);
     } catch (error: unknown) {
       console.error(error);
       if (error instanceof Error) setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -118,39 +132,16 @@ export default function ManageCommunitySuperAdmin() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
+  // เมื่อ Search หรือ Filter เปลี่ยน ให้รีเซ็ตกลับไปหน้า 1
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
-
-  /*
-   * คำอธิบาย : ฟังก์ชันกรองข้อมูลก่อนแสดงในตาราง
-   * Input : communityRows, searchQuery, statusFilter
-   * Output : ข้อมูลที่ผ่านการกรองแล้ว
-   */
-  const filteredRows = useMemo(() => {
-    const normalizedSearchQuery = normalizeText(searchQuery);
-
-    return communityRows.filter((row) => {
-      const haystacks = [row.name, row.province, row.admin, row.status].map((fieldValue) =>
-        normalizeText(String(fieldValue ?? ""))
-      );
-      const passSearch = !normalizedSearchQuery || haystacks.some((haystack) => haystack.includes(normalizedSearchQuery));
-
-      const statusUpper = (row.status ?? "").toString().toUpperCase();
-      const passStatus =
-        statusFilter === "all" ||
-        (statusFilter === "open" && statusUpper === "OPEN") ||
-        (statusFilter === "closed" && statusUpper === "CLOSED");
-
-      return passSearch && passStatus;
-    });
-  }, [communityRows, searchQuery, statusFilter]);
+  }, [debouncedSearch, statusFilter]);
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลชุมชนตาม ID
@@ -205,7 +196,7 @@ export default function ManageCommunitySuperAdmin() {
         onClick: (selectedRows) => {
           const ids = selectedRows.map((row) => row.id);
           setBulkDeleteIds(ids);
-          setConfirmMessage(`ยืนยันลบ ${ids.length} รายการหรือไม่?`);
+          setConfirmMessage(`คุณต้องการลบชุมชนจำนวน ${ids.length} รายการหรือไม่`);
           setIsOpenConfirm(true);
         },
       },
@@ -264,7 +255,7 @@ export default function ManageCommunitySuperAdmin() {
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<CommunityRow>
-        data={filteredRows}
+        data={communityRows}
         columns={columns}
         getKey={(row) => String(row.id)}
         actions={rowActions}
@@ -273,7 +264,7 @@ export default function ManageCommunitySuperAdmin() {
         pageSizeOptions={[10, 30, 50]}
         pagination={{
           currentPage,
-          totalPages: Math.ceil(totalItems / pageSize),
+          totalPages: Math.ceil(totalItems / pageSize), // คำนวณจาก Total Count จริง
           totalCount: totalItems,
           limit: pageSize,
         }}

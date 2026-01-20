@@ -93,8 +93,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-bold text-black text-base">{label}</div>
-      <div className="text-black font-regular text-base">:</div>
-      <div className="text-black font-regular break-words text-base">{children ?? "-"}</div>
+      <div className="text-black font-normal text-base">:</div>
+      <div className="text-black font-normal break-words text-base">{children ?? "-"}</div>
     </div>
   );
 }
@@ -189,8 +189,8 @@ function Section({
         onClick={() => setIsSectionOpen((isPreviousState) => !isPreviousState)}
         className="w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left hover:bg-slate-50 text-base font-semibold"
       >
-        <span className="font-semibold">{title}</span>
-        <div className="flex items-center gap-3 text-sm text-slate-600">
+        <span className="font-bold text-base">{title}</span>
+        <div className="flex items-center gap-3 font-normal text-base text-slate-600">
           {typeof count === "number" && (
             <span>
               จำนวน {count} {title}
@@ -207,7 +207,7 @@ function Section({
             <div className="flex justify-end mb-3">
               <button
                 onClick={onManage}
-                className="bg-dark-green text-white px-4 py-1.5 rounded-lg hover:bg-green-700"
+                className="bg-[#055035] hover:bg-green-900 text-white px-4 py-1.5 rounded-lg"
               >
                 จัดการ
               </button>
@@ -327,11 +327,11 @@ export default function CommunityDetailSuperAdmin() {
 
           <Link
             to={`/super/community/${community.id}/edit`}
-            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green mr-2"
           >
             <button
               type="button"
-              className="bg-dark-green text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
+              className="bg-[#055035] hover:bg-green-900 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               <Icon icon="weui:pencil-filled" className="w-5 h-5" />
               <span>แก้ไข</span>
@@ -379,7 +379,7 @@ export default function CommunityDetailSuperAdmin() {
                             icon="material-symbols:star-rounded"
                             className="text-[22px] text-black"
                           />
-                          <span className="text-[16px] font-regular">
+                          <span className="text-[16px] font-normal">
                             {Number(community.rating).toFixed(1)} คะแนน
                           </span>
                         </div>
@@ -487,7 +487,7 @@ export default function CommunityDetailSuperAdmin() {
 
         {/* ช่องทางการติดต่ออื่น ๆ */}
         <div className="px-6 sm:px-8 mt-8">
-          <h2 className="text-xl font-semibold">ช่องทางการติดต่ออื่นๆ</h2>
+          <h2 className="text-xl font-bold">ช่องทางการติดต่ออื่นๆ</h2>
           <div className="mt-3 space-y-1 text-sm">
             <Row label="Facebook">
               {community.urlFacebook ? (
@@ -537,13 +537,13 @@ export default function CommunityDetailSuperAdmin() {
 
         {/* ประวัติชุมชน */}
         <div className="px-6 sm:px-8 mt-10">
-          <h2 className="text-xl font-semibold">ประวัติชุมชน</h2>
+          <h2 className="text-xl font-bold">ประวัติชุมชน</h2>
           <p className="mt-2 leading-relaxed">{displayText(community.description)}</p>
         </div>
 
         {/* แกลเลอรีรูปภาพเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
-          <h2 className="text-xl font-semibold">รูปภาพเพิ่มเติม</h2>
+          <h2 className="text-xl font-bold">รูปภาพเพิ่มเติม</h2>
           {galleryImageLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {galleryImageLists.map((url, i) => (
@@ -562,7 +562,7 @@ export default function CommunityDetailSuperAdmin() {
 
         {/* วิดีโอเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
-          <h2 className="text-xl font-semibold">วิดีโอเพิ่มเติม</h2>
+          <h2 className="text-xl font-bold">วิดีโอเพิ่มเติม</h2>
           {videoLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {videoLists.map((url, i) => (

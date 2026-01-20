@@ -69,18 +69,18 @@ export async function fetchHomestayDetailByAdmin(homestayId: number) {
   return res.data?.data;
 }
 
-/*
- * ฟังก์ชัน : getHomestaysAll
- * อธิบาย : ดึงข้อมูลที่พัก (homestay) ทั้งหมดในชุมชน (เฉพาะ superadmin)
- * Mapping : GET /super/community/:communityId/homestays
+/* * อธิบาย : ฟังก์ชันดึงรายการที่พักทั้งหมดในชุมชน (สำหรับ SuperAdmin) พร้อมระบบค้นหา
+ * Input : communityId, page, limit, search
+ * Output : Promise ข้อมูลรายการที่พักและ pagination
  */
-// export async function getHomestaysAll(communityId: number) {
-//   return api.get(`/super/community/${communityId}/homestays`);
-// }
-
-export async function getHomestaysAll(communityId: number, page = 1, limit = 10) {
+export async function getHomestaysAll(
+  communityId: number,
+  page = 1,
+  limit = 10,
+  search = ""
+) {
   return api.get(`/super/community/${communityId}/homestays`, {
-    params: { page, limit },
+    params: { page, limit, search },
   });
 }
 
@@ -97,7 +97,7 @@ export async function deleteHomestayBySuperAdmin(homestayId: number) {
 }
 
 
-/* 
+/*
  * อธิบาย : ฟังก์ชันดึงข้อมูลรายละเอียดที่พักและที่พักอื่น ๆ ในชุมชน
  * Input : communityId, homestayId
  * Output : ข้อมูลที่พัก (homestay) และรายการที่พักอื่น (otherHomestays)

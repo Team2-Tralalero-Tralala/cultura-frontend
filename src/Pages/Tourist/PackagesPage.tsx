@@ -2,6 +2,8 @@
  * คำอธิบาย : Page Component สำหรับหน้าแสดงรายการแพ็กเกจ (Packages)
  * เป็นหน้าสาธารณะที่แสดงรายการแพ็กเกจมาใหม่หรือแพ็กเกจยอดนิยมตาม query parameter
  * ประกอบด้วย Navbar, Breadcrumb, และส่วนแสดงแพ็กเกจในรูปแบบ grid
+ * Input: -
+ * Output: JSX.Element (หน้าแสดงรายการแพ็กเกจ)
  */
 
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
@@ -18,7 +20,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 /*
- * ฟังก์ชัน : PackagesPage
  * คำอธิบาย : แสดงหน้าแสดงรายการแพ็กเกจมาใหม่หรือแพ็กเกจยอดนิยมตาม query parameter sort
  * Input : ไม่มี
  * Output : React Component ที่ render หน้าแสดงรายการแพ็กเกจตาม sort parameter
@@ -40,11 +41,10 @@ export default function PackagesPage() {
   // State สำหรับข้อความ error
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  /*
-   * ฟังก์ชัน : formatLocation
-   * คำอธิบาย : จัดรูปแบบข้อมูล location จาก API เป็น string
-   * Input : location (LocationData | null) - ข้อมูล location จาก API
-   * Output : string - ข้อมูล location ที่จัดรูปแบบแล้ว
+  /**
+   * คำอธิบาย: จัดรูปแบบข้อมูล location จาก API เป็น string
+   * Input: location ({ province: string; district: string; subDistrict: string } | null) - ข้อมูล location จาก API
+   * Output: string - ข้อมูล location ที่จัดรูปแบบแล้ว
    */
   const formatLocation = (
     location: { province: string; district: string; subDistrict: string } | null,
@@ -54,11 +54,10 @@ export default function PackagesPage() {
     return parts.join(" ");
   };
 
-  /*
-   * ฟังก์ชัน : transformPackageData
-   * คำอธิบาย : แปลงข้อมูล Package จาก API เป็นรูปแบบ PackageData พร้อมเก็บ ID
-   * Input : packageData (PackageApiData) - ข้อมูล Package จาก API
-   * Output : PackageData - ข้อมูล Package ที่แปลงแล้วพร้อม ID
+  /**
+   * คำอธิบาย: แปลงข้อมูล Package จาก API เป็นรูปแบบ PackageData พร้อมเก็บ ID
+   * Input: packageData (PackageApiData) - ข้อมูล Package จาก API
+   * Output: PackageData - ข้อมูล Package ที่แปลงแล้วพร้อม ID
    */
   const transformPackageData = (packageData: PackageApiData): PackageData => {
     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -89,11 +88,10 @@ export default function PackagesPage() {
     };
   };
 
-  /*
-   * ฟังก์ชัน : loadPackages
-   * คำอธิบาย : ดึงข้อมูลแพ็กเกจจาก API ตาม sort parameter และอัปเดต state
-   * Input : ไม่มี
-   * Output : void
+  /**
+   * คำอธิบาย: ดึงข้อมูลแพ็กเกจจาก API ตาม sort parameter และอัปเดต state
+   * Input: -
+   * Output: void (Update state)
    */
   const loadPackages = useCallback(async () => {
     try {
@@ -119,11 +117,10 @@ export default function PackagesPage() {
     loadPackages();
   }, [loadPackages]);
 
-  /*
-   * ฟังก์ชัน : handlePackageClick
-   * คำอธิบาย : จัดการเมื่อคลิกการ์ดแพ็กเกจ
-   * Input : packageId (number) - ID ของแพ็กเกจที่ถูกคลิก
-   * Output : void
+  /**
+   * คำอธิบาย: จัดการเมื่อคลิกการ์ดแพ็กเกจ
+   * Input: packageId (number) - ID ของแพ็กเกจที่ถูกคลิก
+   * Output: void (Navigate to page)
    */
   const handlePackageClick = (packageId: number) => {
     // TODO: Navigate to package detail page

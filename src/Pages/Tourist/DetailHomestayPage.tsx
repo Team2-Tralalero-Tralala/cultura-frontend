@@ -2,6 +2,8 @@
  * คำอธิบาย : Component สำหรับแสดงรายละเอียดที่พักโฮมสเตย์ของผู้ใช้ทั่วไป (Tourist)
  * แสดงรายละเอียดต่าง ๆ เช่น ชื่อที่พัก, ประเภท, สิ่งอำนวยความสะดวก, ที่อยู่, คำอธิบาย, แกลเลอรีรูปภาพ
  * รวมถึงแสดงที่พักอื่น ๆ ในชุมชนเดียวกัน พร้อมระบบ Pagination
+ * Input: -
+ * Output: React Component สำหรับหน้าละเอียดโฮมสเตย์
  */
 
 import { useEffect, useState } from "react";
@@ -19,10 +21,10 @@ import LocalServiceCard from "@/Components/LocalServiceCard";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
- * Input : fileName ชื่อไฟล์ที่ได้จาก backend
- * Output : string - URL ของไฟล์ภาพ
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
+ * Input: fileName ชื่อไฟล์ที่ได้จาก backend
+ * Output: string - URL ของไฟล์ภาพ
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -39,12 +41,14 @@ interface OtherHomestay {
   homestayImage: { image: string; type: string }[];
 }
 
-/*
- * คำอธิบาย : Component สำหรับหน้า "รายละเอียดที่พักโฮมสเตย์ของผู้ใช้ทั่วไป (Tourist)"
+/**
+ * คำอธิบาย: Component สำหรับหน้า "รายละเอียดที่พักโฮมสเตย์ของผู้ใช้ทั่วไป (Tourist)"
  * แสดงรายละเอียดที่พักโฮมสเตย์ รวมถึงที่พักอื่น ๆ ในชุมชนเดียวกัน
  * มีการจัดการสถานะการโหลดข้อมูลและการแสดงผลข้อมูลต่าง ๆ
+ * Input: -
+ * Output: React Component สำหรับหน้าละเอียดโฮมสเตย์
  */
-export default function DetailHomestayTourist() {
+export default function DetailHomestayPage() {
   const { communityId, homestayId } = useParams<{ communityId: string; homestayId: string }>();
   const [homestay, setHomestay] = useState<HomestayDetail | null>(null);
   const [otherHomestays, setOtherHomestays] = useState<OtherHomestay[]>([]);
@@ -54,16 +58,20 @@ export default function DetailHomestayTourist() {
   const [totalOtherHomestays, setTotalOtherHomestays] = useState(0);
   const limit = 12;
 
-  /*
-   * คำอธิบาย : สำหรับเลื่อนหน้าจอไปด้านบนเมื่อมีการเปลี่ยนแปลง homestayId หรือ communityId
+  /**
+   * คำอธิบาย: สำหรับเลื่อนหน้าจอไปด้านบนเมื่อมีการเปลี่ยนแปลง homestayId หรือ communityId
+   * Input: -
+   * Output: - (Side effect: scroll window to top)
    */
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [homestayId, communityId]);
 
-  /*
-   * คำอธิบาย : สำหรับดึงข้อมูลรายละเอียดที่พักและที่พักอื่นๆในชุมชน
+  /**
+   * คำอธิบาย: สำหรับดึงข้อมูลรายละเอียดที่พักและที่พักอื่นๆในชุมชน
    * เมื่อ component ถูก mount หรือเมื่อ homestayId, communityId, page เปลี่ยนแปลง
+   * Input: -
+   * Output: - (Update state homestay, otherHomestays)
    */
   useEffect(() => {
     const loadData = async () => {

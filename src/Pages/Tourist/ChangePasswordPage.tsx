@@ -1,6 +1,5 @@
-/*
- * Component: ChangePasswordPage
- * ฟอร์มเปลี่ยนรหัสผ่านสำหรับนักท่องเที่ยว
+/**
+ * คำอธิบาย: ฟอร์มเปลี่ยนรหัสผ่านสำหรับนักท่องเที่ยว
  */
 
 import React, { useMemo, useState } from "react";
@@ -16,12 +15,12 @@ import api from "@/Libs/Api";
 
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
-/*
- * คําอธิบาย : ฟังก์ชัน Component หลักสำหรับหน้าจอเปลี่ยนรหัสผ่านของนักท่องเที่ยว
- * Input : -
- * Output : JSX Element หน้าจอเปลี่ยนรหัสผ่าน
+/**
+ * คำอธิบาย: ฟังก์ชัน Component หลักสำหรับหน้าจอเปลี่ยนรหัสผ่านของนักท่องเที่ยว
+ * Input: -
+ * Output: JSX Element หน้าจอเปลี่ยนรหัสผ่าน
  */
-export default function TouristChangePasswordPage() {
+export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -36,10 +35,10 @@ export default function TouristChangePasswordPage() {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  /*
-   * คําอธิบาย : คำนวณสถานะความพร้อมของการส่งข้อมูล (Validation เบื้องต้น)
-   * Input : currentPassword, newPassword, confirmNewPassword
-   * Output : boolean (true หากข้อมูลครบและถูกต้อง, false หากไม่พร้อม)
+  /**
+   * คำอธิบาย: คำนวณสถานะความพร้อมของการส่งข้อมูล (Validation เบื้องต้น)
+   * Input: - (ใช้ currentPassword, newPassword, confirmNewPassword)
+   * Output: boolean (true หากข้อมูลครบและถูกต้อง, false หากไม่พร้อม)
    */
   const canSubmit = useMemo(() => {
     if (!currentPassword || !newPassword || !confirmNewPassword) return false;
@@ -48,10 +47,10 @@ export default function TouristChangePasswordPage() {
     return true;
   }, [currentPassword, newPassword, confirmNewPassword]);
 
-  /*
-   * คําอธิบาย : คำนวณข้อความแนะนำความปลอดภัยของรหัสผ่าน
-   * Input : newPassword
-   * Output : JSX Element (รายการข้อกำหนด) หรือ String หรือ null
+  /**
+   * คำอธิบาย: คำนวณข้อความแนะนำความปลอดภัยของรหัสผ่าน
+   * Input: - (ใช้ newPassword)
+   * Output: JSX Element (รายการข้อกำหนด) หรือ String หรือ null
    */
   const strengthHint = useMemo(() => {
     if (!newPassword) return null;
@@ -76,10 +75,10 @@ export default function TouristChangePasswordPage() {
     );
   }, [newPassword]);
 
-  /*
-   * คําอธิบาย : ฟังก์ชันสำหรับล้างค่าใน Input ทั้งหมดให้เป็นค่าว่าง
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับล้างค่าใน Input ทั้งหมดให้เป็นค่าว่าง
+   * Input: -
+   * Output: -
    */
   const resetForm = () => {
     setCurrentPassword("");
@@ -87,10 +86,10 @@ export default function TouristChangePasswordPage() {
     setConfirmNewPassword("");
   };
 
-  /*
-   * คําอธิบาย : ฟังก์ชันสำหรับตรวจสอบการ Submit Form และเปิด Modal ยืนยัน
-   * Input : event (Form Event)
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบการ Submit Form และเปิด Modal ยืนยัน
+   * Input: event (Form Event)
+   * Output: -
    */
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -98,10 +97,10 @@ export default function TouristChangePasswordPage() {
     setIsConfirmOpen(true);
   };
 
-  /*
-   * คําอธิบาย : ฟังก์ชันสำหรับเรียก API เพื่อเปลี่ยนรหัสผ่านเมื่อผู้ใช้กดยืนยัน
-   * Input : - (ใช้ข้อมูลจาก State: currentPassword, newPassword)
-   * Output : - (Update State ผลลัพธ์การทำงาน)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับเรียก API เพื่อเปลี่ยนรหัสผ่านเมื่อผู้ใช้กดยืนยัน
+   * Input: - (ใช้ข้อมูลจาก State: currentPassword, newPassword)
+   * Output: - (Update State ผลลัพธ์การทำงาน)
    */
   const proceedChangePassword = async () => {
     setIsConfirmOpen(false);

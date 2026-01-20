@@ -1,7 +1,5 @@
-/*
- * คำอธิบาย : หน้า TOURIST ลืมรหัสผ่าน (Guest flow)
- * Route: /guest/forget-password
- * Flow: ระบุตัวตน -> ตั้งรหัสผ่านใหม่ -> สำเร็จ
+/**
+ * คำอธิบาย: หน้า TOURIST ลืมรหัสผ่าน (Guest flow)s
  */
 
 import Button from "@/Components/Button";
@@ -59,8 +57,8 @@ function getErrorMessage(error: unknown): string {
 
 /*
  * คำอธิบาย : หน้า TOURIST ลืมรหัสผ่าน (Guest flow)
- * Route: /guest/forget-password
- * Flow: ระบุตัวตน -> ตั้งรหัสผ่านใหม่ -> สำเร็จ
+ * Input: -
+ * Output: JSX.Element
  */
 export default function ForgetPasswordPage() {
   const navigate = useNavigate();

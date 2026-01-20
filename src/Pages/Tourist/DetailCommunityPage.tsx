@@ -1,9 +1,6 @@
 /**
- * หน้า : รายละเอียดชุมชนสำหรับฝั่งผู้ใช้ทั่วไป (Guest / Tourist)
- * คำอธิบาย : สำหรับแสดงรายละเอียดของชุมชน (ชุมชนที่เปิด)
- * หน้าที่ : ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของชุมชนแบบ public
- * สิทธิ์การเข้าถึง : Guest (ไม่ login) และ Tourist (login แล้ว)
- * เส้นทาง (Route) : /tourist/community/:communityId/detail , /guest/community/:communityId/detail
+ * หน้า: รายละเอียดชุมชนสำหรับฝั่งผู้ใช้ทั่วไป (Guest / Tourist)
+ * คำอธิบาย: สำหรับแสดงรายละเอียดของชุมชน (ชุมชนที่เปิด)
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -17,18 +14,18 @@ import PaginationRoundedForCardPackage from "@/Components/Pagination/PaginationR
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
 
-/*
- * คำอธิบาย : ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล/เป็นค่าว่าง
- * Input : textValue (string | null | undefined)
- * Output : string (ค่าที่พร้อมแสดงผล)
+/**
+ * คำอธิบาย: ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล/เป็นค่าว่าง
+ * Input: textValue (string | null | undefined)
+ * Output: string (ค่าที่พร้อมแสดงผล)
  */
 const displayText = (textValue?: string | null) =>
   textValue && String(textValue).trim() ? textValue : "-";
 
-/*
- * คำอธิบาย : แปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
- * Input : isoDateString (string | null | undefined)
- * Output : string (dd/mm/yyyy) หรือ "-" ถ้าแปลงไม่ได้
+/**
+ * คำอธิบาย: แปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
+ * Input: isoDateString (string | null | undefined)
+ * Output: string (dd/mm/yyyy) หรือ "-" ถ้าแปลงไม่ได้
  */
 const toThaiDate = (isoDateString?: string | null) => {
   if (!isoDateString) return "-";
@@ -40,17 +37,17 @@ const toThaiDate = (isoDateString?: string | null) => {
   return `${day}/${month}/${year}`;
 };
 
-/*
- * คำอธิบาย : base url สำหรับไฟล์อัปโหลดจาก backend
- * หมายเหตุ : VITE_API_URL มักลงท้ายด้วย /api → จึงต้องตัดออกเพื่อให้ได้ backend base
+/**
+ * คำอธิบาย: base url สำหรับไฟล์อัปโหลดจาก backend
+ * หมายเหตุ: VITE_API_URL มักลงท้ายด้วย /api → จึงต้องตัดออกเพื่อให้ได้ backend base
  */
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
-/*
- * คำอธิบาย : แปลง path ที่ได้จาก backend ให้เป็น URL เต็มของไฟล์ใน /uploads
- * Input : fileName (string | null)
- * Output : string | undefined (URL เต็มของไฟล์)
+/**
+ * คำอธิบาย: แปลง path ที่ได้จาก backend ให้เป็น URL เต็มของไฟล์ใน /uploads
+ * Input: fileName (string | null)
+ * Output: string | undefined (URL เต็มของไฟล์)
  */
 function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
@@ -59,10 +56,10 @@ function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
-/*
- * คำอธิบาย : ดึง path รูปภาพจาก object โดยรองรับ field หลายชื่อ (กันเคส shape ต่างกัน)
- * Input : imageObject (any)
- * Output : string | null (path รูป)
+/**
+ * คำอธิบาย: ดึง path รูปภาพจาก object โดยรองรับ field หลายชื่อ (กันเคส shape ต่างกัน)
+ * Input: imageObject (any)
+ * Output: string | null (path รูป)
  */
 function pickImagePath(imageObject: any): string | null {
   return (
@@ -70,10 +67,10 @@ function pickImagePath(imageObject: any): string | null {
   );
 }
 
-/*
- * คำอธิบาย : ค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
- * Input : communityData (any), imageType (string)
- * Output : string | null (path รูป)
+/**
+ * คำอธิบาย: ค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
+ * Input: communityData (any), imageType (string)
+ * Output: string | null (path รูป)
  */
 function findImage(communityData: any, imageType: string): string | null {
   const imageItem = communityData?.communityImage?.find(
@@ -82,10 +79,10 @@ function findImage(communityData: any, imageType: string): string | null {
   return pickImagePath(imageItem);
 }
 
-/*
- * คำอธิบาย : คืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
- * Input : communityData (any), imageType (string)
- * Output : string[] (รายการ path รูป)
+/**
+ * คำอธิบาย: คืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
+ * Input: communityData (any), imageType (string)
+ * Output: string[] (รายการ path รูป)
  */
 function listImagesByType(communityData: any, imageType: string): string[] {
   const imageArray = (communityData?.communityImage || []).filter(
@@ -95,10 +92,10 @@ function listImagesByType(communityData: any, imageType: string): string[] {
   return imageArray.map(pickImagePath).filter(Boolean) as string[];
 }
 
-/*
- * คำอธิบาย : Component สำหรับแสดงข้อมูลในรูปแบบ "Label : Value"
- * Input : label (string), children (ReactNode)
- * Output : React Element
+/**
+ * คำอธิบาย: Component สำหรับแสดงข้อมูลในรูปแบบ "Label : Value"
+ * Input: label (string), children (ReactNode)
+ * Output: React Element
  */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -110,10 +107,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-/*
- * คำอธิบาย : Component สำหรับแสดงโลโก้ของชุมชนในรูปแบบวงกลม
- * Input : src, name, size
- * Output : React Element
+/**
+ * คำอธิบาย: Component สำหรับแสดงโลโก้ของชุมชนในรูปแบบวงกลม
+ * Input: src, name, size
+ * Output: React Element
  */
 function LogoCircle({ src, name, size = 240 }: any) {
   const baseClassName =
@@ -144,10 +141,10 @@ function LogoCircle({ src, name, size = 240 }: any) {
   );
 }
 
-/*
- * คำอธิบาย : Component สำหรับแสดงภาพปกของชุมชนหรือรายการข้อมูล
- * Input : src, height
- * Output : React Element
+/**
+ * คำอธิบาย: Component สำหรับแสดงภาพปกของชุมชนหรือรายการข้อมูล
+ * Input: src, height
+ * Output: React Element
  */
 function CoverRect({ src, height = 300 }: any) {
   if (src) {
@@ -163,10 +160,12 @@ function CoverRect({ src, height = 300 }: any) {
   );
 }
 
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดชุมชนแบบ Public สำหรับ Guest / Tourist
+/**
+ * คำอธิบาย: หน้าแสดงรายละเอียดชุมชนแบบ Public สำหรับ Guest / Tourist
+ * Input: -
+ * Output: React Component สำหรับแสดงหน้าละเอียดชุมชน
  */
-export default function CommunityDetailUser() {
+export default function DetailCommunityPage() {
   const location = useLocation();
   const isGuestPath = location.pathname.startsWith("/guest");
   const basePath = isGuestPath ? "/guest" : "/tourist";
@@ -208,10 +207,10 @@ export default function CommunityDetailUser() {
     limit: number;
   } | null>(null);
 
-  /*
-   * คำอธิบาย : ดึง URL รูปปกของแพ็กเกจ (type=COVER) เพื่อใช้แสดงบน CardPackage
-   * Input : tourPackage (ข้อมูลแพ็กเกจที่มี packageFile)
-   * Output : URL ของรูปปกแพ็กเกจ (ถ้าไม่มีคืนค่า undefined)
+  /**
+   * คำอธิบาย: ดึง URL รูปปกของแพ็กเกจ (type=COVER) เพื่อใช้แสดงบน CardPackage
+   * Input: tourPackage (ข้อมูลแพ็กเกจที่มี packageFile)
+   * Output: URL ของรูปปกแพ็กเกจ (ถ้าไม่มีคืนค่า undefined)
    */
   function getPackageCover(tourPackage: any): string | undefined {
     const coverFile = tourPackage?.packageFile?.find(
@@ -220,10 +219,10 @@ export default function CommunityDetailUser() {
     return resolveBackendUploadUrl(coverFile?.filePath);
   }
 
-  /*
-   * คำอธิบาย : คำนวณสถานะการจองของแพ็กเกจจากวันเปิด/ปิดจอง
-   * Input : tourPackage (ต้องมี bookingOpenDate / bookingCloseDate)
-   * Output : "UPCOMING" | "OPEN" | "CLOSED"
+  /**
+   * คำอธิบาย: คำนวณสถานะการจองของแพ็กเกจจากวันเปิด/ปิดจอง
+   * Input: tourPackage (ต้องมี bookingOpenDate / bookingCloseDate)
+   * Output: "UPCOMING" | "OPEN" | "CLOSED"
    */
   function getBookingStatus(tourPackage: any): "OPEN" | "CLOSED" | "UPCOMING" {
     const now = new Date();
@@ -235,10 +234,10 @@ export default function CommunityDetailUser() {
     return "OPEN";
   }
 
-  /*
-   * คำอธิบาย : ดึง URL รูปปกร้านค้า (type=COVER) สำหรับแสดงในรายการร้านค้าหน้ารายละเอียดชุมชน
-   * Input : store (ข้อมูลร้านค้าที่มี storeImage)
-   * Output : URL ของรูปปกร้านค้า (ถ้าไม่มีคืนค่า undefined)
+  /**
+   * คำอธิบาย: ดึง URL รูปปกร้านค้า (type=COVER) สำหรับแสดงในรายการร้านค้าหน้ารายละเอียดชุมชน
+   * Input: store (ข้อมูลร้านค้าที่มี storeImage)
+   * Output: URL ของรูปปกร้านค้า (ถ้าไม่มีคืนค่า undefined)
    */
   function getStoreCover(store: any): string | undefined {
     const storeCoverImage = store?.storeImage?.find(
@@ -247,10 +246,10 @@ export default function CommunityDetailUser() {
     return resolveBackendUploadUrl(storeCoverImage?.image);
   }
 
-  /*
-   * คำอธิบาย : ดึง URL รูปปกที่พัก (type=COVER) สำหรับแสดงในรายการที่พักหน้ารายละเอียดชุมชน
-   * Input : homestay (ข้อมูลที่พักที่มี homestayImage)
-   * Output : URL ของรูปปกที่พัก (ถ้าไม่มีคืนค่า undefined)
+  /**
+   * คำอธิบาย: ดึง URL รูปปกที่พัก (type=COVER) สำหรับแสดงในรายการที่พักหน้ารายละเอียดชุมชน
+   * Input: homestay (ข้อมูลที่พักที่มี homestayImage)
+   * Output: URL ของรูปปกที่พัก (ถ้าไม่มีคืนค่า undefined)
    */
   function getHomestayCover(homestay: any): string | undefined {
     const homestayCoverImage = homestay?.homestayImage?.find(
@@ -259,10 +258,10 @@ export default function CommunityDetailUser() {
     return resolveBackendUploadUrl(homestayCoverImage?.image);
   }
 
-  /*
-   * คำอธิบาย : ดึงข้อมูลรายละเอียดชุมชนแบบ Public จาก Backend
-   * Input : -
-   * Output : อัปเดต state ของ community, packages, stores, homestays
+  /**
+   * คำอธิบาย: ดึงข้อมูลรายละเอียดชุมชนแบบ Public จาก Backend
+   * Input: -
+   * Output: อัปเดต state ของ community, packages, stores, homestays
    */
   useEffect(() => {
     if (!communityId) return;

@@ -131,6 +131,7 @@ export default function BookingHistoryTourist() {
       setIsLoading(false);
     }
   };
+
   /**
    * คำอธิบาย: ดึงข้อมูลใหม่เมื่อมีการเปลี่ยนแปลง filter (status หรือ period)
    * Input: - (ใช้ filterState)
@@ -194,6 +195,11 @@ export default function BookingHistoryTourist() {
     setBookings(sliced);
   }, [rawBookings, searchQuery, activeSort, pagination.currentPage, pagination.limit]);
 
+  /**
+   * คำอธิบาย: จัดการเมื่อมีการเปลี่ยนรูปแบบการเรียงลำดับ (ล่าสุด/เก่าสุด)
+   * Input: type - รูปแบบการเรียงลำดับ ("newest" | "oldest")
+   * Output: -
+   */
   const handleSort = (type: "newest" | "oldest") => {
     setActiveSort(type);
   };

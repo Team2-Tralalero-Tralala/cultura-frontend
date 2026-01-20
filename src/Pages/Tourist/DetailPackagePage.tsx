@@ -103,6 +103,11 @@ interface ApiResponse {
   data: PackageDetail;
 }
 
+/**
+ * คำอธิบาย: หน้าสำหรับแสดงรายละเอียดของแพ็กเกจท่องเที่ยว
+ * Input: -
+ * Output: JSX.Element
+ */
 export default function DetailPackagePage() {
   const { packageId } = useParams<{ packageId: string }>();
   const { user } = useAuth();
@@ -144,15 +149,10 @@ export default function DetailPackagePage() {
     }
   };
 
-  /*
-   * คำอธิบาย : สร้างรายการสื่อ (รูปภาพ) สำหรับใช้แสดงในแกลเลอรีของแพ็กเกจ
-   * เงื่อนไข :
-   *  - หากมีข้อมูล packageFiles จะทำการแปลงเป็น MediaItem[]
-   *  - หากไม่มีข้อมูล จะกำหนดค่าเริ่มต้นเป็น Array ว่าง
-   * Input :
-   *  - packageDetail.packageFiles
-   * Output :
-   *  - galleryItems (MediaItem[])
+  /**
+   * คำอธิบาย: สร้างรายการสื่อ (รูปภาพ) สำหรับใช้แสดงในแกลเลอรีของแพ็กเกจ
+   * Input: - (ใช้ข้อมูลจาก packageDetail.packageFiles)
+   * Output: galleryItems (MediaItem[])
    */
   const galleryItems: any[] = packageDetail?.packageFiles
     ? packageDetail.packageFiles.map((file) => ({

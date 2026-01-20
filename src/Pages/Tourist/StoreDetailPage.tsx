@@ -51,7 +51,7 @@ type OtherStore = {
 };
 
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
+const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
@@ -61,7 +61,7 @@ const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
   const cleaned = fileName.replace(/^\/?uploads\//, "");
-  return `${BACKEND_BASE_URL}/uploads/${cleaned}`;
+  return `${backendBaseUrl}/uploads/${cleaned}`;
 }
 
 /*
@@ -214,12 +214,12 @@ export default function StoreDetailPage() {
         <div className="mb-12">
           {store?.storeImages?.length ? (
             <Thumbnails
-              items={store.storeImages.map((file, i) => ({
+              items={store.storeImages.map((file, index) => ({
                 type: "image" as const,
                 src:
                   resolveBackendUploadUrl(file.image) ||
                   "https://placehold.co/600x400?text=No+Image",
-                alt: `${store.name} - รูป ${i + 1}`,
+                alt: `${store.name} - รูป ${index + 1}`,
               }))}
             />
           ) : (
@@ -230,13 +230,13 @@ export default function StoreDetailPage() {
         <h2 className="text-[24px] font-bold text-black mt-12 mb-6">ร้านค้าอื่นของชุมชน</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {otherStores.map((other) => {
-            const firstImage = other.storeImage?.[0];
+          {otherStores.map((otherStore) => {
+            const firstImage = otherStore.storeImage?.[0];
             const imageUrl = firstImage ? resolveBackendUploadUrl(firstImage.image) : undefined;
-            const targetUrl = `/tourist/community/${communityId}/detail/store/${other.id}`;
+            const targetUrl = `/tourist/community/${communityId}/detail/store/${otherStore.id}`;
             return (
               <div
-                key={other.id}
+                key={otherStore.id}
                 className="flex flex-col items-center cursor-pointer"
                 onClick={() => {
                   window.location.href = targetUrl;
@@ -244,7 +244,11 @@ export default function StoreDetailPage() {
               >
                 <div className="w-full aspect-[17/10] bg-gray-100 rounded-md overflow-hidden mb-2">
                   {imageUrl ? (
-                    <img src={imageUrl} alt={other.name} className="w-full h-full object-cover" />
+                    <img
+                      src={imageUrl}
+                      alt={otherStore.name}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
                       ไม่มีรูป
@@ -252,7 +256,9 @@ export default function StoreDetailPage() {
                   )}
                 </div>
 
-                <p className="text-center text-[16px] font-bold truncate w-full">{other.name}</p>
+                <p className="text-center text-[16px] font-bold truncate w-full">
+                  {otherStore.name}
+                </p>
               </div>
             );
           })}

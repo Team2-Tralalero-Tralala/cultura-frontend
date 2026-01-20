@@ -57,7 +57,7 @@ const genderOptions: { label: string; value: Exclude<Gender, ""> }[] = [
  * Input : ไม่มี
  * Output : แสดงหน้าจอแก้ไขข้อมูลส่วนตัวของ Tourist
  */
-const EditProfileTourist: React.FC = () => {
+const EditProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -339,4 +339,4 @@ const EditProfileTourist: React.FC = () => {
   );
 };
 
-export default EditProfileTourist;
+export default EditProfilePage;

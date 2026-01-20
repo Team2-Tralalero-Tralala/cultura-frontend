@@ -9,7 +9,7 @@ import * as PackageFeedbackService from "@/Services/package-feedbacks-service";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
-import { ArrowLeft, SquarePen } from "lucide-react";
+import { ArrowLeft} from "lucide-react";
 
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";

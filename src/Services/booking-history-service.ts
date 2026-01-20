@@ -29,7 +29,8 @@ export async function fetchBookingHistoriesByRole(
   list: BookingHistoryItem[];
   page: number;
   limit: number;
-  hasNext: boolean;
+  totalPages: number;
+  totalCount: number;
 }> {
   const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const response = await fetch(
@@ -43,17 +44,20 @@ export async function fetchBookingHistoriesByRole(
     }
   );
 
-  const data = await response.json();
+  const json = await response.json();
 
-  const list: BookingHistoryItem[] = data?.data ?? [];
+  const list: BookingHistoryItem[] = json?.data?.data ?? [];
+  const pagination = json?.data?.pagination;
 
   return {
     list,
-    page,
-    limit,
-    hasNext: Array.isArray(list) && list.length === limit,
+    page: pagination?.currentPage ?? page,
+    limit: pagination?.limit ?? limit,
+    totalPages: pagination?.totalPages ?? 1,
+    totalCount: pagination?.totalCount ?? list.length,
   };
 }
+
 /*
  * คำอธิบาย : Service สำหรับดึงข้อมูลรายการการจองทั้งหมดของแอดมิน
  * Mapping: GET /admin/bookings/all

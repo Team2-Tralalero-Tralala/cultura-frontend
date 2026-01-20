@@ -11,6 +11,14 @@ export interface BookingHistoryItem {
   bookingAt: string;
 }
 
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  limit: number;
+}
+
+
 export interface TouristBookingHistory {
   id: number;
   bookingAt: string;

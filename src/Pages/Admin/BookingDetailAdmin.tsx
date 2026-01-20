@@ -19,7 +19,9 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import ModalReject from "@/Components/Modal/ModalReject";
-
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 /**
  * Type: ApiBooking
  *
@@ -61,16 +63,13 @@ type ApiBooking = {
   };
 };
 
-/**
- * Constant: BOOKING_STATUS
- * คำอธิบาย:
- *  กำหนดค่าคงที่ของสถานะการจอง
- *  ใช้สำหรับอ้างอิงสถานะจากระบบ Backend
- */
 const BOOKING_STATUS = {
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
   PENDING: "PENDING",
+  BOOKED: "BOOKED",
+  REJECTED: "REJECTED",
+  REFUND_PENDING: "REFUND_PENDING",
+  REFUNDED: "REFUNDED",
+  REFUND_REJECTED: "REFUND_REJECTED",
 } as const;
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -88,6 +87,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
  */
 export default function BookingDetailAdmin() {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
   const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,12 +97,16 @@ export default function BookingDetailAdmin() {
   const [openApproveModal, setOpenApproveModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
 
-  const token = localStorage.getItem("token");
+  const [openAlert, setOpenAlert] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
-  const breadcrumbItems = [
-    { label: "จัดการการจอง", to: "/admin/bookings" },
-    { label: "รายละเอียดการจอง" },
-  ];
+  const [openRejectConfirmModal, setOpenRejectConfirmModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
+
+
 
   /**
    * คำอธิบาย:
@@ -166,16 +172,22 @@ export default function BookingDetailAdmin() {
   const confirmApprove = async () => {
     if (!booking || !bookingId) return;
 
+    const nextStatus =
+      booking.status === BOOKING_STATUS.REFUND_PENDING
+        ? BOOKING_STATUS.REFUNDED
+        : BOOKING_STATUS.BOOKED;
+
     try {
       await axios.post(
         `${apiUrl}/admin/bookings/${bookingId}/status`,
-        { bookingId, status: "BOOKED" },
-        {
-          withCredentials: true,
-        }
+        { bookingId, status: nextStatus },
+        { withCredentials: true },
       );
 
-      setBooking({ ...booking, status: "BOOKED" });
+      setBooking({ ...booking, status: nextStatus });
+      setAlertType("success");
+      setAlertTitle("บันทึกข้อมูลสำเร็จ");
+      setOpenAlert(true);
     } catch (err) {
       console.error(err);
     } finally {
@@ -200,28 +212,35 @@ export default function BookingDetailAdmin() {
   const confirmReject = async (reason: string) => {
     if (!booking || !bookingId) return;
 
+    const nextStatus =
+      booking.status === BOOKING_STATUS.REFUND_PENDING
+        ? BOOKING_STATUS.REFUND_REJECTED
+        : BOOKING_STATUS.REJECTED;
+
     try {
       await axios.post(
         `${apiUrl}/admin/bookings/${bookingId}/status`,
-        { bookingId, status: "REJECTED", rejectReason: reason },
+        { bookingId, status: nextStatus, rejectReason: reason },
         {
           withCredentials: true,
-        }
+        },
       );
 
-      setBooking({ ...booking, status: "REJECTED", rejectReason: reason });
+      setBooking({ ...booking, status: nextStatus, rejectReason: reason });
+
+      setAlertType("success");
+      setAlertTitle("บันทึกข้อมูลสำเร็จ");
+      setOpenAlert(true);
     } catch (err) {
       console.error(err);
     } finally {
       setOpenRejectModal(false);
     }
+     setOpenRejectConfirmModal(false);
   };
 
   return (
     <div className="w-full mx-auto space-y-2">
-      {/* --------------------------------------------------------
-           Breadcrumb นำทางหน้า
-         -------------------------------------------------------- */}
       <div className="p-2">
         <Breadcrumb
           current={{
@@ -233,121 +252,202 @@ export default function BookingDetailAdmin() {
 
       <div className="w-full mx-auto">
         <div className="bg-white rounded-xl shadow-md p-8">
-          <h3 className="text-xl font-semibold mb-4">ดูรายละเอียดการจอง</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => navigate("/admin/bookings")}
+              className="p-1 rounded-md hover:bg-gray-100 transition"
+              aria-label="ย้อนกลับ"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+
+            <h3 className="text-xl font-bold">ดูรายละเอียดการจอง</h3>
+          </div>
 
           {loading ? (
-            <div className="text-center text-gray-600 py-20">กำลังโหลดข้อมูล...</div>
+            <div className="text-center text-black py-20">กำลังโหลดข้อมูล...</div>
           ) : error ? (
             <div className="text-center text-red-500 py-20">{error}</div>
           ) : !booking ? (
-            <div className="text-center text-gray-500 py-20">ไม่พบข้อมูลการจอง</div>
+            <div className="text-center text-black py-20">ไม่พบข้อมูลการจอง</div>
           ) : (
             <>
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <span className="font-medium">ชื่อผู้จอง :</span> {booking.tourist.fname}{" "}
-                  {booking.tourist.lname}
-                </p>
-                <p>
-                  <span className="font-medium">ชื่อแพ็กเกจ :</span> {booking.package.name}
-                </p>
-                <p>
-                  <span className="font-medium">วันที่เดินทาง :</span>{" "}
-                  {formatDate(booking.package.startDate)}
-                </p>
-                <p>
-                  <span className="font-medium">วันที่เดินทางกลับ :</span>{" "}
-                  {formatDate(booking.package.dueDate)}
-                </p>
-                <p>
-                  <span className="font-medium">จำนวนคนที่เดินทาง :</span>{" "}
-                  {booking.totalParticipant} คน
-                </p>
-                <p>
-                  <span className="font-medium">จำนวนผู้จอง :</span> {booking.totalParticipant} คน
-                </p>
-                <p>
-                  <span className="font-medium">ราคาทั้งหมด :</span> THB{" "}
-                  {(booking.package.price * booking.totalParticipant).toLocaleString()}
-                </p>
-                <p>
-                  <span className="font-medium">เวลาที่จอง :</span> {formatDate(booking.bookingAt)}
-                </p>
-                <p>
-                  <span className="font-medium">หลักฐานการโอน :</span> {booking.transferSlip || "-"}
-                </p>
-                <p>
-                  <span className="font-medium">อีเมลผู้จอง :</span> {booking.tourist.email}
-                </p>
-                <p>
-                  <span className="font-medium">เบอร์โทรผู้จอง :</span> {booking.tourist.phone}
-                </p>
-              </div>
-              <div className="flex justify-end gap-4 pt-8">
-                <div className="w-40">
-                  <Button type="cancel" onClick={() => setOpenRejectModal(true)}>
-                    ปฏิเสธการจอง
-                  </Button>
+              <div className="grid grid-cols-[240px_1fr] gap-y-3 text-black text-x">
+                <div className="font-bold">ชื่อผู้จอง :</div>
+                <div>
+                  {booking.tourist.fname} {booking.tourist.lname}
                 </div>
-                <div className="w-40">
-                  <Button type="confirm-admin" onClick={() => setOpenApproveModal(true)}>
-                    อนุมัติการจอง
-                  </Button>
-                </div>
+
+                <div className="font-bold">ชื่อแพ็กเกจ :</div>
+                <div>{booking.package.name}</div>
+
+                <div className="font-bold">วันที่แพ็กเกจเริ่ม :</div>
+                <div>{formatDate(booking.package.startDate)}</div>
+
+                <div className="font-bold">วันที่แพ็กเกจสิ้นสุด :</div>
+                <div>{formatDate(booking.package.dueDate)}</div>
+
+                <div className="font-bold">จำนวนคนที่เปิดรับ :</div>
+                <div>{booking.package.capacity} คน</div>
+
+                <div className="font-bold">จำนวนที่จอง :</div>
+                <div>{booking.totalParticipant} คน</div>
+
+                <div className="font-bold">ราคาสุทธิ :</div>
+                <div>THB {(booking.package.price * booking.totalParticipant).toLocaleString()}</div>
+
+                <div className="font-bold">เวลาที่จอง :</div>
+                <div>{formatDate(booking.bookingAt)}</div>
+
+                <div className="font-bold">หลักฐานการโอน :</div>
+                <div>{booking.transferSlip || "-"}</div>
+
+                <div className="font-bold">อีเมลผู้จอง :</div>
+                <div>{booking.tourist.email}</div>
+
+                <div className="font-bold">เบอร์โทรผู้จอง :</div>
+                <div>{booking.tourist.phone}</div>
+
+                {booking.status === BOOKING_STATUS.REFUND_PENDING && (
+                  <>
+                    <div className="font-bold">เหตุผลคำขอคืนเงิน :</div>
+                    <div>{booking.rejectReason || "-"}</div>
+                  </>
+                )}
               </div>
+
+              {booking.status === BOOKING_STATUS.PENDING && (
+                <ActionButtons
+                  rejectText="ปฏิเสธการจอง"
+                  approveText="อนุมัติการจอง"
+                  onReject={() => setOpenRejectModal(true)}
+                  onApprove={() => setOpenApproveModal(true)}
+                />
+              )}
+
+              {booking.status === BOOKING_STATUS.REFUND_PENDING && (
+                <ActionButtons
+                  rejectText="ปฏิเสธคำขอคืนเงิน"
+                  approveText="อนุมัติคำขอคืนเงิน"
+                  onReject={() => setOpenRejectModal(true)}
+                  onApprove={() => setOpenApproveModal(true)}
+                />
+              )}
             </>
           )}
         </div>
       </div>
 
+      {/* MODALS */}
       <Modal
         open={openApproveModal}
-        title="อนุมัติการจองนี้หรือไม่?"
-        text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการอนุมัติการจองนี้"
+        title={
+          booking?.status === BOOKING_STATUS.REFUND_PENDING
+            ? "อนุมัติคำขอคืนเงินหรือไม่"
+            : "อนุมัติการจองนี้หรือไม่"
+        }
+        text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการอนุมัติ"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={confirmApprove}
         onCancel={() => setOpenApproveModal(false)}
       />
 
-      <ModalReject
-        open={openRejectModal}
-        title="ปฎิเสธคำขอการจอง"
-        text="กรุณากรอกเหตุผลการปฎิเสธ เพื่อส่งให้นักท่องเที่ยว"
+      <Modal
+        open={openRejectConfirmModal}
+        title={
+          booking?.status === BOOKING_STATUS.REFUND_PENDING
+            ? "ปฏิเสธคำขอคืนเงินหรือไม่"
+            : "ปฏิเสธการจองนี้หรือไม่"
+        }
+        text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการปฏิเสธ"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
+        onConfirm={() => confirmReject(rejectReason)}
+        onCancel={() => setOpenRejectConfirmModal(false)}
+      />
+
+      <ModalReject
+        open={openRejectModal}
+        title={
+          booking?.status === BOOKING_STATUS.REFUND_PENDING
+            ? "ปฏิเสธคำขอคืนเงิน"
+            : "ปฏิเสธคำขอการจอง"
+        }
+        text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้นักท่องเที่ยว"
+        confirmText="ส่ง"
+        cancelText="ยกเลิก"
         maxLength={100}
-        onConfirm={confirmReject}
+        onConfirm={(reason: string) => {
+          setRejectReason(reason);
+          setOpenRejectModal(false);
+          setOpenRejectConfirmModal(true);
+        }}
         onCancel={() => setOpenRejectModal(false)}
+      />
+
+      <ModalAlert
+        open={openAlert}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => navigate("/admin/bookings")}
       />
     </div>
   );
-}
 
-/**
- * ฟังก์ชัน: formatDate
- *
- * คำอธิบาย:
- *  แปลงวันที่จากรูปแบบ ISO string
- *  ให้เป็นวันที่และเวลาในรูปแบบภาษาไทย
- *
- * Input:
- *  - inputDate?: string | null
- *
- * Output:
- *  - string: วันที่และเวลาในรูปแบบภาษาไทย
- *  - "-" หากไม่มีข้อมูลหรือรูปแบบไม่ถูกต้อง
- */
+  function ActionButtons({
+    rejectText,
+    approveText,
+    onReject,
+    onApprove,
+  }: {
+    rejectText: string;
+    approveText: string;
+    onReject: () => void;
+    onApprove: () => void;
+  }) {
+    return (
+      <div className="flex justify-end gap-4 pt-8">
+        <div className="w-40">
+          <Button type="cancel" onClick={onReject}>
+            {rejectText}
+          </Button>
+        </div>
+        <div className="w-40">
+          <Button type="confirm-admin" onClick={onApprove}>
+            {approveText}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-function formatDate(inputDate?: string | null) {
-  if (!inputDate) return "-";
-  const parsedDate = new Date(inputDate);
-  if (isNaN(parsedDate.getTime())) return "-";
-  return parsedDate.toLocaleString("th-TH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  /**
+   * ฟังก์ชัน: formatDate
+   *
+   * คำอธิบาย:
+   *  แปลงวันที่จากรูปแบบ ISO string
+   *  ให้เป็นวันที่และเวลาในรูปแบบภาษาไทย
+   *
+   * Input:
+   *  - inputDate?: string | null
+   *
+   * Output:
+   *  - string: วันที่และเวลาในรูปแบบภาษาไทย
+   *  - "-" หากไม่มีข้อมูลหรือรูปแบบไม่ถูกต้อง
+   */
+
+  function formatDate(inputDate?: string | null) {
+    if (!inputDate) return "-";
+    const parsedDate = new Date(inputDate);
+    if (isNaN(parsedDate.getTime())) return "-";
+    return parsedDate.toLocaleString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 }

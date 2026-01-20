@@ -13,7 +13,8 @@ function SubmitButton({
   onClick,
   isLoading = false,
   disabled = false,
-}: SubmitButtonProps) {
+  className = "", 
+}: SubmitButtonProps & { className?: string }) {
   return (
     <button
       type={htmlType}
@@ -23,10 +24,11 @@ function SubmitButton({
         flex items-center justify-center 
         w-full px-3 py-2 border rounded-form 
         text-white text-lg font-medium 
-        bg-dark-green hover:bg-green-900 
+        bg-[#0A4B32] hover:bg-[#083b27] 
         transition-all
         disabled:opacity-60 disabled:cursor-not-allowed
-      `}
+        ${className} 
+      `} 
     >
       {isLoading ? "กำลังบันทึก..." : children}
     </button>

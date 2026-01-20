@@ -1,8 +1,8 @@
 /*
  * Component: CreateMemberPage (Admin)
- * Description: หน้าสำหรับ Admin สร้างสมาชิกในชุมชน (ใช้ ModalAlert ตอนสำเร็จ)
+ * Description: หน้าสำหรับ Admin สร้างสมาชิกในชุมชน (ใช้ ModalAlert ตอนสำเร็จ และ Error)
  * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+ * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
  */
 
 import React, { useState } from "react";
@@ -10,27 +10,32 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
-import { ModalAlert } from "@/Components/Modal/ModalAlert"; 
-import api from "@/Libs/api"; 
-import TextField from "../../Components/TextField"; 
-import Button from "../../Components/Button"; 
-import SubmitButton from "../../Components/SubmitButton"; 
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import api from "@/Libs/api";
+import TextField from "../../Components/TextField";
+import Button from "../../Components/Button";
+import SubmitButton from "../../Components/SubmitButton";
 import AvatarUploader from "@/Components/AvatarUploader";
-import Breadcrumb from "@/Components/BreadcrumbNavigation"; 
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
  */
-const memberSchema = z.object({
-  fname: z.string().min(1, "กรุณากรอกชื่อ"),
-  lname: z.string().min(1, "กรุณากรอกนามสกุล"),
-  username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
-  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
-  confirmPassword: z.string(),
-  communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
-});
+const memberSchema = z
+  .object({
+    fname: z.string().min(1, "กรุณากรอกชื่อ"),
+    lname: z.string().min(1, "กรุณากรอกนามสกุล"),
+    username: z.string().min(3, "กรุณากรอกชื่อผู้ใช้"),
+    email: z.string().email("กรุณากรอกอีเมล"),
+    phone: z.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
+    password: z.string().min(6, "กรุณากรอกรหัสผ่าน"),
+    confirmPassword: z.string().min(1, "กรุณายืนยันรหัสผ่าน"),
+    communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "รหัสผ่านไม่ตรงกัน",
+    path: ["confirmPassword"],
+  });
 
 /*
  * คำอธิบาย : Component สำหรับสร้างบัญชีสมาชิกโดย Admin
@@ -38,7 +43,7 @@ const memberSchema = z.object({
 const CreateMemberPage: React.FC = () => {
   const navigate = useNavigate();
 
- /*
+  /*
    * คำอธิบาย : State สำหรับเก็บค่าข้อมูลจากฟอร์ม
    */
   const [formData, setFormData] = useState({
@@ -49,7 +54,7 @@ const CreateMemberPage: React.FC = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    communityRole: "", 
+    communityRole: "",
     profileImage: null as File | null,
   });
 
@@ -58,20 +63,15 @@ const CreateMemberPage: React.FC = () => {
    */
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
-   /*
-   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal ยืนยันการสร้างบัญชี
+  /*
+   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal
    */
   const [showConfirm, setShowConfirm] = useState(false);
-
-   /*
-   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal เมื่อสร้างบัญชีสำเร็จ
-   */
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false); // [เพิ่ม] State สำหรับ Error Modal
 
-   /*
+  /*
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
-   * Input : fieldName, fieldValue
-   * Output : boolean
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -101,45 +101,56 @@ const CreateMemberPage: React.FC = () => {
     }
   };
 
-   /*
+  /*
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
-   * Input : event
-   * Output : -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => {
-        const newData = { ...prev, [id]: value };
-        validateField(id, value); 
-        return newData;
+      const newData = { ...prev, [id]: value };
+      // ลบ error ทันทีที่พิมพ์
+      if (formErrors[id]) {
+        setFormErrors((prevErr) => ({ ...prevErr, [id]: undefined }));
+      }
+      return newData;
     });
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
-   * Input : file
-   * Output : -
-   */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
   /*
+   * [เพิ่ม] ฟังก์ชันตรวจสอบความถูกต้องก่อนเปิด Modal Confirm
+   */
+  const handlePreCheck = () => {
+    const isFormValid = validateField(); // ตรวจสอบ Schema (Zod)
+    const isPasswordMatch = formData.password === formData.confirmPassword;
+
+    if (!isFormValid || !isPasswordMatch) {
+      // ถ้าไม่ผ่าน ให้แสดง Error Modal
+      setShowErrorModal(true);
+
+      // กรณีรหัสผ่านไม่ตรงกัน อาจจะ Toast บอกเพิ่มเพื่อให้ชัดเจน (Optional)
+      if (!isPasswordMatch) {
+        toast.error("รหัสผ่านไม่ตรงกัน");
+      }
+    } else {
+      // ถ้าผ่าน ให้แสดง Confirm Modal
+      setShowConfirm(true);
+    }
+  };
+
+  /*
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
-   * Input : event
-   * Output : -
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 
+    // ตรวจสอบซ้ำอีกครั้ง (Defense in depth)
     const isValid = validateField();
-    if (!isValid) {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน ❌");
+    if (!isValid || formData.password !== formData.confirmPassword) {
       return;
     }
 
@@ -150,7 +161,7 @@ const CreateMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        password: formData.password, 
+        password: formData.password,
         communityRole: formData.communityRole.trim(),
       };
 
@@ -158,8 +169,8 @@ const CreateMemberPage: React.FC = () => {
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-         setShowSuccessModal(true);
-         return;
+        setShowSuccessModal(true);
+        return;
       }
 
       if (formData.profileImage) {
@@ -172,15 +183,15 @@ const CreateMemberPage: React.FC = () => {
       }
 
       setShowSuccessModal(true);
-
     } catch (error: any) {
       console.error("❌ Error creating member:", error);
-      const msg = error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
+      const msg =
+        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
       toast.error(`เกิดข้อผิดพลาด: ${msg}`);
     }
   };
 
-  return (
+ return (
     <div className="pl-0 pr-4 pt-6 pb-6 h-full bg-transparent relative">
       <div>
         <Breadcrumb
@@ -191,42 +202,45 @@ const CreateMemberPage: React.FC = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 mb-6 pl-6">
-        <button
-          onClick={() => navigate(-1)}
-          type="button"
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
-          title="ย้อนกลับ"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">สร้างบัญชีสมาชิก</h1>
-      </div>
+      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200 mt-6">
 
-      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          สร้างบัญชีสมาชิก
-        </h2>
+        <div className="flex items-center gap-3  pb-6">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+            title="ย้อนกลับ"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <h1 
+            onClick={() => navigate(-1)}
+            className="text-xl font-bold text-black tracking-tight cursor-pointer"
+          >
+            สร้างบัญชีสมาชิก
+          </h1>
+        </div>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           <div className="flex flex-col items-center">
-            <AvatarUploader 
-                avatarUrl={null} 
-                onAvatarChange={handleAvatarChange} 
-                avatarSize={270} 
+            <AvatarUploader
+              avatarUrl={null}
+              onAvatarChange={handleAvatarChange}
+              avatarSize={270}
             />
           </div>
 
@@ -307,33 +321,34 @@ const CreateMemberPage: React.FC = () => {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                error={!!formErrors.confirmPassword}
+                helperText={formErrors.confirmPassword}
               />
             </div>
 
             <TextField
               id="communityRole"
               label="บทบาทวิสาหกิจ"
-              placeholder="เช่น แม่บ้าน, ฝ่ายบัญชี"
+              placeholder="กรอกบทบาทวิสาหกิจ"
               required
               value={formData.communityRole}
               onChange={handleChange}
               error={!!formErrors.communityRole}
               helperText={formErrors.communityRole}
             />
-
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 pt-4 mt-8">
           <div className="w-32">
             <Button type="cancel" onClick={() => navigate(-1)}>
               ยกเลิก
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton 
-                htmlType="button" 
-                onClick={() => setShowConfirm(true)}
+            <SubmitButton
+              htmlType="button"
+              onClick={handlePreCheck}
             >
               สร้างบัญชี
             </SubmitButton>
@@ -361,8 +376,16 @@ const CreateMemberPage: React.FC = () => {
         message="ข้อมูลสมาชิกถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
           setShowSuccessModal(false);
-          navigate("/admin/members"); 
+          navigate("/admin/members");
         }}
+      />
+
+      <ModalAlert
+        open={showErrorModal}
+        type="error"
+        title="กรอกข้อมูลไม่ครบถ้วน"
+        message="กรุณาตรวจสอบข้อมูลให้ครบถ้วน"
+        onClose={() => setShowErrorModal(false)}
       />
     </div>
   );

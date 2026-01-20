@@ -2,7 +2,7 @@
  * Component: CreateAccountPage
  * Description: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+ * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
  */
 
 import React, { useEffect, useState } from "react";
@@ -106,7 +106,8 @@ const EditAccountPage: React.FC = () => {
   });
 
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false); 
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
@@ -114,13 +115,13 @@ const EditAccountPage: React.FC = () => {
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
-        return 2;
-      case "Member":
         return 3;
+      case "Member":
+        return 1;
       case "Tourist":
-        return 4;
-      default:
         return 2;
+      default:
+        return 3;
     }
   };
 
@@ -146,14 +147,14 @@ const EditAccountPage: React.FC = () => {
           role === "Admin"
             ? "Admin"
             : role === "Member"
-            ? "Member"
-            : role === "Tourist"
-            ? "Tourist"
-            : user.role?.name === "superadmin"
-            ? "Admin"
-            : user.role?.name === "member"
-            ? "Member"
-            : "Tourist",
+              ? "Member"
+              : role === "Tourist"
+                ? "Tourist"
+                : user.role?.name === "superadmin"
+                  ? "Admin"
+                  : user.role?.name === "member"
+                    ? "Member"
+                    : "Tourist",
       }));
       setAvatarUrl(user.profileImageUrl || null);
 
@@ -249,6 +250,32 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
+  const handlePreCheck = () => {
+    const isBasicValid =
+      formData.fname.trim() !== "" &&
+      formData.lname.trim() !== "" &&
+      formData.username.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.phone.trim() !== "";
+
+    let isRoleSpecificValid = true;
+
+    if (formData.role === "Member") {
+      if (!roleSpecificData.communityId || !roleSpecificData.activityRole.trim()) {
+        isRoleSpecificValid = false;
+      }
+    } else if (formData.role === "Tourist") {
+      if (!roleSpecificData.birthDate) {
+        isRoleSpecificValid = false;
+      }
+    }
+
+    if (!isBasicValid || !isRoleSpecificValid) {
+      setShowErrorModal(true);
+    } else {
+      setShowConfirm(true);
+    }
+  };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -292,8 +319,8 @@ const EditAccountPage: React.FC = () => {
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
-            ? "FEMALE"
-            : "NONE";
+              ? "FEMALE"
+              : "NONE";
         requestBody.birthDate = roleSpecificData.birthDate
           ? new Date(roleSpecificData.birthDate).toISOString().split("T")[0]
           : null;
@@ -401,6 +428,10 @@ const EditAccountPage: React.FC = () => {
               value={formData.username}
               onChange={handleChange}
             />
+            <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
+              <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
+              <li>ควรประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข</li>
+            </ul>
             <TextField
               id="email"
               label="อีเมล"
@@ -464,7 +495,7 @@ const EditAccountPage: React.FC = () => {
                     getOptionLabel={(option) => option.name}
                     value={
                       communityOptions.find(
-                        (c) => String(c.id) === String(roleSpecificData.communityId)
+                        (c) => String(c.id) === String(roleSpecificData.communityId),
                       ) || null
                     }
                     onChange={(_, newValue) => {
@@ -571,7 +602,7 @@ const EditAccountPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
+            <SubmitButton htmlType="button" onClick={handlePreCheck}>
               บันทึก
             </SubmitButton>
           </div>
@@ -600,6 +631,14 @@ const EditAccountPage: React.FC = () => {
           setShowSuccessModal(false);
           navigate("/super/accounts/all");
         }}
+      />
+
+      <ModalAlert
+        open={showErrorModal}
+        type="error"
+        title="กรอกข้อมูลไม่ครบถ้วน"
+        message="กรุณาตรวจสอบข้อมูลให้ครบก่อนทำการบันทึก"
+        onClose={() => setShowErrorModal(false)}
       />
     </div>
   );

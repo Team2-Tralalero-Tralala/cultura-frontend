@@ -15,6 +15,23 @@ import type { BookingHistoryItem } from "../../Types/BookingHistory";
 import * as BookingHistoriesService from "../../Services/booking-history-service";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
+const BACKEND_BASE_URL =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
+/**
+ * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
+ * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
+ * Output   : string | undefined - URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
+*/
+function getImageUrl(fileName?: string): string | undefined {
+  if (!fileName) {
+    return undefined;
+  }
+
+  const cleanedPath = fileName.replace(/^\/?uploads\//, "");
+  return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+}
+
 const STATUS_LABEL_TH: Record<string, string> = {
   BOOKED: "จองสำเร็จ",
   REJECTED: "ปฏิเสธการจอง",
@@ -31,6 +48,7 @@ const STATUS_OPTIONS = [
 ] as const;
 
 type BookingRow = {
+  bookingId: string;
   customerName: string;
   activityTitle: string;
   price: string;
@@ -47,15 +65,6 @@ type BookingHistoryResp = {
   totalCount?: number;
   hasNext?: boolean;
 };
-
-const columns: Column<BookingRow>[] = [
-  { key: "customerName", header: "ชื่อผู้จอง", className: "min-w-[180px]" },
-  { key: "activityTitle", header: "ชื่อกิจกรรม", className: "min-w-[260px]" },
-  { key: "price", header: "ราคา", className: "min-w-[120px]" },
-  { key: "status", header: "สถานะ", className: "min-w-[160px]" },
-  { key: "evidence", header: "หลักฐาน", className: "min-w-[160px]" },
-  { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
-];
 
 /**
  * คำอธิบาย : แปลงข้อมูลประวัติการจองจากรูปแบบ API (BookingHistoryItem)
@@ -92,8 +101,18 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
       minute: "2-digit",
     })
     : "-";
-  return { customerName, activityTitle, price, status, evidence, bookedAt };
+
+  return {
+    bookingId: String(item.id),
+    customerName,
+    activityTitle,
+    price,
+    status,
+    evidence,
+    bookedAt,
+  };
 };
+
 
 /**
  * คำอธิบาย : Component สำหรับแสดงประวัติการจองของผู้ใช้งานฝั่งผู้ดูแล (Admin / Member)
@@ -105,6 +124,9 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
  *   - React.ReactElement : หน้าแสดงผลตารางประวัติการจอง พร้อมตัวกรองและการแบ่งหน้า
 */
 export default function BookingHistoryAdmin(): React.ReactElement {
+  const [isSlipModalOpen, setIsSlipModalOpen] = useState(false);
+  const [slipImageUrl, setSlipImageUrl] = useState<string | undefined>(undefined);
+
   const navigate = useNavigate();
   const [tableRows, setTableRows] = useState<BookingRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,6 +138,45 @@ export default function BookingHistoryAdmin(): React.ReactElement {
   const [totalCount, setTotalCount] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const columns: Column<BookingRow>[] = [
+    { key: "customerName", header: "ชื่อผู้จอง", className: "min-w-[180px]" },
+    {
+      key: "activityTitle",
+      header: "ชื่อกิจกรรม",
+      className: "min-w-[260px]",
+      render: (row) => (
+        <button
+          type="button"
+          className="text-left"
+          onClick={() => navigate(`/admin/booking/${row.bookingId}`)}
+        >
+          {row.activityTitle}
+        </button>
+      ),
+    },
+    { key: "price", header: "ราคา", className: "min-w-[120px]" },
+    { key: "status", header: "สถานะ", className: "min-w-[160px]" },
+    {
+      key: "evidence",
+      header: "หลักฐาน",
+      className: "min-w-[160px]",
+      render: (row) =>
+        row.evidence !== "-" ? (
+          <button
+            type="button"
+            className="text-green-600 underline"
+            onClick={() => handleOpenSlip(row.evidence)}
+          >
+            {row.evidence}
+          </button>
+        ) : (
+          "-"
+        ),
+    },
+
+    { key: "bookedAt", header: "เวลา", className: "min-w-[180px]" },
+  ];
 
   /**
    * คำอธิบาย : เรียก service เพื่อโหลดข้อมูลตามหน้า/จำนวนเรคอร์ด และแมปเป็นแถวสำหรับตาราง
@@ -149,6 +210,20 @@ export default function BookingHistoryAdmin(): React.ReactElement {
     }
   }, []);
 
+  const handleOpenSlip = (fileName?: string) => {
+    const imageUrl = getImageUrl(fileName);
+    if (!imageUrl) return;
+
+    setSlipImageUrl(imageUrl);
+    setIsSlipModalOpen(true);
+  };
+
+
+  const handleCloseSlip = () => {
+    setIsSlipModalOpen(false);
+    setSlipImageUrl(undefined);
+  };
+
   useEffect(() => {
     void loadPageData(page, limit);
   }, [page, limit, loadPageData]);
@@ -176,7 +251,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
    * Output: string
   */
   const getRowKey = (r: BookingRow) =>
-    `${r.customerName}|${r.activityTitle}|${r.price}|${r.bookedAt}|${r.evidence}`;
+    `${r.bookingId}|${r.customerName}|${r.activityTitle}|${r.price}|${r.bookedAt}|${r.evidence}`;
 
   /**
    * คำอธิบาย : กำหนดค่าการแบ่งหน้าให้ DataTable
@@ -233,6 +308,54 @@ export default function BookingHistoryAdmin(): React.ReactElement {
           selectable={false}
         />
       </div>
+      {isSlipModalOpen && slipImageUrl && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+          <div
+            className="
+        relative
+        bg-[#E5E5E5]/70
+        rounded-[24px]
+        shadow-lg
+        w-[650px]
+        h-[650px]
+        max-w-[95vw]
+        max-h-[90vh]
+        flex
+        items-center
+        justify-center
+      "
+          >
+            <button
+              type="button"
+              className="
+          absolute
+          right-4
+          top-3
+          text-2xl
+          text-gray-700
+          hover:text-black
+        "
+              onClick={handleCloseSlip}
+            >
+              ×
+            </button>
+
+            <div className="w-full h-full p-6 flex items-center justify-center">
+              <img
+                src={slipImageUrl}
+                alt="transfer slip"
+                className="
+            max-w-full
+            max-h-full
+            object-contain
+            rounded-[16px]
+            bg-white
+          "
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

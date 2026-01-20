@@ -305,12 +305,13 @@ export default function DetailPackageRequiredPage() {
     .toUpperCase()
     .startsWith("APPROVE");
 
+
   return (
     <div className="w-full">
       <Breadcrumb
         current={{
-          label: packageRequestDetail?.name || "-",
-          to: `package-requests/:requestId`,
+          label: "รายละเอียดแพ็กเกจ",
+          to: `package-requests/${requestId}`,
         }}
       />
 
@@ -342,19 +343,24 @@ export default function DetailPackageRequiredPage() {
             <span className="font-normal">{packageRequestDetail?.name || "-"}</span>
           </p>
         </div>
-
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900 flex items-center">
             <span className="font-semibold">สถานะแพ็กเกจ :</span>
-            {packageRequestDetail?.statusPackage === "UNPUBLISH" ? (
-              <span className="ml-2 px-3 py-1 rounded-full bg-red-100 text-red-500 text-[14px]">
+
+            {packageRequestDetail?.statusPackage === "UNPUBLISH" && (
+              <span className="ml-2 px-4 py-1 rounded-full bg-red-200 text-red-600 text-[16px] font-bold">
                 ไม่เผยแพร่
               </span>
-            ) : (
-              <span className="ml-2 text-gray-700 text-[16px]">-</span>
+            )}
+
+            {packageRequestDetail?.statusPackage === "PUBLISH" && (
+              <span className="ml-2 px-4 py-1 rounded-full bg-green-200 text-green-700 text-[16px] font-bold">
+                เผยแพร่
+              </span>
             )}
           </p>
         </div>
+
 
         <div className="space-y-2">
           <p className="text-[16px] text-gray-900">
@@ -511,10 +517,9 @@ export default function DetailPackageRequiredPage() {
             </p>
           </div>
         </div>
-        <p className="text-[16px] text-gray-900">
-          <span className="font-semibold">ที่พักในแพ็กเกจ</span>{" "}
+        <p className="text-[20px] font-bold text-gray-900">
+          ที่พักในแพ็กเกจ
         </p>
-
         {packageRequestDetail?.homestayHistories?.length ? (
           <div className="grid grid-cols-2 gap-6">
             <p className="text-[16px] text-gray-900">

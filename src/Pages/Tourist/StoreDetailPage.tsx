@@ -148,7 +148,7 @@ export default function StoreDetailPage() {
           }}
         />
 
-        <h1 className="text-[40px] font-bold text-black mb-6">{store?.name}</h1>
+        <h1 className="text-[30px] font-bold text-black mb-6">{store?.name}</h1>
 
         <div className="flex flex-wrap gap-[29px] mb-6">
           {store?.tagStores.map((item) => (

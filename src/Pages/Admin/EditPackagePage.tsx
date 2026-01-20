@@ -21,13 +21,16 @@ import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
-import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
+import {
+  PackageStatusDropdown,
+  type PackageStatus,
+} from "@/Components/Selector/PackageStatusDropdown";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
@@ -126,11 +129,10 @@ function buildImageCandidates(rawPath: string): string[] {
       return window.location.origin;
     }
   })();
-  const cleanedPath = String(rawPath).replace(/\\/g, "/").replace(/^\.?\/*/, "");
-  const prefixes = [
-    "",
-    "uploads/"
-  ];
+  const cleanedPath = String(rawPath)
+    .replace(/\\/g, "/")
+    .replace(/^\.?\/*/, "");
+  const prefixes = ["", "uploads/"];
   const candidates = new Set<string>();
   for (const prefix of prefixes) {
     const path = cleanedPath.startsWith(prefix) ? cleanedPath : `${prefix}${cleanedPath}`;
@@ -256,7 +258,7 @@ export const EditPackagePage = () => {
   const [tagIds, setTagIds] = useState<number[]>([]);
   const [coverFiles, setCoverFiles] = useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([])
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [startDateObj, setStartDateObj] = useState<Date | null>(null);
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
@@ -280,7 +282,7 @@ export const EditPackagePage = () => {
           : result.error.issues.find((issue) => issue.path[0] === field)?.message,
       }));
     },
-    []
+    [],
   );
 
   /*
@@ -317,19 +319,31 @@ export const EditPackagePage = () => {
     }
     if (selectedHomestay) {
       if (!hsCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
+        }));
         isValid = false;
       }
       if (!hsCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
+        }));
         isValid = false;
       }
       if (!hsCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
+        }));
         isValid = false;
       }
       if (!hsCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
+        }));
         isValid = false;
       }
     }
@@ -416,34 +430,39 @@ export const EditPackagePage = () => {
    * Input: query - ข้อความค้นหา
    * Output : (void) - อัปเดต homestayOptions state
    */
-  const fetchHomestays = React.useCallback(async (query: string) => {
-    const trimmedQuery = query.trim();
+  const fetchHomestays = React.useCallback(
+    async (query: string) => {
+      const trimmedQuery = query.trim();
 
-    if (trimmedQuery.length > 0 && trimmedQuery.length < MIN_HOMESTAY_QUERY_CHARS) {
-      setHomestayOptions([]);
-      setOpenHomestayBox(false);
-      return;
-    }
+      if (trimmedQuery.length > 0 && trimmedQuery.length < MIN_HOMESTAY_QUERY_CHARS) {
+        setHomestayOptions([]);
+        setOpenHomestayBox(false);
+        return;
+      }
 
-    try {
-      const response = await axios.get(`${apiUrl}/admin/list-homestays`, {
-        params: { q: trimmedQuery, limit: 8 },
-        withCredentials: true,
-      });
-      const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];
-      const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map((homestay: any) => ({
-        id: Number(homestay.id),
-        name: homestay.name ?? "",
-        facility: homestay.facility ?? homestay.description ?? "",
-        images: homestay.homestayImage ?? homestay.images ?? [],
-      }));
-      setHomestayOptions(options);
-      setOpenHomestayBox(options.length > 0);
-    } catch (error) {
-      setHomestayOptions([]);
-      setOpenHomestayBox(false);
-    }
-  }, [id]);
+      try {
+        const response = await axios.get(`${apiUrl}/admin/list-homestays`, {
+          params: { q: trimmedQuery, limit: 8 },
+          withCredentials: true,
+        });
+        const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];
+        const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map(
+          (homestay: any) => ({
+            id: Number(homestay.id),
+            name: homestay.name ?? "",
+            facility: homestay.facility ?? homestay.description ?? "",
+            images: homestay.homestayImage ?? homestay.images ?? [],
+          }),
+        );
+        setHomestayOptions(options);
+        setOpenHomestayBox(options.length > 0);
+      } catch (error) {
+        setHomestayOptions([]);
+        setOpenHomestayBox(false);
+      }
+    },
+    [id],
+  );
 
   React.useEffect(() => {
     const timerId = setTimeout(() => {
@@ -478,7 +497,7 @@ export const EditPackagePage = () => {
         return newState;
       });
     },
-    [validateField]
+    [validateField],
   );
 
   const [hsCheckInDate, setHsCheckInDate] = useState("");
@@ -519,7 +538,9 @@ export const EditPackagePage = () => {
         });
         const packageData = response?.data?.data;
         setInitialStatus((packageData.statusPackage as PackageStatus) ?? "DRAFT");
-        setCommunityId(Number(packageData?.communityId ?? packageData?.community?.id ?? NaN) || undefined);
+        setCommunityId(
+          Number(packageData?.communityId ?? packageData?.community?.id ?? NaN) || undefined,
+        );
 
         if (packageData?.overseerPackage) {
           setCurrentOverseer({
@@ -554,10 +575,10 @@ export const EditPackagePage = () => {
         setFormState({
           name: packageData.name ?? "",
           description: packageData.description ?? "",
-          statusPackage:
-            (packageData.statusPackage as PackageStatus) ?? "DRAFT",
+          statusPackage: (packageData.statusPackage as PackageStatus) ?? "DRAFT",
           houseNumber: locationData.houseNumber ?? "",
-          villageNumber: locationData.villageNumber != null ? String(locationData.villageNumber) : "",
+          villageNumber:
+            locationData.villageNumber != null ? String(locationData.villageNumber) : "",
           province: locationData.province ?? "",
           district: locationData.district ?? "",
           subDistrict: locationData.subDistrict ?? "",
@@ -566,7 +587,8 @@ export const EditPackagePage = () => {
           latitude: locationData.latitude != null ? String(locationData.latitude) : "",
           longitude: locationData.longitude != null ? String(locationData.longitude) : "",
           placeQuery: "",
-          overseerMemberId: packageData.overseerMemberId != null ? String(packageData.overseerMemberId) : "",
+          overseerMemberId:
+            packageData.overseerMemberId != null ? String(packageData.overseerMemberId) : "",
           tagId: "",
           facility: packageData.warning ?? "",
           startDate: toDateOnly(packageData.startDate),
@@ -584,24 +606,32 @@ export const EditPackagePage = () => {
 
         const tagsFromServer: number[] = Array.isArray(packageData?.tagPackages)
           ? packageData.tagPackages
-            .map((tagPackage: any) => tagPackage?.tag?.id ?? tagPackage?.id)
-            .filter((tagId: any) => typeof tagId === "number")
+              .map((tagPackage: any) => tagPackage?.tag?.id ?? tagPackage?.id)
+              .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(tagsFromServer);
 
-        const imagesData: any[] = Array.isArray(packageData?.packageFile) ? packageData.packageFile : [];
+        const imagesData: any[] = Array.isArray(packageData?.packageFile)
+          ? packageData.packageFile
+          : [];
         const coverFetched: File[] = await Promise.all(
           imagesData
             .filter((image) => String(image.type).toUpperCase() === "COVER")
             .map((image) =>
-              bestEffortUrlToFile(String(image.filePath || image.image || ""), String(image.filePath || "cover.jpg")),
+              bestEffortUrlToFile(
+                String(image.filePath || image.image || ""),
+                String(image.filePath || "cover.jpg"),
+              ),
             ),
         );
         const galleryFetched: File[] = await Promise.all(
           imagesData
             .filter((image) => String(image.type).toUpperCase() === "GALLERY")
             .map((image) =>
-              bestEffortUrlToFile(String(image.filePath || image.image || ""), String(image.filePath || "gallery.jpg")),
+              bestEffortUrlToFile(
+                String(image.filePath || image.image || ""),
+                String(image.filePath || "gallery.jpg"),
+              ),
             ),
         );
         const videoFetched: File[] = await Promise.all(
@@ -630,7 +660,7 @@ export const EditPackagePage = () => {
                 }
               }
               throw lastError || new Error("no video url works");
-            })
+            }),
         );
         setCoverFiles(coverFetched);
         setGalleryFiles(galleryFetched);
@@ -659,7 +689,9 @@ export const EditPackagePage = () => {
           setHsBookedRoom(String(homestayHistory.bookedRoom));
         }
       } catch (error: any) {
-        setErrorMessage(error?.response?.data?.message || error?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ");
+        setErrorMessage(
+          error?.response?.data?.message || error?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
+        );
       } finally {
         if (mounted) setLoading(false);
       }
@@ -677,12 +709,14 @@ export const EditPackagePage = () => {
    * Input: [latitude, longitude] - array ของตัวเลข
    * Output : (void) - อัปเดต formState
    */
-  const handleMapChange = React.useCallback(([latitude, longitude]: [number, number]) => {
-    setFormField("latitude", String(latitude));
-    setFormField("longitude", String(longitude));
-    setPosition([latitude, longitude]);
-  }, [setFormField]);
-
+  const handleMapChange = React.useCallback(
+    ([latitude, longitude]: [number, number]) => {
+      setFormField("latitude", String(latitude));
+      setFormField("longitude", String(longitude));
+      setPosition([latitude, longitude]);
+    },
+    [setFormField],
+  );
 
   /*
    * คำอธิบาย : Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันจาก Modal
@@ -724,7 +758,7 @@ export const EditPackagePage = () => {
         ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
         ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
         facility: formState.facility || "",
-        tagIds: tagIds.map(id => Number(id)),
+        tagIds: tagIds.map((id) => Number(id)),
         homestayId: selectedHomestay ? selectedHomestay.id : -1,
         location: {
           houseNumber: formState.houseNumber || "",
@@ -752,9 +786,9 @@ export const EditPackagePage = () => {
     } catch (error: any) {
       setErrorMessage(
         error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "บันทึกแพ็กเกจไม่สำเร็จ",
+          error?.response?.data?.error ||
+          error?.message ||
+          "บันทึกแพ็กเกจไม่สำเร็จ",
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -808,7 +842,11 @@ export const EditPackagePage = () => {
           }}
         />
       </div>
-      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
+      <form
+        noValidate
+        onSubmit={handleSubmit}
+        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
+      >
         <button
           type="button"
           onClick={() => navigate(`/admin/packages/all`)}
@@ -910,16 +948,16 @@ export const EditPackagePage = () => {
                         delete newErrors.postalCode;
                       } else {
                         newErrors.province = result.error.issues.find(
-                          (issue) => issue.path[0] === "province"
+                          (issue) => issue.path[0] === "province",
                         )?.message;
                         newErrors.district = result.error.issues.find(
-                          (issue) => issue.path[0] === "district"
+                          (issue) => issue.path[0] === "district",
                         )?.message;
                         newErrors.subDistrict = result.error.issues.find(
-                          (issue) => issue.path[0] === "subDistrict"
+                          (issue) => issue.path[0] === "subDistrict",
                         )?.message;
                         newErrors.postalCode = result.error.issues.find(
-                          (issue) => issue.path[0] === "postalCode"
+                          (issue) => issue.path[0] === "postalCode",
                         )?.message;
                       }
                       return newErrors;
@@ -954,8 +992,12 @@ export const EditPackagePage = () => {
                 />
               )}
               <div className="grid grid-cols-2 gap-3 mt-2">
-                {!!formErrors.latitude && <div className="text-red-600 text-sm">{formErrors.latitude}</div>}
-                {!!formErrors.longitude && <div className="text-red-600 text-sm">{formErrors.longitude}</div>}
+                {!!formErrors.latitude && (
+                  <div className="text-red-600 text-sm">{formErrors.latitude}</div>
+                )}
+                {!!formErrors.longitude && (
+                  <div className="text-red-600 text-sm">{formErrors.longitude}</div>
+                )}
               </div>
             </div>
           </div>
@@ -1234,8 +1276,7 @@ export const EditPackagePage = () => {
                 onFocus={() => {
                   if (homestayQuery.trim() === "") {
                     fetchHomestays("");
-                  }
-                  else if (homestayOptions.length > 0) {
+                  } else if (homestayOptions.length > 0) {
                     setOpenHomestayBox(true);
                   }
                 }}
@@ -1315,7 +1356,6 @@ export const EditPackagePage = () => {
                   required
                   errorText={(formErrors as any).hsCheckOutTime}
                 />
-
               </div>
 
               <div className="relative rounded-xl border p-4 bg-white shadow-sm">
@@ -1395,7 +1435,6 @@ export const EditPackagePage = () => {
           setIsConfirmModalOpen(false);
         }}
       />
-
     </div>
   );
 };

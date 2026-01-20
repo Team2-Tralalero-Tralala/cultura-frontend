@@ -8,7 +8,7 @@
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
 import { getCommunityOwn, updateCommunityOwn } from "@/Libs/CommunityService";
-import type { CommunityFormData } from "@/Types/CommunityForm";
+import type { CommunityFormData } from "@/Types/Community";
 import Button from "@/Components/Button";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
@@ -19,8 +19,8 @@ import ThailandLocationSelector, {
 } from "@/Components/Selector/ThailandLocationSelector";
 import TextArea from "@/Components/TextArea";
 import TextField from "@/Components/TextField";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import UploadCard from "@/Components/upload/UploadCard";
+import UploadProfile from "@/Components/upload/UploadProfile";
 import { Icon } from "@iconify/react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
@@ -35,7 +35,7 @@ import { Link, useNavigate } from "react-router";
 import zod from "zod";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { BankSelector } from "@/Components/Selector/BankSelector";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*

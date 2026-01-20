@@ -7,7 +7,7 @@
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { LineGraph } from "@/Components/LineGraph";

@@ -11,10 +11,10 @@ import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import UploadCard from "@/Components/upload/UploadCard";
+import UploadProfile from "@/Components/upload/UploadProfile";
 import { createCommunity } from "@/Libs/CommunityService";
-import type { CommunityFormData } from "@/Types/CommunityForm";
+import type { CommunityFormData } from "@/Types/Community";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
@@ -29,7 +29,7 @@ import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import * as z from "zod";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";

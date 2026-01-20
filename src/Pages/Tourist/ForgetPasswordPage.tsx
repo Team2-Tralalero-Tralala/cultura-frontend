@@ -7,7 +7,7 @@
 import Button from "@/Components/Button";
 import { SuccessCard } from "@/Components/SuccessCard";
 import TextField from "@/Components/TextField";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import AuthLayout from "@/Layouts/AuthLayout";
 import api from "@/Libs/Api";
 import { Icon } from "@iconify/react";

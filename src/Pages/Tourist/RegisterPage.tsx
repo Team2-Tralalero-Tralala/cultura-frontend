@@ -2,7 +2,7 @@
  * คำอธิบาย: หน้าสำหรับสมัครบัญชีของนักท่องเที่ยว
  */
 import Button from "@/Components/Button";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";

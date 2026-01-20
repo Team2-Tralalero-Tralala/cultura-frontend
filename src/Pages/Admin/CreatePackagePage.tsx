@@ -16,13 +16,16 @@ import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
-import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
+import {
+  PackageStatusDropdown,
+  type PackageStatus,
+} from "@/Components/Selector/PackageStatusDropdown";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
@@ -146,7 +149,7 @@ export const CreatePackagePage = () => {
   const [tagIds, setTagIds] = useState<number[]>([]);
   const [coverFiles, setCoverFiles] = useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([])
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [startDateObj, setStartDateObj] = useState<Date | null>(null);
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
@@ -169,7 +172,7 @@ export const CreatePackagePage = () => {
           : result.error.issues.find((issue) => issue.path[0] === field)?.message,
       }));
     },
-    []
+    [],
   );
 
   /*
@@ -206,19 +209,31 @@ export const CreatePackagePage = () => {
     }
     if (selectedHomestay) {
       if (!homestayCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
+        }));
         isValid = false;
       }
       if (!homestayCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
+        }));
         isValid = false;
       }
       if (!homestayCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
+        }));
         isValid = false;
       }
       if (!homestayCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
+        }));
         isValid = false;
       }
     }
@@ -276,7 +291,7 @@ export const CreatePackagePage = () => {
     const fetchMyCommunity = async () => {
       try {
         const response = await axios.get(`${apiUrl}/admin/community`, {
-          withCredentials: true
+          withCredentials: true,
         });
         const myCommunityId = response.data?.data?.id;
         if (myCommunityId) {
@@ -305,12 +320,14 @@ export const CreatePackagePage = () => {
         withCredentials: true,
       });
       const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];
-      const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map((homestay: any) => ({
-        id: Number(homestay.id),
-        name: homestay.name ?? "",
-        facility: homestay.facility ?? homestay.description ?? "",
-        images: homestay.homestayImage ?? homestay.images ?? [],
-      }));
+      const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map(
+        (homestay: any) => ({
+          id: Number(homestay.id),
+          name: homestay.name ?? "",
+          facility: homestay.facility ?? homestay.description ?? "",
+          images: homestay.homestayImage ?? homestay.images ?? [],
+        }),
+      );
       setHomestayOptions(options);
       setOpenHomestayBox(options.length > 0);
     } catch (error) {
@@ -322,7 +339,10 @@ export const CreatePackagePage = () => {
 
   React.useEffect(() => {
     const timerId = setTimeout(() => {
-      if (homestayQuery || document.activeElement === homestayBoxRef.current?.querySelector('input')) {
+      if (
+        homestayQuery ||
+        document.activeElement === homestayBoxRef.current?.querySelector("input")
+      ) {
         fetchHomestays(homestayQuery);
       }
     }, 250);
@@ -355,7 +375,7 @@ export const CreatePackagePage = () => {
         return newState;
       });
     },
-    [validateField]
+    [validateField],
   );
 
   const [homestayCheckInDate, setHomestayCheckInDate] = useState("");
@@ -385,11 +405,14 @@ export const CreatePackagePage = () => {
    * Input: [latitude, longitude] (พิกัดละติจูดและลองจิจูด)
    * Output: - (อัปเดต state ในฟอร์ม)
    */
-  const handleMapChange = React.useCallback(([latitude, longitude]: [number, number]) => {
-    setFormField("latitude", String(latitude));
-    setFormField("longitude", String(longitude));
-    setPosition([latitude, longitude]);
-  }, [setFormField]);
+  const handleMapChange = React.useCallback(
+    ([latitude, longitude]: [number, number]) => {
+      setFormField("latitude", String(latitude));
+      setFormField("longitude", String(longitude));
+      setPosition([latitude, longitude]);
+    },
+    [setFormField],
+  );
 
   /*
    * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
@@ -429,16 +452,20 @@ export const CreatePackagePage = () => {
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
 
         // Homestay
-        ...(selectedHomestay && homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
-        ...(selectedHomestay && homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
-        ...(selectedHomestay && homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
-        ...(selectedHomestay && homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
+        ...(selectedHomestay &&
+          homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
+        ...(selectedHomestay &&
+          homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
+        ...(selectedHomestay &&
+          homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
+        ...(selectedHomestay &&
+          homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
         ...(selectedHomestay && homestayBookedRoom && { bookedRoom: Number(homestayBookedRoom) }),
 
         facility: formState.facility || "",
 
         // [จุดสำคัญ] ต้องแปลง tagIds เป็น number array ไม่งั้นจะ Error 400
-        tagIds: tagIds.map(tagIdValue => Number(tagIdValue)),
+        tagIds: tagIds.map((tagIdValue) => Number(tagIdValue)),
 
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
 
@@ -495,7 +522,6 @@ export const CreatePackagePage = () => {
     setIsConfirmModalOpen(true);
   }
 
-
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
       {/* Breadcrumb */}
@@ -507,7 +533,11 @@ export const CreatePackagePage = () => {
           }}
         />
       </div>
-      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
+      <form
+        noValidate
+        onSubmit={handleSubmit}
+        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
+      >
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -791,7 +821,10 @@ export const CreatePackagePage = () => {
         <section className="grid md:grid-cols-2 gap-5">
           <div className="md:col-span-1">
             <div ref={searchBoxRef}>
-              <TagSelector value={tagIds} onChange={(selectedTagIds) => setTagIds(selectedTagIds)} />
+              <TagSelector
+                value={tagIds}
+                onChange={(selectedTagIds) => setTagIds(selectedTagIds)}
+              />
             </div>
           </div>
 
@@ -966,7 +999,6 @@ export const CreatePackagePage = () => {
                   required
                   errorText={(formErrors as any).homestayCheckOutTime}
                 />
-
               </div>
 
               <div className="relative rounded-xl border p-4 bg-white shadow-sm">
@@ -1045,7 +1077,6 @@ export const CreatePackagePage = () => {
           setIsConfirmModalOpen(false);
         }}
       />
-
     </div>
   );
 };

@@ -10,7 +10,7 @@ import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Link } from "react-router-dom";
 import { Tag } from "@/Components/Tag";
-import type { HomestayDetail } from "@/Types/HomestayDetail";
+import type { HomestayDetail } from "@/Types/Homestay";
 import { fetchHomestayDetailByAdmin } from "@/Libs/HomestayService";
 
 const apiUrl = import.meta.env.VITE_API_URL;

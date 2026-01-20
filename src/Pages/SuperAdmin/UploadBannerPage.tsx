@@ -8,7 +8,7 @@
 
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
@@ -37,7 +37,7 @@ async function cropImageToFile(
   file: File,
   area: { x: number; y: number; width: number; height: number },
   mime = "image/jpeg",
-  quality = 0.95
+  quality = 0.95,
 ): Promise<File> {
   const imageElement = await new Promise<HTMLImageElement>((resolve, reject) => {
     const temporaryImage = new Image();
@@ -60,11 +60,11 @@ async function cropImageToFile(
     0,
     0,
     canvasElement.width,
-    canvasElement.height
+    canvasElement.height,
   );
 
   const blobData: Blob = await new Promise((resolve) =>
-    canvasElement.toBlob((blob) => resolve(blob!), mime, quality)
+    canvasElement.toBlob((blob) => resolve(blob!), mime, quality),
   );
 
   const outputName = file.name.replace(/\.(\w+)$/, "_cropped.$1");
@@ -114,10 +114,10 @@ async function fetchBanners(): Promise<BannerItem[]> {
   const rawList = Array.isArray(response.data?.data)
     ? response.data.data
     : Array.isArray(response.data?.banners)
-    ? response.data.banners
-    : Array.isArray(response.data)
-    ? response.data
-    : [];
+      ? response.data.banners
+      : Array.isArray(response.data)
+        ? response.data
+        : [];
 
   return (rawList as RawBannerItem[]).map((rawItem, index) => {
     const bannerItem: BannerItem = {
@@ -221,7 +221,7 @@ export default function UploadBannerPage() {
       ...serverBanners.map((banner) => ({ url: banner.url ?? bannerPreviewUrl(banner) })),
       ...localPreviews,
     ],
-    [serverBanners, localPreviews]
+    [serverBanners, localPreviews],
   );
 
   /*
@@ -419,7 +419,7 @@ export default function UploadBannerPage() {
         } else {
           const localIndex = pendingIndex - serverCount;
           setBannerFiles((previousFiles) =>
-            previousFiles.filter((_unused, index) => index !== localIndex)
+            previousFiles.filter((_unused, index) => index !== localIndex),
           );
         }
         setResultType("success");

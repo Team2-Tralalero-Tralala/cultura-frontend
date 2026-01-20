@@ -11,7 +11,7 @@ import Button from "@/Components/Button";
 import TextField from "@/Components/TextField";
 import TextArea from "@/Components/TextArea";
 import MapPicker from "@/Components/MapPicker";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
@@ -64,9 +64,19 @@ const homestaySchema = z.object({
   type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
   facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
   guestPerRoom: z
-    .string().min(1).refine((value) => Number(value) >= 1 && Number.isInteger(Number(value)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
+    .string()
+    .min(1)
+    .refine(
+      (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+    ),
   totalRoom: z
-    .string().min(1).refine((value) => Number(value) >= 1 && Number.isInteger(Number(value)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
+    .string()
+    .min(1)
+    .refine(
+      (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+    ),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
   province: z.string().min(1, "กรุณาเลือกจังหวัด"),
   district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
@@ -112,11 +122,10 @@ if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
             (response as any).data.data = Array.isArray(tagList) ? tagList : [];
           }
         }
-      } catch {
-      }
+      } catch {}
       return response;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 }
 
@@ -136,9 +145,7 @@ export default function CreateHomestaysPage() {
   const [galleryFiles, setGalleryFiles] = React.useState<FileLike[]>([]);
   const [tagIds, setTagIds] = React.useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
-  const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(
-    null
-  );
+  const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
 
   /**
@@ -237,16 +244,14 @@ export default function CreateHomestaysPage() {
    * คำอธิบาย: handler สำหรับ MapPicker
    * - อัปเดต latitude/longitude ในฟอร์ม (ไม่ validate ทันที)
    */
-  const onMapChange = React.useCallback(
-    (position: [number, number]) => {
-      const [latitude, longitude] = position;
-      setForm((prev) => ({
-        ...prev,
-        latitude: String(latitude),
-        longitude: String(longitude),
-      }));
-    }, []
-  );
+  const onMapChange = React.useCallback((position: [number, number]) => {
+    const [latitude, longitude] = position;
+    setForm((prev) => ({
+      ...prev,
+      latitude: String(latitude),
+      longitude: String(longitude),
+    }));
+  }, []);
 
   /**
    * ฟังก์ชันยืนยันการบันทึก
@@ -424,8 +429,7 @@ export default function CreateHomestaysPage() {
                     setField("province", location.province ?? "");
                     setField("district", location.district ?? "");
                     setField("subDistrict", location.subdistrict ?? "");
-                    setField(
-                      "postalCode", (location.postalCode ?? "").toString());
+                    setField("postalCode", (location.postalCode ?? "").toString());
                   }}
                   error={{
                     province: !!errors.province,
@@ -437,7 +441,6 @@ export default function CreateHomestaysPage() {
                     district: errors.district,
                     subdistrict: errors.subDistrict,
                   }}
-
                 />
               </div>
 
@@ -462,25 +465,16 @@ export default function CreateHomestaysPage() {
                 onChange={onMapChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-2">
-                {!!errors.latitude && (
-                  <div className="text-red-600 text-sm">
-                    {errors.latitude}
-                  </div>
-                )}
+                {!!errors.latitude && <div className="text-red-600 text-sm">{errors.latitude}</div>}
                 {!!errors.longitude && (
-                  <div className="text-red-600 text-sm">
-                    {errors.longitude}
-                  </div>
+                  <div className="text-red-600 text-sm">{errors.longitude}</div>
                 )}
               </div>
             </div>
 
             {/* แท็ก */}
             <div className="md:col-span-2">
-              <TagSelector
-                value={tagIds}
-                onChange={setTagIds}
-              />
+              <TagSelector value={tagIds} onChange={setTagIds} />
             </div>
 
             {/* อัปโหลดรูป */}
@@ -509,8 +503,7 @@ export default function CreateHomestaysPage() {
 
               <div className="space-y-2">
                 <label className="block text-base font-semibold">
-                  อัปโหลดรูปภาพเพิ่มเติม{" "}
-                  <span className="text-red-600">*</span>
+                  อัปโหลดรูปภาพเพิ่มเติม <span className="text-red-600">*</span>
                 </label>
                 <UploadCard
                   max={5}
@@ -546,16 +539,13 @@ export default function CreateHomestaysPage() {
             </div>
           </div>
         </section>
-
-
       </form>
 
       {/* Modal ยืนยัน */}
       <Modal
         open={isConfirmOpen}
         title="ยืนยันการบันทึกที่พัก"
-        text={`คุณต้องการบันทึกที่พักจำนวน ${pendingPayloads?.length ?? 0
-          } รายการหรือไม่`}
+        text={`คุณต้องการบันทึกที่พักจำนวน ${pendingPayloads?.length ?? 0} รายการหรือไม่`}
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={onConfirmSave}

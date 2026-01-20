@@ -9,7 +9,7 @@ import * as zod from "zod";
 
 import Button from "@/Components/Button";
 import TextArea from "@/Components/TextArea";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { Modal } from "@/Components/Modal/Modal";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";
@@ -30,10 +30,7 @@ const initialFeedbackForm: FeedbackFormState = {
 
 const feedbackValidationSchema = zod.object({
   ratingScore: zod.number().min(1, "กรุณาให้คะแนนอย่างน้อย 1 ดาว").max(5),
-  feedbackMessage: zod
-    .string()
-    .max(200, "ข้อเสนอแนะต้องไม่เกิน 200 ตัวอักษร")
-    .optional(),
+  feedbackMessage: zod.string().max(200, "ข้อเสนอแนะต้องไม่เกิน 200 ตัวอักษร").optional(),
 });
 
 type FeedbackFormErrors = Partial<Record<keyof FeedbackFormState, string>>;
@@ -53,10 +50,10 @@ export function CreateFeedbackPage() {
   const [packageName, setPackageName] = useState<string>("ชื่อแพ็กเกจ");
 
   /**
- * คำอธิบาย : ฟังก์ชันสำหรับเปิด Modal แจ้งเตือนพร้อมกำหนดข้อความ
- * Input : title, message
- * Output : -
- */
+   * คำอธิบาย : ฟังก์ชันสำหรับเปิด Modal แจ้งเตือนพร้อมกำหนดข้อความ
+   * Input : title, message
+   * Output : -
+   */
   const showAlertModal = (title: string, message: string) => {
     setAlertModalTitle(title);
     setAlertModalMessage(message);
@@ -64,10 +61,10 @@ export function CreateFeedbackPage() {
   };
 
   /**
- * คำอธิบาย : ฟังก์ชันสำหรับดึงค่าจาก Cookie ตามชื่อที่ระบุ
- * Input : cookieName
- * Output : ค่าที่เก็บใน Cookie หรือ null
- */
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงค่าจาก Cookie ตามชื่อที่ระบุ
+   * Input : cookieName
+   * Output : ค่าที่เก็บใน Cookie หรือ null
+   */
   const getCookieValue = (cookieName: string): string | null => {
     const cookieMatch = document.cookie.match(new RegExp("(^| )" + cookieName + "=([^;]+)"));
     return cookieMatch ? cookieMatch[2] : null;
@@ -88,7 +85,7 @@ export function CreateFeedbackPage() {
           delete nextErrors[fieldKey];
         } else {
           const foundIssue = validationResult.error.issues.find(
-            (issue) => issue.path[0] === fieldKey
+            (issue) => issue.path[0] === fieldKey,
           );
           if (foundIssue) {
             nextErrors[fieldKey] = foundIssue.message;
@@ -168,9 +165,9 @@ export function CreateFeedbackPage() {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       );
 
       showAlertModal("สำเร็จ", "ส่งข้อเสนอแนะของคุณเรียบร้อยแล้ว");
@@ -232,7 +229,6 @@ export function CreateFeedbackPage() {
         <h1 className="text-[32px] font-bold text-black">ประวัติการจอง</h1>
       </div>
 
-
       <hr className="border-gray-300 mb-8" />
       <main className="flex-grow max-w-[1200px] mx-auto w-full px-6 py-10">
         {/* การ์ดเนื้อหาหลัก (Main Content Card) */}
@@ -246,9 +242,7 @@ export function CreateFeedbackPage() {
             {/* ส่วนการให้คะแนน (Rating Section) */}
             <div className="mb-10">
               <div className="flex items-center gap-4 mb-10">
-                <label className="text-base font-medium text-black">
-                  ให้คะแนนแพ็กเกจ
-                </label>
+                <label className="text-base font-medium text-black">ให้คะแนนแพ็กเกจ</label>
 
                 <div className="flex items-center gap-3">
                   {[1, 2, 3, 4, 5].map((starRatingIndex) => (
@@ -259,11 +253,16 @@ export function CreateFeedbackPage() {
                       className="focus:outline-none transition-all hover:scale-110 active:scale-90"
                     >
                       <Icon
-                        icon={starRatingIndex <= feedbackFormData.ratingScore ? "mdi:star" : "mdi:star-outline"}
-                        className={`w-8 h-8 ${starRatingIndex <= feedbackFormData.ratingScore
-                          ? "text-[#1DC9A0]"
-                          : "text-[#D1D5DB]"
-                          }`}
+                        icon={
+                          starRatingIndex <= feedbackFormData.ratingScore
+                            ? "mdi:star"
+                            : "mdi:star-outline"
+                        }
+                        className={`w-8 h-8 ${
+                          starRatingIndex <= feedbackFormData.ratingScore
+                            ? "text-[#1DC9A0]"
+                            : "text-[#D1D5DB]"
+                        }`}
                       />
                     </button>
                   ))}
@@ -326,10 +325,7 @@ export function CreateFeedbackPage() {
                 </Button>
               </div>
               <div className="w-[140px]">
-                <Button
-                  type="confirm-tourist"
-                  onClick={() => handleFormSubmit()}
-                >
+                <Button type="confirm-tourist" onClick={() => handleFormSubmit()}>
                   {isDataSavingProcess ? "กำลังส่ง..." : "ยืนยัน"}
                 </Button>
               </div>

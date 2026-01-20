@@ -7,7 +7,7 @@
  */
 
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { DailyDateInput } from "@/Components/calendar/input_calendar/DailyDateInput";
+import { DailyDateInput } from "@/Components/calendar/InputCalendar/DailyDateInput";
 import CardPackage from "@/Components/CardPackage";
 import Footer from "@/Components/Footer";
 import NavbarTourist from "@/Components/NavbarTourist";

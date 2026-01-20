@@ -18,7 +18,7 @@ import {
 } from "@/Libs/DashboardService";
 import { BarChart } from "@/Components/Graph/BarChart";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 
 /**
  * Component: DashboardPage

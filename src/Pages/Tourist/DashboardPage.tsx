@@ -10,7 +10,7 @@ import {
   type TouristDashboardFilters,
   type TouristDashboardResponse,
 } from "@/Libs/DashboardService";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";

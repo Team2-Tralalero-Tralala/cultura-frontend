@@ -15,7 +15,7 @@ import {
   type MemberDashboardResponse,
 } from "@/Libs/DashboardService";
 import { BarChart } from "@/Components/Graph/BarChart";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 
 /**
  * คำอธิบาย: หน้า Dashboard ของ Member

@@ -12,7 +12,7 @@
  */
 
 import type { BookingHistoryItem, TouristBookingHistory } from "../Types/BookingHistory";
-import type { BookingAdminDtoFromApi, Pagination, BookingRow } from "@/Types/BookingAdmin";
+import type { BookingAdminDtoFromApi, Pagination, BookingRow } from "@/Types/Booking";
 import axios from "axios";
 import api from "@/Libs/Api";
 const apiUrl = import.meta.env.VITE_API_URL;

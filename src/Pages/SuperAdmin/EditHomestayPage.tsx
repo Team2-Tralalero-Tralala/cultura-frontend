@@ -15,7 +15,7 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
@@ -71,14 +71,14 @@ const schema = z.object({
     .refine(
       (guestPerRoomValue) =>
         Number(guestPerRoomValue) >= 1 && Number.isInteger(Number(guestPerRoomValue)),
-      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
   totalRoom: z
     .string()
     .min(1)
     .refine(
       (refineValue) => Number(refineValue) >= 1 && Number.isInteger(Number(refineValue)),
-      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
   province: z.string().min(1, "กรุณาเลือกจังหวัด"),
@@ -193,12 +193,9 @@ export default function EditHomestayPage() {
         const homestayIdNumber = Number(homestayId);
         if (!homestayIdNumber) throw new Error("homestayId ไม่ถูกต้อง");
 
-        const response = await axios.get(
-          `${API_URL}/super/homestays/${homestayIdNumber}`,
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await axios.get(`${API_URL}/super/homestays/${homestayIdNumber}`, {
+          withCredentials: true,
+        });
         const homestayData = response?.data?.data ?? response?.data;
         if (!homestayData) throw new Error("ไม่พบข้อมูลที่พัก");
 
@@ -236,9 +233,9 @@ export default function EditHomestayPage() {
             .map((imageItem) =>
               bestEffortUrlToFile(
                 String(imageItem.image || ""),
-                String(imageItem.image || "cover.jpg")
-              )
-            )
+                String(imageItem.image || "cover.jpg"),
+              ),
+            ),
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
@@ -247,26 +244,26 @@ export default function EditHomestayPage() {
             .map((imageItem) =>
               bestEffortUrlToFile(
                 String(imageItem.image || ""),
-                String(imageItem.image || "gallery.jpg")
-              )
-            )
+                String(imageItem.image || "gallery.jpg"),
+              ),
+            ),
         );
 
         setCoverFiles(coverFilesFetched);
         setGalleryFiles(galleryFilesFetched);
         const currentTagIds: number[] = Array.isArray(homestayData?.tagHomestays)
           ? homestayData.tagHomestays
-            .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
-            .filter((tagId: any) => typeof tagId === "number")
+              .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
+              .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(currentTagIds);
       } catch (err: any) {
         console.error("Load homestay error:", err?.response?.data || err);
         setErrorMessage(
           err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          "โหลดข้อมูลไม่สำเร็จ"
+            err?.response?.data?.error ||
+            err?.message ||
+            "โหลดข้อมูลไม่สำเร็จ",
         );
       } finally {
         setIsLoading(false);
@@ -315,7 +312,7 @@ export default function EditHomestayPage() {
    */
   const setField = <FieldKey extends keyof HomestayForm>(
     key: FieldKey,
-    value: HomestayForm[FieldKey]
+    value: HomestayForm[FieldKey],
   ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     validateField(key, value);
@@ -340,7 +337,7 @@ export default function EditHomestayPage() {
     setPosition((previousPosition) =>
       previousPosition[0] === newPosition[0] && previousPosition[1] === newPosition[1]
         ? previousPosition
-        : newPosition
+        : newPosition,
     );
   }, []);
 
@@ -415,9 +412,9 @@ export default function EditHomestayPage() {
       console.error("Update homestay error:", error?.response?.data || error);
       setErrorMessage(
         error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "อัปเดตที่พักไม่สำเร็จ"
+          error?.response?.data?.error ||
+          error?.message ||
+          "อัปเดตที่พักไม่สำเร็จ",
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {

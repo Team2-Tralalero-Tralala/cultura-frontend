@@ -20,7 +20,7 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
@@ -76,14 +76,14 @@ const schema = z.object({
     .refine(
       (guestPerRoomValue) =>
         Number(guestPerRoomValue) >= 1 && Number.isInteger(Number(guestPerRoomValue)),
-      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
   totalRoom: z
     .string()
     .min(1)
     .refine(
       (refineValue) => Number(refineValue) >= 1 && Number.isInteger(Number(refineValue)),
-      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
   province: z.string().min(1, "กรุณาเลือกจังหวัด"),
@@ -238,16 +238,16 @@ export default function EditHomestayAdminPage() {
           imgs
             .filter((img) => img.type === "COVER")
             .map((img) =>
-              bestEffortUrlToFile(String(img.image || ""), String(img.image || "cover.jpg"))
-            )
+              bestEffortUrlToFile(String(img.image || ""), String(img.image || "cover.jpg")),
+            ),
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
           imgs
             .filter((img) => img.type === "GALLERY")
             .map((img) =>
-              bestEffortUrlToFile(String(img.image || ""), String(img.image || "gallery.jpg"))
-            )
+              bestEffortUrlToFile(String(img.image || ""), String(img.image || "gallery.jpg")),
+            ),
         );
 
         setCoverFiles(coverFilesFetched);
@@ -264,7 +264,7 @@ export default function EditHomestayAdminPage() {
           err?.response?.data?.message ||
             err?.response?.data?.error ||
             err?.message ||
-            "โหลดข้อมูลไม่สำเร็จ"
+            "โหลดข้อมูลไม่สำเร็จ",
         );
       } finally {
         setIsLoading(false);
@@ -311,7 +311,7 @@ export default function EditHomestayAdminPage() {
    */
   const setField = <FieldKey extends keyof HomestayForm>(
     key: FieldKey,
-    value: HomestayForm[FieldKey]
+    value: HomestayForm[FieldKey],
   ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     validateField(key, value);
@@ -334,7 +334,7 @@ export default function EditHomestayAdminPage() {
     setPosition((previousPosition) =>
       previousPosition[0] === newPosition[0] && previousPosition[1] === newPosition[1]
         ? previousPosition
-        : newPosition
+        : newPosition,
     );
   }, []);
 
@@ -413,7 +413,7 @@ export default function EditHomestayAdminPage() {
         error?.response?.data?.message ||
           error?.response?.data?.error ||
           error?.message ||
-          "อัปเดตที่พักไม่สำเร็จ"
+          "อัปเดตที่พักไม่สำเร็จ",
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {

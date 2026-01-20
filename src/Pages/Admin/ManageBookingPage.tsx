@@ -17,7 +17,7 @@ import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
 import { fetchBookingsByAdmin, updateBookingStatus } from "@/Libs/BookingHistoryService";
-import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/BookingAdmin";
+import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/Booking";
 import type { PaginationResponse } from "@/Types/Community";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 

@@ -27,3 +27,50 @@ export type PaginationResponse<T> = {
     limit: number; // จำนวนรายการต่อหน้า
   };
 };
+
+export type CommunityFormData = {
+  id?: number;
+  locationId?: number;
+  adminId: number;
+  name: string;
+  alias?: string;
+  type: string;
+  registerNumber: string;
+  registerDate: Date;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  description: string;
+  mainActivityName: string;
+  mainActivityDescription: string;
+  status: string;
+  detail: string;
+  houseNumber: string;
+  villageNumber?: number | null;
+  longitude: number;
+  latitude: number;
+  province: string;
+  district: string;
+  subDistrict: string;
+  postalCode: string;
+  location: {
+    province: string;
+    district: string;
+    subDistrict: string;
+    postalCode: string;
+  };
+  phone: string;
+  email: string;
+  urlWebsite: string;
+  urlFacebook: string;
+  urlLine: string;
+  urlTiktok: string;
+  urlOther: string;
+  mainAdmin: string;
+  mainAdminPhone: string;
+  coordinatorName?: string;
+  coordinatorPhone?: string;
+  rating: number;
+  communityMembers: number[];
+  isRatingVisible: boolean;
+};

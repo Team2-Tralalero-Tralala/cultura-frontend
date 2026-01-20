@@ -10,7 +10,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import zod from "zod";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";

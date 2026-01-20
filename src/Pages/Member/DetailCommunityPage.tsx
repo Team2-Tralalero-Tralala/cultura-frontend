@@ -1,8 +1,9 @@
 /**
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดของชุมชน (Member)
- * หน้าที่ : ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
- * สิทธิ์การเข้าถึง : Member เท่านั้น (ดึงข้อมูลชุมชนของตนเอง)
- * เส้นทาง (Route) : /member/community/own
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดของชุมชน (Member)
+ * - ดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
+ * - สำหรับ Member (ดึงข้อมูลชุมชนของตนเอง)
+ * Input: -
+ * Output: หน้าแสดงรายละเอียดชุมชน
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -11,18 +12,18 @@ import { Icon } from "@iconify/react";
 import { getCommunityDetailByMember } from "@/Libs/CommunityService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : แปลงค่าข้อความสำหรับแสดงผล หากไม่มีข้อมูลหรือเป็นค่าว่างจะแสดง "-"
- * Input : textValue (string | null | undefined)
- * Output : string
+/**
+ * คำอธิบาย: แปลงค่าข้อความสำหรับแสดงผล หากไม่มีข้อมูลหรือเป็นค่าว่างจะแสดง "-"
+ * Input: textValue (ค่าข้อความที่ต้องการตรวจสอบ)
+ * Output: ข้อความหรือ "-"
  */
 const displayText = (textValue?: string | null) =>
   textValue && String(textValue).trim() ? textValue : "-";
 
-/*
- * คำอธิบาย : แปลงวันที่จากรูปแบบ ISO string เป็นวันที่รูปแบบไทย (dd/mm/yyyy)
- * Input : isoDateString (string | null | undefined)
- * Output : string
+/**
+ * คำอธิบาย: แปลงวันที่จากรูปแบบ ISO string เป็นวันที่รูปแบบไทย (dd/mm/yyyy)
+ * Input: isoDateString (รูปแบบวันที่ ISO)
+ * Output: วันที่ในรูปแบบไทย หรือ "-"
  */
 const toThaiDate = (isoDateString?: string | null) => {
   if (!isoDateString) return "-";
@@ -34,15 +35,15 @@ const toThaiDate = (isoDateString?: string | null) => {
   return `${day}/${month}/${year}`;
 };
 
-/*
- * คำอธิบาย : ค่า URL Backend Base จาก Environment Variable
+/**
+ * คำอธิบาย: ค่า URL Backend Base จาก Environment Variable
  */
 const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-/*
- * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend ให้เป็น URL ดาวน์โหลดเต็มรูปแบบ
- * Input : fileName (string | null)
- * Output : string | undefined
+/**
+ * คำอธิบาย: แปลงพาธไฟล์ที่เก็บจาก backend ให้เป็น URL ดาวน์โหลดเต็มรูปแบบ
+ * Input: fileName (ชื่อไฟล์หรือ path)
+ * Output: URL เต็มรูปแบบ หรือ undefined
  */
 function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
@@ -52,10 +53,10 @@ function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
-/*
- * คำอธิบาย : ดึง path รูปภาพจาก object โดยรองรับชื่อ field ที่แตกต่างกัน
- * Input : imageEntity (any)
- * Output : string | null
+/**
+ * คำอธิบาย: ดึง path รูปภาพจาก object โดยรองรับชื่อ field ที่แตกต่างกัน
+ * Input: imageEntity (Object รูปภาพ)
+ * Output: path รูปภาพ หรือ null
  */
 function pickImagePath(imageEntity: any): string | null {
   return (
@@ -63,10 +64,10 @@ function pickImagePath(imageEntity: any): string | null {
   );
 }
 
-/*
- * คำอธิบาย : ค้นหารูปภาพของชุมชนตามประเภทที่กำหนด
- * Input : communityData (any), imageType (string)
- * Output : string | null
+/**
+ * คำอธิบาย: ค้นหารูปภาพของชุมชนตามประเภทที่กำหนด
+ * Input: communityData (ข้อมูลชุมชน), imageType (ประเภทรูปภาพ)
+ * Output: path รูปภาพ หรือ null
  */
 function findImage(communityData: any, imageType: string): string | null {
   const imageItem = communityData?.communityImage?.find(
@@ -75,10 +76,10 @@ function findImage(communityData: any, imageType: string): string | null {
   return pickImagePath(imageItem);
 }
 
-/*
- * คำอธิบาย : ดึงรายการ path รูปภาพของชุมชนตามประเภทที่กำหนด
- * Input : communityData (any), imageType (string)
- * Output : string[]
+/**
+ * คำอธิบาย: ดึงรายการ path รูปภาพของชุมชนตามประเภทที่กำหนด
+ * Input: communityData (ข้อมูลชุมชน), imageType (ประเภทรูปภาพ)
+ * Output: อาร์เรย์ของ path รูปภาพ
  */
 function listImagesByType(communityData: any, imageType: string): string[] {
   const imageLists = (communityData?.communityImage || []).filter(
@@ -89,25 +90,27 @@ function listImagesByType(communityData: any, imageType: string): string[] {
 
 // Components ย่อยที่ใช้ภายในหน้า
 
-/*
- * คำอธิบาย : แสดงแถวข้อมูลแบบ Label : Value
- * Input : label (string), children (ReactNode)
- * Output : React element
+/**
+ * คำอธิบาย: แสดงแถวข้อมูลแบบ Label : Value
+ * Input: label (ชื่อหัวข้อ), children (ข้อมูลที่จะแสดง)
+ * Output: React element แสดงแถวข้อมูล
  */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-bold text-black text-base">{label}</div>
       <div className="text-black font-regular text-base">:</div>
-      <div className="text-black font-regular break-words text-base">{children ?? "-"}</div>
+      <div className="text-gray-600 mb-6 leading-relaxed wrap-break-word text-justify pr-4">
+        {children ?? "-"}
+      </div>
     </div>
   );
 }
 
-/*
- * คำอธิบาย : แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
- * Input : src, name, size
- * Output : React element
+/**
+ * คำอธิบาย: แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
+ * Input: src (URL รูป), name (ชื่อ), size (ขนาด)
+ * Output: React element รูปโปรไฟล์
  */
 function AvatarCircle({ src, name, size = 64 }: any) {
   const baseClassName =
@@ -137,10 +140,10 @@ function AvatarCircle({ src, name, size = 64 }: any) {
   );
 }
 
-/*
- * คำอธิบาย : แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
- * Input : src, name, size
- * Output : React element
+/**
+ * คำอธิบาย: แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
+ * Input: src (URL โลโก้), name (ชื่อชุมชน), size (ขนาด)
+ * Output: React element โลโก้
  */
 function LogoCircle({ src, name, size = 120 }: any) {
   const baseClassName =
@@ -159,10 +162,7 @@ function LogoCircle({ src, name, size = 120 }: any) {
 
   const initialName = (name || "").trim().charAt(0)?.toUpperCase() || "?";
   return (
-    <div
-      style={style}
-      className={`${baseClassName} bg-gradient-to-br from-emerald-500 to-teal-600`}
-    >
+    <div style={style} className={`${baseClassName} bg-linear-to-br from-emerald-500 to-teal-600`}>
       <span className="text-white font-bold" style={{ fontSize: size * 0.45 }}>
         {initialName}
       </span>
@@ -170,10 +170,10 @@ function LogoCircle({ src, name, size = 120 }: any) {
   );
 }
 
-/*
- * คำอธิบาย : แสดงภาพปก (แนวนอนสี่เหลี่ยม)
- * Input : src, height
- * Output : React element
+/**
+ * คำอธิบาย: แสดงภาพปก (แนวนอนสี่เหลี่ยม)
+ * Input: src (URL ภาพปก), height (ความสูง)
+ * Output: React element ภาพปก
  */
 function CoverRect({ src, height = 320 }: any) {
   if (src) return <img src={src} alt="Cover" style={{ height }} className="w-full object-cover" />;
@@ -186,10 +186,10 @@ function CoverRect({ src, height = 320 }: any) {
   );
 }
 
-/*
- * คำอธิบาย : Icon Pin (หมุดพิกัด)
- * Input : props
- * Output : React element (SVG)
+/**
+ * คำอธิบาย: Icon Pin (หมุดพิกัด)
+ * Input: props (SVG props)
+ * Output: React element (SVG)
  */
 const Pin = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" width="20" height="20" {...props}>
@@ -200,10 +200,10 @@ const Pin = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-/*
- * คำอธิบาย : Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
- * Input : title, count, children, defaultOpen, onManage
- * Output : React element
+/**
+ * คำอธิบาย: Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
+ * Input: title (หัวข้อ), count (จำนวนรายการ), children (เนื้อหา), defaultOpen (สถานะเปิด/ปิดเริ่มต้น), onManage (ฟังก์ชันจัดการ)
+ * Output: React element Accordion
  */
 function Section({
   title,
@@ -256,10 +256,10 @@ function Section({
   );
 }
 
-/*
- * คำอธิบาย : การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / ที่พัก)
- * Input : image, title, children
- * Output : React element
+/**
+ * คำอธิบาย: การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / ที่พัก)
+ * Input: image (URL รูป), title (ชื่อรายการ), children (รายละเอียดเพิ่มเติม)
+ * Output: React element Card
  */
 function ItemCard({ image, title, children }: any) {
   return (
@@ -281,9 +281,12 @@ function ItemCard({ image, title, children }: any) {
   );
 }
 
-/* Component หลัก : CommunityDetailAdmin */
-
-export default function CommunityDetailAdmin() {
+/**
+ * คำอธิบาย: Component หลักแสดงหน้าละเอียดชุมชน
+ * Input: -
+ * Output: หน้าแสดงรายละเอียดชุมชน
+ */
+export default function DetailCommunityPage() {
   const navigate = useNavigate();
   const [community, setCommunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -295,8 +298,8 @@ export default function CommunityDetailAdmin() {
       try {
         const response = await getCommunityDetailByMember();
         setCommunity(response?.data?.data);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
+      } catch (error: any) {
+        setError(error?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setIsLoading(false);
       }
@@ -439,7 +442,7 @@ export default function CommunityDetailAdmin() {
 
             <Row label="อีเมล">{displayText(community.email)}</Row>
             <Row label="ที่อยู่">
-              <span className="whitespace-pre-line break-words">
+              <span className="whitespace-pre-line wrap-break-word">
                 {`${displayText(community.location?.detail)} ${displayText(
                   community.location?.subDistrict,
                 )} ${displayText(community.location?.district)} ${displayText(community.location?.province)} ${

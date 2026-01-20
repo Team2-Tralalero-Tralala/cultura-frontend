@@ -1,7 +1,10 @@
 /**
- * คำอธิบาย : Component สำหรับแสดงรายการ Feedback ของแพ็กเกจตาม packageId
- * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
- * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
+ * คำอธิบาย: Component สำหรับแสดงรายการ Feedback ของแพ็กเกจตาม packageId
+ * - รองรับการดึงข้อมูลจาก backend
+ * - การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
+ * - การตอบกลับ Feedback ผ่าน Modal
+ * Input: -
+ * Output: หน้าแสดงรายการ Feedback
  */
 import React from "react";
 import { useParams } from "react-router-dom";
@@ -10,7 +13,7 @@ import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 type FeedbackImage = {
   image: string;
@@ -50,9 +53,9 @@ type Feedback = {
 type SortOrder = "newest" | "oldest";
 
 /**
- * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
- * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
- * Output   : string | undefined - URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
+ * คำอธิบาย: แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
+ * Input: fileName (ชื่อไฟล์รูปภาพจากฐานข้อมูล)
+ * Output: URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
  */
 function getImageUrl(fileName?: string): string | undefined {
   if (!fileName) {
@@ -60,13 +63,13 @@ function getImageUrl(fileName?: string): string | undefined {
   }
 
   const cleanedPath = fileName.replace(/^\/?uploads\//, "");
-  return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+  return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
 /**
- * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
- * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
- * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
+ * คำอธิบาย: แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
+ * Input: isoDateString (วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล)
+ * Output: ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
  */
 const formatDateThai = (isoDateString: string) => {
   const date = new Date(isoDateString);
@@ -78,9 +81,9 @@ const formatDateThai = (isoDateString: string) => {
 };
 
 /**
- * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
- * Input : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
- * Output: string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
+ * คำอธิบาย: แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
+ * Input: tourist (ข้อมูลนักท่องเที่ยว)
+ * Output: ชื่อ-นามสกุลหลัง mask แล้ว
  */
 function formatFullName(tourist: Tourist): string {
   const mask = (text: string) => (text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "");
@@ -88,9 +91,9 @@ function formatFullName(tourist: Tourist): string {
 }
 
 /**
- * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
- * Input    : rating (number) - คะแนนระหว่าง 1–5
- * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
+ * คำอธิบาย: แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
+ * Input: rating (คะแนนระหว่าง 1–5)
+ * Output: สัญลักษณ์ดาวจำนวน 5 ตัว
  */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
@@ -99,13 +102,14 @@ function renderStars(rating: number): string {
 }
 
 /**
- * คำอธิบาย : Feedback ของแพ็กเกจตาม packageId
- * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
- * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
- * Input : packageId (string) : รับจาก URL parameter เพื่อใช้ดึง feedback ของแพ็กเกจนั้น
- * Output : JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
+ * คำอธิบาย: Feedback ของแพ็กเกจตาม packageId
+ * - รองรับการดึงข้อมูลจาก backend
+ * - การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
+ * - การตอบกลับ Feedback ผ่าน Modal
+ * Input: -
+ * Output: JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
  */
-export default function PackageFeedbacksPage() {
+export default function DetailFeedbackPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
@@ -141,7 +145,9 @@ export default function PackageFeedbacksPage() {
   }, [packageIdNumber]);
 
   /**
-   * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
+   * คำอธิบาย: เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
+   * Input: -
+   * Output: รายการ feedback ที่เรียงลำดับแล้ว
    */
   const sortedFeedbackLists = React.useMemo(() => {
     return [...feedbackLists]
@@ -166,10 +172,9 @@ export default function PackageFeedbacksPage() {
   ];
 
   /**
-   * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId ที่กำหนด
-   * Input    : feedbackId (number) - รหัสของ feedback
-   *            value (string) - ข้อความที่ผู้ใช้พิมพ์
-   * Output   : void
+   * คำอธิบาย: อัปเดตข้อความตอบกลับใน state ตาม feedbackId ที่กำหนด
+   * Input: feedbackId (รหัสของ feedback), value (ข้อความที่ผู้ใช้พิมพ์)
+   * Output: -
    */
   function handleChangeReplyText(feedbackId: number, value: string): void {
     setReplyTexts((previousReplyTexts) => ({
@@ -179,9 +184,9 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * คำอธิบาย : เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
-   * Input    : feedbackId (number) - รหัสของ feedback ที่ต้องการตอบ
-   * Output   : void
+   * คำอธิบาย: เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
+   * Input: feedbackId (รหัสของ feedback ที่ต้องการตอบ)
+   * Output: -
    */
   function handleOpenReplyModal(feedbackId: number): void {
     const replyMessage = replyTexts[feedbackId]?.trim();
@@ -195,7 +200,9 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
+   * คำอธิบาย: ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
+   * Input: -
+   * Output: -
    */
   function handleCloseReplyModal(): void {
     setIsReplyModalOpen(false);
@@ -203,9 +210,9 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * คำอธิบาย : ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
-   * Input    : feedbackId (number) - รหัส feedback ที่ต้องการตอบกลับ
-   * Output   : Promise<void>
+   * คำอธิบาย: ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
+   * Input: feedbackId (รหัส feedback ที่ต้องการตอบกลับ)
+   * Output: -
    */
   async function sendReply(feedbackId: number): Promise<void> {
     const replyMessage = replyTexts[feedbackId]?.trim();
@@ -267,7 +274,7 @@ export default function PackageFeedbacksPage() {
             {isLoading && <div className="text-gray-500 text-sm">ไม่มีข้อเสนอแนะในแพ็กเกจนี้</div>}
 
             {sortedFeedbackLists.map((feedbackItem) => {
-              const hasReply =
+              const isReplied =
                 !!feedbackItem.replyMessage && feedbackItem.replyMessage.trim() !== "";
 
               const feedbackTimeLabel = formatDateThai(feedbackItem.createdAt);
@@ -338,7 +345,7 @@ export default function PackageFeedbacksPage() {
                     </div>
                   )}
 
-                  {hasReply && (
+                  {isReplied && (
                     <div className="mt-4 bg-[#EDEDED] rounded-2xl px-4 py-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
@@ -364,7 +371,7 @@ export default function PackageFeedbacksPage() {
                     </div>
                   )}
 
-                  {!hasReply && (
+                  {!isReplied && (
                     <div className="pt-2">
                       <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-sm">
                         <input

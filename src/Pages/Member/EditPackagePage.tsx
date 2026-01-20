@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย : Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
+ * คำอธิบาย: Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
  * - ดึงข้อมูลแพ็กเกจเดิมมาแสดงในฟอร์ม
  * - รองรับการอัปเดตข้อมูล, รูปภาพ (Cover/Gallery), และที่พักที่เกี่ยวข้อง
  * - ส่งข้อมูลแบบ multipart/form-data
@@ -34,20 +34,20 @@ import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
-/*
- * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
- * Input: inputValue - สตริงที่ต้องการตรวจสอบ, fallback - ค่าที่จะคืนหากสตริงว่าง (default: "-")
- * Output : สตริงที่ตัดช่องว่างแล้ว หรือค่า fallback
+/**
+ * คำอธิบาย: ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
+ * Input: inputValue (สตริงที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนหากสตริงว่าง default: "-")
+ * Output: สตริงที่ตัดช่องว่างแล้ว หรือค่า fallback
  */
 function normalizeOrDefault(inputValue: string, fallback = "-") {
   const trimmed = (inputValue ?? "").toString().trim();
   return trimmed.length ? trimmed : fallback;
 }
 
-/*
- * คำอธิบาย : แปลงค่าใดๆ เป็น number หรือ null
- * Input: value - ค่าที่ต้องการแปลง
- * Output : number หรือ null
+/**
+ * คำอธิบาย: แปลงค่าใดๆ เป็น number หรือ null
+ * Input: value (ค่าที่ต้องการแปลง)
+ * Output: number หรือ null
  */
 function toIntOrNull(value: any): number | null {
   const trimmed = String(value ?? "").trim();
@@ -56,10 +56,10 @@ function toIntOrNull(value: any): number | null {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
-/*
- * คำอธิบาย : แปลง Date object หรือ string วันที่/เวลา เป็น format "HH:mm"
- * Input: input - วันที่/เวลา
- * Output : สตริง "HH:mm" หรือ ""
+/**
+ * คำอธิบาย: แปลง Date object หรือ string วันที่/เวลา เป็น format "HH:mm"
+ * Input: input (วันที่/เวลา)
+ * Output: สตริง "HH:mm" หรือ ""
  */
 function toTimeInput(input?: string | Date | null) {
   if (!input) return "";
@@ -79,10 +79,10 @@ function toTimeInput(input?: string | Date | null) {
   return "";
 }
 
-/*
- * คำอธิบาย : แปลง Date object หรือ string วันที่ เป็น format "YYYY-MM-DD"
- * Input: input - วันที่
- * Output : สตริง "YYYY-MM-DD" หรือ ""
+/**
+ * คำอธิบาย: แปลง Date object หรือ string วันที่ เป็น format "YYYY-MM-DD"
+ * Input: input (วันที่)
+ * Output: สตริง "YYYY-MM-DD" หรือ ""
  */
 function toDateOnly(input?: string | Date | null) {
   if (!input) return "";
@@ -98,10 +98,10 @@ function toDateOnly(input?: string | Date | null) {
   return `${year}-${month}-${day}`;
 }
 
-/*
- * คำอธิบาย : แปลง URL ของรูปภาพเป็น File object
- * Input: url - URL ของรูปภาพ, filename - ชื่อไฟล์
- * Output : Promise<File>
+/**
+ * คำอธิบาย: แปลง URL ของรูปภาพเป็น File object
+ * Input: url (URL ของรูปภาพ), filename (ชื่อไฟล์)
+ * Output: Promise<File>
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
   const response = await fetch(url);
@@ -114,10 +114,10 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   return file;
 }
 
-/*
- * คำอธิบาย : สร้างรายการ URL ที่เป็นไปได้สำหรับ path ของรูปภาพ
- * Input: rawPath - path ของรูปภาพ
- * Output : Array ของ URL string
+/**
+ * คำอธิบาย: สร้างรายการ URL ที่เป็นไปได้สำหรับ path ของรูปภาพ
+ * Input: rawPath (path ของรูปภาพ)
+ * Output: Array ของ URL string
  */
 function buildImageCandidates(rawPath: string): string[] {
   if (!rawPath) return [];
@@ -142,10 +142,10 @@ function buildImageCandidates(rawPath: string): string[] {
   return Array.from(candidates);
 }
 
-/*
- * คำอธิบาย : พยายามแปลง path ของรูปภาพเป็น File object โดยลองจาก URL ที่เป็นไปได้
- * Input: rawPath - path ของรูปภาพ, filename - ชื่อไฟล์
- * Output : Promise<File>
+/**
+ * คำอธิบาย: พยายามแปลง path ของรูปภาพเป็น File object โดยลองจาก URL ที่เป็นไปได้
+ * Input: rawPath (path ของรูปภาพ), filename (ชื่อไฟล์)
+ * Output: Promise<File>
  */
 async function bestEffortUrlToFile(rawPath: string, filename: string): Promise<File> {
   const candidates = buildImageCandidates(rawPath);
@@ -249,16 +249,16 @@ export const EditPackagePage = () => {
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
   const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [formErrors, setFormErrors] = useState<PackageErrors>({});
   const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
-  const [tagIds, setTagIds] = useState<number[]>([]);
-  const [coverFiles, setCoverFiles] = useState<File[]>([]);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [tagIdLists, setTagIdLists] = useState<number[]>([]);
+  const [coverFileLists, setCoverFileLists] = useState<File[]>([]);
+  const [galleryFileLists, setGalleryFileLists] = useState<File[]>([]);
+  const [videoFileLists, setVideoFileLists] = useState<File[]>([]);
   const [startDateObj, setStartDateObj] = useState<Date | null>(null);
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
@@ -267,10 +267,10 @@ export const EditPackagePage = () => {
   const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
   const [originalStatus, setOriginalStatus] = useState<PackageStatus | null>(null);
 
-  /*
-   * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
-   * Input: field - ชื่อฟิลด์ (keyof PackageForm), value - ค่าใหม่, newState - object state ทั้งหมด
-   * Output : (void) - อัปเดต formErrors state
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
+   * Input: field (ชื่อฟิลด์ keyof PackageForm), value (ค่าใหม่), newState (object state ทั้งหมด)
+   * Output: - (อัปเดต formErrors state)
    */
   const validateField = React.useCallback(
     (field: keyof PackageForm, value: any, newState: PackageForm) => {
@@ -285,10 +285,10 @@ export const EditPackagePage = () => {
     [],
   );
 
-  /*
-   * คำอธิบาย : ตรวจสอบความถูกต้อง (Validate) ของฟอร์มทั้งหมด
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้อง (Validate) ของฟอร์มทั้งหมด
    * Input: -
-   * Output : boolean - true หากถูกต้องทั้งหมด, false หากมีข้อผิดพลาด
+   * Output: boolean (true หากถูกต้องทั้งหมด, false หากมีข้อผิดพลาด)
    */
   const validateAll = () => {
     if (formState.statusPackage === "DRAFT") {
@@ -362,25 +362,25 @@ export const EditPackagePage = () => {
 
   type MemberOption = { id: number; fname: string; lname: string };
   const [memberQuery, setMemberQuery] = useState("");
-  const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
-  const showMemberBox = memberQuery.trim().length >= 1 && memberOptions.length > 0;
+  const [memberOptionLists, setMemberOptionLists] = useState<MemberOption[]>([]);
+  const isShowMemberBox = memberQuery.trim().length >= 1 && memberOptionLists.length > 0;
 
   React.useEffect(() => {
     const query = memberQuery.trim();
     if (!query) {
-      setMemberOptions([]);
+      setMemberOptionLists([]);
       return;
     }
-    setMemberOptions([]);
+    setMemberOptionLists([]);
   }, [memberQuery]);
 
   const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openTagBox, setOpenTagBox] = useState(false);
+  const [isOpenTagBox, setIsOpenTagBox] = useState(false);
 
   React.useEffect(() => {
     const onDown = (event: MouseEvent) => {
       if (!searchBoxRef.current) return;
-      if (!searchBoxRef.current.contains(event.target as Node)) setOpenTagBox(false);
+      if (!searchBoxRef.current.contains(event.target as Node)) setIsOpenTagBox(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -418,15 +418,15 @@ export const EditPackagePage = () => {
   };
 
   const [homestayQuery, setHomestayQuery] = useState("");
-  const [homestayOptions, setHomestayOptions] = useState<HomestayOption[]>([]);
+  const [homestayOptionLists, setHomestayOptionLists] = useState<HomestayOption[]>([]);
   const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
   const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
-  const [openHomestayBox, setOpenHomestayBox] = useState(false);
+  const [isOpenHomestayBox, setIsOpenHomestayBox] = useState(false);
 
   React.useEffect(() => {
     const onDown = (event: MouseEvent) => {
       if (homestayBoxRef.current && !homestayBoxRef.current.contains(event.target as Node)) {
-        setOpenHomestayBox(false);
+        setIsOpenHomestayBox(false);
       }
     };
     document.addEventListener("mousedown", onDown);
@@ -435,18 +435,18 @@ export const EditPackagePage = () => {
 
   const MIN_HOMESTAY_QUERY_CHARS = 2;
 
-  /*
-   * คำอธิบาย : (Callback) Fetch ข้อมูลที่พักสำหรับ Ccommunity
-   * Input: query - ข้อความค้นหา
-   * Output : (void) - อัปเดต homestayOptions state
+  /**
+   * คำอธิบาย: (Callback) Fetch ข้อมูลที่พักสำหรับ Ccommunity
+   * Input: query (ข้อความค้นหา)
+   * Output: - (อัปเดต homestayOptions state)
    */
   const fetchHomestays = React.useCallback(
     async (query: string) => {
       const trimmedQuery = query.trim();
 
       if (trimmedQuery.length > 0 && trimmedQuery.length < MIN_HOMESTAY_QUERY_CHARS) {
-        setHomestayOptions([]);
-        setOpenHomestayBox(false);
+        setHomestayOptionLists([]);
+        setIsOpenHomestayBox(false);
         return;
       }
 
@@ -464,11 +464,11 @@ export const EditPackagePage = () => {
             images: homestay.homestayImage ?? homestay.images ?? [],
           }),
         );
-        setHomestayOptions(options);
-        setOpenHomestayBox(options.length > 0);
+        setHomestayOptionLists(options);
+        setIsOpenHomestayBox(options.length > 0);
       } catch (error) {
-        setHomestayOptions([]);
-        setOpenHomestayBox(false);
+        setHomestayOptionLists([]);
+        setIsOpenHomestayBox(false);
       }
     },
     [id],
@@ -481,23 +481,23 @@ export const EditPackagePage = () => {
     return () => clearTimeout(timerId);
   }, [homestayQuery, fetchHomestays]);
 
-  /*
-   * คำอธิบาย : เลือกที่พักจากรายการ
-   * Input: homestay - object ที่พักที่เลือก
-   * Output : (void)
+  /**
+   * คำอธิบาย: เลือกที่พักจากรายการ
+   * Input: homestay (object ที่พักที่เลือก)
+   * Output: -
    */
   const chooseHomestay = (homestay: HomestayOption) => {
     setSelectedHomestay(homestay);
     setHomestayQuery("");
-    setHomestayOptions([]);
-    setOpenHomestayBox(false);
+    setHomestayOptionLists([]);
+    setIsOpenHomestayBox(false);
     setFormField("tagId" as any, formState.tagId);
   };
 
-  /*
-   * คำอธิบาย : (Callback) อัปเดตฟิลด์ในฟอร์ม และ Validate ทันที
-   * Input: key - ชื่อฟิลด์, value - ค่าใหม่
-   * Output : (void)
+  /**
+   * คำอธิบาย: (Callback) อัปเดตฟิลด์ในฟอร์ม และ Validate ทันที
+   * Input: key (ชื่อฟิลด์), value (ค่าใหม่)
+   * Output: -
    */
   const setFormField = React.useCallback(
     <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
@@ -516,10 +516,10 @@ export const EditPackagePage = () => {
   const [hsCheckOutTime, setHsCheckOutTime] = useState("");
   const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
 
-  /*
-   * คำอธิบาย : ล้างข้อมูลที่พักที่เลือกไว้
+  /**
+   * คำอธิบาย: ล้างข้อมูลที่พักที่เลือกไว้
    * Input: -
-   * Output : (void)
+   * Output: -
    */
   const clearHomestay = () => {
     setSelectedHomestay(null);
@@ -535,14 +535,14 @@ export const EditPackagePage = () => {
   useEffect(() => {
     let mounted = true;
 
-    /*
-     * คำอธิบาย : โหลดข้อมูลแพ็กเกจจาก API
+    /**
+     * คำอธิบาย: โหลดข้อมูลแพ็กเกจจาก API
      * Input: -
-     * Output : (void) - อัปเดต state ต่างๆ ของหน้า
+     * Output: - (อัปเดต state ต่างๆ ของหน้า)
      */
     async function loadPackageData() {
       try {
-        setLoading(true);
+        setIsLoading(true);
         const response = await axios.get(`${apiUrl}/member/package/${id}`, {
           withCredentials: true,
         });
@@ -620,7 +620,7 @@ export const EditPackagePage = () => {
               .map((tagPackage: any) => tagPackage?.tag?.id ?? tagPackage?.id)
               .filter((tagId: any) => typeof tagId === "number")
           : [];
-        setTagIds(tagsFromServer);
+        setTagIdLists(tagsFromServer);
 
         const imagesData: any[] = Array.isArray(packageData?.packageFile)
           ? packageData.packageFile
@@ -673,9 +673,9 @@ export const EditPackagePage = () => {
               throw lastError || new Error("no video url works");
             }),
         );
-        setCoverFiles(coverFetched);
-        setGalleryFiles(galleryFetched);
-        setVideoFiles(videoFetched);
+        setCoverFileLists(coverFetched);
+        setGalleryFileLists(galleryFetched);
+        setVideoFileLists(videoFetched);
         setOriginalStatus(status);
         if (homestayHistory?.homestay) {
           setSelectedHomestay({
@@ -705,7 +705,7 @@ export const EditPackagePage = () => {
           error?.response?.data?.message || error?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
         );
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setIsLoading(false);
       }
     }
 
@@ -716,10 +716,10 @@ export const EditPackagePage = () => {
     };
   }, [id]);
 
-  /*
-   * คำอธิบาย : (Callback) Handler เมื่อ MapPicker มีการเปลี่ยนแปลงตำแหน่ง
-   * Input: [latitude, longitude] - array ของตัวเลข
-   * Output : (void) - อัปเดต formState
+  /**
+   * คำอธิบาย: (Callback) Handler เมื่อ MapPicker มีการเปลี่ยนแปลงตำแหน่ง
+   * Input: [latitude, longitude] (array ของตัวเลข)
+   * Output: - (อัปเดต formState)
    */
   const handleMapChange = React.useCallback(
     ([latitude, longitude]: [number, number]) => {
@@ -730,11 +730,11 @@ export const EditPackagePage = () => {
     [setFormField],
   );
 
-  /*
-   * คำอธิบาย : Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันจาก Modal
+  /**
+   * คำอธิบาย: Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันจาก Modal
    * - สร้าง FormData และส่งข้อมูล (axios.put) ไปยัง API
    * Input: -
-   * Output : (void) - (async) นำทางไปยังหน้า list หากสำเร็จ, หรือแสดง error
+   * Output: - ((async) นำทางไปยังหน้า list หากสำเร็จ, หรือแสดง error)
    */
   const handleConfirmSave = async () => {
     setIsConfirmModalOpen(false);
@@ -767,7 +767,7 @@ export const EditPackagePage = () => {
         ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
         ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
         facility: formState.facility || "",
-        tagIds: tagIds.map((id) => Number(id)),
+        tagIds: tagIdLists.map((id) => Number(id)),
         homestayId: selectedHomestay ? selectedHomestay.id : -1,
         location: {
           houseNumber: formState.houseNumber,
@@ -784,9 +784,9 @@ export const EditPackagePage = () => {
 
       const formData = new FormData();
       formData.append("data", JSON.stringify(payload));
-      coverFiles.forEach((file: any) => formData.append("cover", file));
-      galleryFiles.forEach((file: any) => formData.append("gallery", file));
-      videoFiles.forEach((file: any) => formData.append("video", file));
+      coverFileLists.forEach((file: any) => formData.append("cover", file));
+      galleryFileLists.forEach((file: any) => formData.append("gallery", file));
+      videoFileLists.forEach((file: any) => formData.append("video", file));
 
       await axios.put(`${apiUrl}/member/package/${id}`, formData, {
         withCredentials: true,
@@ -806,12 +806,12 @@ export const EditPackagePage = () => {
       setIsSaving(false);
     }
   };
-  /*
-   * คำอธิบาย : Handler ที่ถูกเรียกเมื่อกด Submit ฟอร์ม
+  /**
+   * คำอธิบาย: Handler ที่ถูกเรียกเมื่อกด Submit ฟอร์ม
    * - ตรวจสอบความถูกต้องทั้งหมด
    * - หากถูกต้อง จะเปิด Modal ยืนยัน
-   * Input: event - React FormEvent
-   * Output : (void)
+   * Input: event (React FormEvent)
+   * Output: -
    */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -872,7 +872,7 @@ export const EditPackagePage = () => {
             helperText={formErrors.name}
           />
 
-          {/* สถานะเเพ็กเกจ */}
+          {/* สถานะเเเพ็กเกจ */}
           <div className="space-y-2">
             <label className="block text-base font-semibold">
               สถานะเเพ็กเกจ <span className="text-red-600 text-base">*</span>
@@ -986,7 +986,7 @@ export const EditPackagePage = () => {
 
             {/* Map Picker */}
             <div className="md:col-span-2">
-              {!loading && (
+              {!isLoading && (
                 <MapPicker
                   startingPosition={position}
                   startingZoom={13}
@@ -1137,7 +1137,7 @@ export const EditPackagePage = () => {
         <section className="grid md:grid-cols-2 gap-5">
           <div className="md:col-span-1">
             <div ref={searchBoxRef}>
-              <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
+              <TagSelector value={tagIdLists} onChange={(ids) => setTagIdLists(ids)} />
             </div>
           </div>
 
@@ -1165,8 +1165,8 @@ export const EditPackagePage = () => {
               max={1}
               accept="image/*"
               multiple={false}
-              value={coverFiles}
-              onChange={setCoverFiles}
+              value={coverFileLists}
+              onChange={setCoverFileLists}
               itemW={160}
               itemH={110}
               square={false}
@@ -1187,8 +1187,8 @@ export const EditPackagePage = () => {
               max={5}
               accept="image/*"
               multiple
-              value={galleryFiles}
-              onChange={setGalleryFiles}
+              value={galleryFileLists}
+              onChange={setGalleryFileLists}
               itemW={160}
               itemH={110}
               square={false}
@@ -1209,8 +1209,8 @@ export const EditPackagePage = () => {
               max={5}
               accept="video/*"
               multiple={false}
-              value={videoFiles}
-              onChange={setVideoFiles}
+              value={videoFileLists}
+              onChange={setVideoFileLists}
               itemW={160}
               itemH={110}
               square={false}
@@ -1243,23 +1243,23 @@ export const EditPackagePage = () => {
                 onFocus={() => {
                   if (homestayQuery.trim() === "") {
                     fetchHomestays("");
-                  } else if (homestayOptions.length > 0) {
-                    setOpenHomestayBox(true);
+                  } else if (homestayOptionLists.length > 0) {
+                    setIsOpenHomestayBox(true);
                   }
                 }}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" && homestayOptions[0]) {
+                  if (event.key === "Enter" && homestayOptionLists[0]) {
                     event.preventDefault();
-                    chooseHomestay(homestayOptions[0]);
+                    chooseHomestay(homestayOptionLists[0]);
                   }
-                  if (event.key === "Escape") setOpenHomestayBox(false);
+                  if (event.key === "Escape") setIsOpenHomestayBox(false);
                 }}
               />
             </div>
 
-            {openHomestayBox && homestayOptions.length > 0 && (
+            {isOpenHomestayBox && homestayOptionLists.length > 0 && (
               <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
-                {homestayOptions.map((homestay) => (
+                {homestayOptionLists.map((homestay) => (
                   <button
                     key={homestay.id}
                     type="button"

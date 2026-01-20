@@ -32,10 +32,10 @@ type RefundRow = {
 };
 
 /**
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
  * รองรับทั้งแบบ Full URL และ Relative Path
- * Input : path (string | null) - ที่อยู่ของไฟล์รูปภาพ (เช่น "uploads/slip.jpg" หรือ "http://...")
- * Output : string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
+ * Input: path (string | null) - ที่อยู่ของไฟล์รูปภาพ
+ * Output: string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
  */
 const getSlipImageUrl = (path: string | null): string | null => {
   if (!path || path === "-") return null;
@@ -53,9 +53,15 @@ const getSlipImageUrl = (path: string | null): string | null => {
 };
 
 /**
- * คำอธิบาย : กำหนดโครงสร้างคอลัมน์ (Column Definition) สำหรับ DataTable
+ * คำอธิบาย: กำหนดโครงสร้างคอลัมน์ (Column Definition) สำหรับ DataTable
+ * Input:
+ * - onApprove (function): callback เมื่อคลิกอนุมัติ
+ * - onReject (function): callback เมื่อคลิกปฏิเสธ
+ * - onNavigate (function): callback เมื่อคลิกเพื่อดูรายละเอียด
+ * - onOpenSlip (function): callback เมื่อคลิกเพื่อดูสลิป
+ * Output: Column<RefundRow>[] (รายการคอลัมน์)
  */
-const makeColumns = (
+const createColumns = (
   onApprove: (row: RefundRow) => void,
   onReject: (row: RefundRow) => void,
   onNavigate: (id: number) => void,
@@ -158,10 +164,15 @@ const makeColumns = (
   },
 ];
 
-export function ManageRefundBookingMember() {
+/**
+ * คำอธิบาย: Component สำหรับจัดการคำขอคืนเงินของสมาชิก (Member)
+ * Input: -
+ * Output: หน้าจัดการคำขอคืนเงิน
+ */
+export default function ManageRefundPage() {
   const navigate = useNavigate();
 
-  const [rows, setRows] = useState<RefundRow[]>([]);
+  const [refundLists, setRefundLists] = useState<RefundRow[]>([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -175,17 +186,19 @@ export function ManageRefundBookingMember() {
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [isConfirmOpen, setConfirmOpen] = useState(false);
-  const [isRejectOpen, setRejectOpen] = useState(false);
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [isOpenReject, setIsOpenReject] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RefundRow | null>(null);
 
-  const [isSlipOpen, setSlipOpen] = useState(false);
+  const [isOpenSlip, setIsOpenSlip] = useState(false);
   const [slipUrl, setSlipUrl] = useState<string | null>(null);
 
   /**
-   * คำอธิบาย : ดึงข้อมูลคำขอคืนเงินจาก API และอัปเดตตาราง
+   * คำอธิบาย: ดึงข้อมูลคำขอคืนเงินจาก API และอัปเดตตาราง
+   * Input: -
+   * Output: - (อัปเดต refundRows และ pagination)
    */
-  const reload = useCallback(async () => {
+  const fetchRefunds = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -214,7 +227,7 @@ export function ManageRefundBookingMember() {
         transferSlip: item.transferSlip || "-",
       }));
 
-      setRows(mappedRows);
+      setRefundLists(mappedRows);
       setPagination({
         currentPage: paginationInfo.currentPage ?? currentPage,
         totalPages: paginationInfo.totalPages ?? 1,
@@ -229,17 +242,17 @@ export function ManageRefundBookingMember() {
   }, [currentPage, pageSize]);
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    fetchRefunds();
+  }, [fetchRefunds]);
 
   const filteredRows = useMemo(() => {
     const keyword = searchQuery.toLowerCase();
-    return rows.filter((row) =>
+    return refundLists.filter((row) =>
       [row.touristName, row.packageName, row.status].some((value) =>
         value.toLowerCase().includes(keyword),
       ),
     );
-  }, [rows, searchQuery]);
+  }, [refundLists, searchQuery]);
 
   /**
    * คำอธิบาย : ดำเนินการอนุมัติคำขอคืนเงิน
@@ -248,7 +261,7 @@ export function ManageRefundBookingMember() {
     try {
       setIsLoading(true);
       await approveRefundMember(row.id);
-      await reload();
+      await fetchRefunds();
     } catch (error: any) {
       console.error(error);
       setErrorMessage(error.message || "อนุมัติไม่สำเร็จ");
@@ -264,7 +277,7 @@ export function ManageRefundBookingMember() {
     try {
       setIsLoading(true);
       await rejectRefundMember(row.id, reason || "");
-      await reload();
+      await fetchRefunds();
     } catch (error: any) {
       console.error(error);
       setErrorMessage(error.message || "ปฏิเสธไม่สำเร็จ");
@@ -275,19 +288,19 @@ export function ManageRefundBookingMember() {
 
   const columns = useMemo(
     () =>
-      makeColumns(
+      createColumns(
         (row) => {
           setSelectedRow(row);
-          setConfirmOpen(true);
+          setIsOpenConfirm(true);
         },
         (row) => {
           setSelectedRow(row);
-          setRejectOpen(true);
+          setIsOpenReject(true);
         },
         (id) => navigate(`/member/booking/${id}`),
         (url) => {
           setSlipUrl(url);
-          setSlipOpen(true);
+          setIsOpenSlip(true);
         },
       ),
     [navigate],
@@ -338,7 +351,7 @@ export function ManageRefundBookingMember() {
 
       {/* Modal ยืนยันการอนุมัติ */}
       <Modal
-        open={isConfirmOpen}
+        open={isOpenConfirm}
         title="ยืนยันการอนุมัติคำขอคืนเงิน"
         text={
           selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""
@@ -348,19 +361,19 @@ export function ManageRefundBookingMember() {
         onConfirm={async () => {
           if (!selectedRow) return;
           const row = selectedRow;
-          setConfirmOpen(false);
+          setIsOpenConfirm(false);
           await handleApprove(row);
           setSelectedRow(null);
         }}
         onCancel={() => {
-          setConfirmOpen(false);
+          setIsOpenConfirm(false);
           setSelectedRow(null);
         }}
       />
 
       {/* Modal ปฏิเสธคำขอ */}
       <RejectModal
-        open={isRejectOpen}
+        open={isOpenReject}
         title="ปฏิเสธคำขอคืนเงิน"
         text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
         confirmText="ส่ง"
@@ -368,19 +381,19 @@ export function ManageRefundBookingMember() {
         onConfirm={async (reason) => {
           if (!selectedRow) return;
           const row = selectedRow;
-          setRejectOpen(false);
+          setIsOpenReject(false);
           await handleReject(row, reason);
           setSelectedRow(null);
         }}
         onCancel={() => {
-          setRejectOpen(false);
+          setIsOpenReject(false);
           setSelectedRow(null);
         }}
       />
 
       {/* Modal แสดงรูปภาพสลิป */}
-      {isSlipOpen && slipUrl && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+      {isOpenSlip && slipUrl && (
+        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50">
           {/* กล่อง modal ขนาดคงที่ */}
           <div
             className="
@@ -401,7 +414,7 @@ export function ManageRefundBookingMember() {
             <button
               type="button"
               onClick={() => {
-                setSlipOpen(false);
+                setIsOpenSlip(false);
                 setSlipUrl(null);
               }}
               className="

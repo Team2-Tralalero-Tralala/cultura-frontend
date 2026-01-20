@@ -1,6 +1,5 @@
-/*
- * Component: MemberFeedbacks
- * Responsibility: แสดง “ข้อเสนอแนะทั้งหมด” ของแพ็กเกจที่สมาชิกเป็นเจ้าของ
+/**
+ * คำอธิบาย: แสดง "ข้อเสนอแนะทั้งหมด" ของแพ็กเกจที่สมาชิกเป็นเจ้าของ
  */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -73,19 +72,17 @@ type PackageGroup = {
 
 type SortOrder = "newest" | "oldest";
 
-// --- Helper Functions (เหมือน Admin) ---
-
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว
- * Input : userId
- * Output : String (ชื่อที่ถูก Mask แล้ว)
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว
+ * Input: userId
+ * Output: String (ชื่อที่ถูก Mask แล้ว)
  */
 const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
- * Input : isoDateString
- * Output : String (วันที่รูปแบบไทย)
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
+ * Input: isoDateString
+ * Output: String (วันที่รูปแบบไทย)
  */
 const formatDateThai = (isoDateString: string) => {
   const date = new Date(isoDateString);
@@ -96,10 +93,10 @@ const formatDateThai = (isoDateString: string) => {
   });
 };
 
-/*
- * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
- * Input    : rating (number) - คะแนนระหว่าง 1–5
- * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
+/**
+ * คำอธิบาย: แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
+ * Input: rating (คะแนนระหว่าง 1–5)
+ * Output: สัญลักษณ์ดาวจำนวน 5 ตัว
  */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
@@ -109,10 +106,10 @@ function renderStars(rating: number): string {
 
 // --- Sub-Components (เหมือน Admin) ---
 
-/*
- * คำอธิบาย : Component ส่วนควบคุมด้านบน (สรุปรายการ, ค้นหา, ตัวกรอง)
- * Input : Props (totalItems, totalPackages, searchQuery, etc.)
- * Output : JSX Element
+/**
+ * คำอธิบาย: Component ส่วนควบคุมด้านบน (สรุปรายการ, ค้นหา, ตัวกรอง)
+ * Input: Props (totalItems, totalPackages, searchQuery, etc.)
+ * Output: JSX Element
  */
 const TopControls: React.FC<{
   totalItems: number;
@@ -166,10 +163,10 @@ const TopControls: React.FC<{
   );
 };
 
-/*
- * คำอธิบาย : Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ
- * Input : feedback object
- * Output : JSX Element
+/**
+ * คำอธิบาย: Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ
+ * Input: feedback object
+ * Output: JSX Element
  */
 const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) => {
   const displayImages = feedback.images.slice(0, 3);
@@ -223,10 +220,10 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
   );
 };
 
-/*
- * คำอธิบาย : Component แสดงกลุ่มข้อเสนอแนะแยกตามแพ็กเกจ
- * Input : group data, onViewAllClick callback
- * Output : JSX Element
+/**
+ * คำอธิบาย: Component แสดงกลุ่มข้อเสนอแนะแยกตามแพ็กเกจ
+ * Input: group data, onViewAllClick callback
+ * Output: JSX Element
  */
 const PackageGroupSection: React.FC<{
   group: PackageGroup;
@@ -263,13 +260,13 @@ const PackageGroupSection: React.FC<{
   );
 };
 
-/*
- * คำอธิบาย : หน้าแสดงข้อเสนอแนะทั้งหมดสำหรับ Member (Main Page)
- * Input : -
- * Output : JSX Element
+/**
+ * คำอธิบาย: หน้าแสดงข้อเสนอแนะทั้งหมดสำหรับ Member (Main Page)
+ * Input: -
+ * Output: JSX Element
  */
-export default function MemberFeedbacks() {
-  const [packageGroups, setPackageGroups] = useState<PackageGroup[]>([]);
+export default function FeedbackPage() {
+  const [packageGroupLists, setPackageGroupLists] = useState<PackageGroup[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [totalPackages, setTotalPackages] = useState<number>(0);
 
@@ -282,10 +279,10 @@ export default function MemberFeedbacks() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะทั้งหมดจาก Server
-   * Input : -
-   * Output : - (Update State)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะทั้งหมดจาก Server
+   * Input: -
+   * Output: - (Update State)
    */
   const fetchAllFeedbacks = useCallback(async () => {
     try {
@@ -324,8 +321,12 @@ export default function MemberFeedbacks() {
         };
       });
 
-      setPackageGroups(nextGroups);
-      setTotalItems(nextGroups.reduce((sum, packageGroup) => sum + packageGroup.totalInGroup, 0));
+      setPackageGroupLists(nextGroups);
+      const allFeedbacksCount = nextGroups.reduce(
+        (sum, packageGroup) => sum + packageGroup.totalInGroup,
+        0,
+      );
+      setTotalItems(allFeedbacksCount);
       setTotalPackages(nextGroups.length);
     } catch (error: any) {
       setErrorMessage(error?.response?.data?.message || error?.message || "โหลดข้อมูลไม่สำเร็จ");
@@ -338,15 +339,15 @@ export default function MemberFeedbacks() {
     fetchAllFeedbacks();
   }, [fetchAllFeedbacks]);
 
-  /*
-   * คำอธิบาย : คำนวณกลุ่มข้อเสนอแนะที่ผ่านการกรองและการเรียงลำดับ
-   * Input : packageGroups, searchQuery, sortOrder
-   * Output : PackageGroup[]
+  /**
+   * คำอธิบาย: คำนวณกลุ่มข้อเสนอแนะที่ผ่านการกรองและการเรียงลำดับ
+   * Input: packageGroups, searchQuery, sortOrder
+   * Output: PackageGroup[]
    */
   const filteredGroups = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    let groups = packageGroups
+    const groups = [...packageGroupLists]
       .map((packageGroup) => {
         const filteredFeedbacks = packageGroup.feedbacks.filter(
           (feedback) =>
@@ -380,7 +381,7 @@ export default function MemberFeedbacks() {
     });
 
     return sortedPackageGroups;
-  }, [packageGroups, searchQuery, sortOrder]);
+  }, [packageGroupLists, searchQuery, sortOrder]);
 
   const handleSortChange = (newSort: SortOrder) => {
     setSortOrder(newSort);
@@ -449,10 +450,10 @@ export default function MemberFeedbacks() {
 
           {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
-          {filteredGroups.map((packageGroup) => (
+          {filteredGroups.map((group) => (
             <PackageGroupSection
-              key={packageGroup.id}
-              group={packageGroup}
+              key={group.id}
+              group={group}
               onViewAllClick={(g) => navigate(`/member/feedbacks/${g.id}`)} // [Member] Navigate Path
             />
           ))}

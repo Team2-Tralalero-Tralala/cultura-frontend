@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member (Detail Package Member)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend เฉพาะที่ Member มีสิทธิ์เข้าถึง
- * และแสดงข้อมูลเชิงรายละเอียดเหมือนกับหน้าของ SuperAdmin
- * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไขของ Member)
+/**
+ * คำอธิบาย: หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member (Detail Package Member)
+ * - ดึงข้อมูลแพ็กเกจจาก backend เฉพาะที่ Member มีสิทธิ์เข้าถึง
+ * - แสดงข้อมูลเชิงรายละเอียดเหมือนกับหน้าของ SuperAdmin
+ * - รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
+ * - สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้
  */
 
 import { useEffect, useState } from "react";
@@ -19,13 +18,9 @@ import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
 /**
- * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
- * คำอธิบาย : URL ของ Backend สำหรับติดต่อ API
- * Input  : -
- * Output : string | undefined (ค่า base URL จาก environment)
+ * คำอธิบาย: URL ของ Backend สำหรับติดต่อ API
  */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const apiBaseUrl = import.meta.env.VITE_API_URL;
 
 interface DateTimeField {
   date: string | null;
@@ -104,12 +99,11 @@ interface PackageData {
 }
 
 /**
- * ฟังก์ชัน : formatDateTH
- * คำอธิบาย : แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
- * Input  : dateStr: string | null (วันที่ในรูปแบบ ISO หรือ null)
- * Output : string (วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล)
+ * คำอธิบาย: แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
+ * Input: dateStr (วันที่ในรูปแบบ ISO หรือ null)
+ * Output: วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล
  */
-function formatDateTH(dateStr: string | null): string {
+function formatDate(dateStr: string | null): string {
   if (!dateStr) return "-";
   const dateObject = new Date(dateStr);
   const day = String(dateObject.getDate()).padStart(2, "0");
@@ -119,10 +113,9 @@ function formatDateTH(dateStr: string | null): string {
 }
 
 /**
- * ฟังก์ชัน : extractDateTime
- * คำอธิบาย : แยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String (เช่น "2025-01-01T08:30:00.000Z")
- * Input  : isoString?: string | null (ข้อความวันที่-เวลาในรูปแบบ ISO 8601 หรือ null)
- * Output : วัตถุที่ประกอบด้วยวันที่ (date) และเวลา (time) เช่น { date: "2025-01-01", time: "08:30" }
+ * คำอธิบาย: แยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String (เช่น "2025-01-01T08:30:00.000Z")
+ * Input: isoString (ข้อความวันที่-เวลาในรูปแบบ ISO 8601 หรือ null)
+ * Output: วัตถุที่ประกอบด้วยวันที่ (date) และเวลา (time)
  */
 function extractDateTime(isoString?: string | null): DateTimeField {
   if (!isoString) return { date: null, time: null };
@@ -133,12 +126,11 @@ function extractDateTime(isoString?: string | null): DateTimeField {
 }
 
 /**
- * ฟังก์ชัน : DetailPackageMember
- * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ Member ดูข้อมูลเชิงลึกของแพ็กเกจ
- * Input  : - (ใช้ useParams เพื่ออ่านค่า id ของแพ็กเกจจาก URL)
- * Output : JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจ)
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดแพ็กเกจให้ Member ดูข้อมูลเชิงลึกของแพ็กเกจ
+ * Input: -
+ * Output: JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจ)
  */
-export default function DetailPackageMember() {
+export default function DetailPackagePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [packageDetail, setPackageDetail] = useState<PackageData | null>(null);
@@ -146,16 +138,15 @@ export default function DetailPackageMember() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /**
-   * ฟังก์ชัน : useEffect(fetchPackageDetail)
-   * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id (เฉพาะที่ Member มีสิทธิ์)
-   * Input  : -
-   * Output : - (อัปเดต state packageDetail, isLoading, errorMessage)
+   * คำอธิบาย: ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id (เฉพาะที่ Member มีสิทธิ์)
+   * Input: -
+   * Output: - (อัปเดต state packageDetail, isLoading, errorMessage)
    */
   useEffect(() => {
     async function fetchPackageDetail() {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/member/package/${id}`, {
+        const response = await axios.get(`${apiBaseUrl}/member/package/${id}`, {
           withCredentials: true,
         });
 
@@ -313,25 +304,25 @@ export default function DetailPackageMember() {
             <p>
               <strong>เช็กอิน :</strong>{" "}
               {checkInDateTime.date
-                ? `${formatDateTH(checkInDateTime.date)} เวลา ${checkInDateTime.time ?? "-"}`
+                ? `${formatDate(checkInDateTime.date)} เวลา ${checkInDateTime.time ?? "-"}`
                 : "-"}
             </p>
             <p>
               <strong>เช็กเอาท์ :</strong>{" "}
               {checkOutDateTime.date
-                ? `${formatDateTH(checkOutDateTime.date)} เวลา ${checkOutDateTime.time ?? "-"}`
+                ? `${formatDate(checkOutDateTime.date)} เวลา ${checkOutDateTime.time ?? "-"}`
                 : "-"}
             </p>
           </div>
 
           <div className="border rounded-2xl p-6 flex gap-6 bg-white shadow-sm">
             {/* รูปที่พัก */}
-            <div className="w-64 h-40 flex-shrink-0 overflow-hidden rounded-xl border">
+            <div className="w-64 h-40 shrink-0 overflow-hidden rounded-xl border">
               <img
                 className="w-full h-full object-cover"
                 src={
                   homestayMainImage?.path
-                    ? `${new URL(API_BASE_URL).origin}/uploads/${homestayMainImage.path}`
+                    ? `${new URL(apiBaseUrl).origin}/uploads/${homestayMainImage.path}`
                     : "https://placehold.co/640x480?text=Homestay"
                 }
                 alt={homestayDetail.name}
@@ -486,8 +477,8 @@ export default function DetailPackageMember() {
             </p>
             <p className="mb-6">
               <strong>วันที่เริ่ม - วันที่สิ้นสุดแพ็กเกจ : </strong>{" "}
-              {formatDateTH(packageDetail.startDate?.date)} -{" "}
-              {formatDateTH(packageDetail.dueDate?.date)}
+              {formatDate(packageDetail.startDate?.date)} -{" "}
+              {formatDate(packageDetail.dueDate?.date)}
               <br />
               <strong>เวลา : </strong> {packageDetail.startDate?.time || "-"} -{" "}
               {packageDetail.dueDate?.time || "-"}
@@ -500,8 +491,8 @@ export default function DetailPackageMember() {
             </p>
             <p className="mb-6">
               <strong>วันที่เปิด - วันที่ปิดการจอง : </strong>{" "}
-              {formatDateTH(packageDetail.openBookingAt?.date)} -{" "}
-              {formatDateTH(packageDetail.closeBookingAt?.date)}
+              {formatDate(packageDetail.openBookingAt?.date)} -{" "}
+              {formatDate(packageDetail.closeBookingAt?.date)}
               <br />
               <strong>เวลา : </strong> {packageDetail.openBookingAt?.time || "-"} -{" "}
               {packageDetail.closeBookingAt?.time || "-"}

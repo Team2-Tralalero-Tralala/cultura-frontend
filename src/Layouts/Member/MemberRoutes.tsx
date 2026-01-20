@@ -10,7 +10,7 @@ import Feedback from "@/Pages/Member/FeedbackPage";
 import ManagePackagePage from "@/Pages/Member/ManagePackagePage";
 import { EditPackagePage } from "@/Pages/Member/EditPackagePage";
 import CreatePackagePage from "@/Pages/Member/CreatePackagePage";
-import { ManageRefundBookingMember } from "@/Pages/Member/ManageRefundPage";
+import ManageRefundPage from "@/Pages/Member/ManageRefundPage";
 
 import ManageBookingMember from "@/Pages/Member/ManageBookingMember";
 import { DashboardPage } from "@/Pages/Member/DashboardPage";
@@ -33,7 +33,7 @@ import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 export default function MemberRoutes() {
   return (
     <Routes>
-      <Route path="/bookings/refunded-pending" element={<ManageRefundBookingMember />} />
+      <Route path="/bookings/refunded-pending" element={<ManageRefundPage />} />
 
       <Route path="account/change-password/own" element={<ChangePasswordPage />} />
       <Route path="feedbacks" element={<Feedback />} />

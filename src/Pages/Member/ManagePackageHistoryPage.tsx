@@ -1,6 +1,6 @@
-/*
- * คำอธิบาย : Component สำหรับหน้า “ประวัติแพ็กเกจ” ของสมาชิก
- * แสดงรายการแพ็กเกจที่สมาชิกได้สร้างและสิ้นสุดไปแล้ว
+/**
+ * คำอธิบาย: Component สำหรับหน้า “ประวัติแพ็กเกจ” ของสมาชิก
+ * - แสดงรายการแพ็กเกจที่สมาชิกได้สร้างและสิ้นสุดไปแล้ว
  */
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -27,18 +27,18 @@ type PackageHistoryRow = {
   dueDate: string;
 };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input : string
- * Output : string ที่ผ่านการ normalize แล้ว
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
+ * Input: str (string)
+ * Output: string ที่ผ่านการ normalize แล้ว
  */
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
- * Input : iso (string)
- * Output : วันที่และเวลาในรูปแบบไทย เช่น "09 พ.ย. 2568 | 00:00 น."
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
+ * Input: iso (string)
+ * Output: วันที่และเวลาในรูปแบบไทย เช่น "09 พ.ย. 2568 | 00:00 น."
  */
 const formatThaiDateTime = (iso: string) => {
   if (!iso) return "-";
@@ -68,10 +68,10 @@ const formatThaiDateTime = (iso: string) => {
   return `${day} ${month} ${year} | ${hours}:${minutes} น.`;
 };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางประวัติแพ็กเกจ
- * Input : ไม่มี
- * Output : รายการคอลัมน์ของตาราง
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางประวัติแพ็กเกจ
+ * Input: -
+ * Output: รายการคอลัมน์ของตาราง
  */
 const columns: Column<PackageHistoryRow>[] = [
   {
@@ -94,18 +94,18 @@ const columns: Column<PackageHistoryRow>[] = [
   },
 ];
 
-/*
- * คำอธิบาย : ฟังก์ชันหลักของหน้า ประวัติแพ็กเกจ สมาชิก
- * Input : ไม่มี
- * Output : ส่วนแสดงผลของหน้า ประวัติแพ็กเกจ สมาชิก
+/**
+ * คำอธิบาย: ฟังก์ชันหลักของหน้า ประวัติแพ็กเกจ สมาชิก
+ * Input: -
+ * Output: ส่วนแสดงผลของหน้า ประวัติแพ็กเกจ สมาชิก
  */
-export default function PackageHistoryMember() {
+export default function ManagePackageHistoryPage() {
   const navigate = useNavigate();
 
-  const [rows, setRows] = useState<PackageHistoryRow[]>([]);
+  const [packageHistoryLists, setPackageHistoryLists] = useState<PackageHistoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [openConfirm, setOpenConfirm] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [packageIdToDelete, setPackageIdToDelete] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
@@ -116,10 +116,10 @@ export default function PackageHistoryMember() {
   });
   const [communityName, setCommunityName] = useState<string>("");
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
-   * Input : ไม่มี
-   * Output : อัปเดต state rows และ pagination
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
+   * Input: -
+   * Output: - (อัปเดต state packageHistoryRows และ pagination)
    */
   const fetchData = async () => {
     try {
@@ -128,31 +128,31 @@ export default function PackageHistoryMember() {
 
       const res = await getHistoriesPackageMember(pagination.currentPage, pagination.limit);
 
-      const list = res?.data?.data ?? [];
-      const packages = res?.data?.pagination ?? {};
+      const packageList = res?.data?.data ?? [];
+      const paginationData = res?.data?.pagination ?? {};
 
-      const mapped = list.map((pkg: any) => ({
-        id: pkg.id,
-        name: pkg.name ?? "-",
-        community: pkg.community?.name ?? "-",
-        overseer: `${pkg.overseerPackage?.fname ?? ""} ${pkg.overseerPackage?.lname ?? ""}`.trim(),
-        status:
-          pkg.statusPackage === "PUBLISH" || pkg.statusPackage === "UNPUBLISH"
-            ? "จบแล้ว"
-            : pkg.statusPackage,
-        dueDate: pkg.dueDate,
+      const mappedRows: PackageHistoryRow[] = packageList.map((packageItem: any) => ({
+        id: packageItem.id,
+        name: packageItem.name ?? "-",
+        community: packageItem.community?.name ?? "-",
+        overseer:
+          `${packageItem.overseerPackage?.fname ?? ""} ${packageItem.overseerPackage?.lname ?? ""}`.trim(),
+        status: packageItem.status === "CLOSED" ? "สิ้นสุดกิจกรรม" : packageItem.status,
+        bookedCount: packageItem.booked_count ?? 0,
+        capacity: packageItem.capacity ?? 0,
+        tags: Array.isArray(packageItem.tags) ? packageItem.tags.map((t: any) => t.name) : [],
       }));
 
-      if (list.length > 0) {
-        setCommunityName(list[0].community?.name || "ชุมชน");
+      if (packageList.length > 0) {
+        setCommunityName(packageList[0].community?.name || "ชุมชน");
       }
 
-      setRows(mapped);
+      setPackageHistoryLists(mappedRows);
       setPagination({
-        currentPage: packages.currentPage ?? 1,
-        totalPages: packages.totalPages ?? 1,
-        totalCount: packages.totalCount ?? mapped.length,
-        limit: packages.limit ?? pagination.limit,
+        currentPage: paginationData.currentPage ?? 1,
+        limit: paginationData.limit ?? 10,
+        totalCount: paginationData.totalCount ?? 0,
+        totalPages: paginationData.totalPages ?? 1,
       });
     } catch (error: any) {
       console.error("Failed to fetch packages:", error);
@@ -162,19 +162,17 @@ export default function PackageHistoryMember() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า หรือจำนวนเรคอร์ดต่อหน้า
-   * Input : pagination.currentPage, pagination.limit
-   * Output : เรียก fetchData เพื่อโหลดข้อมูลใหม่
+  /**
+   * คำอธิบาย: ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า หรือจำนวนเรคอร์ดต่อหน้า
+   * Input: pagination.currentPage, pagination.limit
+   * Output: - (เรียก fetchData เพื่อโหลดข้อมูลใหม่)
    */
   useEffect(() => {
     fetchData();
   }, [pagination.currentPage, pagination.limit]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
-   * Input : -
-   * Output : อัปเดต state communityName
+  /**
+   * คำอธิบาย: การจัดการ Action บน row (copy, delete)
    */
   const rowActions: DataTableActionsConfig<PackageHistoryRow> = {
     header: "จัดการ",
@@ -185,37 +183,41 @@ export default function PackageHistoryMember() {
     callbacks: {
       copy: (row) => navigate(``),
       delete: (row) => {
-        setDeleteId(row.id);
-        setOpenConfirm(true);
+        setPackageIdToDelete(row.id);
+        setIsOpenConfirm(true);
       },
     },
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันกรองข้อมูลในตารางตามข้อความค้นหา
-   * Input : searchQuery
-   * Output : แถวข้อมูลที่ตรงกับคำค้นหา
+  /**
+   * คำอธิบาย: ฟังก์ชันกรองข้อมูลในตารางตามข้อความค้นหา
+   * Input: searchQuery
+   * Output: แถวข้อมูลที่ตรงกับคำค้นหา
    */
   const filteredRows = useMemo(() => {
-    const query = normalizeText(searchQuery);
-    return rows.filter((row) => {
-      const haystacks = [row.name, row.community, row.overseer, row.dueDate].map((value) =>
-        normalizeText(String(value ?? "")),
-      );
-      return !query || haystacks.some((haystack) => haystack.includes(query));
+    if (!searchQuery) return packageHistoryLists;
+    const lowerQuery = searchQuery.toLowerCase();
+    return packageHistoryLists.filter((row) => {
+      const combined = `
+        ${row.name}
+        ${row.community}
+        ${row.overseer}
+        ${row.status}
+      `.toLowerCase();
+      return combined.includes(lowerQuery);
     });
-  }, [rows, searchQuery]);
+  }, [searchQuery, packageHistoryLists]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
-   * Input : id (number)
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
+   * Input: id (number)
+   * Output: - (ลบแพ็กเกจและโหลดข้อมูลใหม่)
    */
   const handleDelete = async (id: number) => {
     try {
       await deletePackageAdmin(id);
-      setOpenConfirm(false);
-      setDeleteId(null);
+      setIsOpenConfirm(false);
+      setPackageIdToDelete(null);
       await fetchData();
     } catch (error: any) {
       console.error("Failed to delete package:", error);
@@ -231,10 +233,10 @@ export default function PackageHistoryMember() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
-   * Input : rows (รายการแพ็กเกจที่เลือก)
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
+   * Input: rows (รายการแพ็กเกจที่เลือก)
+   * Output: - (Alert ข้อมูลลบแพ็กเกจ)
    */
   const bulkActions: BulkAction<PackageHistoryRow>[] = [
     {
@@ -304,19 +306,19 @@ export default function PackageHistoryMember() {
       </div>
 
       <Modal
-        open={openConfirm}
+        open={isOpenConfirm}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         onConfirm={async () => {
-          if (!deleteId) return;
-          await handleDelete(deleteId);
-          setOpenConfirm(false);
-          setDeleteId(null);
+          if (!packageIdToDelete) return;
+          await handleDelete(packageIdToDelete);
+          setIsOpenConfirm(false);
+          setPackageIdToDelete(null);
           await fetchData();
         }}
         onCancel={() => {
-          setOpenConfirm(false);
-          setDeleteId(null);
+          setIsOpenConfirm(false);
+          setPackageIdToDelete(null);
         }}
       />
     </div>

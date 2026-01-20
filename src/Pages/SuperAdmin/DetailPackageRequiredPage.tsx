@@ -305,12 +305,11 @@ export default function DetailPackageRequiredPage() {
     .toUpperCase()
     .startsWith("APPROVE");
 
-
-  return (
+  return ( 
     <div className="w-full">
       <Breadcrumb
         current={{
-          label: "รายละเอียดแพ็กเกจ",
+          label: packageRequestDetail?.name || "รายละเอียดแพ็กเกจ",
           to: `package-requests/${requestId}`,
         }}
       />

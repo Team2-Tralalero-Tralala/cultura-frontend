@@ -1,14 +1,15 @@
 /**
  * คำอธิบาย : Component สำหรับแสดงรายการ Feedback ของแพ็กเกจตาม packageId
- * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
+ * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ล่าสุด / เก่าสุด)
  * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
 */
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import * as PackageFeedbackService from "@/Services/package-feedbacks-service";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
+import { ArrowLeft, SquarePen } from "lucide-react";
 
 const BACKEND_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
@@ -65,18 +66,20 @@ function getImageUrl(fileName?: string): string | undefined {
 }
 
 /**
- * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
+ * คำอธิบาย : แปลงค่าเวลาให้เป็นรูปแบบวันที่ dd/mm/yyyy (พุทธศักราช)
  * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
- * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
-*/
-const formatDateThai = (isoDateString: string) => {
-    const date = new Date(isoDateString);
-    return date.toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+ * Output   : string - วันที่รูปแบบ dd/mm/yyyy (พ.ศ.)
+ */
+const formatDateThai = (isoDateString: string): string => {
+  const date = new Date(isoDateString);
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear() + 543;
+
+  return `${day}/${month}/${year}`;
 };
+
 
 /**
  * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
@@ -102,12 +105,13 @@ function renderStars(rating: number): string {
 
 /**
  * คำอธิบาย : Feedback ของแพ็กเกจตาม packageId
- * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
+ * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ล่าสุด / เก่าสุด)
  * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
  * Input : packageId (string) : รับจาก URL parameter เพื่อใช้ดึง feedback ของแพ็กเกจนั้น
  * Output : JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
 */
 export default function PackageFeedbacksPage() {
+  const navigate = useNavigate();
   const { packageId } = useParams<{ packageId: string }>();
 
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
@@ -146,7 +150,7 @@ export default function PackageFeedbacksPage() {
   }, [packageIdNumber]);
 
   /**
-   * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
+   * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ล่าสุด / เก่าสุด)
   */
   const sortedFeedbackLists = React.useMemo(() => {
     return [...feedbackLists]
@@ -167,7 +171,7 @@ export default function PackageFeedbacksPage() {
     feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
 
   const filterOptions: { label: string; value: SortOrder }[] = [
-    { label: "ใหม่สุด", value: "newest" },
+    { label: "ล่าสุด", value: "newest" },
     { label: "เก่าสุด", value: "oldest" },
   ];
 
@@ -226,9 +230,9 @@ export default function PackageFeedbacksPage() {
       previousFeedbacks.map((feedbackItem) =>
         feedbackItem.id === feedbackId
           ? {
-              ...feedbackItem,
-              replyMessage,
-            }
+            ...feedbackItem,
+            replyMessage,
+          }
           : feedbackItem
       )
     );
@@ -247,13 +251,26 @@ export default function PackageFeedbacksPage() {
           to: `package/feedback/${packageId}`,
         }}
       />
-
       <section className="relative bg-white rounded-2xl shadow-sm border border-gray-200 w-full min-h-[500px] p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-800">
-            ทั้งหมด : {feedbackLists.length} รายการ
-          </p>
-          
+          <div className="space-y-4">
+            <button
+              type="button"
+              className="flex items-center gap-2 cursor-pointer select-none"
+              onClick={() => navigate("/admin/packages/feedbacks")}
+              aria-label="ย้อนกลับไปยังรายการข้อเสนอแนะ"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-800" />
+              <h1 className="text-[20px] font-bold text-gray-800">ข้อเสนอแนะ</h1>
+            </button>
+
+            <p className="text-sm font-semibold text-gray-800">
+              ทั้งหมด : {feedbackLists.length} รายการ
+            </p>
+          </div>
+
+
+
           <div className="[&_svg:first-of-type]:hidden [&_*]:text-base">
             <FilterDropdown
               options={filterOptions}
@@ -265,7 +282,7 @@ export default function PackageFeedbacksPage() {
 
         <div className="w-full rounded-2xl overflow-hidden bg-[#EDEDED]">
           <div className="bg-[#4E8374] px-6 py-3">
-            <h2 className="text-white text-lg font-semibold">{packageName}</h2>
+            <h2 className="text-white text-[20px] font-semibold">{packageName}</h2>
           </div>
 
           <div className="p-6 space-y-6">
@@ -324,7 +341,7 @@ export default function PackageFeedbacksPage() {
                     </div>
                   </div>
 
-                  <p className="text-gray-800 text-sm leading-relaxed">
+                  <p className="mt-2 text-base text-gray-800 leading-relaxed">
                     {feedbackItem.message}
                   </p>
 
@@ -377,9 +394,10 @@ export default function PackageFeedbacksPage() {
                         )}
                       </div>
 
-                      <p className="mt-2 text-sm text-gray-800 leading-relaxed">
-                        {feedbackItem.replyMessage}
-                      </p>
+                   <p className="mt-2 text-base text-gray-800 leading-relaxed">
+                    {feedbackItem.replyMessage}
+                  </p>
+
                     </div>
                   )}
 

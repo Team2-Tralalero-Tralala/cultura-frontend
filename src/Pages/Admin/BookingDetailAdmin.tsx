@@ -22,6 +22,7 @@ import ModalReject from "@/Components/Modal/ModalReject";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
+
 /**
  * Type: ApiBooking
  *
@@ -84,6 +85,10 @@ const apiUrl = import.meta.env.VITE_API_URL;
  * Output:
  *  - Render รายละเอียดการจอง
  *  - ควบคุม Modal สำหรับอนุมัติและปฏิเสธการจอง
+ *
+ * Side Effects:
+ *  - เรียก API เพื่อดึงข้อมูลการจอง
+ *  - อัปเดต state และแสดงผลตามสถานะการจอง
  */
 export default function BookingDetailAdmin() {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -104,9 +109,6 @@ export default function BookingDetailAdmin() {
 
   const [openRejectConfirmModal, setOpenRejectConfirmModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-
-
-
 
   /**
    * คำอธิบาย:
@@ -396,6 +398,19 @@ export default function BookingDetailAdmin() {
     </div>
   );
 
+ /**
+ * Component: ActionButtons
+ *
+ * คำอธิบาย:
+ *  แสดงปุ่มสำหรับการอนุมัติและปฏิเสธการจอง
+ *  ใช้ซ้ำได้ทั้งกรณีการจองและการคืนเงิน
+ *
+ * Props:
+ *  - rejectText: string
+ *  - approveText: string
+ *  - onReject: () => void
+ *  - onApprove: () => void
+ */
   function ActionButtons({
     rejectText,
     approveText,

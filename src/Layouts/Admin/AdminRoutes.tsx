@@ -38,7 +38,7 @@ import EditMemberPage from "@/Pages/Admin/EditMemberPage";
 import AuthentionLogAdmin from "@/Pages/Admin/AuthentionLogAdmin";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 import { ManageParticipant } from "@/Pages/Admin/ManageParticipant";
-import BookingDetailStatus from "@/Pages/Admin/BookingDetailStatus";
+import BookingDetailStatusAdmin from "@/Pages/Admin/BookingDetailStatusAdmin";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
@@ -60,7 +60,7 @@ export default function AdminRoutes() {
       <Route path="/community/homestay" element={<CreateHomestaysPage />} />
       <Route path="/community/homestay/:homestayId/edit" element={<EditHomestayPage />} />
       <Route path="/bookings-histories/all" element={<BookingHistoryAdmin />} />
-      <Route path="/bookings-histories/:bookingId" element={<BookingDetailStatus />} />
+      <Route path="/bookings-histories/:bookingId" element={<BookingDetailStatusAdmin />} />
       {/*<Route path="logs" element={<AuthentionLogSuperAdmin />} /> */}
       {/* <Route path="package-requests/:requestId" element={<DetailPackageRequriedPage />} /> */}
 

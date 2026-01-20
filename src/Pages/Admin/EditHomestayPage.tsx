@@ -182,6 +182,10 @@ export default function EditHomestayAdminPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [isConfirmOpen, setConfirmOpen] = React.useState(false);
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
   const [communityId, setCommunityId] = React.useState<number | null>(null);
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const startingZoom = 12;
@@ -341,33 +345,38 @@ export default function EditHomestayAdminPage() {
 
   /**
    * ฟังก์ชัน: handleSubmit
-   * คำอธิบาย: ตรวจสอบฟอร์มและเปิด Modal เพื่อยืนยันการบันทึก
+   * คำอธิบาย: เปิด Modal เพื่อยืนยันการบันทึก
    */
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (isSaving) return;
-
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    if (!validateAll()) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+    // เปิด Modal ยืนยันทันที
     setConfirmOpen(true);
   };
 
-  /**
-   * ฟังก์ชัน: onConfirmSave
-   * คำอธิบาย: เมื่อยืนยันบันทึก → สร้าง FormData และส่ง PUT ไปยัง API (ฝั่ง Admin)
-   * รูปแบบข้อมูล:
-   *  - data: JSON (string) รวมข้อมูล text และ tagHomestays
-   *  - cover: File(s)
-   *  - gallery: File(s)
+  /*
+   * คำอธิบาย : onConfirmSave
+   * - ตรวจสอบความถูกต้อง (Validation)
+   * - หากไม่ผ่าน: แสดง Alert Error
+   * - หากผ่าน: สร้าง FormData และส่งข้อมูล (axios.put) -> แสดง Alert Success
+   * Input: -
+   * Output : (void)
    */
   const onConfirmSave = async () => {
     setConfirmOpen(false);
+    const isFormValid = validateAll();
+    const isFilesValid = coverFiles.length > 0 && galleryFiles.length > 0;
 
+    if (!isFormValid || !isFilesValid) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ครบถ้วน");
+      setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
+      setAlertOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 2. ส่งข้อมูล (API Call)
     try {
       setIsSaving(true);
       setErrorMessage(null);
@@ -405,17 +414,19 @@ export default function EditHomestayAdminPage() {
         withCredentials: true,
       });
 
-      setSuccessMessage("อัปเดตที่พักสำเร็จ");
-      if (communityId) navigate(`/admin/community/homestays`);
-      else navigate(-1);
+      // บันทึกสำเร็จ
+      setAlertType("success");
+      setAlertTitle("แก้ไขที่พักสำเร็จ");
+      setAlertMessage("ข้อมูลที่พักถูกแก้ไขเรียบร้อยแล้ว");
+      setAlertOpen(true);
+
     } catch (error: any) {
       console.error("Update homestay error:", error?.response?.data || error);
-      setErrorMessage(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "อัปเดตที่พักไม่สำเร็จ"
-      );
+      // บันทึกไม่สำเร็จ
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -689,12 +700,27 @@ export default function EditHomestayAdminPage() {
       {/* Modal ยืนยัน */}
       <Modal
         open={isConfirmOpen}
-        title="ยืนยันการบันทึกข้อมูลที่พัก"
-        text="คุณต้องการอัปเดตข้อมูลที่พักนี้หรือไม่"
+        title="ยืนยันการแก้ไขที่พัก"
+        text="คุณต้องการยืนยันการแก้ไขที่พักหรือไม่"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={onConfirmSave}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      {/* Modal Alert */}
+      <ModalAlert
+        open={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertOpen(false);
+          if (alertType === "success") {
+            if (communityId) navigate(`/admin/community/homestays`);
+            else navigate(-1);
+          }
+        }}
       />
     </div>
   );

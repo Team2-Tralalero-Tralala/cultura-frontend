@@ -1056,7 +1056,7 @@ export const CreatePackagePage = () => {
           <div className="w-36">
             <fieldset disabled={isSaving}>
               <Button type="confirm-admin" htmlType="submit">
-                {isSaving ? "กำลังบันทึก..." : "สร้างแพ็กเกจ"}
+                {isSaving ? "กำลังบันทึก..." : "สร้าง"}
               </Button>
             </fieldset>
           </div>

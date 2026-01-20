@@ -205,8 +205,8 @@ const EditProfileTourist: React.FC = () => {
             </div>
 
             {/* Form */}
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-6 ">
+              <div className="grid grid-cols-2 gap-6 ">
                 <TextField id="fname" label="ชื่อ (ไม่ต้องใส่คำนำหน้า)" required value={formData.fname} onChange={handleChange} />
                 <TextField id="lname" label="นามสกุล" required value={formData.lname} onChange={handleChange} />
               </div>
@@ -220,7 +220,7 @@ const EditProfileTourist: React.FC = () => {
                 <TextField id="birthDate" type="date" label="วัน-เดือน-ปีเกิด" required value={formData.birthDate} onChange={handleChange} />
 
                 <div>
-                  <label className="block mb-2 font-medium">
+                  <label className="block mb-2 font-bold ">
                     เพศ <span className="text-red-500">*</span>
                   </label>
 

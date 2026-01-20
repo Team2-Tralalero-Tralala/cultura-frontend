@@ -58,7 +58,7 @@ const TextField: React.FC<BaseFieldProps> = ({
     <div className="space-y-1.5">
       {/* Label + helperText */}
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-base font-semibold text-black">
+        <label htmlFor={id} className="block text-base font-bold text-black">
           {label}
           {required && <RequiredMark />}
         </label>

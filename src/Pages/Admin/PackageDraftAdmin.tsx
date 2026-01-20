@@ -214,8 +214,8 @@ const PackageDraftAdmin = () => {
       ),
     },
     { key: "community", header: "ชื่อชุมชน" },
-    { key: "overseer", header: "ชื่อผู้ดูแล" },
-    { key: "status", header: "สถานะ" },
+    { key: "overseer", header: "ผู้ดูแล" },
+    { key: "status", header: "สถานะแพ็กเกจ" },
 
     {
       key: "setting",
@@ -248,9 +248,9 @@ const PackageDraftAdmin = () => {
       <Breadcrumb
         current={{ label: "ฉบับร่าง", to: "/admin/packages/draft" }}
       />
-
+      <h1 className="text-xl font-bold ">ฉบับร่าง</h1>
       {/* Toolbar */}
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between mb-4 text-16px">
         <SearchBarTable
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -262,7 +262,7 @@ const PackageDraftAdmin = () => {
           onClick={() => (window.location.href = "/admin/package/create")}
         >
           <Plus size={18} className="mr-2" />
-          เพิ่มแพ็กเกจ
+          สร้างแพ็กเกจ
         </button>
       </div>
 
@@ -274,6 +274,7 @@ const PackageDraftAdmin = () => {
         bulkActions={selectedRows.length > 0 ? bulkActions : []}
         selectable
         onSelectedChange={(rows) => setSelectedRows(rows)}
+        pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
         onPageChange={(p) =>
           setPagination((prev) => ({ ...prev, currentPage: p }))

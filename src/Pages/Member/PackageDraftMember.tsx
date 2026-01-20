@@ -252,8 +252,8 @@ const PackageDraftMember: React.FC = () => {
       ),
     },
     { key: "community", header: "ชื่อชุมชน" },
-    { key: "overseer", header: "ชื่อผู้ดูแล" },
-    { key: "status", header: "สถานะ" },
+    { key: "overseer", header: "ผู้ดูแล" },
+    { key: "status", header: "สถานะแพ็กเกจ" },
     {
       key: "setting",
       header: "จัดการ",
@@ -291,8 +291,8 @@ const PackageDraftMember: React.FC = () => {
           to: "/member/packages/draft",
         }}
       />
-
-      <div className="flex justify-between mb-4">
+      <h1 className="text-xl font-bold ">ฉบับร่าง</h1>
+      <div className="flex justify-between mb-4 text-16px">
         <SearchBarTable
           value={searchTerm}
           onChange={(event) =>
@@ -309,7 +309,7 @@ const PackageDraftMember: React.FC = () => {
           }
         >
           <Plus size={18} className="mr-2" />
-          เพิ่มแพ็กเกจ
+          สร้างแพ็กเกจ
         </button>
       </div>
 
@@ -327,6 +327,7 @@ const PackageDraftMember: React.FC = () => {
           setSelectedRows(rows)
         }
         pagination={pagination}
+        pageSizeOptions={[10, 30, 50]}
         onPageChange={(page) =>
           setPagination((prev) => ({
             ...prev,

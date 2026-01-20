@@ -245,7 +245,7 @@ export default function ThailandLocationSelector({
       <div ref={InputProps.ref} className="w-full">
         {/* Label + Error message ในบรรทัดเดียวกัน */}
         <div className="flex items-center justify-between mb-1.5">
-          <label htmlFor={id} className="block text-base font-semibold text-gray-800">
+          <label htmlFor={id} className="block text-base font-bold text-gray-800">
             {label} <span className="text-red-600">*</span>
           </label>
           {error && (

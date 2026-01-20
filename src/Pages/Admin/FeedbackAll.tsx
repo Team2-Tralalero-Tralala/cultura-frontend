@@ -149,6 +149,7 @@ const TopControls: React.FC<{
   const sortDisplay = currentSort === "newest" ? "ล่าสุด" : "เก่าสุด";
   return (
     <section className="rounded-xl bg-white border-slate-200 mb-5">
+      <h1 className="text-xl font-bold ">ข้อเสนอแนะ</h1>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="text-black">
           <span className="font-semibold">ทั้งหมด</span> :{" "}
@@ -168,7 +169,7 @@ const TopControls: React.FC<{
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="ค้นหา"
-              className="w-[269px] h-[51px] rounded-lg border border-slate-300 bg-white pl-10 pr-4 text-sm outline-none focus:border-emerald-600 transition"
+              className="w-[269px] h-[51px] rounded-lg border border-slate-300 bg-white pl-10 pr-4 text-[16px] outline-none focus:border-emerald-600 transition"
             />
           </div>
 
@@ -206,14 +207,14 @@ const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) =>
             </div>
             <div className="text-lg font-medium text-slate-800">{feedback.userName}</div>
           </div>
-          <div className="flex flex-col gap-1 text-sm items-end text-slate-500">
+          <div className="flex flex-col gap-1 text-sm items-end text-black">
             {renderStars(feedback.rating)}
             <span>{formatDateThai(feedback.createdAt)}</span>
           </div>
         </div>
 
         <div className="h-[130px] overflow-hidden">
-          <p className="text-base text-slate-700 leading-relaxed whitespace-pre-line line-clamp-5">
+          <p className="text-base text-black leading-relaxed whitespace-pre-line line-clamp-5">
             {feedback.message || "-"}
           </p>
         </div>

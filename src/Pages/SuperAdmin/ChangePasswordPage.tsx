@@ -155,9 +155,16 @@ export default function ChangePasswordPage() {
         }}
       />
       <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
-        <div className="flex items-center mb-4 pb-4 border-gray-100">
-          <h1 className="text-3xl font-bold text-gray-800">เปลี่ยนรหัสผ่าน</h1>
+        <div className="flex items-center mb-6">
+          <a
+            className="flex items-center gap-2 mr-4 text-gray-800 hover:text-dark-green"
+            href="/super/communities/all"
+          >
+            <Icon icon="lucide:arrow-left" className="w-7 h-7" />
+            <h1 className="text-[20px] font-bold">เปลี่ยนรหัสผ่าน</h1>
+          </a>
         </div>
+
 
         <div className="pl-0">
           {message && (

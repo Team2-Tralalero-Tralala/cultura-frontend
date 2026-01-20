@@ -509,14 +509,14 @@ export default function UploadBannerPage() {
       />
 
       <main className="min-h-screen bg-white px-8 py-8 rounded-xl">
-        <div className="flex items-center mb-6 ">
+        <div className="flex items-center mb-6">
           <a
-            className="items-center gap-2 mr-4 text-gray-800 hover:text-dark-green"
+            className="flex items-center gap-2 mr-4 text-gray-800 hover:text-dark-green"
             href="/super/setting"
           >
             <Icon icon="lucide:arrow-left" className="w-7 h-7" />
+            <h1 className="text-[20px] font-bold">การเพิ่ม/แก้ไข รูปภาพ</h1>
           </a>
-          <h1 className="text-[20px] font-bold">การเพิ่ม/แก้ไข รูปภาพ</h1>
         </div>
 
         <div className="relative pl-20 mb-8 ml-20 mt-10 border-l border-black">

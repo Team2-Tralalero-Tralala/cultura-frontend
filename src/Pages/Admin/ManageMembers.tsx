@@ -20,7 +20,7 @@ import api from "@/Libs/api";
 type MemberRow = {
     userId: number;
     displayName: string;
-    roleName: string;
+    activityRole: string;
     contact: string;
 };
 
@@ -63,7 +63,7 @@ export default function ManageMembers() {
         if (!normalizedQuery) return memberList;
 
         return memberList.filter((member) =>
-            [member.displayName, member.roleName, member.contact]
+            [member.displayName, member.activityRole, member.contact]
                 .map(normalizeText)
                 .some((fieldValue) => fieldValue.includes(normalizedQuery))
         );
@@ -83,9 +83,10 @@ export default function ManageMembers() {
         return {
             userId: Number(member.id),
             displayName,
-            roleName: member.role?.name ?? "-",
+            activityRole: member.activityRole ?? "-",
             contact: member.email ?? member.phone ?? "-",
         };
+        
     };
 
     /**
@@ -103,6 +104,7 @@ export default function ManageMembers() {
             });
 
             const body = response.data?.data;
+            console.log(body)
             const rows = Array.isArray(body?.data) ? body.data : [];
             const pagination = body?.pagination;
 
@@ -143,7 +145,7 @@ export default function ManageMembers() {
                     </div>
                 ),
             },
-            { key: "roleName", header: "บทบาท", className: "min-w-[140px]" },
+            { key: "activityRole", header: "บทบาท", className: "min-w-[140px]" },
             { key: "contact", header: "ช่องทางติดต่อ", className: "min-w-[220px]" },
         ],
         [navigate]
@@ -236,7 +238,7 @@ export default function ManageMembers() {
             <Modal
                 open={isOpenDeleteModal}
                 title="ยืนยันการลบสมาชิก"
-                text={`คุณต้องการลบสมาชิก “${selectedMember?.displayName ?? "-"}” ออกจากชุมชนใช่หรือไม่?`}
+                text={`คุณต้องการยืนยันการลบบัญชีสมาชิกหรือไม่`}
                 confirmText="ลบ"
                 cancelText="ยกเลิก"
                 onCancel={() => {

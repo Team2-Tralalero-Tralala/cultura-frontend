@@ -1,7 +1,6 @@
 /**
- * หน้า : ดูรายละเอียดที่พัก (Admin)
- * Page : DetailHomestayAdmin
- * Description : แสดงรายละเอียดของที่พัก (Homestay) สำหรับแอดมินของชุมชนนั้น ๆ
+ * คำอธิบาย : Component หน้าสำหรับแสดงรายละเอียดของที่พัก (Homestay) สำหรับแอดมิน
+ * โดยรองรับการแสดงรายละเอียดข้อมูลที่พัก, แสดงรูปภาพและแผนที่ที่พัก, ลิงก์ไปยังหน้าแก้ไขข้อมูลที่พัก
  */
 
 import { useEffect, useState } from "react";
@@ -15,10 +14,10 @@ import { fetchHomestayDetailByAdmin } from "@/Libs/HomestayService";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-/*
- * คำอธิบาย : แปลงชื่อไฟล์หรือพาธจาก backend ให้เป็น URL เต็มสำหรับใช้งานบน frontend
- * Input : fileName (string | undefined)
- * Output : string | undefined (URL เต็ม)
+/**
+ * คำอธิบาย: แปลงชื่อไฟล์หรือพาธจาก backend ให้เป็น URL เต็มสำหรับใช้งาน
+ * Input: fileName (ชื่อไฟล์หรือพาธ)
+ * Output: URL เต็มของไฟล์ หรือ undefined หากไม่มีข้อมูล
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -29,28 +28,27 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
   return `${apiUrl}/${cleanedPath}`;
 }
 
-/*
- * คำอธิบาย : ใช้แสดงค่าที่ส่งเข้ามา หากไม่มีค่าหรือเป็น falsy จะแสดงเป็น "-"
- * Input : textValue (any)
- * Output : any (คืนค่าต้นฉบับถ้ามีค่า หรือ "-" หากไม่มีค่า)
+/**
+ * คำอธิบาย: แสดงค่าที่ส่งเข้ามา หากไม่มีค่าจะแสดงเป็น "-"
+ * Input: textValue (ค่าข้อความที่ต้องการตรวจสอบ)
+ * Output: ค่าข้อความเดิม หรือ "-"
  */
 const displayText = (textValue: any) => (textValue ? textValue : "-");
 
-/*
- * คำอธิบาย : หน้าสำหรับแสดงรายละเอียดของที่พัก (Homestay) สำหรับผู้ดูแลระบบ (Admin)
+/**
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดที่พักสำหรับ Admin
  */
-export default function DetailHomestayAdmin() {
+export default function DetailHomestayPage() {
   const navigate = useNavigate();
   const { homestayId } = useParams<{ homestayId: string }>();
 
-  /* State เก็บข้อมูลรายละเอียดที่พัก */
   const [homestayDetail, setHomestayDetail] = useState<HomestayDetail | null>(null);
-
-  /* State เก็บ URL รูปภาพสำหรับแสดงใน Modal (Preview) */
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
-  /*
-   * คำอธิบาย : โหลดข้อมูลรายละเอียดที่พักจาก backend เมื่อ homestayId เปลี่ยนแปลง
+  /**
+   * คำอธิบาย: ดึงข้อมูลรายละเอียดที่พักจาก Backend
+   * Input: - (ใช้ homestayId จาก URL params)
+   * Output: - (อัปเดต state homestayDetail)
    */
   useEffect(() => {
     if (!homestayId) return;

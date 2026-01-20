@@ -1,29 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/*
- * คำอธิบาย : หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Admin (Detail Package Admin)
- * ใช้สำหรับดึงข้อมูลแพ็กเกจจาก backend และแสดงข้อมูลเชิงรายละเอียด
- * รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
- * สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้ (นำทางไปหน้าแก้ไขของ Admin)
+/**
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดแพ็กเกจ (Admin)
+ * หน้าที่:
+ * - แสดงรายละเอียดแพ็กเกจท่องเที่ยว
+ * - แสดงข้อมูลผู้สร้างและผู้ดูแล
+ * - แสดงข้อมูลที่พักในแพ็กเกจ
+ * - แสดงแผนที่และรูปภาพ
+ * - ลิงก์ไปยังหน้าแก้ไขและรายชื่อผู้จอง
  */
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Button from "../../Components/Button";
-import { EditIcon } from "../../Components/Icon/MaterialSymbolsLight";
-import { Tag } from "../../Components/Tag";
+import Button from "@/Components/Button";
+import { EditIcon } from "@/Components/Icon/MaterialSymbolsLight";
+import { Tag } from "@/Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
-/**
- * ฟังก์ชัน : API_BASE_URL (ค่าคงที่)
- * คำอธิบาย : URL ของ Backend สำหรับติดต่อ API
- * Input  : -
- * Output : string | undefined (ค่า base URL จาก environment)
- */
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL;
 
 interface DateTimeField {
   date: string | null;
@@ -102,10 +98,9 @@ interface PackageData {
 }
 
 /**
- * ฟังก์ชัน : formatDateTH
- * คำอธิบาย : แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
- * Input  : dateStr: string | null (วันที่ในรูปแบบ ISO หรือ null)
- * Output : string (วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล)
+ * คำอธิบาย: แปลงวันที่รูปแบบ ISO เป็นรูปแบบไทย (dd/mm/yyyy)
+ * Input: dateStr (ISO Date String)
+ * Output: วันที่รูปแบบไทย หรือ "-" หากไม่มีข้อมูล
  */
 function formatDateTH(dateStr: string | null): string {
   if (!dateStr) return "-";
@@ -117,26 +112,22 @@ function formatDateTH(dateStr: string | null): string {
 }
 
 /**
- * ฟังก์ชัน : extractDateTime
- * คำอธิบาย : แยกวันที่และเวลาออกจากข้อมูลรูปแบบ ISO String (เช่น "2025-01-01T08:30:00.000Z")
- * Input  : isoString?: string | null (ข้อความวันที่-เวลาในรูปแบบ ISO 8601 หรือ null)
- * Output : วัตถุที่ประกอบด้วยวันที่ (date) และเวลา (time) เช่น { date: "2025-01-01", time: "08:30" }
+ * คำอธิบาย: แยกวันที่และเวลาออกจาก ISO string
+ * Input: isoString (ISO Date String)
+ * Output: Object { date, time }
  */
 function extractDateTime(isoString?: string | null): DateTimeField {
   if (!isoString) return { date: null, time: null };
   const dateObject = new Date(isoString);
-  const date = dateObject.toISOString().split("T")[0]; // YYYY-MM-DD
-  const time = dateObject.toTimeString().split(" ")[0].slice(0, 5); // HH:MM
+  const date = dateObject.toISOString().split("T")[0];
+  const time = dateObject.toTimeString().split(" ")[0].slice(0, 5);
   return { date, time };
 }
 
 /**
- * ฟังก์ชัน : DetailPackageAdmin
- * คำอธิบาย : React Component สำหรับแสดงรายละเอียดแพ็กเกจให้ Admin ดูข้อมูลเชิงลึกของแพ็กเกจ
- * Input  : - (ใช้ useParams เพื่ออ่านค่า id ของแพ็กเกจจาก URL)
- * Output : JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Admin)
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Admin
  */
-export default function DetailPackageAdmin() {
+export default function DetailPackagePage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -145,16 +136,15 @@ export default function DetailPackageAdmin() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   /**
-   * ฟังก์ชัน : useEffect(fetchPackageDetail)
-   * คำอธิบาย : ดึงข้อมูลรายละเอียดแพ็กเกจจาก backend ตาม id เมื่อ component mount หรือ id เปลี่ยน
-   * Input  : -
-   * Output : - (อัปเดต state packageDetail, isLoading, errorMessage)
+   * คำอธิบาย: ดึงข้อมูลรายละเอียดแพ็กเกจ
+   * Input: - (ใช้ id จาก URL params)
+   * Output: - (อัปเดต state packageDetail)
    */
   useEffect(() => {
     async function fetchPackageDetail() {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/packages/${id}`, {
+        const response = await axios.get(`${apiUrl}/packages/${id}`, {
           withCredentials: true,
         });
 
@@ -257,7 +247,6 @@ export default function DetailPackageAdmin() {
         };
 
         setPackageDetail(mappedPackageDetail);
-        console.log("Mapped package data (admin):", mappedPackageDetail);
       } catch (error) {
         console.error("Error fetching package (admin):", error);
         setErrorMessage("เกิดข้อผิดพลาดในการโหลดข้อมูล");
@@ -278,7 +267,7 @@ export default function DetailPackageAdmin() {
   if (!packageDetail) {
     return <div className="p-6 text-gray-500">ไม่พบข้อมูลแพ็กเกจ</div>;
   }
-  // เตรียม section แสดงที่พักในแพ็กเกจ (ถ้ามี)
+
   let homestaySection: JSX.Element | null = null;
 
   if (packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0) {
@@ -322,7 +311,7 @@ export default function DetailPackageAdmin() {
                 className="w-full h-full object-cover"
                 src={
                   homestayMainImage?.path
-                    ? `${new URL(API_BASE_URL).origin}/uploads/${homestayMainImage.path}`
+                    ? `${new URL(apiUrl).origin}/uploads/${homestayMainImage.path}`
                     : "https://placehold.co/640x480?text=Homestay"
                 }
                 alt={homestayDetail.name}

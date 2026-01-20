@@ -1,10 +1,10 @@
 /**
- * Component: MemberDetailPage (Admin)
- * Description: แสดงรายละเอียดบัญชีผู้ใช้งานตาม ID ที่ได้รับจาก URL
- * หน้านี้ใช้สำหรับดูข้อมูลเท่านั้น (ไม่สามารถอัปโหลดรูปโปรไฟล์ได้)
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดบัญชีสมาชิก (Admin)
+ * โดยรองรับการแสดงรายละเอียดข้อมูลส่วนตัวและบทบาท
+ * และลิงก์ไปยังหน้าแก้ไขข้อมูลสมาชิก
  */
 
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Button from "@/Components/Button";
@@ -14,19 +14,49 @@ import { fetchMemberDetail } from "@/Libs/AccountService";
 import type { UserDetail } from "@/Types/User";
 
 /**
- * Component: MemberDetailPage
- * วัตถุประสงค์: แสดงรายละเอียดบัญชีสมาชิกของชุมชน (Admin)
- * Input: userId (ได้จาก useParams)
- * Output: แสดงรายละเอียดบัญชีแบบ read-only
+ * คำอธิบาย: แปลง path รูปจาก backend เป็น URL
+ * Input: fileName (ชื่อไฟล์)
+ * Output: URL ของรูปภาพ
  */
-export function MemberDetailPage() {
+function resolveBackendUploadUrl(fileName?: string): string | undefined {
+  if (!fileName) return undefined;
+  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  if (!fileName.startsWith("uploads/")) {
+    const cleaned = fileName.replace(/^\/+/, "");
+    return `${baseUrl}/uploads/${cleaned}`;
+  }
+  return `${baseUrl}/${fileName}`;
+}
+
+/**
+ * คำอธิบาย: จัดรูปแบบเบอร์โทรศัพท์ (###-###-####)
+ * Input: phone (เบอร์โทรศัพท์)
+ * Output: เบอร์โทรศัพท์ที่มีขีดคั่น หรือ "-" หากไม่มีข้อมูล
+ */
+function formatPhoneNumber(phone?: string | null): string {
+  if (!phone) return "-";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return phone;
+}
+
+/**
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดบัญชีสมาชิก
+ */
+export default function DetailMemberPage() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<UserDetail | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  /** โหลดข้อมูลผู้ใช้จาก API */
+  /**
+   * คำอธิบาย: โหลดข้อมูลสมาชิกจาก API
+   * Input: - (ใช้ userId จาก URL params)
+   * Output: - (อัปเดต state user)
+   */
   useEffect(() => {
     if (!userId) return;
     (async () => {
@@ -39,41 +69,18 @@ export function MemberDetailPage() {
         if (status === 403 || status === 404) {
           navigate("/admin/members");
         } else {
-          setError("ไม่สามารถโหลดข้อมูลได้");
+          setErrorMessage("ไม่สามารถโหลดข้อมูลได้");
         }
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     })();
   }, [userId]);
 
-  /** แปลง path รูปจาก backend → URL */
-  function resolveBackendUploadUrl(fileName?: string): string | undefined {
-    if (!fileName) return undefined;
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-    if (!fileName.startsWith("uploads/")) {
-      const cleaned = fileName.replace(/^\/+/, "");
-      return `${baseUrl}/uploads/${cleaned}`;
-    }
-    return `${baseUrl}/${fileName}`;
-  }
-
-  /** จัดรูปแบบเบอร์โทรศัพท์ ###-###-#### */
-  function formatPhoneNumber(phone?: string | null): string {
-    if (!phone) return "-";
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length === 10) {
-      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-    return phone;
-  }
-
-  // Section: Loading & Error
-  if (loading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
-  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (isLoading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
+  if (errorMessage) return <div className="p-8 text-red-600">{errorMessage}</div>;
   if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
 
-  // Section: Render Layout
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-6 md:px-0">

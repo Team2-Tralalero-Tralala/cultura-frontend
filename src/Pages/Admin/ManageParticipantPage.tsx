@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย: Component ManageParticipant (Admin) หน้าจัดการสมาชิกในแพ็กเกจ (Admin)
+ * คำอธิบาย: Component สำหรับจัดการสมาชิกในแพ็กเกจ (Admin)
  * - แสดงตารางสมาชิกในแพ็กเกจ
  * - มีฟังก์ชันค้นหา อัปเดตสถานะการเข้าร่วมแพ็กเกจ
  */
@@ -19,7 +19,7 @@ import type { ParticipantsInPackage } from "@/Types/Package";
  * input: dateObj - วันที่ที่ต้องการแปลง
  * output: วันที่ที่แปลงแล้ว
  */
-const normalizeDate = (dateObj: Date | string) => {
+const formatDateToThai = (dateObj: Date | string) => {
   if (!dateObj) return "";
   const dateValue = typeof dateObj === "string" ? dateObj.replace("Z", "") : dateObj;
   const date = new Date(dateValue);
@@ -35,6 +35,7 @@ const normalizeDate = (dateObj: Date | string) => {
   });
   return `${formattedDate} | เวลา ${formattedTime}`;
 };
+
 /**
  * คำอธิบาย: ฟังก์ชันที่ใช้ในการแสดง dropdown ของสถานะ
  * input: status - สถานะที่ต้องการแสดง
@@ -105,12 +106,12 @@ const StatusDropdown = ({
 };
 
 /**
- * Component: ManageParticipant
- * input: -
- * output: ตารางสมาชิกในแพ็กเกจ
+ * คำอธิบาย: หน้าจัดการสมาชิกในแพ็กเกจ (Admin)
+ * Input: -
+ * Output: JSX.Element (หน้าจอแสดงตารางรายการสมาชิกในแพ็กเกจและการจัดการ)
  */
-export function ManageParticipant() {
-  const [rows, setRows] = useState<ParticipantsInPackage[]>([]);
+export default function ManageParticipantPage() {
+  const [participants, setParticipants] = useState<ParticipantsInPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
@@ -127,7 +128,7 @@ export function ManageParticipant() {
    * input: ไม่มี
    * output: ไม่มี
    */
-  async function fetchData(): Promise<void> {
+  async function fetchParticipants(): Promise<void> {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -138,7 +139,7 @@ export function ManageParticipant() {
         pagination.limit,
         searchQuery,
       );
-      setRows(resultData);
+      setParticipants(resultData);
       setPagination(resultPagination);
     } catch (err: unknown) {
       const error = err as Error;
@@ -167,7 +168,7 @@ export function ManageParticipant() {
         );
 
         if (!isCancelled) {
-          setRows(resultData);
+          setParticipants(resultData);
           setPagination(resultPagination);
         }
       } catch (err) {
@@ -182,7 +183,7 @@ export function ManageParticipant() {
       isCancelled = true;
       clearTimeout(delay);
     };
-  }, [pagination.currentPage, pagination.limit, searchQuery]);
+  }, [pagination.currentPage, pagination.limit, searchQuery, params.packageId]);
 
   /**
    * คำอธิบาย: กำหนดคอลัมน์ของตาราง
@@ -219,7 +220,7 @@ export function ManageParticipant() {
         key: "bookingAt",
         header: "วันที่จองแพ็กเกจ",
         className: "min-w-[200px]",
-        render: (object) => <div>{normalizeDate(object.bookingAt) ?? "-"}</div>,
+        render: (object) => <div>{formatDateToThai(object.bookingAt) ?? "-"}</div>,
       },
       {
         key: "phone",
@@ -248,7 +249,7 @@ export function ManageParticipant() {
                 onChange={async (val) => {
                   try {
                     await updateParticipantStatus(object.id, val);
-                    await fetchData();
+                    await fetchParticipants();
                   } catch (err) {
                     console.error(err);
                     setErrorMessage("อัปเดตสถานะไม่สำเร็จ");
@@ -261,7 +262,7 @@ export function ManageParticipant() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rows],
+    [participants],
   );
 
   // Section: Render Layout
@@ -305,7 +306,7 @@ export function ManageParticipant() {
 
       {/* Section: Table */}
       <DataTable<ParticipantsInPackage>
-        data={rows}
+        data={participants}
         getKey={(row) => row.id.toString()}
         columns={columns}
         pageSizeOptions={[10, 30, 50]}

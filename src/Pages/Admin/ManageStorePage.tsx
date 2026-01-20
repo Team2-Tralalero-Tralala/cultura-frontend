@@ -1,7 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/*
- * คำอธิบาย : Component หน้าแแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
+/**
+ * คำอธิบาย: Component หน้าแสดงข้อมูลร้านค้าทั้งหมด ที่อยู่ในชุมชนของ Admin ที่มีปุ่มเพิ่ม ลบ แก้ไขร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงในตาราง
  */
 import React, { useState, useMemo } from "react";
@@ -37,18 +35,18 @@ type StoreFromApi = {
   tagStores: { tag: { id: number; name: string } }[];
 };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input : string
- * Output : string ที่ผ่านการ normalize แล้ว
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
+ * Input: string
+ * Output: string ที่ผ่านการ normalize แล้ว
  */
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางร้านค้า
- * Input : ไม่มี
- * Output : รายการคอลัมน์ของตาราง
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางร้านค้า
+ * Input: ไม่มี
+ * Output: รายการคอลัมน์ของตาราง
  */
 const columns: Column<StoreRow>[] = [
   {
@@ -68,15 +66,15 @@ const columns: Column<StoreRow>[] = [
   { key: "tagStores", header: "ประเภท" },
 ];
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแสดงหน้า Manage Store Admin
- * Input : ไม่มี
- * Output : ส่วนแสดงผลของหน้า Manage Store Admin
+/**
+ * คำอธิบาย: Component สำหรับแสดงหน้าจัดการร้านค้า Admin
+ * Input: -
+ * Output: JSX.Element (หน้าจอแสดงตารางรายการร้านค้าและการจัดการ)
  */
-export default function ManageStoreAdmin() {
+export default function ManageStorePage() {
   const navigate = useNavigate();
   const [communityName, setCommunityName] = useState<string>("");
-  const [rows, setRows] = useState<StoreRow[]>([]);
+  const [storeRows, setStoreRows] = useState<StoreRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
@@ -86,18 +84,18 @@ export default function ManageStoreAdmin() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<StoreRow[]>([]);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteIds, setDeleteIds] = useState<number | number[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
-   * Input : ไม่มี
-   * Output : อัปเดต state rows และ pagination
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าจาก API
+   * Input: ไม่มี
+   * Output: อัปเดต state storeRows และ pagination
    */
-  const loadStores = async () => {
+  const fetchStores = async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -120,7 +118,7 @@ export default function ManageStoreAdmin() {
         };
       });
 
-      setRows(mapped);
+      setStoreRows(mapped);
       setPagination(resultPagination);
     } catch (error: any) {
       setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -128,27 +126,29 @@ export default function ManageStoreAdmin() {
       setIsLoading(false);
     }
   };
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
-   * Input : ไม่มี
-   * Output : อัปเดต state communityName
+
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าเมื่อ pagination มีการเปลี่ยนแปลง
+   * Input: pagination.currentPage, pagination.limit
+   * Output: เรียก fetchStores เพื่อโหลดข้อมูลใหม่
    */
   React.useEffect(() => {
-    loadStores();
+    fetchStores();
   }, [pagination.currentPage, pagination.limit]);
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
-   * Input : ไม่มี
-   * Output : อัปเดต state communityName
+
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
+   * Input: ไม่มี
+   * Output: เรียก fetchCommunityName เพื่อโหลดชื่อชุมชน
    */
   React.useEffect(() => {
     fetchCommunityName();
   }, []);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
-   * Input : ไม่มี
-   * Output : อัปเดต state communityName
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับดึงชื่อชุมชนของ Admin
+   * Input: ไม่มี
+   * Output: อัปเดต state communityName
    */
   const fetchCommunityName = async () => {
     try {
@@ -159,10 +159,10 @@ export default function ManageStoreAdmin() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำในแต่ละแถวของตาราง
-   * Input : ไม่มี
-   * Output : การกระทำที่สามารถทำได้ในแต่ละแถว
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับกำหนดการกระทำในแต่ละแถวของตาราง
+   * Input: ไม่มี
+   * Output: การกระทำที่สามารถทำได้ในแต่ละแถว
    */
   const rowActions: DataTableActionsConfig<StoreRow> = {
     header: "จัดการ",
@@ -174,30 +174,30 @@ export default function ManageStoreAdmin() {
       edit: (row) => navigate(`/admin/community/store/${row.id}/edit/`),
       delete: (row) => {
         setDeleteIds(row.id);
-        setIsOpenConfirm(true);
+        setIsConfirmModalOpen(true);
       },
     },
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับกรองข้อมูลร้านค้าตามคำค้นหา
-   * Input : searchQuery
-   * Output : รายการร้านค้าที่ผ่านการกรอง
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับกรองข้อมูลร้านค้าตามคำค้นหา
+   * Input: searchQuery
+   * Output: รายการร้านค้าที่ผ่านการกรอง
    */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
-    return rows.filter((row) => {
+    return storeRows.filter((row) => {
       const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
         normalizeText(String(value ?? "")),
       );
       return !query || haystacks.some((haystack) => haystack.includes(query));
     });
-  }, [rows, searchQuery]);
+  }, [storeRows, searchQuery]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
-   * Input : storeID
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
+   * Input: storeId
+   * Output: void
    */
   const handleDelete = async (storeId: number) => {
     try {
@@ -210,10 +210,10 @@ export default function ManageStoreAdmin() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
-   * Input : rows
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับลบหลายอันพร้อมกัน
+   * Input: rows
+   * Output: void
    */
   const bulkActions: BulkAction<StoreRow>[] = [
     {
@@ -225,7 +225,7 @@ export default function ManageStoreAdmin() {
       onClick: async (rows) => {
         const storeId = rows.map((row) => row.id);
         setDeleteIds(storeId);
-        setIsOpenConfirm(true);
+        setIsConfirmModalOpen(true);
       },
     },
   ];
@@ -295,7 +295,7 @@ export default function ManageStoreAdmin() {
       </div>
 
       <Modal
-        open={isOpenConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการลบร้านค้า"
         text="คุณต้องการลบร้านค้านี้หรือไม่?"
         onConfirm={async () => {
@@ -305,12 +305,12 @@ export default function ManageStoreAdmin() {
           } else {
             await handleDelete(deleteIds);
           }
-          setIsOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           setDeleteIds(null);
-          await loadStores();
+          await fetchStores();
         }}
         onCancel={() => {
-          setIsOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           setDeleteIds(null);
         }}
       />

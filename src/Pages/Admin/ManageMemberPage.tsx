@@ -24,10 +24,13 @@ type MemberRow = {
   contact: string;
 };
 
-export default function ManageMembers() {
+/**
+ * คำอธิบาย: หน้าสำหรับจัดการสมาชิก (Admin)
+ */
+export default function ManageMemberPage() {
   const navigate = useNavigate();
 
-  const [memberList, setMemberList] = useState<MemberRow[]>([]);
+  const [members, setMembers] = useState<MemberRow[]>([]);
   const [isTableLoading, setIsTableLoading] = useState(false);
   const [fetchErrorMessage, setFetchErrorMessage] = useState<string | null>(null);
 
@@ -38,11 +41,11 @@ export default function ManageMembers() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับแปลงข้อความเป็นตัวพิมพ์เล็กและตัดช่องว่าง
+   * คำอธิบาย: ฟังก์ชันสำหรับแปลงข้อความเป็นตัวพิมพ์เล็กและตัดช่องว่าง
    * Input: textValue (string)
    * Output: ข้อความที่ผ่านการจัดรูปแบบแล้ว (string)
    */
@@ -50,27 +53,27 @@ export default function ManageMembers() {
     (textValue ?? "").toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
   /**
-   * คำอธิบาย : ตัวแปรสำหรับกรองข้อมูลสมาชิกตามคำค้นหา
-   * Input: memberList, searchQuery
+   * คำอธิบาย: ตัวแปรสำหรับกรองข้อมูลสมาชิกตามคำค้นหา
+   * Input: members, searchQuery
    * Output: รายการสมาชิกที่ตรงกับคำค้นหา
    */
   const filteredRows = useMemo(() => {
     const normalizedQuery = normalizeText(searchQuery);
-    if (!normalizedQuery) return memberList;
+    if (!normalizedQuery) return members;
 
-    return memberList.filter((member) =>
+    return members.filter((member) =>
       [member.displayName, member.roleName, member.contact]
         .map(normalizeText)
         .some((fieldValue) => fieldValue.includes(normalizedQuery)),
     );
-  }, [memberList, searchQuery]);
+  }, [members, searchQuery]);
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับแปลงข้อมูลจาก API เป็นรูปแบบ MemberRow
+   * คำอธิบาย: ฟังก์ชันสำหรับแปลงข้อมูลจาก API เป็นรูปแบบ MemberRow
    * Input: member (ข้อมูลดิบจาก API)
    * Output: ข้อมูลในรูปแบบ MemberRow
    */
-  const mapToMemberRow = (member: any): MemberRow => {
+  const mapApiToMemberRow = (member: any): MemberRow => {
     const displayName =
       [member.fname, member.lname].filter(Boolean).join(" ").trim() || member.username || "-";
 
@@ -83,7 +86,7 @@ export default function ManageMembers() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกทั้งหมดจาก API
+   * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลสมาชิกทั้งหมดจาก API
    * Input: -
    * Output: - (มีการอัปเดต State ภายในฟังก์ชัน)
    */
@@ -100,7 +103,7 @@ export default function ManageMembers() {
       const rows = Array.isArray(body?.data) ? body.data : [];
       const pagination = body?.pagination;
 
-      setMemberList(rows.map(mapToMemberRow));
+      setMembers(rows.map(mapApiToMemberRow));
       setTotalCount(Number(pagination?.totalCount ?? rows.length));
       setTotalPages(Number(pagination?.totalPages ?? 1));
     } catch (error: any) {
@@ -149,7 +152,7 @@ export default function ManageMembers() {
         edit: (row) => navigate(`/admin/member/${row.userId}/edit`),
         delete: (row) => {
           setSelectedMember(row);
-          setIsOpenDeleteModal(true);
+          setIsDeleteModalOpen(true);
         },
       },
     }),
@@ -218,13 +221,13 @@ export default function ManageMembers() {
       </div>
 
       <Modal
-        open={isOpenDeleteModal}
+        open={isDeleteModalOpen}
         title="ยืนยันการลบสมาชิก"
         text={`คุณต้องการลบสมาชิก “${selectedMember?.displayName ?? "-"}” ออกจากชุมชนใช่หรือไม่?`}
         confirmText="ลบ"
         cancelText="ยกเลิก"
         onCancel={() => {
-          setIsOpenDeleteModal(false);
+          setIsDeleteModalOpen(false);
           setSelectedMember(null);
         }}
         onConfirm={async () => {
@@ -232,7 +235,7 @@ export default function ManageMembers() {
 
           try {
             await api.patch(`/admin/member/${selectedMember.userId}`, {});
-            setIsOpenDeleteModal(false);
+            setIsDeleteModalOpen(false);
             setSelectedMember(null);
             await fetchMembers();
           } catch (error: any) {

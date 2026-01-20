@@ -1,5 +1,6 @@
-/*
- * คำอธิบาย : หน้าแก้ไขข้อมูลร้านค้า (Edit Store)
+/**
+ * คำอธิบาย: Component EditStorePage
+ * หน้าแก้ไขข้อมูลร้านค้า
  * ใช้สำหรับดึงข้อมูลร้านค้าจาก backend เพื่อนำมาแสดงบนฟอร์มสำหรับแก้ไข
  * รวมถึงโหลดรูปภาพจาก backend และอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนใหม่
  */
@@ -49,9 +50,9 @@ const storeSchema = zod.object({
 });
 
 /**
- * คำอธิบาย : แปลง URL ของไฟล์จาก backend ให้เป็น File object เพื่อใช้กับ UploadCard ได้
- * Input : url - ที่อยู่ของไฟล์ / filename - ชื่อไฟล์
- * Output : File object (พร้อม type และ flag isFromServer)
+ * คำอธิบาย: แปลง URL ของไฟล์จาก backend ให้เป็น File object เพื่อใช้กับ UploadCard ได้
+ * Input: url - ที่อยู่ของไฟล์ / filename - ชื่อไฟล์
+ * Output: File object (พร้อม type และ flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
   const res = await fetch(url, {
@@ -64,12 +65,12 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   (file as any).isFromServer = true;
   return file;
 }
+
 /**
- * ฟังก์ชันหลักของหน้า EditStore
- * คำอธิบาย : แสดงฟอร์มแก้ไขร้านค้า พร้อมโหลดข้อมูลเดิมจาก backend
+ * คำอธิบาย: แสดงฟอร์มแก้ไขร้านค้า พร้อมโหลดข้อมูลเดิมจาก backend
  * รวมถึงจัดการการอัปโหลดรูปภาพโดยไม่ซ้ำกับไฟล์เดิมจาก server
  */
-export function EditStore() {
+export function EditStorePage() {
   const [tags, setTags] = React.useState<Tag[]>([]);
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
@@ -83,26 +84,26 @@ export function EditStore() {
 
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>([0, 0]);
-  const [isOpenConfirm, setIsisOpenConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const { storeId } = useParams();
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [formData, setFormData] = React.useState<Partial<StoreData>>({
     latitude: position[0],
     longitude: position[1],
   });
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [isOpenCancelConfirm, setIsisOpenCancelConfirm] = useState(false);
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const navigate = useNavigate();
 
   /**
-   * คำอธิบาย : โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
-   * Input : storeId - ID ของร้านค้าที่ต้องการโหลดข้อมูล
-   * Output : ข้อมูลร้านค้าที่โหลดมา
+   * คำอธิบาย: โหลดข้อมูลร้านค้าจาก backend เมื่อมี storeId
+   * Input: storeId - ID ของร้านค้าที่ต้องการโหลดข้อมูล
+   * Output: ข้อมูลร้านค้าที่โหลดมา
    */
   React.useEffect(() => {
     async function loadData() {
@@ -177,6 +178,7 @@ export function EditStore() {
     }
     loadData();
   }, [storeId]);
+
   /**
    * อัปเดตค่า location ใน formData ทุกครั้งเมื่อผู้ใช้เลือกจังหวัด/อำเภอ/ตำบลใหม่
    */
@@ -195,11 +197,12 @@ export function EditStore() {
       validateField("subDistrict", location.subdistrict);
     }
   }, [location]);
+
   /**
-   * คำอธิบาย : ฟังก์ชัน validateField สำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * คำอธิบาย: ฟังก์ชัน validateField สำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
    * หากระบุ field จะตรวจสอบเฉพาะฟิลด์นั้น, หากไม่ระบุ field จะตรวจสอบทั้งฟอร์ม
-   * Input : field (ชื่อฟิลด์ที่ต้องการตรวจสอบ), value (ค่าของฟิลด์นั้น)
-   * Output : boolean (true หากข้อมูลถูกต้อง, false หากไม่ถูกต้อง)
+   * Input: field (ชื่อฟิลด์ที่ต้องการตรวจสอบ), value (ค่าของฟิลด์นั้น)
+   * Output: boolean (true หากข้อมูลถูกต้อง, false หากไม่ถูกต้อง)
    */
   const validateField = (field?: string, value?: any) => {
     if (field) {
@@ -231,10 +234,10 @@ export function EditStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
+   * คำอธิบาย: ฟังก์ชัน handleFormChange สำหรับ input ทั่วไป
    * จะอัปเดตค่าใน formData และเรียก validateField เพื่อตรวจสอบความถูกต้องทันที
-   * Input : e (React ChangeEvent จาก input หรือ textarea)
-   * Output : none (อัปเดต state formData และ formErrors)
+   * Input: e (React ChangeEvent จาก input หรือ textarea)
+   * Output: none (อัปเดต state formData และ formErrors)
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -244,13 +247,12 @@ export function EditStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
+   * คำอธิบาย: ฟังก์ชันส่งข้อมูลไป backend เมื่อกดบันทึก
    * จะตรวจสอบความถูกต้องของข้อมูลก่อนส่ง และจัดการอัปโหลดเฉพาะไฟล์ที่มีการเปลี่ยนแปลง
-   * Input : none (ใช้ข้อมูลจาก state formData, files)
-   * Output : none (ส่ง request ไปยัง API หรือแสดง Error Alert)
+   * Input: none (ใช้ข้อมูลจาก state formData, files)
+   * Output: none (ส่ง request ไปยัง API หรือแสดง Error Alert)
    */
   const handleSubmit = async () => {
-    console.log("form", formData);
     try {
       const isValid = validateField();
 
@@ -258,14 +260,14 @@ export function EditStore() {
         setAlertType("error");
         setAlertTitle("ข้อมูลไม่ถูกต้อง");
         setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
-        setAlertOpen(true);
+        setIsAlertOpen(true);
         return;
       }
       if (coverFiles.length === 0 || galleryFiles.length === 0) {
         setAlertType("error");
         setAlertTitle("ข้อมูลไม่ถูกต้อง");
         setAlertMessage("กรุณาอัพโหลดรูปภาพให้ครบถ้วน");
-        setAlertOpen(true);
+        setIsAlertOpen(true);
         return;
       }
       const {
@@ -314,13 +316,13 @@ export function EditStore() {
       setAlertType("success");
       setAlertTitle("สร้างแก้ไขร้านค้าสำเร็จ");
       setAlertMessage("ข้อมูลร้านค้าถูกแก้ไข");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       navigate(-1);
     } catch (error: any) {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
     }
   };
 
@@ -509,12 +511,12 @@ export function EditStore() {
         {/* ปุ่ม action */}
         <div className="flex justify-end mt-5">
           <div className="w-32 mr-2.5">
-            <Button type="cancel" onClick={() => setIsisOpenCancelConfirm(true)}>
+            <Button type="cancel" onClick={() => setIsCancelConfirmModalOpen(true)}>
               ยกเลิก
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setIsisOpenConfirm(true)}>
+            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
               บันทึก
             </Button>
           </div>
@@ -522,31 +524,31 @@ export function EditStore() {
 
         {/* Modal Confirm */}
         <Modal
-          open={isOpenConfirm}
+          open={isConfirmModalOpen}
           title="ยืนยันการแก้ไขร้านค้า"
           text="คุณต้องการยืนยันการแก้ไขร้านค้านี้หรือไม่"
           onConfirm={async () => {
-            setIsisOpenConfirm(false);
+            setIsConfirmModalOpen(false);
             await handleSubmit();
           }}
-          onCancel={() => setIsisOpenConfirm(false)}
+          onCancel={() => setIsConfirmModalOpen(false)}
         />
         <Modal
-          open={isOpenCancelConfirm}
+          open={isCancelConfirmModalOpen}
           title="ยืนยันการยกเลิก"
           text="ต้องการยกเลิกการแก้ไขร้านค้าหรือไม่"
           onConfirm={() => {
-            setIsisOpenCancelConfirm(false);
+            setIsCancelConfirmModalOpen(false);
             navigate(-1);
           }}
-          onCancel={() => setIsisOpenCancelConfirm(false)}
+          onCancel={() => setIsCancelConfirmModalOpen(false)}
         />
         <ModalAlert
-          open={alertOpen}
+          open={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}
-          onClose={() => setAlertOpen(false)}
+          onClose={() => setIsAlertOpen(false)}
         />
       </div>
     </div>

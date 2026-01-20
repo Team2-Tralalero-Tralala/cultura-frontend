@@ -28,18 +28,18 @@ type PackageHistoryRow = {
   dueDate: string;
 };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input : string
- * Output : string ที่ผ่านการ normalize แล้ว
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
+ * Input: string
+ * Output: string ที่ผ่านการ normalize แล้ว
  */
 const normalizeText = (str: string) =>
   (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
- * Input : iso (string)
- * Output : วันที่และเวลาในรูปแบบไทย เช่น "09 พ.ย. 2568 | 00:00 น."
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
+ * Input: iso (string)
+ * Output: วันที่และเวลาในรูปแบบไทย เช่น "09 พ.ย. 2568 | 00:00 น."
  */
 const formatThaiDateTime = (iso: string) => {
   if (!iso) return "-";
@@ -69,10 +69,10 @@ const formatThaiDateTime = (iso: string) => {
   return `${day} ${month} ${year} | ${hours}:${minutes} น.`;
 };
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบคอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
- * Input : ไม่มี
- * Output : คอลัมน์ที่ใช้ในตาราง DataTable
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบคอลัมน์ที่ใช้ในตาราง DataTable สำหรับแสดงข้อมูลแพ็กเกจ
+ * Input: ไม่มี
+ * Output: คอลัมน์ที่ใช้ในตาราง DataTable
  */
 const columns: Column<PackageHistoryRow>[] = [
   {
@@ -98,17 +98,15 @@ const columns: Column<PackageHistoryRow>[] = [
   },
 ];
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแสดงหน้าประวัติแพ็กเกจของผู้ดูแลระบบระดับวิสาหกิจชุมชน (Admin)
- * Input : ไม่มี
- * Output : ส่วนแสดงผลหน้าเว็บ (UI)
+/**
+ * คำอธิบาย: Component สำหรับหน้าประวัติแพ็กเกจของผู้ดูแลระบบระดับวิสาหกิจชุมชน (Admin)
  */
-export default function PackageHistoryAdmin() {
+export default function ManagePackageHistoryPage() {
   const navigate = useNavigate();
 
   const [rows, setRows] = useState<PackageHistoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [openConfirm, setOpenConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,12 +118,12 @@ export default function PackageHistoryAdmin() {
   });
   const [communityName, setCommunityName] = useState<string>("");
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
-   * Input : -
-   * Output : อัปเดต state rows และ pagination
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
+   * Input: -
+   * Output: อัปเดต state rows และ pagination
    */
-  const fetchData = async () => {
+  const fetchHistories = async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -159,28 +157,10 @@ export default function PackageHistoryAdmin() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า หรือจำนวนเรคอร์ดต่อหน้า
-   * Input : pagination.currentPage, pagination.limit
-   * Output : เรียก fetchData เพื่อโหลดข้อมูลใหม่
-   */
-  useEffect(() => {
-    fetchData();
-  }, [pagination.currentPage, pagination.limit]);
-
-  /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
-   * Input : ไม่มี
-   * Output : เรียก fetchCommunityName เพื่อโหลดชื่อชุมชน
-   */
-  useEffect(() => {
-    fetchCommunityName();
-  }, []);
-
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับโหลดชื่อชุมชน
-   * Input : ไม่มี
-   * Output : อัปเดต state communityName
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับโหลดชื่อชุมชน
+   * Input: ไม่มี
+   * Output: อัปเดต state communityName
    */
   const fetchCommunityName = async () => {
     try {
@@ -191,10 +171,28 @@ export default function PackageHistoryAdmin() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำที่สามารถทำได้ในแต่ละแถวของตาราง
-   * Input : -
-   * Output : การกระทำที่สามารถทำได้ในแต่ละแถวของตาราง
+  /**
+   * คำอธิบาย: ฟังก์ชัน useEffect สำหรับโหลดข้อมูลเมื่อเปลี่ยนหน้า หรือจำนวนเรคอร์ดต่อหน้า
+   * Input: pagination.currentPage, pagination.limit
+   * Output: เรียก fetchHistories เพื่อโหลดข้อมูลใหม่
+   */
+  useEffect(() => {
+    fetchHistories();
+  }, [pagination.currentPage, pagination.limit]);
+
+  /**
+   * คำอธิบาย: ฟังก์ชัน useEffect สำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
+   * Input: ไม่มี
+   * Output: เรียก fetchCommunityName เพื่อโหลดชื่อชุมชน
+   */
+  useEffect(() => {
+    fetchCommunityName();
+  }, []);
+
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับกำหนดการกระทำที่สามารถทำได้ในแต่ละแถวของตาราง
+   * Input: -
+   * Output: การกระทำที่สามารถทำได้ในแต่ละแถวของตาราง
    */
   const rowActions: DataTableActionsConfig<PackageHistoryRow> = {
     header: "จัดการ",
@@ -204,18 +202,18 @@ export default function PackageHistoryAdmin() {
     items: () => ["copy", "delete"],
 
     callbacks: {
-      copy: (row) => navigate(``),
+      copy: (row) => navigate(``), // TODO: Implement copy functionality if needed
       delete: (row) => {
         setDeleteId(row.id);
-        setOpenConfirm(true);
+        setIsConfirmModalOpen(true);
       },
     },
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันกรองข้อมูลในตารางตามข้อความค้นหา
-   * Input : searchQuery
-   * Output : แถวข้อมูลที่ตรงกับคำค้นหา
+  /**
+   * คำอธิบาย: ฟังก์ชันกรองข้อมูลในตารางตามข้อความค้นหา
+   * Input: searchQuery
+   * Output: แถวข้อมูลที่ตรงกับคำค้นหา
    */
   const filteredRows = useMemo(() => {
     const query = normalizeText(searchQuery);
@@ -227,17 +225,17 @@ export default function PackageHistoryAdmin() {
     });
   }, [rows, searchQuery]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
-   * Input : id (number)
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
+   * Input: id (number)
+   * Output: void
    */
   const handleDelete = async (id: number) => {
     try {
       await deletePackageAdmin(id);
-      setOpenConfirm(false);
+      setIsConfirmModalOpen(false);
       setDeleteId(null);
-      await fetchData();
+      await fetchHistories();
     } catch (error: any) {
       console.error("Failed to delete package:", error);
       alert(
@@ -252,10 +250,10 @@ export default function PackageHistoryAdmin() {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
-   * Input : rows (รายการแพ็กเกจที่เลือก)
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
+   * Input: rows (รายการแพ็กเกจที่เลือก)
+   * Output: void
    */
   const bulkActions: BulkAction<PackageHistoryRow>[] = [
     {
@@ -267,7 +265,7 @@ export default function PackageHistoryAdmin() {
       onClick: async (rows) => {
         const packageIds = rows.map((row) => row.id);
         alert("Bulk delete: " + packageIds);
-        await fetchData();
+        await fetchHistories();
       },
     },
   ];
@@ -325,18 +323,18 @@ export default function PackageHistoryAdmin() {
       </div>
 
       <Modal
-        open={openConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         onConfirm={async () => {
           if (!deleteId) return;
           await handleDelete(deleteId);
-          setOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           setDeleteId(null);
-          await fetchData();
+          await fetchHistories();
         }}
         onCancel={() => {
-          setOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           setDeleteId(null);
         }}
       />

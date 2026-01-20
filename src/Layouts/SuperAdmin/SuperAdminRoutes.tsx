@@ -41,7 +41,7 @@ import DetailPackageSuperAdmin from "@/Pages/SuperAdmin/DetailPackagePage";
 import { ManageAccountCommunity } from "@/Pages/SuperAdmin/ManageMemberPage";
 import StoreDetailPage from "@/Pages/SuperAdmin/DetailStorePage";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfilePage";
-import { ManageParticipant } from "@/Pages/Admin/ManageParticipantPage";
+import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Super Admin
@@ -125,7 +125,7 @@ export default function SuperAdminRoutes() {
       {/* 🔸 หน้าแก้ไขบัญชีผู้ใช้ทั่วไป (Tourist) */}
       <Route path="/tourist/:touristId/edit" element={<EditAccountPage />} />
       <Route path="/account/community/:communityId" element={<ManageAccountCommunity />} />
-      <Route path="participants/package/:packageId" element={<ManageParticipant />} />
+      <Route path="participants/package/:packageId" element={<ManageParticipantPage />} />
 
       {/* หน้าตารางของ tag */}
       <Route path="tags" element={<ManageTags />} />

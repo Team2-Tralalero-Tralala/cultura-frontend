@@ -1,5 +1,5 @@
-/*
- * คำอธิบาย : Component สำหรับแสดงประวัติการเข้าใช้งานระบบ (Admin)
+/**
+ * คำอธิบาย: Component สำหรับแสดงประวัติการเข้าใช้งานระบบ (Admin)
  * โดยแสดงตารางข้อมูลการเข้าใช้งานของผู้ใช้ทั้งหมด ประกอบด้วย:
  * 1. ชื่อผู้ใช้
  * 2. บทบาท (ผู้ดูแลระบบ, ผู้ดูแลชุมชน, สมาชิก, นักท่องเที่ยว)
@@ -18,10 +18,10 @@ import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { fetchAuthenticationLog } from "@/Libs/AuthenticationLogService";
 import type { AuthenticationLogRow } from "@/Types/AuthenticationLog";
 
-/*
- * คำอธิบาย : แปลงชื่อบทบาทจากภาษาอังกฤษเป็นภาษาไทย
- * Input : role (string) - ชื่อบทบาทเป็นภาษาอังกฤษ
- * Output : ชื่อบทบาทเป็นภาษาไทย
+/**
+ * คำอธิบาย: แปลงชื่อบทบาทจากภาษาอังกฤษเป็นภาษาไทย
+ * Input: role (string) - ชื่อบทบาทเป็นภาษาอังกฤษ
+ * Output: ชื่อบทบาทเป็นภาษาไทย
  */
 const thaiRoleName = (role: string) => {
   switch (role) {
@@ -38,10 +38,10 @@ const thaiRoleName = (role: string) => {
   }
 };
 
-/*
- * คำอธิบาย : แปลงเวลาจาก ISO string เป็นรูปแบบภาษาไทย
- * Input : loginTime (string | null) - เวลาในรูปแบบ ISO string
- * Output : เวลาในรูปแบบภาษาไทย (เช่น "1 ม.ค. 2568, 10:30 น.") หรือ "-" หากไม่มีข้อมูล
+/**
+ * คำอธิบาย: แปลงเวลาจาก ISO string เป็นรูปแบบภาษาไทย
+ * Input: loginTime (string | null) - เวลาในรูปแบบ ISO string
+ * Output: เวลาในรูปแบบภาษาไทย (เช่น "1 ม.ค. 2568, 10:30 น.") หรือ "-" หากไม่มีข้อมูล
  */
 const thaiLoginTime = (loginTime: string | null) => {
   if (!loginTime) return "-";
@@ -83,14 +83,14 @@ const columns: Column<AuthenticationLogRow>[] = [
   },
 ];
 
-/*
- * คำอธิบาย : Component หลักสำหรับหน้า "ประวัติการเข้าใช้งาน" (Admin)
+/**
+ * คำอธิบาย: Component หลักสำหรับหน้า "ประวัติการเข้าใช้งาน" (Admin)
  * ใช้จัดการ state ของข้อมูลการเข้าใช้งาน การโหลดข้อมูล
  * รวมถึงการแสดงตารางข้อมูล การค้นหา และการกรองตามบทบาท
  */
-export default function AuthentionLogAdmin() {
+export default function AuthenticationLogPage() {
   // ====== state ตาราง ======
-  const [rows, setRows] = React.useState<AuthenticationLogRow[]>([]);
+  const [authenticationLogs, setAuthenticationLogs] = React.useState<AuthenticationLogRow[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
@@ -111,10 +111,10 @@ export default function AuthentionLogAdmin() {
 
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  /*
-   * คำอธิบาย : ดึงข้อมูลประวัติการเข้าใช้งานจาก API
-   * Input : ไม่มี
-   * Output :
+  /**
+   * คำอธิบาย: ดึงข้อมูลประวัติการเข้าใช้งานจาก API
+   * Input: ไม่มี
+   * Output:
    *    - อัพเดท state ของ rows และ pagination
    *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage
    */
@@ -130,7 +130,7 @@ export default function AuthentionLogAdmin() {
         searchQuery,
         filterRole,
       );
-      setRows(resultData);
+      setAuthenticationLogs(resultData);
       setPagination(resultPagination);
     } catch (e: any) {
       setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -182,7 +182,7 @@ export default function AuthentionLogAdmin() {
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<AuthenticationLogRow>
-        data={rows}
+        data={authenticationLogs}
         getKey={(row) => row.id.toString()}
         columns={columns}
         pageSizeOptions={[10, 30, 50]}

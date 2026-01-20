@@ -1,17 +1,10 @@
 /**
- * คำอธิบาย:
- *  Component สำหรับแสดงรายละเอียดการจองแพ็กเกจทัวร์
- *  ใช้โดยผู้ดูแลชุมชน (Admin) เพื่อพิจารณาอนุมัติหรือปฏิเสธการจอง
- *  และแสดงข้อมูลผู้จอง แพ็กเกจ และหลักฐานการโอนเงิน
- *
- * Input:
- *  - bookingId: string (รับจาก URL parameter)
- *
- * Output:
- *  - แสดงรายละเอียดการจอง
- *  - รองรับการอนุมัติหรือปฏิเสธการจอง
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดการจองแพ็กเกจทัวร์ (สำหรับ Admin)
+ * หน้าที่:
+ * - แสดงข้อมูลรายละเอียดการจอง
+ * - แสดงข้อมูลผู้จอง แพ็กเกจ และหลักฐานการโอนเงิน
+ * - พิจารณาอนุมัติหรือปฏิเสธการจอง
  */
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -22,17 +15,7 @@ import ModalReject from "@/Components/Modal/ModalReject";
 
 /**
  * Type: ApiBooking
- *
- * คำอธิบาย:
- *  โครงสร้างข้อมูลการจอง (Booking) ที่ได้จาก API
- *  ใช้สำหรับแสดงรายละเอียดการจองและจัดการสถานะการจอง
- *
- * Source:
- *  - API: GET /admin/booking/:bookingId
- *
- * Usage:
- *  - ใช้เป็น type สำหรับ state booking
- *  - ใช้สำหรับแสดงข้อมูลในหน้า Booking Detail
+ * คำอธิบาย: โครงสร้างข้อมูลการจอง (Booking) ที่ได้จาก API
  */
 type ApiBooking = {
   id: number;
@@ -61,63 +44,30 @@ type ApiBooking = {
   };
 };
 
-/**
- * Constant: BOOKING_STATUS
- * คำอธิบาย:
- *  กำหนดค่าคงที่ของสถานะการจอง
- *  ใช้สำหรับอ้างอิงสถานะจากระบบ Backend
- */
-const BOOKING_STATUS = {
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
-  PENDING: "PENDING",
-} as const;
-
 const apiUrl = import.meta.env.VITE_API_URL;
 
 /**
- * คำอธิบาย:
- *  หน้ารายละเอียดการจองสำหรับผู้ดูแลชุมชน (Admin)
- *
- * Input:
- *  - bookingId: string (จาก useParams)
- *
- * Output:
- *  - Render รายละเอียดการจอง
- *  - ควบคุม Modal สำหรับอนุมัติและปฏิเสธการจอง
+ * คำอธิบาย: Component สำหรับหน้ารายละเอียดการจองของผู้ดูแลชุมชน (Admin)
  */
-export default function BookingDetailAdmin() {
+export default function DetailBookingPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [openApproveModal, setOpenApproveModal] = useState(false);
-  const [openRejectModal, setOpenRejectModal] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   const token = localStorage.getItem("token");
 
-  const breadcrumbItems = [
-    { label: "จัดการการจอง", to: "/admin/bookings" },
-    { label: "รายละเอียดการจอง" },
-  ];
-
   /**
-   * คำอธิบาย:
-   *  ดึงข้อมูลรายละเอียดการจองจาก API ตาม bookingId
-   *
-   * Input:
-   *  - bookingId: string (จาก URL parameter)
-   *
-   * Output:
-   *  - อัปเดต state:
-   *    - booking
-   *    - loading
-   *    - error
+   * คำอธิบาย: ดึงข้อมูลรายละเอียดการจองจาก API ตาม bookingId
+   * Input: - (ใช้ bookingId จาก URL parameter)
+   * Output: - (อัปเดต state booking, isLoading, error)
    */
   const fetchBooking = useCallback(async () => {
     if (!bookingId) return;
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
 
     try {
@@ -142,7 +92,7 @@ export default function BookingDetailAdmin() {
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
       setBooking(null);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [bookingId, token]);
 
@@ -151,17 +101,9 @@ export default function BookingDetailAdmin() {
   }, [fetchBooking]);
 
   /**
-   * คำอธิบาย:
-   *  - อนุมัติการจองแพ็กเกจทัวร์และอัปเดตสถานะการจองผ่าน API
-   *  - เรียก API: POST /member/bookings/:bookingId/status
-   *
-   * Input:
-   *  - bookingId: string
-   *  - booking: ApiBooking
-   *
-   * Output:
-   *  - อัปเดตสถานะ booking เป็น "BOOKED"
-   *  - ปิด Modal การอนุมัติ
+   * คำอธิบาย: อนุมัติการจองแพ็กเกจทัวร์และอัปเดตสถานะการจองผ่าน API
+   * Input: -
+   * Output: - (อัปเดตสถานะ booking เป็น "BOOKED" และปิด Modal)
    */
   const confirmApprove = async () => {
     if (!booking || !bookingId) return;
@@ -172,30 +114,21 @@ export default function BookingDetailAdmin() {
         { bookingId, status: "BOOKED" },
         {
           withCredentials: true,
-        }
+        },
       );
 
       setBooking({ ...booking, status: "BOOKED" });
     } catch (err) {
       console.error(err);
     } finally {
-      setOpenApproveModal(false);
+      setIsApproveModalOpen(false);
     }
   };
 
   /**
-   * คำอธิบาย:
-   *  - ปฏิเสธการจองแพ็กเกจทัวร์ พร้อมระบุเหตุผล และอัปเดตสถานะการจองผ่าน API
-   *  - เรียก API: POST /member/bookings/:bookingId/status
-   *
-   * Input:
-   *  - reason: string (เหตุผลในการปฏิเสธจาก Modal)
-   *  - bookingId: string
-   *
-   * Output:
-   *  - อัปเดตสถานะ booking เป็น "REJECTED"
-   *  - บันทึกเหตุผลการปฏิเสธ
-   *  - ปิด Modal การปฏิเสธ
+   * คำอธิบาย: ปฏิเสธการจองแพ็กเกจทัวร์ พร้อมระบุเหตุผล และอัปเดตสถานะการจองผ่าน API
+   * Input: reason (เหตุผลในการปฏิเสธ)
+   * Output: - (อัปเดตสถานะ booking เป็น "REJECTED" และปิด Modal)
    */
   const confirmReject = async (reason: string) => {
     if (!booking || !bookingId) return;
@@ -206,22 +139,20 @@ export default function BookingDetailAdmin() {
         { bookingId, status: "REJECTED", rejectReason: reason },
         {
           withCredentials: true,
-        }
+        },
       );
 
       setBooking({ ...booking, status: "REJECTED", rejectReason: reason });
     } catch (err) {
       console.error(err);
     } finally {
-      setOpenRejectModal(false);
+      setIsRejectModalOpen(false);
     }
   };
 
   return (
     <div className="w-full mx-auto space-y-2">
-      {/* --------------------------------------------------------
-           Breadcrumb นำทางหน้า
-         -------------------------------------------------------- */}
+      {/* Breadcrumb นำทางหน้า */}
       <div className="p-2">
         <Breadcrumb
           current={{
@@ -235,7 +166,7 @@ export default function BookingDetailAdmin() {
         <div className="bg-white rounded-xl shadow-md p-8">
           <h3 className="text-xl font-semibold mb-4">ดูรายละเอียดการจอง</h3>
 
-          {loading ? (
+          {isLoading ? (
             <div className="text-center text-gray-600 py-20">กำลังโหลดข้อมูล...</div>
           ) : error ? (
             <div className="text-center text-red-500 py-20">{error}</div>
@@ -285,12 +216,12 @@ export default function BookingDetailAdmin() {
               </div>
               <div className="flex justify-end gap-4 pt-8">
                 <div className="w-40">
-                  <Button type="cancel" onClick={() => setOpenRejectModal(true)}>
+                  <Button type="cancel" onClick={() => setIsRejectModalOpen(true)}>
                     ปฏิเสธการจอง
                   </Button>
                 </div>
                 <div className="w-40">
-                  <Button type="confirm-admin" onClick={() => setOpenApproveModal(true)}>
+                  <Button type="confirm-admin" onClick={() => setIsApproveModalOpen(true)}>
                     อนุมัติการจอง
                   </Button>
                 </div>
@@ -301,44 +232,34 @@ export default function BookingDetailAdmin() {
       </div>
 
       <Modal
-        open={openApproveModal}
+        open={isApproveModalOpen}
         title="อนุมัติการจองนี้หรือไม่?"
         text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการอนุมัติการจองนี้"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={confirmApprove}
-        onCancel={() => setOpenApproveModal(false)}
+        onCancel={() => setIsApproveModalOpen(false)}
       />
 
       <ModalReject
-        open={openRejectModal}
+        open={isRejectModalOpen}
         title="ปฎิเสธคำขอการจอง"
         text="กรุณากรอกเหตุผลการปฎิเสธ เพื่อส่งให้นักท่องเที่ยว"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         maxLength={100}
         onConfirm={confirmReject}
-        onCancel={() => setOpenRejectModal(false)}
+        onCancel={() => setIsRejectModalOpen(false)}
       />
     </div>
   );
 }
 
 /**
- * ฟังก์ชัน: formatDate
- *
- * คำอธิบาย:
- *  แปลงวันที่จากรูปแบบ ISO string
- *  ให้เป็นวันที่และเวลาในรูปแบบภาษาไทย
- *
- * Input:
- *  - inputDate?: string | null
- *
- * Output:
- *  - string: วันที่และเวลาในรูปแบบภาษาไทย
- *  - "-" หากไม่มีข้อมูลหรือรูปแบบไม่ถูกต้อง
+ * คำอธิบาย: แปลงวันที่จากรูปแบบ ISO string ให้เป็นวันที่และเวลาในรูปแบบภาษาไทย
+ * Input: inputDate (วันที่ในรูปแบบ ISO string)
+ * Output: วันที่และเวลาในรูปแบบภาษาไทย หรือ "-" หากไม่มีข้อมูล
  */
-
 function formatDate(inputDate?: string | null) {
   if (!inputDate) return "-";
   const parsedDate = new Date(inputDate);

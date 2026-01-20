@@ -1,8 +1,6 @@
 /**
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดของชุมชน (Admin)
- * หน้าที่ : ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
- * สิทธิ์การเข้าถึง : Admin เท่านั้น (ดึงข้อมูลชุมชนของตนเอง)
- * เส้นทาง (Route) : /admin/community/own
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดของชุมชน (สำหรับ Admin)
+ * หน้าที่: ดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -11,18 +9,18 @@ import { Icon } from "@iconify/react";
 import { getCommunityDetailByAdmin } from "@/Libs/CommunityService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : ฟังก์ชันแสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล
- * Input : textValue (string | null)
- * Output : string
+/**
+ * คำอธิบาย: แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล
+ * Input: textValue (ค่าข้อความที่ต้องการตรวจสอบ)
+ * Output: ข้อความที่ตรวจสอบแล้ว หรือ "-"
  */
 const displayText = (textValue?: string | null) =>
   textValue && String(textValue).trim() ? textValue : "-";
 
-/*
- * คำอธิบาย : ฟังก์ชันแปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
- * Input : isoDateString (string | null)
- * Output : string (วันที่รูปแบบไทย)
+/**
+ * คำอธิบาย: แปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
+ * Input: isoDateString (วันที่ในรูปแบบ ISO string)
+ * Output: วันที่ในรูปแบบไทย หรือ "-" หากไม่มีข้อมูล
  */
 const toThaiDate = (isoDateString?: string | null) => {
   if (!isoDateString) return "-";
@@ -37,10 +35,10 @@ const toThaiDate = (isoDateString?: string | null) => {
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
-/*
- * คำอธิบาย : ฟังก์ชันจัดการ URL สำหรับไฟล์ที่อัปโหลดจาก Backend
- * Input : fileName (string | null)
- * Output : string | undefined
+/**
+ * คำอธิบาย: จัดการ URL สำหรับไฟล์ที่อัปโหลดจาก Backend
+ * Input: fileName (ชื่อไฟล์)
+ * Output: URL เต็มของไฟล์ หรือ undefined
  */
 function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
@@ -50,10 +48,10 @@ function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
-/*
- * คำอธิบาย : ฟังก์ชันดึง path รูปภาพจาก object โดยตรวจสอบ field ที่อาจมีชื่อแตกต่างกัน
- * Input : imageEntity (any)
- * Output : string | null
+/**
+ * คำอธิบาย: ดึง path รูปภาพจาก object โดยตรวจสอบ field ที่อาจมีชื่อแตกต่างกัน
+ * Input: imageEntity (Object ที่เก็บข้อมูลรูปภาพ)
+ * Output: path ของรูปภาพ หรือ null
  */
 function pickImagePath(imageEntity: any): string | null {
   return (
@@ -61,10 +59,10 @@ function pickImagePath(imageEntity: any): string | null {
   );
 }
 
-/*
- * คำอธิบาย : ฟังก์ชันค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
- * Input : communityData (any), imageType (string)
- * Output : string | null
+/**
+ * คำอธิบาย: ค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
+ * Input: communityData (ข้อมูลชุมชน), imageType (ประเภทรูปภาพ)
+ * Output: path ของรูปภาพ หรือ null
  */
 function findImage(communityData: any, imageType: string): string | null {
   const imageItem = communityData?.communityImage?.find(
@@ -73,10 +71,10 @@ function findImage(communityData: any, imageType: string): string | null {
   return pickImagePath(imageItem);
 }
 
-/*
- * คำอธิบาย : ฟังก์ชันคืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
- * Input : communityData (any), imageType (string)
- * Output : string[]
+/**
+ * คำอธิบาย: คืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
+ * Input: communityData (ข้อมูลชุมชน), imageType (ประเภทรูปภาพ)
+ * Output: Array ของ path รูปภาพ
  */
 function listImagesByType(communityData: any, imageType: string): string[] {
   const imageLists = (communityData?.communityImage || []).filter(
@@ -263,8 +261,10 @@ function ItemCard({ image, title, children }: any) {
   );
 }
 
-/* ฟังก์ชันหลัก : CommunityDetailAdmin */
-export default function CommunityDetailAdmin() {
+/**
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดชุมชนสำหรับ Admin
+ */
+export default function DetailCommunityPage() {
   const navigate = useNavigate();
   const [community, setCommunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

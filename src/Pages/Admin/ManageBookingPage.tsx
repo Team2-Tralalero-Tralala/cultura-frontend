@@ -1,6 +1,6 @@
 /**
- * หน้า: จัดการการจอง (Admin)
- * คำอธิบาย :
+ * คำอธิบาย: Component ManageBookingPage
+ * หน้าสำหรับจัดการการจอง (Admin)
  * - แสดงรายการการจองทั้งหมดของแพ็กเกจในชุมชน
  * - ตาราง: ชื่อผู้จอง / ชื่อกิจกรรม / ราคา / สถานะ / หลักฐาน / จัดการ
  * - รองรับค้นหา, กรองสถานะ, ปุ่มคำขอคืนเงิน
@@ -21,17 +21,17 @@ import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/Boo
 import type { PaginationResponse } from "@/Types/Community";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
- * Input :
- * - onApprove (function) : callback เมื่อคลิกปุ่ม "อนุมัติ"
- * - onReject (function)  : callback เมื่อคลิกปุ่ม "ปฏิเสธ"
- * - onNavigate (function)    : callback เมื่อคลิกชื่อผู้จอง / ชื่อกิจกรรม เพื่อไปหน้ารายละเอียด
- * - onOpenSlip (function)    : callback เมื่อคลิกเปิดสลิปโอนเงิน
- * Output :
- * - Column<BookingRow>[] : รายการคอลัมน์ที่ใช้กับ DataTable
+/**
+ * คำอธิบาย: สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
+ * Input:
+ * - onApprove (function): callback เมื่อคลิกปุ่ม "อนุมัติ"
+ * - onReject (function): callback เมื่อคลิกปุ่ม "ปฏิเสธ"
+ * - onNavigate (function): callback เมื่อคลิกชื่อผู้จอง / ชื่อกิจกรรม เพื่อไปหน้ารายละเอียด
+ * - onOpenSlip (function): callback เมื่อคลิกเปิดสลิปโอนเงิน
+ * Output:
+ * - Column<BookingRow>[]: รายการคอลัมน์ที่ใช้กับ DataTable
  */
-const makeColumns = (
+const createColumns = (
   onApprove: (row: BookingRow) => void,
   onReject: (row: BookingRow) => void,
   onNavigate: (id: number) => void,
@@ -167,13 +167,13 @@ const makeColumns = (
   },
 ];
 
-/*
- * คำอธิบาย : หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
+/**
+ * คำอธิบาย: หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
  */
-export default function ManageBookingAdmin() {
+export default function ManageBookingPage() {
   const navigate = useNavigate();
 
-  const [bookingRows, setBookingRows] = React.useState<BookingRow[]>([]); // เปลี่ยน rows เป็น bookingRows
+  const [bookingRows, setBookingRows] = React.useState<BookingRow[]>([]);
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
@@ -188,18 +188,18 @@ export default function ManageBookingAdmin() {
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
   // Modal ยืนยันการอนุมัติ/ปฏิเสธ
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false); // เพิ่ม is นำหน้า
-  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<BookingRow | null>(null);
 
   // Modal แสดงสลิปโอนเงิน
-  const [isSlipModalOpen, setIsSlipModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
+  const [isSlipModalOpen, setIsSlipModalOpen] = React.useState(false);
   const [slipUrl, setSlipUrl] = React.useState<string | null>(null);
 
-  /*
-   * คำอธิบาย : เปิด Modal แสดงสลิปโอนเงิน
-   * Input : url (string)
-   * Output : -
+  /**
+   * คำอธิบาย: เปิด Modal แสดงสลิปโอนเงิน
+   * Input: url (string)
+   * Output: -
    */
   const openSlipModal = (url: string) => {
     // กันกรณีเป็น "-" หรือค่าว่าง
@@ -208,10 +208,10 @@ export default function ManageBookingAdmin() {
     setIsSlipModalOpen(true);
   };
 
-  /*
-   * คำอธิบาย : ปิด Modal แสดงสลิปโอนเงิน
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ปิด Modal แสดงสลิปโอนเงิน
+   * Input: -
+   * Output: -
    */
   const closeSlipModal = () => {
     setIsSlipModalOpen(false);
@@ -225,10 +225,10 @@ export default function ManageBookingAdmin() {
     { label: "รอคืนเงิน", value: "REFUND_PENDING" },
   ];
 
-  /*
-   * คำอธิบาย : โหลดข้อมูลการจองทั้งหมดจาก API
-   * Input : currentPage, pageSize
-   * Output : อัปเดต bookingRows และ pagination state
+  /**
+   * คำอธิบาย: โหลดข้อมูลการจองทั้งหมดจาก API
+   * Input: currentPage, pageSize
+   * Output: อัปเดต bookingRows และ pagination state
    */
   const reload = React.useCallback(async (): Promise<void> => {
     try {
@@ -278,10 +278,10 @@ export default function ManageBookingAdmin() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
 
-  /*
-   * คำอธิบาย : อนุมัติการจอง
-   * Input : row (BookingRow)
-   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
+  /**
+   * คำอธิบาย: อนุมัติการจอง
+   * Input: row (BookingRow)
+   * Output: เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
    */
   const handleApprove = async (row: BookingRow) => {
     try {
@@ -300,10 +300,10 @@ export default function ManageBookingAdmin() {
     }
   };
 
-  /*
-   * คำอธิบาย : ปฏิเสธการจอง (ต้องมีเหตุผลเมื่อปฏิเสธ)
-   * Input : row (BookingRow), reason (string)
-   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
+  /**
+   * คำอธิบาย: ปฏิเสธการจอง (ต้องมีเหตุผลเมื่อปฏิเสธ)
+   * Input: row (BookingRow), reason (string)
+   * Output: เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
    */
   const handleReject = async (row: BookingRow, reason?: string) => {
     try {
@@ -334,10 +334,10 @@ export default function ManageBookingAdmin() {
     setIsConfirmModalOpen(true);
   };
 
-  /*
-   * คำอธิบาย : กรองข้อมูล bookingRows ตามคำค้นหาและสถานะ
-   * Input : bookingRows, searchQuery, statusFilter
-   * Output : Array ของ BookingRow ที่ผ่านการกรอง
+  /**
+   * คำอธิบาย: กรองข้อมูล bookingRows ตามคำค้นหาและสถานะ
+   * Input: bookingRows, searchQuery, statusFilter
+   * Output: Array ของ BookingRow ที่ผ่านการกรอง
    */
   const filteredBookingRows = React.useMemo(() => {
     const normalizedSearchQuery = searchQuery.trim().toLowerCase();
@@ -400,7 +400,7 @@ export default function ManageBookingAdmin() {
       {/* ตาราง */}
       <DataTable<BookingRow>
         data={filteredBookingRows}
-        columns={makeColumns(
+        columns={createColumns(
           openApproveModal,
           openRejectModal,
           (id) => navigate(`/admin/booking/${id}`),

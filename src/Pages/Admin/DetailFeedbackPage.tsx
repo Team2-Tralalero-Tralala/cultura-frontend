@@ -50,9 +50,9 @@ type Feedback = {
 type SortOrder = "newest" | "oldest";
 
 /**
- * คำอธิบาย : แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งานใน <img>
- * Input    : fileName (string | undefined) - ชื่อไฟล์รูปภาพจากฐานข้อมูล
- * Output   : string | undefined - URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
+ * คำอธิบาย: แปลงชื่อไฟล์รูปภาพจาก backend ให้เป็น URL ที่พร้อมใช้งาน
+ * Input: fileName (ชื่อไฟล์รูปภาพ)
+ * Output: URL ของรูปภาพ หรือ undefined หากไม่มีข้อมูล
  */
 function getImageUrl(fileName?: string): string | undefined {
   if (!fileName) {
@@ -64,9 +64,9 @@ function getImageUrl(fileName?: string): string | undefined {
 }
 
 /**
- * คำอธิบาย : แปลงค่าเวลาให้เป็นข้อความระบุเวลาที่ผ่านไปเป็นพุทธศักราชให้อัตโนมัติ
- * Input    : createdAt (string) - วันที่และเวลาที่สร้างข้อมูลจากฐานข้อมูล
- * Output   : string - ข้อความเวลาที่ผ่านไปในรูปแบบภาษาไทย
+ * คำอธิบาย: แปลงค่าเวลาให้เป็นรูปแบบวันเดือนปีพ.ศ.
+ * Input: isoDateString (วันที่และเวลาในรูปแบบ ISO)
+ * Output: วันที่ในรูปแบบภาษาไทย (เช่น 12 ม.ค. 2567)
  */
 const formatDateThai = (isoDateString: string) => {
   const date = new Date(isoDateString);
@@ -78,9 +78,9 @@ const formatDateThai = (isoDateString: string) => {
 };
 
 /**
- * คำอธิบาย : แปลงชื่อ-นามสกุลนักท่องเที่ยวให้เป็นรูปแบบที่ถูก mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
- * Input : tourist: Tourist - ข้อมูลนักท่องเที่ยว (fname, lname)
- * Output: string - ชื่อ-นามสกุลหลัง mask แล้ว (เช่น "ส** น***")
+ * คำอธิบาย: แปลงชื่อ-นามสกุลนักท่องเที่ยวแบบ Mask (แสดงเฉพาะตัวแรก ที่เหลือเป็น *)
+ * Input: tourist (ข้อมูลนักท่องเที่ยว)
+ * Output: ชื่อ-นามสกุลแบบ Mask
  */
 function formatFullName(tourist: Tourist): string {
   const mask = (text: string) => (text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "");
@@ -88,9 +88,9 @@ function formatFullName(tourist: Tourist): string {
 }
 
 /**
- * คำอธิบาย : แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว ★/☆
- * Input    : rating (number) - คะแนนระหว่าง 1–5
- * Output   : string - สัญลักษณ์ดาวจำนวน 5 ตัว
+ * คำอธิบาย: แปลงคะแนนรีวิวให้เป็นสัญลักษณ์ดาว
+ * Input: rating (คะแนน 1-5)
+ * Output: สัญลักษณ์ดาว string (เช่น ★★★☆☆)
  */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
@@ -99,13 +99,9 @@ function renderStars(rating: number): string {
 }
 
 /**
- * คำอธิบาย : Feedback ของแพ็กเกจตาม packageId
- * โดยรองรับการดึงข้อมูลจาก backend, การเรียงลำดับตามวันที่ (ใหม่สุด / เก่าสุด)
- * และการตอบกลับ Feedback ผ่าน Modal ยืนยันการส่งข้อความ
- * Input : packageId (string) : รับจาก URL parameter เพื่อใช้ดึง feedback ของแพ็กเกจนั้น
- * Output : JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
+ * คำอธิบาย: Component หน้าแสดงรายละเอียด Feedback ของแพ็กเกจ
  */
-export default function PackageFeedbacksPage() {
+export default function DetailFeedbackPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
@@ -120,6 +116,11 @@ export default function PackageFeedbacksPage() {
 
   const packageIdNumber = Number(packageId);
 
+  /**
+   * คำอธิบาย: ดึงข้อมูล Feedback ตาม packageId
+   * Input: packageIdNumber (รหัสแพ็กเกจ)
+   * Output: - (อัปเดต state feedbackLists)
+   */
   React.useEffect(() => {
     if (!packageIdNumber) {
       return;
@@ -139,7 +140,7 @@ export default function PackageFeedbacksPage() {
   }, [packageIdNumber]);
 
   /**
-   * คำอธิบาย : เรียงลำดับรายการ feedback ตามวันที่ (ใหม่สุด / เก่าสุด)
+   * คำอธิบาย: เรียงลำดับรายการ Feedback ตามตัวเลือก (ใหม่สุด/เก่าสุด)
    */
   const sortedFeedbackLists = React.useMemo(() => {
     return [...feedbackLists]
@@ -164,10 +165,9 @@ export default function PackageFeedbacksPage() {
   ];
 
   /**
-   * คำอธิบาย : อัปเดตข้อความตอบกลับใน state ตาม feedbackId ที่กำหนด
-   * Input    : feedbackId (number) - รหัสของ feedback
-   *            value (string) - ข้อความที่ผู้ใช้พิมพ์
-   * Output   : void
+   * คำอธิบาย: อัปเดตข้อความตอบกลับใน state ตาม feedbackId
+   * Input: feedbackId (รหัส Feedback), value (ข้อความตอบกลับ)
+   * Output: - (อัปเดต state replyTexts)
    */
   function handleChangeReplyText(feedbackId: number, value: string): void {
     setReplyTexts((previousReplyTexts) => ({
@@ -177,9 +177,9 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * คำอธิบาย : เปิด Modal เพื่อยืนยันการส่งข้อความตอบกลับ
-   * Input    : feedbackId (number) - รหัสของ feedback ที่ต้องการตอบ
-   * Output   : void
+   * คำอธิบาย: เปิด Modal ยืนยันการตอบกลับ
+   * Input: feedbackId (รหัส Feedback ที่ต้องการตอบกลับ)
+   * Output: - (อัปเดต state isReplyModalOpen, selectedFeedbackId)
    */
   function handleOpenReplyModal(feedbackId: number): void {
     const replyMessage = replyTexts[feedbackId]?.trim();
@@ -193,7 +193,9 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * คำอธิบาย : ปิด Modal การตอบกลับและรีเซ็ตค่า feedback ที่ถูกเลือก
+   * คำอธิบาย: ปิด Modal การตอบกลับ
+   * Input: -
+   * Output: - (อัปเดต state isReplyModalOpen, selectedFeedbackId)
    */
   function handleCloseReplyModal(): void {
     setIsReplyModalOpen(false);
@@ -201,9 +203,9 @@ export default function PackageFeedbacksPage() {
   }
 
   /**
-   * คำอธิบาย : ส่งข้อความตอบกลับไปยัง backend และอัปเดตรายการ feedback ใน state
-   * Input    : feedbackId (number) - รหัส feedback ที่ต้องการตอบกลับ
-   * Output   : Promise<void>
+   * คำอธิบาย: ส่งข้อความตอบกลับไปยัง Backend และอัปเดตข้อมูลในหน้าจอ
+   * Input: feedbackId (รหัส Feedback)
+   * Output: -
    */
   async function sendReply(feedbackId: number): Promise<void> {
     const replyMessage = replyTexts[feedbackId]?.trim();

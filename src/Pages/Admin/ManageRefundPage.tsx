@@ -1,6 +1,5 @@
 /**
- * คำอธิบาย : หน้าจัดการคำขอคืนเงิน (Admin)
- * ปรับปรุง UI ให้เหมือนฝั่ง Member แต่ใช้ Service ของ Admin
+ * คำอธิบาย: หน้าจัดการคำขอคืนเงิน (Admin)
  */
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -28,10 +27,10 @@ type RefundRow = {
 };
 
 /**
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
  * รองรับทั้งแบบ Full URL และ Relative Path
- * Input : path (string | null) - ที่อยู่ของไฟล์รูปภาพ (เช่น "uploads/slip.jpg" หรือ "http://...")
- * Output : string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
+ * Input: path (string | null) - ที่อยู่ของไฟล์รูปภาพ (เช่น "uploads/slip.jpg" หรือ "http://...")
+ * Output: string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
  */
 const getSlipImageUrl = (path: string | null): string | null => {
   if (!path || path === "-") return null;
@@ -49,9 +48,9 @@ const getSlipImageUrl = (path: string | null): string | null => {
 };
 
 /**
- * คำอธิบาย : กำหนดโครงสร้างคอลัมน์ (Column Definition)
+ * คำอธิบาย: กำหนดโครงสร้างคอลัมน์ (Column Definition)
  */
-const makeColumns = (
+const createColumns = (
   onApprove: (row: RefundRow) => void,
   onReject: (row: RefundRow) => void,
   onNavigate: (id: number) => void,
@@ -153,10 +152,15 @@ const makeColumns = (
   },
 ];
 
-export function ManageRefundBooking() {
+/**
+ * คำอธิบาย: Component หน้าจัดการคำขอคืนเงิน (Admin)
+ * input: -
+ * output: JSX.Element (หน้าจอแสดงตารางรายการคำขอคืนเงินและการจัดการ)
+ */
+export default function ManageRefundPage() {
   const navigate = useNavigate();
 
-  const [rows, setRows] = useState<RefundRow[]>([]);
+  const [refunds, setRefunds] = useState<RefundRow[]>([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -171,18 +175,18 @@ export function ManageRefundBooking() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Modal States
-  const [isConfirmOpen, setConfirmOpen] = useState(false);
-  const [isRejectOpen, setRejectOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RefundRow | null>(null);
 
   // Slip Modal States
-  const [isSlipOpen, setSlipOpen] = useState(false);
+  const [isSlipModalOpen, setIsSlipModalOpen] = useState(false);
   const [slipUrl, setSlipUrl] = useState<string | null>(null);
 
   /**
-   * คำอธิบาย : ดึงข้อมูลคำขอคืนเงินจาก Admin API
+   * คำอธิบาย: ดึงข้อมูลคำขอคืนเงินจาก Admin API
    */
-  const reload = useCallback(async () => {
+  const fetchRefunds = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
@@ -204,12 +208,14 @@ export function ManageRefundBooking() {
         id: item.id,
         touristName: `${item.tourist?.fname ?? ""} ${item.tourist?.lname ?? ""}`.trim(),
         packageName: item.package?.name ?? "-",
-        totalPrice: `฿${((item.package?.price ?? 0) * (item.totalParticipant ?? 1)).toLocaleString()}`,
+        totalPrice: `฿${(
+          (item.package?.price ?? 0) * (item.totalParticipant ?? 1)
+        ).toLocaleString()}`,
         status: item.status,
         transferSlip: item.transferSlip || "-",
       }));
 
-      setRows(mappedRows);
+      setRefunds(mappedRows);
       setPagination({
         currentPage: paginationInfo.currentPage ?? currentPage,
         totalPages: paginationInfo.totalPages ?? 1,
@@ -224,27 +230,27 @@ export function ManageRefundBooking() {
   }, [currentPage, pageSize]);
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    fetchRefunds();
+  }, [fetchRefunds]);
 
   // Client-side filtering
   const filteredRows = useMemo(() => {
     const keyword = searchQuery.toLowerCase();
-    return rows.filter((row) =>
+    return refunds.filter((row) =>
       [row.touristName, row.packageName, row.status].some((value) =>
         value.toLowerCase().includes(keyword),
       ),
     );
-  }, [rows, searchQuery]);
+  }, [refunds, searchQuery]);
 
   /**
-   * คำอธิบาย : ดำเนินการอนุมัติคำขอคืนเงิน (Admin Service)
+   * คำอธิบาย: ดำเนินการอนุมัติคำขอคืนเงิน (Admin Service)
    */
   const handleApprove = async (row: RefundRow) => {
     try {
       setIsLoading(true);
       await approveRefund(row.id); // Admin Service
-      await reload();
+      await fetchRefunds();
     } catch (error: any) {
       console.error(error);
       setErrorMessage(error.message || "อนุมัติไม่สำเร็จ");
@@ -254,13 +260,13 @@ export function ManageRefundBooking() {
   };
 
   /**
-   * คำอธิบาย : ดำเนินการปฏิเสธคำขอคืนเงิน (Admin Service)
+   * คำอธิบาย: ดำเนินการปฏิเสธคำขอคืนเงิน (Admin Service)
    */
   const handleReject = async (row: RefundRow, reason?: string) => {
     try {
       setIsLoading(true);
       await rejectRefund(row.id, reason || ""); // Admin Service
-      await reload();
+      await fetchRefunds();
     } catch (error: any) {
       console.error(error);
       setErrorMessage(error.message || "ปฏิเสธไม่สำเร็จ");
@@ -271,19 +277,19 @@ export function ManageRefundBooking() {
 
   const columns = useMemo(
     () =>
-      makeColumns(
+      createColumns(
         (row) => {
           setSelectedRow(row);
-          setConfirmOpen(true);
+          setIsConfirmModalOpen(true);
         },
         (row) => {
           setSelectedRow(row);
-          setRejectOpen(true);
+          setIsRejectModalOpen(true);
         },
         (id) => navigate(`/admin/booking/${id}`),
         (url) => {
           setSlipUrl(url);
-          setSlipOpen(true);
+          setIsSlipModalOpen(true);
         },
       ),
     [navigate],
@@ -334,7 +340,7 @@ export function ManageRefundBooking() {
 
       {/* Modal ยืนยันการอนุมัติ */}
       <Modal
-        open={isConfirmOpen}
+        open={isConfirmModalOpen}
         title="ยืนยันการอนุมัติคำขอคืนเงิน"
         text={
           selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""
@@ -344,19 +350,19 @@ export function ManageRefundBooking() {
         onConfirm={async () => {
           if (!selectedRow) return;
           const row = selectedRow;
-          setConfirmOpen(false);
+          setIsConfirmModalOpen(false);
           await handleApprove(row);
           setSelectedRow(null);
         }}
         onCancel={() => {
-          setConfirmOpen(false);
+          setIsConfirmModalOpen(false);
           setSelectedRow(null);
         }}
       />
 
       {/* Modal ปฏิเสธคำขอ */}
       <RejectModal
-        open={isRejectOpen}
+        open={isRejectModalOpen}
         title="ปฏิเสธคำขอคืนเงิน"
         text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
         confirmText="ส่ง"
@@ -364,18 +370,18 @@ export function ManageRefundBooking() {
         onConfirm={async (reason) => {
           if (!selectedRow) return;
           const row = selectedRow;
-          setRejectOpen(false);
+          setIsRejectModalOpen(false);
           await handleReject(row, reason);
           setSelectedRow(null);
         }}
         onCancel={() => {
-          setRejectOpen(false);
+          setIsRejectModalOpen(false);
           setSelectedRow(null);
         }}
       />
 
       {/* Modal แสดงรูปภาพสลิป */}
-      {isSlipOpen && slipUrl && (
+      {isSlipModalOpen && slipUrl && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
           <div
             className="
@@ -396,7 +402,7 @@ export function ManageRefundBooking() {
             <button
               type="button"
               onClick={() => {
-                setSlipOpen(false);
+                setIsSlipModalOpen(false);
                 setSlipUrl(null);
               }}
               className="

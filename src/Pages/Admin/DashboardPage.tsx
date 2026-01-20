@@ -1,10 +1,9 @@
 /**
- * คำอธิบาย: component สำหรับหน้ารายของ Admin
- * แสดงข้อมูลสรุปต่างๆประกอบด้วย
- * 1. ข้อมูลสรุป (summary) - แพ็กเกจทั้งหมด รายได้ทั้งหมด การจองสำเร็จ ยกเลิกการจอง
- * 2. ข้อมูลกราฟ (graph) - แสดงกราฟการจองและรายได้ตามวันที่
- * 3. ข้อมูลแพ็กเกจ 20 อันดับที่ยอดจองเยอะที่สุกในชุมชม
- * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
+ * คำอธิบาย: Component สำหรับหน้ารายงานสรุปผล (Dashboard) ของ Admin
+ * แสดงข้อมูลสรุปต่างๆ ประกอบด้วย:
+ * 1. ข้อมูลสรุป (Summary) - แพ็กเกจทั้งหมด รายได้ทั้งหมด การจองสำเร็จ ยกเลิกการจอง
+ * 2. ข้อมูลกราฟ (Graph) - แสดงกราฟการจองและรายได้ตามช่วงเวลา
+ * 3. ข้อมูลแพ็กเกจยอดนิยม - 20 อันดับแพ็กเกจที่มียอดจองสูงสุด
  */
 import { LineGraph } from "@/Components/LineGraph";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -17,12 +16,11 @@ import {
   type MemberDashboardFilters,
 } from "@/Libs/DashboardService";
 import { BarChart } from "@/Components/Graph/BarChart";
-import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
+import { startOfMonth, endOfMonth, startOfYear, endOfYear, format } from "date-fns";
 import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 
 /**
- * Component: DashboardPage
- * วัตถุประสงค์: ใช้สำหรับแสดงข้อมูลสรุปผล Dashboard ของผู้ดูแลชุมชน
+ * คำอธิบาย: Component หน้า Dashboard ของ Admin แสดงสรุปผลข้อมูลสถิติต่างๆ
  */
 export function DashboardPage() {
   const [dashboardData, setDashboardData] = React.useState<AdminDashboardResponse>();
@@ -30,6 +28,7 @@ export function DashboardPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   type PeriodType = "weekly" | "monthly" | "yearly";
+
   /**
    * คำอธิบาย: คำนวณช่วงวันที่เริ่มต้นตามประเภทช่วงเวลา (รายสัปดาห์, รายเดือน, รายปี)
    * Input: periodType (PeriodType) - ประเภทของช่วงเวลาที่ต้องการคำนวณ
@@ -98,8 +97,8 @@ export function DashboardPage() {
 
   /**
    * คำอธิบาย: ดึงข้อมูล Dashboard จาก API ตาม filter ที่กำหนด
-   * Input: - (ใช้ state ภายใน ฟังก์ชัน)
-   * Output: - (อัปเดต state dashboardData)
+   * Input: - (ใช้ state ภายในฟังก์ชัน: bookingDateRange, revenueDateRange, packageDateRange)
+   * Output: - (อัปเดต state dashboardData หรือ errorMessage)
    */
   const fetchDashboardData = React.useCallback(async () => {
     try {

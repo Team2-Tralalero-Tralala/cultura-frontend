@@ -3,6 +3,7 @@
  * โดยรองรับการดึงข้อมูลจาก backend ตาม role,
  * การแบ่งหน้า (pagination), การค้นหา และการกรองสถานะการจอง
  */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/Components/Button";
@@ -14,14 +15,14 @@ import type { BookingHistoryItem } from "../../Types/BookingHistory";
 import * as BookingHistoriesService from "@/Libs/BookingHistoryService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-const STATUS_LABEL_TH: Record<string, string> = {
+const statusLabelsTh: Record<string, string> = {
   BOOKED: "จองสำเร็จ",
   REJECTED: "ปฏิเสธการจอง",
   REFUNDED: "คืนเงินแล้ว",
   REFUND_REJECTED: "ปฏิเสธการคืนเงิน",
 } as const;
 
-const STATUS_OPTIONS = [
+const statusOptions = [
   { label: "ทั้งหมด", value: "ALL" },
   { label: "จองสำเร็จ", value: "BOOKED" },
   { label: "ปฏิเสธการจอง", value: "REJECTED" },
@@ -47,7 +48,7 @@ type BookingHistoryResp = {
   hasNext?: boolean;
 };
 
-const columns: Column<BookingRow>[] = [
+const tableColumns: Column<BookingRow>[] = [
   { key: "customerName", header: "ชื่อผู้จอง", className: "min-w-[180px]" },
   { key: "activityTitle", header: "ชื่อกิจกรรม", className: "min-w-[260px]" },
   { key: "price", header: "ราคา", className: "min-w-[120px]" },
@@ -57,18 +58,18 @@ const columns: Column<BookingRow>[] = [
 ];
 
 /**
- * คำอธิบาย : แปลงข้อมูลประวัติการจองจากรูปแบบ API (BookingHistoryItem)
+ * คำอธิบาย: แปลงข้อมูลประวัติการจองจากรูปแบบ API (BookingHistoryItem)
  * ให้อยู่ในรูปแบบที่พร้อมแสดงผลในตาราง (BookingRow)
- * Input :
- *   - item (BookingHistoryItem) : ข้อมูลประวัติการจองจาก backend
- * Output :
- *   - BookingRow : ข้อมูลที่ผ่านการจัดรูปแบบแล้ว
- *     - customerName : ชื่อ–นามสกุลผู้จอง
- *     - activityTitle : ชื่อแพ็กเกจ
- *     - price : ราคาที่จัดรูปแบบเป็นสกุลเงินบาท
- *     - status : สถานะการจอง (ข้อความภาษาไทย)
- *     - evidence : หลักฐานการโอนเงิน
- *     - bookedAt : วันที่และเวลาที่ทำการจอง (รูปแบบภาษาไทย)
+ * Input:
+ *   - item (BookingHistoryItem): ข้อมูลประวัติการจองจาก backend
+ * Output:
+ *   - BookingRow: ข้อมูลที่ผ่านการจัดรูปแบบแล้ว
+ *     - customerName: ชื่อ–นามสกุลผู้จอง
+ *     - activityTitle: ชื่อแพ็กเกจ
+ *     - price: ราคาที่จัดรูปแบบเป็นสกุลเงินบาท
+ *     - status: สถานะการจอง (ข้อความภาษาไทย)
+ *     - evidence: หลักฐานการโอนเงิน
+ *     - bookedAt: วันที่และเวลาที่ทำการจอง (รูปแบบภาษาไทย)
  */
 const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
   const firstName = item?.tourist?.fname ?? "";
@@ -80,7 +81,7 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
       ? item.package.price.toLocaleString("th-TH", { style: "currency", currency: "THB" })
       : "-";
   const rawStatus = (item?.status ?? "").toUpperCase();
-  const status = STATUS_LABEL_TH[rawStatus] ?? "-";
+  const status = statusLabelsTh[rawStatus] ?? "-";
   const evidence = item?.transferSlip ?? "-";
   const bookedAt = item?.bookingAt
     ? new Date(item.bookingAt).toLocaleString("th-TH", {
@@ -95,15 +96,15 @@ const mapApiToRow = (item: BookingHistoryItem): BookingRow => {
 };
 
 /**
- * คำอธิบาย : Component สำหรับแสดงประวัติการจองของผู้ใช้งานฝั่งผู้ดูแล (Admin / Member)
+ * คำอธิบาย: Component สำหรับแสดงประวัติการจองของผู้ใช้งานฝั่งผู้ดูแล (Admin / Member)
  * โดยรองรับการดึงข้อมูลจาก backend ตาม role,
  * การแบ่งหน้า (pagination), การค้นหา และการกรองสถานะการจอง
- * Input :
+ * Input:
  *   - ไม่มี (อาศัยข้อมูลจาก service และ state ภายใน component)
- * Output :
- *   - React.ReactElement : หน้าแสดงผลตารางประวัติการจอง พร้อมตัวกรองและการแบ่งหน้า
+ * Output:
+ *   - React.ReactElement: หน้าแสดงผลตารางประวัติการจอง พร้อมตัวกรองและการแบ่งหน้า
  */
-export default function BookingHistoryAdmin(): React.ReactElement {
+export default function ManageBookingHistoryPage(): React.ReactElement {
   const navigate = useNavigate();
   const [tableRows, setTableRows] = useState<BookingRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,8 +118,8 @@ export default function BookingHistoryAdmin(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(false);
 
   /**
-   * คำอธิบาย : เรียก service เพื่อโหลดข้อมูลตามหน้า/จำนวนเรคอร์ด และแมปเป็นแถวสำหรับตาราง
-   * Input : p: number (หน้า), l?: number (จำนวนต่อหน้า)
+   * คำอธิบาย: เรียก service เพื่อโหลดข้อมูลตามหน้า/จำนวนเรคอร์ด และแมปเป็นแถวสำหรับตาราง
+   * Input: p: number (หน้า), l?: number (จำนวนต่อหน้า)
    * Output: Promise<void>
    */
   const loadPageData = useCallback(async (p: number, l?: number) => {
@@ -155,8 +156,8 @@ export default function BookingHistoryAdmin(): React.ReactElement {
     void loadPageData(page, limit);
   }, [page, limit, loadPageData]);
 
-  /*
-   * คำอธิบาย : กรองแถวตามสถานะที่เลือก และค้นหาด้วยข้อความ (client-side)
+  /**
+   * คำอธิบาย: กรองแถวตามสถานะที่เลือก และค้นหาด้วยข้อความ (client-side)
    */
   const filteredRows = useMemo(() => {
     const q = (searchQuery ?? "").toLowerCase().trim();
@@ -165,7 +166,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
       selectedStatus === "ALL"
         ? tableRows
         : tableRows.filter(
-            (r) => r.status === STATUS_LABEL_TH[selectedStatus as keyof typeof STATUS_LABEL_TH],
+            (r) => r.status === statusLabelsTh[selectedStatus as keyof typeof statusLabelsTh],
           );
 
     if (!q) return subset;
@@ -173,15 +174,15 @@ export default function BookingHistoryAdmin(): React.ReactElement {
   }, [tableRows, searchQuery, selectedStatus]);
 
   /**
-   * คำอธิบาย : สร้างคีย์สตริงที่มีเสถียรภาพต่อแถวสำหรับ DataTable
-   * Input : r: BookingRow
+   * คำอธิบาย: สร้างคีย์สตริงที่มีเสถียรภาพต่อแถวสำหรับ DataTable
+   * Input: r: BookingRow
    * Output: string
    */
   const getRowKey = (r: BookingRow) =>
     `${r.customerName}|${r.activityTitle}|${r.price}|${r.bookedAt}|${r.evidence}`;
 
   /**
-   * คำอธิบาย : กำหนดค่าการแบ่งหน้าให้ DataTable
+   * คำอธิบาย: กำหนดค่าการแบ่งหน้าให้ DataTable
    */
   const pagination: Pagination = {
     currentPage: page,
@@ -207,7 +208,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             <FilterDropdown
-              options={STATUS_OPTIONS as unknown as { label: string; value: string }[]}
+              options={statusOptions as unknown as { label: string; value: string }[]}
               selected={selectedStatus}
               onChange={(v) => setSelectedStatus(v)}
             />
@@ -222,7 +223,7 @@ export default function BookingHistoryAdmin(): React.ReactElement {
         <DataTable<BookingRow>
           data={filteredRows}
           getKey={getRowKey}
-          columns={columns}
+          columns={tableColumns}
           theme="brand"
           pagination={pagination}
           isLoading={isLoading}

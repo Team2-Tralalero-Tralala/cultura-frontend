@@ -1,12 +1,7 @@
 /**
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Community)
- * โดยแสดงแบบฟอร์มแบบ Accordion แบ่งเป็น 3 ส่วนหลัก ได้แก่
- * 1. ข้อมูลวิสาหกิจชุมชน (ชื่อ, ประเภท, กิจกรรมหลัก, บัญชีธนาคาร)
- * 2. ที่อยู่วิสาหกิจชุมชน (บ้านเลขที่, จังหวัด, พิกัด)
- * 3. ข้อมูลติดต่อและผู้ดูแล (โทรศัพท์, อีเมล, ผู้ดูแลหลัก)
- * ฟังก์ชันหลัก: โหลดข้อมูลจาก API, ตรวจสอบความถูกต้องของข้อมูลด้วย Zod,
- * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
+ * คำอธิบาย: Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน (Admin)
  */
+
 import { getCommunityOwn, updateCommunityOwn } from "@/Libs/CommunityService";
 import type { CommunityFormData } from "@/Types/Community";
 import Button from "@/Components/Button";
@@ -38,12 +33,6 @@ import { BankSelector } from "@/Components/Selector/BankSelector";
 import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
- * ใช้ Zod สำหรับ validate field แต่ละรายการก่อนส่งไป backend
- * Input : object ของข้อมูลฟอร์มทั้งหมด
- * Output : หากไม่ผ่าน validation จะคืนข้อความ error ของแต่ละ field
- */
 const communitySchema = zod.object({
   name: zod.string().min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
   type: zod.string().min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
@@ -69,10 +58,11 @@ const communitySchema = zod.object({
   mainAdmin: zod.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
   mainAdminPhone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
 });
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับแปลงไฟล์จาก URL ให้เป็นวัตถุ File เพื่อใช้งานในฟอร์มหรืออัปโหลดใหม่
- * Input : url, filename
- * Output : File object
+
+/**
+ * คำอธิบาย: แปลง URL ไฟล์เป็น File object
+ * Input: url, filename
+ * Output: File object พร้อม flag isFromServer
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
   const response = await fetch(url, {
@@ -85,26 +75,21 @@ async function urlToFile(url: string, filename: string): Promise<File> {
   (file as any).isFromServer = true;
   return file;
 }
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL พรีวิวไฟล์ (เช่น รูปภาพหรือวิดีโอ) จากวัตถุ File
- * Input : file
- * Output : URL string หรือ null
+
+/**
+ * คำอธิบาย: สร้าง URL Preview สำหรับไฟล์
+ * Input: file (File object)
+ * Output: URL blob หรือ null
  */
 const getFilePreview = (file: File | null): string | null => {
   if (!file) return null;
-  if ((file as any).isFromServer) {
-    // ถ้าเป็นไฟล์จากเซิร์ฟเวอร์ (ถูก flag แล้ว)
-    return URL.createObjectURL(file);
-  }
   return URL.createObjectURL(file);
 };
 
-/*
- * คำอธิบาย : ดึงไฟล์รูปภาพและวิดีโอจากรายการภาพของชุมชนตามประเภท
- * Input :
- * - communityImages (array) : รายการรูปภาพจาก API
- * - backendUrl (string) : URL ของ Backend
- * Output : object ที่ประกอบด้วย logo, cover, gallery, video (File[])
+/**
+ * คำอธิบาย: ดึงไฟล์รูปภาพและวิดีโอจากรายการภาพของชุมชน
+ * Input: communityImages (รายการภาพ), backendUrl (URL backend)
+ * Output: { logo, cover, gallery, video } เป็น array ของ File objects
  */
 const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) => {
   const logoPromise = Promise.all(
@@ -150,10 +135,10 @@ const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) =
   return { logo, cover, gallery, video };
 };
 
-/*
- * คำอธิบาย : เตรียมข้อมูล FormData สำหรับส่งไปยัง Server
- * Input : object ที่รวมข้อมูล formData, selectedMembers, location, position, registerDate, isVisibleRating, files
- * Output : FormData object ที่พร้อมส่ง
+/**
+ * คำอธิบาย: เตรียม FormData สำหรับการบันทึกข้อมูล
+ * Input: ข้อมูลฟอร์มและไฟล์ต่างๆ
+ * Output: FormData พร้อมส่ง
  */
 const prepareSubmitData = ({
   formData,
@@ -225,13 +210,12 @@ const prepareSubmitData = ({
   return formDataToSend;
 };
 
-/*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชนสำหรับผู้ดูแลชุมชน admin
- * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
- * Input : communityId (ดึงจาก useParams)
- * Output : ส่งคำขออัปเดตข้อมูลวิสาหกิจชุมชนผ่าน API updateCommunity()
+/**
+ * คำอธิบาย: Component หน้าแก้ไขข้อมูลวิสาหกิจชุมชน
  */
-export function EditCommunity() {
+export default function EditCommunityPage() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
     communityMembers: [],
   });
@@ -245,12 +229,12 @@ export function EditCommunity() {
 
   const [expanded, setExpanded] = React.useState<string | false>(false);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
-  const [checked, setChecked] = React.useState(true);
+  const [isStatusOpen, setIsStatusOpen] = React.useState(true);
   const [isVisibleRating, setIsVisibleRating] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
-  const [openConfirm, setOpenConfirm] = React.useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isMapLoading, setIsMapLoading] = React.useState(false);
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
@@ -258,25 +242,22 @@ export function EditCommunity() {
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
-  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
-  const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = React.useState(false);
 
-  const navigate = useNavigate();
-
-  /*
-   * คำอธิบาย : โหลดข้อมูลชุมชนจาก API โดยใช้ communityId จาก URL
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: โหลดข้อมูลชุมชน
+   * Input: -
+   * Output: - (อัปเดต state)
    */
   React.useEffect(() => {
     async function fetchData() {
       try {
         const delayPromise = new Promise((resolve) => setTimeout(resolve, 400));
-
         const fetchDataPromise = getCommunityOwn();
 
         const [response] = await Promise.all([fetchDataPromise, delayPromise]);
@@ -287,6 +268,7 @@ export function EditCommunity() {
         }
         const latitude = Number(data.location?.latitude ?? 13.736717);
         const longitude = Number(data.location?.longitude ?? 100.523186);
+
         setFormData({
           ...data,
           adminId: data.admin.id,
@@ -307,17 +289,20 @@ export function EditCommunity() {
           subDistrict: data.location.subDistrict,
           postalCode: data.location.postalCode,
         });
+
         setLocation({
           province: data.location.province,
           district: data.location.district,
           subdistrict: data.location.subDistrict,
           postalCode: data.location.postalCode,
         });
+
         setAdmin({
           id: data.admin.id,
           fname: data.admin.fname,
           lname: data.admin.lname,
         });
+
         setMembers(
           data.communityMembers?.map((member: any) => ({
             id: member.user.id,
@@ -325,9 +310,10 @@ export function EditCommunity() {
             lname: member.user.lname,
           })) ?? [],
         );
+
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([latitude, longitude]);
-        setChecked(data.status === "OPEN" ? true : false);
+        setIsStatusOpen(data.status === "OPEN" ? true : false);
         setIsVisibleRating(data.isRatingVisible);
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
@@ -342,11 +328,10 @@ export function EditCommunity() {
         setCoverFiles(cover[0] || null);
         setGalleryFiles(gallery);
         setVideoFiles(video);
+
         const memberIds = data.communityMembers?.map((member: any) => member.user.id) ?? [];
         setSelectedMembers(memberIds);
         setIsMapLoading(true);
-
-        // Set Initial States for Dirty Check
       } catch (error) {
         console.error(error);
       } finally {
@@ -356,20 +341,16 @@ export function EditCommunity() {
     fetchData();
   }, []);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันควบคุมการขยาย/ย่อของ Accordion
-   * Input : panel
-   * Output : -
+  /**
+   * คำอธิบาย: จัดการการเปิด/ปิด Accordion
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
     setExpanded(isExpanded ? panel : false);
-  /*
-   * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
-   * Input : field, value
-   * Output : boolean
+
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูล
    */
   const validateField = (field?: string, value?: any) => {
-    // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
     if (field) {
       const result = communitySchema.safeParse({ ...formData, [field]: value });
       setFormErrors((prev) => ({
@@ -381,7 +362,6 @@ export function EditCommunity() {
       return result.success;
     }
 
-    // ถ้าไม่มี field แปลว่าต้องตรวจทั้งฟอร์ม
     const result = communitySchema.safeParse(formData);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -393,27 +373,24 @@ export function EditCommunity() {
       return false;
     }
 
-    // ถ้าผ่านทั้งหมด
     setFormErrors({});
     return true;
   };
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้เปลี่ยนสถานะชุมชน (เปิด/ปิด)
-   * Input : event
-   * Output : -
+
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนสถานะชุมชน
    */
   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
-    setChecked(newChecked);
+    setIsStatusOpen(newChecked);
     setFormData((prev) => ({
       ...prev,
       status: newChecked ? "OPEN" : "CLOSED",
     }));
   };
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้เปิด/ปิดการแสดงคะแนนชุมชน
-   * Input : event
-   * Output : -
+
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนสถานะการแสดงคะแนน
    */
   const handleCheckRating = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
@@ -424,10 +401,8 @@ export function EditCommunity() {
     }));
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
-   * Input : e
-   * Output : -
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนแปลง input form
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -435,10 +410,9 @@ export function EditCommunity() {
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
   };
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนค่าใน field เฉพาะ
-   * Input : field, value
-   * Output : -
+
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่า value โดยตรง
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     let newValue = value;
@@ -452,10 +426,8 @@ export function EditCommunity() {
     validateField(field, newValue);
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่ม "บันทึก"
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: บันทึกการแก้ไขข้อมูล
    */
   const handleSubmit = async () => {
     const isFormValid = validateField();
@@ -464,7 +436,7 @@ export function EditCommunity() {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ถูกต้อง");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       return;
     }
 
@@ -487,7 +459,7 @@ export function EditCommunity() {
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       navigate("/admin/community/own");
     } catch (error: any) {
       const backendMessage =
@@ -496,7 +468,7 @@ export function EditCommunity() {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage(backendMessage);
-      setAlertOpen(true);
+      setIsAlertOpen(true);
     }
   };
 
@@ -523,7 +495,7 @@ export function EditCommunity() {
         </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <p>สถานะชุมชน</p>
-          <Switch checked={checked} onChange={handleCheck} />
+          <Switch checked={isStatusOpen} onChange={handleCheck} />
         </Stack>
       </div>
 
@@ -1080,42 +1052,42 @@ export function EditCommunity() {
       </Accordion>
       <div className="flex justify-end mt-5 mb-10 mr-5">
         <div className="w-32 mr-2.5">
-          <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+          <Button type="cancel" onClick={() => setIsCancelConfirmModalOpen(true)}>
             ยกเลิก
           </Button>
         </div>
         <div className="w-32">
-          <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+          <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
             บันทึก
           </Button>
         </div>
       </div>
       <Modal
-        open={openConfirm}
+        open={isConfirmModalOpen}
         title="ยืนยันการแก้ไขข้อมูล"
         text="คุณต้องการยืนยันการแก้ไขข้อมูลหรือไม่"
         onConfirm={async () => {
-          setOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           await handleSubmit();
         }}
-        onCancel={() => setOpenConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
       <Modal
-        open={openCancelConfirm}
+        open={isCancelConfirmModalOpen}
         title="ยืนยันการยกเลิก"
         text="เมื่อกดตกลง ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
         onConfirm={() => {
-          setOpenCancelConfirm(false);
+          setIsCancelConfirmModalOpen(false);
           navigate(-1);
         }}
-        onCancel={() => setOpenCancelConfirm(false)}
+        onCancel={() => setIsCancelConfirmModalOpen(false)}
       />
       <ModalAlert
-        open={alertOpen}
+        open={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
-        onClose={() => setAlertOpen(false)}
+        onClose={() => setIsAlertOpen(false)}
       />
     </div>
   );

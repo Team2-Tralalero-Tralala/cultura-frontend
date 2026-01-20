@@ -1,10 +1,11 @@
 /**
- * คำอธิบาย : Component สำหรับเเสดงรายละเอียดร้านค้าของ Admin
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดร้านค้า (Admin)
  */
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit } from "lucide-react";
-import Breadcrumb from "../../Components/BreadcrumbNavigation";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 interface Community {
   id: number;
@@ -26,49 +27,45 @@ interface Store {
   };
 }
 
-/*
- * คำอธิบาย : ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend
- * Input : path ของรูปภาพจาก backend
- * Output : URL ของรูปภาพที่สามารถนำไปแสดงผลได้
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+
+/**
+ * คำอธิบาย: สร้าง URL สำหรับรูปภาพจาก Backend
+ * Input: imagePath (path ของรูปภาพ)
+ * Output: URL ของรูปภาพ
  */
 const buildImageUrl = (imagePath?: string): string => {
   if (!imagePath) return "";
   if (imagePath.startsWith("http")) return imagePath;
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const backend = apiUrl.replace("/api", "");
-
   const cleanPath = imagePath.replace(/^\/+/, "");
   return `${backend}/${cleanPath}`;
 };
 
-/*
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดร้านค้า สำหรับผู้ใช้งานบทบาท Admin
- * Input : รหัสร้านค้าจาก URL parameter
- * Output : แสดงข้อมูลรายละเอียดร้านค้า รูปภาพ แท็ก และตำแหน่งร้านค้า
+/**
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดร้านค้า
  */
-const StoreDetailAdmin = () => {
+export default function DetailStorePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [store, setStore] = useState<Store | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายละเอียดร้านค้าจาก backend
-   * Input : ไม่มี (ใช้รหัสร้านค้าจาก URL)
-   * Output : ตั้งค่าข้อมูลร้านค้าเข้าสู่ state เพื่อใช้แสดงผล
+  /**
+   * คำอธิบาย: ดึงข้อมูลรายละเอียดร้านค้า
+   * Input: - (ใช้ id จาก URL params)
+   * Output: - (อัปเดต state store)
    */
   const fetchStore = async () => {
     if (!id) {
-      console.error(" ID is undefined");
+      console.error("ID is undefined");
       return;
     }
 
-    const url = `${import.meta.env.VITE_API_URL}/admin/store/${id}`;
-
     try {
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(`${apiUrl}/admin/store/${id}`, { credentials: "include" });
       const result = await res.json();
 
       if (result?.data) {
@@ -115,37 +112,31 @@ const StoreDetailAdmin = () => {
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  /*
-   * คำอธิบาย : เรียกใช้งานฟังก์ชันโหลดข้อมูลร้านค้า
-   * Input : ไม่มี
-   * Output : โหลดข้อมูลร้านค้าเมื่อเปิดหน้า หรือเมื่อ id เปลี่ยนแปลง
+  /**
+   * คำอธิบาย: โหลดข้อมูลเมื่อ Component mount
    */
   useEffect(() => {
     fetchStore();
   }, [id]);
 
-  if (loading) return <div className="p-6 text-gray-600">กำลังโหลดข้อมูล...</div>;
+  if (isLoading) return <div className="p-6 text-gray-600">กำลังโหลดข้อมูล...</div>;
   if (!store) return <div className="p-6 text-red-500">ไม่พบข้อมูลร้านค้า</div>;
 
   const coverImage = store.images[0];
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าแก้ไขข้อมูลร้านค้า
-   * Input : ไม่มี
-   * Output : เปลี่ยนหน้าไปยังหน้าจอแก้ไขร้านค้า
+  /**
+   * คำอธิบาย: นำทางไปหน้าแก้ไขร้านค้า
    */
   const handleEditClick = () => {
     navigate(`/admin/community/store/${id}/edit`);
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับนำทางกลับไปยังหน้ารายการร้านค้า
-   * Input : ไม่มี
-   * Output : เปลี่ยนหน้าไปยังหน้ารายการร้านค้าทั้งหมด
+  /**
+   * คำอธิบาย: นำทางกลับหน้ารายการร้านค้า
    */
   const handleBackClick = () => {
     navigate("/admin/community/stores");
@@ -281,6 +272,4 @@ const StoreDetailAdmin = () => {
       </div>
     </div>
   );
-};
-
-export default StoreDetailAdmin;
+}

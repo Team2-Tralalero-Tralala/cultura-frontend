@@ -1,6 +1,10 @@
 /**
- * ฟังก์ชันหลักของหน้า CreateStore
- * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
+ * คำอธิบาย: Component หน้าสำหรับสร้างร้านค้าใหม่ (สำหรับ Admin)
+ * หน้าที่:
+ * - แสดงฟอร์มสร้างร้านค้า
+ * - ตรวจสอบข้อมูล (Validation)
+ * - จัดการรูปภาพและตำแหน่งที่ตั้ง
+ * - บันทึกข้อมูลร้านค้าลงฐานข้อมูล
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
@@ -17,8 +21,7 @@ import TextField from "@/Components/TextField";
 import { createStoreByAdmin } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 import { Icon } from "@iconify/react";
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import z from "zod";
 
@@ -42,11 +45,11 @@ const storeSchema = z.object({
     .array(z.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
     .min(1, "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ"),
 });
+
 /**
- * ฟังก์ชันหลักของหน้า CreateStore
- * คำอธิบาย : แสดงฟอร์มสร้างร้านค้าใหม่ พร้อมจัดการการอัปโหลดรูปภาพ
+ * คำอธิบาย: Component หลักของหน้า CreateStorePage
  */
-export function CreateStore() {
+export function CreateStorePage() {
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
@@ -59,22 +62,26 @@ export function CreateStore() {
   const startingPosition: [number, number] = [13.736717, 100.523186]; // BUU
   const startingZoom = 13;
   const [position, setPosition] = useState<[number, number]>(startingPosition);
-  const [openConfirm, setOpenConfirm] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+
   const [formData, setFormData] = React.useState<Partial<StoreData>>({
     latitude: position[0],
     longitude: position[1],
   });
   const navigate = useNavigate();
-  const [openCancelConfirm, setOpenCancelConfirm] = useState(false);
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = useState(false);
+
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
-   * Input :
-   *   - field (string | undefined) : ชื่อฟิลด์ที่ต้องการตรวจสอบ (ถ้าไม่ระบุจะตรวจสอบทั้งฟอร์ม)
-   *   - value (any | undefined) : ค่าของฟิลด์ที่ต้องการตรวจสอบ (ใช้เมื่อระบุ field)
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input:
+   *   - field (string | undefined): ชื่อฟิลด์ที่ต้องการตรวจสอบ (ถ้าไม่ระบุจะตรวจสอบทั้งฟอร์ม)
+   *   - value (any | undefined): ค่าของฟิลด์ที่ต้องการตรวจสอบ (ใช้เมื่อระบุ field)
+   *   - mergedData (any | undefined): ข้อมูลที่รวมแล้ว (ใช้กรณี validate ทันทีที่เปลี่ยนค่าโดยยังไม่ set state)
+   * Output: boolean (true หากข้อมูลถูกต้อง, false หากผิดพลาด)
    */
   const validateField = (field?: string, value?: any, mergedData?: any) => {
     const data = mergedData || formData;
@@ -109,10 +116,11 @@ export function CreateStore() {
     setFormErrors({});
     return true;
   };
+
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
-   * Input : none (ตรวจสอบจาก state formData, location, position, files)
-   * Output : boolean (true หากมีการแก้ไขข้อมูล, false หากไม่มี)
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input: - (ตรวจสอบจาก state formData, location, position, files)
+   * Output: boolean (true หากมีการแก้ไขข้อมูล, false หากไม่มี)
    */
   const checkIsDirty = () => {
     const isFormDirty =
@@ -135,23 +143,23 @@ export function CreateStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการเมื่อกดปุ่มยกเลิก
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการเมื่อกดปุ่มยกเลิก
    * หากมีการแก้ไขข้อมูลจะแสดง Modal ยืนยัน, หากไม่มีจะย้อนกลับไปหน้าก่อนหน้าทันที
-   * Input : none
-   * Output : none (อาจเปลี่ยน state openCancelConfirm หรือ navigate)
+   * Input: -
+   * Output: -
    */
   const handleCancel = () => {
     if (checkIsDirty()) {
-      setOpenCancelConfirm(true);
+      setIsCancelConfirmModalOpen(true);
     } else {
       navigate(-1);
     }
   };
+
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
-   * Input :
-   *   - e : เหตุการณ์การเปลี่ยนแปลงจาก input field
-   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
+   * Input: e (เหตุการณ์การเปลี่ยนแปลงจาก input field)
+   * Output: - (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -162,26 +170,28 @@ export function CreateStore() {
   };
 
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
-   * Input :
-   *   - field : ชื่อฟิลด์ที่ต้องการอัปเดต
-   *   - value : ค่าที่จะตั้งให้กับฟิลด์นั้น
-   * Output : none (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ select หรือ custom input
+   * Input:
+   *   - field: ชื่อฟิลด์ที่ต้องการอัปเดต
+   *   - value: ค่าที่จะตั้งให้กับฟิลด์นั้น
+   * Output: - (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
     setFormData(updated);
     validateField(field, value);
   };
+
   const tagList = React.useMemo<Tag[]>(
     () => (formData.tagStores ?? []).map((id) => ({ id, name: "" })),
     [formData.tagStores],
   );
+
   /**
-   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มไปยัง backend เพื่อสร้างร้านค้าใหม่
+   * คำอธิบาย: ฟังก์ชันสำหรับส่งข้อมูลฟอร์มไปยัง backend เพื่อสร้างร้านค้าใหม่
    * โดยจะจัดการแยกข้อมูล location และไฟล์รูปภาพออกจากกัน
-   * Input : none (ใช้ข้อมูลจาก state formData, location, position, coverFiles, galleryFiles)
-   * Output : none (เรียกใช้ createStore() เพื่อส่งข้อมูลไปยัง backend)
+   * Input: - (ใช้ข้อมูลจาก stateformData, location, position, coverFiles, galleryFiles)
+   * Output: -
    */
   const handleSubmit = async () => {
     try {
@@ -190,14 +200,14 @@ export function CreateStore() {
         setAlertType("error");
         setAlertTitle("ข้อมูลไม่ถูกต้อง");
         setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
-        setAlertOpen(true);
+        setIsAlertOpen(true);
         return;
       }
       if (coverFiles.length === 0 || galleryFiles.length === 0) {
         setAlertType("error");
         setAlertTitle("ข้อมูลไม่ถูกต้อง");
         setAlertMessage("กรุณาอัพโหลดรูปภาพให้ครบถ้วน");
-        setAlertOpen(true);
+        setIsAlertOpen(true);
         return;
       }
       const {
@@ -244,13 +254,13 @@ export function CreateStore() {
       setAlertType("success");
       setAlertTitle("สร้างวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสหากิจชุมชนถูกบันทึก");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       navigate("/admin/community/stores");
     } catch (error: any) {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
     }
   };
 
@@ -432,37 +442,37 @@ export function CreateStore() {
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
               บันทึก
             </Button>
           </div>
         </div>
         <Modal
-          open={openConfirm}
+          open={isConfirmModalOpen}
           title="ยืนยันการสร้างร้านค้า"
           text="คุณต้องการยืนยันการสร้างร้านค้าหรือไม่"
           onConfirm={async () => {
-            setOpenConfirm(false);
+            setIsConfirmModalOpen(false);
             await handleSubmit();
           }}
-          onCancel={() => setOpenConfirm(false)}
+          onCancel={() => setIsConfirmModalOpen(false)}
         />
         <Modal
-          open={openCancelConfirm}
+          open={isCancelConfirmModalOpen}
           title="ยืนยันการยกเลิก"
           text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
           onConfirm={() => {
-            setOpenCancelConfirm(false);
+            setIsCancelConfirmModalOpen(false);
             navigate(-1);
           }}
-          onCancel={() => setOpenCancelConfirm(false)}
+          onCancel={() => setIsCancelConfirmModalOpen(false)}
         />
         <ModalAlert
-          open={alertOpen}
+          open={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}
-          onClose={() => setAlertOpen(false)}
+          onClose={() => setIsAlertOpen(false)}
         />
       </div>
     </div>

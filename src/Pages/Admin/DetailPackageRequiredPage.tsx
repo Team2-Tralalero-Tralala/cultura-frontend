@@ -1,8 +1,12 @@
 /**
- * คำอธิบาย : Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจทั้งหมด
- * เช่น ข้อมูลแพ็กเกจ, ที่อยู่, สิ่งอำนวยความสะดวก, แผนที่,
- * ที่พักในแพ็กเกจ, ภาพประกอบ และสถานะการอนุมัติ/ปฏิเสธ
+ * คำอธิบาย: Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจทั้งหมด
+ * หน้าที่:
+ * - แสดงข้อมูลแพ็กเกจที่จะขออนุมัติ
+ * - แสดงรายละเอียดที่อยู่, สิ่งอำนวยความสะดวก, แผนที่
+ * - แสดงที่พักในแพ็กเกจและรูปภาพ
+ * - จัดการการอนุมัติหรือปฏิเสธคำขอ
  */
+
 import { useEffect, useState, useMemo } from "react";
 import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,9 +20,9 @@ import { Modal } from "@/Components/Modal/Modal";
 import RejectModal from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 delete (L.Icon.Default as any).prototype._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -29,9 +33,9 @@ const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const BACKEND_BASE_URL = apiUrl.replace("/api", "") || "http://localhost:3000";
 
 /**
- * คำอธิบาย : แปลงพาธไฟล์ที่เก็บจาก backend เป็น URL ดาวน์โหลดเต็ม
- * Input : fileName?: string
- * Output: string | undefined (URL สำหรับดาวน์โหลดไฟล์)
+ * คำอธิบาย: แปลงพาธไฟล์จาก Backend เป็น URL เต็มรูปแบบ
+ * Input: fileName (ชื่อไฟล์)
+ * Output: URL สำหรับดาวน์โหลดไฟล์ หรือ undefined หากไม่พบ
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
@@ -40,9 +44,9 @@ function resolveBackendUploadUrl(fileName?: string): string | undefined {
 }
 
 /**
- * คำอธิบาย : แปลงวันที่ ISO เป็นรูปแบบไทย dd/mm/yyyy
- * Input : isoString?: string
- * Output: string (วันที่ในรูปแบบไทย หรือ "-")
+ * คำอธิบาย: แปลงวันที่จาก ISO เป็นรูปแบบไทยสั้น (dd/mm/yyyy)
+ * Input: isoString (ISO Date String)
+ * Output: วันที่รูปแบบไทยสั้น หรือ "-"
  */
 function formatDate(isoString?: string): string {
   if (!isoString) return "-";
@@ -54,9 +58,9 @@ function formatDate(isoString?: string): string {
 }
 
 /**
- * คำอธิบาย : แปลงวันที่ ISO เป็นรูปแบบไทย dd/mm/yyyy
- * Input : isoString?: string
- * Output: วันที่ในรูปแบบไทย วันพุธที่ 1 ตุลาคม พ.ศ. 2568  เวลา 14:00
+ * คำอธิบาย: แปลงวันที่จาก ISO เป็นรูปแบบไทยเต็ม
+ * Input: dateString (ISO Date String)
+ * Output: วันที่รูปแบบไทยเต็ม (เช่น วันพุธที่ 1 ตุลาคม พ.ศ. 2568) หรือ "-"
  */
 export function formatThaiDate(dateString: string) {
   if (!dateString) return "-";
@@ -97,10 +101,9 @@ export function formatThaiDate(dateString: string) {
 }
 
 /**
- * คำอธิบาย : แปลงข้อความสิ่งอำนวยความสะดวกจากรูปแบบ string ให้เป็นรายการ array
- *             รองรับการคั่นด้วย \n, comma (,), หรือสัญลักษณ์ bullet (•)
- * Input : text?: string (ข้อความสิ่งอำนวยความสะดวกจาก backend)
- * Output: string[] (รายการสิ่งอำนวยความสะดวกแต่ละบรรทัด)
+ * คำอธิบาย: แปลงข้อความสิ่งอำนวยความสะดวกเป็น Array
+ * Input: text (ข้อความสิ่งอำนวยความสะดวก)
+ * Output: Array ของข้อความสิ่งอำนวยความสะดวก
  */
 function parseFacilityText(text?: string): string[] {
   if (!text) return [];
@@ -112,9 +115,9 @@ function parseFacilityText(text?: string): string[] {
 }
 
 /**
- * คำอธิบาย : ดึงเวลา (HH:mm) จาก ISO string
- * Input : isoString?: string
- * Output: string (เวลา HH:mm หรือ "-")
+ * คำอธิบาย: ดึงเวลา (HH:mm) จาก ISO string
+ * Input: isoString (ISO Date String)
+ * Output: เวลา (HH:mm) หรือ "-"
  */
 function extractTimeFromISO(isoString?: string): string {
   if (!isoString) return "-";
@@ -123,9 +126,9 @@ function extractTimeFromISO(isoString?: string): string {
 }
 
 /**
- * คำอธิบาย : รวมฟิลด์ address ใน PackageRequestDetail เป็นข้อความเดียวเพื่อแสดงผล
- * Input : detail?: PackageRequestDetail | null
- * Output: string (ที่อยู่แบบบรรทัดเดียว หรือ "-")
+ * คำอธิบาย: สร้างข้อความที่อยู่บรรทัดเดียวจาก object ที่อยู่
+ * Input: detail (PackageRequestDetail)
+ * Output: ข้อความที่อยู่ หรือ "-"
  */
 function buildAddressLine(detail?: PackageRequestDetail | null): string {
   const text = [
@@ -143,13 +146,12 @@ function buildAddressLine(detail?: PackageRequestDetail | null): string {
 }
 
 /**
- * คำอธิบาย : React Component สำหรับแสดงรายละเอียดคำขอแพ็กเกจ พร้อมปุ่มอนุมัติ/ปฏิเสธ
- * Input : - (ใช้ useParams รับ requestId จาก URL)
- * Output: JSX.Element (UI ของหน้าแสดงรายละเอียดแพ็กเกจ)
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดและจัดการคำขอแพ็กเกจ
  */
 export default function DetailPackageRequiredPage() {
   const navigate = useNavigate();
   const { requestId } = useParams<{ requestId: string }>();
+
   const [packageRequestDetail, setPackageRequestDetail] = useState<PackageRequestDetail | null>(
     null,
   );
@@ -157,7 +159,13 @@ export default function DetailPackageRequiredPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isApproveClicked, setIsApproveClicked] = useState(false);
 
+  /**
+   * คำอธิบาย: โหลดข้อมูลคำขอแพ็กเกจ
+   * Input: - (ใช้ requestId จาก URL params)
+   * Output: - (อัปเดต state packageRequestDetail)
+   */
   useEffect(() => {
     if (!requestId) return;
     let isMounted = true;
@@ -169,58 +177,48 @@ export default function DetailPackageRequiredPage() {
     };
   }, [requestId]);
 
-  /**
-   * คำอธิบาย : คำนวณพิกัดศูนย์กลางแผนที่จากข้อมูลแพ็กเกจ หรือใช้ fallback เป็นกรุงเทพฯ
-   * Input : - (อิง state packageRequestDetail)
-   * Output: [number, number] (ละติจูด, ลองจิจูด)
-   */
   const mapCenter = useMemo<[number, number]>(() => {
     const lat = packageRequestDetail?.location?.latitude ?? 13.7563;
     const lng = packageRequestDetail?.location?.longitude ?? 100.5018;
     return [lat, lng];
   }, [packageRequestDetail?.location?.latitude, packageRequestDetail?.location?.longitude]);
 
-  /**
-   * คำอธิบาย : คีย์สำหรับบังคับรีเรนเดอร์ MapPicker เมื่อพิกัดเปลี่ยน
-   */
   const mapKey = `${mapCenter[0]},${mapCenter[1]}`;
 
   /**
-   * คำอธิบาย : เปิด Modal สำหรับยืนยันการอนุมัติคำขอแพ็กเกจ
+   * คำอธิบาย: เปิด Modal อนุมัติ
    */
   function openApproveModal() {
     setIsApproveModalOpen(true);
   }
 
   /**
-   * คำอธิบาย : ปิด Modal ยืนยันการอนุมัติคำขอแพ็กเกจ
+   * คำอธิบาย: ปิด Modal อนุมัติ
    */
   function closeApproveModal() {
     setIsApproveModalOpen(false);
   }
 
   /**
-   * คำอธิบาย : เปิด Modal สำหรับกรอกเหตุผลในการปฏิเสธคำขอแพ็กเกจ
+   * คำอธิบาย: เปิด Modal ปฏิเสธ
    */
   function openRejectModal() {
     setIsRejectModalOpen(true);
   }
 
   /**
-   * คำอธิบาย : ปิด Modal ปฏิเสธคำขอแพ็กเกจ
+   * คำอธิบาย: ปิด Modal ปฏิเสธ
    */
   function closeRejectModal() {
     setIsRejectModalOpen(false);
   }
 
-  const [approveClicked, setApproveClicked] = useState(false);
-
   /**
-   * คำอธิบาย : ดำเนินการอนุมัติคำขอแพ็กเกจตาม requestId
+   * คำอธิบาย: ดำเนินการอนุมัติคำขอ
    */
   async function approveCurrentRequest() {
-    if (approveClicked) return;
-    setApproveClicked(true);
+    if (isApproveClicked) return;
+    setIsApproveClicked(true);
 
     if (!requestId) return;
 
@@ -238,14 +236,13 @@ export default function DetailPackageRequiredPage() {
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
-      setApproveClicked(false);
+      setIsApproveClicked(false);
     }
   }
 
   /**
-   * คำอธิบาย : ดำเนินการปฏิเสธคำขอ พร้อมเหตุผล และกลับไปหน้ารายการเมื่อสำเร็จ
-   * Input : reason: string
-   * Output: Promise<void>
+   * คำอธิบาย: ดำเนินการปฏิเสธคำขอ
+   * Input: reason (เหตุผลการปฏิเสธ)
    */
   async function rejectCurrentRequest(reason: string) {
     if (!requestId) return;
@@ -263,26 +260,20 @@ export default function DetailPackageRequiredPage() {
     }
   }
 
-  /**
-   * คำอธิบาย : เปิดโมดัลยืนยันการอนุมัติเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
-   */
   function handleApproveClick() {
     openApproveModal();
   }
 
-  /**
-   * คำอธิบาย : เปิดโมดัลระบุเหตุผลการปฏิเสธเมื่อผู้ใช้กดปุ่ม "ปฏิเสธ"
-   */
   function handleRejectClick() {
     openRejectModal();
   }
 
-  /**
-   * คำอธิบาย : ตรวจว่าสถานะอนุมัติแล้วหรือไม่เพื่อซ่อนปุ่ม
-   */
   const isApproved = String((packageRequestDetail as any)?.statusApprove || "")
     .toUpperCase()
     .startsWith("APPROVE");
+
+  if (isLoading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
+  if (errorMessage) return <div className="p-8 text-red-600">{errorMessage}</div>;
 
   return (
     <div className="w-full">

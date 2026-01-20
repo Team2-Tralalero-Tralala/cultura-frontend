@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย : หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ รองรับการอัปโหลดรูปภาพและวิดีโอ
+ * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) รองรับการกรอกข้อมูลแพ็กเกจ อัปโหลดรูปภาพ/วิดีโอ และเลือกที่พัก
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -29,8 +29,8 @@ import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
-/*
- * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
+/**
+ * คำอธิบาย: ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
  * Input: inputValue (ค่าที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนกลับถ้าว่าง)
  * Output: ค่า string ที่ตัดช่องว่างแล้ว หรือค่า fallback
  */
@@ -39,8 +39,8 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
   return trimmed.length ? trimmed : fallback;
 }
 
-/*
- * คำอธิบาย : แปลงค่าใดๆ เป็น number หรือ null
+/**
+ * คำอธิบาย: แปลงค่าใดๆ เป็น number หรือ null
  * Input: value (ค่าที่ต้องการแปลง)
  * Output: ค่าตัวเลข หรือ null หากแปลงไม่ได้
  */
@@ -136,6 +136,14 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
+/**
+ * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
+ * หน้าที่:
+ * - จัดการ state ฟอร์มแพ็กเกจ
+ * - ตรวจสอบข้อมูล (Validation)
+ * - ค้นหาและเลือกที่พัก (Homestay) เพื่อผูกกับแพ็กเกจ
+ * - บันทึกข้อมูลแพ็กเกจลงฐานข้อมูล
+ */
 export const CreatePackagePage = () => {
   const navigate = useNavigate();
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
@@ -157,9 +165,9 @@ export const CreatePackagePage = () => {
   const [homestayCheckInDateObject, setHomestayCheckInDateObject] = useState<Date | null>(null);
   const [homestayCheckOutDateObject, setHomestayCheckOutDateObject] = useState<Date | null>(null);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
-   * Input: fieldName (ชื่อ Field), fieldValue (ค่าของ Field), newState (ข้อมูลฟอร์มใหม่)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
+   * Input: field (ชื่อ Field), value (ค่าของ Field), newState (ข้อมูลฟอร์มใหม่)
    * Output: -
    */
   const validateField = React.useCallback(
@@ -175,8 +183,8 @@ export const CreatePackagePage = () => {
     [],
   );
 
-  /*
-   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนบันทึก
+  /**
+   * คำอธิบาย: ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนบันทึก
    * Input: -
    * Output: สถานะความถูกต้อง (Boolean)
    */
@@ -305,10 +313,8 @@ export const CreatePackagePage = () => {
     fetchMyCommunity();
   }, []);
 
-  const MIN_HOMESTAY_QUERY_CHARS = 0;
-
-  /*
-   * คำอธิบาย : ฟังก์ชันดึงข้อมูลรายการที่พักจาก Server ตามคำค้นหา
+  /**
+   * คำอธิบาย: ฟังก์ชันดึงข้อมูลรายการที่พักจาก Server ตามคำค้นหา
    * Input: query (คำค้นหา)
    * Output: -
    */
@@ -349,8 +355,8 @@ export const CreatePackagePage = () => {
     return () => clearTimeout(timerId);
   }, [homestayQuery, fetchHomestays]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับเลือกที่พักจากรายการค้นหา
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับเลือกที่พักจากรายการค้นหา
    * Input: homestay (ข้อมูลที่พักที่เลือก)
    * Output: -
    */
@@ -362,9 +368,9 @@ export const CreatePackagePage = () => {
     setFormField("tagId" as any, formState.tagId);
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าในฟอร์มและตรวจสอบความถูกต้องทันที
-   * Input: fieldName (ชื่อ Field), fieldValue (ค่าใหม่)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับอัปเดตค่าในฟอร์มและตรวจสอบความถูกต้องทันที
+   * Input: key (ชื่อ Field), value (ค่าใหม่)
    * Output: -
    */
   const setFormField = React.useCallback(
@@ -384,8 +390,8 @@ export const CreatePackagePage = () => {
   const [homestayCheckOutTime, setHomestayCheckOutTime] = useState("");
   const [homestayBookedRoom, setHomestayBookedRoom] = useState<string>("1");
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
    * Input: -
    * Output: -
    */
@@ -400,8 +406,8 @@ export const CreatePackagePage = () => {
     setHomestayBookedRoom("1");
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
+  /**
+   * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
    * Input: [latitude, longitude] (พิกัดละติจูดและลองจิจูด)
    * Output: - (อัปเดต state ในฟอร์ม)
    */
@@ -414,8 +420,8 @@ export const CreatePackagePage = () => {
     [setFormField],
   );
 
-  /*
-   * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
+  /**
+   * คำอธิบาย: ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
    * Input: -
    * Output: -
    */
@@ -497,8 +503,8 @@ export const CreatePackagePage = () => {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
+  /**
+   * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
    * Input: event (เหตุการณ์จากฟอร์ม)
    * Output: - (เปิด Modal ยืนยัน หรือแสดง Error)
    */
@@ -1080,5 +1086,3 @@ export const CreatePackagePage = () => {
     </div>
   );
 };
-
-export default CreatePackagePage;

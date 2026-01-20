@@ -299,10 +299,10 @@ export default function DetailPackageSuperAdmin() {
 
       homestaySection = (
         <div className="mt-8">
-          <h2 className="font-semibold text-lg mb-2">ที่พักในแพ็กเกจ</h2>
+          <h2 className="font-bold text-xl mb-2">ที่พักในแพ็กเกจ</h2>
 
-          <div className="flex justify-between text-md text-black mb-4">
-            <p>
+          <div className="flex item-start text-base text-black mb-4">
+            <p className="mr-20">
               <strong>เช็กอิน :</strong>{" "}
               {checkInDateTime.date
                 ? `${formatDateTH(checkInDateTime.date)} เวลา ${checkInDateTime.time ?? "-"}`
@@ -317,7 +317,6 @@ export default function DetailPackageSuperAdmin() {
           </div>
 
           <div className="border rounded-2xl p-6 flex gap-6 bg-white shadow-sm">
-            {/* รูปที่พัก */}
             <div className="w-64 h-40 flex-shrink-0 overflow-hidden rounded-xl border">
               <img
                 className="w-full h-full object-cover"
@@ -330,14 +329,13 @@ export default function DetailPackageSuperAdmin() {
               />
             </div>
 
-            {/* รายละเอียดที่พัก */}
             <div className="flex-1 text-black">
-              <div className="font-semibold text-lg mb-2">{homestayDetail.name}</div>
+              <div className="font-semibold text-base mb-2">{homestayDetail.name}</div>
 
               {homestayFacilityItems.length > 0 && (
                 <div>
-                  <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <div className="font-semibold text-base mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
+                  <ul className="list-disc pl-5 space-y-1 text-base">
                     {homestayFacilityItems.map((facilityItem, index) => (
                       <li key={index}>{facilityItem}</li>
                     ))}

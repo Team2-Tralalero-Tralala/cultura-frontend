@@ -5,7 +5,7 @@
  *   ใช้สำหรับแสดงข้อมูลแพ็กเกจท่องเที่ยวแต่ละรายการที่อยู่ในระบบของชุมชน
  *   แสดงข้อมูลผู้สร้าง, ผู้ดูแล, วันที่เปิด-ปิดการจอง, สิ่งอำนวยความสะดวก,
  *   แผนที่ตำแหน่งสถานที่ และข้อมูลที่พักในแพ็กเกจ (ถ้ามี)
-*/
+ */
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -62,15 +62,13 @@ interface HomestayData {
   detail: string;
   facility?: string;
   images: { id: number; path: string; type: string }[];
-  location?:
-    | {
-        subDistrict?: string;
-        district?: string;
-        province?: string;
-        latitude?: number;
-        longitude?: number;
-      }
-    | null;
+  location?: {
+    subDistrict?: string;
+    district?: string;
+    province?: string;
+    latitude?: number;
+    longitude?: number;
+  } | null;
 }
 
 interface HomestayHistory {
@@ -94,7 +92,7 @@ interface PackageData {
   description: string;
   capacity: number;
   price: number;
-  facility: string
+  facility: string;
   warning: string;
   statusPackage: string;
   statusApprove?: string | null;
@@ -199,9 +197,7 @@ export default function DetailPackageHistoryAdmin() {
               }
             : null,
           tags: packageRawData.tagPackages
-            ? packageRawData.tagPackages.map(
-                (tagItem: any) => tagItem.tag.name
-              )
+            ? packageRawData.tagPackages.map((tagItem: any) => tagItem.tag.name)
             : [],
           startDate: extractDateTime(packageRawData.startDate),
           dueDate: extractDateTime(packageRawData.dueDate),
@@ -220,11 +216,13 @@ export default function DetailPackageHistoryAdmin() {
               }
             : null,
           files: packageRawData.packageFile
-            ? packageRawData.packageFile.map((fileItem: any): PackageFile => ({
-                id: fileItem.id,
-                path: fileItem.filePath,
-                type: fileItem.type,
-              }))
+            ? packageRawData.packageFile.map(
+                (fileItem: any): PackageFile => ({
+                  id: fileItem.id,
+                  path: fileItem.filePath,
+                  type: fileItem.type,
+                }),
+              )
             : [],
           homestayHistories: packageRawData.homestayHistories
             ? packageRawData.homestayHistories.map(
@@ -249,35 +247,23 @@ export default function DetailPackageHistoryAdmin() {
                           homestayHistoryItem.homestay.homestayImage ??
                           homestayHistoryItem.homestay.images ??
                           []
-                        ).map(
-                          (imageItem: any, imageIndex: number) => ({
-                            id: imageItem.id ?? imageIndex,
-                            path:
-                              imageItem.image ??
-                              imageItem.filePath ??
-                              imageItem.path ??
-                              "",
-                            type: imageItem.type ?? "GALLERY",
-                          })
-                        ),
+                        ).map((imageItem: any, imageIndex: number) => ({
+                          id: imageItem.id ?? imageIndex,
+                          path: imageItem.image ?? imageItem.filePath ?? imageItem.path ?? "",
+                          type: imageItem.type ?? "GALLERY",
+                        })),
                         location: homestayHistoryItem.homestay.location
                           ? {
-                              subDistrict:
-                                homestayHistoryItem.homestay.location
-                                  .subDistrict,
-                              district:
-                                homestayHistoryItem.homestay.location.district,
-                              province:
-                                homestayHistoryItem.homestay.location.province,
-                              latitude:
-                                homestayHistoryItem.homestay.location.latitude,
-                              longitude:
-                                homestayHistoryItem.homestay.location.longitude,
+                              subDistrict: homestayHistoryItem.homestay.location.subDistrict,
+                              district: homestayHistoryItem.homestay.location.district,
+                              province: homestayHistoryItem.homestay.location.province,
+                              latitude: homestayHistoryItem.homestay.location.latitude,
+                              longitude: homestayHistoryItem.homestay.location.longitude,
                             }
                           : null,
                       }
                     : null,
-                })
+                }),
               )
             : [],
         };
@@ -306,7 +292,6 @@ export default function DetailPackageHistoryAdmin() {
     return <div className="p-6 text-gray-500">ไม่พบข้อมูลแพ็กเกจ</div>;
   }
 
-
   let homestaySection: JSX.Element | null = null;
 
   if (packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0) {
@@ -327,10 +312,10 @@ export default function DetailPackageHistoryAdmin() {
 
       homestaySection = (
         <div className="mt-8">
-          <h2 className="font-semibold text-lg mb-2">ที่พักในแพ็กเกจ</h2>
+          <h2 className="font-semibold text-xl mb-2">ที่พักในแพ็กเกจ</h2>
 
-          <div className="flex justify_between text-md text-black mb-4">
-            <p>
+          <div className="flex justify_between text-base text-black mb-4">
+            <p className="mr-20">
               <strong>เช็กอิน :</strong>{" "}
               {checkIn.date ? `${formatDateTH(checkIn.date)} เวลา ${checkIn.time ?? "-"}` : "-"}
             </p>
@@ -354,12 +339,12 @@ export default function DetailPackageHistoryAdmin() {
             </div>
 
             <div className="flex-1 text-black">
-              <div className="font-semibold text-lg mb-2">{homestay.name}</div>
+              <div className="font-semibold text-base mb-2">{homestay.name}</div>
 
               {facilityItems.length > 0 && (
                 <div>
                   <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <ul className="list-disc pl-5 space-y-1 text-base">
                     {facilityItems.map((facilityItem, facilityIndex) => (
                       <li key={facilityIndex}>{facilityItem}</li>
                     ))}
@@ -384,6 +369,33 @@ export default function DetailPackageHistoryAdmin() {
           }}
         />
       </div>
+      {/*
+       * การ์ดแจ้งเตือน: กรณีแพ็กเกจถูก SuperAdmin ปฏิเสธ
+       * เงื่อนไข: statusApprove === "REJECTED"
+       * แสดงเหตุผลจาก rejectReason (ถ้ามี)
+       */}
+      {packageDetail.statusApprove === "REJECTED" && (
+        <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-6 border border-red-100">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                <Icon icon="mdi:close-circle-outline" className="w-10 h-10 text-red-600" />
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <p className="text-lg font-bold text-gray-900">ปฏิเสธคำขอแพ็กเกจ</p>
+
+              <div className="mt-1 text-sm text-gray-700 leading-relaxed">
+                <strong>เหตุผลปฏิเสธคำขอแพ็กเกจ :</strong>{" "}
+                {packageDetail.rejectReason?.trim()
+                  ? packageDetail.rejectReason
+                  : "ไม่พบเหตุผลปฏิเสธ"}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-8xl mx-auto bg-white rounded-2xl shadow-sm p-8">
         {/* Header */}
 
@@ -407,7 +419,7 @@ export default function DetailPackageHistoryAdmin() {
           </p>
         </div>
 
-{/* สถานะแพ็กเกจ */}
+        {/* สถานะแพ็กเกจ */}
         <div className="mb-6">
           <div className="flex flex-row items-center gap-5">
             <p className="text-md text-black">
@@ -465,7 +477,7 @@ export default function DetailPackageHistoryAdmin() {
                 label={tagLabel}
                 sizeClass="h-8 px-4"
                 className="text-black bg-white whitespace-nowrap"
-                />
+              />
             ))}
           </p>
         )}
@@ -509,8 +521,7 @@ export default function DetailPackageHistoryAdmin() {
         {/* สิ่งอำนวยความสะดวก */}
         <div className="mb-6">
           <p className="text-black text-md">
-            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong>{" "}
-            {packageDetail.facility || "-"}
+            <strong>สิ่งอำนวยความสะดวกแพ็กเกจ : </strong> {packageDetail.facility || "-"}
           </p>
         </div>
 
@@ -524,7 +535,8 @@ export default function DetailPackageHistoryAdmin() {
                 packageDetail.location.longitude - 0.01
               },${packageDetail.location.latitude - 0.01},${
                 packageDetail.location.longitude + 0.01
-              },${packageDetail.location.latitude + 0.01
+              },${
+                packageDetail.location.latitude + 0.01
               }&layer=mapnik&marker=${packageDetail.location.latitude},${packageDetail.location.longitude}`}
               className="w-full h-96 rounded-xl border"
             ></iframe>
@@ -532,21 +544,17 @@ export default function DetailPackageHistoryAdmin() {
               <div className="mt-6">
                 <p className="mb-4">
                   <strong>ที่อยู่ :</strong> {packageDetail.location.address}{" "}
-                  {packageDetail.location.subDistrict}{" "}
-                  {packageDetail.location.district}{" "}
-                  {packageDetail.location.province}{" "}
-                  {packageDetail.location.postalCode}
+                  {packageDetail.location.subDistrict} {packageDetail.location.district}{" "}
+                  {packageDetail.location.province} {packageDetail.location.postalCode}
                 </p>
                 <p>
-                  <strong>ละติจูด / ลองจิจูด : </strong>{" "}
-                  {packageDetail.location.latitude},{" "}
+                  <strong>ละติจูด / ลองจิจูด : </strong> {packageDetail.location.latitude},{" "}
                   {packageDetail.location.longitude}
                 </p>
               </div>
               <div className="mt-6">
                 <p className="mb-4">
-                  <strong>คำอธิบายที่อยู่ :</strong>{" "}
-                  {packageDetail.location.detail}
+                  <strong>คำอธิบายที่อยู่ :</strong> {packageDetail.location.detail}
                 </p>
               </div>
             </div>

@@ -24,6 +24,7 @@ import PackageDraftMember from "@/Pages/Member/PackageDraftMember";
 import { EditProfile } from "@/Pages/SuperAdmin/EditProfile";
 import BookingHistoryMember from "@/Pages/Member/HistoryBookingMember";
 import { ManageParticipant } from "@/Pages/Admin/ManageParticipant";
+import DetailDonePackageMember from "@/Pages/Member/DetailDonePackageMember";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Member
@@ -51,7 +52,8 @@ export default function MemberRoutes() {
       <Route path="packages/done" element={<PackageHistoryMember />} />
       <Route path="participants/package/:packageId" element={<ManageParticipant />} />
       <Route path="packages/draft" element={<PackageDraftMember />} />
-      
+      <Route path="packages/done/:id" element={<DetailDonePackageMember />} />
+
 
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />

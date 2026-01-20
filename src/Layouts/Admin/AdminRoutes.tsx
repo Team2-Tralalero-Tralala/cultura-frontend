@@ -92,7 +92,7 @@ export default function AdminRoutes() {
       <Route path="/community/store/:id" element={<StoreDetailAdmin />} />
 
       {/* ---------------- แพ็กเกจ ---------------- */}
-      <Route path="package/history/:id" element={<DetailPackageHistoryAdmin />} />
+      <Route path="packages/history/:id" element={<DetailPackageHistoryAdmin />} />
       <Route path="packages/drafts" element={<PackageDraftAdmin />} />
       <Route path="packages/histories" element={<PackageHistoryAdmin />} />
       <Route path="packages/all" element={<ManagePackagePage />} />

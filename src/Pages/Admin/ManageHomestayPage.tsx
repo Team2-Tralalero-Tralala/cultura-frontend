@@ -268,7 +268,7 @@ export default function ManageHomestayPage() {
 
       {/* Modal สำหรับ row delete */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการลบที่พัก"
         text="คุณต้องการลบที่พักนี้หรือไม่?"
         onConfirm={handleDelete}
@@ -277,7 +277,7 @@ export default function ManageHomestayPage() {
 
       {/* Modal สำหรับ bulk delete */}
       <Modal
-        open={isBulkConfirmModalOpen}
+        isOpen={isBulkConfirmModalOpen}
         title="ยืนยันการลบที่พัก"
         text={`คุณต้องการลบที่พัก ${bulkDeleteIds.length} รายการหรือไม่?`}
         onConfirm={handleBulkDelete}

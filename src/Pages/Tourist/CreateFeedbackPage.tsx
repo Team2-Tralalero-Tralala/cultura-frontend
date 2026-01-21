@@ -336,7 +336,7 @@ export function CreateFeedbackPage() {
 
       {/* Modal ยืนยันการส่งข้อเสนอแนะ */}
       <Modal
-        open={isConfirmationModalOpen}
+        isOpen={isConfirmationModalOpen}
         title="ยืนยันการส่งข้อเสนอแนะ"
         text="คุณต้องการยืนยันการส่งข้อเสนอแนะไปยังชุมชนหรือไม่"
         onConfirm={onConfirmFeedbackSave}
@@ -347,7 +347,7 @@ export function CreateFeedbackPage() {
 
       <Footer />
       <Modal
-        open={isAlertModalOpen}
+        isOpen={isAlertModalOpen}
         title={alertModalTitle}
         text={alertModalMessage}
         confirmText="ตกลง"

@@ -422,7 +422,7 @@ export default function DetailFeedbackPage() {
       </section>
 
       <Modal
-        open={isReplyModalOpen}
+        isOpen={isReplyModalOpen}
         title="ยืนยันการตอบกลับรีวิวหรือไม่"
         text="คุณจะไม่สามารถย้อนกลับได้"
         confirmText="ยืนยัน"

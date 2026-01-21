@@ -14,7 +14,7 @@ import type {
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import api from "@/Libs/Api";
 
 type MemberRow = {
@@ -170,11 +170,11 @@ export default function ManageMemberPage() {
 
   return (
     <>
-      <Breadcrumb
+      <BreadcrumbNavigation
         current={{
           label: "จัดการสมาชิก",
           to: "/admin/members",
-          fromSidebar: true,
+          isFromSidebar: true,
         }}
       />
 
@@ -221,7 +221,7 @@ export default function ManageMemberPage() {
       </div>
 
       <Modal
-        open={isDeleteModalOpen}
+        isOpen={isDeleteModalOpen}
         title="ยืนยันการลบสมาชิก"
         text={`คุณต้องการลบสมาชิก “${selectedMember?.displayName ?? "-"}” ออกจากชุมชนใช่หรือไม่?`}
         confirmText="ลบ"

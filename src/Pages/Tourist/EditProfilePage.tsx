@@ -308,7 +308,7 @@ const EditProfilePage: React.FC = () => {
 
       {/* Modals ยืนยันการเเก้ไขข้อมูลส่วนตัว */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการเเก้ไขข้อมูลส่วนตัว"
         text="คุณต้องการยืนยันแก้ไขข้อมูลส่วนตัวหรือไม่?"
         onConfirm={() => {
@@ -319,7 +319,7 @@ const EditProfilePage: React.FC = () => {
       />
       {/* Modals เเก้ไขข้อมูลส่วนตัวสำเร็จ */}
       <ModalAlert
-        open={isSuccessModalOpen}
+        isOpen={isSuccessModalOpen}
         type="success"
         title="แก้ไขข้อมูลส่วนตัวสำเร็จ"
         message="ข้อมูลส่วนตัวของคุณถูกแก้ไขเรียบร้อยแล้ว"
@@ -327,7 +327,7 @@ const EditProfilePage: React.FC = () => {
       />
       {/* Modals เกิดข้อผิดพลาด */}
       <ModalAlert
-        open={isErrorModalOpen}
+        isOpen={isErrorModalOpen}
         type="error"
         title="ไม่สามารถบันทึกข้อมูลได้"
         message={errorMessage}

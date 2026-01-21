@@ -292,7 +292,7 @@ const ManageDraftPackage: React.FC = () => {
       />
 
       <Modal
-        open={deleteModalState.isOpen}
+        isOpen={deleteModalState.isOpen}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         confirmText="ลบ"
@@ -302,7 +302,7 @@ const ManageDraftPackage: React.FC = () => {
       />
 
       <Modal
-        open={bulkDeleteModalState.open}
+        isOpen={bulkDeleteModalState.open}
         title="ลบแพ็กเกจหลายรายการ"
         text={`คุณต้องการลบทั้งหมด ${bulkDeleteModalState.rows.length} รายการหรือไม่?`}
         confirmText="ลบทั้งหมด"

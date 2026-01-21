@@ -541,7 +541,7 @@ export default function CreateHomestaysPage() {
 
       {/* Modal ยืนยัน */}
       <Modal
-        open={isConfirmOpen}
+        isOpen={isConfirmOpen}
         title="ยืนยันการบันทึกที่พัก"
         text={`คุณต้องการบันทึกที่พักจำนวน ${pendingPayloads?.length ?? 0} รายการหรือไม่`}
         confirmText="ยืนยัน"

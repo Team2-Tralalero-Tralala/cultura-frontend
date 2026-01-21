@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { getCommunityDetailByMember } from "@/Libs/CommunityService";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 /**
  * คำอธิบาย: แปลงค่าข้อความสำหรับแสดงผล หากไม่มีข้อมูลหรือเป็นค่าว่างจะแสดง "-"
@@ -342,11 +342,11 @@ export default function DetailCommunityPage() {
     <div className="w-full space-y-4">
       {/* Breadcrumb นำทางหน้า */}
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: community?.name || "ชุมชน",
             to: "member/community/own", // path ของหน้าปัจจุบัน
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>

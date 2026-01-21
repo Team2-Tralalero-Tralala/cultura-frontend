@@ -2,8 +2,6 @@
  * คำอธิบาย : Component สำหรับเลือกตำแหน่งบนแผนที่ (MapPicker)
  * ใช้ React Leaflet ในการแสดงแผนที่, Marker และ Popup
  * รองรับการค้นหาพิกัดด้วย OpenStreetMapProvider
- * Input: props (startingPosition?, startingZoom?, onChange?)
- * Output: UI Map Picker ที่เลือกตำแหน่งและคืนค่า lat/lng ผ่าน onChange
  */
 
 import React from "react";
@@ -81,7 +79,7 @@ function MapPicker({
     onChange(position);
   }, [position, onChange]);
 
-  const [_popOverOpen, _setPopOverOpen] = React.useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 
   // Provider สำหรับค้นหาสถานที่ จำกัดในประเทศไทย
   const providerRef = React.useRef(
@@ -93,7 +91,7 @@ function MapPicker({
         limit: 5,
         addressdetails: 1,
       },
-    })
+    }),
   );
 
   // sync lat/lng กับตำแหน่ง marker
@@ -126,7 +124,7 @@ function MapPicker({
     try {
       const results = await providerRef.current.search({ query: q.trim() });
       if (results.length > 0) {
-        _setPopOverOpen(true);
+        setIsPopoverOpen(true);
         setResults(results);
       }
     } catch (e) {
@@ -155,7 +153,7 @@ function MapPicker({
     if (typeof x === "number" && typeof y === "number") {
       setPosition([y, x]);
     }
-    _setPopOverOpen(false);
+    setIsPopoverOpen(false);
   };
   return (
     <div className="flex flex-col gap-2 ">
@@ -193,7 +191,7 @@ function MapPicker({
             หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด
           </span>
           {/* Search box + strictly controlled popover */}
-          <Popover open={_popOverOpen} onOpenChange={(v) => _setPopOverOpen(v)}>
+          <Popover open={isPopoverOpen} onOpenChange={(value) => setIsPopoverOpen(value)}>
             {/* Non-interactive trigger (won't toggle on click) */}
             <PopoverTrigger asChild>
               <span
@@ -245,9 +243,9 @@ function MapPicker({
 
             {/* Popover matches the anchor width */}
             <PopoverContent
-              className="z-[99999] p-0 w-[var(--radix-popover-trigger-width)]"
+              className="z-99999 p-0 w-(--radix-popover-trigger-width)"
               sideOffset={6}
-              onOpenAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(event) => event.preventDefault()}
             >
               {/* Results list */}
               <div className="max-h-72 overflow-auto">
@@ -296,7 +294,7 @@ function MapPicker({
           <ClickToMoveMarker
             onPick={(latlng) => {
               setPosition(latlng); // move marker
-              _setPopOverOpen(false); // optional: close results popover
+              setIsPopoverOpen(false); // optional: close results popover
             }}
           />
 
@@ -324,7 +322,7 @@ function MapPicker({
               if (!map) return;
               const c = map.getCenter();
               setPosition([c.lat, c.lng]); // move main marker to current center
-              _setPopOverOpen(false); // optional
+              setIsPopoverOpen(false); // optional
             }}
           >
             ปักหมุด

@@ -296,7 +296,7 @@ export function ManageStorePage() {
       </div>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการลบร้านค้า"
         text={
           deleteIds?.length > 1

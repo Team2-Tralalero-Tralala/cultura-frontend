@@ -10,8 +10,8 @@ import MemberRoutes from "@/Layouts/Member/MemberRoutes";
 
 import ProtectedRoute from "@/Libs/ProtectedRoute";
 import Home from "@/Pages/Home";
-import LoginAdmin from "@/Pages/LoginAdmin";
-import LoginTourist from "@/Pages/LoginTourist";
+import LoginAdmin from "@/Pages/LoginAdminPage";
+import LoginTourist from "@/Pages/LoginTouristPage";
 import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayPage";
 import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
 import EditProfileTourist from "@/Pages/Tourist/EditProfilePage";

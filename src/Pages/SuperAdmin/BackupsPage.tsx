@@ -369,7 +369,7 @@ export default function BackupsPage() {
 
       {/* Delete Confirmation Modal */}
       <Modal
-        open={deleteModal.isOpen}
+        isOpen={deleteModal.isOpen}
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
         title={

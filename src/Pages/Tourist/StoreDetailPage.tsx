@@ -8,7 +8,7 @@ import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { getStoreWithOtherStoresInCommunity } from "@/Libs/StoreService";
-import { Tag } from "@/Components/Tag";
+import Tag from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import Thumbnails from "@/Components/Thumbnails";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";

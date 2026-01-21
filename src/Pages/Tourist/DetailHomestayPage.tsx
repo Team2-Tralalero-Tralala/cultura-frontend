@@ -13,7 +13,7 @@ import type { HomestayDetail } from "@/Types/Homestay";
 import NavbarTourist from "@/Components/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { Tag } from "@/Components/Tag";
+import Tag from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";

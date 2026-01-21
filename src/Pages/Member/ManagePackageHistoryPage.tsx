@@ -306,7 +306,7 @@ export default function ManagePackageHistoryPage() {
       </div>
 
       <Modal
-        open={isOpenConfirm}
+        isOpen={isOpenConfirm}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         onConfirm={async () => {

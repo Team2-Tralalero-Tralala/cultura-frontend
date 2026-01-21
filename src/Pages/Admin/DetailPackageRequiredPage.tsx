@@ -17,7 +17,7 @@ import * as PackageRequestService from "@/Libs/PackageService";
 import MapPicker from "@/Components/MapPicker";
 import "leaflet/dist/leaflet.css";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
+import ModalReject from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import L from "leaflet";
 
@@ -553,7 +553,7 @@ export default function DetailPackageRequiredPage() {
       )}
 
       <Modal
-        open={isApproveModalOpen}
+        isOpen={isApproveModalOpen}
         title="ยืนยันการอนุมัติ"
         text={
           packageRequestDetail?.name
@@ -569,8 +569,8 @@ export default function DetailPackageRequiredPage() {
         onCancel={closeApproveModal}
       />
 
-      <RejectModal
-        open={isRejectModalOpen}
+      <ModalReject
+        isOpen={isRejectModalOpen}
         title="ปฏิเสธคำขออนุมัติ"
         text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
         confirmText="ส่ง"

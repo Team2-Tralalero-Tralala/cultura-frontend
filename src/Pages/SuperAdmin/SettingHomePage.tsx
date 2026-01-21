@@ -8,7 +8,7 @@
  *    - การเปิด/ปิด ระบบ
  * ใช้ร่วมกับ Service สำหรับตรวจสอบสถานะเซิร์ฟเวอร์
  */
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { fetchServerStatus } from "@/Libs/ServerStatusService";
 import { Icon } from "@iconify/react";
 import React from "react";
@@ -52,11 +52,11 @@ export function SettingHomePage() {
   return (
     <div className="space-y-4 h-full">
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "การตั้งค่า",
             to: "/super/setting",
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>

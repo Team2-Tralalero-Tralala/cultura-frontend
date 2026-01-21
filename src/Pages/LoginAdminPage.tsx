@@ -1,9 +1,16 @@
+/**
+ * คำอธิบาย : Component LoginAdminPage
+ */
 import Button from "@/Components/Button";
 import AuthLayout from "@/Layouts/AuthLayout";
 import { Link } from "react-router-dom";
-import { LoginAdminCard } from "@/Components/LoginAdminCard";
-
-export default function LoginAdmin() {
+import LoginAdminCard from "@/Components/LoginAdminCard";
+/**
+ * คำอธิบาย : Component LoginAdminPage
+ * Input : ไม่มี
+ * Output : React Component ที่แสดงหน้า Login Admin
+ */
+export default function LoginAdminPage() {
   return (
     <AuthLayout
       rightLabel="ยังไม่มีบัญชี"

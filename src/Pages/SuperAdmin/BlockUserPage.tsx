@@ -283,7 +283,7 @@ export function BlockUserPage() {
       />
 
       <Modal
-        open={modalOpen}
+        isOpen={modalOpen}
         title={modalTitle}
         text={modalText}
         confirmText="ยืนยัน"

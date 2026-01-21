@@ -1,7 +1,7 @@
 /**
  * คำอธิบาย: Component สำหรับแสดงหน้าประวัติการเข้าใช้งาน (Authentication Log) หน้าที่แสดงรายการและค้นหา
  */
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import React, { useState } from "react";
@@ -138,11 +138,11 @@ export default function AuthentionLogPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-2 w-full">
         <div>
-          <Breadcrumb
+          <BreadcrumbNavigation
             current={{
               label: "ประวัติการเข้าใช้งาน",
               to: "/super/logs",
-              fromSidebar: true,
+              isFromSidebar: true,
             }}
           />
         </div>

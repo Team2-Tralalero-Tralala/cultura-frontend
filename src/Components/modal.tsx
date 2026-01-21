@@ -1,13 +1,11 @@
-import React from "react";
-import { AlertCircle } from "lucide-react";
-/* 
+/*
  * คำอธิบาย : Component Modal สำหรับยืนยันการทำรายการต่างๆ
  * จะมีปุ่มให้เลือก 2 แบบ คือ ยืนยัน และ ยกเลิก
  * เมื่อเลือกยืนยัน จะทำการยืนยันการทำรายการ
  * เมื่อเลือกยกเลิก จะปิด Modal โดยไม่ทำการยืนยัน
- * Input  : isOpen, title, message, confirmText, cancelText, onConfirm, onCancel
- * Output : หน้า UI สำหรับยืนยันการทำรายการ
  */
+import React from "react";
+import { AlertCircle } from "lucide-react";
 interface ModalProps {
   isOpen: boolean;
   title?: string;
@@ -40,12 +38,8 @@ const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* ข้อความ */}
-        <h2 className="text-[32px] font-bold font-sarabun mb-2">
-          {title}
-        </h2>
-        <p className="text-[20px] text-black font-sarabun mb-6">
-          {message}
-        </p>
+        <h2 className="text-[32px] font-bold font-sarabun mb-2">{title}</h2>
+        <p className="text-[20px] text-black font-sarabun mb-6">{message}</p>
 
         {/* ปุ่ม */}
         <div className="flex justify-center gap-4">

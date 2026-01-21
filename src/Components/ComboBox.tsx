@@ -55,76 +55,76 @@ export function Combobox({
   onClose = () => {},
 }: ComboBoxProps) {
   // State สำหรับควบคุมสถานะการเปิด/ปิด Popover
-  const [_open, _setOpen] = React.useState(isOpen);
+  const [isOpenState, setIsOpenState] = React.useState(isOpen);
 
   // State สำหรับเก็บค่าที่เลือก
-  const [_value, _setValue] = React.useState(value);
+  const [currentValue, setCurrentValue] = React.useState(value);
 
   // State สำหรับเก็บข้อความที่จะแสดงใน input
-  const [_label, _setLabel] = React.useState("");
+  const [currentLabel, setCurrentLabel] = React.useState("");
 
   /*
-   * คำอธิบาย : อัพเดท state _value และ _label เมื่อ value หรือ items เปลี่ยน
+   * คำอธิบาย : อัพเดท state currentValue และ currentLabel เมื่อ value หรือ items เปลี่ยน
    * Input : ไม่มี
-   * Output : อัพเดท state _value และ _label ตามค่า value ที่รับเข้ามา
+   * Output : อัพเดท state currentValue และ currentLabel ตามค่า value ที่รับเข้ามา
    */
   React.useEffect(() => {
-    _setValue(value);
+    setCurrentValue(value);
     if (value) {
       const selectedItem = items.find((item) => item.value === value);
       if (selectedItem) {
-        _setLabel(selectedItem.label);
+        setCurrentLabel(selectedItem.label);
       } else {
-        _setLabel("");
+        setCurrentLabel("");
       }
     } else {
-      _setLabel("");
+      setCurrentLabel("");
     }
   }, [value, items]);
 
   /*
-   * คำอธิบาย : ฟังก์ชัน setOpen
+   * คำอธิบาย : ฟังก์ชัน handleSetOpen
    * Input : open (boolean) - สถานะเปิด/ปิด
-   * Output : อัปเดต state _open และเรียก onOpen / onClose callback
+   * Output : อัปเดต state isOpenState และเรียก onOpen / onClose callback
    */
-  const setOpen = (open: boolean) => {
-    _setOpen(open);
+  const handleSetOpen = (open: boolean) => {
+    setIsOpenState(open);
     if (open) onOpen();
     else onClose();
   };
 
   /*
-   * คำอธิบาย : ฟังก์ชัน setValue
-   * Input : value (string) - ค่าที่เลือก
-   * Output : อัปเดต state _value และเรียก onChange callback
+   * คำอธิบาย : ฟังก์ชัน handleSetValue
+   * Input : newValue (string) - ค่าที่เลือก
+   * Output : อัปเดต state currentValue และเรียก onChange callback
    */
-  const setValue = (value: string) => {
-    _setValue(value);
-    onChange(value);
+  const handleSetValue = (newValue: string) => {
+    setCurrentValue(newValue);
+    onChange(newValue);
   };
 
   // ส่วนแสดงผล UI หลักของ Combobox
   return (
-    <Popover open={_open} onOpenChange={setOpen}>
+    <Popover open={isOpenState} onOpenChange={handleSetOpen}>
       <Command>
         <PopoverTrigger>
           <div
-            aria-expanded={_open}
+            aria-expanded={isOpenState}
             className="flex border justify-between items-center rounded-xl cursor-pointer"
           >
             {/* Input สำหรับค้นหา + ไอคอนแสดงสถานะ */}
             <div className="flex justify-between items-center flex-1 border-r pr-2">
               <CommandInput
                 placeholder={`ค้นหา${title}...`}
-                value={_label}
+                value={currentLabel}
                 onValueChange={(val) => {
-                  _setLabel(val);
-                  setOpen(true);
+                  setCurrentLabel(val);
+                  handleSetOpen(true);
                 }}
-                onClick={() => setOpen(true)}
+                onClick={() => handleSetOpen(true)}
               />
               <Icon
-                icon={!_open ? "prime:sort-down-fill" : "prime:sort-up-fill"}
+                icon={!isOpenState ? "prime:sort-down-fill" : "prime:sort-up-fill"}
                 width="24"
                 height="24"
                 className="opacity-50"
@@ -144,16 +144,16 @@ export function Combobox({
                   value={item.value}
                   keywords={[item.label, item.value]}
                   onSelect={() => {
-                    setValue(item.value === _value ? "" : item.value);
-                    _setLabel(item.label === _label ? "" : item.label);
-                    setOpen(false);
+                    handleSetValue(item.value === currentValue ? "" : item.value);
+                    setCurrentLabel(item.label === currentLabel ? "" : item.label);
+                    handleSetOpen(false);
                   }}
                 >
                   {/* แสดง CheckIcon เมื่อค่าถูกเลือก */}
                   <CheckIcon
                     className={cn(
                       "mr-2 h-4 w-4",
-                      _value === item.value ? "opacity-100" : "opacity-0",
+                      currentValue === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                   <div className="text-center flex-1">{item.label}</div>

@@ -284,7 +284,7 @@ const EditMemberPage: React.FC = () => {
       </form>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขข้อมูลสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
@@ -297,7 +297,7 @@ const EditMemberPage: React.FC = () => {
       />
 
       <ModalAlert
-        open={isSuccessModalOpen}
+        isOpen={isSuccessModalOpen}
         type="success"
         title="แก้ไขสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกแก้ไขเรียบร้อยแล้ว"

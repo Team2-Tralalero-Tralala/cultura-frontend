@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Tag } from "@/Components/Tag";
+import Tag from "@/Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";

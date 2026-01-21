@@ -607,7 +607,7 @@ const EditAccountPage: React.FC = () => {
       </form>
 
       <Modal
-        open={showConfirm}
+        isOpen={showConfirm}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่"
         confirmText="ยืนยัน"
@@ -620,7 +620,7 @@ const EditAccountPage: React.FC = () => {
       />
 
       <ModalAlert
-        open={showSuccessModal}
+        isOpen={showSuccessModal}
         type="success"
         title="แก้ไขบัญชีสำเร็จ"
         message="ข้อมูลบัญชีผู้ใช้ถูกแก้ไขเรียบร้อยแล้ว"

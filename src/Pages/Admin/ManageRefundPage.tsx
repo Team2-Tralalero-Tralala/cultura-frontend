@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 // Components
 import DataTable from "@/Components/Tables/DataTable";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
+import ModalReject from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 
@@ -340,7 +340,7 @@ export default function ManageRefundPage() {
 
       {/* Modal ยืนยันการอนุมัติ */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการอนุมัติคำขอคืนเงิน"
         text={
           selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""
@@ -361,8 +361,8 @@ export default function ManageRefundPage() {
       />
 
       {/* Modal ปฏิเสธคำขอ */}
-      <RejectModal
-        open={isRejectModalOpen}
+      <ModalReject
+        isOpen={isRejectModalOpen}
         title="ปฏิเสธคำขอคืนเงิน"
         text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
         confirmText="ส่ง"

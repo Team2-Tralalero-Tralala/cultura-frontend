@@ -2,6 +2,7 @@
  * คำอธิบาย : Component การ์ดแสดงประวัติการจอง
  * แสดงรายการประวัติการจองในรูปแบบการ์ด
  */
+
 import { useNavigate } from "react-router-dom";
 
 export type BookingStatus = "Payment" | "Complete" | "Cancel" | "Review" | string;
@@ -22,10 +23,13 @@ interface BookingHistoryCardListProps {
   bookings: BookingItem[];
 }
 
-/*
- * คำอธิบาย: ฟังก์ชันสำหรับแสดงรายการประวัติการจอง
- * Input : isLoading, bookings
- * Output : -
+/**
+ * คำอธิบาย: แสดงรายการประวัติการจอง
+ * Input:
+ *   - isLoading: สถานะกำลังโหลดข้อมูล
+ *   - bookings: รายการข้อมูลการจอง
+ * Output:
+ *   - JSX Element แสดงรายการการ์ด หรือข้อความเมื่อไม่มีข้อมูล
  */
 function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListProps) {
   const navigate = useNavigate();

@@ -1426,7 +1426,7 @@ export const EditPackagePage = () => {
       </form>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการบันทึก"
         text="คุณต้องการบันทึกการแก้ไขแพ็กเกจนี้ใช่หรือไม่?"
         confirmText="ยืนยัน"

@@ -2,7 +2,7 @@
  * คำอธิบาย: หน้า Dashboard ของ Tourist
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
-import { LineGraph } from "@/Components/LineGraph";
+import LineGraph from "@/Components/LineGraph";
 import React from "react";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import {

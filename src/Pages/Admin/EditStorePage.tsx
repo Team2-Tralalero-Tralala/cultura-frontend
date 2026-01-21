@@ -524,7 +524,7 @@ export function EditStorePage() {
 
         {/* Modal Confirm */}
         <Modal
-          open={isConfirmModalOpen}
+          isOpen={isConfirmModalOpen}
           title="ยืนยันการแก้ไขร้านค้า"
           text="คุณต้องการยืนยันการแก้ไขร้านค้านี้หรือไม่"
           onConfirm={async () => {
@@ -534,7 +534,7 @@ export function EditStorePage() {
           onCancel={() => setIsConfirmModalOpen(false)}
         />
         <Modal
-          open={isCancelConfirmModalOpen}
+          isOpen={isCancelConfirmModalOpen}
           title="ยืนยันการยกเลิก"
           text="ต้องการยกเลิกการแก้ไขร้านค้าหรือไม่"
           onConfirm={() => {
@@ -544,7 +544,7 @@ export function EditStorePage() {
           onCancel={() => setIsCancelConfirmModalOpen(false)}
         />
         <ModalAlert
-          open={isAlertOpen}
+          isOpen={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}

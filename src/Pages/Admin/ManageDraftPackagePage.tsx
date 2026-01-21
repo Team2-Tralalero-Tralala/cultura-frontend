@@ -276,7 +276,7 @@ export default function ManageDraftPackagePage() {
 
       {/* Modal : ลบเดี่ยว */}
       <Modal
-        open={deleteModal.isOpen}
+        isOpen={deleteModal.isOpen}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         confirmText="ลบ"
@@ -287,7 +287,7 @@ export default function ManageDraftPackagePage() {
 
       {/* Modal : ลบหลายรายการ */}
       <Modal
-        open={bulkDeleteModal.isOpen}
+        isOpen={bulkDeleteModal.isOpen}
         title="ลบแพ็กเกจหลายรายการ"
         text={`คุณต้องการลบทั้งหมด ${bulkDeleteModal.rows.length} รายการหรือไม่?`}
         confirmText="ลบทั้งหมด"

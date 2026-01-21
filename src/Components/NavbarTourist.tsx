@@ -13,36 +13,27 @@ import { Icon } from "@iconify/react";
  * Input : ไม่มี
  * Output : ส่วนแสดงผล Navbar
  */
-const NavbarTourist = () => {
+export default function NavbarTourist() {
   const { user, logout: logoutAuth } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับเข้าสู่ระบบ
-   * Input : ไม่มี
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับเข้าสู่ระบบ
    */
-  const login = () => {
+  const handleLogin = () => {
     navigate("/guest/login");
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
-   * Input : ไม่มี
-   * Output : void
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับออกจากระบบโดยเรียกใช้ logout จาก AuthContext และปิด dropdown
    */
-  const logout = async () => {
+  const handleLogout = async () => {
     await logoutAuth();
     setIsOpen(false);
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับสลับสถานะการเปิด-ปิด dropdown
-   * Input : ไม่มี
-   * Output : void
-   */
-  const toggleDropdown = () => {
+  const handleToggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
@@ -70,7 +61,7 @@ const NavbarTourist = () => {
             <div className="relative">
               {/* ปุ่มโปรไฟล์ */}
               <button
-                onClick={toggleDropdown}
+                onClick={handleToggleDropdown}
                 className="flex items-center justify-between gap-3 hover:text-green-500 p-2"
               >
                 {user.fname} {user.lname}
@@ -98,7 +89,7 @@ const NavbarTourist = () => {
                     </Link>
                   </li>
                   <li
-                    className="flex items-center gap-2 block w-max hover:text-green-500 py-2 px-3 cursor-pointer"
+                    className="flex items-center gap-2 w-max hover:text-green-500 py-2 px-3 cursor-pointer"
                     onClick={() => navigate("/tourist/change-password")}
                   >
                     <Icon icon="material-symbols:lock" className="text-xl" />
@@ -113,7 +104,7 @@ const NavbarTourist = () => {
                   </li>
 
                   <li
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="flex items-center gap-2 w-max hover:text-green-500 py-2 px-3 cursor-pointer"
                   >
                     <Icon icon="majesticons:logout-line" className="text-xl" />
@@ -131,7 +122,7 @@ const NavbarTourist = () => {
               </button>
 
               <button
-                onClick={login}
+                onClick={handleLogin}
                 className="bg-[#00BF6A] px-6 py-1.5 rounded-full border-2 border-transparent hover:text-white text-base"
               >
                 เข้าสู่ระบบ
@@ -142,6 +133,4 @@ const NavbarTourist = () => {
       </nav>
     </header>
   );
-};
-
-export default NavbarTourist;
+}

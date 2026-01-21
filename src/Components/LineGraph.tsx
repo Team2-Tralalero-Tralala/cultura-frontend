@@ -32,7 +32,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 /*
@@ -50,19 +50,23 @@ export type LineGraphProps = {
   labelX?: string;
 };
 
-/*
- * Component: LineGraph
- * คำอธิบาย : แสดงกราฟ Line Chart พร้อม Area Fill สำหรับข้อมูลการจองแพ็กเกจ
- * Input  : props { labels, data, title? }
- * Output : JSX Element ของกราฟ
+/**
+ * คำอธิบาย: แสดงกราฟ Line Chart พร้อม Area Fill สำหรับข้อมูลการจองแพ็กเกจ
+ * Input:
+ *   - labels: ข้อมูลแกน X (วันที่)
+ *   - data: ข้อมูลแกน Y (จำนวนการจอง)
+ *   - title: ชื่อกราฟ
+ *   - className: คลาสเสริม
+ *   - labelX: ชื่อแกน X
+ * Output: JSX Element ของกราฟ
  */
-export const LineGraph: React.FC<LineGraphProps> = ({
+export default function LineGraph({
   labels,
   data,
   title = "จำนวนการจองแพ็กเกจทั้งหมด",
   className = "w-full h-64 p-4 bg-white rounded-lg border border-gray-200 shadow-sm",
   labelX,
-}) => {
+}: LineGraphProps) {
   /*
    * คำอธิบาย : กำหนดข้อมูลและ configuration สำหรับ Chart.js
    * Input : ไม่มี
@@ -179,4 +183,4 @@ export const LineGraph: React.FC<LineGraphProps> = ({
       <Line data={chartData} options={options} />
     </div>
   );
-};
+}

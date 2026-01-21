@@ -19,7 +19,7 @@ import type {
   BulkAction,
   Pagination,
 } from "@/Components/Tables/Types";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 export type TagRow = { id: number; name: string };
 
@@ -214,11 +214,11 @@ export function ManageTagPage() {
     <div className="space-y-4 cursor-default">
       <div className="flex flex-col gap-2 w-full">
         <div>
-          <Breadcrumb
+          <BreadcrumbNavigation
             current={{
               label: "จัดการประเภท",
               to: "/super/tags",
-              fromSidebar: true,
+              isFromSidebar: true,
             }}
           />
         </div>
@@ -267,7 +267,7 @@ export function ManageTagPage() {
       </div>
 
       <ModalConfirm
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         onConfirm={handleFinalConfirm}
         onCancel={() => {
           setIsConfirmModalOpen(false);

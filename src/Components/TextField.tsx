@@ -20,20 +20,22 @@ function EyeIcon({ hidden }: { hidden: boolean }) {
     <Icon icon="mdi:eye-outline" style={{ fontSize: "24px" }} />
   );
 }
-/*
- * ฟังก์ชัน : TextField
- * คำอธิบาย : Component หลักสำหรับ input ฟอร์ม รองรับ text, password, และ tel
- * Input :
- *   - id (string) : id ของ input element
- *   - label (string) : label ที่แสดงด้านบนของ input
- *   - required (boolean) : แสดงเครื่องหมาย * ถ้าเป็นฟิลด์บังคับ
- *   - placeholder (string) : ข้อความ placeholder ใน input
- *   - type (string) : ประเภท input เช่น "text", "password", "tel"
- *   - value (string) : ค่าปัจจุบันของ input
- *   - onChange (function) : callback เมื่อค่ามีการเปลี่ยนแปลง
- *   - error (boolean) : สถานะ error
- *   - helperText (string) : ข้อความแสดง error หรือคำแนะนำ
- * Output : React component <BaseFieldProps> สำหรับใช้งานเป็น input ในฟอร์ม
+/**
+ * คำอธิบาย: Component สำหรับสร้าง TextField (อินพุตฟอร์ม)
+ * รองรับ text, password (พร้อม toggle), และเบอร์โทรศัพท์ (+66)
+ * Input:
+ *   - id: string
+ *   - label: string
+ *   - required: boolean
+ *   - placeholder: string
+ *   - type: string (text, password, tel)
+ *   - value: string
+ *   - name: string
+ *   - readOnly: boolean
+ *   - onChange: function
+ *   - error: boolean
+ *   - helperText: string
+ * Output: JSX Element ของ Input Field
  */
 const TextField: React.FC<BaseFieldProps> = ({
   id,
@@ -50,9 +52,9 @@ const TextField: React.FC<BaseFieldProps> = ({
 }) => {
   const isPassword = type === "password";
   const isTel = type === "tel";
-  const [showPassword, setShowPassword] = useState(false);
+  const [isShowPassword, setIsShowPassword] = useState(false);
 
-  const currentType = isPassword ? (showPassword ? "text" : "password") : type;
+  const currentType = isPassword ? (isShowPassword ? "text" : "password") : type;
 
   return (
     <div className="space-y-1.5">
@@ -84,7 +86,7 @@ const TextField: React.FC<BaseFieldProps> = ({
             onChange={onChange}
             value={value}
             readOnly={readOnly}
-            className={`block w-full rounded-form border-1
+            className={`block w-full rounded-form border
             ${
               error
                 ? "border-red-600 focus:ring-red-600 focus:border-red-600"
@@ -124,13 +126,13 @@ const TextField: React.FC<BaseFieldProps> = ({
         {isPassword && (
           <button
             type="button"
-            onClick={() => setShowPassword((v) => !v)}
+            onClick={() => setIsShowPassword((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-            aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
-            aria-pressed={showPassword}
-            title={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+            aria-label={isShowPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+            aria-pressed={isShowPassword}
+            title={isShowPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
           >
-            <EyeIcon hidden={!showPassword} />
+            <EyeIcon hidden={!isShowPassword} />
           </button>
         )}
       </div>

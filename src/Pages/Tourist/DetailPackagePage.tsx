@@ -14,7 +14,7 @@ import NavbarTourist from "@/Components/NavbarTourist";
 import CardPackage from "@/Components/CardPackage";
 import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
 import Button from "@/Components/Button";
-import { Tag } from "@/Components/Tag";
+import Tag from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import SideThumbnails from "@/Components/SideThumbnails";
 
@@ -692,7 +692,7 @@ export default function DetailPackagePage() {
                 <Button
                   type="confirm-tourist"
                   onClick={() => handleConfirmClick(packageDetail.id)}
-                  disabled={isActivityStarted}
+                  isDisabled={isActivityStarted}
                 >
                   {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : "จองเลย"}
                 </Button>

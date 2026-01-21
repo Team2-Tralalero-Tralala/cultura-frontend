@@ -13,7 +13,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import { Modal } from "@/Components/Modal/Modal";
 import Button from "@/Components/Button";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 // Types
 import type {
@@ -323,11 +323,11 @@ export function ManageAccountPage() {
       {/* Section: Header */}
       <div className="flex flex-col w-full">
         <div>
-          <Breadcrumb
+          <BreadcrumbNavigation
             current={{
               label: "จัดการบัญชี",
               to: "/super/accounts/all",
-              fromSidebar: true, // << สำคัญ : มาจาก sidebar
+              isFromSidebar: true, // << สำคัญ : มาจาก sidebar
             }}
           />
           <h1 className="text-[20px] font-bold text-black">จัดการบัญชี</h1>
@@ -384,7 +384,7 @@ export function ManageAccountPage() {
 
         {/* Section: Modal */}
         <Modal
-          open={isModalOpen}
+          isOpen={isModalOpen}
           title={modalTitle}
           text={modalText}
           confirmText="ยืนยัน"

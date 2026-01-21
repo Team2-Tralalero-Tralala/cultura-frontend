@@ -15,11 +15,11 @@ import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
+import ModalReject from "@/Components/Modal/ModalReject";
 import { fetchBookingsByAdmin, updateBookingStatus } from "@/Libs/BookingHistoryService";
 import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/Booking";
 import type { PaginationResponse } from "@/Types/Community";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 /**
  * คำอธิบาย: สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
@@ -356,11 +356,11 @@ export default function ManageBookingPage() {
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "จัดการการจอง",
             to: `/admin/bookings`,
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>
@@ -426,7 +426,7 @@ export default function ManageBookingPage() {
 
       {/* Modal: ยืนยันอนุมัติ */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title={
           selectedRow?.status?.toUpperCase() === "REFUND_PENDING"
             ? "ยืนยันการอนุมัติคำขอคืนเงิน"
@@ -463,8 +463,8 @@ export default function ManageBookingPage() {
       />
 
       {/* Modal: ปฏิเสธ + กรอกเหตุผล */}
-      <RejectModal
-        open={isRejectModalOpen}
+      <ModalReject
+        isOpen={isRejectModalOpen}
         title={
           selectedRow?.status?.toUpperCase() === "REFUND_PENDING"
             ? "ปฏิเสธคำขอคืนเงิน"

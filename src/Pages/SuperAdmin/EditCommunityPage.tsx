@@ -1069,7 +1069,7 @@ export function EditCommunityPage() {
         </div>
       </div>
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการแก้ไขข้อมูล"
         text="คุณต้องการยืนยันการแก้ไขข้อมูลหรือไม่"
         onConfirm={async () => {
@@ -1079,7 +1079,7 @@ export function EditCommunityPage() {
         onCancel={() => setIsConfirmModalOpen(false)}
       />
       <Modal
-        open={isCancelConfirmModalOpen}
+        isOpen={isCancelConfirmModalOpen}
         title="ยืนยันการยกเลิก"
         text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
         onConfirm={() => {
@@ -1089,7 +1089,7 @@ export function EditCommunityPage() {
         onCancel={() => setIsCancelConfirmModalOpen(false)}
       />
       <ModalAlert
-        open={isAlertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

@@ -13,7 +13,7 @@ import type { CommunityRow } from "@/Types/Community";
 import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับปรับข้อความให้เป็นมาตรฐานเพื่อใช้ในการค้นหา
@@ -243,11 +243,11 @@ export function ManageCommunityPage() {
   return (
     <div className="space-y-4 cursor-default">
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "จัดการชุมชน",
             to: "/super/communities",
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>
@@ -297,7 +297,7 @@ export function ManageCommunityPage() {
       />
 
       <Modal
-        open={isOpenConfirm}
+        isOpen={isOpenConfirm}
         title="ยืนยันการลบชุมชน"
         text={confirmMessage}
         onConfirm={handleConfirmDelete}

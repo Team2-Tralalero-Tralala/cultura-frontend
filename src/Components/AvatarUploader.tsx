@@ -1,10 +1,5 @@
 /**
- * File: AvatarUploader.tsx
- * Component: AvatarUploader
- * Description:
- *   - อัปโหลดรูปโปรไฟล์วงกลม พร้อมปุ่มแก้ไขเล็กๆ ที่มุมล่างขวา
- *   - แสดงไอคอนรูปคนเมื่อยังไม่มีรูป
- *   - ใช้ react-easy-crop สำหรับครอปรูป
+คำอธิบาย: Component สำหรับอัปโหลดและครอปรูปภาพโปรไฟล์
  */
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -12,21 +7,20 @@ import { Icon } from "@iconify/react";
 import Cropper from "react-easy-crop";
 
 /**
- * ฟังก์ชัน: cropImageToFile
- * วัตถุประสงค์: ครอปภาพตามขนาดที่กำหนดและแปลงกลับเป็นไฟล์ใหม่
+ * คำอธิบาย: ครอปภาพตามขนาดที่กำหนดและแปลงกลับเป็นไฟล์ใหม่
  * Input:
  *   - file: ไฟล์ต้นฉบับ (File)
  *   - area: พื้นที่ครอป (x, y, width, height)
- *   - mime: ประเภทไฟล์ (image/jpeg, image/png)
+ *   - mime: ประเภทไฟล์ (image/jpeg)
  *   - quality: คุณภาพของภาพ (0.0 - 1.0)
  * Output:
- *   - ไฟล์ภาพใหม่หลังครอป (File)
+ *   - ไฟล์ภาพใหม่หลังครอป (Promise<File>)
  */
 async function cropImageToFile(
   file: File,
   area: { x: number; y: number; width: number; height: number },
   mime = "image/jpeg",
-  quality = 0.95
+  quality = 0.95,
 ): Promise<File> {
   const imageElement = await new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -49,11 +43,11 @@ async function cropImageToFile(
     0,
     0,
     canvasElement.width,
-    canvasElement.height
+    canvasElement.height,
   );
 
   const blob: Blob = await new Promise((resolve) =>
-    canvasElement.toBlob((blobData) => resolve(blobData!), mime, quality)
+    canvasElement.toBlob((blobData) => resolve(blobData!), mime, quality),
   );
 
   const newFileName = file.name.replace(/\.(\w+)$/, "_cropped.$1");
@@ -62,27 +56,34 @@ async function cropImageToFile(
 
 /**
  * Type: AvatarUploaderProps
- * วัตถุประสงค์: ระบุ Props ที่รับเข้ามาใน AvatarUploader
+ * วัตถุประสงค์: กำหนด Props สำหรับ AvatarUploader
  */
 export type AvatarUploaderProps = {
   avatarSize?: number;
   avatarUrl?: string | null;
   onAvatarChange?: (file: File | null) => void;
-  autoCropOnPick?: boolean;
-  disabled?: boolean;
+  isAutoCropOnPick?: boolean; // Renamed from autoCropOnPick
+  isDisabled?: boolean; // Renamed from disabled
   className?: string;
 };
 
 /**
- * Component: AvatarUploader
- * วัตถุประสงค์: ใช้สำหรับอัปโหลดและครอปรูปโปรไฟล์ในรูปแบบวงกลม
+ * คำอธิบาย : Component สำหรับอัปโหลดและครอปรูปภาพโปรไฟล์
+ * Input:
+ *   - avatarSize: ขนาดของ Avatar (px)
+ *   - avatarUrl: URL ของรูปปัจจุบัน
+ *   - onAvatarChange: Callback เมื่อรูปเปลี่ยน
+ *   - isAutoCropOnPick: เปิด Modal crop อัตโนมัติเมื่อเลือกรูป
+ *   - isDisabled: สถานะปิดการใช้งาน
+ * Output:
+ *   - JSX Element สำหรับ Avatar Uploader
  */
 export default function AvatarUploader({
   avatarSize = 220,
   avatarUrl = null,
   onAvatarChange,
-  autoCropOnPick = true,
-  disabled = false,
+  isAutoCropOnPick = true,
+  isDisabled = false,
   className = "",
 }: AvatarUploaderProps) {
   const uid = useId();
@@ -103,25 +104,26 @@ export default function AvatarUploader({
 
   const avatarStyle = useMemo(
     () => ({ width: `${avatarSize}px`, height: `${avatarSize}px` }),
-    [avatarSize]
+    [avatarSize],
   );
 
   /**
-   * ฟังก์ชัน: pickAvatar
-   * วัตถุประสงค์: เปิดหน้าต่างเลือกไฟล์ภาพจากเครื่อง
+   * คำอธิบาย: เปิดหน้าต่างเลือกไฟล์
+   * input: ไม่มี
+   * output: ไม่มี
    */
-  const pickAvatar = () => !disabled && inputRef.current?.click();
+  const pickAvatar = () => !isDisabled && inputRef.current?.click();
 
   /**
-   * ฟังก์ชัน: handleAvatarPicked
-   * วัตถุประสงค์: เมื่อผู้ใช้เลือกไฟล์ภาพ → เก็บไฟล์ลง state และเตรียมครอป
-   * Input: event (React.ChangeEvent<HTMLInputElement>)
+   * คำอธิบาย: จัดการเมื่อมีการเลือกไฟล์
+   * Input: event (Change Event)
+   * Output: ไม่มี
    */
   const handleAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const selectedFile = event.target.files?.[0] ?? null;
     setAvatarFile(selectedFile);
     event.currentTarget.value = "";
-    if (autoCropOnPick && selectedFile && selectedFile.type.startsWith("image/")) {
+    if (isAutoCropOnPick && selectedFile && selectedFile.type.startsWith("image/")) {
       setIsCropping(true);
       setCropZoom(1);
       setCropPosition({ x: 0, y: 0 });
@@ -132,9 +134,9 @@ export default function AvatarUploader({
   };
 
   /**
-   * ฟังก์ชัน: onCropComplete
-   * วัตถุประสงค์: เก็บตำแหน่งและขนาดพื้นที่ที่ผู้ใช้ครอปไว้ใน state
-   * Input: areaPixels (ตำแหน่งครอปจาก react-easy-crop)
+   * คำอธิบาย: บันทึกตำแหน่งการครอป
+   * Input: _unused, areaPixels
+   * Output: ไม่มี
    */
   const onCropComplete = (_unused: any, areaPixels: any) => {
     setCropPixels({
@@ -146,8 +148,9 @@ export default function AvatarUploader({
   };
 
   /**
-   * ฟังก์ชัน: applyCrop
-   * วัตถุประสงค์: ครอปภาพตามขนาดที่เลือกและอัปเดตภาพใหม่
+   * คำอธิบาย: ยืนยันการครอปและสร้างไฟล์ใหม่
+   * Input: ไม่มี
+   * Output: ไม่มี
    */
   const applyCrop = async () => {
     if (!isCropping || !cropPixels || !avatarFile) return;
@@ -158,15 +161,15 @@ export default function AvatarUploader({
   };
 
   /**
-   * ฟังก์ชัน: useOriginal
-   * วัตถุประสงค์: ใช้ภาพต้นฉบับโดยไม่ครอป
+   * คำอธิบาย: ใช้รูปต้นฉบับโดยไม่ครอป
+   * Input: ไม่มี
+   * Output: ไม่มี
    */
   const useOriginal = () => {
     onAvatarChange?.(avatarFile ?? null);
     setIsCropping(false);
   };
 
-  // Section: Render
   return (
     <>
       <div className={`relative inline-block ${className}`} style={avatarStyle}>
@@ -178,16 +181,15 @@ export default function AvatarUploader({
           className="hidden"
           onChange={handleAvatarPicked}
           aria-hidden="true"
-          disabled={disabled}
+          disabled={isDisabled}
         />
 
-        {/* วงกลมแสดงรูป */}
         <div
           onClick={pickAvatar}
           className={[
             "relative overflow-hidden rounded-full border border-gray-400 bg-gray-300 flex items-center justify-center",
             "shadow-[0_4px_10px_rgba(0,0,0,0.15)]",
-            disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-gray-200",
+            isDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-gray-200",
           ].join(" ")}
           style={avatarStyle}
         >
@@ -205,11 +207,10 @@ export default function AvatarUploader({
           )}
         </div>
 
-        {/* ปุ่มแก้ไข (ดินสอ) */}
         <button
           type="button"
           onClick={pickAvatar}
-          disabled={disabled}
+          disabled={isDisabled}
           className="absolute bottom-4 right-4 w-8 h-8 flex items-center justify-center 
            rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-50"
         >
@@ -217,10 +218,9 @@ export default function AvatarUploader({
         </button>
       </div>
 
-      {/* Modal ครอปภาพ */}
       {isCropping && (
         <div
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-999 flex items-center justify-center bg-black/70"
           role="dialog"
           aria-modal="true"
         >
@@ -280,13 +280,12 @@ export default function AvatarUploader({
 }
 
 /**
- * Hook: useObjectUrl
- * วัตถุประสงค์: สร้าง URL ชั่วคราวจากไฟล์ภาพสำหรับแสดง preview
+ * คำอธิบาย: สร้าง Object URL สำหรับ Preview
  * Input:
- *   - file: ไฟล์ภาพ (File | null)
- *   - fallbackUrl: URL สำรองถ้าไม่มีไฟล์
+ *   - file: ไฟล์ภาพ (File)
+ *   - fallbackUrl: URL เดิม (String)
  * Output:
- *   - URL ของภาพ (string | null)
+ *   - URL ที่ใช้แสดงผล (String)
  */
 function useObjectUrl(file: File | null, fallbackUrl: string | null) {
   const [url, setUrl] = useState<string | null>(fallbackUrl ?? null);

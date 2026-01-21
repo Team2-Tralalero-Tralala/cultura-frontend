@@ -253,7 +253,7 @@ export default function DetailBookingPage() {
       </div>
 
       <Modal
-        open={isOpenApproveModal}
+        isOpen={isOpenApproveModal}
         title="อนุมัติการจองนี้หรือไม่?"
         text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการอนุมัติการจองนี้"
         confirmText="ยืนยัน"
@@ -263,7 +263,7 @@ export default function DetailBookingPage() {
       />
 
       <ModalReject
-        open={isOpenRejectModal}
+        isOpen={isOpenRejectModal}
         title="ปฎิเสธคำขอการจอง"
         text="กรุณากรอกเหตุผลการปฎิเสธ เพื่อส่งให้นักท่องเที่ยว"
         confirmText="ยืนยัน"

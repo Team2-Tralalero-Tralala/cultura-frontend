@@ -16,20 +16,19 @@ function RequiredMark() {
   return <span className="text-red-600"> *</span>;
 }
 
-/*
- * ฟังก์ชัน : TextField
- * คำอธิบาย : Component หลักสำหรับ input ฟอร์ม รองรับ text, password, และ tel
- * Input :
+/**
+ * คำอธิบาย: Component หลักสำหรับ TextArea input ฟอร์ม
+ * Input:
  *   - id (string) : id ของ input element
  *   - label (string) : label ที่แสดงด้านบนของ input
  *   - required (boolean) : แสดงเครื่องหมาย * ถ้าเป็นฟิลด์บังคับ
  *   - placeholder (string) : ข้อความ placeholder ใน input
- *   - type (string) : ประเภท input เช่น "text", "password", "tel"
  *   - value (string) : ค่าปัจจุบันของ input
  *   - onChange (function) : callback เมื่อค่ามีการเปลี่ยนแปลง
  *   - error (boolean) : สถานะ error
  *   - helperText (string) : ข้อความแสดง error หรือคำแนะนำ
- * Output : React component <TextField> สำหรับใช้งานเป็น input ในฟอร์ม
+ *   - rows (number) : จำนวนแถว (default: 4)
+ * Output: React component <TextArea> สำหรับใช้งานเป็น input ในฟอร์ม
  */
 const TextArea: React.FC<BaseFieldProps> = ({
   id,
@@ -68,7 +67,7 @@ const TextArea: React.FC<BaseFieldProps> = ({
           onChange={onChange}
           value={value}
           rows={rows}
-          className={`block w-full rounded-form border-1 
+          className={`block w-full rounded-form border 
             ${
               error
                 ? "border-red-600 focus:ring-red-600 focus:border-red-600"

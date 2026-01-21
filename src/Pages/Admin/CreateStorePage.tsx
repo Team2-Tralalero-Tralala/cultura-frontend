@@ -448,7 +448,7 @@ export function CreateStorePage() {
           </div>
         </div>
         <Modal
-          open={isConfirmModalOpen}
+          isOpen={isConfirmModalOpen}
           title="ยืนยันการสร้างร้านค้า"
           text="คุณต้องการยืนยันการสร้างร้านค้าหรือไม่"
           onConfirm={async () => {
@@ -458,7 +458,7 @@ export function CreateStorePage() {
           onCancel={() => setIsConfirmModalOpen(false)}
         />
         <Modal
-          open={isCancelConfirmModalOpen}
+          isOpen={isCancelConfirmModalOpen}
           title="ยืนยันการยกเลิก"
           text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
           onConfirm={() => {
@@ -468,7 +468,7 @@ export function CreateStorePage() {
           onCancel={() => setIsCancelConfirmModalOpen(false)}
         />
         <ModalAlert
-          open={isAlertOpen}
+          isOpen={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}

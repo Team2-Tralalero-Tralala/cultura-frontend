@@ -951,7 +951,7 @@ export default function CreateCommuninityPage() {
         </div>
       </div>
       <Modal
-        open={openConfirm}
+        isOpen={openConfirm}
         title="ยืนยันการสร้างชุมชน"
         text="คุณต้องการยืนยันการสร้างชุมชนหรือไม่"
         onConfirm={async () => {
@@ -961,7 +961,7 @@ export default function CreateCommuninityPage() {
         onCancel={() => setOpenConfirm(false)}
       />
       <Modal
-        open={openCancelConfirm}
+        isOpen={openCancelConfirm}
         title="ยืนยันการยกเลิก"
         text="เเมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
         onConfirm={() => {
@@ -971,7 +971,7 @@ export default function CreateCommuninityPage() {
         onCancel={() => setOpenCancelConfirm(false)}
       />
       <ModalAlert
-        open={alertOpen}
+        isOpen={alertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

@@ -665,7 +665,7 @@ export default function EditHomestayPage() {
 
       {/* Modal ยืนยัน */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการบันทึกข้อมูลที่พัก"
         text="คุณต้องการอัปเดตข้อมูลที่พักนี้หรือไม่"
         confirmText="ยืนยัน"

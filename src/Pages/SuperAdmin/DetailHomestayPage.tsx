@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Tag } from "@/Components/Tag"; // นำเข้า Tag Component
+import Tag from "@/Components/Tag"; // นำเข้า Tag Component
 import type { HomestayDetail } from "@/Types/Homestay";
 import { fetchHomestayDetail } from "@/Libs/HomestayService";
 

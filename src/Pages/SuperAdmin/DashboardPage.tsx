@@ -6,12 +6,12 @@
  * 3. ข้อมูลสถิติ (stats) - แสดงสถิติตามจังหวัด
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
-import { LineGraph } from "@/Components/LineGraph";
-import { PieGraph } from "@/Components/PieGraph";
+import LineGraph from "@/Components/LineGraph";
+import PieGraph from "@/Components/PieGraph";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
 import type { DashboardResponse } from "@/Libs/DashboardService";
@@ -487,11 +487,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 h-full">
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "รายงานและสถิติ",
             to: "/super/dashboard",
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>

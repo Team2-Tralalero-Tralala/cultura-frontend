@@ -13,7 +13,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 
@@ -299,11 +299,11 @@ export default function ManagePackagePage() {
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "จัดการแพ็กเกจ",
             to: `/admin/packages/all`,
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>
@@ -363,7 +363,7 @@ export default function ManagePackagePage() {
 
       {/* Modal สำหรับยืนยันการลบ */}
       <Modal
-        open={isDeleteModalOpen}
+        isOpen={isDeleteModalOpen}
         title="ยืนยันการลบ"
         text={`คุณต้องการลบแพ็กเกจ "${rowToDelete?.title ?? ""}" ใช่หรือไม่?`}
         confirmText="ยืนยันลบ"

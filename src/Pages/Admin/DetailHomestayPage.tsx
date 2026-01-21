@@ -8,7 +8,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Link } from "react-router-dom";
-import { Tag } from "@/Components/Tag";
+import Tag from "@/Components/Tag";
 import type { HomestayDetail } from "@/Types/Homestay";
 import { fetchHomestayDetailByAdmin } from "@/Libs/HomestayService";
 

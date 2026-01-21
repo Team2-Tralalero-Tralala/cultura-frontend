@@ -258,7 +258,7 @@ export default function ChangePasswordPage() {
       </main>
 
       <ConfirmModal
-        open={isConfirmOpen}
+        isOpen={isConfirmOpen}
         onConfirm={() => void proceedChangePassword()}
         onCancel={() => setIsConfirmOpen(false)}
         title="ยืนยันการเปลี่ยนรหัสผ่าน"
@@ -268,7 +268,7 @@ export default function ChangePasswordPage() {
       />
 
       <ModalAlert
-        open={isAlertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

@@ -23,7 +23,7 @@ export interface SubmitButtonProps {
   htmlType?: "submit" | "button" | "reset";
 
   /** ปิดการใช้งานปุ่ม */
-  disabled?: boolean;
+  isDisabled?: boolean;
 
   /** สถานะโหลด (true = หมุนโหลด, ปิดการคลิก) */
   isLoading?: boolean;
@@ -37,4 +37,3 @@ export interface SubmitButtonProps {
   /** เพิ่ม className ภายนอก (optional) */
   className?: string;
 }
-    

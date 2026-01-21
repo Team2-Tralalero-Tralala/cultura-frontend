@@ -1073,7 +1073,7 @@ export const CreatePackagePage = () => {
       </form>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการสร้างแพ็กเกจ"
         text="คุณต้องการสร้างแพ็กเกจนี้ใช่หรือไม่?"
         confirmText="ยืนยัน"

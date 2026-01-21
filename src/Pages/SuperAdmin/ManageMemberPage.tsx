@@ -340,7 +340,7 @@ export function ManageMemberPage() {
 
       {/* Section: Modal */}
       <Modal
-        open={isModalOpen}
+        isOpen={isModalOpen}
         title={modalTitle}
         text={modalText}
         confirmText="ยืนยัน"

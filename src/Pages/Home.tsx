@@ -204,7 +204,7 @@ export default function Home() {
       {!isLoading && (
         <PackageSection
           title="แพ็กเกจมาใหม่"
-          showNewBadge={true}
+          isShowNewBadge={true}
           packages={newPackages}
           onViewMore={handleViewMoreNew}
         />
@@ -214,7 +214,7 @@ export default function Home() {
       {!isLoading && (
         <PackageSection
           title="แพ็กเกจยอดนิยม"
-          showNewBadge={false}
+          isShowNewBadge={false}
           packages={popularPackages}
           onViewMore={handleViewMorePopular}
         />

@@ -8,22 +8,23 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { Icon } from "@iconify/react";
 
-type ModalProps = {
-  open: boolean;
+export interface ModalProps {
+  isOpen: boolean;
   onConfirm: () => void;
   onCancel?: () => void;
   title?: string;
   text?: string;
   confirmText?: string;
   cancelText?: string;
-};
+}
 
 const sweetAlert = withReactContent(Swal);
+
 /**
  * คำอธิบาย : Component Modal สำหรับยืนยันการทำรายการต่างๆ
  * โดยใช้ SweetAlert2 ในการแสดงกล่องข้อความยืนยัน
  * Input :
- *   - open (boolean) : ควบคุมการเปิด/ปิด Modal
+ *   - isOpen (boolean) : ควบคุมการเปิด/ปิด Modal
  *   - onConfirm (function) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยืนยัน
  *   - onCancel (function, optional) : ฟังก์ชันที่จะทำงานเมื่อผู้ใช้กดยกเลิก
  *   - title (string, optional) : ข้อความหัวข้อของ Modal
@@ -34,7 +35,7 @@ const sweetAlert = withReactContent(Swal);
  *   - แสดง SweetAlert popup เพื่อให้ผู้ใช้ยืนยันหรือยกเลิก
  */
 export const Modal: React.FC<ModalProps> = ({
-  open,
+  isOpen,
   onConfirm,
   onCancel,
   title = "TITLE",
@@ -43,7 +44,7 @@ export const Modal: React.FC<ModalProps> = ({
   cancelText = "ยกเลิก",
 }) => {
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
 
     let isFired = false;
     if (!isFired) {
@@ -120,7 +121,7 @@ export const Modal: React.FC<ModalProps> = ({
     return () => {
       isFired = true; // กัน re-run ตอน unmount
     };
-  }, [open, onConfirm, onCancel, sweetAlert]);
+  }, [isOpen, onConfirm, onCancel]);
 
   return null;
 };

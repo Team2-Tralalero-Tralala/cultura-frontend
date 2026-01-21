@@ -334,7 +334,7 @@ const CreateMemberPage: React.FC = () => {
       </form>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
@@ -347,7 +347,7 @@ const CreateMemberPage: React.FC = () => {
       />
 
       <ModalAlert
-        open={isSuccessModalOpen}
+        isOpen={isSuccessModalOpen}
         type="success"
         title="สร้างบัญชีสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกสร้างเรียบร้อยแล้ว"

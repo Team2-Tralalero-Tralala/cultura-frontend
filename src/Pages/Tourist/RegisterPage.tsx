@@ -470,7 +470,7 @@ export function RegisterPage() {
           </Button>
         </div>
         <ModalAlert
-          open={isAlertOpen}
+          isOpen={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}

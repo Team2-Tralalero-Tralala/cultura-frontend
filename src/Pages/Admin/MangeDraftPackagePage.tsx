@@ -54,7 +54,7 @@ const PackageDraftAdmin = () => {
 
   const [deleteModal, setDeleteModal] = useState({
     open: false,
-    pkg: null as Package | null,
+    packageObject: null as Package | null,
   });
 
   const [bulkDeleteModal, setBulkDeleteModal] = useState({
@@ -62,7 +62,7 @@ const PackageDraftAdmin = () => {
     rows: [] as Package[],
   });
 
- /*
+  /*
    * คำอธิบาย : ฟังก์ชันดึงรายการแพ็กเกจฉบับร่างจาก API และจัดรูปแบบข้อมูลก่อนนำไปแสดงผล
    * Input : ไม่มี
    * Output : อัปเดต state packages และ pagination
@@ -79,15 +79,12 @@ const PackageDraftAdmin = () => {
       const result = await res.json();
 
       const formatted: Package[] = Array.isArray(result.data)
-        ? result.data.map((pkg: any) => ({
-            id: pkg.id ?? 0,
-            name: pkg.name ?? "-",
-            community: pkg.community?.name ?? "-",
-            overseer: pkg.overseerPackage?.name ?? "-",
-            status:
-              pkg.statusPackage === "DRAFT"
-                ? "ฉบับร่าง"
-                : pkg.statusPackage,
+        ? result.data.map((packageObject: any) => ({
+            id: packageObject.id ?? 0,
+            name: packageObject.name ?? "-",
+            community: packageObject.community?.name ?? "-",
+            overseer: packageObject.overseerPackage?.name ?? "-",
+            status: packageObject.statusPackage === "DRAFT" ? "ฉบับร่าง" : packageObject.statusPackage,
           }))
         : [];
 
@@ -116,13 +113,8 @@ const PackageDraftAdmin = () => {
     const query = normalizeText(searchTerm);
     if (!query) return packages;
 
-    return packages.filter((pkg) => {
-      const fields = [
-        pkg.name,
-        pkg.community,
-        pkg.overseer,
-        pkg.status,
-      ].map(normalizeText);
+    return packages.filter((packageObject) => {
+      const fields = [packageObject.name, packageObject.community, packageObject.overseer, packageObject.status].map(normalizeText);
 
       return fields.some((text) => text.includes(query));
     });
@@ -148,15 +140,14 @@ const PackageDraftAdmin = () => {
    * Output : ลบข้อมูลจากระบบและโหลดข้อมูลใหม่
    */
   const handleConfirmDelete = async () => {
-    if (!deleteModal.pkg) return;
+    if (!deleteModal.packageObject) return;
 
-    setDeleteModal({ open: false, pkg: null });
+    setDeleteModal({ open: false, packageObject: null });
 
     try {
-      await axios.delete(
-        `http://localhost:3000/api/admin/packages/draft/${deleteModal.pkg.id}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`http://localhost:3000/api/admin/packages/draft/${deleteModal.packageObject.id}`, {
+        withCredentials: true,
+      });
       fetchPackages();
     } catch (err) {
       console.error("Delete error:", err);
@@ -177,7 +168,7 @@ const PackageDraftAdmin = () => {
       await axios.patch(
         `http://localhost:3000/api/admin/packages/draft/bulk-delete`,
         { ids },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setSelectedRows([]);
@@ -202,14 +193,12 @@ const PackageDraftAdmin = () => {
     {
       key: "name",
       header: "ชื่อแพ็กเกจ",
-      render: (pkg) => (
+      render: (packageObject) => (
         <span
           className="cursor-pointer hover:text-gray-800"
-          onClick={() =>
-            (window.location.href = `/admin/package/${pkg.id}`)
-          }
+          onClick={() => (window.location.href = `/admin/package/${packageObject.id}`)}
         >
-          {pkg.name}
+          {packageObject.name}
         </span>
       ),
     },
@@ -220,21 +209,16 @@ const PackageDraftAdmin = () => {
     {
       key: "setting",
       header: "จัดการ",
-      render: (pkg) => (
+      render: (packageObject) => (
         <div className="flex space-x-2 gap-2">
           <span
             className="cursor-pointer"
-            onClick={() =>
-              (window.location.href = `/admin/package/${pkg.id}/edit`)
-            }
+            onClick={() => (window.location.href = `/admin/package/${packageObject.id}/edit`)}
           >
             <PencilIcon className="w-4 h-4" />
           </span>
 
-          <span
-            className="cursor-pointer"
-            onClick={() => setDeleteModal({ open: true, pkg })}
-          >
+          <span className="cursor-pointer" onClick={() => setDeleteModal({ open: true, packageObject })}>
             <TrashIcon className="w-4 h-4" />
           </span>
         </div>
@@ -245,16 +229,11 @@ const PackageDraftAdmin = () => {
   return (
     <div className="font-sarabun bg-[#F0F0F0]">
       {/* Breadcrumb */}
-      <Breadcrumb
-        current={{ label: "ฉบับร่าง", to: "/admin/packages/draft" }}
-      />
+      <Breadcrumb current={{ label: "ฉบับร่าง", to: "/admin/packages/draft" }} />
 
       {/* Toolbar */}
       <div className="flex justify-between mb-4">
-        <SearchBarTable
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <SearchBarTable value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
 
         <button
           className="px-3 py-2 border rounded-form text-white flex items-center hover:bg-green-900"
@@ -275,9 +254,7 @@ const PackageDraftAdmin = () => {
         selectable
         onSelectedChange={(rows) => setSelectedRows(rows)}
         pagination={pagination}
-        onPageChange={(p) =>
-          setPagination((prev) => ({ ...prev, currentPage: p }))
-        }
+        onPageChange={(pagination) => setPagination((prev) => ({ ...prev, currentPage: pagination }))}
         onPageSizeChange={(limit) =>
           setPagination((prev) => ({
             ...prev,
@@ -291,18 +268,18 @@ const PackageDraftAdmin = () => {
 
       {/* Modal : ลบเดี่ยว */}
       <Modal
-        open={deleteModal.open}
+        isOpen={deleteModal.open}
         title="ยืนยันการลบแพ็กเกจ"
         text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
         confirmText="ลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteModal({ open: false, pkg: null })}
+        onCancel={() => setDeleteModal({ open: false, packageObject: null })}
       />
 
       {/* Modal : ลบหลายรายการ */}
       <Modal
-        open={bulkDeleteModal.open}
+        isOpen={bulkDeleteModal.open}
         title="ลบแพ็กเกจหลายรายการ"
         text={`คุณต้องการลบทั้งหมด ${bulkDeleteModal.rows.length} รายการหรือไม่?`}
         confirmText="ลบทั้งหมด"

@@ -8,7 +8,7 @@ import withReactContent from "sweetalert2-react-content";
 import { Icon } from "@iconify/react";
 
 interface ModalAlertProps {
-  open: boolean;
+  isOpen: boolean;
   type?: "success" | "error" | "info" | "warning";
   title?: string;
   message?: string;
@@ -19,7 +19,7 @@ interface ModalAlertProps {
  * คำอธิบาย :
  * Component ModalAlert ใช้ SweetAlert2 แสดงข้อความแจ้งเตือน
  * Input :
- *   - open (boolean) : ควบคุมการเปิด/ปิด Modal
+ *   - isOpen (boolean) : ควบคุมการเปิด/ปิด Modal
  *   - type (string, optional) : ประเภทของ Modal
  *   - title (string, optional) : ข้อความหัวข้อของ Modal
  *   - message (string, optional) : ข้อความอธิบายเพิ่มเติม
@@ -28,7 +28,7 @@ interface ModalAlertProps {
  *   - แสดง SweetAlert popup เพื่อให้ผู้ใช้ยืนยันหรือยกเลิก
  */
 export const ModalAlert: React.FC<ModalAlertProps> = ({
-  open,
+  isOpen,
   type = "info",
   title = "Alert",
   message = "",
@@ -37,7 +37,7 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
   const MySwal = withReactContent(Swal);
 
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
 
     void MySwal.fire({
       iconHtml: (
@@ -46,10 +46,10 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
             type === "success"
               ? "solar:check-circle-bold-duotone"
               : type === "error"
-              ? "solar:close-circle-bold-duotone"
-              : type === "warning"
-              ? "solar:warning-circle-bold-duotone"
-              : "solar:info-circle-bold-duotone"
+                ? "solar:close-circle-bold-duotone"
+                : type === "warning"
+                  ? "solar:warning-circle-bold-duotone"
+                  : "solar:info-circle-bold-duotone"
           }
           width={160}
           height={160}
@@ -58,10 +58,10 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
               type === "success"
                 ? "#004D2C"
                 : type === "error"
-                ? "#D92D20"
-                : type === "warning"
-                ? "#E9A100"
-                : "#004D2C",
+                  ? "#D92D20"
+                  : type === "warning"
+                    ? "#E9A100"
+                    : "#004D2C",
           }}
         />
       ),
@@ -114,7 +114,7 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
     }).then(() => {
       onClose();
     });
-  }, [open, type, title, message, onClose]);
+  }, [isOpen, type, title, message, onClose]);
 
   return null;
 };

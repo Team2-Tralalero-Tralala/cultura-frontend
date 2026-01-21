@@ -550,7 +550,7 @@ export function UploadBannerPage() {
         />
 
         <Modal
-          open={isConfirmOpen}
+          isOpen={isConfirmOpen}
           title={confirmTitle}
           text={confirmDescription}
           onCancel={handleCancelConfirm}
@@ -560,7 +560,7 @@ export function UploadBannerPage() {
         />
 
         <ModalAlert
-          open={isResultOpen}
+          isOpen={isResultOpen}
           type={resultType}
           title={resultTitle}
           message={resultMessage}

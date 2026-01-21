@@ -39,18 +39,21 @@ export type PieGraphProps = {
   className?: string;
 };
 
-/*
- * Component: PieGraph
- * คำอธิบาย : แสดงกราฟ Doughnut Chart สำหรับข้อมูลการจองสำเร็จและยกเลิก
- * Input  : props { successCount, cancelledCount, title? }
- * Output : JSX Element ของกราฟ
+/**
+ * คำอธิบาย: แสดงกราฟ Doughnut Chart สำหรับข้อมูลการจองสำเร็จและยกเลิก
+ * Input:
+ *   - successCount: จำนวนการจองสำเร็จ
+ *   - cancelledCount: จำนวนการจองยกเลิก
+ *   - title: ชื่อกราฟ
+ *   - className: คลาสเสริม
+ * Output: JSX Element ของกราฟ
  */
-export const PieGraph: React.FC<PieGraphProps> = ({
+export default function PieGraph({
   successCount,
   cancelledCount,
   title = "สถิติการจองแพ็กเกจ",
   className = "w-full h-64 p-4 bg-white rounded-lg border border-gray-200 shadow-sm",
-}) => {
+}: PieGraphProps) {
   const total = successCount + cancelledCount;
   const hasNoData = total === 0;
 
@@ -106,7 +109,9 @@ export const PieGraph: React.FC<PieGraphProps> = ({
                 const dataset = data.datasets[0];
                 const value = dataset.data[index];
                 // ถ้าไม่มีข้อมูลแสดงแค่ label โดยไม่มี percentage
-                const text = hasNoData ? label : `${label} (${((value / total) * 100).toFixed(2)}%)`;
+                const text = hasNoData
+                  ? label
+                  : `${label} (${((value / total) * 100).toFixed(2)}%)`;
                 return {
                   text: text,
                   fillStyle: dataset.backgroundColor[index],
@@ -157,5 +162,4 @@ export const PieGraph: React.FC<PieGraphProps> = ({
       </div>
     </div>
   );
-};
-
+}

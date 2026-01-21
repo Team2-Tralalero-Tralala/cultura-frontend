@@ -12,7 +12,7 @@ import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
+import ModalReject from "@/Components/Modal/ModalReject";
 import { Link } from "react-router-dom";
 import {
   approvePackageRequestForAdmin,
@@ -291,7 +291,7 @@ export default function ManagePackageRequestPage() {
       {/* Modal: ยืนยันการอนุมัติแพ็กเกจ */}
       {isConfirmModalOpen && (
         <Modal
-          open={isConfirmModalOpen}
+          isOpen={isConfirmModalOpen}
           title="ยืนยันการอนุมัติ"
           text={
             selectedRow
@@ -317,8 +317,8 @@ export default function ManagePackageRequestPage() {
 
       {/* Modal: ปฏิเสธคำขอ */}
       {isRejectModalOpen && (
-        <RejectModal
-          open={isRejectModalOpen}
+        <ModalReject
+          isOpen={isRejectModalOpen}
           title="ปฏิเสธคำขออนุมัติ"
           text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
           confirmText="ส่ง"

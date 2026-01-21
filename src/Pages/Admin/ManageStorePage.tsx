@@ -295,7 +295,7 @@ export default function ManageStorePage() {
       </div>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการลบร้านค้า"
         text="คุณต้องการลบร้านค้านี้หรือไม่?"
         onConfirm={async () => {

@@ -250,7 +250,7 @@ export const EditProfilePage: React.FC = () => {
       </form>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขข้อมูลส่วนตัวหรือไม่?"
         confirmText="ยืนยัน"
@@ -263,7 +263,7 @@ export const EditProfilePage: React.FC = () => {
       />
 
       <ModalAlert
-        open={isSuccessModalOpen}
+        isOpen={isSuccessModalOpen}
         type="success"
         title="แก้ไขข้อมูลส่วนตัวสำเร็จ"
         message="ข้อมูลส่วนตัวของคุณถูกแก้ไขเรียบร้อยแล้ว"
@@ -274,7 +274,7 @@ export const EditProfilePage: React.FC = () => {
         }}
       />
       <ModalAlert
-        open={isErrorModalOpen}
+        isOpen={isErrorModalOpen}
         type="error"
         title="ไม่สามารถบันทึกข้อมูลได้"
         message={errorMessage}

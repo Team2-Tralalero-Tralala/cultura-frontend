@@ -654,7 +654,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       </form>
 
       <Modal
-        open={showConfirm}
+        isOpen={showConfirm}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่"
         confirmText="ยืนยัน"
@@ -667,7 +667,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       />
 
       <ModalAlert
-        open={showSuccessModal}
+        isOpen={showSuccessModal}
         type="success"
         title="สร้างบัญชีสำเร็จ"
         message="บัญชีผู้ใช้ถูกสร้างเรียบร้อยแล้ว"

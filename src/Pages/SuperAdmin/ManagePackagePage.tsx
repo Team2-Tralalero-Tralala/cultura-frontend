@@ -11,7 +11,7 @@ import { TrashIcon } from "../../Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -318,11 +318,11 @@ export function ManagePackagePage() {
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "จัดการแพ็กเกจ",
             to: `/super/packages/all`,
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>
@@ -376,7 +376,7 @@ export function ManagePackagePage() {
 
       {/* Modal สำหรับยืนยันการลบ */}
       <Modal
-        open={isDeleteModalOpen}
+        isOpen={isDeleteModalOpen}
         title="ยืนยันการลบ"
         text={`คุณต้องการลบแพ็กเกจ "${packageToDelete?.title ?? ""}" ใช่หรือไม่?`}
         confirmText="ยืนยันลบ"

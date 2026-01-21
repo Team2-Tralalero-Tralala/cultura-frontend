@@ -3,17 +3,15 @@
  * ใช้ AuthLayout ในการจัด Layout ของหน้า (โลโก้, สีพื้นหลัง, ปุ่มไปยังหน้าสมัครสมาชิก)
  * และใช้ LoginTouristCard เป็นฟอร์มเข้าสู่ระบบ
  */
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useNavigate } from "react-router-dom";
 import Button from "../Components/Button";
-import { LoginTouristCard } from "../Components/LoginTouristCard";
+import LoginTouristCard from "../Components/LoginTouristCard";
 import ServerMaintenanceModal from "../Components/Modal/ServerMaintenanceModal";
 import AuthLayout from "../Layouts/AuthLayout";
 import { fetchServerStatus } from "@/Libs/ServerService";
 /*
- * ฟังก์ชัน : LoginTourist
  * คำอธิบาย : แสดงหน้าเข้าสู่ระบบสำหรับ Tourist
  * โดยประกอบด้วย:
  *   - Layout พื้นฐานจาก AuthLayout
@@ -22,7 +20,7 @@ import { fetchServerStatus } from "@/Libs/ServerService";
  * Input : -
  * Output : React Component ที่ render หน้า Login ของ Tourist
  */
-export default function LoginTourist() {
+export default function LoginTouristPa() {
   const navigate = useNavigate();
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(true);
 

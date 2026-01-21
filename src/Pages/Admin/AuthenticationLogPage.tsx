@@ -8,7 +8,7 @@
  * รองรับการค้นหาและกรองตามบทบาท
  * ใช้ API เดียวกันกับ Super Admin
  */
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import React, { useState } from "react";
@@ -147,11 +147,11 @@ export default function AuthenticationLogPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-2 w-full">
         <div>
-          <Breadcrumb
+          <BreadcrumbNavigation
             current={{
               label: "ประวัติการเข้าใช้งาน",
               to: "/admin/logs",
-              fromSidebar: true,
+              isFromSidebar: true,
             }}
           />
         </div>

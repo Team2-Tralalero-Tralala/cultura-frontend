@@ -12,7 +12,7 @@ import { ArrowLeft, SquarePen } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "@/Components/Button";
 import Thumbnails from "@/Components/Thumbnails";
-import type { PackageRequestDetail } from "@/Types/package-request";
+import type { PackageRequestDetail } from "@/Types/Package";
 import * as PackageRequestService from "@/Libs/PackageService";
 import MapPicker from "@/Components/MapPicker";
 import "leaflet/dist/leaflet.css";

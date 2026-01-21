@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { api } from "./AccountService";
-import type { PackageRequestDetail } from "@/Types/package-request";
+import type { PackageRequestDetail } from "@/Types/Package";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export type Role = "member" | "admin" | "superadmin";

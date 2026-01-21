@@ -1,5 +1,4 @@
 /*
- * Component: PieGraph (Client)
  * คำอธิบาย: Graph component สำหรับแสดงข้อมูลสถิติการจองแพ็กเกจในรูปแบบ Pie/Doughnut Chart
  * ใช้ Chart.js กับ react-chartjs-2 ในการวาดกราฟวงกลม แสดงสัดส่วนการจองสำเร็จและยกเลิก
  * รองรับการแสดงข้อมูลจาก props และการปรับแต่งสีตามธีม
@@ -11,11 +10,10 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import React from "react";
 import { Doughnut } from "react-chartjs-2";
 
 /*
- * ลงทะเบียน component ของ Chart.js ที่จำเป็น
+ * คำอธิบาย: ลงทะเบียน component ของ Chart.js ที่จำเป็น
  * Input : ไม่มี
  * Output : void
  */

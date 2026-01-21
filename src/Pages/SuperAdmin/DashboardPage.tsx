@@ -11,7 +11,7 @@ import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCale
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
 import LineGraph from "@/Components/Graph/LineGraph";
-import PieGraph from "@/Components/PieGraph";
+import PieGraph from "@/Components/Graph/PieGraph";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
 import type { DashboardResponse } from "@/Libs/DashboardService";

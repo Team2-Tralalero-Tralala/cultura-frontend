@@ -12,8 +12,8 @@ import { TagSelector, type Tag } from "@/Components/Selector/TagSelector";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
-import TextField from "@/Components/TextField";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
 import { createStore } from "@/Libs/StoreService";
 import type { StoreData } from "@/Types/Store";
 import { Icon } from "@iconify/react";

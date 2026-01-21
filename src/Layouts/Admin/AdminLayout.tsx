@@ -2,8 +2,8 @@
  * คำอธิบาย : Component สำหรับ Layout ของผู้ดูแลระบบระดับวิสาหกิจชุมชน (Admin)
  * ใช้สำหรับแสดง Sidebar และพื้นที่คอนเทนต์ของหน้าผู้ดูแลทั้งหมด
  */
-import SidebarAdmin from "../../Components/SidebarAdmin";
-import NavbarAdmin from "../../Components/NavbarSam";
+import SidebarAdmin from "../../Components/Sidebar/SidebarAdmin";
+import NavbarAdmin from "../../Components/Navbar/NavbarSam";
 import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";

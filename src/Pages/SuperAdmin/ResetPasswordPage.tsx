@@ -5,7 +5,7 @@
  */
 
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField";
+import TextField from "@/Components/Input/TextField";
 import { resetPassword } from "@/Libs/UserService";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";

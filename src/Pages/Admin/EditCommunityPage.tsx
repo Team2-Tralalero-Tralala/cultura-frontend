@@ -12,8 +12,8 @@ import MemberSelector, { type Member } from "@/Components/Selector/MemberSelecto
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
-import TextField from "@/Components/TextField";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
 import UploadCard from "@/Components/upload/UploadCard";
 import UploadProfile from "@/Components/upload/UploadProfile";
 import { Icon } from "@iconify/react";

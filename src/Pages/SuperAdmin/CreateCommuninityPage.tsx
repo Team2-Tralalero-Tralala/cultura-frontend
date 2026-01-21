@@ -18,8 +18,8 @@ import type { CommunityFormData } from "@/Types/Community";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
-import TextField from "@/Components/TextField";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
 import { Icon } from "@iconify/react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";

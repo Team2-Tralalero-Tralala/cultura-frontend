@@ -24,12 +24,12 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import Switch from "@/Components/Switch";
-import TextArea from "@/Components/TextArea";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
 import Button from "@/Components/Button";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
-import TextField from "@/Components/TextField";
+import TextField from "@/Components/Input/TextField";
 import { Modal } from "@/Components/Modal/Modal";
 import UploadCard from "@/Components/upload/UploadCard";
 import UploadProfile from "@/Components/upload/UploadProfile";

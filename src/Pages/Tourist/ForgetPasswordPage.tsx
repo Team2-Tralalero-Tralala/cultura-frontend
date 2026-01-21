@@ -4,7 +4,7 @@
 
 import Button from "@/Components/Button";
 import { SuccessCard } from "@/Components/SuccessCard";
-import TextField from "@/Components/TextField";
+import TextField from "@/Components/Input/TextField";
 import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import AuthLayout from "@/Layouts/AuthLayout";
 import api from "@/Libs/Api";

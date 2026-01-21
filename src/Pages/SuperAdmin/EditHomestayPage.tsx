@@ -11,8 +11,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
 
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/Input/TextField";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import ThailandLocationSelector, {
   type ThailandLocation,

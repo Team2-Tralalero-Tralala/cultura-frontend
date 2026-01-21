@@ -11,13 +11,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
-import TextField from "../../Components/TextField";
+import TextField from "../../Components/Input/TextField";
 import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
+import TextArea from "@/Components/Input/TextArea";
 import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,

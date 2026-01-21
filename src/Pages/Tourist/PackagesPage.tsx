@@ -9,7 +9,7 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import CardPackage from "@/Components/CardPackage";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import { type PackageData } from "@/Components/PackageSection";
 import {
   fetchNewestPackages,

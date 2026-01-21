@@ -6,11 +6,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import api from "@/Libs/Api";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import AvatarUploader from "@/Components/AvatarUploader";
-import TextField from "@/Components/TextField";
+import AvatarUploader from "@/Components/upload/AvatarUploader";
+import TextField from "@/Components/Input/TextField";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";

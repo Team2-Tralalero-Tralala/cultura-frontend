@@ -3,7 +3,7 @@
  * ที่รองรับหลายประเภท เช่น ข้อความทั่วไป, รหัสผ่าน (พร้อมปุ่ม toggle แสดง/ซ่อน),
  * และเบอร์โทรศัพท์ (พร้อม prefix +66 และไอคอนธงไทย)
  */
-import type { BaseFieldProps } from "../Types/BaseField";
+import type { BaseFieldProps } from "../../Types/BaseField";
 
 /*
  * ฟังก์ชัน : RequiredMark

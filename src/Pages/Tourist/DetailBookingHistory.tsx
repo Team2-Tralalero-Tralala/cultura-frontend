@@ -5,7 +5,7 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import FilterDropdown from "@/Components/Filters/Tourists/FiltersForTR";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 import { useEffect, useState } from "react";
 import { getTouristBookingHistory } from "@/Libs/BookingHistoryService";

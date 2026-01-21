@@ -8,11 +8,11 @@ import axios from "axios";
 import * as zod from "zod";
 
 import Button from "@/Components/Button";
-import TextArea from "@/Components/TextArea";
+import TextArea from "@/Components/Input/TextArea";
 import UploadCard from "@/Components/upload/UploadCard";
 import { Modal } from "@/Components/Modal/Modal";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 

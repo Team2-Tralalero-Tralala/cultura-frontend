@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getHomestayDetailAndOtherHomestay } from "@/Libs/HomestayService";
 import type { HomestayDetail } from "@/Types/Homestay";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Tag from "@/Components/Tag";

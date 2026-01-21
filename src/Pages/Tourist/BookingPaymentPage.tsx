@@ -7,7 +7,7 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import { createBooking, uploadPaymentProof } from "@/Libs/BookingService";
 import { Icon } from "@iconify/react";
 import axios from "axios";

@@ -6,7 +6,7 @@
  * Input: -
  * Output: หน้า Dashboard ที่แสดงข้อมูลสรุปและกราฟ
  */
-import LineGraph from "@/Components/LineGraph";
+import LineGraph from "@/Components/Graph/LineGraph";
 import React from "react";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import {

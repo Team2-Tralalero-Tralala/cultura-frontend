@@ -9,10 +9,10 @@ import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/TextField";
+import TextField from "../../Components/Input/TextField";
 import Button from "../../Components/Button";
 import SubmitButton from "../../Components/SubmitButton";
-import AvatarUploader from "@/Components/AvatarUploader";
+import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 

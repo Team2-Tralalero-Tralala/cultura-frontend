@@ -10,7 +10,7 @@ import { getBookingsByTourist } from "@/Libs/BookingHistoryService";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 import type { Pagination as PaginationType } from "@/Components/Tables/Types";
 import FilterDropdown from "@/Components/Filters/Tourists/FiltersForTR";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BookingHistoryCardList, { type BookingItem } from "@/Components/BookingHistoryCardList";
 import Button from "@/Components/Button";

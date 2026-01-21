@@ -10,7 +10,7 @@ import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
-import LineGraph from "@/Components/LineGraph";
+import LineGraph from "@/Components/Graph/LineGraph";
 import PieGraph from "@/Components/PieGraph";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";

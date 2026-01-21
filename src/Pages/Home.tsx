@@ -7,7 +7,7 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import HeroCarousel from "@/Components/HeroCarousel";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import PackageSection, { type PackageData } from "@/Components/PackageSection";
 import TagsSection from "@/Components/TagsSection";
 import {

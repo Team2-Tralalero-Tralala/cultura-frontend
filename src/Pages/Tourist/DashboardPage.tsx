@@ -2,7 +2,7 @@
  * คำอธิบาย: หน้า Dashboard ของ Tourist
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
-import LineGraph from "@/Components/LineGraph";
+import LineGraph from "@/Components/Graph/LineGraph";
 import React from "react";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import {
@@ -11,7 +11,7 @@ import {
   type TouristDashboardResponse,
 } from "@/Libs/DashboardService";
 import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 

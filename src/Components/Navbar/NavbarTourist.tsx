@@ -5,7 +5,7 @@
 import { useAuth } from "@/Libs/UseAuth";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import SearchBar from "./Search/SearchBar";
+import SearchBar from "../Search/SearchBar";
 import { Icon } from "@iconify/react";
 
 /*

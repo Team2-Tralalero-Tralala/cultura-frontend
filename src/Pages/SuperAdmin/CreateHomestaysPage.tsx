@@ -9,8 +9,8 @@ import { Icon } from "@iconify/react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/Input/TextField";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import UploadCard from "@/Components/upload/UploadCard";
 import ThailandLocationSelector, {

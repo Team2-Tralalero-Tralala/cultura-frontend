@@ -6,7 +6,7 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import { Icon } from "@iconify/react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 

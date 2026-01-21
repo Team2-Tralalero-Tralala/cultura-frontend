@@ -10,7 +10,7 @@ import { useAuth } from "@/Libs/UseAuth";
 
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import CardPackage from "@/Components/CardPackage";
 import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
 import Button from "@/Components/Button";

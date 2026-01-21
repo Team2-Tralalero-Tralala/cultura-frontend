@@ -12,7 +12,7 @@ import { getCommunityDetailPublic } from "@/Libs/CommunityService";
 import CardPackage from "@/Components/CardPackage";
 import PaginationRoundedForCardPackage from "@/Components/Pagination/PaginationRoundedForCardPackage";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 
 /**
  * คำอธิบาย: ใช้แสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล/เป็นค่าว่าง

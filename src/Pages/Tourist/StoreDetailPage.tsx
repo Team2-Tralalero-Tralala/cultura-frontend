@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { getStoreWithOtherStoresInCommunity } from "@/Libs/StoreService";

@@ -5,7 +5,7 @@
  * 2. ข้อมูลกราฟ (Graph) - แสดงกราฟการจองและรายได้ตามช่วงเวลา
  * 3. ข้อมูลแพ็กเกจยอดนิยม - 20 อันดับแพ็กเกจที่มียอดจองสูงสุด
  */
-import LineGraph from "@/Components/LineGraph";
+import LineGraph from "@/Components/Graph/LineGraph";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Collapse from "@mui/material/Collapse";
 

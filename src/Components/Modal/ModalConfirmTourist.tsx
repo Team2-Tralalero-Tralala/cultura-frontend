@@ -1,47 +1,33 @@
 /**
  * คำอธิบาย : Component สำหรับแสดง Modal ยืนยันการกระทำ พร้อมปุ่มยืนยันและยกเลิก
- * Input : open, title, message, onConfirm, onCancel
- * Output : แสดง Modal ยืนยันการทำงาน หรือไม่แสดงเมื่อ open เป็น false
  */
 import React from "react";
 import Button from "@/Components/Button";
 
-/**
- * คำอธิบาย : Props สำหรับกำหนดค่าที่ใช้ควบคุมการทำงานของ ModalConfirm
- * Input :
- *   - open (boolean) : ใช้กำหนดสถานะการเปิดหรือปิด modal
- *   - title (string) : ข้อความหัวข้อของ modal
- *   - message (string) : ข้อความรายละเอียดของ modal
- *   - onConfirm (function) : ฟังก์ชันที่ถูกเรียกเมื่อกดปุ่มยืนยัน
- *   - onCancel (function) : ฟังก์ชันที่ถูกเรียกเมื่อกดปุ่มยกเลิก
- * Output :
- *   - Props สำหรับควบคุมการแสดงผลของ ModalConfirm
- */
-type ModalConfirmProps = {
-  open: boolean;
+interface ModalConfirmTouristProps {
+  isOpen: boolean;
   title: string;
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
-};
+}
 
 /**
  * คำอธิบาย : ฟังก์ชัน Component สำหรับแสดง Modal ยืนยันการทำงานจากผู้ใช้งาน
  * Input : props (ModalConfirmProps)
  * Output : JSX Element ของ Modal ยืนยัน หรือ null เมื่อ open เป็น false
  */
-export const ModalConfirm: React.FC<ModalConfirmProps> = ({
-  open,
+export const ModalConfirmTourist: React.FC<ModalConfirmTouristProps> = ({
+  isOpen,
   title,
   message,
   onConfirm,
   onCancel,
 }) => {
-  if (!open) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.4)] font-sarabun fade-in w-screen h-screen top-0 left-0">
-
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-[rgba(0,0,0,0.4)] font-sarabun fade-in w-screen h-screen top-0 left-0">
       <div className="bg-white rounded-[24px] shadow-2xl w-[450px] p-8 flex flex-col items-center text-center relative animate-scale-up">
         {/* Icon */}
         <div className="mb-4">

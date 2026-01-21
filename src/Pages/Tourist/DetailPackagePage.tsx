@@ -6,15 +6,15 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import axios from "axios";
-import { useAuth } from "@/Libs/useAuth";
+import { useAuth } from "@/Libs/UseAuth";
 
 import Footer from "@/Components/Footer";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import CardPackage from "@/Components/CardPackage";
 import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
 import Button from "@/Components/Button";
-import { Tag } from "@/Components/Tag";
+import Tag from "@/Components/Tag";
 import { Icon } from "@iconify/react";
 import SideThumbnails from "@/Components/SideThumbnails";
 
@@ -103,6 +103,11 @@ interface ApiResponse {
   data: PackageDetail;
 }
 
+/**
+ * คำอธิบาย: หน้าสำหรับแสดงรายละเอียดของแพ็กเกจท่องเที่ยว
+ * Input: -
+ * Output: JSX.Element
+ */
 export default function DetailPackagePage() {
   const { packageId } = useParams<{ packageId: string }>();
   const { user } = useAuth();
@@ -144,15 +149,10 @@ export default function DetailPackagePage() {
     }
   };
 
-  /*
-   * คำอธิบาย : สร้างรายการสื่อ (รูปภาพ) สำหรับใช้แสดงในแกลเลอรีของแพ็กเกจ
-   * เงื่อนไข :
-   *  - หากมีข้อมูล packageFiles จะทำการแปลงเป็น MediaItem[]
-   *  - หากไม่มีข้อมูล จะกำหนดค่าเริ่มต้นเป็น Array ว่าง
-   * Input :
-   *  - packageDetail.packageFiles
-   * Output :
-   *  - galleryItems (MediaItem[])
+  /**
+   * คำอธิบาย: สร้างรายการสื่อ (รูปภาพ) สำหรับใช้แสดงในแกลเลอรีของแพ็กเกจ
+   * Input: - (ใช้ข้อมูลจาก packageDetail.packageFiles)
+   * Output: galleryItems (MediaItem[])
    */
   const galleryItems: any[] = packageDetail?.packageFiles
     ? packageDetail.packageFiles.map((file) => ({
@@ -406,21 +406,21 @@ export default function DetailPackagePage() {
                       const originLng = position.coords.longitude;
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                        "_blank"
+                        "_blank",
                       );
                     },
                     (error) => {
                       console.error("Error getting location:", error);
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                        "_blank"
+                        "_blank",
                       );
-                    }
+                    },
                   );
                 } else {
                   window.open(
                     `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                    "_blank"
+                    "_blank",
                   );
                 }
               }
@@ -590,7 +590,7 @@ export default function DetailPackagePage() {
                     <button
                       onClick={() =>
                         navigate(
-                          `/tourist/community/${currentHomestay.communityId}/detail/homestay/${currentHomestay.id}`
+                          `/tourist/community/${currentHomestay.communityId}/detail/homestay/${currentHomestay.id}`,
                         )
                       }
                       className="px-4 py-1.5 border border-gray-400 rounded-lg text-black text-sm font-medium hover:bg-gray-50 transition-colors"
@@ -646,7 +646,7 @@ export default function DetailPackagePage() {
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
                         <span className="leading-relaxed">{line.trim()}</span>
                       </li>
-                    )
+                    ),
                 )}
               </ul>
             ) : (
@@ -692,7 +692,7 @@ export default function DetailPackagePage() {
                 <Button
                   type="confirm-tourist"
                   onClick={() => handleConfirmClick(packageDetail.id)}
-                  disabled={isActivityStarted}
+                  isDisabled={isActivityStarted}
                 >
                   {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : "จองเลย"}
                 </Button>

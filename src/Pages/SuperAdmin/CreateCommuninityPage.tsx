@@ -11,15 +11,15 @@ import MapPicker from "@/Components/MapPicker";
 import { Modal } from "@/Components/Modal/Modal";
 import { AdminSelector } from "@/Components/Selector/AdminSelector";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
-import { createCommunity } from "@/Services/community-service";
-import type { CommunityFormData } from "@/Types/CommunityForm";
+import UploadCard from "@/Components/upload/UploadCard";
+import UploadProfile from "@/Components/upload/UploadProfile";
+import { createCommunity } from "@/Libs/CommunityService";
+import type { CommunityFormData } from "@/Types/Community";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
-import TextField from "@/Components/TextField";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
 import { Icon } from "@iconify/react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
@@ -29,7 +29,7 @@ import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import * as z from "zod";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -37,8 +37,8 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
  * ใช้ Zod สำหรับ validate field แต่ละรายการก่อนส่งข้อมูลไป backend
- * Input : ข้อมูลในฟอร์มที่ผู้ใช้กรอก
- * Output : หากไม่ผ่าน validation จะส่งข้อความ error กลับให้แสดงในฟอร์ม
+ * Input: ข้อมูลในฟอร์มที่ผู้ใช้กรอก
+ * Output: หากไม่ผ่าน validation จะส่งข้อความ error กลับให้แสดงในฟอร์ม
  */
 const communitySchema = z.object({
   name: z.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
@@ -84,7 +84,7 @@ const communitySchema = z.object({
     .transform((value) => String(value))
     .refine(
       (latitude) => latitude.length > 0 && latitude !== "0",
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
+      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด",
     ),
 
   longitude: z
@@ -92,7 +92,7 @@ const communitySchema = z.object({
     .transform((value) => String(value))
     .refine(
       (longitude) => longitude.length > 0 && longitude !== "0",
-      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด"
+      "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด",
     ),
 
   phone: z
@@ -170,7 +170,7 @@ const prepareSubmitData = ({
         latitude: Number(position[0]),
         longitude: Number(position[1]),
       },
-    })
+    }),
   );
 
   if (logoFile) {
@@ -191,10 +191,12 @@ const prepareSubmitData = ({
   return formDataToSend;
 };
 
-/*
- * คำอธิบาย : Component หลักสำหรับหน้า "สร้างวิสาหกิจชุมชนใหม่"
+/**
+ * คำอธิบาย: Component หลักสำหรับหน้า "สร้างวิสาหกิจชุมชนใหม่"
  * ใช้จัดการ state ของข้อมูลฟอร์ม การตรวจสอบความถูกต้อง การส่งข้อมูลไป API
  * รวมถึง modal ยืนยันและการแจ้งเตือนผลลัพธ์
+ * Input: -
+ * Output: JSX Element หน้า Form สร้างวิสาหกิจชุมชน
  */
 export default function CreateCommuninityPage() {
   const [expanded, setExpanded] = React.useState<string[]>([]);
@@ -229,7 +231,7 @@ export default function CreateCommuninityPage() {
   /*
    * คำอธิบาย: ฟังก์ชันนี้ใช้เพื่อตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลงหรือไม่
    * Input: -
-   * Output: boolean
+   * Output: boolean (true ถ้ามีการแก้ไขข้อมูล)
    */
   const checkIsDirty = () => {
     const isFormDirty =
@@ -265,10 +267,10 @@ export default function CreateCommuninityPage() {
     return isFormDirty || isLocationDirty || isFilesDirty || isPositionDirty;
   };
 
-  /*
-   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบการยกเลิก
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบการยกเลิก ถ้ามีการแก้ไขจะแจ้งเตือน
    * Input: -
-   * Output: -
+   * Output: - (Navigate หรือเปิด Modal Confirm)
    */
   const handleCancel = () => {
     if (checkIsDirty()) {
@@ -278,21 +280,21 @@ export default function CreateCommuninityPage() {
     }
   };
 
-  /*
-   * คำอธิบาย : จัดการการขยาย/ย่อของ Accordion แต่ละ panel
-   * Input : panel
-   * Output : -
+  /**
+   * คำอธิบาย: จัดการการขยาย/ย่อของ Accordion แต่ละ panel
+   * Input: panel (string)
+   * Output: - (Update expanded state)
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded((prev) =>
-      isExpanded ? [...prev, panel] : prev.filter((activePanel) => activePanel !== panel)
+      isExpanded ? [...prev, panel] : prev.filter((activePanel) => activePanel !== panel),
     );
   };
 
-  /*
-   * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
-   * Input : field, value
-   * Output : boolean
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
+   * Input: field (optional string), value (optional any)
+   * Output: boolean (true ถ้าข้อมูลถูกต้อง)
    */
   const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -331,10 +333,10 @@ export default function CreateCommuninityPage() {
       longitude: position[1],
     }));
   }, [position]);
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
-   * Input : e
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
+   * Input: e (ChangeEvent)
+   * Output: - (Update formData state)
    */
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -343,21 +345,21 @@ export default function CreateCommuninityPage() {
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
   };
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าใน formData ตามชื่อฟิลด์ที่ระบุ
-   * Input : field, value
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับอัปเดตค่าใน formData ตามชื่อฟิลด์ที่ระบุ
+   * Input: field (keyof CommunityFormData), value (any)
+   * Output: - (Update formData state)
    */
   const handleValueChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
     setFormData(updated);
     validateField(field, value);
   };
-  /*
-   * คำอธิบาย : ตัวแปร memberList สำหรับสร้างรายการสมาชิกจากข้อมูลใน formData.communityMembers
+  /**
+   * คำอธิบาย: ตัวแปร memberList สำหรับสร้างรายการสมาชิกจากข้อมูลใน formData.communityMembers
    * ใช้ useMemo เพื่อป้องกันการคำนวณซ้ำโดยไม่จำเป็น (re-render optimization)
-   * Input : formData.communityMembers
-   * Output : Member[]
+   * Input: - (ใช้ formData.communityMembers)
+   * Output: Member[]
    */
   const memberList = React.useMemo<Member[]>(
     () =>
@@ -366,13 +368,13 @@ export default function CreateCommuninityPage() {
         fname: "",
         lname: "",
       })),
-    [formData.communityMembers]
+    [formData.communityMembers],
   );
 
-  /*
-   * คำอธิบาย : ฟังก์ชันหลักสำหรับส่งข้อมูลฟอร์มไปยัง API เพื่อสร้างวิสาหกิจชุมชนใหม่
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันหลักสำหรับส่งข้อมูลฟอร์มไปยัง API เพื่อสร้างวิสาหกิจชุมชนใหม่
+   * Input: -
+   * Output: Promise<void>
    */
   const handleSubmit = async () => {
     try {
@@ -949,7 +951,7 @@ export default function CreateCommuninityPage() {
         </div>
       </div>
       <Modal
-        open={openConfirm}
+        isOpen={openConfirm}
         title="ยืนยันการสร้างชุมชน"
         text="คุณต้องการยืนยันการสร้างชุมชนหรือไม่"
         onConfirm={async () => {
@@ -959,7 +961,7 @@ export default function CreateCommuninityPage() {
         onCancel={() => setOpenConfirm(false)}
       />
       <Modal
-        open={openCancelConfirm}
+        isOpen={openCancelConfirm}
         title="ยืนยันการยกเลิก"
         text="เเมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
         onConfirm={() => {
@@ -969,7 +971,7 @@ export default function CreateCommuninityPage() {
         onCancel={() => setOpenCancelConfirm(false)}
       />
       <ModalAlert
-        open={alertOpen}
+        isOpen={alertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

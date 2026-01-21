@@ -2,11 +2,11 @@
  * คำอธิบาย: หน้าสำหรับสมัครบัญชีของนักท่องเที่ยว
  */
 import Button from "@/Components/Button";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextField from "@/Components/TextField";
+import TextField from "@/Components/Input/TextField";
 import AuthLayout from "@/Layouts/AuthLayout";
 import CircularProgress from "@mui/material/CircularProgress";
 import axios from "axios";
@@ -59,8 +59,8 @@ type RegisterSchema = z.infer<typeof registerSchema>;
 
 /**
  * คำอธิบาย: RegisterPage (ฟังก์ชันสำหรับหน้าสมัครสมาชิก)
- * input: -
- * output: JSX.Element (หน้าสมัครสมาชิก)
+ * Input: -
+ * Output: JSX.Element (หน้าสมัครสมาชิก)
  */
 export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -147,12 +147,12 @@ export function RegisterPage() {
     return isValid;
   }
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
   /**
    * คำอธิบาย: handleFormSubmit (ฟังก์ชันจัดการการส่งฟอร์มลงทะเบียน)
-   * input: -
-   * output: - (ทำงานแบบ Async เพื่อเรียก API)
+   * Input: -
+   * Output: Promise<void> (ทำงานแบบ Async เพื่อเรียก API)
    */
   async function handleFormSubmit() {
     const isFormValid = validateAll();
@@ -168,7 +168,7 @@ export function RegisterPage() {
         phone: `0${formData.phone}`,
       };
 
-      await axios.post(`${API_URL}/auth/signup`, payload);
+      await axios.post(`${apiUrl}/auth/signup`, payload);
       setIsSuccess(true);
       setIsAlertOpen(true);
     } catch (error: any) {
@@ -470,7 +470,7 @@ export function RegisterPage() {
           </Button>
         </div>
         <ModalAlert
-          open={isAlertOpen}
+          isOpen={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}

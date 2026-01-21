@@ -1,5 +1,5 @@
-/* 
- * คำอธิบาย : Component Sort ใช้สำหรับสร้าง Dropdown เลือกค่าใดก็ได้ 
+/*
+ * คำอธิบาย : Component Sort ใช้สำหรับสร้าง Dropdown เลือกค่าใดก็ได้
  * ไม่จำกัดเฉพาะ "ล่าสุด" / "แนะนำ" / "ราคา" อีกต่อไป
  * Input  : { value, onChange, options, className }
  * Output : Dropdown ที่ reuse ได้ทุกกรณี
@@ -27,12 +27,12 @@ export default function Sort<TOptionValue extends string | number>({
   placeholder = "เลือก...",
   className = "",
 }: SortProps<TOptionValue>) {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setIsOpen(false);
     };
     window.addEventListener("mousedown", handleClickOutside);
     return () => window.removeEventListener("mousedown", handleClickOutside);
@@ -46,9 +46,9 @@ export default function Sort<TOptionValue extends string | number>({
       {/* ปุ่มหลัก */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setIsOpen((open) => !open)}
         aria-haspopup="listbox"
-        aria-expanded={open}
+        aria-expanded={isOpen}
         className="w-[138px] h-[39px] flex items-center justify-between
                    rounded-md border border-slate-300 bg-white px-3 text-sm
                    font-medium shadow-sm hover:bg-slate-50"
@@ -56,7 +56,7 @@ export default function Sort<TOptionValue extends string | number>({
         {selected}
         <svg
           viewBox="0 0 20 20"
-          className={`ml-2 h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`ml-2 h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
         >
           <path
             d="M5.5 7.5l4.5 4.5 4.5-4.5"
@@ -70,7 +70,7 @@ export default function Sort<TOptionValue extends string | number>({
       </button>
 
       {/* รายการตัวเลือก */}
-      {open && (
+      {isOpen && (
         <ul
           role="listbox"
           className="absolute z-50 mt-1 w-[138px] rounded-md border border-slate-200
@@ -83,7 +83,7 @@ export default function Sort<TOptionValue extends string | number>({
               aria-selected={value === opt.value}
               onClick={() => {
                 onChange(opt.value);
-                setOpen(false);
+                setIsOpen(false);
               }}
               className={`cursor-pointer px-3 py-2 hover:bg-slate-100 ${
                 value === opt.value ? "bg-slate-50 font-semibold" : ""

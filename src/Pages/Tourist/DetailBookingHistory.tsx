@@ -5,10 +5,10 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import FilterDropdown from "@/Components/Filters/Tourists/FiltersForTR";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 import { useEffect, useState } from "react";
-import { getTouristBookingHistory } from "@/Services/booking-history-service";
+import { getTouristBookingHistory } from "@/Libs/BookingHistoryService";
 import type { TouristBookingHistory } from "@/Types/BookingHistory";
 import { useSearchParams } from "react-router-dom";
 
@@ -79,7 +79,7 @@ export function DetailBookingHistory() {
         {
           status: filterState.status,
           date: dateFilter,
-        }
+        },
       );
 
       setBookingHistories(response.data);
@@ -324,7 +324,7 @@ export function DetailBookingHistory() {
                       <p className="font-bold">ราคารวม</p>
                       <p className="text-end font-bold ">
                         {formatPrice(
-                          selectedBooking.package.price * selectedBooking.totalParticipant
+                          selectedBooking.package.price * selectedBooking.totalParticipant,
                         )}{" "}
                         บาท
                       </p>

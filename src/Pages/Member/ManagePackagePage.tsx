@@ -1,29 +1,23 @@
-/*
- * คำอธิบาย : Component หน้าสำหรับจัดการแพ็กเกจ (สำหรับ admin)
+/**
+ * คำอธิบาย: Component หน้าสำหรับจัดการแพ็กเกจ (สำหรับ admin)
  * - แสดงรายการแพ็กเกจทั้งหมดในรูปแบบตาราง
  * - รองรับการค้นหา, การแบ่งหน้า (Pagination)
  * - รองรับการลบ (เดี่ยว/กลุ่ม) และการแก้ไข
- * Input: -
- * Output: หน้าตารางจัดการแพ็กเกจ
  */
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "@/Components/Tables/Index";
-import type {
-  Column,
-  DataTableActionsConfig,
-  BulkAction,
-} from "../../Components/Tables/Types";
+import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
 import { TrashIcon } from "../../Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiBaseUrl = import.meta.env.VITE_API_URL;
 
 type Row = {
   id: number;
@@ -50,23 +44,24 @@ const bulkActions: BulkAction<Row>[] = [
   },
 ];
 
-/*
- * คำอธิบาย : ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
+/**
+ * คำอธิบาย: ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
  * Input: -
- * Output : JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
+ * Output: JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
  */
-export default function ManagePackageSuperAdmin() {
+export default function ManagePackagePage() {
+  const navigate = useNavigate();
+
+  /*
+   * คำอธิบาย: Render ชื่อแพ็กเกจเป็นปุ่มที่คลิกได้
+   * Input: row - ข้อมูลแถว
+   * Output: JSX Element (button)
+   */
   const columns: Column<Row>[] = [
     {
       key: "title",
       header: "ชื่อแพ็กเกจ",
       className: "min-w-[240px]",
-
-      /*
-       * คำอธิบาย : Render ชื่อแพ็กเกจเป็นปุ่มที่คลิกได้
-       * Input: row - ข้อมูลแถว
-       * Output : JSX Element (button)
-       */
       render: (row) => (
         <button
           type="button"
@@ -92,39 +87,51 @@ export default function ManagePackageSuperAdmin() {
       },
     },
   ];
-  const navigate = useNavigate();
-
-  const [tableRows, setTableRows] = React.useState<Row[]>([]);
-  const [currentPage, setCurrentPage] = React.useState<number>(1);
-  const [pageSize, setPageSize] = React.useState<number>(10);
-  const [totalItems, setTotalItems] = React.useState<number>(0);
+  const [packageRows, setPackageRows] = React.useState<Row[]>([]);
+  const [pagination, setPagination] = React.useState({
+    currentPage: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+  });
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [packageToDelete, setPackageToDelete] = useState<Row | null>(null);
+  const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
   const [filters, setFilters] = useState({ packageStatus: "ทั้งหมด", approvalStatus: "ทั้งหมด" });
 
-  /*
-   * คำอธิบาย : (Callback) โหลดข้อมูลแพ็กเกจจาก API ตาม page และ limit ปัจจุบัน
-   * Input: - (ใช้ currentPage, pageSize จาก state)
-   * Output : (void) - อัปเดต tableRows, totalItems, และ isLoading state
+  /**
+   * คำอธิบาย: (Callback) โหลดข้อมูลแพ็กเกจจาก API ตาม page และ limit ปัจจุบัน
+   * Input: - (ใช้ pagination.currentPage, pagination.limit จาก state)
+   * Output: - (อัปเดต packageRows, pagination, และ isLoading state)
    */
-  const reloadPackages = React.useCallback(async () => {
+  const fetchPackages = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${apiUrl}/member/packages`, {
-        params: { page: currentPage, limit: pageSize,
-        status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
-        approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined },
+      const response = await axios.get(`${apiBaseUrl}/member/packages`, {
+        params: {
+          page: pagination.currentPage,
+          limit: pagination.limit,
+          status:
+            filters.packageStatus === "เผยแพร่"
+              ? "PUBLISH"
+              : filters.packageStatus === "ไม่เผยแพร่"
+                ? "UNPUBLISH"
+                : undefined,
+          approve:
+            filters.approvalStatus === "อนุมัติ"
+              ? "APPROVE"
+              : filters.approvalStatus === "รออนุมัติ"
+                ? "PENDING"
+                : filters.approvalStatus === "ถูกปฏิเสธ"
+                  ? "REJECTED"
+                  : undefined,
+        },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
       });
       const payload = response?.data;
       let rawDataList: any =
-        payload?.data?.data ??
-        payload?.data ??
-        payload?.items ??
-        payload?.rows ??
-        payload;
+        payload?.data?.data ?? payload?.data ?? payload?.items ?? payload?.rows ?? payload;
 
       if (!Array.isArray(rawDataList)) {
         console.warn("Expected array but got:", rawDataList);
@@ -138,17 +145,18 @@ export default function ManagePackageSuperAdmin() {
         payload?.totalCount ??
         rawDataList.length;
 
-      const mappedRows: Row[] = rawDataList.map(
+      const mappedPackageRows: Row[] = rawDataList.map(
         (packageItem: any): Row => ({
           id: Number(packageItem?.id ?? packageItem?.pk_id ?? 0),
           title: packageItem?.name ?? packageItem?.title ?? "-",
           community: packageItem?.community?.name ?? packageItem?.communityName ?? "-",
           owner: packageItem?.overseerPackage
-            ? `${packageItem.overseerPackage.fname ?? ""} ${packageItem.overseerPackage.lname ?? ""
+            ? `${packageItem.overseerPackage.fname ?? ""} ${
+                packageItem.overseerPackage.lname ?? ""
               }`.trim() ||
-            packageItem.overseerPackage.username ||
-            "-"
-            : packageItem?.ownerName ?? "-",
+              packageItem.overseerPackage.username ||
+              "-"
+            : (packageItem?.ownerName ?? "-"),
           published:
             packageItem?.statusPackage === "PUBLISH" ||
             packageItem?.published === true ||
@@ -159,50 +167,57 @@ export default function ManagePackageSuperAdmin() {
             packageItem?.isApproved === true,
           bookedCount: packageItem?.bookingHistories?.length ?? 0,
           capacity: packageItem?.capacity ?? 0,
-        })
+        }),
       );
 
-      setTableRows(mappedRows);
-      setTotalItems(Number.isFinite(totalCount) ? Number(totalCount) : mappedRows.length);
+      setPackageRows(mappedPackageRows);
+      setPagination((prev) => ({
+        ...prev,
+        totalCount: Number.isFinite(totalCount) ? Number(totalCount) : mappedPackageRows.length,
+        totalPages: Math.max(
+          1,
+          Math.ceil(
+            (Number.isFinite(totalCount) ? Number(totalCount) : mappedPackageRows.length) /
+              prev.limit,
+          ),
+        ),
+      }));
     } catch (error: any) {
       console.error("reloadPackages error:", error?.response?.data ?? error);
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, filters]);
+  }, [pagination.currentPage, pagination.limit, filters]);
 
-  /*
-   * คำอธิบาย : (Callback) Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันการลบจาก Modal
-   * Input: - (ใช้ rowToDelete จาก state)
-   * Output : (void) - (async) เรียก API ลบ, แสดง alert, และโหลดข้อมูลใหม่
+  /**
+   * คำอธิบาย: (Callback) Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันการลบจาก Modal
+   * Input: - (ใช้ packageToDelete จาก state)
+   * Output: - (เรียก API ลบ, แสดง alert, และโหลดข้อมูลใหม่)
    */
   const handleConfirmDelete = useCallback(async () => {
-    if (!rowToDelete) return;
-    const rowId = rowToDelete.id;
-    const rowTitle = rowToDelete.title;
-    setIsDeleteModalOpen(false);
+    if (!packageToDelete) return;
+    const rowId = packageToDelete.id;
+    const rowTitle = packageToDelete.title;
+    setIsOpenDeleteModal(false);
 
     try {
-      await axios.patch(
-        `${apiUrl}/member/package/${rowId}`,
-        null,
-        { withCredentials: true }
-      );
+      await axios.patch(`${apiBaseUrl}/member/package/${rowId}`, null, { withCredentials: true });
 
-      await reloadPackages();
+      await fetchPackages();
     } catch (error: any) {
       console.error("delete failed:", error?.response?.data ?? error);
       alert(
-        `ลบไม่สำเร็จ (${rowTitle}): ${error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "unknown error"
-        }`
+        `ลบไม่สำเร็จ (${rowTitle}): ${
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "unknown error"
+        }`,
       );
     } finally {
-      setRowToDelete(null);
+      setPackageToDelete(null);
     }
-  }, [rowToDelete, reloadPackages]);
+  }, [packageToDelete, fetchPackages]);
 
   const rowActions: DataTableActionsConfig<Row> = React.useMemo(
     () => ({
@@ -214,50 +229,45 @@ export default function ManagePackageSuperAdmin() {
       callbacks: {
         edit: (row) => navigate(`/member/package/${row.id}/edit`),
         delete: (row) => {
-          setRowToDelete(row);
-          setIsDeleteModalOpen(true);
+          setPackageToDelete(row);
+          setIsOpenDeleteModal(true);
         },
       },
     }),
-    [navigate]
+    [navigate],
   );
 
   React.useEffect(() => {
-    reloadPackages();
-  }, [reloadPackages]);
+    fetchPackages();
+  }, [fetchPackages]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  /*
-   * คำอธิบาย : แปลงสตริงเป็น lowercase, normalize, และตัดช่องว่าง
+  /**
+   * คำอธิบาย: แปลงสตริงเป็น lowercase, normalize, และตัดช่องว่าง
    * Input: text - สตริงที่ต้องการแปลง
-   * Output : สตริงที่แปลงแล้ว
+   * Output: สตริงที่แปลงแล้ว
    */
   const normalizeText = (text: string) =>
-    (text ?? "")
-      .toString()
-      .toLowerCase()
-      .normalize("NFC")
-      .replace(/\s+/g, " ")
-      .trim();
+    (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
-  /*
-   * คำอธิบาย : แปลง boolean 'published' เป็นข้อความ
+  /**
+   * คำอธิบาย: แปลง boolean 'published' เป็นข้อความ
    * Input: row - object ข้อมูล
-   * Output : สตริง "เผยแพร่" หรือ "ไม่เผยแพร่"
+   * Output: สตริง "เผยแพร่" หรือ "ไม่เผยแพร่"
    */
   const toPublishedText = (row: Row) => (row.published ? "เผยแพร่" : "ไม่เผยแพร่");
 
-  /*
-   * คำอธิบาย : แปลง boolean 'approved' เป็นข้อความ
+  /**
+   * คำอธิบาย: แปลง boolean 'approved' เป็นข้อความ
    * Input: row - object ข้อมูล
-   * Output : สตริง "อนุมัติ" หรือ "รออนุมัติ"
+   * Output: สตริง "อนุมัติ" หรือ "รออนุมัติ"
    */
   const toApprovedText = (row: Row) => (row.approved ? "อนุมัติ" : "รออนุมัติ");
 
   const filteredRows = React.useMemo(() => {
     const query = normalizeText(searchQuery);
-    if (!query) return tableRows;
-    return tableRows.filter((row) => {
+    if (!query) return packageRows;
+    return packageRows.filter((row) => {
       const haystacks = [
         row.title,
         row.community,
@@ -267,47 +277,35 @@ export default function ManagePackageSuperAdmin() {
       ].map(normalizeText);
       return haystacks.some((haystack) => haystack.includes(query));
     });
-  }, [tableRows, searchQuery]);
+  }, [packageRows, searchQuery]);
 
   React.useEffect(() => {
-    setCurrentPage(1);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, [searchQuery]);
 
-  /*
-  * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าคำขออนุมัติแพ็กเกจของผู้ดูแลระบบ
-  * Input : -
-  * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/super/package-requests"
-  */
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับนำทางไปยังหน้าคำขออนุมัติแพ็กเกจของผู้ดูแลระบบ
+   * Input: -
+   * Output: - (นำผู้ใช้ไปยังหน้า "/member/package-requests")
+   */
   const goToApprovalRequests = () => navigate("/member/package-requests");
 
-  /*
-  * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าสร้างแพ็กเกจของผู้ดูแลระบบ
-  * Input : -
-  * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/member/package/create"
-  */
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับนำทางไปยังหน้าสร้างแพ็กเกจของผู้ดูแลระบบ
+   * Input: -
+   * Output: - (นำผู้ใช้ไปยังหน้า "/member/package/create")
+   */
   const goToCreatePackage = () => navigate("/member/package/create");
-
-  /*
-  * คำอธิบาย : กำหนดออบเจกต์การแบ่งหน้า (Pagination) สำหรับส่งให้ Component DataTable
-  * Input : - (ใช้ currentPage, pageSize และ totalItems จาก state ภายใน Component)
-  * Output : ออบเจกต์ pagination ที่ประกอบด้วย currentPage, totalPages, totalCount และ limit
-  */
-  const pagination = React.useMemo(() => ({
-    currentPage,
-    totalPages: Math.max(1, Math.ceil((totalItems || 0) / (pageSize || 10))),
-    totalCount: totalItems,
-    limit: pageSize,
-  }), [currentPage, pageSize, totalItems]);
 
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "จัดการแพ็กเกจ",
             to: `/member/packages/all`,
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>
@@ -327,8 +325,8 @@ export default function ManagePackageSuperAdmin() {
             <PackageFilter
               currentFilters={filters}
               onFilterChange={(type: string, value: string) => {
-                setFilters(prev => ({ ...prev, [type]: value }));
-                setCurrentPage(1);
+                setFilters((prev) => ({ ...prev, [type]: value }));
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
               }}
             />
           </div>
@@ -339,9 +337,7 @@ export default function ManagePackageSuperAdmin() {
                   icon="material-symbols:add-rounded"
                   className="text-2xl" // ปรับขนาดไอคอนประมาณ 24px
                 />
-                <span className="whitespace-nowrap font-medium text-lg pb-0.5">
-                  เพิ่มแพ็กเกจ
-                </span>
+                <span className="whitespace-nowrap font-medium text-lg pb-0.5">เพิ่มแพ็กเกจ</span>
               </div>
             </Button>
           </div>
@@ -358,23 +354,24 @@ export default function ManagePackageSuperAdmin() {
         selectable
         pagination={pagination}
         pageSizeOptions={[10, 20, 50]}
-        onPageChange={(page) => setCurrentPage(page)}
-        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+        onPageSizeChange={(size) =>
+          setPagination((prev) => ({ ...prev, limit: size, currentPage: 1 }))
+        }
         isLoading={isLoading}
         theme="brand"
       />
 
-      {/* Modal สำหรับยืนยันการลบ */}
       <Modal
-        open={isDeleteModalOpen}
+        isOpen={isOpenDeleteModal}
         title="ยืนยันการลบ"
-        text={`คุณต้องการลบแพ็กเกจ "${rowToDelete?.title ?? ""}" ใช่หรือไม่?`}
+        text={`คุณต้องการลบแพ็กเกจ "${packageToDelete?.title ?? ""}" ใช่หรือไม่?`}
         confirmText="ยืนยันลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}
         onCancel={() => {
-          setIsDeleteModalOpen(false);
-          setRowToDelete(null);
+          setIsOpenDeleteModal(false);
+          setPackageToDelete(null);
         }}
       />
     </div>

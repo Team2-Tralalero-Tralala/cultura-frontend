@@ -1,10 +1,6 @@
-/*
- * คำอธิบาย : Component สำหรับแสดงรายชื่อผู้ใช้ที่ถูกระงับ (Super Admin)
- * หน้าที่ : แสดงตารางบัญชีที่ถูกระงับ พร้อมฟังก์ชันค้นหา / ยกเลิกการระงับรายบุคคล / ยกเลิกทั้งหมด
- * Input : ไม่มี (ดึงข้อมูลจาก API โดยตรง)
- * Output : ตารางรายชื่อผู้ใช้ที่ถูกระงับ
+/**
+ * คำอธิบาย: Component สำหรับแสดงรายชื่อผู้ใช้ที่ถูกระงับ (Super Admin) หน้าที่แสดงตารางบัญชีที่ถูกระงับ พร้อมฟังก์ชันค้นหา, ยกเลิกการระงับรายบุคคล, และยกเลิกทั้งหมด
  */
-
 import { useEffect, useState, useMemo } from "react";
 
 import DataTable from "@/Components/Tables/DataTable";
@@ -25,11 +21,12 @@ import {
   fetchBlockedAccounts,
   unblockAccountById,
   unblockMultipleAccounts,
-} from "@/Services/account-services";
+} from "@/Libs/AccountService";
 
 /**
- * ฟังก์ชัน: thaiRoleName
- * วัตถุประสงค์: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
+ * คำอธิบาย: แปลงชื่อ Role จากอังกฤษเป็นภาษาไทย
+ * Input: role (string) - ชื่อ Role ในภาษาอังกฤษ
+ * Output: ชื่อ Role ในภาษาไทย (string)
  */
 const thaiRoleName = (role: string): string => {
   switch (role) {
@@ -47,31 +44,30 @@ const thaiRoleName = (role: string): string => {
 };
 
 /**
- * ตัวแปร: columns
- * วัตถุประสงค์: กำหนดคอลัมน์ในตารางข้อมูลผู้ใช้ที่ถูกระงับ
+ * คำอธิบาย: กำหนดคอลัมน์ในตารางข้อมูลผู้ใช้ที่ถูกระงับ
+ * Input: -
+ * Output: Array ของ Column Definition
  */
 const columns: Column<BlockedAccountRow>[] = [
   {
     key: "fullname",
     header: "ชื่อจริง-นามสกุล",
     className: "min-w-[240px]",
-    render: (r) => (
-      <div>{`${r.fname ?? "-"} ${r.lname ?? ""}`.trim() || "-"}</div>
-    ),
+    render: (row) => <div>{`${row.fname ?? "-"} ${row.lname ?? ""}`.trim() || "-"}</div>,
   },
   {
     key: "role",
     header: "ประเภท",
     className: "min-w-[160px]",
-    render: (r) => <div>{thaiRoleName(r.role.name)}</div>,
+    render: (row) => <div>{thaiRoleName(row.role.name)}</div>,
   },
   {
     key: "community",
     header: "ชุมชน",
     className: "min-w-[160px]",
-    render: (r) => {
-      const adminName = r.communityAdmin?.[0]?.name ?? null;
-      const memberName = r.communityMembers?.[0]?.Community?.name ?? null;
+    render: (row) => {
+      const adminName = row.communityAdmin?.[0]?.name ?? null;
+      const memberName = row.communityMembers?.[0]?.Community?.name ?? null;
       return <div>{adminName || memberName || "-"}</div>;
     },
   },
@@ -79,27 +75,24 @@ const columns: Column<BlockedAccountRow>[] = [
     key: "email",
     header: "อีเมล",
     className: "min-w-[220px]",
-    render: (r) => <div>{r.email ?? "-"}</div>,
+    render: (row) => <div>{row.email ?? "-"}</div>,
   },
 ];
 
 /**
- * ฟังก์ชัน normalizeText
- * วัตถุประสงค์: ทำให้ค้นหาลื่นและไม่สนตัวพิมพ์ใหญ่/เล็ก
+ * คำอธิบาย: ทำให้ข้อความเป็นตัวพิมพ์เล็กและตัดช่องว่างเพื่อการค้นหา
+ * Input: text (string) - ข้อความที่ต้องการ normalize
+ * Output: ข้อความที่ normalize แล้ว (string)
  */
-const normalizeText = (s: string) =>
-  (s ?? "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFC")
-    .replace(/\s+/g, " ")
-    .trim();
+const normalizeText = (text: string) =>
+  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
- * Component: BlockedAccountPage
- * วัตถุประสงค์: แสดงบัญชีผู้ใช้ที่ถูกระงับ (SuperAdmin)
+ * คำอธิบาย: หน้าแสดงบัญชีผู้ใช้ที่ถูกระงับ (SuperAdmin)
+ * Input: -
+ * Output: React Component สำหรับแสดงผลหน้า Blocked Users
  */
-export function BlockedAccountPage() {
+export function BlockUserPage() {
   const [rows, setRows] = useState<BlockedAccountRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -116,11 +109,12 @@ export function BlockedAccountPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalText, setModalText] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => {});
 
   /**
-   * ฟังก์ชัน: openModal
-   * วัตถุประสงค์: เปิด Modal เพื่อยืนยันการทำงาน
+   * คำอธิบาย: เปิด Modal เพื่อยืนยันการทำงาน
+   * Input: title (string) - หัวข้อ Modal, text (string) - เนื้อหา Modal, onConfirm (function) - ฟังก์ชันที่ทำเมื่อยืนยัน
+   * Output: - (เซ็ต state เพื่อเปิด Modal)
    */
   function openModal(title: string, text: string, onConfirm: () => void) {
     setModalTitle(title);
@@ -130,8 +124,9 @@ export function BlockedAccountPage() {
   }
 
   /**
-   * ฟังก์ชัน: fetchData
-   * วัตถุประสงค์: ดึงข้อมูลบัญชีผู้ใช้ที่ถูกระงับจาก API
+   * คำอธิบาย: ดึงข้อมูลบัญชีผู้ใช้ที่ถูกระงับจาก API
+   * Input: - (ใช้ state ภายใน: pagination)
+   * Output: Promise<void> - (อัปเดต state rows และ pagination)
    */
   async function fetchData(): Promise<void> {
     try {
@@ -144,17 +139,17 @@ export function BlockedAccountPage() {
 
       setRows(resultData);
       setPagination(resultPagination);
-    } catch (err: unknown) {
-      const e = err as Error;
-      console.error("โหลดข้อมูลล้มเหลว:", e);
-      setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error("โหลดข้อมูลล้มเหลว:", err);
+      setErrorMessage(err.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
   }
 
   /**
-   * useEffect: โหลดข้อมูลเมื่อมีการเปลี่ยนหน้า
+   * คำอธิบาย: โหลดข้อมูลเมื่อมีการเปลี่ยนหน้า
    */
   useEffect(() => {
     let isCancelled = false;
@@ -169,8 +164,8 @@ export function BlockedAccountPage() {
           setRows(resultData);
           setPagination(resultPagination);
         }
-      } catch (err) {
-        const e = err as Error;
+      } catch (error) {
+        const e = error as Error;
         if (!isCancelled) setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
       } finally {
         if (!isCancelled) setIsLoading(false);
@@ -187,14 +182,12 @@ export function BlockedAccountPage() {
     const q = normalizeText(searchQuery);
     if (!q) return rows;
 
-    return rows.filter((r) => {
-      const name = `${r.fname ?? ""} ${r.lname ?? ""}`.trim();
-      const email = r.email ?? "";
-      const role = r.role?.name ?? "";
+    return rows.filter((row) => {
+      const name = `${row.fname ?? ""} ${row.lname ?? ""}`.trim();
+      const email = row.email ?? "";
+      const role = row.role?.name ?? "";
       const community =
-        r.communityAdmin?.[0]?.name ??
-        r.communityMembers?.[0]?.Community?.name ??
-        "";
+        row.communityAdmin?.[0]?.name ?? row.communityMembers?.[0]?.Community?.name ?? "";
 
       return (
         normalizeText(name).includes(q) ||
@@ -206,8 +199,7 @@ export function BlockedAccountPage() {
   }, [rows, searchQuery]);
 
   /**
-   * ฟังก์ชัน: rowActions
-   * วัตถุประสงค์: Action ต่อแถว (ยกเลิกการระงับรายบุคคล)
+   * คำอธิบาย: Action ต่อแถว (ยกเลิกการระงับรายบุคคล)
    */
   const rowActions: DataTableActionsConfig<BlockedAccountRow> = {
     header: "จัดการ",
@@ -224,15 +216,14 @@ export function BlockedAccountPage() {
           async () => {
             await unblockAccountById(row.id);
             await fetchData();
-          }
+          },
         );
       },
     },
   };
 
   /**
-   * ฟังก์ชัน: bulkActions
-   * วัตถุประสงค์: Action หลายแถว (ยกเลิกการระงับทั้งหมด)
+   * คำอธิบาย: Action หลายแถว (ยกเลิกการระงับทั้งหมด)
    */
   const bulkActions: BulkAction<BlockedAccountRow>[] = [
     {
@@ -240,14 +231,14 @@ export function BlockedAccountPage() {
       label: "ยกเลิกการระงับทั้งหมด",
       icon: TrashIcon,
       intent: "neutral",
-      onClick: (rows) => {
+      onClick: (selectedRows) => {
         openModal(
           "ยืนยันการยกเลิกการระงับทั้งหมด",
-          `คุณต้องการยกเลิกการระงับทั้งหมด ${rows.length} รายการหรือไม่?`,
+          `คุณต้องการยกเลิกการระงับทั้งหมด ${selectedRows.length} รายการหรือไม่?`,
           async () => {
-            await unblockMultipleAccounts(rows.map((r) => r.id));
+            await unblockMultipleAccounts(selectedRows.map((r) => r.id));
             await fetchData();
-          }
+          },
         );
       },
     },
@@ -262,20 +253,14 @@ export function BlockedAccountPage() {
             current={{
               label: "การระงับบัญชี",
               to: "/super/users/blocked",
-
             }}
           />
         </div>
-        <h1 className="text-[20px] font-bold text-black">
-          การระงับบัญชี
-        </h1>
+        <h1 className="text-[20px] font-bold text-black">การระงับบัญชี</h1>
 
         <div className="flex items-center justify-between w-full mt-2">
           <div className="w-[260px]">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
       </div>
@@ -289,12 +274,8 @@ export function BlockedAccountPage() {
         selectable
         pageSizeOptions={[10, 30, 50]}
         pagination={pagination}
-        onPageChange={(page) =>
-          setPagination((prev) => ({ ...prev, currentPage: page }))
-        }
-        onPageSizeChange={(limit) =>
-          setPagination((prev) => ({ ...prev, currentPage: 1, limit }))
-        }
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
+        onPageSizeChange={(limit) => setPagination((prev) => ({ ...prev, currentPage: 1, limit }))}
         onSelectedChange={(rows) => setSelectedRows(rows)}
         isLoading={isLoading}
         actions={rowActions}
@@ -302,7 +283,7 @@ export function BlockedAccountPage() {
       />
 
       <Modal
-        open={modalOpen}
+        isOpen={modalOpen}
         title={modalTitle}
         text={modalText}
         confirmText="ยืนยัน"

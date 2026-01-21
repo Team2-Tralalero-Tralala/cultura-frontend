@@ -92,7 +92,6 @@ const StyledSwitch = styled((props: SwitchProps) => (
 }));
 
 /*
- * ฟังก์ชัน : CustomSwitch
  * คำอธิบาย : ฟังก์ชัน Component สำหรับเรนเดอร์ Switch ที่มี Label อยู่ภายใน Track
  * Input : CustomSwitchProps (labelOn, labelOff, sx, ...props)
  * Output : <Switch> element ที่มีการปรับแต่งสไตล์

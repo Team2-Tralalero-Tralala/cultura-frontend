@@ -1,5 +1,5 @@
-/*
- * Filter ใช้สำหรับ Role: Tourists
+/**
+ * คำอธิบาย: Component Dropdown Filter สำหรับ Role: Tourists
  */
 import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
@@ -11,7 +11,7 @@ export type FilterOption = {
 
 export type FilterSection = {
   title: string;
-  key: string; // Key for the state object (e.g., 'status', 'period')
+  key: string;
   options: FilterOption[];
 };
 
@@ -23,14 +23,12 @@ type FilterProps = {
   icon?: string;
 };
 
-export default function FilterDropdown({ sections, selected, onChange, label, icon }: FilterProps) {
+export default function FiltersForTR({ sections, selected, onChange, label, icon }: FilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   /**
    * คำอธิบาย: ตรวจสอบการคลิกพื้นที่อื่นนอกจาก Dropdown เพื่อปิดเมนู
-   * Input: -
-   * Output: - (อัปเดต state open)
    */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

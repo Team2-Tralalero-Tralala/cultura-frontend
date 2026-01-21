@@ -7,21 +7,21 @@
  * ใช้ร่วมกับ Service สำหรับจัดการการเปิด/ปิดระบบ
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { fetchServerStatus } from "@/Services/server-status-service";
-import { disableSystem, enableSystem } from "@/Services/system-toggle-service";
+import { fetchServerStatus } from "@/Libs/ServerStatusService";
+import { disableSystem, enableSystem } from "@/Libs/SystemToggleService";
 import { Icon } from "@iconify/react";
 import React from "react";
 
-/*
- * คำอธิบาย : Component หลักสำหรับหน้า "การเปิด/ปิด ระบบ"
- * ใช้จัดการ state ของสถานะระบบ การเปิด/ปิดระบบ
- * รวมถึงการแสดงสถานะและปุ่มควบคุมระบบ
+/**
+ * คำอธิบาย: Component หน้า ToggleSystemPage สำหรับ Super Admin
+ * หน้าที่: จัดการการเปิด/ปิดระบบ และแสดงสถานะปัจจุบัน
+ * Input: -
+ * Output: JSX Element หน้า ToggleSystemPage
  */
-export default function ToggleSystemPage() {
+export function ToggleSystemPage() {
   // ====== state ======
-  const [serverStatus, setServerStatus] = React.useState<boolean>(true);
+  const [isServerOnline, setIsServerOnline] = React.useState<boolean>(true);
 
-  // ====== โหลดข้อมูล ======
   /*
    * คำอธิบาย : ดึงสถานะปัจจุบันของระบบจาก API
    * Input : ไม่มี
@@ -33,13 +33,12 @@ export default function ToggleSystemPage() {
     try {
       // Fetch server status
       const serverStatusData = await fetchServerStatus();
-      setServerStatus(serverStatusData.serverOnline);
+      setIsServerOnline(serverStatusData.serverOnline);
     } catch (e: any) {
-      setServerStatus(false);
+      setIsServerOnline(false);
     }
   };
 
-  // ====== turn system on ======
   /*
    * คำอธิบาย : เปิดระบบผ่าน API
    * Input : ไม่มี
@@ -51,10 +50,9 @@ export default function ToggleSystemPage() {
   const handleTurnOnSystem = async () => {
     const result = await enableSystem();
     console.log(result);
-    setServerStatus(result.data.serverOnline);
+    setIsServerOnline(result.data.serverOnline);
   };
 
-  // ====== turn system off ======
   /*
    * คำอธิบาย : ปิดระบบผ่าน API
    * Input : ไม่มี
@@ -64,7 +62,7 @@ export default function ToggleSystemPage() {
    */
   const handleTurnOffSystem = async () => {
     const result = await disableSystem();
-    setServerStatus(result.data.serverOnline);
+    setIsServerOnline(result.data.serverOnline);
   };
 
   React.useEffect(() => {
@@ -88,11 +86,9 @@ export default function ToggleSystemPage() {
             สถานะเซิร์ฟเวอร์
             <div className="flex items-center gap-2 px-2 py-2 rounded-full bg-black text-white">
               <div
-                className={`w-6 h-6 rounded-full ${serverStatus ? "bg-green-500" : "bg-red-500"}`}
+                className={`w-6 h-6 rounded-full ${isServerOnline ? "bg-green-500" : "bg-red-500"}`}
               ></div>
-              <span className="font-medium pr-4">
-                {serverStatus ? "ออนไลน์" : "ออฟไลน์"}
-              </span>
+              <span className="font-medium pr-4">{isServerOnline ? "ออนไลน์" : "ออฟไลน์"}</span>
             </div>
           </div>
         </div>
@@ -103,26 +99,29 @@ export default function ToggleSystemPage() {
           <div className="flex flex-col items-center space-y-4">
             <div className="flex flex-col items-center justify-center">
               <Icon
-                icon={serverStatus ? "wpf:online" : "heroicons-solid:status-offline"}
-                className={`w-64 h-64  ${serverStatus ? "text-green-500" : "text-red-500"}`}
+                icon={isServerOnline ? "wpf:online" : "heroicons-solid:status-offline"}
+                className={`w-64 h-64  ${isServerOnline ? "text-green-500" : "text-red-500"}`}
               />
               <h2
-                className={`text-4xl font-bold ${serverStatus ? "text-green-500" : "text-red-500"}`}
+                className={`text-4xl font-bold ${isServerOnline ? "text-green-500" : "text-red-500"}`}
               >
-                {serverStatus ? "ออนไลน์" : "ออฟไลน์"}
+                {isServerOnline ? "ออนไลน์" : "ออฟไลน์"}
               </h2>
             </div>
 
             <h2 className="text-2xl font-medium flex items-center gap-2">
-              <Icon icon="streamline-pixel:coding-apps-websites-setting-computer" className="w-5 h-5" />
-              คลิกปุ่มหากต้องการ{serverStatus ? "ปิด" : "เปิด"}ระบบ
+              <Icon
+                icon="streamline-pixel:coding-apps-websites-setting-computer"
+                className="w-5 h-5"
+              />
+              คลิกปุ่มหากต้องการ{isServerOnline ? "ปิด" : "เปิด"}ระบบ
             </h2>
           </div>
 
           {/* System Control Buttons */}
           <div className="flex flex-col items-center space-y-4">
             <div className="flex gap-4">
-              {!serverStatus ? (
+              {!isServerOnline ? (
                 <button
                   onClick={handleTurnOnSystem}
                   className="px-6 py-3 rounded-lg shadow-lg bg-white text-black flex items-center gap-3 cursor-pointer"

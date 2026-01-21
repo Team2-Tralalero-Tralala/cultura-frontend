@@ -5,7 +5,7 @@
  */
 import { Navigate, Outlet, useLocation } from "react-router";
 import type { Role } from "./AuthProvider";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./UseAuth";
 
 type Props = {
   allow: Role[]; // role ที่เข้าได้

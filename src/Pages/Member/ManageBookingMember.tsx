@@ -1,6 +1,5 @@
 /**
- * หน้า: จัดการการจอง (Member)
- * คำอธิบาย :
+ * คำอธิบาย: หน้าจัดการการจอง (Member)
  * - แสดงรายการการจองของแพ็กเกจที่ Member ดูแลเอง
  * - โครงสร้างเหมือนหน้า Admin ทุกประการ
  */
@@ -13,34 +12,26 @@ import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
-import {
-  fetchBookingsByMember,
-  updateBookingStatusByMember,
-} from "@/Services/booking-history-service";
-import type {
-  BookingRow,
-  Pagination,
-  BookingAdminDtoFromApi,
-} from "@/Types/BookingAdmin";
+import ModalReject from "@/Components/Modal/ModalReject";
+import { fetchBookingsByMember, updateBookingStatusByMember } from "@/Libs/BookingHistoryService";
+import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/Booking";
 import type { PaginationResponse } from "@/Types/Community";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
- * Input :
- * - onApprove (function) : callback เมื่อคลิกปุ่ม "อนุมัติ"
- * - onReject (function)  : callback เมื่อคลิกปุ่ม "ปฏิเสธ"
- * - onNavigate (function)    : callback เมื่อคลิกชื่อผู้จอง / ชื่อกิจกรรม เพื่อไปหน้ารายละเอียด
- * - onOpenSlip (function)    : callback เมื่อคลิกเปิดสลิปโอนเงิน
- * Output :
- * - Column<BookingRow>[] : รายการคอลัมน์ที่ใช้กับ DataTable
+/**
+ * คำอธิบาย: สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
+ * Input:
+ * - onApprove (function): callback เมื่อคลิกปุ่ม "อนุมัติ"
+ * - onReject (function): callback เมื่อคลิกปุ่ม "ปฏิเสธ"
+ * - onNavigate (function): callback เมื่อคลิกชื่อผู้จอง / ชื่อกิจกรรม เพื่อไปหน้ารายละเอียด
+ * - onOpenSlip (function): callback เมื่อคลิกเปิดสลิปโอนเงิน
+ * Output: Column<BookingRow>[] (รายการคอลัมน์ที่ใช้กับ DataTable)
  */
-const makeColumns = (
+const createColumns = (
   onApprove: (row: BookingRow) => void,
   onReject: (row: BookingRow) => void,
   onNavigate: (id: number) => void,
-  onOpenSlip: (url: string) => void
+  onOpenSlip: (url: string) => void,
 ): Column<BookingRow>[] => [
   {
     key: "touristName",
@@ -163,13 +154,15 @@ const makeColumns = (
   },
 ];
 
-/*
- * คำอธิบาย : หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
+/**
+ * คำอธิบาย: หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
+ * Input: -
+ * Output: JSX Element
  */
 export default function ManageBookingMember() {
   const navigate = useNavigate();
 
-  const [bookingRows, setBookingRows] = React.useState<BookingRow[]>([]); // เปลี่ยน rows เป็น bookingRows
+  const [bookingLists, setBookingLists] = React.useState<BookingRow[]>([]); // เปลี่ยน rows เป็น bookingLists
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
@@ -182,19 +175,19 @@ export default function ManageBookingMember() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [selectedStatus, setSelectedStatus] = React.useState("all");
 
   // Modal ยืนยันการอนุมัติ/ปฏิเสธ
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
-  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
+  const [isOpenConfirmModal, setIsOpenConfirmModal] = React.useState(false);
+  const [isOpenRejectModal, setIsOpenRejectModal] = React.useState(false);
   const [selectedRow, setSelectedRow] = React.useState<BookingRow | null>(null);
 
   // Modal แสดงสลิปโอนเงิน
-  const [isSlipModalOpen, setIsSlipModalOpen] = React.useState(false); // เพิ่ม is นำหน้า
+  const [isOpenSlipModal, setIsOpenSlipModal] = React.useState(false);
   const [slipUrl, setSlipUrl] = React.useState<string | null>(null);
 
-  /*
-   * คำอธิบาย : ตัวเลือกสถานะที่ใช้สำหรับ FilterDropdown
+  /**
+   * คำอธิบาย: ตัวเลือกสถานะที่ใช้สำหรับ FilterDropdown
    */
   const statusOptions = [
     { label: "ทั้งหมด", value: "all" },
@@ -202,80 +195,75 @@ export default function ManageBookingMember() {
     { label: "รอคืนเงิน", value: "REFUND_PENDING" },
   ];
 
-  /*
-   * คำอธิบาย : ดึงรายการการจองจาก API ตามหน้า, จำนวนต่อหน้า และสถานะ แล้ว map เป็น BookingRow
-   * Input : currentPage, pageSize, statusFilter
-   * Output : อัปเดต state ของ bookingRows และ pagination
+  /**
+   * คำอธิบาย: ดึงรายการการจองจาก API ตามหน้า, จำนวนต่อหน้า และสถานะ แล้ว map เป็น BookingRow
+   * Input: currentPage, pageSize, selectedStatus
+   * Output: - (อัปเดต state ของ bookingRows และ pagination)
    */
-  const reload = React.useCallback(async () => {
+  const loadPageData = React.useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response: PaginationResponse<BookingAdminDtoFromApi> =
-        await fetchBookingsByMember(
-          currentPage,
-          pageSize,
-          statusFilter === "all" ? undefined : statusFilter
-        );
+      const response: PaginationResponse<BookingAdminDtoFromApi> = await fetchBookingsByMember(
+        currentPage,
+        pageSize,
+        selectedStatus === "all" ? undefined : selectedStatus,
+      );
 
-      const mappedRows: BookingRow[] = response.data.map(
-        (bookingItem: BookingAdminDtoFromApi) => {
-          let normalizedSlipPath =
-            (bookingItem.transferSlip ?? "").replace(/\\/g, "/");
+      const mappedRows: BookingRow[] = response.data.map((bookingItem: BookingAdminDtoFromApi) => {
+        let normalizedSlipPath = (bookingItem.transferSlip ?? "").replace(/\\/g, "/");
 
-          if (
-            normalizedSlipPath &&
-            !normalizedSlipPath.startsWith("http")
-          ) {
-            normalizedSlipPath = `${import.meta.env.VITE_FILE_URL}/${normalizedSlipPath}`;
-          }
-
-          return {
-            id: bookingItem.id,
-            touristName: `${bookingItem.tourist.fname} ${bookingItem.tourist.lname}`,
-            packageName: bookingItem.package.name,
-            totalPrice: `฿${bookingItem.totalPrice.toLocaleString()}`,
-            status: bookingItem.status,
-            transferSlip: normalizedSlipPath || "-",
-          };
+        if (normalizedSlipPath && !normalizedSlipPath.startsWith("http")) {
+          normalizedSlipPath = `${import.meta.env.VITE_FILE_URL}/${normalizedSlipPath}`;
         }
-      );
 
-      setBookingRows(mappedRows);
-      setPagination(response.pagination);
+        return {
+          id: bookingItem.id,
+          touristName: `${bookingItem.tourist.fname} ${bookingItem.tourist.lname}`,
+          packageName: bookingItem.package.name,
+          totalPrice: `฿${bookingItem.totalPrice.toLocaleString()}`,
+          status: bookingItem.status,
+          transferSlip: normalizedSlipPath || "-",
+        };
+      });
+
+      setBookingLists(mappedRows);
+      setPagination({
+        currentPage: response.pagination.currentPage ?? 1,
+        limit: response.pagination.limit ?? 10,
+        totalCount: response.pagination.totalCount ?? 0,
+        totalPages: response.pagination.totalPages ?? 1,
+      });
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ"
-      );
+      setErrorMessage(error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize, statusFilter]);
+  }, [currentPage, pageSize, selectedStatus]);
 
   React.useEffect(() => {
-    reload();
-  }, [reload]);
+    loadPageData();
+  }, [loadPageData]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, selectedStatus]);
 
-  /*
-   * คำอธิบาย : อนุมัติการจอง หรืออนุมัติคำขอคืนเงิน แล้วเรียก API และรีโหลดข้อมูล
-   * Input : row (BookingRow)
-   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
+  /**
+   * คำอธิบาย: อนุมัติการจอง หรืออนุมัติคำขอคืนเงิน แล้วเรียก API และรีโหลดข้อมูล
+   * Input: row (BookingRow)
+   * Output: - (เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่)
    */
   const handleApprove = async (row: BookingRow) => {
     try {
       setIsLoading(true);
 
       const currentStatus = row.status?.toUpperCase();
-      const newStatus: "BOOKED" | "REFUNDED" =
-        currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
+      const newStatus: "BOOKED" | "REFUNDED" = currentStatus === "PENDING" ? "BOOKED" : "REFUNDED";
 
       await updateBookingStatusByMember(row.id, newStatus);
-      await reload();
+      await loadPageData();
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
@@ -287,10 +275,10 @@ export default function ManageBookingMember() {
     }
   };
 
-  /*
-   * คำอธิบาย : ปฏิเสธการจอง หรือปฏิเสธคำขอคืนเงิน พร้อมเหตุผล แล้วเรียก API และรีโหลดข้อมูล
-   * Input : row (BookingRow), reason (string)
-   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
+  /**
+   * คำอธิบาย: ปฏิเสธการจอง หรือปฏิเสธคำขอคืนเงิน พร้อมเหตุผล แล้วเรียก API และรีโหลดข้อมูล
+   * Input: row (BookingRow), reason (string)
+   * Output: - (เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่)
    */
   const handleReject = async (row: BookingRow, reason?: string) => {
     try {
@@ -301,7 +289,7 @@ export default function ManageBookingMember() {
         currentStatus === "PENDING" ? "REJECTED" : "REFUND_REJECTED";
 
       await updateBookingStatusByMember(row.id, newStatus, reason);
-      await reload();
+      await loadPageData();
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
@@ -313,31 +301,31 @@ export default function ManageBookingMember() {
     }
   };
 
-  /*
-   * คำอธิบาย : กรองข้อมูล bookingRows ตามคำค้นหาและสถานะ
-   * Input : bookingRows, searchQuery, statusFilter
-   * Output : Array ของ BookingRow ที่ผ่านการกรอง
+  /**
+   * คำอธิบาย: กรองข้อมูล bookingRows ตามคำค้นหาและสถานะ
+   * Input: bookingRows, searchQuery, selectedStatus
+   * Output: Array ของ BookingRow ที่ผ่านการกรอง
    */
   const filteredRows = React.useMemo(() => {
     const keyword = searchQuery.toLowerCase();
 
-    const searchedRows = bookingRows.filter((row) =>
+    const searchedRows = bookingLists.filter((row) =>
       [row.touristName, row.packageName, row.status].some((value) =>
-        value.toLowerCase().includes(keyword)
-      )
+        value.toLowerCase().includes(keyword),
+      ),
     );
 
-    if (statusFilter === "all") return searchedRows;
-    return searchedRows.filter((row) => row.status === statusFilter);
-  }, [bookingRows, searchQuery, statusFilter]);
+    if (selectedStatus === "all") return searchedRows;
+    return searchedRows.filter((row) => row.status === selectedStatus);
+  }, [bookingLists, searchQuery, selectedStatus]);
 
   return (
     <div className="space-y-4">
-      <Breadcrumb
+      <BreadcrumbNavigation
         current={{
           label: "จัดการการจอง",
           to: "/member/bookings/all",
-          fromSidebar: true,
+          isFromSidebar: true,
         }}
       />
 
@@ -354,8 +342,8 @@ export default function ManageBookingMember() {
 
           <FilterDropdown
             options={statusOptions}
-            selected={statusFilter}
-            onChange={setStatusFilter}
+            selected={selectedStatus}
+            onChange={setSelectedStatus}
           />
 
           {/* ปุ่มคำขอคืนเงิน */}
@@ -370,26 +358,24 @@ export default function ManageBookingMember() {
         </div>
       </div>
 
-      {errorMessage && (
-        <div className="text-sm text-red-600">{errorMessage}</div>
-      )}
+      {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<BookingRow>
         data={filteredRows}
-        columns={makeColumns(
+        columns={createColumns(
           (row) => {
             setSelectedRow(row);
-            setIsConfirmModalOpen(true);
+            setIsOpenConfirmModal(true);
           },
           (row) => {
             setSelectedRow(row);
-            setIsRejectModalOpen(true);
+            setIsOpenRejectModal(true);
           },
           (id) => navigate(`/member/booking/${id}`),
           (url) => {
             setSlipUrl(url);
-            setIsSlipModalOpen(true);
-          }
+            setIsOpenSlipModal(true);
+          },
         )}
         getKey={(row) => String(row.id)}
         selectable
@@ -406,7 +392,7 @@ export default function ManageBookingMember() {
 
       {/* Modal: ยืนยันอนุมัติ */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isOpenConfirmModal}
         title={
           selectedRow?.status?.toUpperCase() === "REFUND_PENDING"
             ? "ยืนยันการอนุมัติคำขอคืนเงิน"
@@ -427,7 +413,7 @@ export default function ManageBookingMember() {
           const row = selectedRow;
 
           // ปิด modal + เคลียร์ state ก่อน
-          setIsConfirmModalOpen(false);
+          setIsOpenConfirmModal(false);
           setSelectedRow(null);
 
           try {
@@ -437,14 +423,14 @@ export default function ManageBookingMember() {
           }
         }}
         onCancel={() => {
-          setIsConfirmModalOpen(false);
+          setIsOpenConfirmModal(false);
           setSelectedRow(null);
         }}
       />
 
       {/* Modal: ปฏิเสธ + กรอกเหตุผล */}
-      <RejectModal
-        open={isRejectModalOpen}
+      <ModalReject
+        isOpen={isOpenRejectModal}
         title={
           selectedRow?.status?.toUpperCase() === "REFUND_PENDING"
             ? "ปฏิเสธคำขอคืนเงิน"
@@ -463,7 +449,7 @@ export default function ManageBookingMember() {
           const row = selectedRow;
 
           // ปิด modal + เคลียร์ state ก่อน
-          setIsRejectModalOpen(false);
+          setIsOpenRejectModal(false);
           setSelectedRow(null);
 
           try {
@@ -473,14 +459,14 @@ export default function ManageBookingMember() {
           }
         }}
         onCancel={() => {
-          setIsRejectModalOpen(false);
+          setIsOpenRejectModal(false);
           setSelectedRow(null);
         }}
       />
 
       {/* Modal: แสดงรูปหลักฐานการโอน (แบบเต็มจอ) */}
-      {isSlipModalOpen && slipUrl && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+      {isOpenSlipModal && slipUrl && (
+        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50">
           {/* กล่อง modal ขนาดคงที่ */}
           <div
             className="
@@ -501,7 +487,7 @@ export default function ManageBookingMember() {
             <button
               type="button"
               onClick={() => {
-                setIsSlipModalOpen(false);
+                setIsOpenSlipModal(false);
                 setSlipUrl(null);
               }}
               className="
@@ -533,7 +519,6 @@ export default function ManageBookingMember() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

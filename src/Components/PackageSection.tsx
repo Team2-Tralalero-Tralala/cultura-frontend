@@ -27,7 +27,7 @@ interface PackageSectionProps {
   /** หัวข้อของส่วน (เช่น "แพ็กเกจมาใหม่") */
   title: string;
   /** แสดงป้าย "New" ด้านข้างหัวข้อหรือไม่ */
-  showNewBadge?: boolean;
+  isShowNewBadge?: boolean;
   /** รายการแพ็กเกจที่จะแสดง */
   packages: PackageData[];
   /** ฟังก์ชันที่เรียกเมื่อคลิกปุ่มดูเพิ่มเติม */
@@ -35,15 +35,18 @@ interface PackageSectionProps {
 }
 
 /*
- * ฟังก์ชัน : PackageSection
  * คำอธิบาย : แสดงส่วนของแพ็กเกจพร้อมการ์ดที่เลื่อนได้แนวนอนด้วยปุ่มนำทาง
  * แสดง 4 การ์ดต่อครั้ง และสามารถขยายเพื่อแสดงเพิ่มเติมได้
- * Input : PackageSectionProps (title, showNewBadge, packages, onViewMore)
- * Output : React Component ที่ render ส่วนของแพ็กเกจ
+ * Input:
+ *   - title: หัวข้อของส่วน
+ *   - isShowNewBadge: แสดงป้าย "New" หรือไม่
+ *   - packages: รายการแพ็กเกจ
+ *   - onViewMore: ฟังก์ชันเมื่อคลิกดูเพิ่มเติม
+ * Output: React Component ที่ render ส่วนของแพ็กเกจ
  */
 export default function PackageSection({
   title,
-  showNewBadge = false,
+  isShowNewBadge = false,
   packages,
   onViewMore,
 }: PackageSectionProps) {
@@ -115,7 +118,7 @@ export default function PackageSection({
         {/* Section Title */}
         <div className="flex items-center gap-3 mb-6">
           <h2 className="text-2xl font-bold text-black">{title}</h2>
-          {showNewBadge && (
+          {isShowNewBadge && (
             <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded">
               New
             </span>

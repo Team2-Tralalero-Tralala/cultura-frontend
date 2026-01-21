@@ -4,7 +4,7 @@
  * และเรียกใช้งาน AuthContext เพื่อทำการ login
  */
 
-import TextField from "./TextField";
+import TextField from "./Input/TextField";
 import Button from "./Button";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../Libs/AuthProvider";
@@ -22,7 +22,7 @@ const loginSchema = z.object({
  * Input : -
  * Output : React Component ที่แสดงฟอร์ม login และจัดการ redirect/error
  */
-export function LoginTouristCard() {
+export default function LoginTouristCard() {
   const [showBlocked, setShowBlocked] = useState(false);
   const { login } = useContext(AuthContext);
   // State สำหรับควบคุม input และ error
@@ -173,7 +173,7 @@ export function LoginTouristCard() {
           {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}
         </Button>
       </form>
-      <ModalBlocked open={showBlocked} onClose={() => setShowBlocked(false)} />
+      <ModalBlocked isOpen={showBlocked} onClose={() => setShowBlocked(false)} />
     </div>
   );
 }

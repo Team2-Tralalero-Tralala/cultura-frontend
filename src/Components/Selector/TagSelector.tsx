@@ -2,7 +2,7 @@
  * คำอธิบาย : Component สำหรับเลือกแท็ก (Tag) ของชุมชน
  * โดยใช้ Autocomplete ที่สามารถเลือกหลายรายการได้ (multiple select)
  */
-import { getTags } from "@/Services/tag-service";
+import { getTags } from "@/Libs/TagService";
 import Autocomplete from "@mui/material/Autocomplete";
 import Checkbox from "@mui/material/Checkbox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";

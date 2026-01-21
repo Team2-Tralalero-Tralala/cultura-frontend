@@ -1,24 +1,20 @@
-/*
- * Component: CreateAccountPage
- * Description: หน้าสำหรับสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+/**
+ * คำอธิบาย: Component สำหรับหน้าสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
+ * รับข้อมูลผู้ใช้ ตรวจสอบความถูกต้อง และบันทึกลงฐานข้อมูล รองรับการสร้างบัญชีหลายบทบาท
  */
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import api from "@/Libs/api";
-import TextField from "../../Components/TextField";
+import api from "@/Libs/Api";
+import TextField from "../../Components/Input/TextField";
 import Button from "../../Components/Button";
-import SubmitButton from "../../Components/SubmitButton";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "../../Components/Selector/ThailandLocationSelector";
-import AvatarUploader from "@/Components/AvatarUploader";
+import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 import Autocomplete from "@mui/material/Autocomplete";
@@ -50,7 +46,7 @@ const accountSchema = z.object({
         const currentDate = new Date();
         return !isNaN(dateObject.getTime()) && dateObject <= currentDate;
       },
-      { message: "วันเกิดต้องเป็นวันที่ถูกต้อง และไม่เกินวันที่ปัจจุบัน" }
+      { message: "วันเกิดต้องเป็นวันที่ถูกต้อง และไม่เกินวันที่ปัจจุบัน" },
     )
     .optional(),
 
@@ -98,6 +94,11 @@ interface CreateAccountBody {
   postalCode?: string;
 }
 
+/**
+ * คำอธิบาย: Popper Component สำหรับ AutoComplete ของ MUI
+ * Input: props (any) - props จาก MUI Autocomplete
+ * Output: JSX Element Popper
+ */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -117,10 +118,20 @@ function CustomPopper(props: any) {
   );
 }
 
+/**
+ * คำอธิบาย: หน้าสร้างบัญชีผู้ใช้ใหม่
+ * Input: Props (CreateAccountPageProps) - defaultRole (Optional)
+ * Output: JSX Element หน้า Form สร้างบัญชี
+ */
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  /**
+   * คำอธิบาย: หา Role จาก URL path หรือ props
+   * Input: -
+   * Output: RoleType (Admin | Member | Tourist)
+   */
   const getRoleFromPath = (): RoleType => {
     if (defaultRole) return defaultRole;
     if (location.pathname.includes("member")) return "Member";
@@ -219,6 +230,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   }, [role]);
 
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลใน Form
+   * Input: fieldName (optional string), fieldValue (optional unknown) - ถ้าส่งมาจะตรวจเฉพาะ field นั้น
+   * Output: boolean (true ถ้าถูกต้อง)
+   */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
       const result = accountSchema.safeParse({
@@ -268,6 +284,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
+  /**
+   * คำอธิบาย: ส่งข้อมูลเพื่อสร้างบัญชีใหม่
+   * Input: event (React.FormEvent)
+   * Output: Promise<void>
+   */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -316,8 +337,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
           roleSpecificData.gender === "ชาย"
             ? "MALE"
             : roleSpecificData.gender === "หญิง"
-            ? "FEMALE"
-            : "NONE";
+              ? "FEMALE"
+              : "NONE";
         accountBody.birthDate = roleSpecificData.birthDate || null;
         accountBody.province = locationData.province;
         accountBody.district = locationData.district;
@@ -512,7 +533,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     getOptionLabel={(option) => option.name}
                     value={
                       communityOptions.find(
-                        (c) => String(c.id) === String(roleSpecificData.communityId)
+                        (c) => String(c.id) === String(roleSpecificData.communityId),
                       ) || null
                     }
                     onChange={(_, newValue) => {
@@ -541,24 +562,24 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                               focus:outline-none focus:ring-1 transition-shadow pr-10"
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
-                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
+                            <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
                         </div>
                       );
                     }}
                   />
                 </div>
-                
+
                 <TextField
                   id="activityRole"
                   label="บทบาทในชุมชน"
                   placeholder="กรอกบทบาทในชุมชน"
                   required
                   value={roleSpecificData.activityRole}
-                  onChange={(e) => 
+                  onChange={(e) =>
                     setRoleSpecificData((prev) => ({
                       ...prev,
-                      activityRole: e.target.value
+                      activityRole: e.target.value,
                     }))
                   }
                 />
@@ -624,15 +645,15 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
+            <Button type="confirm-admin" onClick={() => setShowConfirm(true)}>
               สร้างบัญชี
-            </SubmitButton>
+            </Button>
           </div>
         </div>
       </form>
 
       <Modal
-        open={showConfirm}
+        isOpen={showConfirm}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่"
         confirmText="ยืนยัน"
@@ -645,13 +666,13 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       />
 
       <ModalAlert
-        open={showSuccessModal}
+        isOpen={showSuccessModal}
         type="success"
         title="สร้างบัญชีสำเร็จ"
         message="บัญชีผู้ใช้ถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
           setShowSuccessModal(false);
-          navigate("/super/accounts/all"); 
+          navigate("/super/accounts/all");
         }}
       />
     </div>

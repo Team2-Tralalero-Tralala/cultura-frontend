@@ -1,33 +1,36 @@
 /**
- * คำอธิบาย : หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ รองรับการอัปโหลดรูปภาพและวิดีโอ
+ * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) รองรับการกรอกข้อมูลแพ็กเกจ อัปโหลดรูปภาพ/วิดีโอ และเลือกที่พัก
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
-import TextField from "../../Components/TextField";
+import TextField from "../../Components/Input/TextField";
 import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/TextArea";
+import TextArea from "@/Components/Input/TextArea";
 import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
-import BoxTimeInput from "@/Components/calendar/input_calendar/BoxTimeInput";
+import {
+  PackageStatusDropdown,
+  type PackageStatus,
+} from "@/Components/Selector/PackageStatusDropdown";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
-/*
- * คำอธิบาย : ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
+/**
+ * คำอธิบาย: ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
  * Input: inputValue (ค่าที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนกลับถ้าว่าง)
  * Output: ค่า string ที่ตัดช่องว่างแล้ว หรือค่า fallback
  */
@@ -36,8 +39,8 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
   return trimmed.length ? trimmed : fallback;
 }
 
-/*
- * คำอธิบาย : แปลงค่าใดๆ เป็น number หรือ null
+/**
+ * คำอธิบาย: แปลงค่าใดๆ เป็น number หรือ null
  * Input: value (ค่าที่ต้องการแปลง)
  * Output: ค่าตัวเลข หรือ null หากแปลงไม่ได้
  */
@@ -133,6 +136,14 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
+/**
+ * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
+ * หน้าที่:
+ * - จัดการ state ฟอร์มแพ็กเกจ
+ * - ตรวจสอบข้อมูล (Validation)
+ * - ค้นหาและเลือกที่พัก (Homestay) เพื่อผูกกับแพ็กเกจ
+ * - บันทึกข้อมูลแพ็กเกจลงฐานข้อมูล
+ */
 export const CreatePackagePage = () => {
   const navigate = useNavigate();
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
@@ -146,7 +157,7 @@ export const CreatePackagePage = () => {
   const [tagIds, setTagIds] = useState<number[]>([]);
   const [coverFiles, setCoverFiles] = useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([])
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [startDateObj, setStartDateObj] = useState<Date | null>(null);
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
@@ -154,9 +165,9 @@ export const CreatePackagePage = () => {
   const [homestayCheckInDateObject, setHomestayCheckInDateObject] = useState<Date | null>(null);
   const [homestayCheckOutDateObject, setHomestayCheckOutDateObject] = useState<Date | null>(null);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
-   * Input: fieldName (ชื่อ Field), fieldValue (ค่าของ Field), newState (ข้อมูลฟอร์มใหม่)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
+   * Input: field (ชื่อ Field), value (ค่าของ Field), newState (ข้อมูลฟอร์มใหม่)
    * Output: -
    */
   const validateField = React.useCallback(
@@ -169,11 +180,11 @@ export const CreatePackagePage = () => {
           : result.error.issues.find((issue) => issue.path[0] === field)?.message,
       }));
     },
-    []
+    [],
   );
 
-  /*
-   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนบันทึก
+  /**
+   * คำอธิบาย: ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนบันทึก
    * Input: -
    * Output: สถานะความถูกต้อง (Boolean)
    */
@@ -206,19 +217,31 @@ export const CreatePackagePage = () => {
     }
     if (selectedHomestay) {
       if (!homestayCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
+        }));
         isValid = false;
       }
       if (!homestayCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
+        }));
         isValid = false;
       }
       if (!homestayCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
+        }));
         isValid = false;
       }
       if (!homestayCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({ ...prev, homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์" }));
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
+        }));
         isValid = false;
       }
     }
@@ -276,7 +299,7 @@ export const CreatePackagePage = () => {
     const fetchMyCommunity = async () => {
       try {
         const response = await axios.get(`${apiUrl}/admin/community`, {
-          withCredentials: true
+          withCredentials: true,
         });
         const myCommunityId = response.data?.data?.id;
         if (myCommunityId) {
@@ -290,10 +313,8 @@ export const CreatePackagePage = () => {
     fetchMyCommunity();
   }, []);
 
-  const MIN_HOMESTAY_QUERY_CHARS = 0;
-
-  /*
-   * คำอธิบาย : ฟังก์ชันดึงข้อมูลรายการที่พักจาก Server ตามคำค้นหา
+  /**
+   * คำอธิบาย: ฟังก์ชันดึงข้อมูลรายการที่พักจาก Server ตามคำค้นหา
    * Input: query (คำค้นหา)
    * Output: -
    */
@@ -305,12 +326,14 @@ export const CreatePackagePage = () => {
         withCredentials: true,
       });
       const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];
-      const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map((homestay: any) => ({
-        id: Number(homestay.id),
-        name: homestay.name ?? "",
-        facility: homestay.facility ?? homestay.description ?? "",
-        images: homestay.homestayImage ?? homestay.images ?? [],
-      }));
+      const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map(
+        (homestay: any) => ({
+          id: Number(homestay.id),
+          name: homestay.name ?? "",
+          facility: homestay.facility ?? homestay.description ?? "",
+          images: homestay.homestayImage ?? homestay.images ?? [],
+        }),
+      );
       setHomestayOptions(options);
       setOpenHomestayBox(options.length > 0);
     } catch (error) {
@@ -322,15 +345,18 @@ export const CreatePackagePage = () => {
 
   React.useEffect(() => {
     const timerId = setTimeout(() => {
-      if (homestayQuery || document.activeElement === homestayBoxRef.current?.querySelector('input')) {
+      if (
+        homestayQuery ||
+        document.activeElement === homestayBoxRef.current?.querySelector("input")
+      ) {
         fetchHomestays(homestayQuery);
       }
     }, 250);
     return () => clearTimeout(timerId);
   }, [homestayQuery, fetchHomestays]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับเลือกที่พักจากรายการค้นหา
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับเลือกที่พักจากรายการค้นหา
    * Input: homestay (ข้อมูลที่พักที่เลือก)
    * Output: -
    */
@@ -342,9 +368,9 @@ export const CreatePackagePage = () => {
     setFormField("tagId" as any, formState.tagId);
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับอัปเดตค่าในฟอร์มและตรวจสอบความถูกต้องทันที
-   * Input: fieldName (ชื่อ Field), fieldValue (ค่าใหม่)
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับอัปเดตค่าในฟอร์มและตรวจสอบความถูกต้องทันที
+   * Input: key (ชื่อ Field), value (ค่าใหม่)
    * Output: -
    */
   const setFormField = React.useCallback(
@@ -355,7 +381,7 @@ export const CreatePackagePage = () => {
         return newState;
       });
     },
-    [validateField]
+    [validateField],
   );
 
   const [homestayCheckInDate, setHomestayCheckInDate] = useState("");
@@ -364,8 +390,8 @@ export const CreatePackagePage = () => {
   const [homestayCheckOutTime, setHomestayCheckOutTime] = useState("");
   const [homestayBookedRoom, setHomestayBookedRoom] = useState<string>("1");
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับล้างข้อมูลที่พักที่เลือกไว้
    * Input: -
    * Output: -
    */
@@ -380,19 +406,22 @@ export const CreatePackagePage = () => {
     setHomestayBookedRoom("1");
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
+  /**
+   * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการเปลี่ยนตำแหน่งบนแผนที่
    * Input: [latitude, longitude] (พิกัดละติจูดและลองจิจูด)
    * Output: - (อัปเดต state ในฟอร์ม)
    */
-  const handleMapChange = React.useCallback(([latitude, longitude]: [number, number]) => {
-    setFormField("latitude", String(latitude));
-    setFormField("longitude", String(longitude));
-    setPosition([latitude, longitude]);
-  }, [setFormField]);
+  const handleMapChange = React.useCallback(
+    ([latitude, longitude]: [number, number]) => {
+      setFormField("latitude", String(latitude));
+      setFormField("longitude", String(longitude));
+      setPosition([latitude, longitude]);
+    },
+    [setFormField],
+  );
 
-  /*
-   * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
+  /**
+   * คำอธิบาย: ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
    * Input: -
    * Output: -
    */
@@ -429,16 +458,20 @@ export const CreatePackagePage = () => {
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
 
         // Homestay
-        ...(selectedHomestay && homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
-        ...(selectedHomestay && homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
-        ...(selectedHomestay && homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
-        ...(selectedHomestay && homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
+        ...(selectedHomestay &&
+          homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
+        ...(selectedHomestay &&
+          homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
+        ...(selectedHomestay &&
+          homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
+        ...(selectedHomestay &&
+          homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
         ...(selectedHomestay && homestayBookedRoom && { bookedRoom: Number(homestayBookedRoom) }),
 
         facility: formState.facility || "",
 
         // [จุดสำคัญ] ต้องแปลง tagIds เป็น number array ไม่งั้นจะ Error 400
-        tagIds: tagIds.map(tagIdValue => Number(tagIdValue)),
+        tagIds: tagIds.map((tagIdValue) => Number(tagIdValue)),
 
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
 
@@ -470,8 +503,8 @@ export const CreatePackagePage = () => {
     }
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
+  /**
+   * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
    * Input: event (เหตุการณ์จากฟอร์ม)
    * Output: - (เปิด Modal ยืนยัน หรือแสดง Error)
    */
@@ -495,7 +528,6 @@ export const CreatePackagePage = () => {
     setIsConfirmModalOpen(true);
   }
 
-
   return (
     <div className="w-full max-w-none px-0 lg:px-0">
       {/* Breadcrumb */}
@@ -507,7 +539,11 @@ export const CreatePackagePage = () => {
           }}
         />
       </div>
-      <form noValidate onSubmit={handleSubmit} className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8">
+      <form
+        noValidate
+        onSubmit={handleSubmit}
+        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
+      >
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -791,7 +827,10 @@ export const CreatePackagePage = () => {
         <section className="grid md:grid-cols-2 gap-5">
           <div className="md:col-span-1">
             <div ref={searchBoxRef}>
-              <TagSelector value={tagIds} onChange={(selectedTagIds) => setTagIds(selectedTagIds)} />
+              <TagSelector
+                value={tagIds}
+                onChange={(selectedTagIds) => setTagIds(selectedTagIds)}
+              />
             </div>
           </div>
 
@@ -966,7 +1005,6 @@ export const CreatePackagePage = () => {
                   required
                   errorText={(formErrors as any).homestayCheckOutTime}
                 />
-
               </div>
 
               <div className="relative rounded-xl border p-4 bg-white shadow-sm">
@@ -1035,7 +1073,7 @@ export const CreatePackagePage = () => {
       </form>
 
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการสร้างแพ็กเกจ"
         text="คุณต้องการสร้างแพ็กเกจนี้ใช่หรือไม่?"
         confirmText="ยืนยัน"
@@ -1045,9 +1083,6 @@ export const CreatePackagePage = () => {
           setIsConfirmModalOpen(false);
         }}
       />
-
     </div>
   );
 };
-
-export default CreatePackagePage;

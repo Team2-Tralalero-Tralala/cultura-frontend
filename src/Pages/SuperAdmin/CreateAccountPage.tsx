@@ -11,7 +11,6 @@ import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
 import TextField from "../../Components/Input/TextField";
 import Button from "../../Components/Button";
-import SubmitButton from "../../Components/SubmitButton";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "../../Components/Selector/ThailandLocationSelector";
@@ -646,9 +645,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton htmlType="button" onClick={() => setShowConfirm(true)}>
+            <Button type="confirm-admin" onClick={() => setShowConfirm(true)}>
               สร้างบัญชี
-            </SubmitButton>
+            </Button>
           </div>
         </div>
       </form>

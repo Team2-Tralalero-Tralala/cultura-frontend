@@ -147,11 +147,6 @@ export function ManageStorePage() {
   };
 
   /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage หรือ limit เปลี่ยนแปลง
-   * Input : communityId, pagination.currentPage, pagination.limit
-   * Output : void
-   */
-  /*
    * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage, limit หรือ searchQuery เปลี่ยนแปลง
    * Input : communityId, pagination.currentPage, pagination.limit, searchQuery
    * Output : void

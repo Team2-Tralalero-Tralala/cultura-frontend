@@ -27,11 +27,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
  * Input: fileName ชื่อไฟล์ที่ได้จาก backend
  * Output: string - URL ของไฟล์ภาพ
  */
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับแปลงชื่อไฟล์จาก backend เป็น URL ใช้งานได้
- * Input: fileName ชื่อไฟล์ที่ได้จาก backend
- * Output: string - URL ของไฟล์ภาพ
- */
 function resolveBackendUploadUrl(path?: string): string | undefined {
   if (!path) return undefined;
   if (path.startsWith("http")) return path;

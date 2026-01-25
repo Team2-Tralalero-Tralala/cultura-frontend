@@ -10,6 +10,7 @@ import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import ModalTag from "@/Components/Modal/ModalTag";
 import { Modal as ModalConfirm } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import * as TagService from "@/Libs/TagService";
 
@@ -134,6 +135,10 @@ export function ManageTagPage() {
     setIsConfirmModalOpen(true);
   };
 
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successDescription, setSuccessDescription] = useState("");
+
   /*
    * คำอธิบาย : ฟังก์ชันยืนยัน action ของ modal (create/edit/delete)
    * Input : ไม่มี
@@ -141,13 +146,27 @@ export function ManageTagPage() {
    */
   const handleFinalConfirm = async () => {
     try {
-      if (modalType === "create") await TagService.createTag(pendingTagName);
-      else if (modalType === "edit" && selectedTag)
+      if (modalType === "create") {
+        await TagService.createTag(pendingTagName);
+        setSuccessMessage("สร้างประเภทสำเร็จ");
+        setSuccessDescription("บันทึกข้อมูลประเภทสำเร็จ");
+      }
+      else if (modalType === "edit" && selectedTag) {
         await TagService.updateTag(selectedTag.id, pendingTagName);
-      else if (modalType === "delete" && selectedTag) await TagService.deleteTag(selectedTag.id);
+        setSuccessMessage("แก้ไขประเภทสำเร็จ");
+        setSuccessDescription("บันทึกข้อมูลประเภทสำเร็จ");
+      }
+      else if (modalType === "delete" && selectedTag) {
+        await TagService.deleteTag(selectedTag.id);
+        setSuccessMessage("ลบประเภทสำเร็จ");
+        setSuccessDescription("");
+      }
 
       closeInputModal();
       setIsConfirmModalOpen(false);
+      if (modalType !== "delete") {
+        setIsSuccessModalOpen(true);
+      }
       await fetchData(pagination.currentPage, pagination.limit, searchQuery);
     } catch (error) {
       console.error(error);
@@ -301,6 +320,14 @@ export function ManageTagPage() {
         initialValue={modalType === "edit" ? selectedTag?.name : ""}
         existingTags={rows.map((tag) => tag.name)}
         errorMessage=""
+      />
+
+      <ModalAlert
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        type="success"
+        title={successMessage}
+        message={successDescription}
       />
     </div>
   );

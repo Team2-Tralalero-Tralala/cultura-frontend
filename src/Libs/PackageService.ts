@@ -75,12 +75,12 @@ export async function deletePackageAdmin(id: number) {
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ admin
- * Input : page, limit
+ * Input : page, limit, search
  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
  */
 export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
   const params = { page, limit };
-  const res = await axios.get(`${apiUrl}/admin/package/histories/all`, {
+  const res = await axios.get(`${apiUrl}/admin/packages/histories/all`, {
     params,
     withCredentials: true,
   });
@@ -89,7 +89,7 @@ export async function getHistoriesPackageAdmin(page = 1, limit = 50) {
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจที่จบแล้วทั้งหมดของชุมชนที่อยู่ในชุมชนของ member
- * Input : page, limit
+ * Input : page, limit, search
  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลแพ็กเกจที่จบแล้ว (Promise)
  */
 export async function getHistoriesPackageMember(page = 1, limit = 50) {

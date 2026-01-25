@@ -2,11 +2,11 @@
  * คำอธิบาย: Component สำหรับหน้า “ประวัติแพ็กเกจ” ของสมาชิก
  * - แสดงรายการแพ็กเกจที่สมาชิกได้สร้างและสิ้นสุดไปแล้ว
  */
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
-import Button from "@/Components/Button";
+
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type {
@@ -79,7 +79,7 @@ const columns: Column<PackageHistoryRow>[] = [
     header: "ชื่อแพ็กเกจ",
     className: "min-w-[220px]",
     render: (row) => (
-      <Link to={`/member/package/${row.id}`} className="hover:underline">
+      <Link to={`/member/package/history/${row.id}`} className="hover:text-dark-green hover:underline">
         {row.name}
       </Link>
     ),
@@ -89,7 +89,7 @@ const columns: Column<PackageHistoryRow>[] = [
   { key: "status", header: "สถานะแพ็กเกจ", className: "min-w-[160px]" },
   {
     key: "dueDate",
-    header: "เวลาสิ้นสุด",
+    header: "วัน-เวลาสิ้นสุด",
     render: (row) => formatThaiDateTime(row.dueDate),
   },
 ];
@@ -102,7 +102,7 @@ const columns: Column<PackageHistoryRow>[] = [
 export default function ManagePackageHistoryPage() {
   const navigate = useNavigate();
 
-  const [packageHistoryLists, setPackageHistoryLists] = useState<PackageHistoryRow[]>([]);
+  const [rows, setRows] = useState<PackageHistoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [packageIdToDelete, setPackageIdToDelete] = useState<number | null>(null);
@@ -115,6 +115,30 @@ export default function ManagePackageHistoryPage() {
     limit: 10,
   });
   const [communityName, setCommunityName] = useState<string>("");
+
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับแปลงข้อความเป็นตัวพิมพ์เล็กและตัดช่องว่าง
+   * Input: textValue (string)
+   * Output: ข้อความที่ผ่านการจัดรูปแบบแล้ว (string)
+   */
+  const normalizeText = (textValue: string) =>
+    (textValue ?? "").toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+
+  /**
+   * คำอธิบาย: ตัวแปรสำหรับกรองข้อมูลแพ็กเกจตามคำค้นหา
+   * Input: rows, searchQuery
+   * Output: รายการแพ็กเกจที่ตรงกับคำค้นหา
+   */
+  const filteredRows = React.useMemo(() => {
+    const normalizedQuery = normalizeText(searchQuery);
+    if (!normalizedQuery) return rows;
+
+    return rows.filter((row) =>
+      [row.name, row.community, row.overseer, row.status]
+        .map(normalizeText)
+        .some((fieldValue) => fieldValue.includes(normalizedQuery)),
+    );
+  }, [rows, searchQuery]);
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
@@ -137,7 +161,8 @@ export default function ManagePackageHistoryPage() {
         community: packageItem.community?.name ?? "-",
         overseer:
           `${packageItem.overseerPackage?.fname ?? ""} ${packageItem.overseerPackage?.lname ?? ""}`.trim(),
-        status: packageItem.status === "CLOSED" ? "สิ้นสุดกิจกรรม" : packageItem.status,
+        status: packageItem.statusPackage === "PUBLISH" ? "จบแล้ว" : (packageItem.status === "CLOSED" ? "สิ้นสุดกิจกรรม" : packageItem.statusPackage ?? packageItem.status),
+        dueDate: packageItem.dueDate,
         bookedCount: packageItem.booked_count ?? 0,
         capacity: packageItem.capacity ?? 0,
         tags: Array.isArray(packageItem.tags) ? packageItem.tags.map((t: any) => t.name) : [],
@@ -147,7 +172,7 @@ export default function ManagePackageHistoryPage() {
         setCommunityName(packageList[0].community?.name || "ชุมชน");
       }
 
-      setPackageHistoryLists(mappedRows);
+      setRows(mappedRows);
       setPagination({
         currentPage: paginationData.currentPage ?? 1,
         limit: paginationData.limit ?? 10,
@@ -168,7 +193,11 @@ export default function ManagePackageHistoryPage() {
    * Output: - (เรียก fetchData เพื่อโหลดข้อมูลใหม่)
    */
   useEffect(() => {
-    fetchData();
+    const delay = setTimeout(() => {
+      fetchData();
+    }, 500);
+
+    return () => clearTimeout(delay);
   }, [pagination.currentPage, pagination.limit]);
 
   /**
@@ -194,19 +223,7 @@ export default function ManagePackageHistoryPage() {
    * Input: searchQuery
    * Output: แถวข้อมูลที่ตรงกับคำค้นหา
    */
-  const filteredRows = useMemo(() => {
-    if (!searchQuery) return packageHistoryLists;
-    const lowerQuery = searchQuery.toLowerCase();
-    return packageHistoryLists.filter((row) => {
-      const combined = `
-        ${row.name}
-        ${row.community}
-        ${row.overseer}
-        ${row.status}
-      `.toLowerCase();
-      return combined.includes(lowerQuery);
-    });
-  }, [searchQuery, packageHistoryLists]);
+
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
@@ -222,11 +239,10 @@ export default function ManagePackageHistoryPage() {
     } catch (error: any) {
       console.error("Failed to delete package:", error);
       alert(
-        `ลบไม่สำเร็จ: ${
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "unknown error"
+        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "unknown error"
         }`,
       );
       setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
@@ -271,16 +287,14 @@ export default function ManagePackageHistoryPage() {
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }}
             />
           </div>
 
-          <div>
-            <Button onClick={() => navigate("/member/package/create")} aria-label="สร้างแพ็กเกจ">
-              <span className="text-lg leading-none">＋</span>
-              <span>สร้างแพ็กเกจ</span>
-            </Button>
-          </div>
+
         </div>
       </div>
 

@@ -15,7 +15,6 @@ import EditCommunity from "@/Pages/Admin/EditCommunityPage";
 import CommunityDetailAdmin from "@/Pages/Admin/DetailCommunityPage";
 import PackageRequestsAdmin from "@/Pages/Admin/ManagePackageRequestPage";
 import ManageRefundBooking from "@/Pages/Admin/ManageRefundPage";
-import PackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryPage";
 import PackageFeedbacksPage from "@/Pages/Admin/DetailFeedbackPage";
 import { DashboardPage } from "@/Pages/Admin/DashboardPage";
 import ManageBooking from "@/Pages/Admin/ManageBookingPage";
@@ -38,6 +37,7 @@ import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 import { CreateStorePage } from "@/Pages/SuperAdmin/CreateStorePage";
 import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
+import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage"
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
@@ -82,8 +82,6 @@ export default function AdminRoutes() {
       <Route path="/members" element={<ManageMembers />} />
       <Route path="/member/create" element={<CreateMemberPage />} />
       <Route path="/member/:userId/edit" element={<EditMemberPage />} />
-      {/* หน้าตารางประวัติแพ็กเกจที่สิ้นสุดไปแล้ว Admin */}
-      <Route path="/package/histories" element={<PackageHistoryAdmin />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}
@@ -94,7 +92,7 @@ export default function AdminRoutes() {
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:id" element={<DetailPackageHistoryAdmin />} />
       <Route path="packages/drafts" element={<PackageDraftAdmin />} />
-      <Route path="packages/histories" element={<PackageHistoryAdmin />} />
+      <Route path="packages/histories" element={<ManagePackageHistoryPage />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />
       <Route path="package/:id/edit" element={<EditPackagePage />} />

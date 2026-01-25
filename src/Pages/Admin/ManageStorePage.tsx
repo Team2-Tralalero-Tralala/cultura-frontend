@@ -35,13 +35,7 @@ type StoreFromApi = {
   tagStores: { tag: { id: number; name: string } }[];
 };
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input: string
- * Output: string ที่ผ่านการ normalize แล้ว
- */
-const normalizeText = (str: string) =>
-  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับกำหนดคอลัมน์ของตารางร้านค้า
@@ -103,7 +97,7 @@ export default function ManageStorePage() {
       const currentPage = pagination?.currentPage ?? 1;
       const limit = pagination?.limit ?? 10;
 
-      const response = await getAllStoreAdmin(currentPage, limit);
+      const response = await getAllStoreAdmin(currentPage, limit, searchQuery);
 
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
       const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
@@ -129,12 +123,16 @@ export default function ManageStorePage() {
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลร้านค้าเมื่อ pagination มีการเปลี่ยนแปลง
-   * Input: pagination.currentPage, pagination.limit
+   * Input: pagination.currentPage, pagination.limit, searchQuery
    * Output: เรียก fetchStores เพื่อโหลดข้อมูลใหม่
    */
   React.useEffect(() => {
-    fetchStores();
-  }, [pagination.currentPage, pagination.limit]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchStores();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [pagination.currentPage, pagination.limit, searchQuery]);
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับโหลดชื่อชุมชนเมื่อคอมโพเนนต์ถูกสร้างขึ้น
@@ -179,20 +177,7 @@ export default function ManageStorePage() {
     },
   };
 
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับกรองข้อมูลร้านค้าตามคำค้นหา
-   * Input: searchQuery
-   * Output: รายการร้านค้าที่ผ่านการกรอง
-   */
-  const filteredRows = useMemo(() => {
-    const query = normalizeText(searchQuery);
-    return storeRows.filter((row) => {
-      const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
-        normalizeText(String(value ?? "")),
-      );
-      return !query || haystacks.some((haystack) => haystack.includes(query));
-    });
-  }, [storeRows, searchQuery]);
+
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับลบร้านค้าตามรหัสร้านค้า
@@ -248,7 +233,10 @@ export default function ManageStorePage() {
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }}
             />
           </div>
 
@@ -268,7 +256,7 @@ export default function ManageStorePage() {
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<StoreRow>
-          data={filteredRows}
+          data={storeRows}
           getKey={(row) => row.id.toString()}
           columns={columns}
           selectable={true}

@@ -16,6 +16,7 @@ export interface BookingItem {
   statusLabel: string;
   isJoined?: boolean;
   isEnded?: boolean;
+  hasFeedback?: boolean;
 }
 
 interface BookingHistoryCardListProps {
@@ -68,7 +69,7 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
 
             {/* Action Buttons (Bottom Right) */}
             <div className="mt-4 flex justify-end gap-3 sm:absolute sm:bottom-6 sm:right-6 sm:mt-0">
-              {booking.status === "BOOKED" && booking.isEnded && (
+              {booking.status === "BOOKED" && booking.isEnded && !booking.hasFeedback && (
                 <button
                   onClick={(event) => {
                     event.stopPropagation();

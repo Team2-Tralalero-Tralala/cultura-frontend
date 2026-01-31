@@ -53,28 +53,45 @@ const SidebarMember: React.FC = () => {
     if (subPath.startsWith("/community/own")) {
       setActiveMenuKey("community");
       setOpenDropdown(null);
-    } else if (subPath === "/packages/draft") {
+    }
+
+    else if (subPath.startsWith("/packages/draft")) {
       setActiveMenuKey("packages-draft");
       setOpenDropdown("packages");
-    } else if (subPath === "/packages/done") {
+    } else if (
+      subPath.startsWith("/packages/done") ||
+      subPath.startsWith("/package/history/")
+    ) {
       setActiveMenuKey("packages-done");
       setOpenDropdown("packages");
-    } else if (subPath === "/feedbacks") {
+    } else if (subPath.startsWith("/feedbacks")) {
       setActiveMenuKey("feedbacks");
       setOpenDropdown("packages");
-    } else if (subPath.startsWith("/packages/all")) {
+    } else if (
+      subPath.startsWith("/packages/all") ||
+      subPath.startsWith("/package/") ||
+      subPath.startsWith("/packages")
+    ) {
       setActiveMenuKey("packages");
       setOpenDropdown("packages");
-    } else if (subPath === "/bookings/refunded-pending") {
+    }
+
+    else if (subPath.startsWith("/bookings/refunded-pending")) {
       setActiveMenuKey("booking-refunds");
       setOpenDropdown("booking");
-    } else if (subPath === "/bookings-histories") {
+    } else if (subPath.startsWith("/bookings-histories")) {
       setActiveMenuKey("booking-done");
       setOpenDropdown("booking");
-    } else if (subPath.startsWith("/bookings/panding")) {
+    } else if (
+      subPath.startsWith("/bookings/panding") ||
+      subPath.startsWith("/booking/") ||
+      subPath.startsWith("/bookings")
+    ) {
       setActiveMenuKey("booking");
       setOpenDropdown("booking");
-    } else if (subPath === "/dashboard") {
+    }
+
+    else if (subPath === "/dashboard") {
       setActiveMenuKey("dashboard");
       setOpenDropdown(null);
     } else if (subPath === "/logout") {
@@ -121,9 +138,8 @@ const SidebarMember: React.FC = () => {
           <Link
             to={`${basePath}/community/own`}
             onClick={() => handleClick("community")}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("community") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("community") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <Icon icon="material-symbols:group-outline" className="text-xl" />
             ชุมชนของฉัน
@@ -134,9 +150,8 @@ const SidebarMember: React.FC = () => {
             <Link
               to={`${basePath}/packages/all`}
               onClick={() => handleClick("packages")}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive("packages") ? "bg-[#0D845A]" : ""
-              }`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages") ? "bg-[#0D845A]" : ""
+                }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="material-symbols:card-travel-outline" className="text-xl" />
@@ -150,27 +165,24 @@ const SidebarMember: React.FC = () => {
                 <Link
                   to={`${basePath}/packages/draft`}
                   onClick={() => handleClick("packages-draft", "packages")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive("packages-draft") ? "bg-[#0D845A]" : ""
-                  }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages-draft") ? "bg-[#0D845A]" : ""
+                    }`}
                 >
                   ฉบับร่าง
                 </Link>
                 <Link
                   to={`${basePath}/packages/done`}
                   onClick={() => handleClick("packages-done", "packages")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive("packages-done") ? "bg-[#0D845A]" : ""
-                  }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("packages-done") ? "bg-[#0D845A]" : ""
+                    }`}
                 >
                   ประวัติแพ็กเกจ
                 </Link>
                 <Link
                   to={`${basePath}/feedbacks`}
                   onClick={() => handleClick("feedbacks", "packages")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive("feedbacks") ? "bg-[#0D845A]" : ""
-                  }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("feedbacks") ? "bg-[#0D845A]" : ""
+                    }`}
                 >
                   ข้อเสนอแนะ
                 </Link>
@@ -183,9 +195,8 @@ const SidebarMember: React.FC = () => {
             <Link
               to={`${basePath}/bookings/panding`}
               onClick={() => handleClick("booking")}
-              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${
-                isActive("booking") ? "bg-[#0D845A]" : ""
-              }`}
+              className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking") ? "bg-[#0D845A]" : ""
+                }`}
             >
               <span className="flex items-center gap-3">
                 <Icon icon="fluent-mdl2:reservation-orders" className="text-xl" />
@@ -199,18 +210,16 @@ const SidebarMember: React.FC = () => {
                 <Link
                   to={`${basePath}/bookings/refunded-pending`}
                   onClick={() => handleClick("booking-refunds", "booking")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive("booking-refunds") ? "bg-[#0D845A]" : ""
-                  }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking-refunds") ? "bg-[#0D845A]" : ""
+                    }`}
                 >
                   คำขอคืนเงิน
                 </Link>
                 <Link
                   to={`${basePath}/bookings-histories`}
                   onClick={() => handleClick("booking-done", "booking")}
-                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${
-                    isActive("booking-done") ? "bg-[#0D845A]" : ""
-                  }`}
+                  className={`pl-6 p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking-done") ? "bg-[#0D845A]" : ""
+                    }`}
                 >
                   ประวัติการจอง
                 </Link>
@@ -222,9 +231,8 @@ const SidebarMember: React.FC = () => {
           <Link
             to={`${basePath}/dashboard`}
             onClick={() => handleClick("dashboard")}
-            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${
-              isActive("dashboard") ? "bg-[#0D845A]" : ""
-            }`}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition ${isActive("dashboard") ? "bg-[#0D845A]" : ""
+              }`}
           >
             <Icon icon="mdi:view-dashboard-outline" className="text-xl" />
             รายงาน
@@ -239,9 +247,8 @@ const SidebarMember: React.FC = () => {
             handleClick("logout");
             logout();
           }}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${
-            isActive("logout") ? "bg-[#0D845A]" : ""
-          }`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#0D845A] transition w-full text-left ${isActive("logout") ? "bg-[#0D845A]" : ""
+            }`}
         >
           <Icon icon="solar:logout-2-outline" className="text-xl" />
           ออกจากระบบ

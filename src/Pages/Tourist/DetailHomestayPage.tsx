@@ -15,7 +15,8 @@ import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Tag from "@/Components/Tag";
 import { Icon } from "@iconify/react";
-import Thumbnails, { type MediaItem } from "@/Components/Thumbnails";
+import { type MediaItem } from "@/Components/Thumbnails";
+import SideThumbnails from "@/Components/SideThumbnails";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 import LocalServiceCard from "@/Components/LocalServiceCard";
 
@@ -26,13 +27,24 @@ const apiUrl = import.meta.env.VITE_API_URL;
  * Input: fileName ชื่อไฟล์ที่ได้จาก backend
  * Output: string - URL ของไฟล์ภาพ
  */
-function resolveBackendUploadUrl(fileName?: string): string | undefined {
-  if (!fileName) return undefined;
-  const cleaned = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
-  if (!cleaned.startsWith("uploads/")) {
-    return `${apiUrl}/uploads/${cleaned}`;
+function resolveBackendUploadUrl(path?: string): string | undefined {
+  if (!path) return undefined;
+  if (path.startsWith("http")) return path;
+
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  try {
+    const origin = new URL(apiBase).origin;
+    let cleanPath = path.startsWith("/") ? path.slice(1) : path;
+
+    // Safety check: if path doesn't start with uploads/, prepend it
+    if (!cleanPath.startsWith("uploads/")) {
+      cleanPath = `uploads/${cleanPath}`;
+    }
+
+    return `${origin}/${cleanPath}`;
+  } catch (error) {
+    return path;
   }
-  return `${apiUrl}/${cleaned}`;
 }
 
 interface OtherHomestay {
@@ -57,6 +69,11 @@ export default function DetailHomestayPage() {
   const [page, setPage] = useState(1);
   const [totalOtherHomestays, setTotalOtherHomestays] = useState(0);
   const limit = 12;
+
+  // Debug log with stringify to see full content
+  if (homestay) {
+    console.log("DEBUG HOMESTAY DATA STRING:", JSON.stringify(homestay, null, 2));
+  }
 
   /**
    * คำอธิบาย: สำหรับเลื่อนหน้าจอไปด้านบนเมื่อมีการเปลี่ยนแปลง homestayId หรือ communityId
@@ -148,7 +165,7 @@ export default function DetailHomestayPage() {
       </div>
 
       <div className="container mx-auto px-4 max-w-7xl pb-2 mt-6">
-        <h1 className="text-xl font-bold text-black mb-6">{homestay.name}</h1>
+        <h1 className="text-3xl font-bold text-black mb-6">{homestay.name}</h1>
         {homestay.tagHomestays && homestay.tagHomestays.length > 0 && (
           <div className="flex flex-wrap gap-3 mb-8">
             {homestay.tagHomestays.map((tag, index) => (
@@ -160,6 +177,7 @@ export default function DetailHomestayPage() {
             ))}
           </div>
         )}
+
         <div className="mb-12 text-base text-gray-800 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-start gap-2">
             <span className="font-bold min-w-[180px]">ประเภทที่พัก :</span>
@@ -243,7 +261,13 @@ export default function DetailHomestayPage() {
         </div>
 
         <div className="mb-16">
-          <Thumbnails items={galleryItems} className="!max-w-6xl" />
+          {galleryItems.length > 0 ? (
+            <SideThumbnails items={galleryItems} />
+          ) : (
+            <div className="w-full h-[300px] bg-gray-100 rounded-lg flex items-center justify-center text-black">
+              ไม่มีรูปภาพ
+            </div>
+          )}
         </div>
 
         <div className="h-px bg-gray-200 w-full mb-10 text-[#00BF6A]"></div>

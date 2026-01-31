@@ -109,12 +109,12 @@ export default function BookingHistoryTourist() {
         location: item.package?.location ?? item.package?.community?.name ?? "-",
         bookingDate: item.bookingAt
           ? new Date(item.bookingAt).toLocaleDateString("th-TH", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
           : "-",
         rawBookingDate: item.bookingAt || 0,
         price: item.package?.price ?? item.totalPrice ?? 0,
@@ -122,6 +122,7 @@ export default function BookingHistoryTourist() {
         statusLabel: statusMap[item.status] ?? item.status ?? "-",
         isJoined: item.participation_status === "JOINED" || item.participation_status === true,
         isEnded: item.package?.dueDate ? new Date(item.package.dueDate) < new Date() : false,
+        hasFeedback: item.feedbacks && item.feedbacks.length > 0,
       }));
 
       setRawBookings(mapped);
@@ -215,13 +216,13 @@ export default function BookingHistoryTourist() {
             <Breadcrumb
               current={{
                 label: "ประวัติการจอง",
-                to: "/tourist/booking-history",
+                to: "/tourist/booking-histories",
               }}
             />
           </div>
 
           {/* Page Title */}
-          <h1 className="mb-8 text-2xl font-bold text-gray-900">ประวัติการจอง</h1>
+          <h1 className="mb-8 text-3xl font-bold text-gray-900">ประวัติการจอง</h1>
 
           {/* Toolbar */}
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -230,18 +231,16 @@ export default function BookingHistoryTourist() {
               <Button
                 type={activeSort === "newest" ? "confirm-tourist" : "cancel"}
                 onClick={() => handleSort("newest")}
-                className={`font-medium transition-colors border w-auto px-4 whitespace-nowrap ${
-                  activeSort === "newest" ? "border-[#00BF6A]" : "border-gray-300 text-gray-700"
-                }`}
+                className={`font-medium transition-colors border w-auto px-4 whitespace-nowrap ${activeSort === "newest" ? "border-[#00BF6A]" : "border-gray-300 text-gray-700"
+                  }`}
               >
                 ล่าสุด
               </Button>
               <Button
                 type={activeSort === "oldest" ? "confirm-tourist" : "cancel"}
                 onClick={() => handleSort("oldest")}
-                className={`font-medium transition-colors border w-auto px-4 whitespace-nowrap ${
-                  activeSort === "oldest" ? "border-[#00BF6A]" : "border-gray-300 text-gray-700"
-                }`}
+                className={`font-medium transition-colors border w-auto px-4 whitespace-nowrap ${activeSort === "oldest" ? "border-[#00BF6A]" : "border-gray-300 text-gray-700"
+                  }`}
               >
                 เก่าสุด
               </Button>

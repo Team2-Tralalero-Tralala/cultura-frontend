@@ -11,8 +11,8 @@ const apiUrl = import.meta.env.VITE_API_URL;
  * Input : page, limit
  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
  */
-export async function getAllStore(communityId: number, page: number, limit: number) {
-  const params = { page, limit };
+export async function getAllStore(communityId: number, page: number, limit: number, search?: string) {
+  const params = { page, limit, search };
   return axios.get(`${apiUrl}/super/community/${communityId}/store`, {
     params,
     withCredentials: true,
@@ -66,8 +66,8 @@ export async function getStoreById(storeId: number) {
  * Input : page, limit
  * Output : ผลลัพธ์จากการเรียก API เพื่อดึงข้อมูลร้านค้า (Promise)
  */
-export async function getAllStoreAdmin(page: number, limit: number) {
-  const params = { page, limit };
+export async function getAllStoreAdmin(page: number, limit: number, search?: string) {
+  const params = { page, limit, search };
   return axios.get(`${apiUrl}/admin/community/own/stores/all`, {
     params,
     withCredentials: true,

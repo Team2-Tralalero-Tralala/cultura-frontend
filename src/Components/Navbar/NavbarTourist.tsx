@@ -42,7 +42,7 @@ export default function NavbarTourist() {
       <nav className="container mx-auto flex items-center justify-between px-6 h-16 lg:gap-6">
         <div className="flex items-center gap-10">
           <a href="/">
-            <img src={"/public/logo-black.png"} className="w-40.25 h-7.93" alt="Cultura logo" />
+            <img src={"/logo-black.png"} className="w-40.25 h-7.93" alt="Cultura logo" />
           </a>
 
           {/* กล่องค้นหา */}

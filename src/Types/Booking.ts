@@ -9,6 +9,7 @@ export type BookingRow = {
   totalPrice: string;
   status: string;
   transferSlip: string;
+  feedbacks?: { id: number }[];
 };
 
 /*

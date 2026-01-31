@@ -48,6 +48,7 @@ export default function MemberRoutes() {
       <Route path="/booking/:bookingId" element={<BookingDetailMember />} />
       <Route path="bookings-histories" element={<BookingHistoryMember />} />
       <Route path="/community/own" element={<CommunityDetailMember />} />
+      <Route path="package/history/:id" element={<DetailPackageMember />} />
       <Route path="packages/done" element={<PackageHistoryMember />} />
       <Route path="participants/package/:packageId" element={<ManageParticipantPage />} />
       <Route path="packages/draft" element={<PackageDraftMember />} />

@@ -42,13 +42,7 @@ type StoreFromApi = {
   }[];
 };
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input: str (ข้อความต้นฉบับ)
- * Output: ข้อความที่ผ่านการ normalize แล้ว
- */
-const normalizeText = (str: string) =>
-  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+
 
 /**
  * คำอธิบาย: กำหนดคอลัมน์ของตารางร้านค้า
@@ -126,7 +120,8 @@ export function ManageStorePage() {
       const page = pagination?.currentPage ?? 1;
       const limit = pagination?.limit ?? 10;
 
-      const response = await getAllStore(Number(communityId), page, limit);
+      // ส่ง search query ไปยัง backend
+      const response = await getAllStore(Number(communityId), page, limit, searchQuery);
 
       const resultData: StoreFromApi[] = response?.data?.data?.data ?? [];
       const resultPagination: Pagination = response?.data?.data?.pagination ?? pagination;
@@ -152,13 +147,17 @@ export function ManageStorePage() {
   };
 
   /*
-   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage หรือ limit เปลี่ยนแปลง
-   * Input : communityId, pagination.currentPage, pagination.limit
+   * คำอธิบาย : ฟังก์ชัน useEffect สำหรับโหลดข้อมูลร้านค้าเมื่อ communityId, currentPage, limit หรือ searchQuery เปลี่ยนแปลง
+   * Input : communityId, pagination.currentPage, pagination.limit, searchQuery
    * Output : void
    */
   useEffect(() => {
-    loadStores();
-  }, [communityId, pagination.currentPage, pagination.limit]);
+    const delayDebounceFn = setTimeout(() => {
+      loadStores();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [communityId, pagination.currentPage, pagination.limit, searchQuery]);
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับกำหนดการกระทำของแต่ละแถวในตารางร้านค้า
@@ -180,21 +179,7 @@ export function ManageStorePage() {
     },
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับกรองแถวร้านค้าตามข้อความค้นหา
-   * Input : string
-   * Output : string ที่ผ่านการ normalize แล้ว
-   */
-  const filteredRows = useMemo(() => {
-    const query = normalizeText(searchQuery);
-    return rows.filter((row) => {
-      const haystacks = [row.name, row.detail, row.tagStores].map((value) =>
-        normalizeText(String(value ?? "")),
-      );
-      const passSearch = !query || haystacks.some((haystack) => haystack.includes(query));
-      return passSearch;
-    });
-  }, [rows, searchQuery]);
+
 
   const handleDelete = async (storeId: number) => {
     try {
@@ -250,7 +235,10 @@ export function ManageStorePage() {
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }}
             />
           </div>
 
@@ -269,7 +257,7 @@ export function ManageStorePage() {
         {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<StoreRow>
-          data={filteredRows}
+          data={rows}
           getKey={(row) => row.id.toString()}
           columns={columns}
           selectable={true}

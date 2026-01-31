@@ -107,7 +107,7 @@ const ModalTag: React.FC<ModalTagProps> = ({
             onClick={handleSubmit}
             className="w-[100px] bg-[#055035] hover:bg-[#3a6657] text-white"
           >
-            ยืนยัน
+            {initialValue ? 'บันทึก' : 'สร้าง'}
           </Button>
         </div>
       </div>

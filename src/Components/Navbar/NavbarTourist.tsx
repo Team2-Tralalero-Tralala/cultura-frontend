@@ -42,7 +42,7 @@ export default function NavbarTourist() {
       <nav className="container mx-auto flex items-center justify-between px-6 h-16 lg:gap-6">
         <div className="flex items-center gap-10">
           <a href="/">
-            <img src={"/public/logo-black.png"} className="w-40.25 h-7.93" alt="Cultura logo" />
+            <img src={"/logo-black.png"} className="w-40.25 h-7.93" alt="Cultura logo" />
           </a>
 
           {/* กล่องค้นหา */}
@@ -56,7 +56,7 @@ export default function NavbarTourist() {
           />
         </div>
 
-        <div className="ml-auto flex flex-col items-center gap-6 lg:flex-row lg:gap-6">
+        <div className="ml-auto flex flex-row items-center gap-6">
           {user && user.role === "tourist" ? (
             <div className="relative">
               {/* ปุ่มโปรไฟล์ */}
@@ -115,7 +115,7 @@ export default function NavbarTourist() {
             </div>
           ) : (
             <>
-              <button className="border-2 px-6 py-1 rounded-full hover:text-green-500 text-base">
+              <button className="border-2 px-6 py-1 rounded-full hover:text-green-500 text-base whitespace-nowrap">
                 <Link to="/guest/signup" className="flex items-center gap-2">
                   ลงทะเบียน
                 </Link>
@@ -123,7 +123,7 @@ export default function NavbarTourist() {
 
               <button
                 onClick={handleLogin}
-                className="bg-[#00BF6A] px-6 py-1.5 rounded-full border-2 border-transparent hover:text-white text-base"
+                className="bg-[#00BF6A] px-6 py-1.5 rounded-full border-2 border-transparent hover:text-white text-base whitespace-nowrap"
               >
                 เข้าสู่ระบบ
               </button>

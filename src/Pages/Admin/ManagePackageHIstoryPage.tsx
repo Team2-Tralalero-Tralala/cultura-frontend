@@ -2,11 +2,10 @@
  * คำอธิบาย : Component สำหรับหน้าประวัติแพ็กเกจของผู้ดูแลระบบระดับวิสาหกิจชุมชน (Admin)
  * ใช้สำหรับแสดงตารางประวัติแพ็กเกจทั้งหมดที่เคยสร้างในชุมชน
  */
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
-import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type {
@@ -27,14 +26,6 @@ type PackageHistoryRow = {
   status: string;
   dueDate: string;
 };
-
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input: string
- * Output: string ที่ผ่านการ normalize แล้ว
- */
-const normalizeText = (str: string) =>
-  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
@@ -81,7 +72,7 @@ const columns: Column<PackageHistoryRow>[] = [
     className: "min-w-[220px]",
     render: (row) => (
       <Link
-        to={`/admin/packages/history/${row.id}`}
+        to={`/admin/package/history/${row.id}`}
         className="hover:text-dark-green hover:underline"
       >
         {row.name}
@@ -93,7 +84,7 @@ const columns: Column<PackageHistoryRow>[] = [
   { key: "status", header: "สถานะแพ็กเกจ", className: "min-w-[160px]" },
   {
     key: "dueDate",
-    header: "เวลาสิ้นสุด",
+    header: "วัน-เวลาสิ้นสุด",
     render: (row) => formatThaiDateTime(row.dueDate),
   },
 ];
@@ -119,6 +110,30 @@ export default function ManagePackageHistoryPage() {
   const [communityName, setCommunityName] = useState<string>("");
 
   /**
+   * คำอธิบาย: ฟังก์ชันสำหรับแปลงข้อความเป็นตัวพิมพ์เล็กและตัดช่องว่าง
+   * Input: textValue (string)
+   * Output: ข้อความที่ผ่านการจัดรูปแบบแล้ว (string)
+   */
+  const normalizeText = (textValue: string) =>
+    (textValue ?? "").toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
+
+  /**
+   * คำอธิบาย: ตัวแปรสำหรับกรองข้อมูลแพ็กเกจตามคำค้นหา
+   * Input: rows, searchQuery
+   * Output: รายการแพ็กเกจที่ตรงกับคำค้นหา
+   */
+  const filteredRows = React.useMemo(() => {
+    const normalizedQuery = normalizeText(searchQuery);
+    if (!normalizedQuery) return rows;
+
+    return rows.filter((row) =>
+      [row.name, row.community, row.overseer, row.status]
+        .map(normalizeText)
+        .some((fieldValue) => fieldValue.includes(normalizedQuery)),
+    );
+  }, [rows, searchQuery]);
+
+  /**
    * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลแพ็กเกจจาก backend
    * Input: -
    * Output: อัปเดต state rows และ pagination
@@ -128,6 +143,7 @@ export default function ManagePackageHistoryPage() {
       setIsLoading(true);
       setErrorMessage(null);
 
+      // Remove searchQuery from API call
       const res = await getHistoriesPackageAdmin(pagination.currentPage, pagination.limit);
 
       const list = res?.data?.data ?? [];
@@ -211,21 +227,6 @@ export default function ManagePackageHistoryPage() {
   };
 
   /**
-   * คำอธิบาย: ฟังก์ชันกรองข้อมูลในตารางตามข้อความค้นหา
-   * Input: searchQuery
-   * Output: แถวข้อมูลที่ตรงกับคำค้นหา
-   */
-  const filteredRows = useMemo(() => {
-    const query = normalizeText(searchQuery);
-    return rows.filter((row) => {
-      const haystacks = [row.name, row.community, row.overseer, row.dueDate].map((value) =>
-        normalizeText(String(value ?? "")),
-      );
-      return !query || haystacks.some((haystack) => haystack.includes(query));
-    });
-  }, [rows, searchQuery]);
-
-  /**
    * คำอธิบาย: ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
    * Input: id (number)
    * Output: void
@@ -239,11 +240,10 @@ export default function ManagePackageHistoryPage() {
     } catch (error: any) {
       console.error("Failed to delete package:", error);
       alert(
-        `ลบไม่สำเร็จ: ${
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "unknown error"
+        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "unknown error"
         }`,
       );
       setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
@@ -288,15 +288,11 @@ export default function ManagePackageHistoryPage() {
           <div className="w-[260px]">
             <SearchBarTable
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setPagination((prev) => ({ ...prev, currentPage: 1 }));
+              }}
             />
-          </div>
-
-          <div>
-            <Button onClick={() => navigate("/admin/package/create")} aria-label="สร้างแพ็กเกจ">
-              <span className="text-lg leading-none">＋</span>
-              <span>สร้างแพ็กเกจ</span>
-            </Button>
           </div>
         </div>
       </div>

@@ -1,0 +1,1409 @@
+/**
+ * คำอธิบาย: Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
+ * - ดึงข้อมูลแพ็กเกจเดิมมาแสดงในฟอร์ม
+ * - รองรับการอัปเดตข้อมูล, รูปภาพ (Cover/Gallery), และที่พักที่เกี่ยวข้อง
+ * - ส่งข้อมูลแบบ multipart/form-data
+ * Input: (via URL params) id - ID ของแพ็กเกจที่ต้องการแก้ไข
+ * Output: หน้าฟอร์มสำหรับแก้ไขข้อมูลแพ็กเกจ
+ */
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import * as z from "zod";
+import TextField from "../../Components/Input/TextField";
+import MapPicker from "../../Components/MapPicker";
+import { Icon } from "@iconify/react";
+import ThailandLocationSelector, {
+  type ThailandLocation,
+} from "@/Components/Selector/ThailandLocationSelector";
+import TextArea from "@/Components/Input/TextArea";
+import Button from "@/Components/Button";
+import CommunityMemberSelector, {
+  type Member as CommunityMember,
+} from "@/Components/Selector/CommunityMemberSelector";
+import UploadCard from "@/Components/upload/UploadCard";
+import { TagSelector } from "@/Components/Selector/TagSelector";
+import { Modal } from "@/Components/Modal/Modal";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import {
+  PackageStatusDropdown,
+  type PackageStatus,
+} from "@/Components/Selector/PackageStatusDropdown";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+
+const apiUrl = import.meta.env.VITE_API_URL as string;
+
+/**
+ * คำอธิบาย: ตัดช่องว่างและคืนค่า fallback หากสตริงว่าง
+ * Input: inputValue (สตริงที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนหากสตริงว่าง default: "-")
+ * Output: สตริงที่ตัดช่องว่างแล้ว หรือค่า fallback
+ */
+function normalizeOrDefault(inputValue: string, fallback = "-") {
+  const trimmed = (inputValue ?? "").toString().trim();
+  return trimmed.length ? trimmed : fallback;
+}
+
+/**
+ * คำอธิบาย: แปลงค่าใดๆ เป็น number หรือ null
+ * Input: value (ค่าที่ต้องการแปลง)
+ * Output: number หรือ null
+ */
+function toIntOrNull(value: any): number | null {
+  const trimmed = String(value ?? "").trim();
+  if (trimmed === "") return null;
+  const numberValue = Number(trimmed);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+/**
+ * คำอธิบาย: แปลง Date object หรือ string วันที่/เวลา เป็น format "HH:mm"
+ * Input: input (วันที่/เวลา)
+ * Output: สตริง "HH:mm" หรือ ""
+ */
+function toTimeInput(input?: string | Date | null) {
+  if (!input) return "";
+  const dateObject = new Date(input as any);
+  if (!isNaN(dateObject.getTime())) {
+    const hours = String(dateObject.getHours()).padStart(2, "0");
+    const minutes = String(dateObject.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+  if (typeof input === "string") {
+    const timeMatch = input.match(/^(\d{2}):(\d{2})/);
+    if (timeMatch) {
+      return `${timeMatch[1].padStart(2, "0")}:${timeMatch[2].padStart(2, "0")}`;
+    }
+  }
+
+  return "";
+}
+
+/**
+ * คำอธิบาย: แปลง Date object หรือ string วันที่ เป็น format "YYYY-MM-DD"
+ * Input: input (วันที่)
+ * Output: สตริง "YYYY-MM-DD" หรือ ""
+ */
+function toDateOnly(input?: string | Date | null) {
+  if (!input) return "";
+  if (typeof input === "string") {
+    const matchResult = input.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (matchResult) return `${matchResult[1]}-${matchResult[2]}-${matchResult[3]}`;
+  }
+  const dateObject = new Date(input as any);
+  if (isNaN(dateObject.getTime())) return "";
+  const year = dateObject.getFullYear();
+  const month = String(dateObject.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObject.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * คำอธิบาย: แปลง URL ของรูปภาพเป็น File object
+ * Input: url (URL ของรูปภาพ), filename (ชื่อไฟล์)
+ * Output: Promise<File>
+ */
+async function urlToFile(url: string, filename: string): Promise<File> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`fetch ${url} -> ${response.status}`);
+  const blob = await response.blob();
+  const extension = filename.split(".").pop() || "jpg";
+  const fileType = blob.type || `image/${extension}`;
+  const file = new File([blob], filename, { type: fileType });
+  (file as any).isFromServer = true;
+  return file;
+}
+
+/**
+ * คำอธิบาย: สร้างรายการ URL ที่เป็นไปได้สำหรับ path ของรูปภาพ
+ * Input: rawPath (path ของรูปภาพ)
+ * Output: Array ของ URL string
+ */
+function buildImageCandidates(rawPath: string): string[] {
+  if (!rawPath) return [];
+  if (/^https?:\/\//i.test(rawPath)) return [rawPath];
+  const origin = (() => {
+    try {
+      return new URL(apiUrl).origin;
+    } catch {
+      return window.location.origin;
+    }
+  })();
+  const cleanedPath = String(rawPath)
+    .replace(/\\/g, "/")
+    .replace(/^\.?\/*/, "");
+  const prefixes = ["", "uploads/"];
+  const candidates = new Set<string>();
+  for (const prefix of prefixes) {
+    const path = cleanedPath.startsWith(prefix) ? cleanedPath : `${prefix}${cleanedPath}`;
+    candidates.add(`${origin}/${encodeURI(path)}`);
+    candidates.add(`${origin}/api/${encodeURI(path)}`);
+  }
+  return Array.from(candidates);
+}
+
+/**
+ * คำอธิบาย: พยายามแปลง path ของรูปภาพเป็น File object โดยลองจาก URL ที่เป็นไปได้
+ * Input: rawPath (path ของรูปภาพ), filename (ชื่อไฟล์)
+ * Output: Promise<File>
+ */
+async function bestEffortUrlToFile(rawPath: string, filename: string): Promise<File> {
+  const candidates = buildImageCandidates(rawPath);
+  let lastError: unknown = null;
+  for (const url of candidates) {
+    try {
+      return await urlToFile(url, filename);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("no image url works");
+}
+
+type PackageForm = {
+  name: string;
+  description: string;
+  statusPackage: PackageStatus;
+  houseNumber: string;
+  villageNumber: string;
+  province: string;
+  district: string;
+  subDistrict: string;
+  postalCode: string;
+  addressDetail: string;
+  latitude: string;
+  longitude: string;
+  placeQuery: string;
+  overseerMemberId: string;
+  tagId: string;
+  facility: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  openDate: string;
+  openTime: string;
+  closeDate: string;
+  closeTime: string;
+  capacity: string;
+  price: string;
+  addHomestay: boolean;
+};
+
+const initialFormState: PackageForm = {
+  name: "",
+  description: "",
+  statusPackage: "DRAFT",
+  houseNumber: "",
+  villageNumber: "",
+  province: "",
+  district: "",
+  subDistrict: "",
+  postalCode: "",
+  addressDetail: "",
+  latitude: "",
+  longitude: "",
+  placeQuery: "",
+  overseerMemberId: "",
+  tagId: "",
+  facility: "",
+  startDate: "",
+  startTime: "",
+  endDate: "",
+  endTime: "",
+  openDate: "",
+  openTime: "",
+  closeDate: "",
+  closeTime: "",
+
+  capacity: "",
+  price: "",
+  addHomestay: false,
+};
+
+const packageSchema = z.object({
+  name: z.string().min(1, "กรุณากรอกชื่อแพ็กเกจ"),
+  description: z.string().min(1, "กรุณากรอกรายละเอียดแพ็กเกจ"),
+  statusPackage: z.enum(["DRAFT", "PUBLISH", "UNPUBLISH"]),
+  houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  overseerMemberId: z.string().min(1, "กรุณาเลือกผู้ดูแล"),
+  capacity: z.string().min(1, "กรุณากรอกจำนวนที่เปิดรับ"),
+  price: z.string().min(1, "กรุณากรอกราคา"),
+  startDate: z.string().min(1, "กรุณาเลือกวันที่เริ่ม"),
+  startTime: z.string().min(1, "กรุณาเลือกเวลาเริ่ม"),
+  endDate: z.string().min(1, "กรุณาเลือกวันที่สิ้นสุด"),
+  endTime: z.string().min(1, "กรุณาเลือกเวลาสิ้นสุด"),
+  openDate: z.string().min(1, "กรุณาเลือกวันที่เปิดจอง"),
+  openTime: z.string().min(1, "กรุณาเลือกเวลาเปิดจอง"),
+  closeDate: z.string().min(1, "กรุณาเลือกวันที่ปิดจอง"),
+  closeTime: z.string().min(1, "กรุณาเลือกเวลาปิดจอง"),
+  facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
+});
+
+type PackageErrors = Partial<Record<keyof PackageForm, string>>;
+
+export const EditPackagePage = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [formState, setFormState] = useState<PackageForm>(initialFormState);
+  const [communityId, setCommunityId] = useState<number | undefined>(undefined);
+  const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [formErrors, setFormErrors] = useState<PackageErrors>({});
+  const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
+  const [tagIdLists, setTagIdLists] = useState<number[]>([]);
+  const [coverFileLists, setCoverFileLists] = useState<File[]>([]);
+  const [galleryFileLists, setGalleryFileLists] = useState<File[]>([]);
+  const [videoFileLists, setVideoFileLists] = useState<File[]>([]);
+  const [startDateObj, setStartDateObj] = useState<Date | null>(null);
+  const [endDateObj, setEndDateObj] = useState<Date | null>(null);
+  const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
+  const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
+  const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
+  const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
+  const [originalStatus, setOriginalStatus] = useState<PackageStatus | null>(null);
+
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้อง (Validate) ของฟิลด์เดียวในฟอร์ม
+   * Input: field (ชื่อฟิลด์ keyof PackageForm), value (ค่าใหม่), newState (object state ทั้งหมด)
+   * Output: - (อัปเดต formErrors state)
+   */
+  const validateField = React.useCallback(
+    (field: keyof PackageForm, value: any, newState: PackageForm) => {
+      const result = packageSchema.safeParse(newState);
+      setFormErrors((prev) => ({
+        ...prev,
+        [field]: result.success
+          ? undefined
+          : result.error.issues.find((issue) => issue.path[0] === field)?.message,
+      }));
+    },
+    [],
+  );
+
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้อง (Validate) ของฟอร์มทั้งหมด
+   * Input: -
+   * Output: boolean (true หากถูกต้องทั้งหมด, false หากมีข้อผิดพลาด)
+   */
+  const validateAll = () => {
+    if (formState.statusPackage === "DRAFT") {
+      const errors: PackageErrors = {};
+      if (!formState.name?.trim()) {
+        errors.name = "กรุณากรอกชื่อแพ็กเกจ";
+        setFormErrors(errors);
+        return false;
+      }
+      setFormErrors({});
+      return true;
+    }
+    let isValid = true;
+    const result = packageSchema.safeParse(formState);
+    if (!result.success) {
+      const errorsObject: PackageErrors = {};
+      for (const issue of result.error.issues) {
+        errorsObject[issue.path[0] as keyof PackageForm] = issue.message;
+      }
+      setFormErrors(errorsObject);
+      isValid = false;
+    } else {
+      setFormErrors({});
+    }
+    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
+      setFormErrors((prev) => ({
+        ...prev,
+        closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
+      }));
+      isValid = false;
+    }
+    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
+      setFormErrors((prev) => ({
+        ...prev,
+        closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
+      }));
+      isValid = false;
+    }
+    if (selectedHomestay) {
+      if (!hsCheckInDate) {
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
+        }));
+        isValid = false;
+      }
+      if (!hsCheckInTime) {
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
+        }));
+        isValid = false;
+      }
+      if (!hsCheckOutDate) {
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
+        }));
+        isValid = false;
+      }
+      if (!hsCheckOutTime) {
+        (setFormErrors as any)((prev: any) => ({
+          ...prev,
+          hsCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
+        }));
+        isValid = false;
+      }
+    }
+    return isValid;
+  };
+
+  type MemberOption = { id: number; fname: string; lname: string };
+  const [memberQuery, setMemberQuery] = useState("");
+  const [memberOptionLists, setMemberOptionLists] = useState<MemberOption[]>([]);
+  const isShowMemberBox = memberQuery.trim().length >= 1 && memberOptionLists.length > 0;
+
+  React.useEffect(() => {
+    const query = memberQuery.trim();
+    if (!query) {
+      setMemberOptionLists([]);
+      return;
+    }
+    setMemberOptionLists([]);
+  }, [memberQuery]);
+
+  const searchBoxRef = React.useRef<HTMLDivElement | null>(null);
+  const [isOpenTagBox, setIsOpenTagBox] = useState(false);
+
+  React.useEffect(() => {
+    const onDown = (event: MouseEvent) => {
+      if (!searchBoxRef.current) return;
+      if (!searchBoxRef.current.contains(event.target as Node)) setIsOpenTagBox(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  const canSubmitForm = useMemo(() => {
+    const required = [
+      formState.name,
+      formState.description,
+      formState.statusPackage,
+      formState.houseNumber,
+      formState.villageNumber,
+      formState.province,
+      formState.district,
+      formState.subDistrict,
+      formState.postalCode,
+      formState.latitude,
+      formState.longitude,
+      formState.overseerMemberId,
+      formState.capacity,
+      formState.price,
+      formState.startDate,
+      formState.endDate,
+      formState.openDate,
+      formState.closeDate,
+    ];
+    return required.every((value) => String(value ?? "").trim() !== "");
+  }, [formState]);
+
+  type HomestayOption = {
+    id: number;
+    name: string;
+    facility?: string;
+    images?: { image: string }[];
+  };
+
+  const [homestayQuery, setHomestayQuery] = useState("");
+  const [homestayOptionLists, setHomestayOptionLists] = useState<HomestayOption[]>([]);
+  const [selectedHomestay, setSelectedHomestay] = useState<HomestayOption | null>(null);
+  const homestayBoxRef = React.useRef<HTMLDivElement | null>(null);
+  const [isOpenHomestayBox, setIsOpenHomestayBox] = useState(false);
+
+  React.useEffect(() => {
+    const onDown = (event: MouseEvent) => {
+      if (homestayBoxRef.current && !homestayBoxRef.current.contains(event.target as Node)) {
+        setIsOpenHomestayBox(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  const MIN_HOMESTAY_QUERY_CHARS = 2;
+
+  /**
+   * คำอธิบาย: (Callback) Fetch ข้อมูลที่พักสำหรับ Ccommunity
+   * Input: query (ข้อความค้นหา)
+   * Output: - (อัปเดต homestayOptions state)
+   */
+  const fetchHomestays = React.useCallback(
+    async (query: string) => {
+      const trimmedQuery = query.trim();
+
+      if (trimmedQuery.length > 0 && trimmedQuery.length < MIN_HOMESTAY_QUERY_CHARS) {
+        setHomestayOptionLists([]);
+        setIsOpenHomestayBox(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${apiUrl}/member/list-homestays`, {
+          params: { query: trimmedQuery, limit: 8 },
+          withCredentials: true,
+        });
+        const rawData = response?.data?.data ?? response?.data?.items ?? response?.data ?? [];
+        const options: HomestayOption[] = (Array.isArray(rawData) ? rawData : []).map(
+          (homestay: any) => ({
+            id: Number(homestay.id),
+            name: homestay.name ?? "",
+            facility: homestay.facility ?? homestay.description ?? "",
+            images: homestay.homestayImage ?? homestay.images ?? [],
+          }),
+        );
+        setHomestayOptionLists(options);
+        setIsOpenHomestayBox(options.length > 0);
+      } catch (error) {
+        setHomestayOptionLists([]);
+        setIsOpenHomestayBox(false);
+      }
+    },
+    [id],
+  );
+
+  React.useEffect(() => {
+    const timerId = setTimeout(() => {
+      fetchHomestays(homestayQuery);
+    }, 250);
+    return () => clearTimeout(timerId);
+  }, [homestayQuery, fetchHomestays]);
+
+  /**
+   * คำอธิบาย: เลือกที่พักจากรายการ
+   * Input: homestay (object ที่พักที่เลือก)
+   * Output: -
+   */
+  const chooseHomestay = (homestay: HomestayOption) => {
+    setSelectedHomestay(homestay);
+    setHomestayQuery("");
+    setHomestayOptionLists([]);
+    setIsOpenHomestayBox(false);
+    setFormField("tagId" as any, formState.tagId);
+  };
+
+  /**
+   * คำอธิบาย: (Callback) อัปเดตฟิลด์ในฟอร์ม และ Validate ทันที
+   * Input: key (ชื่อฟิลด์), value (ค่าใหม่)
+   * Output: -
+   */
+  const setFormField = React.useCallback(
+    <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
+      setFormState((prev) => {
+        const newState = { ...prev, [key]: value };
+        validateField(key, value, newState);
+        return newState;
+      });
+    },
+    [validateField],
+  );
+
+  const [hsCheckInDate, setHsCheckInDate] = useState("");
+  const [hsCheckInTime, setHsCheckInTime] = useState("");
+  const [hsCheckOutDate, setHsCheckOutDate] = useState("");
+  const [hsCheckOutTime, setHsCheckOutTime] = useState("");
+  const [hsBookedRoom, setHsBookedRoom] = useState<string>("1");
+
+  /**
+   * คำอธิบาย: ล้างข้อมูลที่พักที่เลือกไว้
+   * Input: -
+   * Output: -
+   */
+  const clearHomestay = () => {
+    setSelectedHomestay(null);
+    setHsCheckInDateObj(null);
+    setHsCheckInDate("");
+    setHsCheckInTime("");
+    setHsCheckOutDateObj(null);
+    setHsCheckOutDate("");
+    setHsCheckOutTime("");
+    setHsBookedRoom("1");
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    /**
+     * คำอธิบาย: โหลดข้อมูลแพ็กเกจจาก API
+     * Input: -
+     * Output: - (อัปเดต state ต่างๆ ของหน้า)
+     */
+    async function loadPackageData() {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`${apiUrl}/member/package/${id}`, {
+          withCredentials: true,
+        });
+        const packageData = response?.data?.data;
+
+        setCommunityId(
+          Number(packageData?.communityId ?? packageData?.community?.id ?? NaN) || undefined,
+        );
+
+        if (packageData?.overseerPackage) {
+          setCurrentOverseer({
+            id: Number(packageData.overseerPackage.id),
+            fname: packageData.overseerPackage.fname ?? "",
+            lname: packageData.overseerPackage.lname ?? "",
+          });
+        }
+        if (!mounted || !packageData) return;
+        const locationData = packageData.location ?? {};
+        const latitude = Number(locationData.latitude ?? 13.7563);
+        const longitude = Number(locationData.longitude ?? 100.5018);
+        setPosition([latitude, longitude]);
+        const homestayHistory =
+          Array.isArray(packageData.homestayHistories) && packageData.homestayHistories.length > 0
+            ? packageData.homestayHistories[0]
+            : null;
+        const startDateRaw = packageData.startDate ?? null;
+        const dueDateRaw = packageData.dueDate ?? null;
+        const bookingOpenRaw = packageData.bookingOpenDate ?? null;
+        const bookingCloseRaw = packageData.bookingCloseDate ?? null;
+        const startParsed = startDateRaw ? new Date(startDateRaw) : null;
+        const dueParsed = dueDateRaw ? new Date(dueDateRaw) : null;
+        const openParsed = bookingOpenRaw ? new Date(bookingOpenRaw) : null;
+        const closeParsed = bookingCloseRaw ? new Date(bookingCloseRaw) : null;
+        const status = (packageData.statusPackage as PackageStatus) ?? "DRAFT";
+
+        setStartDateObj(startParsed && !isNaN(startParsed.getTime()) ? startParsed : null);
+        setEndDateObj(dueParsed && !isNaN(dueParsed.getTime()) ? dueParsed : null);
+        setOpenDateObj(openParsed && !isNaN(openParsed.getTime()) ? openParsed : null);
+        setCloseDateObj(closeParsed && !isNaN(closeParsed.getTime()) ? closeParsed : null);
+
+        setFormState({
+          name: packageData.name ?? "",
+          description: packageData.description ?? "",
+          statusPackage: status,
+          houseNumber: locationData.houseNumber ?? "",
+          villageNumber:
+            locationData.villageNumber != null ? String(locationData.villageNumber) : "",
+          province: locationData.province ?? "",
+          district: locationData.district ?? "",
+          subDistrict: locationData.subDistrict ?? "",
+          postalCode: locationData.postalCode ?? "",
+          addressDetail: locationData.detail ?? "",
+          latitude: locationData.latitude != null ? String(locationData.latitude) : "",
+          longitude: locationData.longitude != null ? String(locationData.longitude) : "",
+          placeQuery: "",
+          overseerMemberId:
+            packageData.overseerMemberId != null ? String(packageData.overseerMemberId) : "",
+          tagId: "",
+          facility: packageData.warning ?? "",
+          startDate: toDateOnly(packageData.startDate),
+          startTime: toTimeInput(packageData.startDate),
+          endDate: toDateOnly(packageData.dueDate),
+          endTime: toTimeInput(packageData.dueDate),
+          openDate: toDateOnly(packageData.bookingOpenDate),
+          openTime: toTimeInput(packageData.bookingOpenDate),
+          closeDate: toDateOnly(packageData.bookingCloseDate),
+          closeTime: toTimeInput(packageData.bookingCloseDate),
+          capacity: packageData.capacity != null ? String(packageData.capacity) : "",
+          price: packageData.price != null ? String(packageData.price) : "",
+          addHomestay: !!homestayHistory,
+        });
+
+        const tagsFromServer: number[] = Array.isArray(packageData?.tagPackages)
+          ? packageData.tagPackages
+              .map((tagPackage: any) => tagPackage?.tag?.id ?? tagPackage?.id)
+              .filter((tagId: any) => typeof tagId === "number")
+          : [];
+        setTagIdLists(tagsFromServer);
+
+        const imagesData: any[] = Array.isArray(packageData?.packageFile)
+          ? packageData.packageFile
+          : [];
+        const coverFetched: File[] = await Promise.all(
+          imagesData
+            .filter((image) => String(image.type).toUpperCase() === "COVER")
+            .map((image) =>
+              bestEffortUrlToFile(
+                String(image.filePath || image.image || ""),
+                String(image.filePath || "cover.jpg"),
+              ),
+            ),
+        );
+        const galleryFetched: File[] = await Promise.all(
+          imagesData
+            .filter((image) => String(image.type).toUpperCase() === "GALLERY")
+            .map((image) =>
+              bestEffortUrlToFile(
+                String(image.filePath || image.image || ""),
+                String(image.filePath || "gallery.jpg"),
+              ),
+            ),
+        );
+        const videoFetched: File[] = await Promise.all(
+          imagesData
+            .filter((image) => String(image.type).toUpperCase() === "VIDEO")
+            .map(async (image) => {
+              const rawPath = String(image.filePath || image.image || "");
+              const candidates = buildImageCandidates(rawPath);
+              let lastError: unknown = null;
+              for (const url of candidates) {
+                try {
+                  const response = await fetch(url);
+                  if (!response.ok) {
+                    lastError = new Error(`fetch ${url} -> ${response.status}`);
+                    continue;
+                  }
+                  const blob = await response.blob();
+                  const fixedBlob =
+                    blob.type && blob.type.startsWith("video/")
+                      ? blob
+                      : new Blob([blob], { type: "video/mp4" });
+                  const filename = rawPath.split("/").pop() || "video.mp4";
+                  return new File([fixedBlob], filename, { type: fixedBlob.type });
+                } catch (error) {
+                  lastError = error;
+                }
+              }
+              throw lastError || new Error("no video url works");
+            }),
+        );
+        setCoverFileLists(coverFetched);
+        setGalleryFileLists(galleryFetched);
+        setVideoFileLists(videoFetched);
+        setOriginalStatus(status);
+        if (homestayHistory?.homestay) {
+          setSelectedHomestay({
+            id: Number(homestayHistory.homestay.id),
+            name: homestayHistory.homestay.name ?? "",
+            facility: homestayHistory.homestay.facility ?? "",
+            images: homestayHistory.homestay.homestayImage ?? [],
+          });
+        }
+        if (homestayHistory?.checkInTime) {
+          const checkInDateObject = new Date(homestayHistory.checkInTime);
+          setHsCheckInDateObj(!isNaN(checkInDateObject.getTime()) ? checkInDateObject : null);
+          setHsCheckInDate(toDateOnly(homestayHistory.checkInTime));
+          setHsCheckInTime(toTimeInput(homestayHistory.checkInTime));
+        }
+        if (homestayHistory?.checkOutTime) {
+          const checkOutDateObject = new Date(homestayHistory.checkOutTime);
+          setHsCheckOutDateObj(!isNaN(checkOutDateObject.getTime()) ? checkOutDateObject : null);
+          setHsCheckOutDate(toDateOnly(homestayHistory.checkOutTime));
+          setHsCheckOutTime(toTimeInput(homestayHistory.checkOutTime));
+        }
+        if (homestayHistory?.bookedRoom) {
+          setHsBookedRoom(String(homestayHistory.bookedRoom));
+        }
+      } catch (error: any) {
+        setErrorMessage(
+          error?.response?.data?.message || error?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
+        );
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    loadPackageData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  /**
+   * คำอธิบาย: (Callback) Handler เมื่อ MapPicker มีการเปลี่ยนแปลงตำแหน่ง
+   * Input: [latitude, longitude] (array ของตัวเลข)
+   * Output: - (อัปเดต formState)
+   */
+  const handleMapChange = React.useCallback(
+    ([latitude, longitude]: [number, number]) => {
+      setFormField("latitude", String(latitude));
+      setFormField("longitude", String(longitude));
+      setPosition([latitude, longitude]);
+    },
+    [setFormField],
+  );
+
+  /**
+   * คำอธิบาย: Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันจาก Modal
+   * - สร้าง FormData และส่งข้อมูล (axios.put) ไปยัง API
+   * Input: -
+   * Output: - ((async) นำทางไปยังหน้า list หากสำเร็จ, หรือแสดง error)
+   */
+  const handleConfirmSave = async () => {
+    setIsConfirmModalOpen(false);
+    if (!id || isSaving) return;
+    setIsSaving(true);
+    setErrorMessage(null);
+    try {
+      const overseerIdVal = Number(formState.overseerMemberId);
+      const safeOverseerId = overseerIdVal > 0 ? overseerIdVal : null;
+
+      const payload = {
+        overseerMemberId: safeOverseerId,
+        name: normalizeOrDefault(formState.name),
+        description: formState.description || "",
+        statusPackage: formState.statusPackage,
+        capacity: Math.max(1, Number(formState.capacity || 0)),
+        price: Math.max(0, Number(formState.price || 0)),
+        warning: formState.facility || "",
+        startDate: formState.startDate || null,
+        dueDate: formState.endDate || null,
+        bookingOpenDate: formState.openDate || null,
+        bookingCloseDate: formState.closeDate || null,
+        ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
+        ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
+        ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
+        ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
+        ...(selectedHomestay && hsCheckInDate && { homestayCheckInDate: hsCheckInDate }),
+        ...(selectedHomestay && hsCheckInTime && { homestayCheckInTime: hsCheckInTime }),
+        ...(selectedHomestay && hsCheckOutDate && { homestayCheckOutDate: hsCheckOutDate }),
+        ...(selectedHomestay && hsCheckOutTime && { homestayCheckOutTime: hsCheckOutTime }),
+        ...(selectedHomestay && hsBookedRoom && { bookedRoom: Number(hsBookedRoom) }),
+        facility: formState.facility || "",
+        tagIds: tagIdLists.map((id) => Number(id)),
+        homestayId: selectedHomestay ? selectedHomestay.id : -1,
+        location: {
+          houseNumber: formState.houseNumber,
+          villageNumber: toIntOrNull(formState.villageNumber),
+          subDistrict: formState.subDistrict,
+          district: formState.district,
+          province: formState.province,
+          postalCode: formState.postalCode,
+          detail: formState.addressDetail,
+          latitude: Number(formState.latitude) || 0,
+          longitude: Number(formState.longitude) || 0,
+        },
+      };
+
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(payload));
+      coverFileLists.forEach((file: any) => formData.append("cover", file));
+      galleryFileLists.forEach((file: any) => formData.append("gallery", file));
+      videoFileLists.forEach((file: any) => formData.append("video", file));
+
+      await axios.put(`${apiUrl}/member/package/${id}`, formData, {
+        withCredentials: true,
+      });
+      navigate("/member/packages/all");
+    } catch (error: any) {
+      setErrorMessage(
+        error?.response?.data?.message ||
+          (Array.isArray(error?.response?.data?.message)
+            ? error?.response?.data?.message.join(", ")
+            : null) ||
+          error?.message ||
+          "บันทึกแพ็กเกจไม่สำเร็จ",
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  /**
+   * คำอธิบาย: Handler ที่ถูกเรียกเมื่อกด Submit ฟอร์ม
+   * - ตรวจสอบความถูกต้องทั้งหมด
+   * - หากถูกต้อง จะเปิด Modal ยืนยัน
+   * Input: event (React FormEvent)
+   * Output: -
+   */
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!id || isSaving) return;
+    if (!validateAll()) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
+      setErrorMessage("ช่วงเปิดจองไม่ถูกต้อง: วันที่เปิดจองต้องไม่เกินวันที่ปิดจอง");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
+      setErrorMessage("วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setIsConfirmModalOpen(true);
+  }
+
+  return (
+    <div className="w-full max-w-none px-0 lg:px-0">
+      {/* Breadcrumb */}
+      <div>
+        <Breadcrumb
+          current={{
+            label: "แก้ไขแพ็กเกจ",
+            to: `/member/package/${id}/edit`,
+          }}
+        />
+      </div>
+      <form
+        noValidate
+        onSubmit={handleSubmit}
+        className="w-full bg-white rounded-lg p-5 md:p-6 lg:p-7 shadow-sm space-y-8"
+      >
+        <button
+          type="button"
+          onClick={() => navigate(`/member/packages/all`)}
+          className="inline-flex items-center gap-2 text-xl mb-1 group hover"
+          aria-label="ย้อนกลับไปหน้ารายการแพ็กเกจ"
+        >
+          <Icon icon="lucide:arrow-left" width={22} />
+          <span className="text-xl font-semibold ">แก้ไขแพ็กเกจ</span>
+        </button>
+
+        {/* ชื่อ/คำอธิบาย */}
+        <section className="space-y-4">
+          <TextField
+            id="name"
+            label="ชื่อแพ็กเกจ"
+            required
+            placeholder="ชื่อแพ็กเกจ"
+            value={formState.name}
+            onChange={(event) => setFormField("name", event.target.value)}
+            error={!!formErrors.name}
+            helperText={formErrors.name}
+          />
+
+          {/* สถานะเเเพ็กเกจ */}
+          <div className="space-y-2">
+            <label className="block text-base font-semibold">
+              สถานะเเพ็กเกจ <span className="text-red-600 text-base">*</span>
+            </label>
+
+            <PackageStatusDropdown
+              value={formState.statusPackage}
+              onChange={(status) => setFormField("statusPackage", status)}
+              exclude={originalStatus === "DRAFT" ? [] : ["DRAFT"]}
+            />
+          </div>
+
+          <div>
+            <TextArea
+              id="description"
+              label="คำอธิบายแพ็กเกจ"
+              required
+              placeholder="คำอธิบายแพ็กเกจ"
+              value={formState.description}
+              onChange={(event) => setFormField("description", event.target.value)}
+              error={!!formErrors?.description}
+              helperText={formErrors?.description}
+            />
+          </div>
+        </section>
+
+        {/* ที่อยู่ */}
+        <section className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-5">
+            <TextField
+              id="houseNumber"
+              label="บ้านเลขที่"
+              required
+              placeholder="กรอกบ้านเลขที่ของชุมชน"
+              value={formState.houseNumber}
+              onChange={(event) => setFormField("houseNumber", event.target.value)}
+              error={!!formErrors.houseNumber}
+              helperText={formErrors.houseNumber}
+            />
+            <TextField
+              id="villageNumber"
+              label="หมู่ที่"
+              placeholder="กรอกหมู่ของชุมชน"
+              value={formState.villageNumber}
+              onChange={(event) => setFormField("villageNumber", event.target.value)}
+              error={!!formErrors.villageNumber}
+              helperText={formErrors.villageNumber}
+            />
+
+            {/* Selector ที่อยู่ */}
+            <div className="md:col-span-2">
+              <ThailandLocationSelector
+                value={{
+                  province: formState.province,
+                  district: formState.district,
+                  subdistrict: formState.subDistrict,
+                  postalCode: formState.postalCode,
+                }}
+                onChange={(location: ThailandLocation) => {
+                  setFormState((prev) => {
+                    const newState = {
+                      ...prev,
+                      province: location.province ?? "",
+                      district: location.district ?? "",
+                      subDistrict: location.subdistrict ?? "",
+                      postalCode: location.postalCode ?? "",
+                    };
+                    const result = packageSchema.safeParse(newState);
+                    setFormErrors((prevErrors) => {
+                      const newErrors = { ...prevErrors };
+                      if (result.success) {
+                        delete newErrors.province;
+                        delete newErrors.district;
+                        delete newErrors.subDistrict;
+                        delete newErrors.postalCode;
+                      } else {
+                        newErrors.province = result.error.issues.find(
+                          (issue) => issue.path[0] === "province",
+                        )?.message;
+                        newErrors.district = result.error.issues.find(
+                          (issue) => issue.path[0] === "district",
+                        )?.message;
+                        newErrors.subDistrict = result.error.issues.find(
+                          (issue) => issue.path[0] === "subDistrict",
+                        )?.message;
+                        newErrors.postalCode = result.error.issues.find(
+                          (issue) => issue.path[0] === "postalCode",
+                        )?.message;
+                      }
+                      return newErrors;
+                    });
+                    return newState;
+                  });
+                }}
+              />
+            </div>
+
+            {/* คำอธิบายที่อยู่ */}
+            <div className="md:col-span-2">
+              <TextArea
+                id="addressDetail"
+                label="คำอธิบายที่อยู่"
+                required
+                placeholder="คำอธิบายที่อยู่"
+                value={formState.addressDetail}
+                onChange={(event) => setFormField("addressDetail", event.target.value)}
+                error={!!formErrors?.addressDetail}
+                helperText={formErrors?.addressDetail}
+              />
+            </div>
+
+            {/* Map Picker */}
+            <div className="md:col-span-2">
+              {!isLoading && (
+                <MapPicker
+                  startingPosition={position}
+                  startingZoom={13}
+                  onChange={handleMapChange}
+                />
+              )}
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {!!formErrors.latitude && (
+                  <div className="text-red-600 text-sm">{formErrors.latitude}</div>
+                )}
+                {!!formErrors.longitude && (
+                  <div className="text-red-600 text-sm">{formErrors.longitude}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ผู้ดูแล + ความจุ */}
+        <section className="w-full">
+          {/* ความจุ */}
+          <TextField
+            id="capacity"
+            label="เปิดรับจำนวน"
+            required
+            type="number"
+            placeholder="จำนวนคนที่เปิดรับ"
+            value={formState.capacity}
+            onChange={(event) => setFormField("capacity", event.target.value)}
+            error={!!formErrors.capacity}
+            helperText={formErrors.capacity}
+          />
+        </section>
+
+        {/* สิ่งอำนวยความสะดวก */}
+        <section>
+          <div className="md:col-span-2">
+            <TextArea
+              id="facility"
+              label="สิ่งอำนวยความสะดวก"
+              required
+              placeholder="สิ่งอำนวยความสะดวก"
+              value={formState.facility}
+              onChange={(event) => setFormField("facility", event.target.value)}
+              error={!!formErrors?.facility}
+              helperText={formErrors?.facility}
+            />
+          </div>
+        </section>
+
+        {/* วันเวลา */}
+        <div className="space-y-8">
+          <div>
+            <p className="text-base font-bold mb-4">
+              กำหนดการจัดกิจกรรม <span className="text-red-500">*</span>
+            </p>
+            <section className="grid md:grid-cols-4 gap-5">
+              <BoxDateInput
+                id="startDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่มแพ็กเกจ"
+                value={startDateObj}
+                onChange={(date) => {
+                  setStartDateObj(date);
+                  if (date) setFormField("startDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("startDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.startDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่เริ่ม"
+                value={formState.startTime}
+                onChange={(time) => setFormField("startTime", time)}
+                errorText={formErrors.startTime}
+              />
+              <BoxDateInput
+                id="endDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุดแพ็กเกจ"
+                value={endDateObj}
+                onChange={(date) => {
+                  setEndDateObj(date);
+                  if (date) setFormField("endDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("endDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.endDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่สิ้นสุด"
+                value={formState.endTime}
+                onChange={(time) => setFormField("endTime", time)}
+                errorText={formErrors.endTime}
+              />
+            </section>
+          </div>
+
+          {/* ส่วนที่ 2: กำหนดการเปิดจองแพ็กเกจ */}
+          <div>
+            <p className="text-base font-bold mb-4">
+              กำหนดการเปิดจองแพ็กเกจ <span className="text-red-500">*</span>
+            </p>
+            <section className="grid md:grid-cols-4 gap-5">
+              <BoxDateInput
+                id="openDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่เริ่มเปิดจอง"
+                value={openDateObj}
+                onChange={(date) => {
+                  setOpenDateObj(date);
+                  if (date) setFormField("openDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("openDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.openDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่เริ่ม"
+                value={formState.openTime}
+                onChange={(time) => setFormField("openTime", time)}
+                errorText={formErrors.openTime}
+              />
+              <BoxDateInput
+                id="closeDate"
+                label="วัน/เดือน/ปี (พ.ศ.) ที่สิ้นสุดการปิดจอง"
+                value={closeDateObj}
+                onChange={(date) => {
+                  setCloseDateObj(date);
+                  if (date) setFormField("closeDate", date.toISOString().split("T")[0] as any);
+                  else setFormField("closeDate", "" as any);
+                }}
+                minDate={new Date()}
+                maxDate={new Date("2100-12-31")}
+                errorText={formErrors.closeDate}
+              />
+              <BoxTimeInput
+                label="เวลาที่สิ้นสุด"
+                value={formState.closeTime}
+                onChange={(time) => setFormField("closeTime", time)}
+                errorText={formErrors.closeTime}
+              />
+            </section>
+          </div>
+        </div>
+
+        {/* แท็ก / ราคา */}
+        <section className="grid md:grid-cols-2 gap-5">
+          <div className="md:col-span-1">
+            <div ref={searchBoxRef}>
+              <TagSelector value={tagIdLists} onChange={(ids) => setTagIdLists(ids)} />
+            </div>
+          </div>
+
+          {/* ราคา */}
+          <TextField
+            id="price"
+            label="ราคา"
+            required
+            type="number"
+            placeholder="กรอกราคา"
+            value={formState.price}
+            onChange={(event) => setFormField("price", event.target.value)}
+            error={!!formErrors.price}
+            helperText={formErrors.price}
+          />
+        </section>
+
+        {/* สื่อแพ็กเกจ: COVER + GALLERY */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <label className="block text-base font-semibold">
+              อัพโหลดภาพหน้าปก <span className="text-red-600">*</span>
+            </label>
+            <UploadCard
+              max={1}
+              accept="image/*"
+              multiple={false}
+              value={coverFileLists}
+              onChange={setCoverFileLists}
+              itemW={160}
+              itemH={110}
+              square={false}
+              itemClass="border border-dashed border-black/60 bg-slate-200/60"
+              rounded="rounded-lg"
+              gapCls="gap-4"
+              containerClass="w-full"
+              wrap
+              iconSizeCls="w-10 h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-base font-semibold">
+              อัพโหลดรูปภาพเพิ่มเติม <span className="text-red-600">*</span>
+            </label>
+            <UploadCard
+              max={5}
+              accept="image/*"
+              multiple
+              value={galleryFileLists}
+              onChange={setGalleryFileLists}
+              itemW={160}
+              itemH={110}
+              square={false}
+              itemClass="border border-dashed border-black/60 bg-slate-200/60"
+              rounded="rounded-lg"
+              gapCls="gap-4"
+              containerClass="w-full"
+              wrap
+              iconSizeCls="w-10 h-10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-base font-semibold">
+              อัพโหลดวิดีโอเพิ่มเติม <span className="text-red-600">*</span>
+            </label>
+            <UploadCard
+              max={5}
+              accept="video/*"
+              multiple={false}
+              value={videoFileLists}
+              onChange={setVideoFileLists}
+              itemW={160}
+              itemH={110}
+              square={false}
+              itemClass="border border-dashed border-black/60 bg-slate-200/60"
+              rounded="rounded-lg"
+              gapCls="gap-4"
+              containerClass="w-full"
+              wrap
+              iconSizeCls="w-10 h-10"
+            />
+          </div>
+        </section>
+
+        {/* ที่พัก (ไม่บังคับ) */}
+        <section className="space-y-3">
+          <label className="block text-base font-semibold">
+            ที่พัก <span className="text-gray-500 text-sm">(ไม่บังคับ)</span>
+          </label>
+
+          {/* ค้นหาที่พัก */}
+          <div ref={homestayBoxRef} className="relative">
+            <div className="flex items-center gap-3 rounded-md border border-gray-400 bg-white px-4 py-2">
+              <Icon icon="mingcute:search-line" width="22" />
+              <input
+                type="text"
+                placeholder="ค้นหาชื่อที่พัก"
+                className="w-full outline-none border-none bg-transparent"
+                value={homestayQuery}
+                onChange={(event) => setHomestayQuery(event.target.value)}
+                onFocus={() => {
+                  if (homestayQuery.trim() === "") {
+                    fetchHomestays("");
+                  } else if (homestayOptionLists.length > 0) {
+                    setIsOpenHomestayBox(true);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && homestayOptionLists[0]) {
+                    event.preventDefault();
+                    chooseHomestay(homestayOptionLists[0]);
+                  }
+                  if (event.key === "Escape") setIsOpenHomestayBox(false);
+                }}
+              />
+            </div>
+
+            {isOpenHomestayBox && homestayOptionLists.length > 0 && (
+              <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-md max-h-56 overflow-auto">
+                {homestayOptionLists.map((homestay) => (
+                  <button
+                    key={homestay.id}
+                    type="button"
+                    className="w-full text-left px-4 py-2 hover:bg-green-50"
+                    onClick={() => chooseHomestay(homestay)}
+                  >
+                    {homestay.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* การ์ดที่พักที่เลือก + เวลาเช็กอิน/เอาท์ */}
+          {selectedHomestay && (
+            <>
+              <div className="grid md:grid-cols-4 gap-4 mb-3">
+                <BoxDateInput
+                  id="hsCheckInDate"
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กอินพัก (หากมีที่พัก)"
+                  value={hsCheckInDateObj}
+                  onChange={(date) => {
+                    setHsCheckInDateObj(date);
+                    if (date) {
+                      setHsCheckInDate(date.toISOString().split("T")[0]);
+                    } else {
+                      setHsCheckInDate("");
+                    }
+                  }}
+                  minDate={new Date("1900-01-01")}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={(formErrors as any).hsCheckInDate}
+                />
+                <BoxTimeInput
+                  label="เวลาเช็กอิน"
+                  value={hsCheckInTime}
+                  onChange={(time) => setHsCheckInTime(time)}
+                  required
+                  errorText={(formErrors as any).hsCheckInTime}
+                />
+                <BoxDateInput
+                  id="hsCheckOutDate"
+                  label="วัน/เดือน/ปี (พ.ศ.) ที่เช็กเอาท์ (หากมีที่พัก)"
+                  value={hsCheckOutDateObj}
+                  onChange={(date) => {
+                    setHsCheckOutDateObj(date);
+                    if (date) {
+                      setHsCheckOutDate(date.toISOString().split("T")[0]);
+                    } else {
+                      setHsCheckOutDate("");
+                    }
+                  }}
+                  minDate={new Date("1900-01-01")}
+                  maxDate={new Date("2100-12-31")}
+                  errorText={(formErrors as any).hsCheckOutDate}
+                />
+                <BoxTimeInput
+                  label="เวลาเช็กเอาท์"
+                  value={hsCheckOutTime}
+                  onChange={(time) => setHsCheckOutTime(time)}
+                  required
+                  errorText={(formErrors as any).hsCheckOutTime}
+                />
+              </div>
+
+              <div className="relative rounded-xl border p-4 bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={clearHomestay}
+                  aria-label="เอาที่พักนี้ออก"
+                  title="เอาที่พักนี้ออก"
+                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border hover:bg-red-50"
+                >
+                  <Icon icon="mdi:trash-can-outline" width="18" />
+                </button>
+
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 sm:col-span-4">
+                    <img
+                      className="w-full h-40 object-cover rounded-lg"
+                      src={
+                        selectedHomestay.images?.[0]?.image
+                          ? `${new URL(apiUrl).origin}/uploads/${selectedHomestay.images[0].image}`
+                          : "https://placehold.co/640x480?text=Homestay"
+                      }
+                      alt={selectedHomestay.name}
+                    />
+                  </div>
+
+                  <div className="col-span-12 sm:col-span-8">
+                    <div className="font-semibold text-lg mb-2">{selectedHomestay.name}</div>
+                    {selectedHomestay.facility && (
+                      <div>
+                        <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {selectedHomestay.facility
+                            .split(/[,•\n]/)
+                            .map((line) => line.trim())
+                            .filter(Boolean)
+                            .slice(0, 12)
+                            .map((facilityItem, index) => (
+                              <li key={index} className="text-sm">
+                                {facilityItem}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+
+        <div className="flex justify-end mt-2.5 gap-2">
+          <div className="w-36">
+            <Button type="cancel" onClick={() => navigate(-1)}>
+              ยกเลิก
+            </Button>
+          </div>
+          <div className="w-36">
+            <fieldset disabled={isSaving}>
+              <Button type="confirm-admin" htmlType="submit">
+                {isSaving ? "กำลังบันทึก..." : "บันทึก"}
+              </Button>
+            </fieldset>
+          </div>
+        </div>
+      </form>
+
+      <Modal
+        isOpen={isConfirmModalOpen}
+        title="ยืนยันการบันทึก"
+        text="คุณต้องการบันทึกการแก้ไขแพ็กเกจนี้ใช่หรือไม่?"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={handleConfirmSave}
+        onCancel={() => {
+          setIsConfirmModalOpen(false);
+        }}
+      />
+    </div>
+  );
+};
+
+export default EditPackagePage;

@@ -1,0 +1,503 @@
+---
+description: This is a Tourism Community Management System (Cultura) frontend built with React.js and TypeScript, and backend built with Express.js and TypeScript following Three-Tier Architecture (TTA). This document contains the complete Coding Standard (CS) version 1.2.0.
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+alwaysApply: true
+---
+
+# CODING STANDARD (CS) — FULL TEXT TRANSCRIPTION
+
+## การควบคุมการเปลี่ยนแปลงเอกสาร
+ตารางที่ 0-1 การควบคุมการเปลี่ยนแปลงเอกสาร
+
+**ชื่อเอกสาร**: Coding Standard (CS)
+**เวอร์ชันปัจจุบัน**: 1.2.0
+**วันที่แก้ไขเวอร์ชันล่าสุด**: 11 พฤศจิกายน 2568
+**ผู้จัดทำเอกสารนี้**: ณัฏฐนันท์ สิริสุรยุทธ
+
+### ประวัติการแก้ไข
+- **1.0.0** (12 กรกฎาคม 2568)
+  • จัดทำบทนำ
+  • จัดทำสารบัญ
+  • จัดทำส่วนที่ 1 และส่วนที่ 2
+  ผู้แก้ไข: ณัฏฐนันท์
+- **1.0.1** (16 กรกฎาคม 2568): แก้ไขเอกสาร — ณัฏฐนันท์
+- **1.0.2** (21 กรกฎาคม 2568): แก้ไขเอกสาร — ณัฏฐนันท์
+- **1.1.0** (20 สิงหาคม 2568): เพิ่มโครงสร้างโปรเจกต์, เพิ่มสารบัญรูปภาพ — ณัฏฐนันท์
+- **1.1.1** (29 สิงหาคม 2568): แก้ไขเอกสาร — ณัฏฐนันท์
+- **1.2.0** (11 พฤศจิกายน 2568): เพิ่มในส่วนที่ 3 และ 4 — ณัฏฐนันท์
+
+## บทนำ
+การพัฒนาระบบซอฟต์แวร์อย่างเป็นระบบและมีประสิทธิภาพ จำเป็นต้องกำหนดแนวทางในการเขียนโปรแกรมให้เป็นมาตรฐานเดียวกัน เอกสารมาตรฐานการเขียนโปรแกรม (Coding Standard) ฉบับนี้จัดทำขึ้นเพื่อเป็นแนวทางปฏิบัติที่ชัดเจนสำหรับนักพัฒนาในการเขียนโปรแกรมให้มีความถูกต้อง เป็นระเบียบ สอดคล้องกัน และสามารถบำรุงรักษาได้ในระยะยาว วัตถุประสงค์หลักเพื่อส่งเสริมความเข้าใจร่วมกันในการพัฒนา ลดความซับซ้อนในการทำงานร่วมกัน และยกระดับคุณภาพของซอฟต์แวร์ให้มีความน่าเชื่อถือ อ่านง่าย และพร้อมสำหรับการขยายระบบในอนาคต รวมถึงกำหนดรูปแบบการตั้งชื่อ โครงสร้างโปรเจกต์ และการเขียนคำอธิบาย (คอมเมนต์)
+
+## ส่วนที่ 1 สมาชิกภายในทีม
+ระบบบริหารจัดการชุมชนท่องเที่ยว (Cultura) ได้พัฒนามาตรฐานนี้เพื่อแนะนำมาตรฐานการเขียนโปรแกรมภายในทีม ช่วยให้สมาชิกมีความเข้าใจตรงกัน ลดข้อผิดพลาด ประหยัดเวลา และเพิ่มประสิทธิภาพการพัฒนาโครงการ
+
+### ตารางที่ 2-1 สมาชิกภายในทีม
+1) 66160097 นางสาวสโรชา ดอกยี่สุ่น — Team Leader
+2) 66160358 นายธีรพล ประสพศิลป์ — Planning Manager
+3) 66160082 นางสาวกุลกัลยา แวดแดง — Planning Engineer
+4) 66160352 นางสาวณัฏฐนันท์ สิริสุรยุทธ — Development Manager
+5) 66160084 นายธันวา อ่อนสุวรรณ — Development Engineer
+6) 66160108 นายนภัสกร กุลตังวัฒนา — Development Engineer
+7) 66160376 นางสาวสมิตานัน แตนิล — Quality Manager
+8) 66160377 นายสรยุทธ สร้อยสน — Quality Engineer
+9) 66160229 นายธมนันท์ ธรรมมา — Quality Engineer
+10) 66160354 นายต่อลาภ ฤทธิ์ชัย — Support Manager
+11) 66160362 นางสาวปรางวรี ขุนลอด — Support Engineer
+12) 66160098 นายสุภษิต มีเดชา — Support Engineer
+
+## ส่วนที่ 2 มาตรฐานการเขียนโปรแกรม (Coding Standard)
+มาตรฐานนี้กำหนดในบริบทของการพัฒนาด้วย React.js (Presentation Tier) และ Express.js (Business Logic / RESTful API) ภายใต้สถาปัตยกรรม Three‑Tier Architecture (TTA) ข้อมูลจัดเก็บใน Data Tier (ฐานข้อมูล)
+
+### 1) การตั้งชื่อโฟลเดอร์ (Folder)
+#### 1.1 โฟลเดอร์ Service (server)
+ใช้ kebab-case (เช่น booking-history) และตั้งชื่อตามโมดูล
+
+### 2) การตั้งชื่อไฟล์
+#### 2.1 Component (Client)
+ใช้ PascalCase (เช่น LoginForm.tsx) และสื่อความหมาย
+
+#### 2.2 Route / Controller / Services (Server)
+- ใช้ kebab-case (เช่น user-routes.js, auth-route.js)
+- ชื่อไฟล์ต้องตรงกับโฟลเดอร์ตามหน้าที่ (เช่น Controllers/user-controller.js)
+- ตั้งชื่อสื่อความหมาย
+
+### 3) การตั้งชื่อฟังก์ชัน
+#### 3.1 ฟังก์ชัน Component (Client)
+- ใช้ PascalCase (เช่น UserProfile) และต้องตรงกับชื่อไฟล์ (UserProfile.tsx → UserProfile)
+
+#### 3.2 ฟังก์ชันภายใน Component (Client)
+- ใช้ camelCase (เช่น getNew)
+
+#### 3.3 ฟังก์ชัน Controller/Middleware/Service (Server)
+- ใช้ camelCase (เช่น createUser)
+- (ทุกกรณีตั้งชื่อสื่อความหมาย)
+
+### 4) การตั้งชื่อตัวแปร
+#### 4.1 ทั่วไป
+camelCase (userId), ชื่อสื่อความหมาย
+
+#### 4.2 ตัวนับรอบ
+ใช้คำเกี่ยวกับการนับ (index) — ห้าม i/j/k
+
+#### 4.3 Array
+camelCase พหูพจน์ (userLists)
+
+#### 4.4 Object
+camelCase คำนามบ่งบอกลักษณะข้อมูล (userData)
+
+#### 4.5 Boolean
+camelCase และมีคำนำหน้า is (isReserved)
+
+### 5) มาตรฐานฐานข้อมูล
+#### 5.1 ชื่อฐานข้อมูล
+ตัวพิมพ์เล็กทั้งหมด ใช้ขีดล่าง (snake_case) เช่น cultura_system
+
+#### 5.2 ชื่อตาราง
+ตัวพิมพ์เล็กทั้งหมด snake_case และใช้พหูพจน์ (users, activity_reviews)
+
+#### 5.3 ชื่อฟิลด์
+ตัวพิมพ์เล็ก snake_case โดยขึ้นต้นด้วย "ตัวย่อของชื่อตาราง" ตามกฎ:
+- **ตาราง 1 คำ/1 พยางค์**: ใช้อักษรแรก + อักษรสุดท้ายที่ไม่ใช่ s (tours → tr_id)
+- **ตาราง 1 คำ/หลายพยางค์**: อักษรแรกของพยางค์แรก + อักษรแรกของพยางค์สุดท้าย (notifications → nt_id)
+- **ตารางหลายคำ**: อักษรแรกของคำแรก + อักษรแรกของคำสุดท้าย (activity_reviews → ar_id)
+- **ตาราง many-to-many**: รวมตัวย่อของทั้งสองตาราง + ชื่อฟิลด์ (user_activities → usat_id)
+
+#### 5.4 คอมเมนต์ตาราง
+ทุกตารางต้องมีคอมเมนต์อธิบายหน้าที่ (เช่น users = ตารางเก็บข้อมูลผู้ใช้ทั้งหมด)
+
+### 6) การกำหนด Schema ของ Prisma (server)
+#### 6.1 ชื่อ Model
+PascalCase (Community) และสื่อความหมาย
+
+#### 6.2 ชื่อ Property
+primary key ต้องใช้ id; อื่น ๆ ใช้ camelCase (firstName)
+
+#### 6.3 ชื่อ Relation
+camelCase (communityMembers); ใช้ @relation และกำหนด onDelete ตาม business rule
+
+#### 6.4 Index Rule
+ใช้ @@unique/@@index ตามความจำเป็น
+
+#### 6.5 ชื่อ Enum
+PascalCase (CommunityStatus)
+
+#### 6.6 ค่า Enum
+UPPERCASE ทั้งหมด (OPEN, CLOSED)
+
+#### 6.7 Migration
+แก้ไข Schema ทุกครั้งต้องสร้าง Migration ใหม่; commit แยกไฟล์ migration
+
+#### 6.8 ชื่อ Commit ของ Migration (Conventional Commit)
+- chore(prisma): add community table
+- chore(prisma): update relation community-member
+
+### 7) การตั้งชื่อตัวแปรของ Config
+**ข้อบังคับ**: UPPERCASE ทั้งหมด, snake_case (API_KEY)
+**หลักการ**: ชื่อย่อหัวข้อหลัก + _ + ชื่อข้อมูล (DB_URL)
+**ข้อห้าม**: ห้ามชื่อซ้ำ/แก้ไขหรือลบโดยพลการ ต้องปรึกษาทีมก่อนเสมอ
+
+### 8) การเขียนคอมเมนต์
+#### 8.1 คอมเมนต์ไฟล์ (File Header Comment)
+**ข้อบังคับ**: ต้องมีคอมเมนต์บนสุดของทุกไฟล์ อธิบายการทำงานของไฟล์นั้นๆ อย่างละเอียด
+
+**รูปแบบ**: ใช้ block comment (`/* ... */`) บรรทัดแรกของไฟล์
+
+**ตัวอย่าง**:
+```typescript
+/*
+ * คำอธิบาย : Component สำหรับหน้าแรกของการตั้งค่าระบบ (Super Admin)
+ * โดยแบ่งออกเป็นส่วนหลัก ได้แก่
+ * 1. แสดงสถานะเซิร์ฟเวอร์ (ออนไลน์/ออฟไลน์)
+ * 2. เมนูการตั้งค่าต่างๆ ประกอบด้วย:
+ *    - การเพิ่ม/แก้ไข โลโก้และรูปภาพ
+ *    - การสำรองข้อมูล
+ *    - การเปิด/ปิด ระบบ
+ * ใช้ร่วมกับ Service สำหรับตรวจสอบสถานะเซิร์ฟเวอร์
+ */
+```
+
+#### 8.2 คอมเมนต์ Component (Client)
+**ข้อบังคับ**: ต้องมีคอมเมนต์ก่อนประกาศ Component ทุกตัว อธิบายการทำงานและหน้าที่ของ Component
+
+**ตัวอย่าง**:
+```typescript
+/*
+ * คำอธิบาย : Component หลักสำหรับหน้า "การตั้งค่า"
+ * ใช้จัดการ state ของสถานะเซิร์ฟเวอร์ การโหลดข้อมูล
+ * รวมถึงการแสดงเมนูการตั้งค่าต่างๆ และการแจ้งเตือนผลลัพธ์
+ */
+```
+
+#### 8.3 คอมเมนต์ฟังก์ชัน (Client/Server)
+**ข้อบังคับ**: ต้องมีคอมเมนต์ก่อนประกาศฟังก์ชันทุกตัว ประกอบด้วย:
+- คำอธิบายการทำงาน
+- Input: พารามิเตอร์ที่รับเข้า (ถ้าไม่มีให้ระบุ "ไม่มี")
+- Output: ผลลัพธ์ที่คืนกลับหรือ side effect ที่เกิดขึ้น
+
+**ตัวอย่าง**:
+```typescript
+/*
+ * คำอธิบาย : ดึงสถานะเซิร์ฟเวอร์จาก API
+ * Input : ไม่มี
+ * Output :
+ *    - อัพเดท state ของ serverStatus
+ *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage และ serverStatus เป็น false
+ */
+```
+
+**ตัวอย่าง (มี Input)**:
+```typescript
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับการดึงข้อมูลกิจกรรม
+ * Input : activityId (string) - รหัสประจำตัวของกิจกรรม
+ * Output : ข้อมูลของกิจกรรมนั้น (Activity object) หรือ null หากไม่พบ
+ */
+```
+
+#### 8.4 คอมเมนต์ DTO Validation (Server)
+**ข้อบังคับ**: ต้องมีคอมเมนต์ก่อนประกาศ DTO อธิบายวัตถุประสงค์, Input/Output (ไทย/อังกฤษ)
+
+**ตัวอย่าง**:
+```typescript
+/*
+ * DTO: createCommunityDto
+ * วัตถุประสงค์: ตรวจสอบข้อมูลเมื่อสร้าง Community ใหม่
+ * Input: body — เช่น ชื่อชุมชน คำอธิบาย วันที่ลงทะเบียน
+ * Output: ผ่าน/ไม่ผ่านการตรวจสอบ พร้อมข้อความผิดพลาดเมื่อไม่ถูกต้อง
+ */
+```
+
+### 9) โครงสร้างของโปรเจกต์
+#### 9.1 Client
+- **node_modules** — ไลบรารีจาก npm
+- **Components** — คอมโพเนนต์ใช้ซ้ำ (ปุ่ม ฟอร์ม การ์ด ฯลฯ)
+- **Layouts** — โครงร่างหลักของหน้าเว็บ (Page Layouts / Templates)
+- **Libs** — utilities/hook ฟังก์ชันช่วย (เช่น แปลงเวลา)
+- **Pages** — ไฟล์หน้าเพจหลัก (Route) เช่น Home.tsx, Login.tsx, Dashboard.tsx
+- **Types** — TypeScript types/interfaces ส่วนกลาง (User, Community, ApiResponse)
+- **.env** — ค่า config ฝั่ง Client (เช่น API URL, keys)
+
+#### 9.2 Server
+- **prisma** — จัดการ/เชื่อมต่อฐานข้อมูล
+- **src** — โค้ดหลัก (Routes, Controllers, Middlewares, Services)
+- **tests** — ชุดทดสอบฝั่ง Server
+- **uploads** — ไฟล์ที่ผู้ใช้อัปโหลด (รูป/เอกสาร)
+- **node_modules** — ไลบรารีจาก npm
+- **.env** — ค่า config ฝั่ง Server (เช่น DB/Keys)
+
+### 10) มาตรฐานการเขียนโปรแกรมฝั่ง Server
+#### 10.1 ลำดับ import library
+1. External Libraries/Packages (เช่น express, prisma, class-validator)
+2. Internal Functions/Modules/Files (services, controllers, middlewares, utilities)
+
+#### 10.2 Export Function
+ใช้ named export ติดหน้า function โดยตรง (ไม่ใช้ export default)
+
+#### 10.3 Services
+##### 10.3.1 โครงสร้างภายใน Services (business logic)
+- ถ้าใช้ได้เฉพาะโมดูล: เก็บภายในโฟลเดอร์ย่อยของโมดูล
+- ถ้าใช้ซ้ำหลายโมดูล: เก็บส่วนกลาง (common)
+
+##### 10.3.3 มาตรฐานไฟล์ module-service.ts
+- ตรวจสอบความถูกต้องของพารามิเตอร์เสมอ
+- ห้ามใช้ any เป็นชนิดข้อมูลของพารามิเตอร์
+- เข้าถึงข้อมูลผ่าน Prisma ORM เท่านั้น
+- ข้อความ Error ใช้ภาษาไทย (ยกเว้นคำทับศัพท์จำเป็น)
+- ค่าที่คืนกลับเป็นประเภทที่เข้าใจง่าย (object หรือ primitive)
+
+#### 10.4 Controllers
+- ตรวจสอบชนิดข้อมูลด้วย TypedHandlerFromDto<typeof DTO>
+- ทุก Controller ต้องมี DTO กำกับ
+- ฟังก์ชันทุกตัวเป็น async
+- เรียกใช้ข้อมูลผ่าน Service เท่านั้น (ห้าม business logic ใน controller)
+- DTO และ Route Processor ต้องมีคอมเมนต์อธิบายหน้าที่
+
+#### 10.5 Routes
+##### 10.5.1 ลำดับ Middleware/Controller
+1) Authentication Middleware
+2) Role Middleware
+3) DTO Validation Middleware
+4) Controller
+
+##### 10.5.2 Route Ordering
+- Static route มาก่อน (GET /community)
+- Dynamic route/slug ภายหลัง (GET /community/:id)
+
+### 11) มาตรการเขียนโปรแกรมฝั่ง Client
+#### 11.1 Role Prefix
+- /super/... (Super Admin)
+- /admin/... (Admin)
+- /member/... (Member)
+- /tourist/... (Tourist)
+- /guest/... (สาธารณะ/ไม่ต้องล็อกอิน)
+
+#### 11.2 การตั้งชื่อ Route
+- ใช้ kebab-case (เช่น /booking-histories)
+- สอดคล้องกับ API เพื่อให้เห็นความเชื่อมโยง Frontend–Backend
+  (เช่น API: /api/super/communities → React Route: /super/communities)
+- รูปแบบ /[actor]/[resource] สำหรับหน้าจัดการ (เช่น /super/communities)
+- สร้างข้อมูลใหม่: เติม /create (เช่น /super/communities/create)
+- แก้ไขข้อมูล: /edit/:id (เช่น /super/communities/:communityId)
+- เก็บประกาศ route ในไฟล์ App.tsx เท่านั้น
+
+## มาตรฐาน RESTful API
+### 1) การตั้งชื่อ API Endpoint
+#### 1.1 Role-based API Prefix
+- /api/super/... — Super Admin
+- /api/admin/... — Admin
+- /api/member/... — Member
+- /api/tourist/... — Tourist
+- /api/shared/... — ใช้ร่วมกันได้
+
+#### 1.2 โครงสร้าง API (API Structure)
+```
+api/{ACTOR}/{MODULE}/{SUBMODULE}/{SUB-SUBMODULE}?{QUERY}
+```
+- **{ACTOR}**: บทบาทผู้ใช้ (เช่น /admin)
+- **{MODULE}**: โมดูลหลัก (เช่น /community)
+- **{SUBMODULE}**: โมดูลย่อย (เช่น /refunds)
+- **{QUERY}**: ค่าพารามิเตอร์ (เช่น ?page=1&limit=10)
+
+**ตัวอย่าง**:
+- GET api/super/community?page=1&limit=10&search=name
+- GET api/admin/packages
+- GET api/admin/booking-histories/booked?status=pending
+- POST api/admin/booking-histories/booked/1/approve
+
+#### 1.3 หลักการตั้งชื่อ Path (URI/Route)
+- ใช้ kebab-case (/tourist/booking-histories)
+- เอกพจน์เมื่ออ้างอิง 1 รายการ (เช่น /super/community/:communityId)
+- พหูพจน์เมื่ออ้างอิงหลายรายการ (/super/communities)
+- หลีกเลี่ยงคำกริยาใน URL (/get-users, /create-users)
+- สอดคล้องกับ Role-Based Access
+
+#### 1.4 HTTP Methods
+- **GET**: ดึงข้อมูล
+- **POST**: สร้าง/เปลี่ยนสถานะ (มักมี body)
+- **PUT**: แทนที่ทั้ง resource
+- **PATCH**: แก้ไขบางส่วน
+
+### 2) Parameters & Query
+ใช้ query สำหรับ filter/search/pagination (เช่น status=active, sort=createdDate)
+
+**ตัวอย่าง**: GET /packages?status=publish&limit=10&offset=0
+
+### 3) Request/Response Body
+#### 3.1 Request Body
+JSON
+
+#### 3.2 Response Body
+JSON
+
+#### 3.3 Pagination (response ควรมี)
+- data, page, limit, totalCount, totalPages
+
+### 4) การจัดการ Error Response
+(ระบุแนวทางสอดคล้องกับมาตรฐานทีม/ระบบ)
+
+## ส่วนที่ 3 Git Workflow และ Commit Message Convention
+
+### 1) Git Workflow (Git Flow)
+
+ระบบใช้ Git Flow เป็นมาตรฐานในการจัดการ branch และการพัฒนาโปรเจกต์ โดยมี branch หลักดังนี้:
+
+1) **main**: โค้ดพร้อมใช้งานจริง (production) — เสถียร/พร้อม deploy ทุก commit
+   - Branch นี้ต้องพร้อมใช้งานจริงเสมอ
+   - ทุก commit บน main ต้องผ่านการทดสอบและตรวจสอบแล้ว
+   - ห้าม commit โดยตรงบน main ต้องผ่าน Pull Request เท่านั้น
+
+2) **develop**: รวมงานจาก feature เพื่อทดสอบ/บูรณาการก่อน release
+   - Branch หลักสำหรับการพัฒนา
+   - รวมงานจาก feature branch ต่างๆ
+   - ทดสอบและบูรณาการก่อน release ไปยัง main
+
+3) **feature/***: พัฒนา feature ใหม่
+   - แตก branch จาก develop
+   - เมื่อพัฒนาเสร็จสิ้นให้รวมกลับไปที่ develop ผ่านกระบวนการ Pull Request
+   - ตัวอย่าง: feature/user-authentication, feature/booking-system
+
+4) **hotfix/***: แก้ไขข้อผิดพลาดเร่งด่วนที่เกิดขึ้นบน Production
+   - แตก branch จาก main
+   - เมื่อแก้ไขเสร็จสิ้นต้องรวมกลับเข้าที่ทั้ง main และ develop
+   - ใช้สำหรับแก้ไข bug ที่ต้องแก้ไขเร่งด่วนบน production
+   - ตัวอย่าง: hotfix/payment-gateway-error, hotfix/security-patch
+
+5) **bugfix/***: แก้ไขข้อผิดพลาดที่เกิดจาก Branch develop
+   - แตก branch จาก develop
+   - เมื่อแก้ไขเสร็จสิ้นต้องรวมกลับเข้า develop
+   - ใช้สำหรับแก้ไข bug ที่พบระหว่างการพัฒนา
+   - ตัวอย่าง: bugfix/form-validation-error, bugfix/api-response-handling
+
+### 2) Git Commit Message
+
+เพื่อให้การบันทึกประวัติการเปลี่ยนแปลงของซอร์สโค้ดมีความชัดเจน สามารถตรวจสอบย้อนหลังได้ง่าย และเอื้อต่อการทำงานร่วมกันในทีม ได้กำหนดมาตรฐานการเขียนข้อความ Commit ดังนี้
+
+#### 2.1 รูปแบบมาตรฐาน (Conventional Commits)
+
+**รูปแบบ**: `<type>(optional scope): <description>`
+
+#### 2.2 ประเภท (Type) ที่อนุญาตให้ใช้
+
+1) **feat**: เพิ่มฟีเจอร์ใหม่
+2) **fix**: แก้ไขข้อผิดพลาด
+3) **docs**: ปรับปรุงหรือแก้ไขเอกสาร
+4) **style**: แก้ไขรูปแบบโค้ด เช่น การจัดวาง การเว้นวรรค โดยไม่กระทบต่อ logic
+5) **refactor**: ปรับปรุงโครงสร้างโค้ด โดยไม่เปลี่ยนพฤติกรรมการทำงาน
+6) **test**: เพิ่มหรือแก้ไขชุดการทดสอบ
+7) **chore**: งานทั่วไป เช่น การปรับ dependency หรือ configuration
+8) **perf**: ปรับปรุงประสิทธิภาพของระบบ
+
+#### 2.3 ตัวอย่าง Commit Message
+
+- feat(auth): add email and password login functionality
+- fix(user): resolve issue where user data failed to save
+- docs(readme): add setup instructions for development environment
+- style(community): format code for better readability
+- refactor(service): extract authentication logic from controller
+- test(auth): add test case for invalid password login
+- chore(deps): update Prisma to version 5.12.0
+- perf(query): optimize data retrieval by using select instead of include
+
+## ส่วนที่ 4 Pull Request
+
+### 1) การตั้งชื่อ Pull Request
+
+#### 1.1 รูปแบบการตั้งชื่อ
+
+**รูปแบบ**: `[type]: <short description>`
+
+#### 1.2 ข้อบังคับ
+
+1) ตั้งชื่อด้วยภาษาอังกฤษหรือภาษาไทยเท่านั้น
+2) ประเภท (Type) ต้องสอดคล้องกับประเภทของการเปลี่ยนแปลง โดยประเภทที่อนุญาตให้ใช้มีดังนี้:
+   - **feat**: เพิ่มฟีเจอร์ใหม่
+   - **fix**: แก้ไขข้อผิดพลาด
+   - **refactor**: ปรับปรุงโครงสร้างโค้ด โดยไม่เปลี่ยนพฤติกรรมการทำงาน
+   - **style**: แก้ไขรูปแบบโค้ด เช่น การจัดวาง การเว้นวรรค โดยไม่กระทบต่อ logic
+   - **docs**: ปรับปรุงหรือแก้ไขเอกสาร
+   - **test**: เพิ่มหรือแก้ไขชุดการทดสอบ
+   - **chore**: งานทั่วไป เช่น การปรับ dependency หรือ configuration
+   - **perf**: ปรับปรุงประสิทธิภาพของระบบ
+
+#### 1.3 ตัวอย่างชื่อ Pull Request
+
+- feat: เพิ่มหน้าแก้ไขข้อมูลร้านค้า (EditStore)
+- fix: แก้ไข MapPicker ให้บันทึกตำแหน่งได้ถูกต้อง
+- refactor: ปรับ service layer ของ community ให้แยกเป็นโมดูลย่อย
+- style: จัดรูปแบบโค้ดใน component UserProfile
+- docs: อัพเดท README เพิ่มคำแนะนำการติดตั้ง
+- test: เพิ่ม unit test สำหรับ authentication service
+- chore: อัพเดท dependencies และแก้ไข configuration
+- perf: ปรับปรุงประสิทธิภาพการดึงข้อมูล package ด้วย pagination
+
+### 2) คำอธิบาย Pull Request
+
+ในส่วนของคำอธิบาย Pull Request ต้องมีข้อมูลดังต่อไปนี้:
+
+#### 2.1 รายละเอียดของการเปลี่ยนแปลง
+
+อธิบายสิ่งที่เพิ่ม แก้ไข หรือลบอย่างชัดเจน พร้อมเหตุผลในการปรับปรุง
+
+**ตัวอย่าง**:
+- เพิ่มหน้า EditStore สำหรับแก้ไขข้อมูลร้านค้า
+- แก้ไข MapPicker component ให้สามารถบันทึกตำแหน่ง latitude และ longitude ได้ถูกต้อง
+- ปรับโครงสร้าง community service ให้แยกเป็นโมดูลย่อยเพื่อเพิ่มความอ่านง่ายและง่ายต่อการบำรุงรักษา
+
+#### 2.2 ระบุชื่อ Branch ที่เกี่ยวข้อง
+
+ระบุ branch ที่เชื่อมโยงกับ Pull Request นี้ เช่น feature/edit-store, bugfix/fix-map-picker และระบุว่าเป็น Backend หรือ Frontend
+
+**ตัวอย่าง**:
+- Branch: feature/edit-store (Frontend)
+- Branch: bugfix/fix-map-picker (Frontend)
+- Branch: refactor/community-service (Backend)
+
+#### 2.3 ภาพผลลัพธ์ (ถ้ามี)
+
+แนบภาพหน้าจอหรือผลลัพธ์การทำงานหลังจากแก้ไข เพื่อให้ reviewer เห็นผลลัพธ์ที่ได้
+
+**ตัวอย่าง**:
+- ภาพหน้าจอหน้า EditStore ที่สร้างใหม่
+- ภาพแสดงการทำงานของ MapPicker ที่แก้ไขแล้ว
+- ภาพแสดงผลการทดสอบ (test results)
+
+### 3) ข้อบังคับในการส่ง Pull Request
+
+#### 3.1 Branch Target
+
+1) ทุก Pull Request ต้องทำการรวมโค้ด (Merge) เข้าสู่ Branch develop เท่านั้น
+   - ห้าม merge เข้า main โดยตรง
+   - main จะรับ merge จาก develop ผ่าน release process เท่านั้น
+
+#### 3.2 Code Review
+
+2) Pull Request จะต้องผ่านการตรวจสอบ (Code Review) อย่างน้อย 1 คน ก่อนจะได้รับอนุญาตให้รวมโค้ด (Merge)
+   - Reviewer ต้องตรวจสอบโค้ดตามมาตรฐาน Coding Standard
+   - Reviewer ต้องตรวจสอบว่าโค้ดทำงานได้ถูกต้อง
+   - Reviewer ต้องตรวจสอบว่าไม่มี breaking changes (ถ้ามีต้องระบุชัดเจน)
+
+#### 3.3 การแก้ไขตาม Feedback
+
+3) Developer ต้องแก้ไขโค้ดตาม feedback จาก reviewer
+   - ตอบกลับทุก comment จาก reviewer
+   - แก้ไขโค้ดตามที่ reviewer แนะนำ
+   - ถ้ามีข้อสงสัยให้สอบถาม reviewer
+
+#### 3.4 การทดสอบ
+
+4) Developer ต้องทดสอบโค้ดก่อนส่ง Pull Request
+   - ทดสอบว่าโค้ดทำงานได้ถูกต้อง
+   - ทดสอบว่าไม่มี breaking changes
+   - ทดสอบ edge cases ที่เกี่ยวข้อง
+
+#### 3.5 การอัพเดท Branch
+
+5) Developer ต้องอัพเดท branch ให้เป็นปัจจุบันก่อนส่ง Pull Request
+   - Pull branch develop ล่าสุดมา merge หรือ rebase
+   - แก้ไข conflict (ถ้ามี)
+   - ทดสอบอีกครั้งหลังจากอัพเดท

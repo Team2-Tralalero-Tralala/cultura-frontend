@@ -7,14 +7,6 @@ export type CommunityRow = {
   status: string; // OPEN | CLOSED
 };
 
-// โครงสร้างข้อมูลจาก API (ตรงกับ Prisma Service ฝั่ง backend)
-export type CommunityDtoFromApi = {
-  id: number;
-  name: string;
-  location: { province: string } | null;
-  admin: { fname: string; lname: string } | null;
-  status: string;
-};
 
 // โครงสร้าง Pagination Response (ข้อมูล + pagination)
 export type PaginationResponse<T> = {

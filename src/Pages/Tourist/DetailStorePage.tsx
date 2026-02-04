@@ -98,7 +98,7 @@ function buildStoreAddressLine(location?: StoreLocation | null): string {
  *   ประกอบด้วยข้อมูลร้าน, รูปภาพ, ที่อยู่, แผนที่,
  *   และรายการร้านค้าอื่นพร้อม Pagination
  */
-export default function StoreDetailPage() {
+export default function DetailStorePage() {
   const { communityId, storeId } = useParams();
   const limit = 12;
 

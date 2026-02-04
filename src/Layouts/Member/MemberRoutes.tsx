@@ -12,14 +12,14 @@ import { EditPackagePage } from "@/Pages/Member/EditPackagePage";
 import CreatePackagePage from "@/Pages/Member/CreatePackagePage";
 import ManageRefundPage from "@/Pages/Member/ManageRefundPage";
 
-import ManageBookingMember from "@/Pages/Member/ManageBookingMember";
+import ManageBookingMember from "@/Pages/Member/ManageBookingPage";
 import { DashboardPage } from "@/Pages/Member/DashboardPage";
 import CommunityDetailMember from "@/Pages/Member/DetailCommunityPage";
 import PackageHistoryMember from "@/Pages/Member/ManagePackageHistoryPage";
 import DetailPackageMember from "@/Pages/Member/DetailPackagePage";
 import PackageFeedbacksPage from "@/Pages/Member/DetailFeedbackPage";
 import BookingDetailMember from "@/Pages/Member/DetailBookingPage";
-import PackageDraftAdmin from "@/Pages/Admin/MangeDraftPackagePage";
+import ManageDraftPackagePage from "@/Pages/Admin/ManageDraftPackagePage";
 import PackageDraftMember from "@/Pages/Member/ManageDraftPackage";
 import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import BookingHistoryMember from "@/Pages/Member/ManageBookingHistoryPage";

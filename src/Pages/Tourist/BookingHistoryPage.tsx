@@ -32,7 +32,7 @@ const statusMap: Record<string, string> = {
  * แสดงประวัติการจองของนักท่องเที่ยว
  * พร้อมตัวกรอง การค้นหา การจัดเรียง และการแบ่งหน้า
  */
-export default function BookingHistoryTourist() {
+export default function BookingHistoryPage() {
   const [activeSort, setActiveSort] = useState<"newest" | "oldest">("newest");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterState, setFilterState] = useState({

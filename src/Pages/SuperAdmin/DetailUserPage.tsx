@@ -15,7 +15,7 @@ import Button from "@/Components/Button";
  * Input: -
  * Output: JSX Element หน้า UserDetailPage
  */
-export function UserDetailPage() {
+export function DetailUserPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<UserDetail | null>(null);

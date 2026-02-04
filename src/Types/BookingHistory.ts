@@ -9,7 +9,6 @@ export interface BookingHistoryItem {
   transferSlip: string | null;
   bookingAt: string;
 }
-
 export interface TouristBookingHistory {
   id: number;
   bookingAt: string;

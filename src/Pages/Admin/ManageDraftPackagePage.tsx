@@ -51,7 +51,7 @@ export default function ManageDraftPackagePage() {
 
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
-    pkg: null as DraftPackageRow | null,
+    packageObject: null as DraftPackageRow | null,
   });
 
   const [bulkDeleteModal, setBulkDeleteModal] = useState({
@@ -77,12 +77,12 @@ export default function ManageDraftPackagePage() {
       const result = res.data;
 
       const formatted: DraftPackageRow[] = Array.isArray(result.data)
-        ? result.data.map((pkg: any) => ({
-            id: pkg.id ?? 0,
-            name: pkg.name ?? "-",
-            community: pkg.community?.name ?? "-",
-            overseer: pkg.overseerPackage?.name ?? "-",
-            status: pkg.statusPackage === "DRAFT" ? "ฉบับร่าง" : pkg.statusPackage,
+        ? result.data.map((packageObject: any) => ({
+            id: packageObject.id ?? 0,
+            name: packageObject.name ?? "-",
+            community: packageObject.community?.name ?? "-",
+            overseer: packageObject.overseerPackage?.name ?? "-",
+            status: packageObject.statusPackage === "DRAFT" ? "ฉบับร่าง" : packageObject.statusPackage,
           }))
         : [];
 
@@ -113,8 +113,8 @@ export default function ManageDraftPackagePage() {
     const query = normalizeText(searchTerm);
     if (!query) return draftPackages;
 
-    return draftPackages.filter((pkg) => {
-      const fields = [pkg.name, pkg.community, pkg.overseer, pkg.status].map(normalizeText);
+    return draftPackages.filter((packageObject) => {
+      const fields = [packageObject.name, packageObject.community, packageObject.overseer, packageObject.status].map(normalizeText);
 
       return fields.some((text) => text.includes(query));
     });
@@ -136,17 +136,17 @@ export default function ManageDraftPackagePage() {
 
   /**
    * คำอธิบาย: ฟังก์ชันลบแพ็กเกจฉบับร่างทีละรายการ
-   * Input: deleteModal.pkg
+   * Input: deleteModal.packageObject
    * Output: ลบข้อมูลจากระบบและโหลดข้อมูลใหม่
    */
   const handleConfirmDelete = async () => {
-    if (!deleteModal.pkg) return;
+    if (!deleteModal.packageObject) return;
 
-    const pkgToDelete = deleteModal.pkg;
-    setDeleteModal({ isOpen: false, pkg: null });
+    const packageObjectToDelete = deleteModal.packageObject;
+    setDeleteModal({ isOpen: false, packageObject: null });
 
     try {
-      await axios.delete(`${API_URL}/admin/packages/draft/${pkgToDelete.id}`, {
+      await axios.delete(`${API_URL}/admin/packages/draft/${packageObjectToDelete.id}`, {
         withCredentials: true,
       });
       fetchDraftPackages();
@@ -194,12 +194,12 @@ export default function ManageDraftPackagePage() {
     {
       key: "name",
       header: "ชื่อแพ็กเกจ",
-      render: (pkg) => (
+      render: (packageObject) => (
         <span
           className="cursor-pointer hover:text-gray-800"
-          onClick={() => navigate(`/admin/package/${pkg.id}`)}
+          onClick={() => navigate(`/admin/package/${packageObject.id}`)}
         >
-          {pkg.name}
+          {packageObject.name}
         </span>
       ),
     },
@@ -210,12 +210,12 @@ export default function ManageDraftPackagePage() {
     {
       key: "setting",
       header: "จัดการ",
-      render: (pkg) => (
+      render: (packageObject) => (
         <div className="flex space-x-2 gap-2">
           <button
             type="button"
             className="cursor-pointer"
-            onClick={() => navigate(`/admin/package/${pkg.id}/edit`)}
+            onClick={() => navigate(`/admin/package/${packageObject.id}/edit`)}
           >
             <PencilIcon className="w-4 h-4" />
           </button>
@@ -223,7 +223,7 @@ export default function ManageDraftPackagePage() {
           <button
             type="button"
             className="cursor-pointer"
-            onClick={() => setDeleteModal({ isOpen: true, pkg })}
+            onClick={() => setDeleteModal({ isOpen: true, packageObject })}
           >
             <TrashIcon className="w-4 h-4" />
           </button>
@@ -257,12 +257,12 @@ export default function ManageDraftPackagePage() {
       <DataTable<DraftPackageRow>
         data={paginatedRows}
         columns={columns}
-        getKey={(pkg) => pkg.id.toString()}
+        getKey={(packageObject) => packageObject.id.toString()}
         bulkActions={selectedRows.length > 0 ? bulkActions : []}
         selectable
         onSelectedChange={(rows) => setSelectedRows(rows)}
         pagination={pagination}
-        onPageChange={(p) => setPagination((prev) => ({ ...prev, currentPage: p }))}
+        onPageChange={(pagination) => setPagination((prev) => ({ ...prev, currentPage: pagination }))}
         onPageSizeChange={(limit) =>
           setPagination((prev) => ({
             ...prev,
@@ -282,7 +282,7 @@ export default function ManageDraftPackagePage() {
         confirmText="ลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteModal({ isOpen: false, pkg: null })}
+        onCancel={() => setDeleteModal({ isOpen: false, packageObject: null })}
       />
 
       {/* Modal : ลบหลายรายการ */}

@@ -1,12 +1,9 @@
 /*
- * คำอธิบาย : Component สำหรับสร้าง TextField (อินพุตฟอร์ม)
- * ที่รองรับหลายประเภท เช่น ข้อความทั่วไป, รหัสผ่าน (พร้อมปุ่ม toggle แสดง/ซ่อน),
- * และเบอร์โทรศัพท์ (พร้อม prefix +66 และไอคอนธงไทย)
+ * คำอธิบาย : Component สำหรับช่องกรอก (TextArea)
  */
 import type { BaseFieldProps } from "../../Types/BaseField";
 
 /*
- * ฟังก์ชัน : RequiredMark
  * คำอธิบาย : แสดงเครื่องหมาย * สีแดง เมื่อฟิลด์เป็น required
  * Input : -
  * Output : React element <span>

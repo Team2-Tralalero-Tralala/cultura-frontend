@@ -1,20 +1,3 @@
-export type PackageRow = {
-  id: number;
-  title: string;
-  community: string;
-  owner: string;
-  published: boolean;
-  approved: boolean;
-};
-
-export type PackageDtoFromApi = {
-  id: number;
-  title: string;
-  community: { name: string } | null;
-  owner: { fullName: string } | null;
-  published: boolean;
-  approved: boolean;
-};
 
 export type PaginationResponse<T> = {
   items: T[];
@@ -88,61 +71,6 @@ export interface PackageRequestDetail {
     longitude: number;
   };
   homestayHistories: {
-    checkInTime: string;
-    checkOutTime: string;
-    homestay: {
-      name: string;
-      facility?: string;
-      homestayImage: { image: string; type?: string }[];
-    } | null;
-  }[];
-}
-
-export interface PackageRequestDetail {
-  /** รหัสคำร้อง */
-  id: string;
-  /** ชื่อแพ็กเกจ */
-  name: string;
-  /** สถานะแพ็กเกจ */
-  statusPackage: String;
-  /** คำอธิบายแพ็กเกจ */
-  description: string;
-  /** จำนวนคนที่เปิดรับ */
-  capacity: number;
-  /** ราคา (หน่วยบาท) */
-  price: number;
-  /** วันเริ่มต้นแพ็กเกจ (ISO) */
-  startDate: string;
-  /** วันสิ้นสุดแพ็กเกจ (ISO) */
-  dueDate: string;
-  /** วันเปิดให้จอง (ISO) */
-  bookingOpenDate: string;
-  /** วันปิดการจอง (ISO) */
-  bookingCloseDate: string;
-  /** สิ่งอำนวยความสะดวก */
-  facility: string;
-  /** ผู้ดูแลแพ็กเกจ */
-  overseerPackage: { fname: string; lname: string };
-  /** ผู้สร้างแพ็กเกจ */
-  createPackage: { fname: string; lname: string };
-  /** รายการแท็กของแพ็กเกจ */
-  tagPackages: { tag: { name: string } }[];
-  /** ไฟล์สื่อของแพ็กเกจ */
-  packageFile: { filePath: string }[];
-  /** ข้อมูลสถานที่ตั้งของแพ็กเกจ */
-  location: {
-    houseNumber: string;
-    villageNumber: string;
-    alley: string;
-    subDistrict: string;
-    district: string;
-    province: string;
-    postalCode: string;
-    detail: string;
-    latitude: number;
-    longitude: number;
-  };
-    homestayHistories: {
     checkInTime: string;
     checkOutTime: string;
     homestay: {

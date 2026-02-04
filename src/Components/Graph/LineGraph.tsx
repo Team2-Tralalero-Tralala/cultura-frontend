@@ -1,5 +1,4 @@
 /*
- * Component: LineGraph (Client)
  * คำอธิบาย: Graph component สำหรับแสดงข้อมูลการจองแพ็กเกจในช่วงเวลาที่กำหนด
  * ใช้ Chart.js กับ react-chartjs-2 ในการวาดกราฟชนิด Line Chart พร้อม Area Fill
  * รองรับการแสดงข้อมูลจาก props และการปรับแต่งสีตามธีม

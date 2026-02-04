@@ -159,7 +159,7 @@ const createColumns = (
  * Input: -
  * Output: JSX Element
  */
-export default function ManageBookingMember() {
+export default function ManageBookingPage() {
   const navigate = useNavigate();
 
   const [bookingLists, setBookingLists] = React.useState<BookingRow[]>([]); // เปลี่ยน rows เป็น bookingLists

@@ -24,7 +24,7 @@ import DetailPackageHistoryAdmin from "@/Pages/Admin/DetailPackageHistoryPage";
 import BookingDetailAdmin from "@/Pages/Admin/DetailBookingPage";
 import ManageHomestayAdmin from "@/Pages/Admin/ManageHomestayPage";
 import StoreDetailAdmin from "@/Pages/Admin/DetailStorePage";
-import PackageDraftAdmin from "@/Pages/Admin/MangeDraftPackagePage";
+import ManageDraftPackagePage from "@/Pages/Admin/ManageDraftPackagePage";
 import EditPackagePage from "@/Pages/Admin/EditPackagePage";
 import ManagePackagePage from "@/Pages/Admin/ManagePackagePage";
 import { CreatePackagePage } from "@/Pages/Admin/CreatePackagePage";
@@ -37,7 +37,7 @@ import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 import { CreateStorePage } from "@/Pages/SuperAdmin/CreateStorePage";
 import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
-import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage"
+import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHIstoryPage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
@@ -91,7 +91,7 @@ export default function AdminRoutes() {
 
       {/* ---------------- แพ็กเกจ ---------------- */}
       <Route path="package/history/:id" element={<DetailPackageHistoryAdmin />} />
-      <Route path="packages/drafts" element={<PackageDraftAdmin />} />
+      <Route path="packages/drafts" element={<ManageDraftPackagePage />} />
       <Route path="packages/histories" element={<ManagePackageHistoryPage />} />
       <Route path="packages/all" element={<ManagePackagePage />} />
       <Route path="package/create" element={<CreatePackagePage />} />

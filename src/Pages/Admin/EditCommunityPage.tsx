@@ -24,7 +24,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import Switch from "@/Components/Switch";
+import Switch from "@/Components/CustomSwitch";
 import * as React from "react";
 import { Link, useNavigate } from "react-router";
 import zod from "zod";

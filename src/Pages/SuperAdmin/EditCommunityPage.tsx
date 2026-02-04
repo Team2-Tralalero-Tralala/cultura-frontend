@@ -23,7 +23,7 @@ import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import Switch from "@/Components/Switch";
+import Switch from "@/Components/CustomSwitch";
 import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";

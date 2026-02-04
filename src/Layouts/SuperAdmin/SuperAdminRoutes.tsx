@@ -11,7 +11,7 @@ import { UploadBannerPage } from "@/Pages/SuperAdmin/UploadBannerPage";
 
 import { BlockUserPage } from "@/Pages/SuperAdmin/BlockUserPage";
 import { ManageAccountPage } from "@/Pages/SuperAdmin/ManageAccountPage";
-import { UserDetailPage } from "@/Pages/SuperAdmin/UserDetailPage";
+import { DetailUserPage } from "@/Pages/SuperAdmin/DetailUserPage";
 
 import ChangePasswordPage from "@/Pages/SuperAdmin/ChangePasswordPage";
 import CommunityDetailSuperAdmin from "@/Pages/SuperAdmin/DetailCommunityPage";
@@ -108,7 +108,7 @@ export default function SuperAdminRoutes() {
 
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="users/blocked" element={<BlockUserPage />} />
-      <Route path="account/:id" element={<UserDetailPage />} />
+      <Route path="account/:id" element={<StoreDetailPage />} />
       <Route path="accounts/all" element={<ManageAccountPage />} />
       {/* 🔹 หน้าเพิ่มบัญชีสมาชิก (Member) */}
       <Route path="/member/create" element={<CreateAccountPage defaultRole="Member" />} />

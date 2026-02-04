@@ -1,69 +1,68 @@
-# React + TypeScript + Vite
+# Cultura Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+โปรเจกต์นี้เป็นส่วน Frontend สำหรับแอปพลิเคชัน **Cultura** ซึ่งพัฒนาโดยใช้เทคโนโลยี **React**, **TypeScript**, และ **Vite** พร้อมทั้งใช้งาน **Tailwind CSS** สำหรับการตกแต่งหน้าตาเว็บไซต์
 
-Currently, two official plugins are available:
+## 📂 โครงสร้างโปรเจกต์ (Project Structure)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+cultura-frontend/
+├── .env                  # Environment variables
+├── .gitignore           # Git ignore rules
+├── eslint.config.js     # ESLint configuration
+├── index.html           # Main HTML entry point
+├── package.json         # Project dependencies and scripts
+├── src/                 # Source code directory
+│   ├── App.tsx         # Main App component
+│   ├── index.css       # Global styles (Tailwind imports)
+│   ├── main.tsx        # Application entry point
+│   └── vite-env.d.ts   # Vite type definitions
+├── tsconfig.app.json    # TypeScript config for App
+├── tsconfig.json        # Base TypeScript config
+├── tsconfig.node.json   # TypeScript config for Node
+└── vite.config.ts       # Vite configuration
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📋 สิ่งที่ต้องมีเบื้องต้น (Prerequisites)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- [Node.js](https://nodejs.org/) (แนะนำเวอร์ชัน LTS ล่าสุด)
+- npm (ติดตั้งมาพร้อมกับ Node.js)
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 การติดตั้ง (Installation)
+
+1. Clone โปรเจกต์ลงมาที่เครื่องของคุณ:
+
+   ```bash
+   git clone https://github.com/Team2-Tralalero-Tralala/cultura-frontend
+   cd cultura-frontend
+   ```
+
+2. ติดตั้ง Dependencies ต่าง ๆ:
+   ```bash
+   npm install
+   ```
+
+## ⚙️ การตั้งค่า (Configuration)
+
+ก่อนเริ่มใช้งาน ให้ทำการสร้างไฟล์ `.env` ที่ root directory ของโปรเจกต์ และกำหนดค่าต่าง ๆ ดังนี้:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_PORT=4000
+```
+
+| ตัวแปร         | รายละเอียด                                   |
+| :------------- | :------------------------------------------- |
+| `VITE_API_URL` | URL ของ Backend API ที่ Frontend จะเชื่อมต่อ |
+| `VITE_PORT`    | Port ที่ต้องการให้ Frontend รัน (เช่น 4000)  |
+
+## 🛠️ สำหรับนักพัฒนา (For Developers)
+
+คำสั่งต่าง ๆ ที่สามารถใช้ได้ในโปรเจกต์นี้:
+
+### รันโปรเจกต์ (Development Mode)
+
+สำหรับรันเพื่อพัฒนา (Development Server):
+
+```bash
+npm run dev
 ```

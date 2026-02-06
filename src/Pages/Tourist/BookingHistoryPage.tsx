@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { getBookingsByTourist } from "@/Libs/BookingHistoryService";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
@@ -14,6 +15,7 @@ import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BookingHistoryCardList, { type BookingItem } from "@/Components/BookingHistoryCardList";
 import Button from "@/Components/Button";
+import { useAuth } from "@/Libs/UseAuth";
 
 /*
  * คำอธิบาย : ตัวแปรสำหรับ map ค่า status จาก API เป็นข้อความภาษาไทย
@@ -33,7 +35,19 @@ const statusMap: Record<string, string> = {
  * พร้อมตัวกรอง การค้นหา การจัดเรียง และการแบ่งหน้า
  */
 export default function BookingHistoryPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeSort, setActiveSort] = useState<"newest" | "oldest">("newest");
+
+  /*
+   * คำอธิบาย : Redirect ไปหน้าแรกหากผู้ใช้ไม่ได้ล็อกอิน (Guest)
+   */
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [filterState, setFilterState] = useState({
     status: "ALL",

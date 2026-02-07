@@ -19,7 +19,7 @@ import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const apiUrl = import.meta.env.VITE_API_URL as string;
 
 type FileLike = File;
 
@@ -281,7 +281,7 @@ export default function CreateHomestaysPage() {
             formData.append("gallery", galleryFile);
           }
         }
-        await axios.post(`${API_URL}/admin/community/homestay`, formData, {
+        await axios.post(`${apiUrl}/admin/community/homestay`, formData, {
           withCredentials: true,
         });
       }

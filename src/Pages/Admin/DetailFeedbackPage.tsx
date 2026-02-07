@@ -5,12 +5,12 @@
  */
 import React from "react";
 import { useParams } from "react-router-dom";
-import * as PackageFeedbackService from "@/Libs/FeedbackService";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
+import * as PackageFeedbackService from "@/Libs/FeedbackService";
 
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 type FeedbackImage = {
   image: string;
@@ -60,7 +60,7 @@ function getImageUrl(fileName?: string): string | undefined {
   }
 
   const cleanedPath = fileName.replace(/^\/?uploads\//, "");
-  return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+  return `${apiUrl}/uploads/${cleanedPath}`;
 }
 
 /**

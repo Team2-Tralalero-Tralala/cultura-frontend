@@ -6,14 +6,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Icon } from "@iconify/react";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/Input/TextField";
-import Button from "../../Components/Button";
+import TextField from "@/Components/Input/TextField";
+import Button from "@/Components/Button";
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
 
 /**
  * คำอธิบาย: Interface สำหรับกำหนดโครงสร้างข้อมูลที่ใช้ในการแก้ไขข้อมูลสมาชิก

@@ -6,15 +6,15 @@
  */
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import DataTable from "@/Components/Tables/Index";
-import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
-import { TrashIcon } from "../../Components/Tables/Icon";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
+import { Icon } from "@iconify/react";
+import DataTable from "@/Components/Tables/Index";
+import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
+import { TrashIcon } from "@/Components/Tables/Icon";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
 import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 
 const apiUrl = import.meta.env.VITE_API_URL;

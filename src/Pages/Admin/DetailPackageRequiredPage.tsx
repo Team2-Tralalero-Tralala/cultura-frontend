@@ -21,7 +21,12 @@ import ModalReject from "@/Components/Modal/ModalReject";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import L from "leaflet";
 
-delete (L.Icon.Default as any).prototype._getIconUrl;
+interface LeafletIconDefaultPrototype extends L.Icon.Default {
+  _getIconUrl?: string;
+}
+
+const iconDefaultProto = L.Icon.Default.prototype as LeafletIconDefaultPrototype;
+delete iconDefaultProto._getIconUrl;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",

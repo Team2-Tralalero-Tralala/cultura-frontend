@@ -4,8 +4,8 @@
  * และลิงก์ไปยังหน้าแก้ไขข้อมูลสมาชิก
  */
 
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -20,12 +20,12 @@ import type { UserDetail } from "@/Types/User";
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
-  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const apiUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
   if (!fileName.startsWith("uploads/")) {
     const cleaned = fileName.replace(/^\/+/, "");
-    return `${baseUrl}/uploads/${cleaned}`;
+    return `${apiUrl}/uploads/${cleaned}`;
   }
-  return `${baseUrl}/${fileName}`;
+  return `${apiUrl}/${fileName}`;
 }
 
 /**

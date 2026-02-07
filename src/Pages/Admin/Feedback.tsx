@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL;
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 type ApiFeedbackImage = {
   id: number;
@@ -92,7 +91,7 @@ function getImageUrl(fileName?: string): string | undefined {
     return undefined;
   }
   const cleanedPath = fileName.replace(/^\/?uploads\//, "");
-  return `${BACKEND_BASE_URL}/uploads/${cleanedPath}`;
+  return `${apiBaseUrl}/uploads/${cleanedPath}`;
 }
 
 /*

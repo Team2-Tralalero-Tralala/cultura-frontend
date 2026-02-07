@@ -24,10 +24,10 @@ type DraftPackageRow = {
 
 /**
  * คำอธิบาย: ฟังก์ชันจัดรูปแบบข้อความให้เป็นมาตรฐานก่อนนำไปค้นหา
- * Input: text (any)
- * Output: string ที่ถูก trim, lowercase และ normalize
+ * Input: text (string | null | undefined)
+ * Output: string ที่ถูก normalize
  */
-const normalizeText = (text: any) =>
+const normalizeText = (text: string | null | undefined): string =>
   (text ?? "").toString().trim().toLowerCase().normalize("NFC").replace(/\s+/g, " ");
 
 /**

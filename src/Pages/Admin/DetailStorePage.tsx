@@ -2,7 +2,7 @@
  * คำอธิบาย: Component สำหรับแสดงรายละเอียดร้านค้า (Admin)
  */
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Edit } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";

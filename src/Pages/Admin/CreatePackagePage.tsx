@@ -496,7 +496,7 @@ export const CreatePackagePage = () => {
         withCredentials: true,
       });
       navigate("/admin/packages/all");
-    } catch (error: any) {
+    } catch (error) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);

@@ -4,14 +4,14 @@
  * การแบ่งหน้า (pagination), การค้นหา และการกรองสถานะการจอง
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/Components/Button";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
-import type { BookingHistoryItem } from "../../Types/BookingHistory";
+import type { BookingHistoryItem } from "@/Types/BookingHistory";
 import * as BookingHistoriesService from "@/Libs/BookingHistoryService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 

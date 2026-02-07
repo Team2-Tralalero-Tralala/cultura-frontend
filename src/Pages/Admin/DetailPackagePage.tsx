@@ -8,14 +8,14 @@
  * - ลิงก์ไปยังหน้าแก้ไขและรายชื่อผู้จอง
  */
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Icon } from "@iconify/react";
 import Button from "@/Components/Button";
 import { EditIcon } from "@/Components/Icon/MaterialSymbolsLight";
 import Tag from "@/Components/Tag";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 

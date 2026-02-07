@@ -64,68 +64,68 @@ const createPackageRequestColumns = (
   onApprove: (row: PackageRequestRow) => void,
   onReject: (row: PackageRequestRow) => void,
 ): Column<PackageRequestRow>[] => [
-  {
-    key: "name",
-    header: "ชื่อแพ็กเกจ",
-    className: "min-w-[220px]",
-    render: (r) => (
-      <Link
-        to={`/admin/package-requests/${r.id}`}
-        className="font-medium text-dark-green hover:underline focus:underline"
-      >
-        {r.name}
-      </Link>
-    ),
-  },
-  {
-    key: "community",
-    header: "ชื่อชุมชน",
-    className: "min-w-[220px]",
-    render: (r) => <div>{r.community.name}</div>,
-  },
-  {
-    key: "overseer",
-    header: "ผู้ดูแล",
-    className: "min-w-[160px]",
-    render: (r) => <div>{r.overseer.username}</div>,
-  },
-  {
-    key: "statusApprove",
-    header: "สถานะคำขอ",
-    render: (r) => <div>{getThaiApprovalStatus(r.statusApprove)}</div>,
-  },
-  {
-    key: "actions",
-    header: "จัดการ",
-    className: "w-[160px] text-left pr-3",
-    render: (r) => {
-      const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
-      return (
-        <div className="flex items-center justify-end gap-2 pr-2">
-          {!approved && (
-            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="cancel" onClick={() => onReject(r)}>
-                ปฏิเสธ
-              </Button>
-            </div>
-          )}
-          {!approved && (
-            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin" onClick={() => onApprove(r)}>
-                อนุมัติ
-              </Button>
-            </div>
-          )}
-          {approved && (
-            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin">อนุมัติ</Button>
-            </div>
-          )}
-        </div>
-      );
+    {
+      key: "name",
+      header: "ชื่อแพ็กเกจ",
+      className: "min-w-[220px]",
+      render: (r) => (
+        <Link
+          to={`/admin/package-requests/${r.id}`}
+          className="font-medium text-dark-green hover:underline focus:underline"
+        >
+          {r.name}
+        </Link>
+      ),
     },
-  },
-];
+    {
+      key: "community",
+      header: "ชื่อชุมชน",
+      className: "min-w-[220px]",
+      render: (r) => <div>{r.community.name}</div>,
+    },
+    {
+      key: "overseer",
+      header: "ผู้ดูแล",
+      className: "min-w-[160px]",
+      render: (r) => <div>{r.overseer.username}</div>,
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะคำขอ",
+      render: (r) => <div>{getThaiApprovalStatus(r.statusApprove)}</div>,
+    },
+    {
+      key: "actions",
+      header: "จัดการ",
+      className: "w-[160px] text-left pr-3",
+      render: (r) => {
+        const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
+        return (
+          <div className="flex items-center justify-end gap-2 pr-2">
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="cancel" onClick={() => onReject(r)}>
+                  ปฏิเสธ
+                </Button>
+              </div>
+            )}
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin" onClick={() => onApprove(r)}>
+                  อนุมัติ
+                </Button>
+              </div>
+            )}
+            {approved && (
+              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin">อนุมัติ</Button>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
 /**
  * คำอธิบาย: Page Component สำหรับรายการคำขออนุมัติแพ็กเกจ (Admin)

@@ -91,12 +91,20 @@ const api = axios.create({
   withCredentials: true,
 });
 
-/**
- * ดึงรายชื่อชุมชนทั้งหมด (Superadmin)
- * Mapping: GET /super/communities
+/*
+ * อธิบาย : ฟังก์ชันดึงรายการชุมชนทั้งหมด (สำหรับ SuperAdmin) พร้อมระบบค้นหาและกรองสถานะ
+ * Input : page, limit, search, status
+ * Output : Promise ข้อมูลรายการชุมชนและ pagination
  */
-export async function getCommunities(page = 1, limit = 10) {
-  return api.get("/super/communities", { params: { page, limit } });
+export async function getCommunities(
+  page = 1,
+  limit = 10,
+  search = "",   // default ค่าว่าง
+  status = "all" // default all
+) {
+  return api.get("/super/communities", {
+    params: { page, limit, search, status }
+  });
 }
 
 /**

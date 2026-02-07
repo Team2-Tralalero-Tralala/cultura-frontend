@@ -6,8 +6,9 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
@@ -16,7 +17,6 @@ import ModalReject from "@/Components/Modal/ModalReject";
 import { fetchBookingsByMember, updateBookingStatusByMember } from "@/Libs/BookingHistoryService";
 import type { BookingRow, Pagination, BookingAdminDtoFromApi } from "@/Types/Booking";
 import type { PaginationResponse } from "@/Types/Community";
-import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 /**
  * คำอธิบาย: สร้างคอลัมน์สำหรับตารางรายการการจอง (รวมปุ่มจัดการ, ลิงก์ และสถานะ)
@@ -159,7 +159,7 @@ const createColumns = (
  * Input: -
  * Output: JSX Element
  */
-export default function ManageBookingPage() {
+export function ManageBookingPage() {
   const navigate = useNavigate();
 
   const [bookingLists, setBookingLists] = React.useState<BookingRow[]>([]); // เปลี่ยน rows เป็น bookingLists

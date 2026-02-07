@@ -6,16 +6,16 @@
  * Input: -
  * Output: หน้า Dashboard ที่แสดงข้อมูลสรุปและกราฟ
  */
-import LineGraph from "@/Components/Graph/LineGraph";
 import React from "react";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
+import { BarChart } from "@/Components/Graph/BarChart";
+import LineGraph from "@/Components/Graph/LineGraph";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import {
   fetchMemberDashboardData,
   type MemberDashboardFilters,
   type MemberDashboardResponse,
 } from "@/Libs/DashboardService";
-import { BarChart } from "@/Components/Graph/BarChart";
-import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 
 /**
  * คำอธิบาย: หน้า Dashboard ของ Member
@@ -121,9 +121,9 @@ export function DashboardPage() {
       };
       const response = await fetchMemberDashboardData(filters);
       setDashboardData(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setErrorMessage(error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }

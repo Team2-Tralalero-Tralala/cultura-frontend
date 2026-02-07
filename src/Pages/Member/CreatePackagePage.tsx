@@ -1,37 +1,35 @@
 /**
- * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
+ * คำอธิบาย : Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Member)
  * - ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ (หน้าตาเหมือนหน้าแก้ไข)
  * - รองรับการอัปโหลดรูปภาพ (Cover/Gallery/Video)
  * - ส่งข้อมูลแบบ multipart/form-data
- * Input: -
- * Output: หน้าฟอร์มสำหรับสร้างแพ็กเกจ
  */
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
-import TextField from "../../Components/Input/TextField";
-import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
-import ThailandLocationSelector, {
-  type ThailandLocation,
-} from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/Input/TextArea";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-import UploadCard from "@/Components/upload/UploadCard";
-import { TagSelector } from "@/Components/Selector/TagSelector";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import {
   PackageStatusDropdown,
   type PackageStatus,
 } from "@/Components/Selector/PackageStatusDropdown";
-import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
-import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+import { TagSelector } from "@/Components/Selector/TagSelector";
+import ThailandLocationSelector, {
+  type ThailandLocation,
+} from "@/Components/Selector/ThailandLocationSelector";
+import UploadCard from "@/Components/upload/UploadCard";
+import MapPicker from "../../Components/MapPicker";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
@@ -50,7 +48,7 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
  * Input: value (ค่าที่ต้องการแปลง)
  * Output: ตัวเลข หรือ null ถ้าแปลงไม่ได้
  */
-function toIntOrNull(value: any): number | null {
+function toIntOrNull(value: unknown): number | null {
   const trimmed = String(value ?? "").trim();
   if (trimmed === "") return null;
   const numberValue = Number(trimmed);
@@ -142,7 +140,12 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-export const CreatePackagePage = () => {
+/**
+ * คำอธิบาย : Component หลักสำหรับหน้าสร้างแพ็กเกจใหม่ (Member)
+ * Input : ไม่มี
+ * Output : หน้าฟอร์มสร้างแพ็กเกจและควบคุม state / การส่งข้อมูล
+ */
+export function CreatePackagePage() {
   const navigate = useNavigate();
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
@@ -492,7 +495,7 @@ export const CreatePackagePage = () => {
       });
 
       navigate("/member/packages/all");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -1055,6 +1058,4 @@ export const CreatePackagePage = () => {
       />
     </div>
   );
-};
-
-export default CreatePackagePage;
+}

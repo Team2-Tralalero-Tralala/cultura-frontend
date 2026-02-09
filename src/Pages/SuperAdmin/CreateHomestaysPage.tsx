@@ -3,7 +3,7 @@
  * หน้าที่: จัดการฟอร์ม ตรวจสอบข้อมูล ยืนยัน และส่งข้อมูลแบบ multipart/form-data ไปยัง API
  */
 import React from "react";
-import * as z from "zod";
+import * as zod from "zod";
 import axios from "axios";
 import { Icon } from "@iconify/react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -60,31 +60,31 @@ const initialHomestay: HomestayForm = {
   placeQuery: "",
 };
 
-const homestaySchema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
-  type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
-  facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
-  guestPerRoom: z
+const homestaySchema = zod.object({
+  name: zod.string().min(1, "กรุณากรอกชื่อที่พัก"),
+  type: zod.string().min(1, "กรุณากรอกประเภทของที่พัก"),
+  facility: zod.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
+  guestPerRoom: zod
     .string()
     .min(1)
     .refine(
       (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
       "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
-  totalRoom: z
+  totalRoom: zod
     .string()
     .min(1)
     .refine(
       (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
       "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
-  houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
-  addressDetail: z.string().optional().default(""),
-  placeQuery: z.string().optional().default(""),
+  houseNumber: zod.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+  addressDetail: zod.string().optional().default(""),
+  placeQuery: zod.string().optional().default(""),
 });
 
 type HomestayFormErrors = Partial<Record<keyof HomestayForm, string>>;

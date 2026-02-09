@@ -46,7 +46,11 @@ export default function DetailHomestayPage() {
    */
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // โหลดข้อมูลด้วย Service ของ Super Admin
+  /**
+   * คำอธิบาย: Hook สำหรับโหลดข้อมูลที่พักเมื่อ Component ถูก Mount
+   * Input: - (ใช้ Params from URL)
+   * Output: - (อัปเดต state homestay)
+   */
   useEffect(() => {
     if (!homestayId) return;
     fetchHomestayDetail(Number(homestayId))
@@ -144,8 +148,8 @@ export default function DetailHomestayPage() {
                 <span className="font-bold text-black">:</span>
                 {homestay.facility ? (
                   <ul className="list-disc list-inside space-y-1 text-black">
-                    {homestay.facility.split(",").map((item: string, i: number) => (
-                      <li key={i}>{item.trim()}</li>
+                    {homestay.facility.split(",").map((facilityItem: string, index: number) => (
+                      <li key={index}>{facilityItem.trim()}</li>
                     ))}
                   </ul>
                 ) : (

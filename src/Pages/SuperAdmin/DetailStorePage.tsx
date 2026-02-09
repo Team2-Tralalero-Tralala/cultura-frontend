@@ -1,8 +1,5 @@
 /**
  * คำอธิบาย: Component สำหรับเเสดงรายละเอียดร้านค้าของ Super Admin
- * หน้าที่: แสดงข้อมูลร้านค้า รูปภาพ แท็ก และแผนที่
- * สิทธิ์การเข้าถึง: Super Admin
- * เส้นทาง (Route): /super/store/:id
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -115,8 +112,8 @@ const DetailStorePage = () => {
 
         setStore(formatted);
       }
-    } catch (err) {
-      console.error("Fetch error:", err);
+    } catch (error) {
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -226,11 +223,11 @@ const DetailStorePage = () => {
           <div className="mt-6">
             <h2 className="text-[20px] font-bold mb-3">รูปภาพเพิ่มเติม</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {store.images.slice(1).map((img, i) => (
+              {store.images.slice(1).map((imgKey) => (
                 <img
-                  key={i}
-                  src={img}
-                  alt={`store-img-${i + 1}`}
+                  key={imgKey}
+                  src={imgKey}
+                  alt={`store-img`}
                   className="w-full h-[150px] object-cover rounded-lg border-2 border-gray-400"
                 />
               ))}

@@ -28,7 +28,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import * as z from "zod";
+import * as zod from "zod";
 import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
@@ -36,78 +36,78 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลฟอร์มวิสาหกิจชุมชน
- * ใช้ Zod สำหรับ validate field แต่ละรายการก่อนส่งข้อมูลไป backend
+ * ใช้ zodod สำหรับ validate field แต่ละรายการก่อนส่งข้อมูลไป backend
  * Input: ข้อมูลในฟอร์มที่ผู้ใช้กรอก
  * Output: หากไม่ผ่าน validation จะส่งข้อความ error กลับให้แสดงในฟอร์ม
  */
-const communitySchema = z.object({
-  name: z.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
+const communitySchema = zod.object({
+  name: zod.string("กรุณากรอกชื่อวิสาหกิจชุมชน").min(1, "กรุณากรอกชื่อวิสาหกิจชุมชน"),
 
-  type: z.string("กรุณากรอกประเภทวิสาหกิจชุมชน").min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
+  type: zod.string("กรุณากรอกประเภทวิสาหกิจชุมชน").min(1, "กรุณากรอกประเภทวิสาหกิจชุมชน"),
 
-  registerNumber: z
+  registerNumber: zod
     .string("กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกเลขทะเบียนวิสาหกิจชุมชน"),
 
-  registerDate: z
-    .union([z.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), z.date()])
+  registerDate: zod
+    .union([zod.string().min(1, "กรุณากรอกวันที่จดทะเบียนวิสาหกิจชุมชน"), zod.date()])
     .transform((val) => (typeof val === "string" ? val : val.toISOString().split("T")[0])),
 
-  bankName: z
+  bankName: zod
     .string("กรุณาเลือกธนาคาร")
     .min(1, "กรุณาเลือกธนาคาร")
     .max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
 
-  accountName: z.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
+  accountName: zod.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
 
-  accountNumber: z.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: zod.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
 
-  description: z.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
+  description: zod.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
 
-  mainActivityName: z.string("กรุณากรอกชื่อกิจกรรมหลัก").min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
+  mainActivityName: zod.string("กรุณากรอกชื่อกิจกรรมหลัก").min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
 
-  mainActivityDescription: z
+  mainActivityDescription: zod
     .string("กรุณากรอกรายละเอียดกิจกรรมหลัก")
     .min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
 
-  houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
+  houseNumber: zod.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
 
-  province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
+  province: zod.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
 
-  district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
+  district: zod.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
 
-  subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  subDistrict: zod.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
 
-  latitude: z
-    .union([z.string(), z.number()])
+  latitude: zod
+    .union([zod.string(), zod.number()])
     .transform((value) => String(value))
     .refine(
       (latitude) => latitude.length > 0 && latitude !== "0",
       "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด",
     ),
 
-  longitude: z
-    .union([z.string(), z.number()])
+  longitude: zod
+    .union([zod.string(), zod.number()])
     .transform((value) => String(value))
     .refine(
       (longitude) => longitude.length > 0 && longitude !== "0",
       "หากคุณไม่ทราบละติจูดและลองจิจูดของวิสาหกิจชุมชน โปรดค้นหาวิสาหกิจชุมชนและปักหมุด",
     ),
 
-  phone: z
+  phone: zod
     .string("กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน")
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
 
-  email: z.string("กรุณากรอกอีเมลของวิสาหกิจชุมชน").min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
+  email: zod.string("กรุณากรอกอีเมลของวิสาหกิจชุมชน").min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
 
-  mainAdmin: z.string("กรุณากรอกชื่อผู้ดูแลหลัก").min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
+  mainAdmin: zod.string("กรุณากรอกชื่อผู้ดูแลหลัก").min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
 
-  mainAdminPhone: z
+  mainAdminPhone: zod
     .string("กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก")
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์ของผู้ดูแลหลัก"),
 
-  adminId: z.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
+  adminId: zod.coerce.number("กรุณาเลือกผู้ดูแล").min(1, "กรุณาเลือกผู้ดูแล"),
 });
 
 /*
@@ -292,7 +292,7 @@ export default function CreateCommuninityPage() {
   };
 
   /**
-   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย zodod Schema
    * Input: field (optional string), value (optional any)
    * Output: boolean (true ถ้าข้อมูลถูกต้อง)
    */
@@ -357,7 +357,7 @@ export default function CreateCommuninityPage() {
   };
   /**
    * คำอธิบาย: ตัวแปร memberList สำหรับสร้างรายการสมาชิกจากข้อมูลใน formData.communityMembers
-   * ใช้ useMemo เพื่อป้องกันการคำนวณซ้ำโดยไม่จำเป็น (re-render optimization)
+   * ใช้ useMemo เพื่อป้องกันการคำนวณซ้ำโดยไม่จำเป็น (re-render optimizodation)
    * Input: - (ใช้ formData.communityMembers)
    * Output: Member[]
    */

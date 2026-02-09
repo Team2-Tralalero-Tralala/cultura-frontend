@@ -224,7 +224,11 @@ export function ManagePackagePage() {
     ],
     [],
   );
-
+/**
+ * คำอธิบาย: กำหนด Action สำหรับแต่ละแถวในตาราง (Edit, Delete)
+ * Input: -
+ * Output: -
+ */
   const rowActions: DataTableActionsConfig<PackageRowData> = React.useMemo(
     () => ({
       header: "จัดการ",
@@ -273,6 +277,11 @@ export function ManagePackagePage() {
   const toApprovedText = (packageData: PackageRowData) =>
     packageData.isApproved ? "อนุมัติ" : "รออนุมัติ";
 
+  /**
+   * คำอธิบาย: ค้นหาข้อมูลแพ็กเกจตามคีย์เวิร์ด
+   * Input: packageRows (ข้อมูลแพ็กเกจ), searchQuery (คีย์เวิร์ดค้นหา)
+   * Output: ข้อมูลแพ็กเกจที่ตรงกับคีย์เวิร์ด
+   */
   const filteredPackageRows = React.useMemo(() => {
     const query = normalizeText(searchQuery);
     if (!query) return packageRows;

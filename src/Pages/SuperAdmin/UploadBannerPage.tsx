@@ -60,6 +60,11 @@ async function cropImageToFile(
     canvasElement.height,
   );
 
+  /*
+   * คำอธิบาย: แปลง canvas ให้เป็น Blob object
+   * Input: canvasElement (canvas element), mime, quality
+   * Output: Blob (ที่ถูกแปลงแล้ว)
+   */
   const blobData: Blob = await new Promise((resolve) =>
     canvasElement.toBlob((blob) => resolve(blob!), mime, quality),
   );

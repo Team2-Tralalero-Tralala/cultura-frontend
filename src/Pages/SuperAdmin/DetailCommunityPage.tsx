@@ -656,28 +656,28 @@ export default function DetailCommunityPage() {
                 >
                   {packageLists.length ? (
                     <div className="space-y-4">
-                      {packageLists.map((pkg: any) => (
+                      {packageLists.map((packageItem: any) => (
                         <div
-                          key={pkg.id}
-                          onClick={() => navigate(`/super/package/${pkg.id}`)}
+                          key={packageItem.id}
+                          onClick={() => navigate(`/super/package/${packageItem.id}`)}
                           className="cursor-pointer"
                         >
                           <ItemCard
                             image={resolveBackendUploadUrl(
-                              pkg?.packageFile?.find(
+                              packageItem?.packageFile?.find(
                                 (fileImage: any) =>
                                   String(fileImage.type).toUpperCase() === "COVER",
                               )?.filePath,
                             )}
-                            title={pkg.name}
+                            title={packageItem.name}
                           >
                             <div className="space-y-1">
                               <div>
-                                - ความจุ {pkg.capacity} คน • ราคา{" "}
-                                {pkg.price?.toLocaleString?.() ?? pkg.price} บาท
+                                - ความจุ {packageItem.capacity} คน • ราคา{" "}
+                                {packageItem.price?.toLocaleString?.() ?? packageItem.price} บาท
                               </div>
-                              {pkg.description && (
-                                <div className="line-clamp-3">{pkg.description}</div>
+                              {packageItem.description && (
+                                <div className="line-clamp-3">{packageItem.description}</div>
                               )}
                             </div>
                           </ItemCard>

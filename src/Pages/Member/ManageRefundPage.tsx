@@ -4,23 +4,17 @@
  */
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-
-// Components
-import DataTable from "@/Components/Tables/DataTable";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
 import ModalReject from "@/Components/Modal/ModalReject";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
-
-// Services
+import DataTable from "@/Components/Tables/DataTable";
+import type { Column } from "@/Components/Tables/Types";
 import {
   fetchRefundRequestsMember,
   approveRefundMember,
   rejectRefundMember,
 } from "@/Libs/BookingService";
-
-// Types
-import type { Column } from "@/Components/Tables/Types";
 
 type RefundRow = {
   id: number;
@@ -169,7 +163,7 @@ const createColumns = (
  * Input: -
  * Output: หน้าจัดการคำขอคืนเงิน
  */
-export default function ManageRefundPage() {
+export function ManageRefundPage() {
   const navigate = useNavigate();
 
   const [refundLists, setRefundLists] = useState<RefundRow[]>([]);
@@ -234,8 +228,8 @@ export default function ManageRefundPage() {
         totalCount: paginationInfo.totalCount ?? refundRequests.length,
         limit: paginationInfo.limit ?? pageSize,
       });
-    } catch (error: any) {
-      setErrorMessage(error.message || "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -262,9 +256,9 @@ export default function ManageRefundPage() {
       setIsLoading(true);
       await approveRefundMember(row.id);
       await fetchRefunds();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMessage(error.message || "อนุมัติไม่สำเร็จ");
+      setErrorMessage(error instanceof Error ? error.message : "อนุมัติไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -278,9 +272,9 @@ export default function ManageRefundPage() {
       setIsLoading(true);
       await rejectRefundMember(row.id, reason || "");
       await fetchRefunds();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMessage(error.message || "ปฏิเสธไม่สำเร็จ");
+      setErrorMessage(error instanceof Error ? error.message : "ปฏิเสธไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }

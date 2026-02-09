@@ -265,7 +265,7 @@ const PackageGroupSection: React.FC<{
  * Input: -
  * Output: JSX Element
  */
-export default function FeedbackPage() {
+export function FeedbackPage() {
   const [packageGroupLists, setPackageGroupLists] = useState<PackageGroup[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [totalPackages, setTotalPackages] = useState<number>(0);
@@ -328,8 +328,9 @@ export default function FeedbackPage() {
       );
       setTotalItems(allFeedbacksCount);
       setTotalPackages(nextGroups.length);
-    } catch (error: any) {
-      setErrorMessage(error?.response?.data?.message || error?.message || "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setErrorMessage(err?.response?.data?.message ?? err?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }

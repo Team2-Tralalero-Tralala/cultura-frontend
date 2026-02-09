@@ -286,7 +286,7 @@ function ItemCard({ image, title, children }: any) {
  * Input: -
  * Output: หน้าแสดงรายละเอียดชุมชน
  */
-export default function DetailCommunityPage() {
+export function DetailCommunityPage() {
   const navigate = useNavigate();
   const [community, setCommunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -298,8 +298,9 @@ export default function DetailCommunityPage() {
       try {
         const response = await getCommunityDetailByMember();
         setCommunity(response?.data?.data);
-      } catch (error: any) {
-        setError(error?.response?.data?.message || "ไม่สามารถโหลดข้อมูลได้");
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        setError(err?.response?.data?.message ?? err?.message ?? "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setIsLoading(false);
       }

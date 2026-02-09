@@ -8,15 +8,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-// Components
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import DataTable from "@/Components/Tables/DataTable";
 import Button from "@/Components/Button";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import type { Column, Pagination } from "@/Components/Tables/Types";
-
 import { getMemberBookingHistories } from "@/Libs/BookingService";
 
 /**
@@ -51,6 +48,21 @@ type BookingRow = {
   fullSlipUrl: string | null;
   bookedAt: string;
   rawStatus: string;
+};
+
+/** โครงสร้างข้อมูลการจองจาก API (สำหรับ map เป็น BookingRow) */
+type BookingApiItem = {
+  id: number;
+  bookerName?: string;
+  eventName?: string;
+  tourist?: { fname?: string; lname?: string };
+  package?: { name?: string };
+  totalPrice?: number;
+  status?: string;
+  slipUrl?: string | null;
+  transferSlip?: string | null;
+  bookingDate?: string;
+  created_at?: string;
 };
 
 /* --- Helpers --- */
@@ -106,10 +118,10 @@ const getSlipImageUrl = (path: string | null): string | null => {
 
 /**
  * คำอธิบาย: ฟังก์ชันแปลงข้อมูล API เป็น Row Data
- * Input: item (any)
+ * Input: item (BookingApiItem) - ข้อมูลการจองจาก API
  * Output: BookingRow
  */
-const mapApiToRow = (item: any): BookingRow => {
+const mapApiToRow = (item: BookingApiItem): BookingRow => {
   const bookerName =
     item.bookerName ?? `${item.tourist?.fname ?? ""} ${item.tourist?.lname ?? ""}`.trim();
   const eventName = item.eventName ?? item.package?.name ?? "-";
@@ -123,9 +135,9 @@ const mapApiToRow = (item: any): BookingRow => {
   const evidence = slipPath ? slipPath.split("/").pop() || "view_slip" : "-";
 
   // สร้าง URL เต็มเตรียมไว้
-  const fullSlipUrl = getSlipImageUrl(slipPath);
+  const fullSlipUrl = getSlipImageUrl(slipPath ?? null);
 
-  const bookedAt = formatThaiDateTime(item.bookingDate ?? item.created_at);
+  const bookedAt = formatThaiDateTime(item.bookingDate ?? item.created_at ?? "");
 
   return {
     id: item.id,
@@ -147,7 +159,7 @@ const mapApiToRow = (item: any): BookingRow => {
  * Input: -
  * Output: JSX Element
  */
-export default function ManageBookingHistoryPage() {
+export function ManageBookingHistoryPage() {
   const navigate = useNavigate();
 
   // Data State
@@ -282,7 +294,7 @@ export default function ManageBookingHistoryPage() {
             />
 
             <FilterDropdown
-              options={statusOptions as any}
+              options={[...statusOptions]}
               selected={selectedStatus}
               onChange={(newStatus) => {
                 setSelectedStatus(newStatus);

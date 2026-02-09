@@ -8,10 +8,10 @@
  */
 import React from "react";
 import { useParams } from "react-router-dom";
-import * as PackageFeedbackService from "@/Libs/FeedbackService";
-import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import { Modal } from "@/Components/Modal/Modal";
+import * as PackageFeedbackService from "@/Libs/FeedbackService";
 
 const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -109,7 +109,7 @@ function renderStars(rating: number): string {
  * Input: -
  * Output: JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
  */
-export default function DetailFeedbackPage() {
+export function DetailFeedbackPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);

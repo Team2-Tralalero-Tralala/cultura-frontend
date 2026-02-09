@@ -395,8 +395,8 @@ export default function DashboardPage() {
             ],
           },
           layout: {
-            hLineWidth: function (i: number, node: any) {
-              if (i === 0 || i === node.table.body.length) return 1;
+            hLineWidth: function (lineIndex: number, node: any) {
+              if (lineIndex === 0 || lineIndex === node.table.body.length) return 1;
               return 0.5;
             },
             vLineWidth: function () {

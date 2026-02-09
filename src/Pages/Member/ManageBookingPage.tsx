@@ -7,8 +7,9 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
@@ -155,7 +156,12 @@ const makeColumns = (
   },
 ];
 
-export default function ManageBookingMember() {
+/**
+ * คำอธิบาย: หน้าสำหรับจัดการรายการการจองของแพ็กเกจที่ Member ดูแลเอง
+ * Input: -
+ * Output: JSX Element
+ */
+export function ManageBookingPage() {
   const navigate = useNavigate();
 
   const [bookingRows, setBookingRows] = React.useState<BookingMemberRow[]>([]);

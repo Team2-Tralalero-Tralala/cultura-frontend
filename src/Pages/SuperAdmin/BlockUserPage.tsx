@@ -165,8 +165,8 @@ export function BlockUserPage() {
           setPagination(resultPagination);
         }
       } catch (error) {
-        const e = error as Error;
-        if (!isCancelled) setErrorMessage(e.message || "โหลดข้อมูลไม่สำเร็จ");
+        const errors = error as Error;
+        if (!isCancelled) setErrorMessage(errors.message || "โหลดข้อมูลไม่สำเร็จ");
       } finally {
         if (!isCancelled) setIsLoading(false);
       }
@@ -179,8 +179,8 @@ export function BlockUserPage() {
   }, [pagination.currentPage, pagination.limit]);
 
   const filteredRows = useMemo(() => {
-    const q = normalizeText(searchQuery);
-    if (!q) return rows;
+    const query = normalizeText(searchQuery);
+    if (!query) return rows;
 
     return rows.filter((row) => {
       const name = `${row.fname ?? ""} ${row.lname ?? ""}`.trim();
@@ -190,10 +190,10 @@ export function BlockUserPage() {
         row.communityAdmin?.[0]?.name ?? row.communityMembers?.[0]?.Community?.name ?? "";
 
       return (
-        normalizeText(name).includes(q) ||
-        normalizeText(email).includes(q) ||
-        normalizeText(role).includes(q) ||
-        normalizeText(community).includes(q)
+        normalizeText(name).includes(query) ||
+        normalizeText(email).includes(query) ||
+        normalizeText(role).includes(query) ||
+        normalizeText(community).includes(query)
       );
     });
   }, [rows, searchQuery]);

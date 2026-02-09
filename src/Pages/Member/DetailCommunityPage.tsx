@@ -261,9 +261,12 @@ function ItemCard({ image, title, children }: any) {
   );
 }
 
-/* Component หลัก : CommunityDetailAdmin */
-
-export default function CommunityDetailAdmin() {
+/**
+ * คำอธิบาย: Component หลักแสดงหน้าละเอียดชุมชน
+ * Input: -
+ * Output: หน้าแสดงรายละเอียดชุมชน
+ */
+export function DetailCommunityPage() {
   const navigate = useNavigate();
   const [community, setCommunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

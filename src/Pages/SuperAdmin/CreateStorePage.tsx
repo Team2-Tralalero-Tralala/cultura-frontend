@@ -20,26 +20,26 @@ import { Icon } from "@iconify/react";
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import z from "zod";
+import zod from "zod";
 
-const storeSchema = z.object({
-  name: z.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
-  detail: z.string("กรุณากรอกรายละเอียดของร้านค้า").min(1, "กรุณากรอกรายละเอียดของร้านค้า"),
-  houseNumber: z.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
-  province: z.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
-  subDistrict: z.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
-  latitude: z.union([
-    z.string().min(1, "กรุณากรอกละติจูด"),
-    z.number().refine((n) => !isNaN(n), "กรุณากรอกละติจูด"),
+const storeSchema = zod.object({
+  name: zod.string("กรุณากรอกชื่อร้านค้า").min(1, "กรุณากรอกชื่อร้านค้า"),
+  detail: zod.string("กรุณากรอกรายละเอียดของร้านค้า").min(1, "กรุณากรอกรายละเอียดของร้านค้า"),
+  houseNumber: zod.string("กรุณากรอกบ้านเลขที่").min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string("กรุณาเลือกจังหวัด").min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string("กรุณาเลือกอำเภอ/เขต").min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string("กรุณาเลือกตำบล/แขวง").min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string("กรุณากรอกรหัสไปรษณีย์").min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  latitude: zod.union([
+    zod.string().min(1, "กรุณากรอกละติจูด"),
+    zod.number().refine((number) => !isNaN(number), "กรุณากรอกละติจูด"),
   ]),
-  longitude: z.union([
-    z.string().min(1, "กรุณากรอกลองจิจูด"),
-    z.number().refine((n) => !isNaN(n), "กรุณากรอกลองจิจูด"),
+  longitude: zod.union([
+    zod.string().min(1, "กรุณากรอกลองจิจูด"),
+    zod.number().refine((number) => !isNaN(number), "กรุณากรอกลองจิจูด"),
   ]),
-  tagStores: z
-    .array(z.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
+  tagStores: zod
+    .array(zod.number(), "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ")
     .min(1, "กรุณาเลือกประเภทร้านค้าอย่างน้อย 1 รายการ"),
 });
 /**
@@ -82,7 +82,7 @@ export function CreateStorePage() {
     const data = mergedData || formData;
 
     if (field) {
-      const singleSchema = z.object({
+      const singleSchema = zod.object({
         [field]: storeSchema.shape[field as keyof typeof storeSchema.shape],
       });
       const result = singleSchema.safeParse({ [field]: value });
@@ -113,11 +113,11 @@ export function CreateStorePage() {
   };
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
-   * Input: e (ChangeEvent) - เหตุการณ์การเปลี่ยนแปลงจาก input field
+   * Input: event (ChangeEvent) - เหตุการณ์การเปลี่ยนแปลงจาก input field
    * Output: - (อัปเดต state formData และตรวจสอบความถูกต้องของฟิลด์)
    */
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
+  const handleFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = event.target;
 
     const updated = { ...formData, [id]: value };
     setFormData(updated);

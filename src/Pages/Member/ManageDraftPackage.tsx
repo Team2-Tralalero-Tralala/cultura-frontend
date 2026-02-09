@@ -4,12 +4,12 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import axios from "axios";
-import DataTable, { type Column } from "../../Components/Tables/Index";
-import SearchBarTable from "../../Components/Search/SearchBarTable";
 import Breadcrumb from "../../Components/BreadcrumbNavigation";
 import { Modal } from "../../Components/Modal/Modal";
+import DataTable, { type Column } from "../../Components/Tables/Index";
 import type { BulkAction } from "../../Components/Tables/Types";
 import { TrashIcon, PencilIcon } from "../../Components/Tables/Icon";
+import SearchBarTable from "../../Components/Search/SearchBarTable";
 
 interface PackageItem {
   id: number;
@@ -36,7 +36,7 @@ function normalizeText(value: unknown): string {
  * Input: -
  * Output: แสดงหน้าจอรายการแพ็กเกจฉบับร่าง พร้อมค้นหา ลบ และจัดการข้อมูล
  */
-const ManageDraftPackage: React.FC = () => {
+export function ManageDraftPackage() {
   const [draftPackageLists, setDraftPackageLists] = useState<PackageItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -317,6 +317,4 @@ const ManageDraftPackage: React.FC = () => {
       />
     </div>
   );
-};
-
-export default ManageDraftPackage;
+}

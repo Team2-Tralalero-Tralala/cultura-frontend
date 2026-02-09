@@ -171,10 +171,20 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
+  /**
+   * คำอธิบาย: ตั้งค่า Role ตาม Pathname
+   * Input: location.pathname
+   * Output: RoleType (Admin | Member | Tourist)
+   */
   useEffect(() => {
     setRole(getRoleFromPath());
   }, [location.pathname]);
 
+  /**
+   * คำอธิบาย: ตั้งค่า Role ตาม Pathname
+   * Input: location.pathname
+   * Output: RoleType (Admin | Member | Tourist)
+   */
   useEffect(() => {
     if (role === "Member") {
       const fetchCommunities = async () => {
@@ -219,7 +229,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             if (adminCommunity) {
               setCommunityOptions([{ id: adminCommunity.id, name: adminCommunity.name }]);
             }
-          } catch (e) {
+          } catch (error) {
             setCommunityOptions([]);
           }
         } finally {
@@ -263,6 +273,11 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าใน Form
+   * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
+   * Output: void
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     const updatedFormData = { ...formData, [id]: value };
@@ -270,11 +285,20 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     validateField(id, value);
   };
 
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าใน Form
+   * Input: file (File | null)
+   * Output: void
+   */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
-
+  /**
+   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าใน Form
+   * Input: newRole (RoleType)
+   * Output: void
+   */
   const handleRoleSelect = (newRole: RoleType) => {
     if (role !== newRole) {
       setRole(newRole);

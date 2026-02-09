@@ -34,7 +34,11 @@ const feedbackValidationSchema = zod.object({
 });
 
 type FeedbackFormErrors = Partial<Record<keyof FeedbackFormState, string>>;
-
+/**
+ * คำอธิบาย : หน้าการสร้างข้อเสนอแนะ (Feedback) ของนักท่องเที่ยว
+ * Input : - (ใช้ข้อมูลจาก State: feedbackFormData, feedbackFormErrors, galleryFileLists, isConfirmationModalOpen, isDataSavingProcess, isAlertModalOpen, alertModalTitle, alertModalMessage, packageName)
+ * Output : - (Update State ผลลัพธ์การทำงาน)
+ */
 export function CreateFeedbackPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();

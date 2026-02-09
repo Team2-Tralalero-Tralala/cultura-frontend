@@ -72,7 +72,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
  * Input: -
  * Output: Render รายละเอียดการจอง และควบคุม Modal สำหรับอนุมัติ/ปฏิเสธ
  */
-export default function DetailBookingPage() {
+export function DetailBookingPage() {
   const { bookingId } = useParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<ApiBooking | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

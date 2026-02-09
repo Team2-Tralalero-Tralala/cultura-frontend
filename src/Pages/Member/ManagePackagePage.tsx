@@ -6,16 +6,16 @@
  */
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import DataTable from "@/Components/Tables/Index";
-import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
-import { TrashIcon } from "../../Components/Tables/Icon";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
+import { Icon } from "@iconify/react";
+import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
-import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+import DataTable from "@/Components/Tables/Index";
+import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
+import { TrashIcon } from "../../Components/Tables/Icon";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL;
 
@@ -45,11 +45,11 @@ const bulkActions: BulkAction<Row>[] = [
 ];
 
 /**
- * คำอธิบาย: ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
- * Input: -
- * Output: JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
+ * คำอธิบาย: Component หลักสำหรับหน้าจัดการแพ็กเกจ (Member)
+ * Input: ไม่มี
+ * Output: หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ (ค้นหา, ลบ, แก้ไข)
  */
-export default function ManagePackagePage() {
+export function ManagePackagePage() {
   const navigate = useNavigate();
 
   /*
@@ -182,8 +182,8 @@ export default function ManagePackagePage() {
           ),
         ),
       }));
-    } catch (error: any) {
-      console.error("reloadPackages error:", error?.response?.data ?? error);
+    } catch (error: unknown) {
+      console.error("reloadPackages error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -204,16 +204,18 @@ export default function ManagePackagePage() {
       await axios.patch(`${apiBaseUrl}/member/package/${rowId}`, null, { withCredentials: true });
 
       await fetchPackages();
-    } catch (error: any) {
-      console.error("delete failed:", error?.response?.data ?? error);
-      alert(
-        `ลบไม่สำเร็จ (${rowTitle}): ${
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "unknown error"
-        }`,
-      );
+    } catch (error: unknown) {
+      console.error("delete failed:", error);
+      const err = error as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      const detail =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        err?.message ??
+        "unknown error";
+      alert(`ลบไม่สำเร็จ (${rowTitle}): ${detail}`);
     } finally {
       setPackageToDelete(null);
     }

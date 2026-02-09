@@ -34,6 +34,8 @@ import { Icon } from "@iconify/react";
 
 /**
  * คำอธิบาย: กำหนดคอลัมน์ในตารางสมาชิกชุมชน
+ * Input: -
+ * Output: -
  */
 const columns: Column<AccountCommunityRow>[] = [
   {
@@ -211,6 +213,8 @@ export function ManageMemberPage() {
 
   /**
    * คำอธิบาย: กำหนด Action สำหรับแต่ละแถวในตาราง (Block, Edit, Delete)
+   * Input: -
+   * Output: -
    */
   const rowActions: DataTableActionsConfig<AccountCommunityRow> = {
     header: "จัดการ",
@@ -247,6 +251,8 @@ export function ManageMemberPage() {
 
   /**
    * คำอธิบาย: กำหนด Bulk Actions สำหรับหลายแถว (Block All, Delete All)
+   * Input: -
+   * Output: -
    */
   const bulkActions: BulkAction<AccountCommunityRow>[] = [
     {

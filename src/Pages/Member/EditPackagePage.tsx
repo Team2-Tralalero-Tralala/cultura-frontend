@@ -1,36 +1,34 @@
 /**
- * คำอธิบาย: Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Superadmin)
+ * คำอธิบาย : Component หน้าสำหรับแก้ไขข้อมูลแพ็กเกจ (สำหรับ Member)
  * - ดึงข้อมูลแพ็กเกจเดิมมาแสดงในฟอร์ม
  * - รองรับการอัปเดตข้อมูล, รูปภาพ (Cover/Gallery), และที่พักที่เกี่ยวข้อง
  * - ส่งข้อมูลแบบ multipart/form-data
- * Input: (via URL params) id - ID ของแพ็กเกจที่ต้องการแก้ไข
- * Output: หน้าฟอร์มสำหรับแก้ไขข้อมูลแพ็กเกจ
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
-import TextField from "../../Components/Input/TextField";
-import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
-import ThailandLocationSelector, {
-  type ThailandLocation,
-} from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/Input/TextArea";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
-import UploadCard from "@/Components/upload/UploadCard";
-import { TagSelector } from "@/Components/Selector/TagSelector";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import {
   PackageStatusDropdown,
   type PackageStatus,
 } from "@/Components/Selector/PackageStatusDropdown";
-import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
-import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+import { TagSelector } from "@/Components/Selector/TagSelector";
+import ThailandLocationSelector, {
+  type ThailandLocation,
+} from "@/Components/Selector/ThailandLocationSelector";
+import UploadCard from "@/Components/upload/UploadCard";
+import MapPicker from "../../Components/MapPicker";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
@@ -49,7 +47,7 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
  * Input: value (ค่าที่ต้องการแปลง)
  * Output: number หรือ null
  */
-function toIntOrNull(value: any): number | null {
+function toIntOrNull(value: unknown): number | null {
   const trimmed = String(value ?? "").trim();
   if (trimmed === "") return null;
   const numberValue = Number(trimmed);
@@ -242,7 +240,12 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-export const EditPackagePage = () => {
+/**
+ * คำอธิบาย : Component หลักสำหรับหน้าแก้ไขข้อมูลแพ็กเกจ (Member)
+ * Input : ไม่มี (ใช้ id จาก URL params)
+ * Output : หน้าฟอร์มแก้ไขแพ็กเกจและควบคุม state / การส่งข้อมูล
+ */
+export function EditPackagePage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
@@ -700,9 +703,10 @@ export const EditPackagePage = () => {
         if (homestayHistory?.bookedRoom) {
           setHsBookedRoom(String(homestayHistory.bookedRoom));
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
         setErrorMessage(
-          error?.response?.data?.message || error?.message || "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
+          err?.response?.data?.message ?? err?.message ?? "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
         );
       } finally {
         if (mounted) setIsLoading(false);
@@ -792,15 +796,15 @@ export const EditPackagePage = () => {
         withCredentials: true,
       });
       navigate("/member/packages/all");
-    } catch (error: any) {
-      setErrorMessage(
-        error?.response?.data?.message ||
-          (Array.isArray(error?.response?.data?.message)
-            ? error?.response?.data?.message.join(", ")
-            : null) ||
-          error?.message ||
-          "บันทึกแพ็กเกจไม่สำเร็จ",
-      );
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string | string[] } };
+        message?: string;
+      };
+      const msg = err?.response?.data?.message;
+      const msgStr =
+        typeof msg === "string" ? msg : Array.isArray(msg) ? msg.join(", ") : null;
+      setErrorMessage(msgStr ?? err?.message ?? "บันทึกแพ็กเกจไม่สำเร็จ");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -1404,6 +1408,4 @@ export const EditPackagePage = () => {
       />
     </div>
   );
-};
-
-export default EditPackagePage;
+}

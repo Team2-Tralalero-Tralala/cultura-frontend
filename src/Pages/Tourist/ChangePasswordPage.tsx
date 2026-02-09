@@ -123,7 +123,11 @@ export default function ChangePasswordPage() {
         newPassword,
         confirmNewPassword,
       });
-
+/**
+ * คำอธิบาย : เปลี่ยนรหัสผ่านสำเร็จ
+ * Input : - (ใช้ข้อมูลจาก State: currentPassword, newPassword)
+ * Output : - (Update State ผลลัพธ์การทำงาน)
+ */
       const successMessage = "เปลี่ยนรหัสผ่านสำเร็จ";
       setMessage({ type: "success", text: successMessage });
 

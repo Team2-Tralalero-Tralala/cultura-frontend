@@ -4,10 +4,10 @@
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Modal } from "@/Components/Modal/Modal";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
-
-import { Modal } from "@/Components/Modal/Modal";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import type {
   Column,
@@ -16,7 +16,6 @@ import type {
   BulkAction,
 } from "@/Components/Tables/Types";
 import { getHistoriesPackageMember, deletePackageAdmin } from "@/Libs/PackageService";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 type PackageHistoryRow = {
   id: number;
@@ -99,7 +98,7 @@ const columns: Column<PackageHistoryRow>[] = [
  * Input: -
  * Output: ส่วนแสดงผลของหน้า ประวัติแพ็กเกจ สมาชิก
  */
-export default function ManagePackageHistoryPage() {
+export function ManagePackageHistoryPage() {
   const navigate = useNavigate();
 
   const [rows, setRows] = useState<PackageHistoryRow[]>([]);
@@ -179,9 +178,9 @@ export default function ManagePackageHistoryPage() {
         totalCount: paginationData.totalCount ?? 0,
         totalPages: paginationData.totalPages ?? 1,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to fetch packages:", error);
-      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setErrorMessage(error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -229,16 +228,19 @@ export default function ManagePackageHistoryPage() {
       setIsOpenConfirm(false);
       setPackageIdToDelete(null);
       await fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to delete package:", error);
-      alert(
-        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "unknown error"
-        }`,
-      );
-      setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
+      const err = error as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      const detail =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        err?.message ??
+        "unknown error";
+      alert(`ลบไม่สำเร็จ: ${detail}`);
+      setErrorMessage(error instanceof Error ? error.message : "ไม่สามารถลบแพ็กเกจได้");
     }
   };
 

@@ -24,6 +24,8 @@ export function DetailUserPage() {
 
   /**
    * คำอธิบาย: โหลดข้อมูลผู้ใช้จาก API
+   * Input: - 
+   * Output: - 
    */
   useEffect(() => {
     if (!id) return;
@@ -31,9 +33,9 @@ export function DetailUserPage() {
       try {
         const data = await fetchUserDetail(Number(id));
         setUser(data);
-      } catch (err: unknown) {
-        const e = err as Error;
-        setErrorMessage(e.message || "ไม่สามารถโหลดข้อมูลได้");
+      } catch (error: unknown) {
+        const errors = error as Error;
+        setErrorMessage(errors.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setIsLoading(false);
       }

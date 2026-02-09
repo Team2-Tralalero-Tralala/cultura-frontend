@@ -15,7 +15,9 @@ import { getCommunityById } from "@/Libs/CommunityService";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 
 /**
- * คำอธิบาย: โครงสร้างข้อมูลที่พัก (Homestay) สำหรับใช้แสดงผลในตาราง
+ * คำอธิบาย: โครงสร้างข้อมูลที่พัก (Homestay) 
+ * Input: -
+ * Output: -
  */
 type HomestayRow = {
   id: number;

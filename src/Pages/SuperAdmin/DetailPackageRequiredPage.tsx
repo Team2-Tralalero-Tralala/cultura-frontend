@@ -233,8 +233,8 @@ export default function DetailPackageRequiredPage() {
       setIsApproveModalOpen(false);
 
       navigate("/super/package-requests", { replace: true });
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "ไม่สามารถอนุมัติได้";
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "ไม่สามารถอนุมัติได้";
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
@@ -254,8 +254,8 @@ export default function DetailPackageRequiredPage() {
       setErrorMessage(null);
       await PackageRequestService.rejectPackageRequest(Number(requestId), reason);
       navigate("/super/package-requests", { replace: true });
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "ไม่สามารถปฏิเสธได้";
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "ไม่สามารถปฏิเสธได้";
       setErrorMessage(message);
     } finally {
       setIsLoading(false);

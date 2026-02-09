@@ -255,12 +255,20 @@ const EditAccountPage: React.FC = () => {
       fetchCommunities();
     }
   }, [formData.role]);
-
+/**
+ * คำอธิบาย: จัดการการเปลี่ยนแปลงข้อมูล
+ * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
+ * Output: -
+ */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
   };
-
+  /**
+   * คำอธิบาย: จัดการการเลือก Role
+   * Input: newRole (RoleType)
+   * Output: -
+   */
   const handleRoleSelect = (newRole: RoleType) => {
     if (formData.role !== newRole) {
       setFormData((previousState) => ({ ...previousState, role: newRole }));

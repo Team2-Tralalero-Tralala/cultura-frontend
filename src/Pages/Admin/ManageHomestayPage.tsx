@@ -142,13 +142,19 @@ export default function ManageHomestayPage() {
    *  - กรองข้อมูลที่พักจาก rows ตามคำค้นหา
    *  - ใช้สำหรับแสดงผลในตาราง
    */
-  const filteredRows = useMemo(() => {
+  const paginatedRows = useMemo(() => {
     const normalizedQuery = normalizeText(searchQuery);
-    return rows.filter((row) =>
+    
+    const filtered = rows.filter((row) =>
       [row.name, row.facility, row.type].some((value) =>
-        normalizeText(value).includes(normalizedQuery),
-      ),
+        normalizeText(value).includes(normalizedQuery)
+      )
     );
+
+    return {
+      displayRows: filtered,
+      totalCount: filtered.length
+    };
   }, [rows, searchQuery]);
 
   /**
@@ -232,7 +238,12 @@ export default function ManageHomestayPage() {
         {/* Section: Toolbar */}
         <div className="flex items-center gap-3 mt-2">
           <div className="max-w-md">
-            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <SearchBarTable 
+            value={searchQuery} 
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }} />
           </div>
 
           <div className="ml-auto">
@@ -246,7 +257,7 @@ export default function ManageHomestayPage() {
       {/* Section: Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <DataTable<HomestayRow>
-          data={filteredRows}
+          data={paginatedRows.displayRows}
           columns={columns}
           getKey={(row) => String(row.id)}
           actions={rowActions}
@@ -257,12 +268,15 @@ export default function ManageHomestayPage() {
           pageSizeOptions={[10, 30, 50]}
           pagination={{
             currentPage,
-            totalPages: Math.ceil(totalItems / 10),
-            totalCount: totalItems,
-            limit: 10,
+            totalPages: Math.ceil(paginatedRows.totalCount / pageSize),
+            totalCount: paginatedRows.totalCount,
+            limit: pageSize,
           }}
           onPageChange={(newPage) => setCurrentPage(newPage)}
-          onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+          onPageSizeChange={(newPageSize) => {
+            setPageSize(newPageSize);
+            setCurrentPage(1);
+          }}
         />
       </div>
 

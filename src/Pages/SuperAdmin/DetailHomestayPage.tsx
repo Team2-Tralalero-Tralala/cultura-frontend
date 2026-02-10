@@ -84,11 +84,17 @@ export default function DetailHomestayPage() {
         <div className="flex justify-between items-center mb-5">
           {/* หัวข้อ + ปุ่มย้อนกลับ */}
           <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-            <ArrowLeft
-              className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
-              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)}
-            />
-            รายละเอียดที่พัก
+            <div 
+              className="flex items-center gap-2 cursor-pointer transition-colors"
+              onClick={() =>
+                navigate(
+                  `/super/community/${homestay.community.id}/homestay/all`
+                )
+              }
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>รายละเอียดที่พัก</span>
+            </div>
           </h1>
 
           {/* ปุ่มแก้ไข */}

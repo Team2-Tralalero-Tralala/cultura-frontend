@@ -60,7 +60,7 @@ const communitySchema = zod.object({
 
   accountName: zod.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
 
-  accountNumber: zod.string("กรุณากรอกหมายเลขบัญชี").min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: zod.number("กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข").min(1, "กรุณากรอกหมายเลขบัญชี"),
 
   description: zod.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
 

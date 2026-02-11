@@ -6,6 +6,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import ModalReject from "@/Components/Modal/ModalReject";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
@@ -27,9 +28,6 @@ type RefundRow = {
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ URL ของรูปภาพสลิปการโอนเงิน
- * รองรับทั้งแบบ Full URL และ Relative Path
- * Input: path (string | null) - ที่อยู่ของไฟล์รูปภาพ
- * Output: string | null - URL เต็มของรูปภาพสำหรับแสดงผล หรือ null หากไม่มีข้อมูล
  */
 const getSlipImageUrl = (path: string | null): string | null => {
   if (!path || path === "-") return null;
@@ -47,13 +45,7 @@ const getSlipImageUrl = (path: string | null): string | null => {
 };
 
 /**
- * คำอธิบาย: กำหนดโครงสร้างคอลัมน์ (Column Definition) สำหรับ DataTable
- * Input:
- * - onApprove (function): callback เมื่อคลิกอนุมัติ
- * - onReject (function): callback เมื่อคลิกปฏิเสธ
- * - onNavigate (function): callback เมื่อคลิกเพื่อดูรายละเอียด
- * - onOpenSlip (function): callback เมื่อคลิกเพื่อดูสลิป
- * Output: Column<RefundRow>[] (รายการคอลัมน์)
+ * คำอธิบาย: กำหนดโครงสร้างคอลัมน์สำหรับ DataTable
  */
 const createColumns = (
   onApprove: (row: RefundRow) => void,
@@ -103,7 +95,6 @@ const createColumns = (
         REFUNDED: "อนุมัติแล้ว",
         REFUND_REJECTED: "ปฏิเสธแล้ว",
       };
-      // จัดการกรณี Case Sensitive ของสถานะ
       const statusKey = row.status?.toUpperCase() || "";
       return <div>{statusTextMap[statusKey] ?? row.status}</div>;
     },
@@ -158,14 +149,10 @@ const createColumns = (
   },
 ];
 
-/**
- * คำอธิบาย: Component สำหรับจัดการคำขอคืนเงินของสมาชิก (Member)
- * Input: -
- * Output: หน้าจัดการคำขอคืนเงิน
- */
 export function ManageRefundPage() {
   const navigate = useNavigate();
 
+  // States
   const [refundLists, setRefundLists] = useState<RefundRow[]>([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -180,34 +167,33 @@ export function ManageRefundPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [isOpenReject, setIsOpenReject] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<RefundRow | null>(null);
+  // Modal Visibility States
+  const [isConfirmApproveOpen, setIsConfirmApproveOpen] = useState(false);
+  const [isRejectReasonOpen, setIsRejectReasonOpen] = useState(false);
+  const [isDoubleConfirmRejectOpen, setIsDoubleConfirmRejectOpen] = useState(false);
+  const [isSuccessAlertOpen, setIsSuccessAlertOpen] = useState(false);
 
+  // Selected Data States
+  const [selectedRow, setSelectedRow] = useState<RefundRow | null>(null);
+  const [tempRejectReason, setTempRejectReason] = useState("");
   const [isOpenSlip, setIsOpenSlip] = useState(false);
   const [slipUrl, setSlipUrl] = useState<string | null>(null);
 
   /**
-   * คำอธิบาย: ดึงข้อมูลคำขอคืนเงินจาก API และอัปเดตตาราง
-   * Input: -
-   * Output: - (อัปเดต refundRows และ pagination)
+   * ดึงข้อมูลคำขอคืนเงินจาก API
    */
   const fetchRefunds = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      // เรียก API Admin
       const response = await fetchRefundRequestsMember(currentPage, pageSize);
-      // responseBody = ส่วนข้อมูลหลักที่ได้จาก response
       const responseBody = response.data?.data || response.data;
-      // refundRequests = รายการคำขอคืนเงินที่เป็น Array
       const refundRequests = Array.isArray(responseBody?.data)
         ? responseBody.data
         : Array.isArray(responseBody)
           ? responseBody
           : [];
-      // paginationInfo = ข้อมูลเกี่ยวกับการแบ่งหน้า
       const paginationInfo = responseBody?.pagination || response.data?.pagination || {};
 
       const mappedRows: RefundRow[] = refundRequests.map((item: any) => ({
@@ -239,6 +225,42 @@ export function ManageRefundPage() {
     fetchRefunds();
   }, [fetchRefunds]);
 
+  /**
+   * ดำเนินการปฏิเสธคำขอคืนเงิน หลังจากยืนยันใน Modal ทั้งสองขั้นตอน
+   */
+  const handleFinalReject = async () => {
+    if (!selectedRow) return;
+    try {
+      setIsLoading(true);
+      await rejectRefundMember(selectedRow.id, tempRejectReason);
+      setIsDoubleConfirmRejectOpen(false);
+      setIsSuccessAlertOpen(true);
+      await fetchRefunds();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "ปฏิเสธไม่สำเร็จ");
+      setIsDoubleConfirmRejectOpen(false);
+    } finally {
+      setIsLoading(false);
+      setSelectedRow(null);
+      setTempRejectReason("");
+    }
+  };
+
+  /**
+   * ดำเนินการอนุมัติคำขอคืนเงิน
+   */
+  const handleApprove = async (row: RefundRow) => {
+    try {
+      setIsLoading(true);
+      await approveRefundMember(row.id);
+      await fetchRefunds();
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "อนุมัติไม่สำเร็จ");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredRows = useMemo(() => {
     const keyword = searchQuery.toLowerCase();
     return refundLists.filter((row) =>
@@ -248,48 +270,16 @@ export function ManageRefundPage() {
     );
   }, [refundLists, searchQuery]);
 
-  /**
-   * คำอธิบาย : ดำเนินการอนุมัติคำขอคืนเงิน
-   */
-  const handleApprove = async (row: RefundRow) => {
-    try {
-      setIsLoading(true);
-      await approveRefundMember(row.id);
-      await fetchRefunds();
-    } catch (error: unknown) {
-      console.error(error);
-      setErrorMessage(error instanceof Error ? error.message : "อนุมัติไม่สำเร็จ");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * คำอธิบาย : ดำเนินการปฏิเสธคำขอคืนเงินพร้อมเหตุผล
-   */
-  const handleReject = async (row: RefundRow, reason?: string) => {
-    try {
-      setIsLoading(true);
-      await rejectRefundMember(row.id, reason || "");
-      await fetchRefunds();
-    } catch (error: unknown) {
-      console.error(error);
-      setErrorMessage(error instanceof Error ? error.message : "ปฏิเสธไม่สำเร็จ");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const columns = useMemo(
     () =>
       createColumns(
         (row) => {
           setSelectedRow(row);
-          setIsOpenConfirm(true);
+          setIsConfirmApproveOpen(true);
         },
         (row) => {
           setSelectedRow(row);
-          setIsOpenReject(true);
+          setIsRejectReasonOpen(true);
         },
         (id) => navigate(`/member/booking/${id}`),
         (url) => {
@@ -343,9 +333,51 @@ export function ManageRefundPage() {
         }}
       />
 
+      {/* Modal กรอกเหตุผลการปฏิเสธ*/}
+      <ModalReject
+        isOpen={isRejectReasonOpen}
+        title="ปฏิเสธคำขอคืนเงิน"
+        text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
+        confirmText="ส่ง"
+        cancelText="ยกเลิก"
+        onConfirm={(reason) => {
+          setTempRejectReason(reason);
+          setIsRejectReasonOpen(false);
+          setIsDoubleConfirmRejectOpen(true);
+        }}
+        onCancel={() => {
+          setIsRejectReasonOpen(false);
+          setSelectedRow(null);
+        }}
+        maxLength={100}
+      />
+
+      {/* Modal ยืนยันการปฏิเสธซ้ำ */}
+      <Modal
+        isOpen={isDoubleConfirmRejectOpen}
+        title="ปฏิเสธคำขอคืนเงินหรือไม่"
+        text="คุณจะไม่สามารถแก้ไขได้ หลังจากยืนยันการปฏิเสธการจองนี้"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={handleFinalReject}
+        onCancel={() => {
+          setIsDoubleConfirmRejectOpen(false);
+          setSelectedRow(null);
+        }}
+      />
+
+      {/* Modal Alert */}
+      <ModalAlert
+        isOpen={isSuccessAlertOpen}
+        type="success"
+        title="ปฏิเสธคำขอคืนเงินสำเร็จ"
+        message="ข้อมูลการปฏิเสธถูกบันทึกเรียบร้อยแล้ว"
+        onClose={() => setIsSuccessAlertOpen(false)}
+      />
+
       {/* Modal ยืนยันการอนุมัติ */}
       <Modal
-        isOpen={isOpenConfirm}
+        isOpen={isConfirmApproveOpen}
         title="ยืนยันการอนุมัติคำขอคืนเงิน"
         text={
           selectedRow ? `ต้องการอนุมัติคำขอคืนเงินของ “${selectedRow.touristName}” ใช่หรือไม่` : ""
@@ -354,88 +386,35 @@ export function ManageRefundPage() {
         cancelText="ยกเลิก"
         onConfirm={async () => {
           if (!selectedRow) return;
-          const row = selectedRow;
-          setIsOpenConfirm(false);
-          await handleApprove(row);
+          setIsConfirmApproveOpen(false);
+          await handleApprove(selectedRow);
           setSelectedRow(null);
         }}
         onCancel={() => {
-          setIsOpenConfirm(false);
+          setIsConfirmApproveOpen(false);
           setSelectedRow(null);
         }}
-      />
-
-      {/* Modal ปฏิเสธคำขอ */}
-      <ModalReject
-        isOpen={isOpenReject}
-        title="ปฏิเสธคำขอคืนเงิน"
-        text="กรุณากรอกเหตุผลการปฏิเสธคำขอคืนเงิน"
-        confirmText="ส่ง"
-        cancelText="ยกเลิก"
-        onConfirm={async (reason) => {
-          if (!selectedRow) return;
-          const row = selectedRow;
-          setIsOpenReject(false);
-          await handleReject(row, reason);
-          setSelectedRow(null);
-        }}
-        onCancel={() => {
-          setIsOpenReject(false);
-          setSelectedRow(null);
-        }}
-        maxLength={100}
       />
 
       {/* Modal แสดงรูปภาพสลิป */}
       {isOpenSlip && slipUrl && (
-        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50">
-          {/* กล่อง modal ขนาดคงที่ */}
-          <div
-            className="
-        relative
-        bg-[#E5E5E5]/70
-        rounded-[24px]
-        shadow-lg
-        w-[650px]
-        h-[650px]
-        max-w-[95vw]
-        max-h-[90vh]
-        flex
-        items-center
-        justify-center
-      "
-          >
-            {/* ปุ่มปิด */}
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+          <div className="relative bg-[#E5E5E5]/70 rounded-[24px] shadow-lg w-[650px] h-[650px] max-w-[95vw] max-h-[90vh] flex items-center justify-center">
             <button
               type="button"
               onClick={() => {
                 setIsOpenSlip(false);
                 setSlipUrl(null);
               }}
-              className="
-          absolute
-          right-4
-          top-3
-          text-2xl
-          text-gray-700
-          hover:text-black
-        "
+              className="absolute right-4 top-3 text-2xl text-gray-700 hover:text-black"
             >
               ×
             </button>
-
-            {/* โซนรูป */}
             <div className="w-full h-full p-6 flex items-center justify-center">
               <img
                 src={slipUrl}
                 alt="หลักฐานการโอน"
-                className="
-            max-w-full
-            max-h-full
-            object-contain
-            rounded-[16px]
-            bg-white
-          "
+                className="max-w-full max-h-full object-contain rounded-[16px] bg-white"
               />
             </div>
           </div>

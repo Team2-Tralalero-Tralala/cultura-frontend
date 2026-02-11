@@ -103,7 +103,7 @@ export default function LoginAdminCard() {
       const loggedInUser = await login(username, password); // ให้ login return user
 
       if (loggedInUser.user.role === "tourist") {
-        setError("ไม่พบบัญชี");
+        setError("ไม่พบบัญชีผู้ใช้งาน");
       } else {
         loggedInUser.navigateToFirstPage();
       }
@@ -114,7 +114,7 @@ export default function LoginAdminCard() {
       // กรณี User is blocked
       if (isBlocked) {
         if (blockedMsg && blockedMsg.includes("tourist")) {
-          setError("ไม่พบบัญชี");
+          setError("ไม่พบบัญชีผู้ใช้งาน");
         } else {
           setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
           setShowBlocked(true);
@@ -141,7 +141,7 @@ export default function LoginAdminCard() {
           label="อีเมล"
           required
           placeholder="ป้อนชื่ออีเมล"
-          type="text"
+          type="email"
           value={username}
           onChange={handleUsernameChange}
           error={!!formErrors.username}

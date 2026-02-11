@@ -8,7 +8,7 @@
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
 import * as React from "react";
-import { Link, redirect, useNavigate, useParams } from "react-router";
+import { Link,useNavigate, useParams } from "react-router";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -53,7 +53,7 @@ const communitySchema = zod.object({
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
   bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
   accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-   accountNumber: zod.coerce
+  accountNumber: zod.coerce
     .string()
     .regex(/^\d+$/, "กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข")
     .min(1, "กรุณากรอกหมายเลขบัญชี"),
@@ -450,6 +450,22 @@ export function EditCommunityPage() {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ถูกต้อง");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (galleryFiles.length === 0) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณาอัปโหลดรูปภาพเพิ่มเติมอย่างน้อย 1 รูป");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (videoFiles.length === 0) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณาอัปโหลดวิดีโออย่างน้อย 1 วิดีโอ");
       setIsAlertOpen(true);
       return;
     }

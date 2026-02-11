@@ -86,29 +86,31 @@ export default function DetailMemberPage() {
       <div className="w-full px-6 md:px-0">
         <Breadcrumb
           current={{
-            label: "รายละเอียดบัญชี",
+            label: "รายละเอียดสมาชิก",
             to: `/admin/member/${userId}`,
           }}
         />
-        <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-          <ArrowLeft
-            className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
-            onClick={() => navigate(-1)}
-          />
-          รายละเอียดบัญชี
-        </h1>
 
         {/* Card */}
         <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
+          <h1 className="flex items-center gap-2 text-[20px] font-bold text-black -mt-4">
+            <div 
+              className="flex items-center gap-2 cursor-pointer transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>รายละเอียดสมาชิก</span>
+            </div>
+          </h1>
           {/* ส่วนปุ่มจัดการ */}
           <div className="absolute top-6 right-6 flex items-center gap-3">
             {/* ปุ่มแก้ไข */}
             <div className="w-32">
               <Button
                 type="confirm-admin"
-                onClick={() => navigate(`/admin/members/${userId}/edit`)}
+                onClick={() => navigate(`/admin/member/${userId}/edit`)}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer">
                   <SquarePen className="h-5 w-5" strokeWidth={2.1} />
                   <span className="text-base">แก้ไข</span>
                 </div>

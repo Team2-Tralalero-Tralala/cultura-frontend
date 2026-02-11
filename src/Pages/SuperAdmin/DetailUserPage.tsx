@@ -90,12 +90,14 @@ export function DetailUserPage() {
           />
         </div>
 
-        <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-          <ArrowLeft
-            className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
-            onClick={() => navigate(-1)}
-          />
-          รายละเอียดบัญชี
+        <h1 className="flex items-center gap-2 text-[20px] font-bold text-black -mt-4">
+            <div 
+              className="flex items-center gap-2 cursor-pointer transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>รายละเอียดบัญชี</span>
+            </div>
         </h1>
 
         {/* Card */}

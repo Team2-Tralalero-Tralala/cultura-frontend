@@ -53,7 +53,10 @@ const communitySchema = zod.object({
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
   bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
   accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+   accountNumber: zod.coerce
+    .string()
+    .regex(/^\d+$/, "กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข")
+    .min(1, "กรุณากรอกหมายเลขบัญชี"),
   description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
   mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
   mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),

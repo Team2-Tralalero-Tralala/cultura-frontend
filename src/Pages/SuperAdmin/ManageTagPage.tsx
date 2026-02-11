@@ -44,7 +44,8 @@ export function ManageTagPage() {
 
   // modal state
   const [selectedTag, setSelectedTag] = useState<TagRow | null>(null);
-  const [modalType, setModalType] = useState<"create" | "edit" | "delete" | null>(null);
+  const [modalType, setModalType] = useState<"create" | "edit" | "delete" | "bulk-delete" | null>(null);
+  const [rowsToDelete, setRowsToDelete] = useState<TagRow[]>([]);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [pendingTagName, setPendingTagName] = useState("");
@@ -150,23 +151,28 @@ export function ManageTagPage() {
         await TagService.createTag(pendingTagName);
         setSuccessMessage("สร้างประเภทสำเร็จ");
         setSuccessDescription("บันทึกข้อมูลประเภทสำเร็จ");
-      }
-      else if (modalType === "edit" && selectedTag) {
+      } else if (modalType === "edit" && selectedTag) {
         await TagService.updateTag(selectedTag.id, pendingTagName);
         setSuccessMessage("แก้ไขประเภทสำเร็จ");
         setSuccessDescription("บันทึกข้อมูลประเภทสำเร็จ");
-      }
-      else if (modalType === "delete" && selectedTag) {
+      } else if (modalType === "delete" && selectedTag) {
         await TagService.deleteTag(selectedTag.id);
         setSuccessMessage("ลบประเภทสำเร็จ");
         setSuccessDescription("");
+      } else if (modalType === "bulk-delete" && rowsToDelete.length > 0) {
+        await Promise.all(rowsToDelete.map((row) => TagService.deleteTag(row.id)));
+        setSuccessMessage(`ลบ ${rowsToDelete.length} รายการสำเร็จ`);
+        setSuccessDescription("");
+        setRowsToDelete([]);
+        setSelectedRows([]);
       }
 
       closeInputModal();
       setIsConfirmModalOpen(false);
-      if (modalType !== "delete") {
+      if (modalType !== "delete" && modalType !== "bulk-delete") {
         setIsSuccessModalOpen(true);
       }
+
       await fetchData(pagination.currentPage, pagination.limit, searchQuery);
     } catch (error) {
       console.error(error);
@@ -221,10 +227,10 @@ export function ManageTagPage() {
       label: "ลบทั้งหมด",
       icon: TrashIcon,
       intent: "neutral",
-      confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        await Promise.all(rows.map((row) => TagService.deleteTag(row.id)));
-        await fetchData(pagination.currentPage, pagination.limit, searchQuery);
+        setRowsToDelete(rows);
+        setModalType("bulk-delete");
+        setIsConfirmModalOpen(true);
       },
     },
   ];
@@ -295,16 +301,20 @@ export function ManageTagPage() {
         title={
           modalType === "delete"
             ? "ยืนยันการลบประเภท"
-            : modalType === "edit"
-              ? "ยืนยันการแก้ไขประเภท"
-              : "ยืนยันการเพิ่มประเภท"
+            : modalType === "bulk-delete"
+              ? "ยืนยันการลบทั้งหมดหรือไม่"
+              : modalType === "edit"
+                ? "ยืนยันการแก้ไขประเภท"
+                : "ยืนยันการเพิ่มประเภท"
         }
         text={
           modalType === "delete"
-            ? "คุณต้องการลบประเภทนี้หรือไม่?"
-            : modalType === "edit"
-              ? "คุณต้องการแก้ไขประเภทนี้หรือไม่?"
-              : "คุณต้องการเพิ่มประเภทนี้หรือไม่?"
+            ? "คุณต้องการยืนยันการลบประเภทหรือไม่?"
+            : modalType === "bulk-delete"
+              ? `คุณต้องการยืนยันการลบทั้งหมดหรือไม่?`
+              : modalType === "edit"
+                ? "คุณต้องการแก้ไขประเภทนี้หรือไม่?"
+                : "คุณต้องการเพิ่มประเภทนี้หรือไม่?"
         }
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"

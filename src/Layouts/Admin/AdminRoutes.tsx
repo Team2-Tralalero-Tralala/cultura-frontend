@@ -37,7 +37,7 @@ import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 import { CreateStorePage } from "@/Pages/SuperAdmin/CreateStorePage";
 import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
-import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHIstoryPage";
+import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin

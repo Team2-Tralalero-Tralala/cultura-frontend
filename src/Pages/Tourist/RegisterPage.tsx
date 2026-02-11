@@ -12,7 +12,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import axios from "axios";
 import { useState } from "react";
 import { Link } from "react-router";
-import z from "zod";
+import zod from "zod";
 import { SuccessCard } from "@/Components/SuccessCard";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
@@ -21,41 +21,53 @@ import { ModalAlert } from "@/Components/Modal/ModalAlert";
  * input: ข้อมูลจากฟอร์ม (Object)
  * output: ผลลัพธ์การตรวจสอบ (Success หรือ Error)
  */
-const registerSchema = z.object({
-  fname: z.string().min(1, "กรุณาป้อนชื่อ"),
-  lname: z.string().min(1, "กรุณาป้อนนามสกุล"),
-  username: z
+const registerSchema = zod.object({
+  fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+  lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+  username: zod
     .string()
-    .min(4, "ความยาวอย่างน้อย 4 ตัวอักษร")
-    .regex(/^[a-zA-Z0-9]+$/, "ประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข"),
-  email: z.string().min(1, "กรุณาป้อนอีเมล").email("รูปแบบอีเมลไม่ถูกต้อง"),
-  password: z
+    .trim()
+    .min(1, "กรุณากรอกชื่อผู้ใช้")
+    .refine((val) => val === "" || val.length >= 4, {
+      message: "ความยาวอย่างน้อย 4 ตัวอักษร",
+    })
+    .regex(/^[a-zA-Z0-9]*$/, "ประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข"),
+  email: zod.string().min(1, "กรุณากรอกอีเมล").email("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง"),
+  password: zod
     .string()
-    .min(8, "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
-    .regex(/[a-zA-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษ")
-    .regex(/[a-z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z)")
-    .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z)")
-    .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9)"),
-  passwordConfirm: z.string().min(1, "กรุณาป้อนรหัสผ่านอีกครั้ง"),
-  phone: z
+    .min(1, "กรุณากรอกรหัสผ่าน")
+    .refine((val) => val === "" || val.length >= 8, {
+      message: "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร",
+    })
+    .regex(/[a-zA-Z]|^$/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษ")
+    .regex(/[a-z]|^$/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z)")
+    .regex(/[A-Z]|^$/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z)")
+    .regex(/[0-9]|^$/, "ต้องประกอบด้วยตัวเลข (0-9)"),
+  passwordConfirm: zod.string().min(1, "กรุณากรอกรหัสผ่านอีกครั้ง"),
+  phone: zod
     .string()
-    .min(9, "กรุณากรอกหมายเลขโทรศัพท์ให้ครบ 9 หลัก")
-    .max(9, "กรุณากรอกหมายเลขโทรศัพท์ให้ถูกต้อง")
-    .regex(/^\d+$/, "กรุณากรอกเฉพาะตัวเลข"),
-  birthDate: z
-    .union([z.date(), z.null(), z.undefined()])
+    .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
+    .refine((val) => val === "" || val.length >= 9, {
+      message: "กรุณากรอกหมายเลขโทรศัพท์ให้ครบ 9 หลัก",
+    })
+    .refine((val) => val === "" || val.length <= 9, {
+      message: "กรุณากรอกหมายเลขโทรศัพท์ให้ถูกต้อง",
+    })
+    .regex(/^\d*$/, "กรุณากรอกเฉพาะตัวเลข"),
+  birthDate: zod
+    .union([zod.date(), zod.null(), zod.undefined()])
     .refine((dateValue) => dateValue instanceof Date, {
       message: "กรุณาระบุวัน-เดือน-ปีเกิด",
     }),
-  gender: z.string().min(1, "กรุณาเลือกเพศ"),
-  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล"),
-  postalCode: z.string().min(1, "กรุณาป้อนรหัสไปรษณีย์"),
-  role: z.string().min(1, "กรุณาเลือกประเภทผู้ใช้"),
+  gender: zod.string().min(1, "กรุณาเลือกเพศ"),
+  province: zod.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
+  role: zod.string().min(1, "กรุณาเลือกประเภทผู้ใช้"),
 });
 
-type RegisterSchema = z.infer<typeof registerSchema>;
+type RegisterSchema = zod.infer<typeof registerSchema>;
 
 /**
  * คำอธิบาย: RegisterPage (ฟังก์ชันสำหรับหน้าสมัครสมาชิก)
@@ -97,7 +109,7 @@ export function RegisterPage() {
       if (value !== formData.password) {
         setFormErrors((prevErrors) => ({
           ...prevErrors,
-          passwordConfirm: "รหัสผ่านไม่ตรงกัน",
+          passwordConfirm: "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน",
         }));
         return false;
       }
@@ -210,9 +222,8 @@ export function RegisterPage() {
    * input: date (วันที่ที่เลือก)
    * output: -
    */
-  function handleDateChange(date: Date) {
-    setFormData((prevData) => ({ ...prevData, birthDate: date }));
-    console.log(date);
+  function handleDateChange(date: Date | null) {
+    setFormData((prevData) => ({ ...prevData, birthDate: date as Date }));
     validateField("birthDate", date);
   }
 
@@ -284,7 +295,7 @@ export function RegisterPage() {
               id="username"
               label="ชื่อผู้ใช้"
               required
-              placeholder="ป้อนชื่อผู้ใช้"
+              placeholder="กรอกชื่อผู้ใช้"
               type="text"
               value={formData.username}
               onChange={handleTextInputChange}
@@ -314,7 +325,7 @@ export function RegisterPage() {
               id="password"
               label="รหัสผ่าน"
               required
-              placeholder="ป้อนรหัสผ่าน"
+              placeholder="กรอกรหัสผ่าน"
               type="password"
               value={formData.password}
               onChange={handleTextInputChange}
@@ -332,7 +343,7 @@ export function RegisterPage() {
               id="passwordConfirm"
               label="ยืนยันรหัสผ่าน"
               required
-              placeholder="ป้อนรหัสผ่านอีกครั้ง"
+              placeholder="กรอกรหัสผ่านอีกครั้ง"
               type="password"
               value={formData.passwordConfirm}
               onChange={handleTextInputChange}
@@ -370,15 +381,24 @@ export function RegisterPage() {
               <BoxDateInput
                 required
                 value={formData.birthDate || null}
-                onChange={() => handleDateChange}
+                onChange={(date) => handleDateChange(date)}
               />
             </div>
           </div>
         </div>
         <div className="col-span-2 mt-2">
-          <label className="block text-base font-semibold text-black mb-2">
-            เพศ <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between min-h-[28px] mb-2">
+            <label className="block text-base font-semibold text-black">
+              เพศ <span className="text-red-500">*</span>
+            </label>
+            <span
+              className={`text-xs ml-2 transition-opacity whitespace-nowrap ${
+                formErrors.gender ? "text-red-600 opacity-100" : "opacity-0"
+              }`}
+            >
+              {formErrors.gender || "placeholder"}
+            </span>
+          </div>
           <div className="flex gap-6">
             <div className="flex items-center gap-2">
               <input

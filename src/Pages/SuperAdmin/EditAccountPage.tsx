@@ -1,6 +1,8 @@
-/**
- * คำอธิบาย: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * แก้ไขข้อมูลส่วนตัว, เปลี่ยนบทบาท, และจัดการข้อมูลที่เกี่ยวข้องกับบทบาทนั้น ๆ
+/*
+ * Component: CreateAccountPage
+ * Description: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
+ * Author: Team 2 (Cultura)
+ * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
  */
 
 import React, { useEffect, useState } from "react";
@@ -9,7 +11,7 @@ import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/Input/TextField";
+import TextField from "@/Components/Input/TextField";
 import Button from "../../Components/Button";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -46,11 +48,6 @@ interface CommunityOption {
   name: string;
 }
 
-/**
- * คำอธิบาย: Custom Popper Component สำหรับ Autocomplete
- * Input: props (any)
- * Output: JSX Element Popper ที่ปรับแต่งแล้ว
- */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -70,22 +67,12 @@ function CustomPopper(props: any) {
   );
 }
 
-/**
- * คำอธิบาย: Component หลักสำหรับหน้าแก้ไขบัญชีผู้ใช้ (Super Admin)
- * Input: - (ใช้ Params จาก URL)
- * Output: JSX Element หน้า EditAccountPage
- */
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
-  /**
-   * คำอธิบาย: ดึง Role จาก URL path
-   * Input: -
-   * Output: RoleType ("Admin" | "Member" | "Tourist")
-   */
   const getRoleFromPath = (): RoleType => {
     if (location.pathname.includes("member")) return "Member";
     if (location.pathname.includes("tourist")) return "Tourist";
@@ -118,34 +105,25 @@ const EditAccountPage: React.FC = () => {
   });
 
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
-  /**
-   * คำอธิบาย: แปลง Role string เป็น ID (Admin=2, Member=3, Tourist=4)
-   * Input: role (RoleType)
-   * Output: number
-   */
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
-        return 2;
-      case "Member":
         return 3;
+      case "Member":
+        return 1;
       case "Tourist":
-        return 4;
-      default:
         return 2;
+      default:
+        return 3;
     }
   };
 
-  /**
-   * คำอธิบาย: ดึงข้อมูลผู้ใช้จาก API ตาม Role และ ID
-   * Input: role (RoleType)
-   * Output: -
-   */
   const fetchUser = async (role: RoleType) => {
     try {
       let endpoint = "";
@@ -255,20 +233,12 @@ const EditAccountPage: React.FC = () => {
       fetchCommunities();
     }
   }, [formData.role]);
-/**
- * คำอธิบาย: จัดการการเปลี่ยนแปลงข้อมูล
- * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
- * Output: -
- */
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
   };
-  /**
-   * คำอธิบาย: จัดการการเลือก Role
-   * Input: newRole (RoleType)
-   * Output: -
-   */
+
   const handleRoleSelect = (newRole: RoleType) => {
     if (formData.role !== newRole) {
       setFormData((previousState) => ({ ...previousState, role: newRole }));
@@ -279,11 +249,32 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /**
-   * คำอธิบาย: บันทึกข้อมูลการแก้ไขบัญชี
-   * Input: event (React.FormEvent)
-   * Output: -
-   */
+  const handlePreCheck = () => {
+    const isBasicValid =
+      formData.fname.trim() !== "" &&
+      formData.lname.trim() !== "" &&
+      formData.username.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.phone.trim() !== "";
+
+    let isRoleSpecificValid = true;
+
+    if (formData.role === "Member") {
+      if (!roleSpecificData.communityId || !roleSpecificData.activityRole.trim()) {
+        isRoleSpecificValid = false;
+      }
+    } else if (formData.role === "Tourist") {
+      if (!roleSpecificData.birthDate) {
+        isRoleSpecificValid = false;
+      }
+    }
+
+    if (!isBasicValid || !isRoleSpecificValid) {
+      setShowErrorModal(true);
+    } else {
+      setShowConfirm(true);
+    }
+  };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -369,35 +360,40 @@ const EditAccountPage: React.FC = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 mb-6 pl-6">
-        <button
-          onClick={() => navigate(-1)}
-          type="button"
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
-          title="ย้อนกลับ"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขบัญชี</h1>
-      </div>
-
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
       >
+        <div className="flex items-center gap-3 pb-6">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+            title="ย้อนกลับ"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <h1
+            onClick={() => navigate(-1)}
+            className="text-xl font-bold text-black tracking-tight cursor-pointer"
+          >
+            แก้ไขบัญชี
+          </h1>
+        </div>
         <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">แก้ไขบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
@@ -436,6 +432,10 @@ const EditAccountPage: React.FC = () => {
               value={formData.username}
               onChange={handleChange}
             />
+            <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
+              <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
+              <li>ควรประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข</li>
+            </ul>
             <TextField
               id="email"
               label="อีเมล"
@@ -490,7 +490,7 @@ const EditAccountPage: React.FC = () => {
                 <div className="space-y-1.5 w-full">
                   <div className="flex items-center justify-between">
                     <label className="block text-base font-semibold text-black">
-                      ชุมชนวิสาหกิจ <span className="text-red-600"> *</span>
+                      ชุมชนวิสาหกิจ
                     </label>
                   </div>
                   <Autocomplete
@@ -535,20 +535,6 @@ const EditAccountPage: React.FC = () => {
                     }}
                   />
                 </div>
-
-                <TextField
-                  id="activityRole"
-                  label="บทบาทในชุมชน"
-                  placeholder="กรอกบทบาทในชุมชน"
-                  required
-                  value={roleSpecificData.activityRole}
-                  onChange={(e) =>
-                    setRoleSpecificData((prev) => ({
-                      ...prev,
-                      activityRole: e.target.value,
-                    }))
-                  }
-                />
               </div>
             )}
 
@@ -606,7 +592,7 @@ const EditAccountPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setShowConfirm(true)}>
+            <Button type="confirm-admin" onClick={handlePreCheck}>
               บันทึก
             </Button>
           </div>
@@ -635,6 +621,14 @@ const EditAccountPage: React.FC = () => {
           setShowSuccessModal(false);
           navigate("/super/accounts/all");
         }}
+      />
+
+      <ModalAlert
+        isOpen={showErrorModal}
+        type="error"
+        title="กรอกข้อมูลไม่ครบถ้วน"
+        message="กรุณาตรวจสอบข้อมูลให้ครบก่อนทำการบันทึก"
+        onClose={() => setShowErrorModal(false)}
       />
     </div>
   );

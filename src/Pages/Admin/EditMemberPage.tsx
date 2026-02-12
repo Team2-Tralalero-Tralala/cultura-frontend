@@ -1,23 +1,36 @@
-/**
+/*
  * Component: EditMemberPage (Admin)
- * คำอธิบาย: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
+ * Description: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
+ * Author: Team 2 (Cultura)
+ * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
  */
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import * as z from "zod"; // [เพิ่ม] import zod
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/Input/TextField";
+import TextField from "@/Components/Input/TextField";
 import Button from "../../Components/Button";
+
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 
-/**
- * คำอธิบาย: Interface สำหรับกำหนดโครงสร้างข้อมูลที่ใช้ในการแก้ไขข้อมูลสมาชิก
+/*
+ *  Schema สำหรับตรวจสอบความถูกต้องของข้อมูล (ไม่รวมรหัสผ่าน)
  */
+const editMemberSchema = z.object({
+  fname: z.string().min(1, "กรุณากรอกชื่อ"),
+  lname: z.string().min(1, "กรุณากรอกนามสกุล"),
+  username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
+  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
+  communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
+});
+
 interface EditMemberBody {
   fname: string;
   lname: string;
@@ -28,9 +41,6 @@ interface EditMemberBody {
   communityRole: string;
 }
 
-/**
- * คำอธิบาย: Component สำหรับแก้ไขข้อมูลสมาชิกโดย Admin
- */
 const EditMemberPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,14 +57,44 @@ const EditMemberPage: React.FC = () => {
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
-   * Input: -
-   * Output: - (อัปเดต state)
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+
+  /*
+   *  ฟังก์ชันตรวจสอบ Validation
    */
+  const validateField = (fieldName?: string, fieldValue?: unknown) => {
+    if (fieldName) {
+      const result = editMemberSchema.safeParse({
+        ...formData,
+        [fieldName]: fieldValue,
+      });
+      setFormErrors((prevErrors) => ({
+        ...prevErrors,
+        [fieldName]: result.success
+          ? undefined
+          : result.error.issues.find((issue) => issue.path[0] === fieldName)?.message,
+      }));
+      return result.success;
+    } else {
+      const result = editMemberSchema.safeParse(formData);
+      if (!result.success) {
+        const validationErrors: Record<string, string> = {};
+        result.error.issues.forEach((issue) => {
+          validationErrors[issue.path[0] as string] = issue.message;
+        });
+        setFormErrors(validationErrors);
+        return false;
+      }
+      setFormErrors({});
+      return true;
+    }
+  };
+
   const fetchMemberData = async () => {
     try {
       const response = await api.get(`/admin/member/${userId}`);
@@ -79,37 +119,40 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
-  /**
-   * คำอธิบาย: Hook สำหรับโหลดข้อมูลสมาชิกเมื่อมี userId
-   */
   useEffect(() => {
     if (userId) {
       fetchMemberData();
     }
   }, [userId]);
 
-  /**
-   * คำอธิบาย: ฟังก์ชันจัดการการเปลี่ยนแปลงค่าของ Input
-   * Input: event
-   * Output: -
-   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [id]: value };
+      //  ลบ Error ทันทีเมื่อมีการพิมพ์แก้ไข
+      if (formErrors[id]) {
+        setFormErrors((prevErr) => ({ ...prevErr, [id]: undefined }));
+      }
+      return newData;
+    });
   };
 
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับบันทึกข้อมูลการแก้ไขสมาชิก
-   * Input: event
-   * Output: -
+  /*
+   * ฟังก์ชัน Pre-check ก่อนเปิด Modal ยืนยัน
    */
+  const handlePreCheck = () => {
+    const isValid = validateField();
+    if (!isValid) {
+      setShowErrorModal(true);
+    } else {
+      setShowConfirm(true);
+    }
+  };
+
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 
-    if (!formData.fname || !formData.lname || !formData.username || !formData.email) {
-      toast.error("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
-      return;
-    }
+    if (!validateField()) return;
 
     try {
       let imageWasUpdated = false;
@@ -130,14 +173,14 @@ const EditMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        roleId: 3,
+        roleId: 1,
         communityRole: formData.communityRole.trim(),
       };
 
       await api.put(`/admin/member/${userId}`, requestBody);
 
-      setIsConfirmModalOpen(false);
-      setIsSuccessModalOpen(true);
+      setShowConfirm(false);
+      setShowSuccessModal(true);
 
       if (imageWasUpdated) {
         setProfileImage(null);
@@ -160,35 +203,37 @@ const EditMemberPage: React.FC = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 mb-6 pl-6">
-        <button
-          onClick={() => navigate(-1)}
-          type="button"
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
-          title="ย้อนกลับ"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200 mt-6">
+        <div className="flex items-center gap-3 pb-6">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+            title="ย้อนกลับ"
           >
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขสมาชิก</h1>
-      </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
 
-      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          แก้ไขข้อมูลสมาชิก
-        </h2>
+          <h1
+            onClick={() => navigate(-1)}
+            className="text-xl font-bold text-black tracking-tight cursor-pointer hover:text-gray-600 transition-colors select-none"
+          >
+            แก้ไขสมาชิก
+          </h1>
+        </div>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           <div className="flex flex-col items-center">
@@ -208,6 +253,8 @@ const EditMemberPage: React.FC = () => {
                 required
                 value={formData.fname}
                 onChange={handleChange}
+                error={!!formErrors.fname}
+                helperText={formErrors.fname}
               />
               <TextField
                 id="lname"
@@ -216,6 +263,8 @@ const EditMemberPage: React.FC = () => {
                 required
                 value={formData.lname}
                 onChange={handleChange}
+                error={!!formErrors.lname}
+                helperText={formErrors.lname}
               />
             </div>
 
@@ -226,7 +275,13 @@ const EditMemberPage: React.FC = () => {
               required
               value={formData.username}
               onChange={handleChange}
+              error={!!formErrors.username}
+              helperText={formErrors.username}
             />
+            <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
+              <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
+              <li>ควรประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข</li>
+            </ul>
 
             <TextField
               id="email"
@@ -235,6 +290,8 @@ const EditMemberPage: React.FC = () => {
               required
               value={formData.email}
               onChange={handleChange}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
             />
 
             <TextField
@@ -244,18 +301,9 @@ const EditMemberPage: React.FC = () => {
               required
               value={formData.phone}
               onChange={handleChange}
+              error={!!formErrors.phone}
+              helperText={formErrors.phone}
             />
-
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => navigate(`/admin/members/${userId}/reset-password`)}
-                className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
-              >
-                <Icon icon="mdi:lock-reset" className="w-4 h-4" />
-                เปลี่ยนรหัสผ่าน
-              </button>
-            </div>
 
             <TextField
               id="communityRole"
@@ -264,18 +312,20 @@ const EditMemberPage: React.FC = () => {
               required
               value={formData.communityRole}
               onChange={handleChange}
+              error={!!formErrors.communityRole}
+              helperText={formErrors.communityRole}
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 pt-4 mt-8">
           <div className="w-32">
             <Button type="cancel" onClick={() => navigate(-1)}>
               ยกเลิก
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
+            <Button type="confirm-admin" onClick={handlePreCheck}>
               บันทึก
             </Button>
           </div>
@@ -283,27 +333,35 @@ const EditMemberPage: React.FC = () => {
       </form>
 
       <Modal
-        isOpen={isConfirmModalOpen}
+        isOpen={showConfirm}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขข้อมูลสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setIsConfirmModalOpen(false);
+          setShowConfirm(false);
           handleSubmit();
         }}
-        onCancel={() => setIsConfirmModalOpen(false)}
+        onCancel={() => setShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={isSuccessModalOpen}
+        isOpen={showSuccessModal}
         type="success"
         title="แก้ไขสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setIsSuccessModalOpen(false);
+          setShowSuccessModal(false);
           navigate("/admin/members");
         }}
+      />
+
+      <ModalAlert
+        isOpen={showErrorModal}
+        type="error"
+        title="กรอกข้อมูลไม่ครบถ้วน"
+        message="กรุณาตรวจสอบข้อมูลให้ครบถ้วน"
+        onClose={() => setShowErrorModal(false)}
       />
     </div>
   );

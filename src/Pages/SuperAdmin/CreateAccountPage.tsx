@@ -672,7 +672,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         isOpen={showErrorModal}
         type="error"
         title="เกิดข้อผิดพลาด"
-        message="กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง"  
+        message="กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง"
         onClose={() => setShowErrorModal(false)}
       />
 

@@ -1,25 +1,20 @@
-/*
- * Component: CreateMemberPage (Admin)
- * Description: หน้าสำหรับ Admin สร้างสมาชิกในชุมชน (ใช้ ModalAlert ตอนสำเร็จ)
- * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+/**
+ * คำอธิบาย: Component สำหรับหน้าสร้างสมาชิกในชุมชน (Admin)
  */
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as z from "zod";
 import { Modal } from "@/Components/Modal/Modal";
-import { ModalAlert } from "@/Components/Modal/ModalAlert"; 
-import api from "@/Libs/api"; 
-import TextField from "../../Components/TextField"; 
-import Button from "../../Components/Button"; 
-import SubmitButton from "../../Components/SubmitButton"; 
-import AvatarUploader from "@/Components/AvatarUploader";
-import Breadcrumb from "@/Components/BreadcrumbNavigation"; 
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import api from "@/Libs/Api";
+import TextField from "../../Components/Input/TextField";
+import Button from "../../Components/Button";
+import AvatarUploader from "@/Components/upload/AvatarUploader";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
- * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
+/**
+ * คำอธิบาย: Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
  */
 const memberSchema = z.object({
   fname: z.string().min(1, "กรุณากรอกชื่อ"),
@@ -32,14 +27,18 @@ const memberSchema = z.object({
   communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
 });
 
-/*
- * คำอธิบาย : Component สำหรับสร้างบัญชีสมาชิกโดย Admin
+/**
+ * คำอธิบาย: Component สำหรับสร้างบัญชีสมาชิกโดย Admin
+ * หน้าที่:
+ * - แสดงฟอร์มกรอกข้อมูลสมาชิก
+ * - ตรวจสอบความถูกต้องของข้อมูล
+ * - บันทึกข้อมูลสมาชิกใหม่และอัปโหลดรูปโปรไฟล์
  */
 const CreateMemberPage: React.FC = () => {
   const navigate = useNavigate();
 
- /*
-   * คำอธิบาย : State สำหรับเก็บค่าข้อมูลจากฟอร์ม
+  /**
+   * คำอธิบาย: State สำหรับเก็บค่าข้อมูลจากฟอร์ม
    */
   const [formData, setFormData] = useState({
     fname: "",
@@ -49,29 +48,29 @@ const CreateMemberPage: React.FC = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    communityRole: "", 
+    communityRole: "",
     profileImage: null as File | null,
   });
 
-  /*
-   * คำอธิบาย : State สำหรับเก็บข้อความ Error ของแต่ละฟิลด์
+  /**
+   * คำอธิบาย: State สำหรับเก็บข้อความ Error ของแต่ละฟิลด์
    */
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
-   /*
-   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal ยืนยันการสร้างบัญชี
+  /**
+   * คำอธิบาย: State สำหรับควบคุมการแสดง Modal ยืนยันการสร้างบัญชี
    */
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-   /*
-   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal เมื่อสร้างบัญชีสำเร็จ
+  /**
+   * คำอธิบาย: State สำหรับควบคุมการแสดง Modal เมื่อสร้างบัญชีสำเร็จ
    */
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-   /*
-   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
-   * Input : fieldName, fieldValue
-   * Output : boolean
+  /**
+   * คำอธิบาย: ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
+   * Output: boolean (ส่งคืน true หากถูกต้อง, false หากผิดพลาด)
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -101,34 +100,34 @@ const CreateMemberPage: React.FC = () => {
     }
   };
 
-   /*
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
-   * Input : event
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
+   * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
+   * Output: -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => {
-        const newData = { ...prev, [id]: value };
-        validateField(id, value); 
-        return newData;
+      const newData = { ...prev, [id]: value };
+      validateField(id, value);
+      return newData;
     });
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
-   * Input : file
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
+   * Input: file (ไฟล์รูปภาพที่เลือก)
+   * Output: -
    */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
-   * Input : event
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
+   * Input: event (เหตุการณ์จากฟอร์ม)
+   * Output: -
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
@@ -150,7 +149,7 @@ const CreateMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        password: formData.password, 
+        password: formData.password,
         communityRole: formData.communityRole.trim(),
       };
 
@@ -158,8 +157,8 @@ const CreateMemberPage: React.FC = () => {
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-         setShowSuccessModal(true);
-         return;
+        setIsSuccessModalOpen(true);
+        return;
       }
 
       if (formData.profileImage) {
@@ -171,11 +170,11 @@ const CreateMemberPage: React.FC = () => {
         });
       }
 
-      setShowSuccessModal(true);
-
+      setIsSuccessModalOpen(true);
     } catch (error: any) {
       console.error("❌ Error creating member:", error);
-      const msg = error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
+      const msg =
+        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
       toast.error(`เกิดข้อผิดพลาด: ${msg}`);
     }
   };
@@ -223,11 +222,7 @@ const CreateMemberPage: React.FC = () => {
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           <div className="flex flex-col items-center">
-            <AvatarUploader 
-                avatarUrl={null} 
-                onAvatarChange={handleAvatarChange} 
-                avatarSize={270} 
-            />
+            <AvatarUploader avatarUrl={null} onAvatarChange={handleAvatarChange} avatarSize={270} />
           </div>
 
           <div className="w-full space-y-6">
@@ -320,7 +315,6 @@ const CreateMemberPage: React.FC = () => {
               error={!!formErrors.communityRole}
               helperText={formErrors.communityRole}
             />
-
           </div>
         </div>
 
@@ -331,37 +325,34 @@ const CreateMemberPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton 
-                htmlType="button" 
-                onClick={() => setShowConfirm(true)}
-            >
+            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
               สร้างบัญชี
-            </SubmitButton>
+            </Button>
           </div>
         </div>
       </form>
 
       <Modal
-        open={showConfirm}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsConfirmModalOpen(false);
           handleSubmit();
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
 
       <ModalAlert
-        open={showSuccessModal}
+        isOpen={isSuccessModalOpen}
         type="success"
         title="สร้างบัญชีสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
-          navigate("/admin/members"); 
+          setIsSuccessModalOpen(false);
+          navigate("/admin/members");
         }}
       />
     </div>

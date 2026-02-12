@@ -3,7 +3,7 @@
  * ใช้ Zod schema ในการตรวจสอบความถูกต้องของข้อมูล,
  * มีการ validate แบบ real-time ขณะกรอก และเรียกใช้งาน AuthContext ในการ login
  */
-import TextField from "./TextField";
+import TextField from "./Input/TextField";
 import Button from "./Button";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../Libs/AuthProvider";
@@ -17,12 +17,11 @@ const loginSchema = z.object({
   password: z.string().min(1, "กรุณาป้อนรหัสผ่าน"),
 });
 /*
- * ฟังก์ชัน : LoginAdminCard
  * คำอธิบาย : ฟอร์มเข้าสู่ระบบสำหรับ Admin โดยตรวจสอบ input ผ่าน Zod และ AuthContext
  * Input : -
  * Output : React Component ที่แสดงฟอร์ม login และจัดการ redirect/error
  */
-export function LoginAdminCard() {
+export default function LoginAdminCard() {
   const [showBlocked, setShowBlocked] = useState(false);
   const { login } = useContext(AuthContext);
 
@@ -104,7 +103,7 @@ export function LoginAdminCard() {
       const loggedInUser = await login(username, password); // ให้ login return user
 
       if (loggedInUser.user.role === "tourist") {
-        setError("ไม่พบบัญชี");
+        setError("ไม่พบบัญชีผู้ใช้งาน");
       } else {
         loggedInUser.navigateToFirstPage();
       }
@@ -115,7 +114,7 @@ export function LoginAdminCard() {
       // กรณี User is blocked
       if (isBlocked) {
         if (blockedMsg && blockedMsg.includes("tourist")) {
-          setError("ไม่พบบัญชี");
+          setError("ไม่พบบัญชีผู้ใช้งาน");
         } else {
           setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
           setShowBlocked(true);
@@ -142,7 +141,7 @@ export function LoginAdminCard() {
           label="อีเมล"
           required
           placeholder="ป้อนชื่ออีเมล"
-          type="text"
+          type="email"
           value={username}
           onChange={handleUsernameChange}
           error={!!formErrors.username}
@@ -172,7 +171,7 @@ export function LoginAdminCard() {
           {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}
         </Button>
       </form>
-      <ModalBlocked open={showBlocked} onClose={() => setShowBlocked(false)} />
+      <ModalBlocked isOpen={showBlocked} onClose={() => setShowBlocked(false)} />
     </div>
   );
 }

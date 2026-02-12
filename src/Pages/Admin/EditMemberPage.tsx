@@ -1,8 +1,6 @@
-/*
+/**
  * Component: EditMemberPage (Admin)
- * Description: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
- * Author: Team 2 (Cultura)
- * Last Modified: 07 ธันวาคม 2568 (Smart Fetch Community)
+ * คำอธิบาย: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
  */
 
 import React, { useEffect, useState } from "react";
@@ -10,16 +8,15 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import api from "@/Libs/api";
-import TextField from "../../Components/TextField";
+import api from "@/Libs/Api";
+import TextField from "../../Components/Input/TextField";
 import Button from "../../Components/Button";
-import SubmitButton from "../../Components/SubmitButton";
-import AvatarUploader from "@/Components/AvatarUploader";
+import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
 
-/*
- * คำอธิบาย : Interface สำหรับกำหนดโครงสร้างข้อมูลที่ใช้ในการแก้ไขข้อมูลสมาชิก
+/**
+ * คำอธิบาย: Interface สำหรับกำหนดโครงสร้างข้อมูลที่ใช้ในการแก้ไขข้อมูลสมาชิก
  */
 interface EditMemberBody {
   fname: string;
@@ -31,18 +28,14 @@ interface EditMemberBody {
   communityRole: string;
 }
 
-/*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลสมาชิกโดย Admin
+/**
+ * คำอธิบาย: Component สำหรับแก้ไขข้อมูลสมาชิกโดย Admin
  */
 const EditMemberPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userId } = useParams();
 
-  
-  /*
-   * คำอธิบาย : State สำหรับเก็บค่าฟอร์มข้อมูลสมาชิก
-   */
   const [formData, setFormData] = useState({
     fname: "",
     lname: "",
@@ -51,35 +44,19 @@ const EditMemberPage: React.FC = () => {
     phone: "",
     communityRole: "",
   });
-  
-  /*
-   * คำอธิบาย : State สำหรับเก็บไฟล์รูปโปรไฟล์ที่อัปโหลดใหม่
-   */
+
   const [profileImage, setProfileImage] = useState<File | null>(null);
-
-  /*
-   * คำอธิบาย : State สำหรับเก็บ URL รูปโปรไฟล์ที่โหลดจากระบบ
-   */
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  /*
-   * คำอธิบาย : State สำหรับควบคุม Modal ยืนยันการบันทึกข้อมูล
-   */
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  /*
-   * คำอธิบาย : State สำหรับควบคุม Modal แสดงผลเมื่อแก้ไขสำเร็จ
-   */
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
+   * Input: -
+   * Output: - (อัปเดต state)
    */
   const fetchMemberData = async () => {
     try {
-
       const response = await api.get(`/admin/member/${userId}`);
       const member = response.data?.data;
 
@@ -95,7 +72,6 @@ const EditMemberPage: React.FC = () => {
       });
 
       setAvatarUrl(member.profileImageUrl || null);
-
     } catch (error: any) {
       console.error("❌ Error fetching member:", error);
       toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
@@ -103,8 +79,8 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
-  /*
-   * คำอธิบาย : Hook สำหรับโหลดข้อมูลสมาชิกเมื่อมี userId
+  /**
+   * คำอธิบาย: Hook สำหรับโหลดข้อมูลสมาชิกเมื่อมี userId
    */
   useEffect(() => {
     if (userId) {
@@ -112,20 +88,20 @@ const EditMemberPage: React.FC = () => {
     }
   }, [userId]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันจัดการการเปลี่ยนแปลงค่าของ Input
-   * Input : event
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันจัดการการเปลี่ยนแปลงค่าของ Input
+   * Input: event
+   * Output: -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับบันทึกข้อมูลการแก้ไขสมาชิก
-   * Input : event
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับบันทึกข้อมูลการแก้ไขสมาชิก
+   * Input: event
+   * Output: -
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
@@ -154,19 +130,18 @@ const EditMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        roleId: 3, 
+        roleId: 3,
         communityRole: formData.communityRole.trim(),
       };
 
       await api.put(`/admin/member/${userId}`, requestBody);
 
-      setShowConfirm(false);
-      setShowSuccessModal(true);
+      setIsConfirmModalOpen(false);
+      setIsSuccessModalOpen(true);
 
       if (imageWasUpdated) {
         setProfileImage(null);
       }
-
     } catch (error: any) {
       console.error("❌ Error updating member:", error);
       const msg = error.response?.data?.message || error.message || "บันทึกข้อมูลไม่สำเร็จ";
@@ -272,14 +247,14 @@ const EditMemberPage: React.FC = () => {
             />
 
             <div className="flex justify-end">
-               <button
-                  type="button"
-                  onClick={() => navigate(`/admin/members/${userId}/reset-password`)} 
-                  className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
-                >
-                  <Icon icon="mdi:lock-reset" className="w-4 h-4" />
-                  เปลี่ยนรหัสผ่าน
-                </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/admin/members/${userId}/reset-password`)}
+                className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
+              >
+                <Icon icon="mdi:lock-reset" className="w-4 h-4" />
+                เปลี่ยนรหัสผ่าน
+              </button>
             </div>
 
             <TextField
@@ -300,37 +275,34 @@ const EditMemberPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <SubmitButton 
-                htmlType="button" 
-                onClick={() => setShowConfirm(true)}
-            >
+            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
               บันทึก
-            </SubmitButton>
+            </Button>
           </div>
         </div>
       </form>
 
       <Modal
-        open={showConfirm}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขข้อมูลสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsConfirmModalOpen(false);
           handleSubmit();
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
 
       <ModalAlert
-        open={showSuccessModal}
+        isOpen={isSuccessModalOpen}
         type="success"
         title="แก้ไขสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
-          navigate("/admin/members"); 
+          setIsSuccessModalOpen(false);
+          navigate("/admin/members");
         }}
       />
     </div>

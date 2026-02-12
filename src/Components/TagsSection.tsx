@@ -12,17 +12,15 @@ interface TagsSectionProps {
   onTagClick?: (tag: string) => void;
 }
 
-/*
- * ฟังก์ชัน : TagsSection
- * คำอธิบาย : แสดงส่วนของแท็กกิจกรรมในรูปแบบ grid
- * Input : TagsSectionProps (title, tags, onTagClick)
- * Output : React Component ที่ render ส่วนของแท็ก
+/**
+ * คำอธิบาย: แสดงส่วนของแท็กกิจกรรมในรูปแบบ grid
+ * Input:
+ *   - title: หัวข้อของส่วน
+ *   - tags: รายการแท็กที่จะแสดง (string[])
+ *   - onTagClick: callback เมื่อคลิกแท็ก
+ * Output: React Component ที่ render ส่วนของแท็ก
  */
-export default function TagsSection({
-  title,
-  tags,
-  onTagClick,
-}: TagsSectionProps) {
+export default function TagsSection({ title, tags, onTagClick }: TagsSectionProps) {
   /*
    * ฟังก์ชัน : handleTagClick
    * คำอธิบาย : จัดการเมื่อคลิกแท็ก

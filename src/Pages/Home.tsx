@@ -7,7 +7,7 @@
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import Footer from "@/Components/Footer";
 import HeroCarousel from "@/Components/HeroCarousel";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import PackageSection, { type PackageData } from "@/Components/PackageSection";
 import TagsSection from "@/Components/TagsSection";
 import {
@@ -16,7 +16,7 @@ import {
   fetchPopularPackages,
   type CarouselImage,
   type PackageApiData,
-} from "@/Services/tourist-service";
+} from "@/Libs/TouristService";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -54,7 +54,7 @@ export default function Home() {
    * Output : string - ข้อมูล location ที่จัดรูปแบบแล้ว
    */
   const formatLocation = (
-    location: { province: string; district: string; subDistrict: string } | null
+    location: { province: string; district: string; subDistrict: string } | null,
   ): string => {
     if (!location) return "ไม่ระบุสถานที่";
     const parts = [location.subDistrict, location.district, location.province].filter(Boolean);
@@ -204,7 +204,7 @@ export default function Home() {
       {!isLoading && (
         <PackageSection
           title="แพ็กเกจมาใหม่"
-          showNewBadge={true}
+          isShowNewBadge={true}
           packages={newPackages}
           onViewMore={handleViewMoreNew}
         />
@@ -214,7 +214,7 @@ export default function Home() {
       {!isLoading && (
         <PackageSection
           title="แพ็กเกจยอดนิยม"
-          showNewBadge={false}
+          isShowNewBadge={false}
           packages={popularPackages}
           onViewMore={handleViewMorePopular}
         />

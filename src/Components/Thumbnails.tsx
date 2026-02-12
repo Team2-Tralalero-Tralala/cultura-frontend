@@ -88,12 +88,7 @@ interface ThumbnailsProps {
  * - ผู้ใช้สามารถโต้ตอบ (Interaction) ด้วยการคลิก Thumbnail
  *   เพื่อเปลี่ยนรูปหลักได้
  */
-export default function Thumbnails({
-  items,
-  options,
-  className,
-  colors,
-}: ThumbnailsProps) {
+export default function Thumbnails({ items, options, className, colors }: ThumbnailsProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     ...options,
@@ -116,26 +111,26 @@ export default function Thumbnails({
     scrollbarTrack = "#e5e7eb",
   } = colors ?? {};
 
-/**
- * คำอธิบาย :
- * ฟังก์ชันสำหรับเมื่อผู้ใช้คลิก Thumbnail
- * โดยจะสั่งให้ Embla Carousel เลื่อนไปยังรูปหลัก
- * ตามตำแหน่ง index ของ Thumbnail ที่ถูกคลิก
-*/
-  const onThumbClick = useCallback(
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับเมื่อผู้ใช้คลิก Thumbnail
+   * โดยจะสั่งให้ Embla Carousel เลื่อนไปยังรูปหลักตามตำแหน่ง index ของ Thumbnail ที่ถูกคลิก
+   * input: index (number) - ตำแหน่งของรูปที่ถูกคลิก
+   * output: void
+   */
+  const handleThumbClick = useCallback(
     (index: number) => {
       emblaApi?.scrollTo(index);
     },
-    [emblaApi]
+    [emblaApi],
   );
 
-/**
- * คำอธิบาย :
- * ฟังก์ชันสำหรับอัปเดตสถานะของรูปที่ถูกเลือกใน Carousel
- * โดยดึงตำแหน่งของรูปที่กำลังแสดงอยู่จาก Embla Carousel
- * แล้วนำมาเก็บไว้ใน state selectedIndex
-*/
-  const onSelect = useCallback(() => {
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับอัปเดตสถานะของรูปที่ถูกเลือกใน Carousel
+   * โดยดึงตำแหน่งของรูปที่กำลังแสดงอยู่จาก Embla Carousel แล้วนำมาเก็บไว้ใน state selectedIndex
+   * input: void
+   * output: void
+   */
+  const handleSelect = useCallback(() => {
     if (!emblaApi) {
       return;
     }
@@ -148,18 +143,15 @@ export default function Thumbnails({
       return;
     }
 
-    onSelect();
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
-  }, [emblaApi, onSelect]);
+    handleSelect();
+    emblaApi.on("select", handleSelect);
+    emblaApi.on("reInit", handleSelect);
+  }, [emblaApi, handleSelect]);
 
   return (
     <div className={`w-full max-w-3xl ${className ?? ""}`}>
       {/* ===== รูปหลัก ===== */}
-      <div
-        ref={emblaRef}
-        className="overflow-hidden rounded-lg border border-gray-300 shadow-md"
-      >
+      <div ref={emblaRef} className="overflow-hidden rounded-lg border border-gray-300 shadow-md">
         <div className="flex">
           {items.map((item, index) => (
             <div key={index} className="flex-[0_0_100%]">
@@ -175,10 +167,7 @@ export default function Thumbnails({
       </div>
 
       {/* ===== Thumbnail ===== */}
-      <div
-        ref={thumbsRef}
-        className="mt-3 overflow-x-auto overflow-y-hidden thumbs-scrollbar"
-      >
+      <div ref={thumbsRef} className="mt-3 overflow-x-auto overflow-y-hidden thumbs-scrollbar">
         <div className="flex gap-2">
           {items.map((thumb, index) => {
             const isActive = index === selectedIndex;
@@ -187,12 +176,10 @@ export default function Thumbnails({
               <button
                 key={index}
                 type="button"
-                onClick={() => onThumbClick(index)}
+                onClick={() => handleThumbClick(index)}
                 style={{
                   borderColor: isActive ? activeBorder : undefined,
-                  boxShadow: isActive
-                    ? `0 0 0 2px ${activeRing}`
-                    : undefined,
+                  boxShadow: isActive ? `0 0 0 2px ${activeRing}` : undefined,
                 }}
                 className={[
                   "relative aspect-video overflow-hidden rounded-md border transition-all",

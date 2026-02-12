@@ -2,6 +2,7 @@
  * คำอธิบาย : Component การ์ดแสดงประวัติการจอง
  * แสดงรายการประวัติการจองในรูปแบบการ์ด
  */
+
 import { useNavigate } from "react-router-dom";
 
 export type BookingStatus = "Payment" | "Complete" | "Cancel" | "Review" | string;
@@ -15,6 +16,7 @@ export interface BookingItem {
   statusLabel: string;
   isJoined?: boolean;
   isEnded?: boolean;
+  hasFeedback?: boolean;
 }
 
 interface BookingHistoryCardListProps {
@@ -22,10 +24,13 @@ interface BookingHistoryCardListProps {
   bookings: BookingItem[];
 }
 
-/*
- * คำอธิบาย: ฟังก์ชันสำหรับแสดงรายการประวัติการจอง
- * Input : isLoading, bookings
- * Output : -
+/**
+ * คำอธิบาย: แสดงรายการประวัติการจอง
+ * Input:
+ *   - isLoading: สถานะกำลังโหลดข้อมูล
+ *   - bookings: รายการข้อมูลการจอง
+ * Output:
+ *   - JSX Element แสดงรายการการ์ด หรือข้อความเมื่อไม่มีข้อมูล
  */
 function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListProps) {
   const navigate = useNavigate();
@@ -64,7 +69,7 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
 
             {/* Action Buttons (Bottom Right) */}
             <div className="mt-4 flex justify-end gap-3 sm:absolute sm:bottom-6 sm:right-6 sm:mt-0">
-              {booking.status === "BOOKED" && booking.isEnded && (
+              {booking.status === "BOOKED" && booking.isEnded && !booking.hasFeedback && (
                 <button
                   onClick={(event) => {
                     event.stopPropagation();

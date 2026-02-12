@@ -8,10 +8,10 @@ import { Icon } from "@iconify/react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/Input/TextField";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
@@ -89,8 +89,8 @@ const homestaySchema = z.object({
 
 type HomestayFormErrors = Partial<Record<keyof HomestayForm, string>>;
 
-/*
- * คำอธิบาย : ตัดช่องว่างของข้อความและคืนค่า fallback หากข้อความว่างเปล่า
+/**
+ * คำอธิบาย: ตัดช่องว่างของข้อความและคืนค่า fallback หากข้อความว่างเปล่า
  * Input: value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าที่จะคืนกลับถ้าว่าง)
  * Output: ข้อความที่ตัดช่องว่างแล้ว หรือค่า fallback
  */
@@ -132,11 +132,11 @@ if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
 }
 
 /**
- * Component: CreateHomestaysAdminPage
+ * คำอธิบาย: Component หน้าสำหรับเพิ่มที่พักรายการเดียว (สำหรับ Admin)
  * หน้าที่:
- * - จัดการ state ของฟอร์มที่พัก 1 ชุด
- * - ตรวจสอบข้อมูล
- * - รวม payload และส่งขึ้น API ตาม communityId (ฝั่ง Admin)
+ * - จัดการ state ของฟอร์มที่พัก
+ * - ตรวจสอบข้อมูล (Validation)
+ * - บันทึกข้อมูลที่พักใหม่ลงฐานข้อมูล
  */
 export default function CreateHomestaysPage() {
   const { communityId } = useParams();
@@ -314,7 +314,6 @@ export default function CreateHomestaysPage() {
     }
   };
 
-
   const startingPosition = React.useMemo<[number, number]>(() => {
     const numberLatitude = Number(homestayFormState.latitude);
     const numberLongitude = Number(homestayFormState.longitude);
@@ -331,7 +330,7 @@ export default function CreateHomestaysPage() {
         <Breadcrumb
           current={{
             label: "เพิ่มที่พัก",
-            to: `/admin/community/homestay`,
+            to: `/admin/community/homestay/create`,
           }}
         />
       </div>
@@ -579,7 +578,7 @@ export default function CreateHomestaysPage() {
 
       {/* Modal ยืนยัน */}
       <Modal
-        open={isConfirmModalOpen}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการสร้างที่พัก"
         text={`คุณต้องการยืนยันการสร้างที่พักหรือไม่`}
         confirmText="ยืนยัน"
@@ -596,7 +595,7 @@ export default function CreateHomestaysPage() {
 
       {/* Modal Alert */}
       <ModalAlert
-        open={alertOpen}
+        isOpen={alertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

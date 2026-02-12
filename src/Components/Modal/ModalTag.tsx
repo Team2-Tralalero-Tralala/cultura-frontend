@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/Components/ui/button";
 
-interface ModalProps {
+interface ModalTagProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (name: string) => void;
@@ -14,7 +14,7 @@ interface ModalProps {
   errorMessage?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({
+const ModalTag: React.FC<ModalTagProps> = ({
   isOpen,
   onClose,
   onConfirm,
@@ -22,7 +22,7 @@ const Modal: React.FC<ModalProps> = ({
   existingTags = [],
   errorMessage,
 }) => {
-  const [tagName, setTagName] = useState(initialValue);       
+  const [tagName, setTagName] = useState(initialValue);
   const [localError, setLocalError] = useState('');   
 
   /*
@@ -44,9 +44,9 @@ const Modal: React.FC<ModalProps> = ({
       return;
     }
 
-  /*
-   * คำอธิบาย : สำหรับตรวจสอบว่าชื่อประเภทที่กรอกซ้ำกับที่มีอยู่แล้วหรือไม่
-   */
+    /*
+     * คำอธิบาย : สำหรับตรวจสอบว่าชื่อประเภทที่กรอกซ้ำกับที่มีอยู่แล้วหรือไม่
+     */
     const isDuplicate = existingTags
       .filter((tag) => tag !== initialValue)
       .some((tag) => tag.toLowerCase() === trimmedName.toLowerCase());
@@ -56,7 +56,7 @@ const Modal: React.FC<ModalProps> = ({
       return;
     }
 
-    onConfirm(trimmedName); 
+    onConfirm(trimmedName);
     setTagName('');
     setLocalError('');
   };
@@ -90,7 +90,7 @@ const Modal: React.FC<ModalProps> = ({
             className={`px-3 w-full h-[50px] rounded-[8px] transition-colors duration-200 ${localError || errorMessage
               ? 'border-red-500 border-[1.5px]'
               : 'border-black border-[1px]'
-              }`}
+            }`}
           />
         </div>
 
@@ -107,7 +107,7 @@ const Modal: React.FC<ModalProps> = ({
             onClick={handleSubmit}
             className="w-[100px] bg-[#055035] hover:bg-[#3a6657] text-white"
           >
-            ยืนยัน
+            {initialValue ? 'บันทึก' : 'สร้าง'}
           </Button>
         </div>
       </div>
@@ -115,4 +115,4 @@ const Modal: React.FC<ModalProps> = ({
   );
 };
 
-export default Modal;
+export default ModalTag;

@@ -1,5 +1,8 @@
 /**
- * คำอธิบาย : หน้าแก้ไขข้อมูลที่พักของ Super Admin ทำหน้าที่โหลดข้อมูลเดิม แสดงฟอร์ม จัดการรูปภาพ และบันทึกการแก้ไข
+ * คำอธิบาย: หน้าแก้ไขข้อมูลที่พักของ Super Admin
+ * หน้าที่: โหลดข้อมูลเดิม แสดงฟอร์มแก้ไข จัดการรูปภาพ และบันทึกการแก้ไข
+ * สิทธิ์การเข้าถึง: Super Admin
+ * เส้นทาง (Route): /super/community/:communityId/homestay/:homestayId/edit
  */
 import React from "react";
 import * as z from "zod";
@@ -8,15 +11,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
 
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/Input/TextField";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
@@ -72,14 +75,14 @@ const schema = z.object({
     .refine(
       (guestPerRoomValue) =>
         Number(guestPerRoomValue) >= 1 && Number.isInteger(Number(guestPerRoomValue)),
-      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
   totalRoom: z
     .string()
     .min(1)
     .refine(
       (refineValue) => Number(refineValue) >= 1 && Number.isInteger(Number(refineValue)),
-      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
     ),
   houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
   province: z.string().min(1, "กรุณาเลือกจังหวัด"),
@@ -91,9 +94,9 @@ const schema = z.object({
 });
 
 /**
- * คำอธิบาย : ดึงไฟล์จาก URL แล้วแปลงเป็น File object เพื่อใช้กับ UploadCard
- * Input : url (ที่อยู่ไฟล์), filename (ชื่อไฟล์)
- * Output : File object (กำหนด MIME type และเติม flag isFromServer)
+ * คำอธิบาย: ดึงไฟล์จาก URL แล้วแปลงเป็น File object เพื่อใช้กับ UploadCard
+ * Input: url (ที่อยู่ไฟล์), filename (ชื่อไฟล์)
+ * Output: Promise<File> (กำหนด MIME type และเติม flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
   const response = await fetch(url, {
@@ -109,9 +112,9 @@ async function urlToFile(url: string, filename: string): Promise<File> {
 }
 
 /**
- * คำอธิบาย : สร้างรายการ URL ผู้สมัครโหลดภาพจากค่า image ใน DB เพื่อป้องกันปัญหา 404 จาก path ที่ต่างกัน
- * Input : rawImagePath (path หรือ filename จากฐานข้อมูล)
- * Output : รายการ URL ที่เป็นไปได้ (เรียงตามความเป็นไปได้)
+ * คำอธิบาย: สร้างรายการ URL ผู้สมัครโหลดภาพจากค่า image ใน DB
+ * Input: rawImagePath (path หรือ filename จากฐานข้อมูล)
+ * Output: string[] รายการ URL ที่เป็นไปได้
  */
 function buildImageCandidates(rawImagePath: string): string[] {
   if (!rawImagePath) return [];
@@ -140,9 +143,9 @@ function buildImageCandidates(rawImagePath: string): string[] {
 }
 
 /**
- * คำอธิบาย : ทดลองโหลดภาพตาม candidate URL ไปทีละรายการจนกว่าจะสำเร็จ
- * Input : rawImagePath (path หรือ filename ของรูปภาพ), filename (ชื่อไฟล์ปลายทาง)
- * Output : File object ที่แปลงสำเร็จ
+ * คำอธิบาย: ทดลองโหลดภาพตาม candidate URL ไปทีละรายการจนกว่าจะสำเร็จ
+ * Input: rawImagePath, filename
+ * Output: Promise<File> File object ที่แปลงสำเร็จ
  */
 async function bestEffortUrlToFile(rawImagePath: string, filename: string): Promise<File> {
   const candidates = buildImageCandidates(rawImagePath);
@@ -160,8 +163,9 @@ async function bestEffortUrlToFile(rawImagePath: string, filename: string): Prom
 type FormErrors = Partial<Record<keyof HomestayForm, string>>;
 
 /**
- * Component: EditHomestayPage
- * หน้าที่: โหลดข้อมูลที่พัก, แสดงฟอร์มแก้ไข, จัดการอัปโหลด/แสดงรูป, และบันทึกข้อมูล
+ * คำอธิบาย: Component สำหรับแก้ไขข้อมูลที่พัก (Super Admin)
+ * Input: - (รับ Params homestayId จาก URL)
+ * Output: JSX Element หน้า EditHomestayPage
  */
 export default function EditHomestayPage() {
   const { homestayId } = useParams();
@@ -198,12 +202,9 @@ export default function EditHomestayPage() {
         const homestayIdNumber = Number(homestayId);
         if (!homestayIdNumber) throw new Error("homestayId ไม่ถูกต้อง");
 
-        const response = await axios.get(
-          `${API_URL}/super/homestays/${homestayIdNumber}`,
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await axios.get(`${API_URL}/super/homestays/${homestayIdNumber}`, {
+          withCredentials: true,
+        });
         const homestayData = response?.data?.data ?? response?.data;
         if (!homestayData) throw new Error("ไม่พบข้อมูลที่พัก");
 
@@ -241,9 +242,9 @@ export default function EditHomestayPage() {
             .map((imageItem) =>
               bestEffortUrlToFile(
                 String(imageItem.image || ""),
-                String(imageItem.image || "cover.jpg")
-              )
-            )
+                String(imageItem.image || "cover.jpg"),
+              ),
+            ),
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
@@ -252,26 +253,26 @@ export default function EditHomestayPage() {
             .map((imageItem) =>
               bestEffortUrlToFile(
                 String(imageItem.image || ""),
-                String(imageItem.image || "gallery.jpg")
-              )
-            )
+                String(imageItem.image || "gallery.jpg"),
+              ),
+            ),
         );
 
         setCoverFiles(coverFilesFetched);
         setGalleryFiles(galleryFilesFetched);
         const currentTagIds: number[] = Array.isArray(homestayData?.tagHomestays)
           ? homestayData.tagHomestays
-            .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
-            .filter((tagId: any) => typeof tagId === "number")
+              .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
+              .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(currentTagIds);
       } catch (err: any) {
         console.error("Load homestay error:", err?.response?.data || err);
         setErrorMessage(
           err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          "โหลดข้อมูลไม่สำเร็จ"
+            err?.response?.data?.error ||
+            err?.message ||
+            "โหลดข้อมูลไม่สำเร็จ",
         );
       } finally {
         setIsLoading(false);
@@ -315,12 +316,13 @@ export default function EditHomestayPage() {
   };
 
   /**
-   * ฟังก์ชัน: setField
    * คำอธิบาย: อัปเดตค่าฟอร์มและตรวจสอบความถูกต้องของฟิลด์นั้นทันที
+   * Input: key, value'
+   * Output: -
    */
   const setField = <FieldKey extends keyof HomestayForm>(
     key: FieldKey,
-    value: HomestayForm[FieldKey]
+    value: HomestayForm[FieldKey],
   ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     validateField(key, value);
@@ -345,7 +347,7 @@ export default function EditHomestayPage() {
     setPosition((previousPosition) =>
       previousPosition[0] === newPosition[0] && previousPosition[1] === newPosition[1]
         ? previousPosition
-        : newPosition
+        : newPosition,
     );
   }, []);
 
@@ -707,7 +709,7 @@ export default function EditHomestayPage() {
 
       {/* Modal ยืนยัน */}
       <Modal
-        open={isConfirmOpen}
+        isOpen={isConfirmOpen}
         title="ยืนยันการแก้ไขที่พัก"
         text="คุณต้องการยืนยันการแก้ไขที่พักหรือไม่"
         confirmText="ยืนยัน"
@@ -718,7 +720,7 @@ export default function EditHomestayPage() {
 
       {/* Modal Alert */}
       <ModalAlert
-        open={alertOpen}
+        isOpen={alertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

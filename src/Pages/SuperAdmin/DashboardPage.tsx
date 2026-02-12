@@ -6,20 +6,20 @@
  * 3. ข้อมูลสถิติ (stats) - แสดงสถิติตามจังหวัด
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import { Combobox } from "@/Components/ComboBox";
 import FiltersForCM from "@/Components/Filters/Communities/FiltersForCM";
-import { LineGraph } from "@/Components/LineGraph";
-import { PieGraph } from "@/Components/PieGraph";
+import LineGraph from "@/Components/Graph/LineGraph";
+import PieGraph from "@/Components/Graph/PieGraph";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column, Pagination } from "@/Components/Tables/Types";
-import type { DashboardResponse } from "@/Services/dashboard-service";
+import type { DashboardResponse } from "@/Libs/DashboardService";
 import {
   fetchDashboardData,
   type DashboardFilters,
   type DashboardStatsItem,
-} from "@/Services/dashboard-service";
+} from "@/Libs/DashboardService";
 import { Icon } from "@iconify/react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
@@ -28,9 +28,8 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import axios from "axios";
 import React from "react";
 
-
-/*
- * คำอธิบาย : คอลัมน์ตารางสำหรับแสดงสถิติตามจังหวัด
+/**
+ * คำอธิบาย: คอลัมน์ตารางสำหรับแสดงสถิติตามจังหวัด
  */
 const statsColumns: Column<DashboardStatsItem>[] = [
   {
@@ -71,8 +70,8 @@ const statsColumns: Column<DashboardStatsItem>[] = [
   },
 ];
 
-/*
- * คำอธิบาย : Interface สำหรับข้อมูลภูมิศาสตร์ของประเทศไทย
+/**
+ * คำอธิบาย: Interface สำหรับข้อมูลภูมิศาสตร์ของประเทศไทย
  */
 interface GeographyItem {
   provinceNameTh: string;
@@ -81,15 +80,15 @@ interface GeographyItem {
   postalCode: string;
 }
 
-/*
- * คำอธิบาย : ฟังก์ชันโหลดข้อมูลจังหวัดทั้งหมดในประเทศไทย
- * Input : ไม่มี
- * Output : Array ของจังหวัด (province names)
+/**
+ * คำอธิบาย: ฟังก์ชันโหลดข้อมูลจังหวัดทั้งหมดในประเทศไทย
+ * Input: -
+ * Output: Promise<string[]> Array ของจังหวัด (province names)
  */
 async function loadProvinces(): Promise<string[]> {
   try {
     const response = await axios.get(
-      "https://raw.githubusercontent.com/thailand-geography-data/thailand-geography-json/main/src/geography.json"
+      "https://raw.githubusercontent.com/thailand-geography-data/thailand-geography-json/main/src/geography.json",
     );
     const data: GeographyItem[] = response.data;
     const provincesSet = new Set<string>();
@@ -103,10 +102,12 @@ async function loadProvinces(): Promise<string[]> {
   }
 }
 
-/*
- * คำอธิบาย : Component หลักสำหรับหน้า "รายงาน"
+/**
+ * คำอธิบาย: Component หลักสำหรับหน้า "รายงาน"
  * ใช้จัดการ state ของข้อมูล Dashboard การโหลดข้อมูล
  * รวมถึงการแสดงข้อมูลสรุป กราฟ และสถิติ
+ * Input: -
+ * Output: JSX Element หน้า Dashboard
  */
 export default function DashboardPage() {
   // ====== state ข้อมูล ======
@@ -133,7 +134,7 @@ export default function DashboardPage() {
 
   const [calendarMode, setCalendarMode] = React.useState<"weekly" | "monthly" | "yearly">("weekly");
   const [dateRange, setDateRange] = React.useState<[Date | null, Date | null]>(() =>
-    getCurrentWeek()
+    getCurrentWeek(),
   );
   const [dateList, setDateList] = React.useState<Date[]>(() => {
     const [start, end] = getCurrentWeek();
@@ -149,7 +150,7 @@ export default function DashboardPage() {
   const [filterRegion, setFilterRegion] = React.useState<string>("all");
   const [selectedProvince, setSelectedProvince] = React.useState<string>("");
   const [provinceOptions, setProvinceOptions] = React.useState<{ value: string; label: string }[]>(
-    []
+    [],
   );
   const [pagination, setPagination] = React.useState<Pagination>({
     currentPage: 1,
@@ -167,14 +168,13 @@ export default function DashboardPage() {
       { label: "ภาคตะวันออกเฉียงเหนือ", value: "northeast" },
       { label: "ภาคใต้", value: "south" },
     ],
-    []
+    [],
   );
 
-  // ====== โหลดข้อมูลจังหวัด ======
-  /*
-   * คำอธิบาย : โหลดรายชื่อจังหวัดทั้งหมดของประเทศไทย
-   * Input : ไม่มี
-   * Output : อัพเดท provinceOptions
+  /**
+   * คำอธิบาย: โหลดรายชื่อจังหวัดทั้งหมดของประเทศไทย
+   * Input: -
+   * Output: - (Update provinceOptions state)
    */
   React.useEffect(() => {
     async function fetchProvinces() {
@@ -188,12 +188,11 @@ export default function DashboardPage() {
     fetchProvinces();
   }, []);
 
-
   // ====== Debounce search query ======
-  /*
-   * คำอธิบาย : หน่วงเวลา search query 1 วินาที
-   * Input : ไม่มี
-   * Output : อัพเดท debouncedSearchQuery เมื่อ searchQuery ไม่เปลี่ยนแปลงเป็นเวลา 1 วินาที
+  /**
+   * คำอธิบาย: หน่วงเวลา search query 1 วินาที
+   * Input: - (ใช้ searchQuery state)
+   * Output: - (Update debouncedSearchQuery state)
    */
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -206,10 +205,10 @@ export default function DashboardPage() {
   }, [searchQuery]);
 
   // ====== โหลดข้อมูล ======
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD (สำหรับ API)
-   * Input : date (Date | null) - วันที่ที่ต้องการแปลง
-   * Output : string - วันที่ในรูปแบบ YYYY-MM-DD หรือ string ว่างถ้า date เป็น null
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับแปลง Date เป็น string รูปแบบ YYYY-MM-DD (สำหรับ API)
+   * Input: date (Date | null) - วันที่ที่ต้องการแปลง
+   * Output: string - วันที่ในรูปแบบ YYYY-MM-DD หรือ string ว่างถ้า date เป็น null
    */
   const formatDateToString = (date: Date | null): string => {
     if (!date) return "";
@@ -219,10 +218,10 @@ export default function DashboardPage() {
     return `${year}-${month}-${day}`;
   };
 
-  /*
-   * คำอธิบาย : แปลงวันที่เป็นรูปแบบไทย (dd/mm/YYYY) โดยใช้ปี พ.ศ.
-   * Input : date (Date | null) - วันที่ที่ต้องการแปลง
-   * Output : string - วันที่ในรูปแบบ dd/mm/YYYY (ปี พ.ศ.) หรือ string ว่างถ้า date เป็น null
+  /**
+   * คำอธิบาย: แปลงวันที่เป็นรูปแบบไทย (dd/mm/YYYY) โดยใช้ปี พ.ศ.
+   * Input: date (Date | null) - วันที่ที่ต้องการแปลง
+   * Output: string - วันที่ในรูปแบบ dd/mm/YYYY (ปี พ.ศ.) หรือ string ว่างถ้า date เป็น null
    */
   const formatDateToThai = (date: Date | null): string => {
     if (!date) return "";
@@ -232,12 +231,10 @@ export default function DashboardPage() {
     return `${day}/${month}/${buddhistYear}`;
   };
 
-  /*
-   * คำอธิบาย : ดึงข้อมูล Dashboard จาก API
-   * Input : ไม่มี
-   * Output :
-   *    - อัพเดท state ของ dashboardData และ pagination
-   *    - หากเกิดข้อผิดพลาดจะเซ็ต errorMessage
+  /**
+   * คำอธิบาย: ดึงข้อมูล Dashboard จาก API
+   * Input: - (ใช้ filters จาก state)
+   * Output: - (Update dashboardData และ pagination state)
    */
   const fetchData = React.useCallback(async () => {
     const [startDate, endDate] = dateRange;
@@ -281,10 +278,10 @@ export default function DashboardPage() {
     debouncedSearchQuery,
   ]);
 
-  /*
-   * คำอธิบาย : จัดการเมื่อมีการเปลี่ยนแปลงวันที่จาก CalendarTrigger
-   * Input : result - ข้อมูลวันที่ที่เลือก (start, end, dates, mode)
-   * Output : อัพเดท state ของ dateRange และ dateList
+  /**
+   * คำอธิบาย: จัดการเมื่อมีการเปลี่ยนแปลงวันที่จาก CalendarTrigger
+   * Input: result (Object) - ข้อมูลวันที่ที่เลือก
+   * Output: - (Update dateRange, dateList, calendarMode state)
    */
   const handleCalendarChange = (result: {
     start: Date;
@@ -297,10 +294,10 @@ export default function DashboardPage() {
     setCalendarMode(result.mode);
   };
 
-  /*
-   * คำอธิบาย : สร้างและดาวน์โหลดไฟล์ PDF รายงานข้อมูลจังหวัด
-   * Input : ไม่มี (ใช้ข้อมูลจาก dashboardData และ dateRange)
-   * Output : สร้างและดาวน์โหลดไฟล์ PDF
+  /**
+   * คำอธิบาย: สร้างและดาวน์โหลดไฟล์ PDF รายงานข้อมูลจังหวัด
+   * Input: - (ใช้ dashboardData และ dateRange state)
+   * Output: Promise<void> - (Download PDF file)
    */
   const handlePrintReport = async () => {
     if (!dashboardData) return;
@@ -327,9 +324,7 @@ export default function DashboardPage() {
         },
         // Date Range
         {
-          text: `ช่วงวันที่: ${formatDateToThai(dateRange[0])} - ${formatDateToThai(
-            dateRange[1]
-          )}`,
+          text: `ช่วงวันที่: ${formatDateToThai(dateRange[0])} - ${formatDateToThai(dateRange[1])}`,
           style: "subheader",
           margin: [0, 0, 0, 20],
         },
@@ -377,7 +372,12 @@ export default function DashboardPage() {
               // Header row
               [
                 { text: "จังหวัด", style: "tableHeader", bold: true },
-                { text: "จำนวนวิสาหกิจชุมชน", style: "tableHeader", bold: true, alignment: "right" },
+                {
+                  text: "จำนวนวิสาหกิจชุมชน",
+                  style: "tableHeader",
+                  bold: true,
+                  alignment: "right",
+                },
                 { text: "จำนวนแพ็กเกจ", style: "tableHeader", bold: true, alignment: "right" },
                 { text: "การจองทั้งหมด", style: "tableHeader", bold: true, alignment: "right" },
                 { text: "การจองสำเร็จ", style: "tableHeader", bold: true, alignment: "right" },
@@ -395,8 +395,8 @@ export default function DashboardPage() {
             ],
           },
           layout: {
-            hLineWidth: function (i: number, node: any) {
-              if (i === 0 || i === node.table.body.length) return 1;
+            hLineWidth: function (lineIndex: number, node: any) {
+              if (lineIndex === 0 || lineIndex === node.table.body.length) return 1;
               return 0.5;
             },
             vLineWidth: function () {
@@ -448,35 +448,37 @@ export default function DashboardPage() {
       },
     };
 
-    pdfMake.createPdf(docDefinition as any).download(
-      `รายงานข้อมูลจังหวัด_${formatDateToThai(dateRange[0])}_${formatDateToThai(
-        dateRange[1]
-      )}.pdf`
-    );
+    pdfMake
+      .createPdf(docDefinition as any)
+      .download(
+        `รายงานข้อมูลจังหวัด_${formatDateToThai(dateRange[0])}_${formatDateToThai(
+          dateRange[1],
+        )}.pdf`,
+      );
   };
 
-  /*
-   * คำอธิบาย : ควบคุมการขยาย/ย่อของ Accordion
-   * Input : panel (string) — รหัสของ panel ที่ต้องการเปิด/ปิด
-   * Output : อัพเดท state expanded เพื่อควบคุมการเปิด/ปิด Accordion
+  /**
+   * คำอธิบาย: ควบคุมการขยาย/ย่อของ Accordion
+   * Input: panel (string) - รหัสของ panel ที่ต้องการเปิด/ปิด
+   * Output: - (Update expanded state)
    */
   const handleAccordionChange =
     (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) =>
       setExpanded(isExpanded ? panel : false);
 
-  /*
-   * คำอธิบาย : รีเซ็ต pagination เมื่อมีการเปลี่ยนแปลง filters
-   * Input : ไม่มี
-   * Output : อัพเดท currentPage เป็น 1
+  /**
+   * คำอธิบาย: รีเซ็ต pagination เมื่อมีการเปลี่ยนแปลง filters
+   * Input: -
+   * Output: - (Reset currentPage to 1)
    */
   React.useEffect(() => {
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
   }, [debouncedSearchQuery, filterRegion, selectedProvince, dateRange]);
 
-  /*
-   * คำอธิบาย : ดึงข้อมูลเมื่อมีการเปลี่ยนแปลง filters หรือ pagination
-   * Input : ไม่มี
-   * Output : ไม่มี
+  /**
+   * คำอธิบาย: ดึงข้อมูลเมื่อมีการเปลี่ยนแปลง filters หรือ pagination
+   * Input: -
+   * Output: - (Trigger fetchData)
    */
   React.useEffect(() => {
     fetchData();
@@ -485,11 +487,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 h-full">
       <div>
-        <Breadcrumb
+        <BreadcrumbNavigation
           current={{
             label: "รายงานและสถิติ",
             to: "/super/dashboard",
-            fromSidebar: true,
+            isFromSidebar: true,
           }}
         />
       </div>

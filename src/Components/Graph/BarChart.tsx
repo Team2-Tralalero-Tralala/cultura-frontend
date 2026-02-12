@@ -1,7 +1,6 @@
-/*
- * Component: Barchart
- * คำอธิบาย: Graph component สำหรับแสดงข้อมูลรายได้ของแพ็กเกจตามช่วงเวลา
- * ใช้ Chart.js กับ react-chartjs-2 ในการวาดกราฟชนิด ฺBar Chart
+/**
+ * คำอธิบาย: Component กราฟแท่งสำหรับแสดงสถิติรายได้ของแพ็กเกจตามช่วงเวลา
+ * ใช้ Chart.js กับ react-chartjs-2 ในการวาดกราฟชนิด Bar Chart
  */
 import React from "react";
 import {
@@ -32,11 +31,10 @@ export type BarChartProps = {
   className?: string;
   labelX?: string;
 };
-/*
- * Component: BarChart
- * คำอธิบาย : แสดงกราฟ Bar Chart พร้อม Area Fill สำหรับข้อมูลรายได้แพ็กเกจ
- * Input  : props { labels, data, title?, className?}
- * Output : JSX Element ของกราฟ
+/**
+ * คำอธิบาย: แสดงกราฟ Bar Chart พร้อม Area Fill สำหรับข้อมูลรายได้แพ็กเกจ
+ * Input: props { labels, data, title?, className?, labelX? }
+ * Output: JSX Element ของกราฟ
  */
 export const BarChart: React.FC<BarChartProps> = ({
   labels,

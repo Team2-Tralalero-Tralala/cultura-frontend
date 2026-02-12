@@ -1,0 +1,178 @@
+/**
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดบัญชีสมาชิก (Admin)
+ * โดยรองรับการแสดงรายละเอียดข้อมูลส่วนตัวและบทบาท
+ * และลิงก์ไปยังหน้าแก้ไขข้อมูลสมาชิก
+ */
+
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { SquarePen, ArrowLeft } from "lucide-react";
+import Button from "@/Components/Button";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+
+import { fetchMemberDetail } from "@/Libs/AccountService";
+import type { UserDetail } from "@/Types/User";
+
+/**
+ * คำอธิบาย: แปลง path รูปจาก backend เป็น URL
+ * Input: fileName (ชื่อไฟล์)
+ * Output: URL ของรูปภาพ
+ */
+function resolveBackendUploadUrl(fileName?: string): string | undefined {
+  if (!fileName) return undefined;
+  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  if (!fileName.startsWith("uploads/")) {
+    const cleaned = fileName.replace(/^\/+/, "");
+    return `${baseUrl}/uploads/${cleaned}`;
+  }
+  return `${baseUrl}/${fileName}`;
+}
+
+/**
+ * คำอธิบาย: จัดรูปแบบเบอร์โทรศัพท์ (###-###-####)
+ * Input: phone (เบอร์โทรศัพท์)
+ * Output: เบอร์โทรศัพท์ที่มีขีดคั่น หรือ "-" หากไม่มีข้อมูล
+ */
+function formatPhoneNumber(phone?: string | null): string {
+  if (!phone) return "-";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return phone;
+}
+
+/**
+ * คำอธิบาย: Component หน้าแสดงรายละเอียดบัญชีสมาชิก
+ */
+export default function DetailMemberPage() {
+  const navigate = useNavigate();
+  const { userId } = useParams<{ userId: string }>();
+  const [user, setUser] = useState<UserDetail | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  /**
+   * คำอธิบาย: โหลดข้อมูลสมาชิกจาก API
+   * Input: - (ใช้ userId จาก URL params)
+   * Output: - (อัปเดต state user)
+   */
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const data = await fetchMemberDetail(Number(userId));
+        setUser(data);
+      } catch (err: any) {
+        console.error("โหลดข้อมูลล้มเหลว:", err);
+        const status = err.response?.status;
+        if (status === 403 || status === 404) {
+          navigate("/admin/members");
+        } else {
+          setErrorMessage("ไม่สามารถโหลดข้อมูลได้");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [userId]);
+
+  if (isLoading) return <div className="p-8">กำลังโหลดข้อมูล...</div>;
+  if (errorMessage) return <div className="p-8 text-red-600">{errorMessage}</div>;
+  if (!user) return <div className="p-8">ไม่พบข้อมูลผู้ใช้</div>;
+
+  return (
+    <div className="flex justify-center w-full">
+      <div className="w-full px-6 md:px-0">
+        <Breadcrumb
+          current={{
+            label: "รายละเอียดสมาชิก",
+            to: `/admin/member/${userId}`,
+          }}
+        />
+
+        {/* Card */}
+        <div className="relative bg-white w-full rounded-2xl shadow-md p-6 md:p-10 mt-2">
+          <h1 className="flex items-center gap-2 text-[20px] font-bold text-black -mt-4">
+            <div 
+              className="flex items-center gap-2 cursor-pointer transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>รายละเอียดสมาชิก</span>
+            </div>
+          </h1>
+          {/* ส่วนปุ่มจัดการ */}
+          <div className="absolute top-6 right-6 flex items-center gap-3">
+            {/* ปุ่มแก้ไข */}
+            <div className="w-32">
+              <Button
+                type="confirm-admin"
+                onClick={() => navigate(`/admin/member/${userId}/edit`)}
+              >
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <SquarePen className="h-5 w-5" strokeWidth={2.1} />
+                  <span className="text-base">แก้ไข</span>
+                </div>
+              </Button>
+            </div>
+          </div>
+
+          {/* Profile + Info */}
+          <div className="flex flex-col md:flex-row justify-center items-center gap-24 mt-12 w-full">
+            {/* Profile Image */}
+            <div className="flex justify-center flex-1">
+              {user.profileImage ? (
+                <img
+                  src={resolveBackendUploadUrl(user.profileImage)}
+                  alt="Profile"
+                  className="rounded-full object-cover w-[300px] h-[300px] border border-gray-300 shadow-sm"
+                />
+              ) : (
+                <div className="w-[300px] h-[300px] rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 shadow-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    className="w-32 h-32 text-gray-400"
+                  >
+                    <path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.9v2.5h19.3v-2.5c0-3.3-6.4-4.9-9.7-4.9z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* User Info */}
+            <div className="flex-1">
+              <div className="space-y-3 text-lg text-slate-800 leading-relaxed">
+                <h2 className="text-[20px] font-bold text-black mb-3">รายละเอียดบัญชี</h2>
+
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">ชื่อ - นามสกุล :</span> {user.fname} {user.lname}
+                </p>
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">ชื่อผู้ใช้ :</span> {user.username}
+                </p>
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">อีเมล :</span> {user.email}
+                </p>
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">โทรศัพท์ :</span> {formatPhoneNumber(user.phone)}
+                </p>
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">Role :</span> {user.role?.name ?? "-"}
+                </p>
+                <p className="text-[16px] text-black font-normal">
+                  <span className="font-bold">ชุมชนวิสาหกิจ :</span>{" "}
+                  {user.communityAdmin?.[0]?.name ||
+                    user.communityMembers?.[0]?.Community?.name ||
+                    "-"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

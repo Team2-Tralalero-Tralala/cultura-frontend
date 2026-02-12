@@ -4,7 +4,7 @@
  * และสามารถรวมผู้ดูแลปัจจุบันของชุมชนเข้าในรายการได้โดยไม่ซ้ำ
  */
 
-import { getUnassignedAdmins } from "@/Services/community-service";
+import { getUnassignedAdmins } from "@/Libs/CommunityService";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useState, useEffect } from "react";
 
@@ -53,7 +53,7 @@ export function AdminSelector({
       try {
         setLoading(true);
         const res = await getUnassignedAdmins();
-        const unassigned = res.data.data as Admin[];
+        const unassigned = (res.data?.data || []) as Admin[];
 
         const merged = admin ? [admin, ...unassigned.filter((a) => a.id !== admin.id)] : unassigned;
 
@@ -68,7 +68,7 @@ export function AdminSelector({
     loadAdmins();
   }, [admin]);
 
-  const selectedAdmin = admins.find((a) => a.id === value) || admin || null;
+  const selectedAdmin = admins.find((admin) => admin.id === value) || admin || null;
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับสร้าง Input ที่ใช้ใน Autocomplete ของ MUI

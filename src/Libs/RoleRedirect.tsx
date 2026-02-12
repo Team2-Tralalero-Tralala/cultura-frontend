@@ -4,7 +4,7 @@
  */
 
 import { Navigate } from "react-router-dom";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./UseAuth";
 /*
  * ฟังก์ชัน : RoleRedirect
  * คำอธิบาย : ตรวจสอบ role ของผู้ใช้แล้ว redirect ไปยัง path ที่กำหนด

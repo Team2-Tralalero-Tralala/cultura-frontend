@@ -1,17 +1,18 @@
 /**
- * คำอธิบาย : หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Super Admin ทำหน้าที่จัดการฟอร์ม ตรวจสอบข้อมูล ยืนยัน และส่งข้อมูลแบบ multipart/form-data ไปยัง API
+ * คำอธิบาย: หน้า "เพิ่มที่พัก (รายการเดียว)" สำหรับ Super Admin
+ * หน้าที่: จัดการฟอร์ม ตรวจสอบข้อมูล ยืนยัน และส่งข้อมูลแบบ multipart/form-data ไปยัง API
  */
 import React from "react";
-import * as z from "zod";
+import * as zod from "zod";
 import axios from "axios";
 import { Icon } from "@iconify/react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import Button from "@/Components/Button";
-import TextField from "@/Components/TextField";
-import TextArea from "@/Components/TextArea";
+import TextField from "@/Components/Input/TextField";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
+import UploadCard from "@/Components/upload/UploadCard";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
@@ -60,29 +61,39 @@ const initialHomestay: HomestayForm = {
   placeQuery: "",
 };
 
-const homestaySchema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อที่พัก"),
-  type: z.string().min(1, "กรุณากรอกประเภทของที่พัก"),
-  facility: z.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
-  guestPerRoom: z
-    .string().min(1).refine((value) => Number(value) >= 1 && Number.isInteger(Number(value)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
-  totalRoom: z
-    .string().min(1).refine((value) => Number(value) >= 1 && Number.isInteger(Number(value)), "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป"),
-  houseNumber: z.string().min(1, "กรุณากรอกบ้านเลขที่"),
-  province: z.string().min(1, "กรุณาเลือกจังหวัด"),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล/แขวง"),
-  postalCode: z.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
-  addressDetail: z.string().optional().default(""),
-  placeQuery: z.string().optional().default(""),
+const homestaySchema = zod.object({
+  name: zod.string().min(1, "กรุณากรอกชื่อที่พัก"),
+  type: zod.string().min(1, "กรุณากรอกประเภทของที่พัก"),
+  facility: zod.string().min(1, "กรุณากรอกสิ่งอำนวยความสะดวก"),
+  guestPerRoom: zod
+    .string()
+    .min(1)
+    .refine(
+      (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+    ),
+  totalRoom: zod
+    .string()
+    .min(1)
+    .refine(
+      (value) => Number(value) >= 1 && Number.isInteger(Number(value)),
+      "ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+    ),
+  houseNumber: zod.string().min(1, "กรุณากรอกบ้านเลขที่"),
+  province: zod.string().min(1, "กรุณาเลือกจังหวัด"),
+  district: zod.string().min(1, "กรุณาเลือกอำเภอ/เขต"),
+  subDistrict: zod.string().min(1, "กรุณาเลือกตำบล/แขวง"),
+  postalCode: zod.string().min(1, "กรุณาเลือกรหัสไปรษณีย์"),
+  addressDetail: zod.string().optional().default(""),
+  placeQuery: zod.string().optional().default(""),
 });
 
 type HomestayFormErrors = Partial<Record<keyof HomestayForm, string>>;
 
 /**
- * คำอธิบาย : ฟังก์ชันสำหรับตัดช่องว่างและคืนค่า default หากเป็นค่าว่าง
- * Input : value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าเริ่มต้นถ้าเป็นค่าว่าง)
- * Output : ข้อมูล string ที่ผ่านการตัดช่องว่างแล้ว
+ * คำอธิบาย: ฟังก์ชันสำหรับตัดช่องว่างและคืนค่า default หากเป็นค่าว่าง
+ * Input: value (ค่าที่ต้องการตรวจสอบ), fallback (ค่าเริ่มต้นถ้าเป็นค่าว่าง, default = "")
+ * Output: ข้อมูล string ที่ผ่านการตัดช่องว่างแล้ว
  */
 function normalizeOrDefault(value: string, fallback = "") {
   const trimmed = (value ?? "").toString().trim();
@@ -113,20 +124,17 @@ if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
             (response as any).data.data = Array.isArray(tagList) ? tagList : [];
           }
         }
-      } catch {
-      }
+      } catch {}
       return response;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 }
 
 /**
- * Component: CreateHomestaysPage
- * หน้าที่:
- * - จัดการ state ของฟอร์มที่พัก 1 ชุด
- * - ตรวจสอบข้อมูล
- * - รวม payload และส่งขึ้น API ตาม communityId
+ * คำอธิบาย: Component สำหรับหน้าเพิ่มที่พัก
+ * Input: - (ใช้ Params communityId จาก URL)
+ * Output: JSX Element หน้า Form เพิ่มที่พัก
  */
 export default function CreateHomestaysPage() {
   const { communityId } = useParams();
@@ -137,9 +145,7 @@ export default function CreateHomestaysPage() {
   const [galleryFiles, setGalleryFiles] = React.useState<FileLike[]>([]);
   const [tagIds, setTagIds] = React.useState<number[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
-  const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(
-    null
-  );
+  const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   const [alertOpen, setAlertOpen] = React.useState(false);
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
@@ -147,8 +153,8 @@ export default function CreateHomestaysPage() {
   const [alertMessage, setAlertMessage] = React.useState("");
   /**
    * คำอธิบาย: อัปเดตฟิลด์ในฟอร์ม และ validate ฟิลด์นั้นทันที
-   * Input: key ของฟอร์ม, value ใหม่
-   * Output: -
+   * Input: key (keyof HomestayForm), value (any) - ข้อมูลที่ต้องการอัปเดต
+   * Output: - (Update form state)
    */
   function setField(key: keyof HomestayForm, value: any) {
     setForm((prevForm) => {
@@ -173,8 +179,8 @@ export default function CreateHomestaysPage() {
 
   /**
    * คำอธิบาย: ตรวจสอบข้อมูลฟอร์มทั้งหมด
-   * Input: -
-   * Output: boolean (true หากผ่าน, false หากไม่ผ่าน)
+   * Input: - (ใช้ form state)
+   * Output: boolean (true หากข้อมูลถูกต้องทั้งหมด, false หากมีข้อผิดพลาด)
    */
   function validateAll(): boolean {
     const result = homestaySchema.safeParse(form);
@@ -203,19 +209,18 @@ export default function CreateHomestaysPage() {
   }
 
   /**
-   * คำอธิบาย: handler สำหรับ MapPicker
-   * - อัปเดต latitude/longitude ในฟอร์ม (ไม่ validate ทันที)
+   * คำอธิบาย: handler สำหรับ MapPicker อัปเดต latitude/longitude ในฟอร์ม
+   * Input: position ([number, number]) - พิกัดละติจูดและลองจิจูด
+   * Output: - (Update form state)
    */
-  const onMapChange = React.useCallback(
-    (position: [number, number]) => {
-      const [latitude, longitude] = position;
-      setForm((prev) => ({
-        ...prev,
-        latitude: String(latitude),
-        longitude: String(longitude),
-      }));
-    }, []
-  );
+  const onMapChange = React.useCallback((position: [number, number]) => {
+    const [latitude, longitude] = position;
+    setForm((prev) => ({
+      ...prev,
+      latitude: String(latitude),
+      longitude: String(longitude),
+    }));
+  }, []);
 
 /**
    * ฟังก์ชันยืนยันการบันทึก (ทำงานเมื่อกดปุ่ม "ยืนยัน" ใน Modal)
@@ -436,8 +441,7 @@ export default function CreateHomestaysPage() {
                     setField("province", location.province ?? "");
                     setField("district", location.district ?? "");
                     setField("subDistrict", location.subdistrict ?? "");
-                    setField(
-                      "postalCode", (location.postalCode ?? "").toString());
+                    setField("postalCode", (location.postalCode ?? "").toString());
                   }}
                   error={{
                     province: !!errors.province,
@@ -449,7 +453,6 @@ export default function CreateHomestaysPage() {
                     district: errors.district,
                     subdistrict: errors.subDistrict,
                   }}
-
                 />
               </div>
 
@@ -474,25 +477,16 @@ export default function CreateHomestaysPage() {
                 onChange={onMapChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-2">
-                {!!errors.latitude && (
-                  <div className="text-red-600 text-sm">
-                    {errors.latitude}
-                  </div>
-                )}
+                {!!errors.latitude && <div className="text-red-600 text-sm">{errors.latitude}</div>}
                 {!!errors.longitude && (
-                  <div className="text-red-600 text-sm">
-                    {errors.longitude}
-                  </div>
+                  <div className="text-red-600 text-sm">{errors.longitude}</div>
                 )}
               </div>
             </div>
 
             {/* แท็ก */}
             <div className="md:col-span-2">
-              <TagSelector
-                value={tagIds}
-                onChange={setTagIds}
-              />
+              <TagSelector value={tagIds} onChange={setTagIds} />
             </div>
 
             {/* อัปโหลดรูป */}
@@ -558,13 +552,11 @@ export default function CreateHomestaysPage() {
             </div>
           </div>
         </section>
-
-
       </form>
 
       {/* Modal ยืนยัน */}
       <Modal
-        open={isConfirmOpen}
+        isOpen={isConfirmOpen}
         title="ยืนยันการสร้างที่พัก"
         text={`คุณต้องการยืนยันการสร้างที่พักหรือไม่`}
         confirmText="ยืนยัน"
@@ -578,7 +570,7 @@ export default function CreateHomestaysPage() {
 
       {/* Modal Alert */}
       <ModalAlert
-        open={alertOpen}
+        isOpen={alertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}

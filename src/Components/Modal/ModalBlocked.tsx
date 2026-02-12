@@ -8,7 +8,7 @@ import withReactContent from "sweetalert2-react-content";
 import { Icon } from "@iconify/react";
 
 type ModalBlockedProps = {
-  open: boolean; // true = เปิด modal
+  isOpen: boolean; // true = เปิด modal
   onClose?: () => void; // callback หลังผู้ใช้กดปุ่ม
   title?: string;
   text?: string;
@@ -18,7 +18,7 @@ type ModalBlockedProps = {
  * คำอธิบาย : Component Modal สำหรับแจ้งเตือนเมื่อบัญชีผู้ใช้ถูกระงับการใช้งาน
  * ใช้ SweetAlert2 (พร้อม sweetalert2-react-content) ในการ render popup
  * Input :
- *   - open (boolean)       : true = แสดง modal, false = ไม่แสดง
+ *   - isOpen (boolean)       : true = แสดง modal, false = ไม่แสดง
  *   - onClose? (function)  : callback หลัง modal ถูกปิด
  *   - title? (string)      : ข้อความหัวข้อ modal (default: "บัญชีของคุณถูกระงับการใช้งาน")
  *   - text? (string)       : ข้อความอธิบายใน modal
@@ -28,7 +28,7 @@ type ModalBlockedProps = {
  *   - เมื่อผู้ใช้กดปุ่ม → เรียก onClose()
  */
 const ModalBlocked: React.FC<ModalBlockedProps> = ({
-  open,
+  isOpen,
   onClose,
   title = "บัญชีของคุณถูกระงับการใช้งาน",
   text = "บัญชีนี้ถูกระงับการใช้งาน จึงไม่สามารถเข้าสู่ระบบได้",
@@ -37,7 +37,7 @@ const ModalBlocked: React.FC<ModalBlockedProps> = ({
   const MySwal = withReactContent(Swal);
 
   useEffect(() => {
-    if (!open) return;
+    if (!isOpen) return;
 
     void MySwal.fire({
       // ใช้ icon container ของ SweetAlert2 เพื่อให้วาง React node ได้
@@ -89,7 +89,7 @@ const ModalBlocked: React.FC<ModalBlockedProps> = ({
     }).then(() => {
       onClose?.();
     });
-  }, [open, MySwal, title, text, confirmText, onClose]);
+  }, [isOpen, MySwal, title, text, confirmText, onClose]);
 
   // ไม่ต้องเรนเดอร์อะไรใน DOM
   return null;

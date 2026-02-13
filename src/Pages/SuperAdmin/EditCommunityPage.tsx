@@ -8,7 +8,7 @@
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
 import * as React from "react";
-import { Link,useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -491,9 +491,11 @@ export function EditCommunityPage() {
       setIsAlertOpen(true);
       navigate("/super/communities/all");
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
+      setAlertMessage(errorMessage);
       setIsAlertOpen(true);
     }
   };

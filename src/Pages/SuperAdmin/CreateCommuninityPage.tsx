@@ -60,7 +60,9 @@ const communitySchema = zod.object({
 
   accountName: zod.string("กรุณากรอกชื่อบัญชีธนาคาร").min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
 
-  accountNumber: zod.number("กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข").min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: zod
+    .number("กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข")
+    .min(1, "กรุณากรอกหมายเลขบัญชี"),
 
   description: zod.string("กรุณากรอกประวัติวิสาหกิจชุมชน").min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
 
@@ -404,9 +406,11 @@ export default function CreateCommuninityPage() {
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
       navigate("/super/communities/all");
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
+      setAlertMessage(errorMessage);
       setAlertOpen(true);
     }
   };

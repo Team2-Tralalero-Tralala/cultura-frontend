@@ -258,7 +258,7 @@ export const EditPackagePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -284,8 +284,8 @@ export const EditPackagePage = () => {
   const validateField = React.useCallback(
     (field: keyof PackageForm, value: any, newState: PackageForm) => {
       const result = packageSchema.safeParse(newState);
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         [field]: result.success
           ? undefined
           : result.error.issues.find((issue) => issue.path[0] === field)?.message,
@@ -313,44 +313,44 @@ export const EditPackagePage = () => {
       setFormErrors({});
     }
     if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
       }));
       isValid = false;
     }
     if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
       }));
       isValid = false;
     }
     if (selectedHomestay) {
       if (!homestayCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
         }));
         isValid = false;
       }
       if (!homestayCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
         }));
         isValid = false;
       }
       if (!homestayCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
         }));
         isValid = false;
       }
       if (!homestayCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
         }));
         isValid = false;
@@ -498,8 +498,8 @@ export const EditPackagePage = () => {
    */
   const setFormField = React.useCallback(
     <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
-      setFormState((prev) => {
-        const newState = { ...prev, [key]: value };
+      setFormState((previousState) => {
+        const newState = { ...previousState, [key]: value };
         validateField(key, value, newState);
         return newState;
       });
@@ -762,7 +762,7 @@ export const EditPackagePage = () => {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ครบถ้วน");
       setAlertMessage(errorMessage);
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -826,7 +826,7 @@ export const EditPackagePage = () => {
       setAlertType("success");
       setAlertTitle("บันทึกแพ็กเกจสำเร็จ");
       setAlertMessage("ข้อมูลแพ็กเกจถูกแก้ไขเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
 
     } catch (error: any) {
       console.error(error);
@@ -839,7 +839,7 @@ export const EditPackagePage = () => {
         error?.message ||
         "บันทึกแพ็กเกจไม่สำเร็จ"
       );
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -956,9 +956,9 @@ export const EditPackagePage = () => {
                   postalCode: formState.postalCode,
                 }}
                 onChange={(location: ThailandLocation) => {
-                  setFormState((prev) => {
+                  setFormState((previousState) => {
                     const newState = {
-                      ...prev,
+                      ...previousState,
                       province: location.province ?? "",
                       district: location.district ?? "",
                       subDistrict: location.subdistrict ?? "",
@@ -1453,12 +1453,12 @@ export const EditPackagePage = () => {
 
       {/* เพิ่ม ModalAlert */}
       <ModalAlert
-        isOpen={alertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertOpen(false);
+          setIsAlertOpen(false);
           if (alertType === "success") {
             navigate("/super/packages/all");
           }

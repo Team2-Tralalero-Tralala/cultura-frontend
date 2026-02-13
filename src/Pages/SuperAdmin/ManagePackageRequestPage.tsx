@@ -138,7 +138,7 @@ export function ManagePackageRequestPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState<boolean>(false);
   const [selectedRow, setSelectedRow] = React.useState<PackageRequestRow | null>(null);
 
   /**
@@ -246,7 +246,7 @@ export function ManagePackageRequestPage() {
 
         <div className="flex items-center gap-2 w-full">
           <div className="w-[260px]">
-            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
           </div>
         </div>
       </div>

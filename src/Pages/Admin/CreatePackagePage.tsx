@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) รองรับการกรอกข้อมูลแพ็กเกจ อัปโหลดรูปภาพ/วิดีโอ และเลือกที่พัก
+ * คำอธิบาย: หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) รองรับการกรอกข้อมูลแพ็กเกจ อัปโหลดรูปภาพ/วิดีโอ และเลือกที่พัก
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -151,9 +151,9 @@ export const CreatePackagePage = () => {
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
   const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -178,8 +178,8 @@ export const CreatePackagePage = () => {
   const validateField = React.useCallback(
     (field: keyof PackageForm, value: any, newState: PackageForm) => {
       const result = packageSchema.safeParse(newState);
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         [field]: result.success
           ? undefined
           : result.error.issues.find((issue) => issue.path[0] === field)?.message,
@@ -207,44 +207,44 @@ export const CreatePackagePage = () => {
       setFormErrors({});
     }
     if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
       }));
       isValid = false;
     }
     if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
       }));
       isValid = false;
     }
     if (selectedHomestay) {
       if (!homestayCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
         }));
         isValid = false;
       }
       if (!homestayCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
         }));
         isValid = false;
       }
       if (!homestayCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
         }));
         isValid = false;
       }
       if (!homestayCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
         }));
         isValid = false;
@@ -380,8 +380,8 @@ export const CreatePackagePage = () => {
    */
   const setFormField = React.useCallback(
     <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
-      setFormState((prev) => {
-        const newState = { ...prev, [key]: value };
+      setFormState((previousState) => {
+        const newState = { ...previousState, [key]: value };
         validateField(key, value, newState);
         return newState;
       });
@@ -443,7 +443,7 @@ export const CreatePackagePage = () => {
     // ตรวจสอบตามสถานะแพ็กเกจ
     if (formState.statusPackage === "DRAFT") {
       if (!formState.name.trim()) {
-        setFormErrors((prev) => ({ ...prev, name: "กรุณากรอกชื่อแพ็กเกจ" }));
+        setFormErrors((previousState) => ({ ...previousState, name: "กรุณากรอกชื่อแพ็กเกจ" }));
         isValid = false;
       }
     } else {
@@ -465,7 +465,7 @@ export const CreatePackagePage = () => {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ครบถ้วน");
       setAlertMessage(errorMessage);
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -527,7 +527,7 @@ export const CreatePackagePage = () => {
       setAlertType("success");
       setAlertTitle("สร้างแพ็กเกจสำเร็จ");
       setAlertMessage("ข้อมูลแพ็กเกจถูกบันทึกเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
 
     } catch (error: any) {
       console.error("Save package error:", error);
@@ -535,7 +535,7 @@ export const CreatePackagePage = () => {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -659,9 +659,9 @@ export const CreatePackagePage = () => {
                   subdistrict: formErrors.subDistrict,
                 }}
                 onChange={(location: ThailandLocation) => {
-                  setFormState((prev) => {
+                  setFormState((previousState) => {
                     const newState = {
-                      ...prev,
+                      ...previousState,
                       province: location.province ?? "",
                       district: location.district ?? "",
                       subDistrict: location.subdistrict ?? "",
@@ -1110,12 +1110,12 @@ export const CreatePackagePage = () => {
       />
 
       <ModalAlert
-        isOpen={alertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertOpen(false);
+          setIsAlertOpen(false);
           if (alertType === "success") {
             navigate("/admin/packages/all");
           }

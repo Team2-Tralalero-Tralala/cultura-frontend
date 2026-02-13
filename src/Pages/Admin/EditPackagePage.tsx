@@ -255,7 +255,7 @@ export const EditPackagePage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -755,7 +755,7 @@ export const EditPackagePage = () => {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ครบถ้วน");
       setAlertMessage(errorMessage);
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -819,7 +819,7 @@ export const EditPackagePage = () => {
       setAlertType("success");
       setAlertTitle("บันทึกแพ็กเกจสำเร็จ");
       setAlertMessage("ข้อมูลแพ็กเกจถูกแก้ไขเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
 
     } catch (error: any) {
       console.error(error);
@@ -832,7 +832,7 @@ export const EditPackagePage = () => {
         error?.message ||
         "บันทึกแพ็กเกจไม่สำเร็จ"
       );
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -1455,12 +1455,12 @@ export const EditPackagePage = () => {
       />
 
       <ModalAlert
-        isOpen={alertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertOpen(false);
+          setIsAlertOpen(false);
           if (alertType === "success") {
             navigate("/admin/packages/all");
           }

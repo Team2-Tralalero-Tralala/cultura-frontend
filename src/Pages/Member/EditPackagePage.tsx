@@ -266,8 +266,8 @@ export function EditPackagePage() {
   const [endDateObj, setEndDateObj] = useState<Date | null>(null);
   const [openDateObj, setOpenDateObj] = useState<Date | null>(null);
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
-  const [hsCheckInDateObj, setHsCheckInDateObj] = useState<Date | null>(null);
-  const [hsCheckOutDateObj, setHsCheckOutDateObj] = useState<Date | null>(null);
+  const [homestayCheckInDate, setHomestayCheckInDateObj] = useState<Date | null>(null);
+  const [homestayCheckOutDate, setHomestayCheckOutDateObj] = useState<Date | null>(null);
   const [originalStatus, setOriginalStatus] = useState<PackageStatus | null>(null);
 
   /**
@@ -526,10 +526,10 @@ export function EditPackagePage() {
    */
   const clearHomestay = () => {
     setSelectedHomestay(null);
-    setHsCheckInDateObj(null);
+    setHomestayCheckInDateObj(null);
     setHsCheckInDate("");
     setHsCheckInTime("");
-    setHsCheckOutDateObj(null);
+    setHomestayCheckOutDateObj(null);
     setHsCheckOutDate("");
     setHsCheckOutTime("");
     setHsBookedRoom("1");
@@ -690,13 +690,13 @@ export function EditPackagePage() {
         }
         if (homestayHistory?.checkInTime) {
           const checkInDateObject = new Date(homestayHistory.checkInTime);
-          setHsCheckInDateObj(!isNaN(checkInDateObject.getTime()) ? checkInDateObject : null);
+          setHomestayCheckInDateObj(!isNaN(checkInDateObject.getTime()) ? checkInDateObject : null);
           setHsCheckInDate(toDateOnly(homestayHistory.checkInTime));
           setHsCheckInTime(toTimeInput(homestayHistory.checkInTime));
         }
         if (homestayHistory?.checkOutTime) {
           const checkOutDateObject = new Date(homestayHistory.checkOutTime);
-          setHsCheckOutDateObj(!isNaN(checkOutDateObject.getTime()) ? checkOutDateObject : null);
+          setHomestayCheckOutDateObj(!isNaN(checkOutDateObject.getTime()) ? checkOutDateObject : null);
           setHsCheckOutDate(toDateOnly(homestayHistory.checkOutTime));
           setHsCheckOutTime(toTimeInput(homestayHistory.checkOutTime));
         }
@@ -704,9 +704,9 @@ export function EditPackagePage() {
           setHsBookedRoom(String(homestayHistory.bookedRoom));
         }
       } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        const errors = error as { response?: { data?: { message?: string } }; message?: string };
         setErrorMessage(
-          err?.response?.data?.message ?? err?.message ?? "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
+          errors?.response?.data?.message ?? errors?.message ?? "ไม่สามารถโหลดข้อมูลแพ็กเกจ",
         );
       } finally {
         if (mounted) setIsLoading(false);
@@ -1309,9 +1309,9 @@ export function EditPackagePage() {
                 <BoxDateInput
                   id="hsCheckInDate"
                   label="วัน/เดือน/ ปี (พ.ศ.) ที่เช็กอินที่พัก"
-                  value={hsCheckInDateObj}
+                  value={homestayCheckInDate}
                   onChange={(date) => {
-                    setHsCheckInDateObj(date);
+                    setHomestayCheckInDateObj(date);
                     if (date) {
                       setHsCheckInDate(date.toISOString().split("T")[0]);
                     } else {
@@ -1331,9 +1331,9 @@ export function EditPackagePage() {
                 <BoxDateInput
                   id="hsCheckOutDate"
                   label="วัน/เดือน/ ปี (พ.ศ.) ที่เช็กเอาท์"
-                  value={hsCheckOutDateObj}
+                  value={homestayCheckOutDate}
                   onChange={(date) => {
-                    setHsCheckOutDateObj(date);
+                    setHomestayCheckOutDateObj(date);
                     if (date) {
                       setHsCheckOutDate(date.toISOString().split("T")[0]);
                     } else {

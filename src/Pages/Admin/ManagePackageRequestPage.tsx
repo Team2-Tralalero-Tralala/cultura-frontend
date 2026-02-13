@@ -70,12 +70,12 @@ const createPackageRequestColumns = (
     key: "name",
     header: "ชื่อแพ็กเกจ",
     className: "min-w-[220px]",
-    render: (r) => (
+    render: (request) => (
       <Link
-        to={`/admin/package-requests/${r.id}`}
+        to={`/admin/package-requests/${request.id}`}
         className="font-medium text-dark-green hover:underline focus:underline"
       >
-        {r.name}
+        {request.name}
       </Link>
     ),
   },
@@ -83,37 +83,37 @@ const createPackageRequestColumns = (
     key: "community",
     header: "ชื่อชุมชน",
     className: "min-w-[220px]",
-    render: (r) => <div>{r.community.name}</div>,
+    render: (request) => <div>{request.community.name}</div>,
   },
   {
     key: "overseer",
     header: "ผู้ดูแล",
     className: "min-w-[160px]",
-    render: (r) => <div>{r.overseer.username}</div>,
+    render: (request) => <div>{request.overseer.username}</div>,
   },
   {
     key: "statusApprove",
     header: "สถานะคำขอ",
-    render: (r) => <div>{getThaiApprovalStatus(r.statusApprove)}</div>,
+    render: (request) => <div>{getThaiApprovalStatus(request.statusApprove)}</div>,
   },
   {
     key: "actions",
     header: "จัดการ",
     className: "w-[160px] text-left pr-3",
-    render: (r) => {
-      const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
+    render: (request) => {
+      const approved = String(request.statusApprove).toUpperCase() === "APPROVE";
       return (
         <div className="flex items-center justify-end gap-2 pr-2">
           {!approved && (
             <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="cancel" onClick={() => onReject(r)}>
+              <Button type="cancel" onClick={() => onReject(request)}>
                 ปฏิเสธ
               </Button>
             </div>
           )}
           {!approved && (
             <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin" onClick={() => onApprove(r)}>
+              <Button type="confirm-admin" onClick={() => onApprove(request)}>
                 อนุมัติ
               </Button>
             </div>
@@ -178,8 +178,8 @@ export default function ManagePackageRequestPage() {
           limit: pageSize,
         },
       );
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -212,8 +212,8 @@ export default function ManagePackageRequestPage() {
       setIsLoading(true);
       await approvePackageRequestForAdmin(row.id);
       await reload();
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "ไม่สามารถอนุมัติได้");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "ไม่สามารถอนุมัติได้");
       setIsLoading(false);
     }
   };
@@ -272,7 +272,7 @@ export default function ManagePackageRequestPage() {
         <div className="flex items-center justify-between w-full">
           {/* ฝั่งซ้าย: ช่องค้นหา */}
           <div className="w-[260px]">
-            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <SearchBarTable value={searchQuery} onChange={(error) => setSearchQuery(error.target.value)} />
           </div>
 
           {/* ฝั่งขวา: ปุ่มเพิ่มแพ็กเกจ (ย้ายมาตรงนี้) */}
@@ -296,7 +296,7 @@ export default function ManagePackageRequestPage() {
       <DataTable<PackageRequestRow>
         data={rows}
         columns={createPackageRequestColumns(openApproveModal, openRejectModal)}
-        getKey={(r: PackageRequestRow) => String(r.id)}
+        getKey={(request: PackageRequestRow) => String(request.id)}
         selectable={false}
         theme="brand"
         isLoading={isLoading}
@@ -307,9 +307,9 @@ export default function ManagePackageRequestPage() {
           totalCount: pagination.totalCount,
           limit: pagination.limit,
         }}
-        onPageChange={(p) => setCurrentPage(p)}
-        onPageSizeChange={(s) => {
-          setPageSize(s);
+        onPageChange={(page) => setCurrentPage(page)}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
           setCurrentPage(1);
         }}
       />
@@ -355,8 +355,8 @@ export default function ManagePackageRequestPage() {
               setIsLoading(true);
               await rejectPackageRequestForAdmin(selectedRow.id, reason);
               await reload();
-            } catch (e: any) {
-              setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");
+            } catch (error: any) {
+              setErrorMessage(error?.message ?? "ไม่สามารถปฏิเสธได้");
             } finally {
               setIsLoading(false);
               setRejectOpen(false);

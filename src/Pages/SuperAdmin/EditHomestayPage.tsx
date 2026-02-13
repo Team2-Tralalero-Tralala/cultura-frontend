@@ -177,7 +177,7 @@ export default function EditHomestayPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [isConfirmOpen, setConfirmOpen] = React.useState(false);
-  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
@@ -266,12 +266,12 @@ export default function EditHomestayPage() {
               .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(currentTagIds);
-      } catch (err: any) {
-        console.error("Load homestay error:", err?.response?.data || err);
+      } catch (error: any) {
+        console.error("Load homestay error:", error?.response?.data || error);
         setErrorMessage(
-          err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            err?.message ||
+          error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            error?.message ||
             "โหลดข้อมูลไม่สำเร็จ",
         );
       } finally {
@@ -288,8 +288,8 @@ export default function EditHomestayPage() {
   const validateField = (key: keyof HomestayForm, value: any) => {
     const formWithNewValue = { ...form, [key]: value };
     const validationResult = schema.safeParse(formWithNewValue);
-    setFormErrors((prev) => ({
-      ...prev,
+    setFormErrors((previousState) => ({
+      ...previousState,
       [key]: validationResult.success
         ? undefined
         : validationResult.error.issues.find((issue) => issue.path[0] === key)?.message,
@@ -324,7 +324,7 @@ export default function EditHomestayPage() {
     key: FieldKey,
     value: HomestayForm[FieldKey],
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((previousState) => ({ ...previousState, [key]: value }));
     validateField(key, value);
   };
 
@@ -379,7 +379,7 @@ export default function EditHomestayPage() {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ครบถ้วน");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -426,7 +426,7 @@ export default function EditHomestayPage() {
       setAlertType("success");
       setAlertTitle("แก้ไขที่พักสำเร็จ");
       setAlertMessage("ข้อมูลที่พักถูกแก้ไขเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
 
     } catch (error: any) {
       console.error("Update homestay error:", error?.response?.data || error);
@@ -434,7 +434,7 @@ export default function EditHomestayPage() {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -564,8 +564,8 @@ export default function EditHomestayPage() {
                     postalCode: form.postalCode,
                   }}
                   onChange={(location: ThailandLocation) => {
-                    setForm((prev) => ({
-                      ...prev,
+                    setForm((previousState) => ({
+                      ...previousState,
                       province: location.province ?? "",
                       district: location.district ?? "",
                       subDistrict: location.subdistrict ?? "",
@@ -720,12 +720,12 @@ export default function EditHomestayPage() {
 
       {/* Modal Alert */}
       <ModalAlert
-        isOpen={alertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
         onClose={() => {
-          setAlertOpen(false);
+          setIsAlertOpen(false);
           if (alertType === "success") {
             if (communityId) navigate(`/super/community/${communityId}/homestay/all`);
             else navigate(-1);

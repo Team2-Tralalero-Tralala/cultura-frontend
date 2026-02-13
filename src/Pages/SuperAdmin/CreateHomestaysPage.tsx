@@ -147,7 +147,7 @@ export default function CreateHomestaysPage() {
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
   const [pendingPayloads, setPendingPayloads] = React.useState<any[] | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
@@ -236,7 +236,7 @@ export default function CreateHomestaysPage() {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ครบถ้วน");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       return;
     }
     try {
@@ -295,7 +295,7 @@ export default function CreateHomestaysPage() {
       setAlertType("success");
       setAlertTitle("สร้างที่พักสำเร็จ");
       setAlertMessage("ข้อมูลที่พักถูกบันทึกเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
 
       navigate(`/super/community/${communityId}/homestay/all`);
 
@@ -303,7 +303,7 @@ export default function CreateHomestaysPage() {
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
       setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
     } finally {
       setIsSaving(false);
       setPendingPayloads(null);
@@ -570,11 +570,11 @@ export default function CreateHomestaysPage() {
 
       {/* Modal Alert */}
       <ModalAlert
-        isOpen={alertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
-        onClose={() => setAlertOpen(false)}
+        onClose={() => setIsAlertOpen(false)}
       />
     </div>
   );

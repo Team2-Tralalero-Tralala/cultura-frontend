@@ -7,6 +7,7 @@
  * ใช้ร่วมกับ Service สำหรับจัดการการเปิด/ปิดระบบ
  */
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Modal } from "@/Components/Modal/Modal";
 import { fetchServerStatus } from "@/Libs/ServerStatusService";
 import { disableSystem, enableSystem } from "@/Libs/SystemToggleService";
 import { Icon } from "@iconify/react";
@@ -21,6 +22,8 @@ import React from "react";
 export function ToggleSystemPage() {
   // ====== state ======
   const [isServerOnline, setIsServerOnline] = React.useState<boolean>(true);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false);
+  const [pendingAction, setPendingAction] = React.useState<"enable" | "disable" | null>(null);
 
   /*
    * คำอธิบาย : ดึงสถานะปัจจุบันของระบบจาก API
@@ -63,6 +66,27 @@ export function ToggleSystemPage() {
   const handleTurnOffSystem = async () => {
     const result = await disableSystem();
     setIsServerOnline(result.data.serverOnline);
+  };
+
+  const openConfirmModal = (action: "enable" | "disable") => {
+    setPendingAction(action);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (pendingAction === "enable") {
+      await handleTurnOnSystem();
+    } else if (pendingAction === "disable") {
+      await handleTurnOffSystem();
+    }
+
+    setIsConfirmModalOpen(false);
+    setPendingAction(null);
+  };
+
+  const handleCancelAction = () => {
+    setIsConfirmModalOpen(false);
+    setPendingAction(null);
   };
 
   React.useEffect(() => {
@@ -123,7 +147,7 @@ export function ToggleSystemPage() {
             <div className="flex gap-4">
               {!isServerOnline ? (
                 <button
-                  onClick={handleTurnOnSystem}
+                  onClick={() => openConfirmModal("enable")}
                   className="px-6 py-3 rounded-lg shadow-lg bg-white text-black flex items-center gap-3 cursor-pointer"
                 >
                   <Icon icon="mingcute:power-fill" className="w-5 h-5" />
@@ -131,7 +155,7 @@ export function ToggleSystemPage() {
                 </button>
               ) : (
                 <button
-                  onClick={handleTurnOffSystem}
+                  onClick={() => openConfirmModal("disable")}
                   className="px-6 py-3 rounded-lg shadow-lg bg-white text-black flex items-center gap-3 cursor-pointer"
                 >
                   <Icon icon="mingcute:power-fill" className="w-5 h-5" />
@@ -142,6 +166,16 @@ export function ToggleSystemPage() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={isConfirmModalOpen}
+        title={pendingAction === "enable" ? "ยืนยันการเปิดระบบ" : "ยืนยันการปิดระบบ"}
+        text={pendingAction === "enable" ? "คุณต้องการยืนยันการเปิดระบบหรือไม่" : "คุณต้องการยืนยันการปิดระบบหรือไม่"}
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+      />
     </div>
   );
 }

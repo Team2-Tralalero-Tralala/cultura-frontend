@@ -11,10 +11,32 @@ export interface BookingHistoryItem {
 }
 export interface TouristBookingHistory {
   id: number;
+  packageId: number;
   bookingAt: string;
   status: string;
   totalParticipant: number;
+  isParticipate: boolean;
   rejectReason: string;
+  touristRejectReason: string;
+  feedbacks: {
+    id: number;
+    rating: number;
+    message: string;
+    createdAt: string;
+    responder?: {
+      id: number;
+      fname: string;
+      lname: string;
+      profileImage: string | null;
+    } | null;
+    replyMessage?: string | null;
+    replyAt?: string | null;
+    feedbackImages?: {
+      id: number;
+      feedbackId: number;
+      image: string;
+    }[];
+  }[];
   package: {
     name: string;
     price: number;

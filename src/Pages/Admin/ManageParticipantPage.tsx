@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import DataTable from "@/Components/Tables/DataTable";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
@@ -122,6 +122,7 @@ export default function ManageParticipantPage() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const params = useParams();
+  const navigate = useNavigate()
 
   /**
    * คำอธิบาย: ดึงข้อมูลบัญชีผู้ใช้ทั้งหมดจาก API
@@ -279,13 +280,13 @@ export default function ManageParticipantPage() {
           />
         </div>
         <div className="flex justify-between items-center mb-3">
-          <Link
-            to={`/super/community/${params.communityId}`}
-            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+          <div 
+            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green" 
+            onClick={() => navigate(-1)}
           >
             <Icon icon="lucide:arrow-left" className="w-5 h-5" />
             <h1 className="text-xl font-bold">รายชื่อผู้จอง</h1>
-          </Link>
+          </div>
         </div>
 
         <div className="flex items-center justify-between w-full mt-2">

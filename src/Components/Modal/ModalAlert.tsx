@@ -12,6 +12,7 @@ interface ModalAlertProps {
   type?: "success" | "error" | "info" | "warning";
   title?: string;
   message?: string;
+  role?: "tourist" | "admin";
   onClose: () => void;
 }
 
@@ -32,6 +33,7 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
   type = "info",
   title = "Alert",
   message = "",
+  role = "admin",
   onClose,
 }) => {
   const MySwal = withReactContent(Swal);
@@ -56,12 +58,16 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
           style={{
             color:
               type === "success"
-                ? "#004D2C"
+                ? role === "tourist"
+                  ? "#00BF6A"
+                  : "#004D2C"
                 : type === "error"
                   ? "#D92D20"
                   : type === "warning"
                     ? "#E9A100"
-                    : "#004D2C",
+                    : role === "tourist"
+                      ? "#00BF6A"
+                      : "#004D2C",
           }}
         />
       ),
@@ -82,8 +88,11 @@ export const ModalAlert: React.FC<ModalAlertProps> = ({
         title: "text-3xl font-semibold text-gray-800 mt-2 mb-2",
         htmlContainer: "text-lg text-gray-600 mb-6",
         actions: "mt-4 flex justify-center gap-4",
-        confirmButton:
-          "w-[120px] py-2.5 text-lg rounded-lg bg-[#004D2C] text-white hover:bg-[#003c22] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#004D2C]",
+        confirmButton: `w-[120px] py-2.5 text-lg rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+          role === "tourist"
+            ? "bg-[#00BF6A] hover:bg-[#008f4d] focus:ring-[#00BF6A]"
+            : "bg-[#004D2C] hover:bg-[#003c22] focus:ring-[#004D2C]"
+        }`,
         icon: "!border-0 !bg-transparent !shadow-none !w-auto !h-auto p-0",
       },
 

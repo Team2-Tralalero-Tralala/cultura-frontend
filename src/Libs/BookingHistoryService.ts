@@ -12,11 +12,16 @@
  */
 
 import type { BookingHistoryItem, TouristBookingHistory } from "../Types/BookingHistory";
-import type { BookingAdminDtoFromApi, Pagination, BookingRow, PaginationMember, BookingMemberDtoFromApi} from "@/Types/Booking";
+import type {
+  BookingAdminDtoFromApi,
+  Pagination,
+  BookingRow,
+  PaginationMember,
+  BookingMemberDtoFromApi,
+} from "@/Types/Booking";
 import axios from "axios";
 import api from "@/Libs/Api";
 const apiUrl = import.meta.env.VITE_API_URL;
-
 
 /**
  * ดึงประวัติการจองตามสิทธิ์ของผู้ใช้
@@ -65,7 +70,7 @@ export async function fetchBookingsByAdmin(
   page = 1,
   limit = 10,
   search = "",
-  status = "all"
+  status = "all",
 ): Promise<{
   data: BookingAdminDtoFromApi[];
   pagination: Pagination;
@@ -87,7 +92,6 @@ export async function fetchBookingsByAdmin(
     },
   };
 }
-
 
 /**
  * ฟังก์ชัน : updateBookingStatus
@@ -131,7 +135,7 @@ export async function fetchBookingsByMember(
   page = 1,
   limit = 10,
   search = "",
-  status = "all"
+  status = "all",
 ): Promise<{
   data: BookingMemberDtoFromApi[];
   pagination: PaginationMember;
@@ -145,10 +149,10 @@ export async function fetchBookingsByMember(
   return {
     data: (payload.data ?? []) as BookingMemberDtoFromApi[],
     pagination: (payload.pagination ?? {
-        currentPage: 1,
-        totalPages: 1,
-        totalCount: 0,
-        limit,
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0,
+      limit,
     }) as PaginationMember,
   };
 }
@@ -300,4 +304,23 @@ export async function getBookingsByTourist(
       limit,
     },
   };
+}
+
+/**
+ * คำอธิบาย : ยกเลิกการจองสำหรับนักท่องเที่ยว
+ * Input : bookingId, reason
+ * Output : void
+ */
+export async function cancelBookingByTourist(bookingId: number, touristRejectReason: string) {
+  await api.post(`/tourist/booking-history/${bookingId}/cancel`, { touristRejectReason });
+}
+
+/**
+ * คำอธิบาย : ดึงข้อมูลประวัติการจองระบุ ID ของนักท่องเที่ยว (Tourist)
+ * Input : bookingId
+ * Output : TouristBookingHistory
+ */
+export async function getTouristBookingById(id: number): Promise<TouristBookingHistory> {
+  const res = await api.get(`/tourist/booking-history/${id}`);
+  return res.data.data;
 }

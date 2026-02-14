@@ -30,6 +30,7 @@ import CommunityDetailUser from "./Pages/Tourist/DetailCommunityPage";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 import ForgetPasswordPage from "./Pages/Tourist/ForgetPasswordPage";
+import CancelBookingPage from "./Pages/Tourist/CancelBookingPage";
 
 function App() {
   return (
@@ -58,6 +59,14 @@ function App() {
         <Route
           path="/tourist/booking-history/:bookingId/feedback"
           element={<CreateFeedbackPage />}
+        />
+        <Route
+          path="/tourist/cancel/booking/:bookingId"
+          element={
+            <ProtectedRoute allow={["tourist"]} redirectTo="/guest/login">
+              <CancelBookingPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/tourist/booking/package/:packageId/summary"

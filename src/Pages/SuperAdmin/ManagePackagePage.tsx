@@ -215,7 +215,7 @@ export function ManagePackagePage() {
         id: "bulk-delete",
         label: "ลบทั้งหมด",
         icon: TrashIcon,
-        intent: "danger",
+        intent: "neutral",
         onClick: (selectedPackageRows) => {
           setPackagesToBulkDelete(selectedPackageRows);
           setIsDeleteModalOpen(true);
@@ -373,7 +373,7 @@ export function ManagePackagePage() {
         bulkActions={bulkActions}
         selectable
         pagination={pagination}
-        pageSizeOptions={[10, 20, 50]}
+        pageSizeOptions={[10, 30, 50]}
         onPageChange={(page) => setCurrentPage(page)}
         onPageSizeChange={(size) => {
           setPageSize(size);
@@ -386,8 +386,8 @@ export function ManagePackagePage() {
       {/* Modal สำหรับยืนยันการลบ */}
       <Modal
         isOpen={isDeleteModalOpen}
-        title="ยืนยันการลบ"
-        text={`คุณต้องการลบแพ็กเกจ "${packageToDelete?.title ?? ""}" ใช่หรือไม่?`}
+        title="ยืนยันการลบแพ็กเกจ"
+        text={`คุณต้องการยืนยันการลบแพ็กเกจหรือไม่`}
         confirmText="ยืนยันลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}

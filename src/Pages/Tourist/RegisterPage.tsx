@@ -10,12 +10,12 @@ import TextField from "@/Components/Input/TextField";
 import AuthLayout from "@/Layouts/AuthLayout";
 import CircularProgress from "@mui/material/CircularProgress";
 import axios from "axios";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import zod from "zod";
 import { SuccessCard } from "@/Components/SuccessCard";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-
+import { subYears, addYears } from "date-fns";
 /**
  * คำอธิบาย: registerSchema (Schema สำหรับตรวจสอบความถูกต้องของข้อมูลลงทะเบียนด้วย Zod)
  * input: ข้อมูลจากฟอร์ม (Object)
@@ -98,6 +98,7 @@ export function RegisterPage() {
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+  const today = new Date();
 
   /**
    * คำอธิบาย: validateField (ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลราย field)
@@ -382,6 +383,8 @@ export function RegisterPage() {
                 required
                 value={formData.birthDate || null}
                 onChange={(date) => handleDateChange(date)}
+                maxDate={addYears(today, 0)}
+                minDate={subYears(today, 100)}
               />
             </div>
           </div>

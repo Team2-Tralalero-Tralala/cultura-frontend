@@ -1,8 +1,5 @@
-/*
- * Component: CreateAccountPage
- * Description: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * Author: Team 2 (Cultura)
- * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
+/**
+ * คำอธิบาย : Component หลักสำหรับหน้าแก้ไขบัญชีผู้ใช้ (Super Admin)
  */
 
 import React, { useEffect, useState } from "react";
@@ -48,6 +45,11 @@ interface CommunityOption {
   name: string;
 }
 
+/*
+ * คำอธิบาย : Custom Popper Component สำหรับปรับแต่งการแสดงผลของ Autocomplete
+ * Input: props (any) - properties ที่รับมาจาก MUI Autocomplete
+ * Output: JSX Element Popper ที่ผ่านการปรับแต่งแล้ว
+ */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
   return (
@@ -73,6 +75,11 @@ const EditAccountPage: React.FC = () => {
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงค่า Role ของผู้ใช้งานจาก URL path
+   * Input: -
+   * Output: RoleType ("Admin" | "Member" | "Tourist")
+   */
   const getRoleFromPath = (): RoleType => {
     if (location.pathname.includes("member")) return "Member";
     if (location.pathname.includes("tourist")) return "Tourist";
@@ -104,13 +111,18 @@ const EditAccountPage: React.FC = () => {
     postalCode: "",
   });
 
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อบทบาท (Role) เป็นรหัส ID ตัวเลขที่ตรงกับฐานข้อมูล
+   * Input: role (RoleType) - ชื่อบทบาท เช่น "Admin", "Member", "Tourist"
+   * Output: number - รหัส ID ของบทบาทนั้นๆ (1, 2, หรือ 3)
+   */
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
@@ -124,6 +136,11 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลผู้ใช้งานจาก API ตาม Role และ ID เพื่อนำมาแสดงบนฟอร์ม
+   * Input: role (RoleType) - บทบาทของผู้ใช้ที่ต้องการดึงข้อมูล
+   * Output: -
+   */
   const fetchUser = async (role: RoleType) => {
     try {
       let endpoint = "";
@@ -182,6 +199,11 @@ const EditAccountPage: React.FC = () => {
 
   useEffect(() => {
     if (formData.role === "Member") {
+      /*
+       * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนทั้งหมดจาก API เพื่อนำมาแสดงเป็นตัวเลือก
+       * Input: -
+       * Output: -
+       */
       const fetchCommunities = async () => {
         setIsCommunityLoading(true);
         try {
@@ -234,11 +256,21 @@ const EditAccountPage: React.FC = () => {
     }
   }, [formData.role]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนแปลงค่าข้อมูลในช่อง Input
+   * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
+   * Output: -
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้งานกดเปลี่ยนปุ่มเลือก Role
+   * Input: newRole (RoleType) - บทบาทใหม่ที่ผู้ใช้งานเลือก
+   * Output: -
+   */
   const handleRoleSelect = (newRole: RoleType) => {
     if (formData.role !== newRole) {
       setFormData((previousState) => ({ ...previousState, role: newRole }));
@@ -249,6 +281,11 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องและครบถ้วนของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
+   * Input: -
+   * Output: -
+   */
   const handlePreCheck = () => {
     const isBasicValid =
       formData.fname.trim() !== "" &&
@@ -270,11 +307,17 @@ const EditAccountPage: React.FC = () => {
     }
 
     if (!isBasicValid || !isRoleSpecificValid) {
-      setShowErrorModal(true);
+      setIsShowErrorModal(true);
     } else {
-      setShowConfirm(true);
+      setIsShowConfirm(true);
     }
   };
+
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลการแก้ไขบัญชีผู้ใช้ รวมถึงการอัปเดตรูปภาพไปยังระบบ
+   * Input: event (React.FormEvent)
+   * Output: -
+   */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -336,8 +379,8 @@ const EditAccountPage: React.FC = () => {
 
       await api.put(endpoint, requestBody);
 
-      setShowConfirm(false);
-      setShowSuccessModal(true);
+      setIsShowConfirm(false);
+      setIsShowSuccessModal(true);
 
       if (imageWasUpdated) {
         fetchUser(formData.role);
@@ -600,35 +643,35 @@ const EditAccountPage: React.FC = () => {
       </form>
 
       <Modal
-        isOpen={showConfirm}
+        isOpen={isShowConfirm}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsShowConfirm(false);
           handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={showSuccessModal}
+        isOpen={isShowSuccessModal}
         type="success"
         title="แก้ไขบัญชีสำเร็จ"
         message="ข้อมูลบัญชีผู้ใช้ถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
+          setIsShowSuccessModal(false);
           navigate("/super/accounts/all");
         }}
       />
 
       <ModalAlert
-        isOpen={showErrorModal}
+        isOpen={isShowErrorModal}
         type="error"
         title="กรอกข้อมูลไม่ครบถ้วน"
         message="กรุณาตรวจสอบข้อมูลให้ครบก่อนทำการบันทึก"
-        onClose={() => setShowErrorModal(false)}
+        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

@@ -1,14 +1,11 @@
-/*
- * Component: EditMemberPage (Admin)
- * Description: หน้าสำหรับ Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
- * Author: Team 2 (Cultura)
- * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
+/**
+ * คำอธิบาย : Component สำหรับหน้า Admin แก้ไขข้อมูลสมาชิกในชุมชน และอัปเดตรูปโปรไฟล์
  */
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import * as z from "zod"; // [เพิ่ม] import zod
+import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
@@ -17,18 +14,17 @@ import Button from "../../Components/Button";
 
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
 
 /*
  *  Schema สำหรับตรวจสอบความถูกต้องของข้อมูล (ไม่รวมรหัสผ่าน)
  */
-const editMemberSchema = z.object({
-  fname: z.string().min(1, "กรุณากรอกชื่อ"),
-  lname: z.string().min(1, "กรุณากรอกนามสกุล"),
-  username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
-  communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
+const editMemberSchema = zod.object({
+  fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+  lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+  username: zod.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
+  email: zod.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+  phone: zod.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
+  communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
 });
 
 interface EditMemberBody {
@@ -60,12 +56,14 @@ const EditMemberPage: React.FC = () => {
 
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
+  const [isShowErrorModal, setIsShowErrorModal] = useState(false);
 
   /*
-   *  ฟังก์ชันตรวจสอบ Validation
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม (Validation)
+   * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
+   * Output: boolean (ส่งคืน true หากข้อมูลถูกต้อง, false หากข้อมูลผิดพลาด)
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -95,6 +93,11 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
+   * Input: -
+   * Output: -
+   */
   const fetchMemberData = async () => {
     try {
       const response = await api.get(`/admin/member/${userId}`);
@@ -125,6 +128,11 @@ const EditMemberPage: React.FC = () => {
     }
   }, [userId]);
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input ภายในฟอร์ม
+   * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
+   * Output: -
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => {
@@ -138,17 +146,24 @@ const EditMemberPage: React.FC = () => {
   };
 
   /*
-   * ฟังก์ชัน Pre-check ก่อนเปิด Modal ยืนยัน
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
+   * Input: -
+   * Output: -
    */
   const handlePreCheck = () => {
     const isValid = validateField();
     if (!isValid) {
-      setShowErrorModal(true);
+      setIsShowErrorModal(true);
     } else {
-      setShowConfirm(true);
+      setIsShowConfirm(true);
     }
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มและรูปภาพเพื่ออัปเดตข้อมูลสมาชิกในระบบ
+   * Input: event (เหตุการณ์จากฟอร์ม)
+   * Output: -
+   */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 
@@ -179,8 +194,8 @@ const EditMemberPage: React.FC = () => {
 
       await api.put(`/admin/member/${userId}`, requestBody);
 
-      setShowConfirm(false);
-      setShowSuccessModal(true);
+      setIsShowConfirm(false);
+      setIsShowSuccessModal(true);
 
       if (imageWasUpdated) {
         setProfileImage(null);
@@ -333,35 +348,35 @@ const EditMemberPage: React.FC = () => {
       </form>
 
       <Modal
-        isOpen={showConfirm}
+        isOpen={isShowConfirm}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขข้อมูลสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsShowConfirm(false);
           handleSubmit();
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={showSuccessModal}
+        isOpen={isShowSuccessModal}
         type="success"
         title="แก้ไขสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
+          setIsShowSuccessModal(false);
           navigate("/admin/members");
         }}
       />
 
       <ModalAlert
-        isOpen={showErrorModal}
+        isOpen={isShowErrorModal}
         type="error"
         title="กรอกข้อมูลไม่ครบถ้วน"
         message="กรุณาตรวจสอบข้อมูลให้ครบถ้วน"
-        onClose={() => setShowErrorModal(false)}
+        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

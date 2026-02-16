@@ -1,14 +1,11 @@
-/*
- * Component: CreateMemberPage (Admin)
- * Description: หน้าสำหรับ Admin สร้างสมาชิกในชุมชน (ใช้ ModalAlert ตอนสำเร็จ และ Error)
- * Author: Team 2 (Cultura)
- * Last Modified: 20 มกราคม 2569 (Smart Fetch Community)
+/**
+ * คำอธิบาย : Component สำหรับหน้าสร้างสมาชิกในชุมชน (Admin)
  */
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import * as z from "zod";
+import * as zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
@@ -20,16 +17,16 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 /*
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
  */
-const memberSchema = z
+const memberSchema = zod
   .object({
-    fname: z.string().min(1, "กรุณากรอกชื่อ"),
-    lname: z.string().min(1, "กรุณากรอกนามสกุล"),
-    username: z.string().min(3, "กรุณากรอกชื่อผู้ใช้"),
-    email: z.string().email("กรุณากรอกอีเมล"),
-    phone: z.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
-    password: z.string().min(6, "กรุณากรอกรหัสผ่าน"),
-    confirmPassword: z.string().min(1, "กรุณายืนยันรหัสผ่าน"),
-    communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
+    fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+    lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+    username: zod.string().min(3, "กรุณากรอกชื่อผู้ใช้"),
+    email: zod.string().email("กรุณากรอกอีเมล"),
+    phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
+    password: zod.string().min(6, "กรุณากรอกรหัสผ่าน"),
+    confirmPassword: zod.string().min(1, "กรุณายืนยันรหัสผ่าน"),
+    communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "รหัสผ่านไม่ตรงกัน",
@@ -65,12 +62,14 @@ const CreateMemberPage: React.FC = () => {
   /*
    * คำอธิบาย : State สำหรับควบคุมการแสดง Modal
    */
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false); // [เพิ่ม] State สำหรับ Error Modal
+   const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
+  const [isShowErrorModal, setIsShowErrorModal] = useState(false);
 
   /*
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
+   * Output : boolean (ส่งคืน true หากถูกต้อง, false หากผิดพลาด)
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -102,6 +101,8 @@ const CreateMemberPage: React.FC = () => {
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
+   * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
+   * Output : -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
@@ -115,13 +116,20 @@ const CreateMemberPage: React.FC = () => {
     });
   };
 
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
+   * Input: file (ไฟล์รูปภาพที่เลือก)
+   * Output : -
+   */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
   /*
-   * [เพิ่ม] ฟังก์ชันตรวจสอบความถูกต้องก่อนเปิด Modal Confirm
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องก่อนเปิด Modal Confirm
+   * Input: -
+   * Output : -
    */
   const handlePreCheck = () => {
     const isFormValid = validateField(); // ตรวจสอบ Schema (Zod)
@@ -129,7 +137,7 @@ const CreateMemberPage: React.FC = () => {
 
     if (!isFormValid || !isPasswordMatch) {
       // ถ้าไม่ผ่าน ให้แสดง Error Modal
-      setShowErrorModal(true);
+      setIsShowErrorModal(true);
 
       // กรณีรหัสผ่านไม่ตรงกัน อาจจะ Toast บอกเพิ่มเพื่อให้ชัดเจน (Optional)
       if (!isPasswordMatch) {
@@ -137,12 +145,14 @@ const CreateMemberPage: React.FC = () => {
       }
     } else {
       // ถ้าผ่าน ให้แสดง Confirm Modal
-      setShowConfirm(true);
+      setIsShowConfirm(true);
     }
   };
 
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
+   * Input: event (เหตุการณ์จากฟอร์ม)
+   * Output : -
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
@@ -168,7 +178,7 @@ const CreateMemberPage: React.FC = () => {
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-        setShowSuccessModal(true);
+        setIsShowSuccessModal(true);
         return;
       }
 
@@ -181,7 +191,7 @@ const CreateMemberPage: React.FC = () => {
         });
       }
 
-      setShowSuccessModal(true);
+      setIsShowSuccessModal(true);
     } catch (error: any) {
       console.error("❌ Error creating member:", error);
       const msg =
@@ -348,35 +358,35 @@ const CreateMemberPage: React.FC = () => {
       </form>
 
       <Modal
-        isOpen={showConfirm}
+        isOpen={isShowConfirm}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsShowConfirm(false);
           handleSubmit();
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={showSuccessModal}
+        isOpen={isShowSuccessModal}
         type="success"
         title="สร้างบัญชีสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
+          setIsShowSuccessModal(false);
           navigate("/admin/members");
         }}
       />
 
       <ModalAlert
-        isOpen={showErrorModal}
+        isOpen={isShowErrorModal}
         type="error"
         title="กรอกข้อมูลไม่ครบถ้วน"
         message="กรุณาตรวจสอบข้อมูลให้ครบถ้วน"
-        onClose={() => setShowErrorModal(false)}
+        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

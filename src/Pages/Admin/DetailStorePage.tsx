@@ -65,7 +65,7 @@ export default function DetailStorePage() {
     }
 
     try {
-      const res = await fetch(`${apiUrl}/admin/store/${id}`, { credentials: "include" });
+      const res = await fetch(`${apiUrl}/community/stores/${id}`, { credentials: "include" });
       const result = await res.json();
 
       if (result?.data) {
@@ -79,7 +79,10 @@ export default function DetailStorePage() {
           id: data.id,
           name: data.name ?? "-",
           detail: data.detail ?? "-",
-          tags: data.tagStores?.map((t: any) => t.tag?.name) || [],
+          tags:
+            data.tagStores
+              ?.map((t: any) => t.tag?.name)
+              .filter((name: string | undefined): name is string => !!name) ?? [],
           images,
           community: data.community
             ? {

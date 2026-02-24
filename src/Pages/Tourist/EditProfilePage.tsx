@@ -137,6 +137,31 @@ const EditProfilePage: React.FC = () => {
   };
 
   /*
+   * คําอธิบาย : ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist ก่อนส่งข้อมูลไปยัง API
+   * Input : ไม่มี
+   * Output : คืนค่า true หากข้อมูลในฟอร์มถูกต้องและพร้อมส่งไปยัง API, คืนค่า false หากข้อมูลในฟอร์มไม่ถูกต้องและไม่ควรส่งไปยัง API
+   */
+  const validateForm = () => {
+    const requiredAddressFields = [
+      { key: "province", label: "จังหวัด" },
+      { key: "district", label: "อำเภอ" },
+      { key: "subDistrict", label: "ตำบล" },
+      { key: "postalCode", label: "รหัสไปรษณีย์" },
+    ];
+
+    for (const field of requiredAddressFields) {
+      const value = formData[field.key as keyof UserProfile];
+
+      if (!value || value.trim() === "") {
+        setErrorMessage(`กรุณากรอกที่อยู่ให้ครบถ้วน`);
+        setIsErrorModalOpen(true);
+        return false;
+      }
+    }
+
+  return true;
+};
+  /*
    * คําอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขในฟอร์มแก้ไขข้อมูลส่วนตัวของ Tourist
    * Input : ไม่มี
    * Output : ส่งคำขอไปยัง API เพื่ออัปเดตข้อมูลส่วนตัวของ Tourist
@@ -188,6 +213,11 @@ const EditProfilePage: React.FC = () => {
                 avatarSize={240}
                 onAvatarChange={(file) => {
                   if (!file) return;
+                  if (!file.type.startsWith("image/")) {
+                    setErrorMessage("กรุณาอัปโหลดไฟล์รูปภาพเท่านั้น");
+                    setIsErrorModalOpen(true);
+                    return;
+                  }
                   setProfileFile(file);
                   setAvatarUrl(URL.createObjectURL(file));
                 }}
@@ -297,7 +327,8 @@ const EditProfilePage: React.FC = () => {
                 <Button type="cancel" onClick={() => navigate(-1)}>
                   ยกเลิก
                 </Button>
-                <Button type="confirm-tourist" onClick={() => setIsConfirmModalOpen(true)}>
+                <Button type="confirm-tourist"onClick={() => {if (!validateForm()) return ; setIsConfirmModalOpen(true);}}
+>
                   บันทึก
                 </Button>
               </div>

@@ -85,7 +85,7 @@ export function ManageDraftPackage() {
         id: packageItem.id ?? 0,
         name: packageItem.name ?? "-",
         community: packageItem.community?.name ?? "-",
-        overseer: packageItem.overseerPackage?.username ?? "-",
+        overseer: packageItem.overseerPackage?.name ?? "-",
         status:
           packageItem.statusPackage === "DRAFT" ? "ฉบับร่าง" : (packageItem.statusPackage ?? "-"),
       }));

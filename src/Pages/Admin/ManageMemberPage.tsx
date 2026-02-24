@@ -223,8 +223,8 @@ export default function ManageMemberPage() {
       <Modal
         isOpen={isDeleteModalOpen}
         title="ยืนยันการลบสมาชิก"
-        text={`คุณต้องการลบสมาชิก “${selectedMember?.displayName ?? "-"}” ออกจากชุมชนใช่หรือไม่?`}
-        confirmText="ลบ"
+        text={`คุณต้องการยืนยันการลบบัญชีสมาชิกหรือไม่`}
+        confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onCancel={() => {
           setIsDeleteModalOpen(false);

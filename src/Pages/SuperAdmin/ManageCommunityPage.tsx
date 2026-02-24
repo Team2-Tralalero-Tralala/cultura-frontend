@@ -15,6 +15,7 @@ import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /*
  * คำอธิบาย : Custom Hook สำหรับชะลอการอัปเดตค่า (Debounce) ช่วยลดการเรียก API ถี่เกินไปในขณะที่ค่า value เปลี่ยนแปลงต่อเนื่อง (เช่น การพิมพ์ค้นหา)
@@ -74,6 +75,11 @@ export default function ManageCommunitySuperAdmin() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   // สร้างตัวแปร search ที่ผ่านการหน่วงเวลาแล้ว (500ms)
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -165,9 +171,17 @@ export default function ManageCommunitySuperAdmin() {
         await Promise.all(bulkDeleteIds.map((id) => handleDelete(id)));
       }
       await reload();
+
+      setAlertType("success");
+      setAlertTitle("ลบชุมชนสำเร็จ");
+      setAlertMessage("\u00A0"); // หรือข้อความที่ต้องการ
+      setAlertOpen(true);
     } catch (error) {
       console.error(error);
-      alert("ลบไม่สำเร็จ");
+      setAlertType("error");
+      setAlertTitle("ลบไม่สำเร็จ");
+      setAlertMessage("กรุณาลองใหม่");
+      setAlertOpen(true);
     } finally {
       setIsOpenConfirm(false);
       setDeleteId(null);
@@ -280,6 +294,14 @@ export default function ManageCommunitySuperAdmin() {
         text={confirmMessage}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
+      />
+
+      <ModalAlert
+        isOpen={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

@@ -147,7 +147,7 @@ export function EditStorePage() {
         );
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "/uploads") || "http://localhost:3000/uploads";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000/uploads";
         const coverFilesFetched: File[] = await Promise.all(
           (data.storeImage || [])
             .filter((img: any) => img.type === "COVER")

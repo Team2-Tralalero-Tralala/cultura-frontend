@@ -35,8 +35,8 @@ import EditMemberPage from "@/Pages/Admin/EditMemberPage";
 import AuthentionLogAdmin from "@/Pages/Admin/AuthenticationLogPage";
 import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
-import { CreateStorePage } from "@/Pages/SuperAdmin/CreateStorePage";
-import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
+import { CreateStorePage } from "@/Pages/Admin/CreateStorePage";
+import { EditStorePage } from "@/Pages/Admin/EditStorePage";
 import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage";
 
 /*

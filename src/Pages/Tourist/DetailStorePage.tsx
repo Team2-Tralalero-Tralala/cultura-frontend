@@ -10,7 +10,8 @@ import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 import { getStoreWithOtherStoresInCommunity } from "@/Libs/StoreService";
 import Tag from "@/Components/Tag";
 import { Icon } from "@iconify/react";
-import Thumbnails from "@/Components/Thumbnails";
+import SideThumbnails from "@/Components/SideThumbnails";
+import { type MediaItem } from "@/Components/Thumbnails";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
 
 type StoreTag = {
@@ -38,7 +39,7 @@ type Store = {
   id: number;
   name: string;
   detail: string | null;
-  storeImages: StoreImage[];
+  storeImage: StoreImage[];
   communityId: number;
   location: StoreLocation | null;
   tagStores: { tag: StoreTag }[];
@@ -137,6 +138,28 @@ export default function DetailStorePage() {
       ? `${store.location.latitude} ${store.location.longitude}`
       : "";
 
+  /**
+   * คำอธิบาย : แปลงรูปภาพร้านค้าเป็น MediaItem สำหรับใช้งานกับ SideThumbnails
+   * Input : store?.storeImages (รายการรูปภาพร้านค้าจาก backend)
+   * Output : galleryItems (MediaItem[])
+   */
+  const galleryItems: MediaItem[] =
+    (store?.storeImage ?? []).map((file, index) => ({
+      type: "image",
+      src:
+        resolveBackendUploadUrl(file.image) ??
+        "https://placehold.co/600x400?text=No+Image",
+      alt: `${store?.name} - รูป ${index + 1}`,
+    }));
+
+  if (galleryItems.length === 0) {
+    galleryItems.push({
+      type: "image",
+      src: "https://placehold.co/600x400?text=No+Image",
+      alt: "No Image",
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <NavbarTourist />
@@ -212,16 +235,8 @@ export default function DetailStorePage() {
         </p>
 
         <div className="mb-12">
-          {store?.storeImages?.length ? (
-            <Thumbnails
-              items={store.storeImages.map((file, index) => ({
-                type: "image" as const,
-                src:
-                  resolveBackendUploadUrl(file.image) ||
-                  "https://placehold.co/600x400?text=No+Image",
-                alt: `${store.name} - รูป ${index + 1}`,
-              }))}
-            />
+          {galleryItems.length > 0 ? (
+            <SideThumbnails items={galleryItems} />
           ) : (
             <p className="text-gray-500 text-[16px]">ไม่มีรูปภาพ</p>
           )}

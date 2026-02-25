@@ -94,6 +94,9 @@ const EditAccountPage: React.FC = () => {
     phone: "",
     role: getRoleFromPath() as RoleType,
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -264,6 +267,9 @@ const EditAccountPage: React.FC = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
+    if (formErrors[id]) {
+      setFormErrors((prev) => ({ ...prev, [id]: undefined }));
+    }
   };
 
   /*
@@ -281,35 +287,57 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /*
+ /*
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องและครบถ้วนของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
    * Input: -
    * Output: -
    */
   const handlePreCheck = () => {
-    const isBasicValid =
-      formData.fname.trim() !== "" &&
-      formData.lname.trim() !== "" &&
-      formData.username.trim() !== "" &&
-      formData.email.trim() !== "" &&
-      formData.phone.trim() !== "";
+    let isValid = true;
+    const newErrors: Record<string, string> = {};
 
-    let isRoleSpecificValid = true;
+    if (formData.fname.trim() === "") {
+      newErrors.fname = "กรุณากรอกชื่อ";
+      isValid = false;
+    }
+    if (formData.lname.trim() === "") {
+      newErrors.lname = "กรุณากรอกนามสกุล";
+      isValid = false;
+    }
+    if (formData.username.trim() === "") {
+      newErrors.username = "กรุณากรอกชื่อผู้ใช้";
+      isValid = false;
+    } else if (formData.username.trim().length < 4) {
+      newErrors.username = "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร";
+      isValid = false;
+    }
+    if (formData.email.trim() === "") {
+      newErrors.email = "กรุณากรอกอีเมล";
+      isValid = false;
+    }
+    if (formData.phone.trim() === "") {
+      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
+      isValid = false;
+    }
 
     if (formData.role === "Member") {
-      if (!roleSpecificData.communityId || !roleSpecificData.activityRole.trim()) {
-        isRoleSpecificValid = false;
+      if (!roleSpecificData.communityId) {
+        newErrors.communityId = "กรุณาเลือกวิสาหกิจชุมชน";
+        isValid = false;
       }
     } else if (formData.role === "Tourist") {
       if (!roleSpecificData.birthDate) {
-        isRoleSpecificValid = false;
+        newErrors.birthDate = "กรุณาระบุวันเกิด";
+        isValid = false;
       }
     }
 
-    if (!isBasicValid || !isRoleSpecificValid) {
-      setIsShowErrorModal(true);
-    } else {
+    setFormErrors(newErrors);
+
+    if (isValid) {
       setIsShowConfirm(true);
+    } else {
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
     }
   };
 
@@ -323,11 +351,8 @@ const EditAccountPage: React.FC = () => {
 
     if (formData.role === "Member") {
       if (!roleSpecificData.communityId) {
+        setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
         toast.error("กรุณาเลือกชุมชน");
-        return;
-      }
-      if (!roleSpecificData.activityRole) {
-        toast.error("กรุณากรอกบทบาทในชุมชน");
         return;
       }
     }
@@ -386,9 +411,26 @@ const EditAccountPage: React.FC = () => {
         fetchUser(formData.role);
         setProfileImage(null);
       }
-    } catch (error: any) {
+  } catch (error: any) {
       console.error("❌ Error updating account:", error);
-      toast.error(error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้");
+
+      const errorMsg =
+        error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const newErrors: Record<string, string> = {};
+
+      if (errorMsg.includes("ชื่อผู้ใช้") || errorMsg.includes("duplicate_username")) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("อีเมล") || errorMsg.includes("duplicate_email")) {
+        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์") || errorMsg.includes("duplicate_phone")) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      } else {
+        toast.error(errorMsg);
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+      }
     }
   };
 
@@ -458,6 +500,8 @@ const EditAccountPage: React.FC = () => {
                 required
                 value={formData.fname}
                 onChange={handleChange}
+                error={!!formErrors.fname}
+                helperText={formErrors.fname}
               />
               <TextField
                 id="lname"
@@ -465,6 +509,8 @@ const EditAccountPage: React.FC = () => {
                 required
                 value={formData.lname}
                 onChange={handleChange}
+                error={!!formErrors.lname}
+                helperText={formErrors.lname}
               />
             </div>
 
@@ -474,6 +520,8 @@ const EditAccountPage: React.FC = () => {
               required
               value={formData.username}
               onChange={handleChange}
+              error={!!formErrors.username}
+              helperText={formErrors.username}
             />
             <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
               <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
@@ -485,6 +533,8 @@ const EditAccountPage: React.FC = () => {
               required
               value={formData.email}
               onChange={handleChange}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
             />
             <TextField
               id="phone"
@@ -492,6 +542,8 @@ const EditAccountPage: React.FC = () => {
               required
               value={formData.phone}
               onChange={handleChange}
+              error={!!formErrors.phone}
+              helperText={formErrors.phone}
             />
 
             <div>
@@ -550,6 +602,9 @@ const EditAccountPage: React.FC = () => {
                         ...prev,
                         communityId: newValue ? String(newValue.id) : "",
                       }));
+                      if (newValue) {
+                        setFormErrors((prev) => ({ ...prev, communityId: undefined }));
+                      }
                     }}
                     loading={isCommunityLoading}
                     noOptionsText={isCommunityLoading ? "กำลังโหลด..." : "ไม่พบข้อมูลชุมชน"}
@@ -558,21 +613,32 @@ const EditAccountPage: React.FC = () => {
                     PopperComponent={CustomPopper}
                     renderInput={(params) => {
                       const { InputProps, inputProps } = params;
+                      const hasError = !!formErrors.communityId;
+
                       return (
                         <div ref={InputProps.ref} className="relative w-full">
                           <input
                             {...inputProps}
                             type="text"
                             placeholder={isCommunityLoading ? "กำลังโหลด..." : "ค้นหาชุมชน"}
-                            className="block w-full rounded-form border-1
-                              border-gray-400 focus:ring-gray-400 focus:border-gray-500
+                            className={`block w-full rounded-form border-1
                               bg-white px-5 py-2 text-black text-base
                               placeholder:text-[#606060] placeholder:font-normal leading-relaxed
-                              focus:outline-none focus:ring-1 transition-shadow pr-10"
+                              focus:outline-none focus:ring-1 transition-shadow pr-10
+                              ${
+                                hasError
+                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                  : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"
+                              }`}
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
+                          {hasError && (
+                            <p className="mt-1.5 ml-1 text-xs text-red-500">
+                              {formErrors.communityId}
+                            </p>
+                          )}
                         </div>
                       );
                     }}

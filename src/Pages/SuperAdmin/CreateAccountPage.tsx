@@ -32,11 +32,21 @@ const accountSchema = zod
   .object({
     fname: zod.string().min(1, "กรุณากรอกชื่อ"),
     lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
-    username: zod.string().min(3, "กรุณากรอกชื่อผู้ใช้"),
+    username: zod
+      .string()
+      .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+      .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
     email: zod.string().email("กรุณากรอกอีเมล"),
     phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
-    password: zod.string().min(6, "กรุณากรอกรหัสผ่าน"),
-    confirmPassword: zod.string().min(6, "กรุณายืนยันรหัสผ่าน"),
+
+    password: zod
+      .string()
+      .min(8, "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
+      .regex(/[a-z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z) อย่างน้อย 1 ตัว")
+      .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว")
+      .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9) อย่างน้อย 1 ตัว"),
+
+    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"),
 
     birthDate: zod
       .string()
@@ -188,7 +198,6 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
    */
   useEffect(() => {
     if (role === "Member") {
-
       /*
        * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนเพื่อนำมาแสดงเป็นตัวเลือก
        * Input: -
@@ -328,6 +337,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     if (role === "Member") {
       if (!roleSpecificData.communityId) {
         isRoleValid = false;
+        setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, communityId: undefined }));
       }
     }
 
@@ -358,6 +370,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
     if (role === "Member") {
       if (!roleSpecificData.communityId) {
+        setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
         toast.error("กรุณาเลือกชุมชน ❌");
         return;
       }
@@ -418,7 +431,23 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       setIsShowSuccessModal(true);
     } catch (error: any) {
       console.error("❌ Error creating account:", error);
-      toast.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
+
+      const errorMsg = error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้";
+      const newErrors: Record<string, string> = {};
+
+      if (errorMsg.includes("ชื่อผู้ใช้")) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("อีเมล")) {
+        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์")) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      } else {
+        toast.error(errorMsg);
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+      }
     }
   };
 
@@ -609,6 +638,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                         ...prev,
                         communityId: newValue ? String(newValue.id) : "",
                       }));
+                      if (newValue) {
+                        setFormErrors((prev) => ({ ...prev, communityId: undefined }));
+                      }
                     }}
                     loading={isCommunityLoading}
                     noOptionsText="ไม่พบข้อมูลชุมชน"
@@ -617,6 +649,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     PopperComponent={CustomPopper}
                     renderInput={(params) => {
                       const { InputProps, inputProps } = params;
+                      const hasError = !!formErrors.communityId;
+
                       return (
                         <div ref={InputProps.ref} className="relative w-full">
                           <input
@@ -625,15 +659,25 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                             placeholder={
                               isCommunityLoading ? "กำลังโหลด..." : "กรอกชื่อวิสาหกิจชุมชน"
                             }
-                            className="block w-full rounded-form border-1
-                              border-gray-400 focus:ring-gray-400 focus:border-gray-500
+                            className={`block w-full rounded-form border-1
                               bg-white px-5 py-2 text-black text-base
                               placeholder:text-[#606060] placeholder:font-normal leading-relaxed
-                              focus:outline-none focus:ring-1 transition-shadow pr-10"
+                              focus:outline-none focus:ring-1 transition-shadow pr-10
+                              ${
+                                hasError
+                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500" 
+                                  : "border-gray-400 focus:ring-gray-400 focus:border-gray-500" 
+                              }`}
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
+                          
+                          {hasError && (
+                            <p className="mt-1.5 ml-1 text-xs text-red-500">
+                              {formErrors.communityId}
+                            </p>
+                          )}
                         </div>
                       );
                     }}

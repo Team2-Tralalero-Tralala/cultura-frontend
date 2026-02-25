@@ -21,11 +21,25 @@ const memberSchema = zod
   .object({
     fname: zod.string().min(1, "กรุณากรอกชื่อ"),
     lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
-    username: zod.string().min(3, "กรุณากรอกชื่อผู้ใช้"),
+    username: zod
+      .string()
+      .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+      .regex(
+        /^[a-zA-Z0-9]+$/, 
+        "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"
+      ),
     email: zod.string().email("กรุณากรอกอีเมล"),
     phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
-    password: zod.string().min(6, "กรุณากรอกรหัสผ่าน"),
-    confirmPassword: zod.string().min(1, "กรุณายืนยันรหัสผ่าน"),
+    
+    password: zod
+      .string()
+      .min(8, "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
+      .regex(/[a-z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z)")
+      .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z)")
+      .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9)"),
+      
+    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"), 
+    
     communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -192,11 +206,25 @@ const CreateMemberPage: React.FC = () => {
       }
 
       setIsShowSuccessModal(true);
-    } catch (error: any) {
+   } catch (error: any) {
       console.error("❌ Error creating member:", error);
-      const msg =
-        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
-      toast.error(`เกิดข้อผิดพลาด: ${msg}`);
+      
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
+      const newErrors: Record<string, string> = {};
+
+      if (errorMsg.includes("ชื่อผู้ใช้")) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("อีเมล")) {
+        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์")) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      } else {
+        toast.error(`เกิดข้อผิดพลาด: ${errorMsg}`);
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+      }
     }
   };
 

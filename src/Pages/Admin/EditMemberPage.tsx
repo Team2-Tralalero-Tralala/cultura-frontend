@@ -21,7 +21,10 @@ import Breadcrumb from "@/Components/BreadcrumbNavigation";
 const editMemberSchema = zod.object({
   fname: zod.string().min(1, "กรุณากรอกชื่อ"),
   lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
-  username: zod.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
+  username: zod
+    .string()
+    .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+    .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
   email: zod.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
   phone: zod.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
   communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
@@ -153,7 +156,7 @@ const EditMemberPage: React.FC = () => {
   const handlePreCheck = () => {
     const isValid = validateField();
     if (!isValid) {
-      setIsShowErrorModal(true);
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
     } else {
       setIsShowConfirm(true);
     }
@@ -201,9 +204,28 @@ const EditMemberPage: React.FC = () => {
         setProfileImage(null);
       }
     } catch (error: any) {
-      console.error("❌ Error updating member:", error);
-      const msg = error.response?.data?.message || error.message || "บันทึกข้อมูลไม่สำเร็จ";
-      toast.error(msg);
+      console.error("❌ Error updating account:", error);
+
+      const errorMsg =
+        error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const newErrors: Record<string, string> = {};
+      if (errorMsg.includes("ชื่อผู้ใช้") || errorMsg.includes("duplicate_username")) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("อีเมล") || errorMsg.includes("duplicate_email")) {
+        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
+      } else if (
+        errorMsg.includes("โทรศัพท์") ||
+        errorMsg.includes("เบอร์") ||
+        errorMsg.includes("duplicate_phone")
+      ) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      } else {
+        toast.error(errorMsg);
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+      }
     }
   };
 
@@ -369,14 +391,6 @@ const EditMemberPage: React.FC = () => {
           setIsShowSuccessModal(false);
           navigate("/admin/members");
         }}
-      />
-
-      <ModalAlert
-        isOpen={isShowErrorModal}
-        type="error"
-        title="กรอกข้อมูลไม่ครบถ้วน"
-        message="กรุณาตรวจสอบข้อมูลให้ครบถ้วน"
-        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

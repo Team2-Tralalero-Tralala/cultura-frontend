@@ -24,8 +24,8 @@ import DetailPackageRequriedPage from "@/Pages/SuperAdmin/DetailPackageRequiredP
 import EditHomestayPage from "@/Pages/SuperAdmin/EditHomestayPage";
 import EditPackagePage from "@/Pages/SuperAdmin/EditPackagePage";
 import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
-import  ManageCommunityPage  from "@/Pages/SuperAdmin/ManageCommunityPage";
-import  ManageHomestayPage  from "@/Pages/SuperAdmin/ManageHomestayPage";
+import ManageCommunityPage from "@/Pages/SuperAdmin/ManageCommunityPage";
+import ManageHomestayPage from "@/Pages/SuperAdmin/ManageHomestayPage";
 import { ManageStorePage } from "@/Pages/SuperAdmin/ManageStorePage";
 import { ResetPasswordPage } from "@/Pages/SuperAdmin/ResetPasswordPage";
 
@@ -108,7 +108,7 @@ export default function SuperAdminRoutes() {
 
       <Route path="logs" element={<AuthentionLogSuperAdmin />} />
       <Route path="users/blocked" element={<BlockUserPage />} />
-      <Route path="account/:id" element={<StoreDetailPage />} />
+      <Route path="account/:id" element={<DetailUserPage />} />
       <Route path="accounts/all" element={<ManageAccountPage />} />
       {/* 🔹 หน้าเพิ่มบัญชีสมาชิก (Member) */}
       <Route path="/member/create" element={<CreateAccountPage defaultRole="Member" />} />

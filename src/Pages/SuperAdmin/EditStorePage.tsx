@@ -141,7 +141,8 @@ export function EditStorePage() {
 
         // โหลดภาพจาก backend แล้วแปลงเป็น File จริง เพื่อให้ UploadCard แสดง preview ได้
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "/uploads") || "http://localhost:3000/uploads";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
+
         const coverFilesFetched: File[] = await Promise.all(
           (data.storeImage || [])
             .filter((img: any) => img.type === "COVER")
@@ -267,15 +268,22 @@ export function EditStorePage() {
 
       if (!isValid) {
         setAlertType("error");
-        setAlertTitle("ข้อมูลไม่ถูกต้อง");
+        setAlertTitle("กรุณากรอกข้อมูลให้ครบถ้วน");
         setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
         setIsAlertOpen(true);
         return;
       }
-      if (coverFiles.length === 0 || galleryFiles.length === 0) {
+      if (coverFiles.length === 0) {
         setAlertType("error");
-        setAlertTitle("ข้อมูลไม่ถูกต้อง");
-        setAlertMessage("กรุณาอัพโหลดรูปภาพให้ครบถ้วน");
+        setAlertTitle("กรุณากรอกข้อมูลให้ครบถ้วน");
+        setAlertMessage("ไม่สามารถบันทึกข้อมูลได้ เนื่องจากต้องใส่รูปภาพหน้าปก");
+        setIsAlertOpen(true);
+        return;
+      }
+      if (galleryFiles.length === 0) {
+        setAlertType("error");
+        setAlertTitle("กรุณากรอกข้อมูลให้ครบถ้วน");
+        setAlertMessage("ไม่สามารถบันทึกข้อมูลได้ เนื่องจากต้องใส่รูปภาพเพิ่มเติม ");
         setIsAlertOpen(true);
         return;
       }

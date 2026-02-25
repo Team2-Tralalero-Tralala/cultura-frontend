@@ -24,13 +24,12 @@ export type AuthUser = {
   profile_picture?: string;
 };
 
-
 type AuthContextValue = {
   user: AuthUser | null;
   accessToken: string | null;
   login: (
     username: string,
-    password: string
+    password: string,
   ) => Promise<{ user: AuthUser; navigateToFirstPage: () => void }>;
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -43,7 +42,7 @@ export const AuthContext = createContext<AuthContextValue>({
     throw new Error("login not implemented");
   },
   register: async () => false,
-  logout: async () => { },
+  logout: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -102,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const res = await axios.post(
           `${apiUrl}/auth/login`,
           { username, password },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const authUser = await fetchUser();
@@ -120,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               navigate("/admin/community/own", { replace: true });
               break;
             case "member":
-              navigate("/member/home", { replace: true });
+              navigate("/member/community/own", { replace: true });
               break;
             case "tourist":
               navigate("/tourist/home", { replace: true });
@@ -140,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw error;
       }
     },
-    [navigate, fetchUser]
+    [navigate, fetchUser],
   );
 
   /*

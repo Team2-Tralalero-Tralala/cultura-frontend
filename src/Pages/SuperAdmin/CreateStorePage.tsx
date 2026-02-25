@@ -191,10 +191,17 @@ export function CreateStorePage() {
         setAlertOpen(true);
         return;
       }
-      if (coverFiles.length === 0 || galleryFiles.length === 0) {
+      if (coverFiles.length === 0) {
         setAlertType("error");
-        setAlertTitle("ข้อมูลไม่ถูกต้อง");
-        setAlertMessage("กรุณาอัพโหลดรูปภาพให้ครบถ้วน");
+        setAlertTitle("กรุณากรอกข้อมูลให้ครบถ้วน");
+        setAlertMessage("ไม่สามารถบันทึกข้อมูลได้ เนื่องจากต้องใส่รูปภาพหน้าปก");
+        setAlertOpen(true);
+        return;
+      }
+      if (galleryFiles.length === 0) {
+        setAlertType("error");
+        setAlertTitle("กรุณากรอกข้อมูลให้ครบถ้วน");
+        setAlertMessage("ไม่สามารถบันทึกข้อมูลได้ เนื่องจากต้องใส่รูปภาพเพิ่มเติม ");
         setAlertOpen(true);
         return;
       }

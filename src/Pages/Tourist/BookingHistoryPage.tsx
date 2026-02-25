@@ -301,6 +301,7 @@ export default function BookingHistoryPage() {
                       { label: "ทั้งหมด", value: "ALL" },
                       { label: "รอยืนยัน", value: "PENDING" },
                       { label: "จองสำเร็จ", value: "BOOKED" },
+                      { label: "ถูกปฏิเสธ", value: "REJECTED" },
                       { label: "ยกเลิกการจอง", value: "CANCELLED" },
                     ],
                   },

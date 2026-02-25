@@ -320,7 +320,7 @@ export function DetailBookingHistory() {
                     {item.package.community.location.district}{" "}
                     {item.package.community.location.province}
                   </p>
-                  <p className="font-bold">ราคา THB {formatPrice(item.package.price)}</p>
+                  <p className="font-bold">ราคา {formatPrice(item.package.price)} บาท</p>
                 </div>
               ))}
               {bookingHistories.length === 0 && <p>ไม่พบข้อมูลการจอง</p>}

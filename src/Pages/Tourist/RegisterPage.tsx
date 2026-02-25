@@ -152,7 +152,7 @@ export function RegisterPage() {
     }
 
     if (formData.password !== formData.passwordConfirm) {
-      errors.passwordConfirm = "รหัสผ่านไม่ตรงกัน";
+      errors.passwordConfirm = "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน";
       isValid = false;
     }
 

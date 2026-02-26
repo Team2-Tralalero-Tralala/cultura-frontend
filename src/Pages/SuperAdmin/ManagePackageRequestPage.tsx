@@ -9,12 +9,12 @@ import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
+import ModalReject from "@/Components/Modal/ModalReject";
 import {
   approvePackageRequest,
   fetchPackageRequests,
   rejectPackageRequest,
-} from "@/Services/package-request-service";
+} from "@/Libs/PackageService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 export type PackageRequestRow = {
@@ -53,72 +53,77 @@ const thaiApproveStatus = (status?: string | null) => {
  */
 const buildPackageRequestColumns = (
   onApprove: (row: PackageRequestRow) => void,
-  onReject: (row: PackageRequestRow) => void
+  onReject: (row: PackageRequestRow) => void,
 ): Column<PackageRequestRow>[] => [
-    {
-      key: "name",
-      header: "ชื่อแพ็กเกจ",
-      className: "min-w-[220px]",
-      render: (packageRequestRow) => (
-        <Link
-          to={`/super/package-requests/${packageRequestRow.id}`}
-          className="font-medium text-dark-green hover:underline focus:underline"
-        >
-          {packageRequestRow.name}
-        </Link>
-      ),
+  {
+    key: "name",
+    header: "ชื่อแพ็กเกจ",
+    className: "min-w-[220px]",
+    render: (packageRequestRow) => (
+      <Link
+        to={`/super/package-requests/${packageRequestRow.id}`}
+        className="font-medium text-dark-green hover:underline focus:underline"
+      >
+        {packageRequestRow.name}
+      </Link>
+    ),
+  },
+  {
+    key: "community",
+    header: "ชื่อชุมชน",
+    className: "min-w-[220px]",
+    render: (packageRequestRow) => <div>{packageRequestRow.community.name}</div>,
+  },
+  {
+    key: "overseer",
+    header: "ผู้ดูแล",
+    className: "min-w-[160px]",
+    render: (packageRequestRow) => <div>{packageRequestRow.overseer.username}</div>,
+  },
+  {
+    key: "statusApprove",
+    header: "สถานะคำขอ",
+    render: (packageRequestRow) => <div>{thaiApproveStatus(packageRequestRow.statusApprove)}</div>,
+  },
+  {
+    key: "actions",
+    header: "จัดการ",
+    className: "w-[160px] text-left pr-3",
+    render: (packageRequestRow) => {
+      const approved = String(packageRequestRow.statusApprove).toUpperCase() === "APPROVE";
+      return (
+        <div className="flex items-center justify-end gap-2 pr-2">
+          {!approved && (
+            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="cancel" onClick={() => onReject(packageRequestRow)}>
+                ปฏิเสธ
+              </Button>
+            </div>
+          )}
+          {!approved && (
+            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="confirm-admin" onClick={() => onApprove(packageRequestRow)}>
+                อนุมัติ
+              </Button>
+            </div>
+          )}
+          {approved && (
+            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="confirm-admin">อนุมัติ</Button>
+            </div>
+          )}
+        </div>
+      );
     },
-    {
-      key: "community",
-      header: "ชื่อชุมชน",
-      className: "min-w-[220px]",
-      render: (packageRequestRow) => <div>{packageRequestRow.community.name}</div>,
-    },
-    {
-      key: "overseer",
-      header: "ผู้ดูแล",
-      className: "min-w-[160px]",
-      render: (packageRequestRow) => <div>{packageRequestRow.overseer.username}</div>,
-    },
-    {
-      key: "statusApprove",
-      header: "สถานะคำขอ",
-      render: (packageRequestRow) => <div>{thaiApproveStatus(packageRequestRow.statusApprove)}</div>,
-    },
-    {
-      key: "actions",
-      header: "จัดการ",
-      className: "w-[160px] text-left pr-3",
-      render: (packageRequestRow) => {
-        const approved = String(packageRequestRow.statusApprove).toUpperCase() === "APPROVE";
-        return (
-          <div className="flex items-center justify-end gap-2 pr-2">
-            {!approved && (
-              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="cancel" onClick={() => onReject(packageRequestRow)}>
-                  ปฏิเสธ
-                </Button>
-              </div>
-            )}
-            {!approved && (
-              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="confirm-admin" onClick={() => onApprove(packageRequestRow)}>
-                  อนุมัติ
-                </Button>
-              </div>
-            )}
-            {approved && (
-              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="confirm-admin">อนุมัติ</Button>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-  ];
+  },
+];
 
-export default function PackageRequestsSuperAdmin() {
+/*
+ * คำอธิบาย : Component สำหรับจัดการคำขออนุมัติแพ็กเกจ
+ * Input : -
+ * Output : JSX Element หน้า ManagePackageRequestPage
+ */
+export function ManagePackageRequestPage() {
   const [packageRequestRows, setPackageRequestRows] = React.useState<PackageRequestRow[]>([]);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState<number>(10);
@@ -132,8 +137,8 @@ export default function PackageRequestsSuperAdmin() {
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  const [isConfirmOpen, setConfirmOpen] = React.useState<boolean>(false);
-  const [isRejectOpen, setRejectOpen] = React.useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState<boolean>(false);
   const [selectedRow, setSelectedRow] = React.useState<PackageRequestRow | null>(null);
 
   /**
@@ -153,7 +158,7 @@ export default function PackageRequestsSuperAdmin() {
           totalPages: 1,
           totalCount: 0,
           limit: pageSize,
-        }
+        },
       );
     } catch (error: any) {
       setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -193,7 +198,7 @@ export default function PackageRequestsSuperAdmin() {
    */
   const openRejectModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
-    setRejectOpen(true);
+    setIsRejectModalOpen(true);
   };
 
   /**
@@ -203,7 +208,7 @@ export default function PackageRequestsSuperAdmin() {
    */
   const openApproveModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
-    setConfirmOpen(true);
+    setIsConfirmModalOpen(true);
   };
 
   /**
@@ -212,15 +217,17 @@ export default function PackageRequestsSuperAdmin() {
   const handleReject = openRejectModal;
 
   /**
-   * คำอธิบาย : รีเซ็ตค่า selectedRow เมื่อ Modal ปิดลง (ใช้ setTimeout เพื่อรอให้ Animation จบ)
+   * คำอธิบาย: รีเซ็ตค่า selectedRow เมื่อ Modal ปิดลง (ใช้ setTimeout เพื่อรอให้ Animation จบ)
+   * Input : isConfirmModalOpen (สถานะ Modal ยืนยันการอนุมัติ)
+   * Output : -
    */
   useEffect(() => {
-    if (!isConfirmOpen) {
+    if (!isConfirmModalOpen) {
       setTimeout(() => {
         setSelectedRow(null);
       }, 0);
     }
-  }, [isConfirmOpen]);
+  }, [isConfirmModalOpen]);
 
   return (
     <div className="space-y-4">
@@ -239,7 +246,7 @@ export default function PackageRequestsSuperAdmin() {
 
         <div className="flex items-center gap-2 w-full">
           <div className="w-[260px]">
-            <SearchBarTable value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
           </div>
         </div>
       </div>
@@ -248,9 +255,7 @@ export default function PackageRequestsSuperAdmin() {
       <DataTable<PackageRequestRow>
         data={packageRequestRows}
         columns={buildPackageRequestColumns(openApproveModal, handleReject)}
-        getKey={(packageRequestRow: PackageRequestRow) =>
-          String(packageRequestRow.id)
-        }
+        getKey={(packageRequestRow: PackageRequestRow) => String(packageRequestRow.id)}
         selectable={false}
         theme="brand"
         isLoading={isLoading}
@@ -272,9 +277,10 @@ export default function PackageRequestsSuperAdmin() {
                 - จะแสดงเมื่อผู้ใช้กดปุ่ม "อนุมัติ"
                 - ใช้ selectedRow แสดงชื่อแพ็กเกจในข้อความยืนยัน
             */}
-      {isConfirmOpen && (
+
+      {isConfirmModalOpen && (
         <Modal
-          open={isConfirmOpen}
+          isOpen={isConfirmModalOpen}
           title="ยืนยันการอนุมัติ"
           text={
             selectedRow
@@ -288,11 +294,11 @@ export default function PackageRequestsSuperAdmin() {
             try {
               await handleApprove(selectedRow);
             } finally {
-              setConfirmOpen(false);
+              setIsConfirmModalOpen(false);
             }
           }}
           onCancel={() => {
-            setConfirmOpen(false);
+            setIsConfirmModalOpen(false);
             setSelectedRow(null);
           }}
         />
@@ -302,9 +308,10 @@ export default function PackageRequestsSuperAdmin() {
                 - ให้ผู้ใช้กรอกเหตุผลการปฏิเสธ
                 - เมื่อส่งสำเร็จ จะ reload ข้อมูลใหม่
             */}
-      {isRejectOpen && (
-        <RejectModal
-          open={isRejectOpen}
+
+      {isRejectModalOpen && (
+        <ModalReject
+          isOpen={isRejectModalOpen}
           title="ปฏิเสธคำขออนุมัติ"
           text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
           confirmText="ส่ง"
@@ -319,12 +326,12 @@ export default function PackageRequestsSuperAdmin() {
               setErrorMessage(error?.message ?? "ไม่สามารถปฏิเสธได้");
             } finally {
               setIsLoading(false);
-              setRejectOpen(false);
+              setIsRejectModalOpen(false);
               setSelectedRow(null);
             }
           }}
           onCancel={() => {
-            setRejectOpen(false);
+            setIsRejectModalOpen(false);
             setSelectedRow(null);
           }}
         />

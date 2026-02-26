@@ -5,7 +5,7 @@
  */
 import { Navigate, Outlet, useLocation } from "react-router";
 import type { Role } from "./AuthProvider";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./UseAuth";
 
 type Props = {
   allow: Role[]; // role ที่เข้าได้
@@ -23,7 +23,7 @@ type Props = {
  */
 export default function ProtectedRoute({
   allow,
-  redirectTo = "/guest/home",
+  redirectTo = "/guest/login",
   children,
 }: React.PropsWithChildren<Props>) {
   const { user } = useAuth();
@@ -33,9 +33,13 @@ export default function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // ⚠️ login แล้วแต่ role ไม่ตรง → ไปหน้า redirectTo
+  // ⚠️ login แล้วแต่ role ไม่ตรง → redirect ตาม role
   if (!allow.includes(user.role)) {
-    return <Navigate to={redirectTo} replace />;
+    const roleRedirect =
+      user.role === "admin" || user.role === "superadmin" || user.role === "member"
+        ? "/guest/partner/login"
+        : "/login";
+    return <Navigate to={roleRedirect} replace />;
   }
 
   // ✅ ผ่านเงื่อนไข → render children หรือ Outlet (กรณี nested routes)

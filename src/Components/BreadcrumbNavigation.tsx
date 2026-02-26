@@ -4,35 +4,23 @@
  * โดยมีการจดจำประวัติการเข้าชมด้วย sessionStorage และใช้ Snapshot Strategy
  * เพื่อป้องกันปัญหาการเข้า URL ตรง หรือการกดปุ่ม Back ของ Browser
  *
- * ตัวอย่าง – หน้ารายการ (มาจาก sidebar) :
- * <Breadcrumb
- * current={{
- * label: "จัดการชุมชน",
- * to: "/super/communities",
- * fromSidebar: true,   // << สำคัญ : มาจาก sidebar
- * }}
- * />
- *
- * ตัวอย่าง – หน้าอื่นๆ ,sub sidebar :
- * <Breadcrumb
- * current={{
- * label: community.name,
- * to: `/super/community/${community.id}`,
- * }}
- * />
  */
 
 import { Link, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 
+/**
+ * Type: Crumb
+ * วัตถุประสงค์: โครงสร้างข้อมูลของแต่ละ Breadcrumb Node
+ */
 type Crumb = {
   label: string;
   to: string;
-  fromSidebar?: boolean;
+  isFromSidebar?: boolean; // Renamed from fromSidebar
 };
 
-interface BreadcrumbProps {
+interface BreadcrumbNavigationProps {
   current: Crumb;
 }
 
@@ -41,9 +29,12 @@ const SNAPSHOT_KEY = "breadcrumb_snapshots_v2";
 const LAST_CHAIN_KEY = "breadcrumb_last_active_v2";
 
 /**
- * คำอธิบาย : ดึงส่วนแรกของ URL เพื่อระบุ Role ของผู้ใช้ (เช่น /super/... -> super)
- * Input : path (String ของ URL path)
- * Output : String (Role prefix เช่น "super", "tourist")
+ * ฟังก์ชัน: getRolePrefix
+ * วัตถุประสงค์: ดึงส่วนแรกของ URL เพื่อระบุ Role ของผู้ใช้ (เช่น /super/... -> super)
+ * Input:
+ *   - path: URL path (string)
+ * Output:
+ *   - Role prefix (string)
  */
 const getRolePrefix = (path: string) => {
   const parts = path.split("/").filter(Boolean);
@@ -55,7 +46,7 @@ const getRolePrefix = (path: string) => {
  * Input : current (ข้อมูลของหน้าปัจจุบัน: label, to, fromSidebar)
  * Output : JSX Element ของ Breadcrumb nav หรือ null
  */
-export default function Breadcrumb({ current }: BreadcrumbProps) {
+export default function BreadcrumbNavigation({ current }: BreadcrumbNavigationProps) {
   const location = useLocation();
 
   const [items, setItems] = useState<Crumb[]>([]);
@@ -64,32 +55,29 @@ export default function Breadcrumb({ current }: BreadcrumbProps) {
     const normalizedCurrent: Crumb = {
       ...current,
       to:
-        !current.to ||
-        current.to.includes("undefined") ||
-        current.to.includes("null")
+        !current.to || current.to.includes("undefined") || current.to.includes("null")
           ? location.pathname
           : current.to,
     };
 
     const snapshots: Record<string, Crumb[]> = JSON.parse(
-      sessionStorage.getItem(SNAPSHOT_KEY) || "{}"
+      sessionStorage.getItem(SNAPSHOT_KEY) || "{}",
     );
-    let lastActiveChain: Crumb[] = JSON.parse(
-      sessionStorage.getItem(LAST_CHAIN_KEY) || "[]"
-    );
+    let lastActiveChain: Crumb[] = JSON.parse(sessionStorage.getItem(LAST_CHAIN_KEY) || "[]");
 
     const currentKey = location.key;
     const isFirstLoad = currentKey === "default";
     let newChain: Crumb[] = [];
 
     const currentRole = getRolePrefix(normalizedCurrent.to);
-    const lastChainRole = lastActiveChain.length > 0 ? getRolePrefix(lastActiveChain[0].to) : currentRole;
+    const lastChainRole =
+      lastActiveChain.length > 0 ? getRolePrefix(lastActiveChain[0].to) : currentRole;
 
     // ตรวจสอบว่า Role เปลี่ยนไปหรือไม่ (เช่น Logout admin -> Login tourist)
     const isRoleMismatch = currentRole !== lastChainRole;
 
-    // Priority 1: ถ้ามาจาก Sidebar หรือ มีการเปลี่ยน Role -> ล้างกระดานทันที
-    if (normalizedCurrent.fromSidebar || isRoleMismatch) {
+    // Priority 1: ถ้ามาจาก Sidebar หรือ Role เปลี่ยน -> ล้างกระดานทันที
+    if (normalizedCurrent.isFromSidebar || isRoleMismatch) {
       newChain = [normalizedCurrent];
     }
     // Priority 2: ถ้ามี Snapshot ของ Key นี้ -> ลอง Restore
@@ -115,9 +103,8 @@ export default function Breadcrumb({ current }: BreadcrumbProps) {
         newChain = [normalizedCurrent];
       } else {
         // Logic การต่อ Chain ปกติ
-        // แก้ไข: เปลี่ยน h เป็น historyItem ให้สื่อความหมาย
         const existedIndex = lastActiveChain.findIndex(
-          (historyItem) => historyItem.to === normalizedCurrent.to
+          (historyItem) => historyItem.to === normalizedCurrent.to,
         );
 
         if (existedIndex !== -1) {
@@ -135,16 +122,14 @@ export default function Breadcrumb({ current }: BreadcrumbProps) {
     sessionStorage.setItem(LAST_CHAIN_KEY, JSON.stringify(newChain));
 
     setItems(newChain);
-
-  }, [location.pathname, location.key, current.label, current.to, current.fromSidebar]);
+  }, [location.pathname, location.key, current.label, current.to, current.isFromSidebar]);
 
   /**
-   * ฟังก์ชัน : handleBack
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการ event เมื่อกดลิงก์ย้อนกลับ (ปัจจุบันยังไม่มี logic พิเศษ)
    * Input : -
    * Output : -
    */
-  const handleBack = () => { };
+  const handleBack = () => {};
 
   if (!items.length) return null;
 
@@ -154,7 +139,7 @@ export default function Breadcrumb({ current }: BreadcrumbProps) {
     <nav aria-label="breadcrumb" className="flex items-center text-[14px] font-medium -pt-2 pb-5">
       {items.map((item, index) => {
         const isCurrent = index === lastIndex;
-        const isSingleFromSidebar = items.length === 1 && !!item.fromSidebar;
+        const isSingleFromSidebar = items.length === 1 && !!item.isFromSidebar;
         // กติกาสี:
         // - หน้าเดียว + fromSidebar: ดำ
         // - หน้าปัจจุบัน: #494949
@@ -162,8 +147,8 @@ export default function Breadcrumb({ current }: BreadcrumbProps) {
         const textColorClass = isSingleFromSidebar
           ? "text-black"
           : isCurrent
-          ? "text-[#494949]"
-          : "text-black";
+            ? "text-[#494949]"
+            : "text-black";
 
         return (
           <div key={item.to + index} className="flex items-center">

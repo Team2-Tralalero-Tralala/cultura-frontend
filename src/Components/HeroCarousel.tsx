@@ -1,7 +1,11 @@
 /*
  * คำอธิบาย : Component สำหรับแสดง carousel ภาพแบบ hero banner
  * ประกอบด้วยภาพหลัก, ปุ่มนำทางซ้าย-ขวา, และจุดบอกตำแหน่ง (pagination dots)
- * ใช้ Embla Carousel สำหรับการทำงาน
+ * Input:
+ *   - items: รายการภาพ (array of { image })
+ *   - options: ตัวเลือกเสริมของ Embla
+ *   - className: คลาสเสริมภายนอก
+ * Output: React Component ที่ render carousel
  */
 
 import useEmblaCarousel from "embla-carousel-react";
@@ -21,7 +25,6 @@ interface HeroCarouselProps {
 }
 
 /*
- * ฟังก์ชัน : HeroCarousel
  * คำอธิบาย : แสดง carousel ภาพแบบ hero banner พร้อมปุ่มนำทางและ pagination dots
  * Input : HeroCarouselProps (items, options, className)
  * Output : React Component ที่ render carousel พร้อม navigation controls
@@ -62,7 +65,7 @@ export default function HeroCarousel({ items, options, className }: HeroCarousel
     (index: number) => {
       if (emblaApi) emblaApi.scrollTo(index);
     },
-    [emblaApi]
+    [emblaApi],
   );
 
   /*

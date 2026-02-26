@@ -3,8 +3,8 @@
  * ใช้สำหรับแสดง Sidebar และพื้นที่คอนเทนต์ของหน้าสมาชิกทั้งหมด
  */
 import React from 'react';
-import SidebarMember from '../../Components/SidebarMember';
-import NavbarMember from "../../Components/NavbarSam";
+import SidebarMember from '../../Components/Sidebar/SidebarMember';
+import NavbarMember from "../../Components/Navbar/NavbarSam";
 import { Outlet } from 'react-router-dom';
 import { ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 

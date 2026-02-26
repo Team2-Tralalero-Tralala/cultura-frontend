@@ -2,23 +2,23 @@
  * คำอธิบาย: หน้า Dashboard ของ Tourist
  * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
  */
-import { LineGraph } from "@/Components/LineGraph";
+import LineGraph from "@/Components/Graph/LineGraph";
 import React from "react";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
 import {
   fetchTouristDashboardData,
   type TouristDashboardFilters,
   type TouristDashboardResponse,
-} from "@/Services/dashboard-service";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
-import NavbarTourist from "@/Components/NavbarTourist";
+} from "@/Libs/DashboardService";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
 /**
- * คำอธิบาย: DashboardPage
- * input: -
- * output: JSX.Element
+ * คำอธิบาย: Component สำหรับหน้า Dashboard (Tourist)
+ * Input: -
+ * Output: JSX.Element
  */
 export function DashboardPage() {
   const [dashboardData, setDashboardData] = React.useState<TouristDashboardResponse>();
@@ -26,6 +26,7 @@ export function DashboardPage() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   type PeriodType = "weekly" | "monthly" | "yearly";
+
   /**
    * คำอธิบาย: คำนวณช่วงวันที่เริ่มต้นตามประเภทช่วงเวลา (รายสัปดาห์, รายเดือน, รายปี)
    * Input: periodType (PeriodType) - ประเภทของช่วงเวลาที่ต้องการคำนวณ
@@ -108,6 +109,7 @@ export function DashboardPage() {
       setIsLoading(false);
     }
   }, [bookingDateRange]);
+
   /**
    * คำอธิบาย: ดึงข้อมูล Dashboard ทุกครั้งที่ fetchDashboardData เปลี่ยนแปลง
    * Input: - (ใช้ fetchDashboardData)
@@ -250,8 +252,8 @@ export function DashboardPage() {
                         bookingDateRange.periodType === "weekly"
                           ? "วัน"
                           : bookingDateRange.periodType === "monthly"
-                          ? "เดือน"
-                          : "ปี"
+                            ? "เดือน"
+                            : "ปี"
                       }
                     />
                   </div>

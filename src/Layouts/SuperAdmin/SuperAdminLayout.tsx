@@ -3,8 +3,8 @@
  * ใช้สำหรับแสดง Sidebar และพื้นที่คอนเทนต์ของหน้าซูเปอร์แอดมินทั้งหมด
  */
 import { Outlet } from "react-router-dom";
-import SidebarSuperAdmin from "../../Components/SidebarSuperAdmin";
-import NavbarSuperAdmin from "../../Components/NavbarSam";
+import SidebarSuperAdmin from "../../Components/Sidebar/SidebarSuperAdmin";
+import NavbarSuperAdmin from "../../Components/Navbar/NavbarSam";
 import { ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 
 

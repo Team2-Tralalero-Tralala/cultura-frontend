@@ -8,34 +8,34 @@
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
 import * as React from "react";
-import { Link, redirect, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import type { CommunityFormData } from "@/Types/CommunityForm";
+import type { CommunityFormData } from "@/Types/Community";
 import zod from "zod";
 import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getCommunityById, updateCommunity } from "@/Services/community-service";
+import { getCommunityById, updateCommunity } from "@/Libs/CommunityService";
 import Backdrop from "@mui/material/Backdrop";
 import { Icon } from "@iconify/react";
 import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
-import Switch from "@/Components/Switch";
-import TextArea from "@/Components/TextArea";
+import Switch from "@/Components/CustomSwitch";
+import TextArea from "@/Components/Input/TextArea";
 import MapPicker from "@/Components/MapPicker";
 import { AdminSelector, type Admin } from "@/Components/Selector/AdminSelector";
 import Button from "@/Components/Button";
 import MemberSelector, { type Member } from "@/Components/Selector/MemberSelector";
-import TextField from "@/Components/TextField";
+import TextField from "@/Components/Input/TextField";
 import { Modal } from "@/Components/Modal/Modal";
-import UploadCard from "@/Components/calendar/upload/UploadCard";
-import UploadProfile from "@/Components/calendar/upload/community/UploadProfile";
+import UploadCard from "@/Components/upload/UploadCard";
+import UploadProfile from "@/Components/upload/UploadProfile";
 import { BankSelector } from "@/Components/Selector/BankSelector";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
-import BoxDateInput from "@/Components/calendar/input_calendar/BoxDateInput";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /*
@@ -53,7 +53,10 @@ const communitySchema = zod.object({
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
   bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
   accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: zod.coerce
+    .string()
+    .regex(/^\d+$/, "กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข")
+    .min(1, "กรุณากรอกหมายเลขบัญชี"),
   description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
   mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
   mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
@@ -74,11 +77,28 @@ const communitySchema = zod.object({
  * Input : url, filename, defaultMimeType
  * Output : File object
  */
-async function urlToFile(url: string, filename: string, defaultMimeType?: string): Promise<File> {
+async function urlToFile(
+  url: string,
+  filename: string,
+  defaultMimeType?: string,
+): Promise<File | null> {
   const response = await fetch(url, {
     credentials: "include",
   });
+
+  // Check if response is successful
+  if (!response.ok) {
+    console.warn(`Failed to fetch file from ${url}: Status ${response.status}`);
+    return null;
+  }
+
   const blob = await response.blob();
+
+  // Check if content type is HTML (error page)
+  if (blob.type.includes("text/html")) {
+    console.warn(`Fetched file from ${url} returned HTML content, ignoring.`);
+    return null;
+  }
 
   let type = blob.type;
   if (!type || (defaultMimeType && !type.startsWith(defaultMimeType.split("/")[0]))) {
@@ -113,15 +133,21 @@ const getFilePreview = (file: File | null): string | null => {
  * - backendUrl (string) : URL ของ Backend
  * Output : object ที่ประกอบด้วย logo, cover, gallery, video (File[])
  */
-const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) => {
-  const getFiles = (type: string, defaultMimeType?: string) =>
-    Promise.all(
+const fetchCommunityFiles = async (
+  communityImages: any[],
+  backendUrl: string,
+): Promise<{ logo: File[]; cover: File[]; gallery: File[]; video: File[] }> => {
+  const getFiles = async (type: string, defaultMimeType?: string) => {
+    const files = await Promise.all(
       (communityImages || [])
         .filter((image: any) => image.type === type)
         .map((image: any) =>
-          urlToFile(`${backendUrl}/${image.image}`, image.image, defaultMimeType)
-        )
+          urlToFile(`${backendUrl}/${image.image}`, image.image, defaultMimeType),
+        ),
     );
+    // Filter out null values (failed fetches)
+    return files.filter((file): file is File => file !== null);
+  };
 
   const [logo, cover, gallery, video] = await Promise.all([
     getFiles("LOGO"),
@@ -209,12 +235,11 @@ const prepareSubmitData = ({
 };
 
 /*
- * คำอธิบาย : Component สำหรับแก้ไขข้อมูลวิสาหกิจชุมชน
- * ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
+ * คำอธิบาย : ทำหน้าที่โหลดข้อมูลจาก API, แสดงข้อมูลในฟอร์ม, ตรวจสอบความถูกต้อง และบันทึกการแก้ไข
  * Input : communityId (ดึงจาก useParams)
  * Output : ส่งคำขออัปเดตข้อมูลวิสาหกิจชุมชนผ่าน API updateCommunity()
  */
-export function EditCommunity() {
+export function EditCommunityPage() {
   const { communityId } = useParams();
   const [formData, setFormData] = React.useState<Partial<CommunityFormData>>({
     communityMembers: [],
@@ -226,26 +251,26 @@ export function EditCommunity() {
     subdistrict: "",
     postalCode: "",
   });
-  const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [expandedPanel, setExpandedPanel] = React.useState<string | false>(false);
   const [formErrors, setFormErrors] = React.useState<Record<string, string | undefined>>({});
-  const [checked, setChecked] = React.useState(true);
+  const [isCommunityOpen, setIsCommunityOpen] = React.useState(true);
   const [isVisibleRating, setIsVisibleRating] = React.useState(true);
   const [admin, setAdmin] = React.useState<Admin>();
   const [members, setMembers] = React.useState<Member[]>();
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
-  const [openConfirm, setOpenConfirm] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true); // สำหรับโหลดข้อมูลครั้งแรก
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [coverFiles, setCoverFiles] = React.useState<File | null>(null);
   const [logoFile, setLogoFile] = React.useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [videoFiles, setVideoFiles] = React.useState<File[]>([]);
   const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
-  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
   const [registerDate, setRegisterDate] = React.useState<Date | null>(null);
-  const [openCancelConfirm, setOpenCancelConfirm] = React.useState(false);
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   const navigate = useNavigate();
@@ -307,19 +332,19 @@ export function EditCommunity() {
             id: member.user.id,
             fname: member.user.fname,
             lname: member.user.lname,
-          })) ?? []
+          })) ?? [],
         );
         setRegisterDate(data.registerDate ? new Date(data.registerDate) : null);
         setPosition([latitude, longitude]);
-        setChecked(data.status === "OPEN" ? true : false);
+        setIsCommunityOpen(data.status === "OPEN" ? true : false);
         setIsVisibleRating(data.isRatingVisible);
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "/uploads/") || "http://localhost:3000";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
         const { logo, cover, gallery, video } = await fetchCommunityFiles(
           data.communityImage,
-          backendUrl
+          backendUrl,
         );
 
         setLogoFile(logo[0] || null);
@@ -344,11 +369,12 @@ export function EditCommunity() {
    * Output : -
    */
   const handleChange = (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) =>
-    setExpanded(isExpanded ? panel : false);
-  /*
-   * คำอธิบาย : ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
-   * Input : field, value
-   * Output : boolean
+    setExpandedPanel(isExpanded ? panel : false);
+
+  /**
+   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลในฟอร์มด้วย Zod Schema
+   * Input: field (optional), value (optional)
+   * Output: boolean (valid or not)
    */
   const validateField = (field?: string, value?: any) => {
     // ถ้ามี field แสดงว่าตรวจเฉพาะช่องนั้น
@@ -386,7 +412,7 @@ export function EditCommunity() {
    */
   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
-    setChecked(newChecked);
+    setIsCommunityOpen(newChecked);
     setFormData((prev) => ({
       ...prev,
       status: newChecked ? "OPEN" : "CLOSED",
@@ -409,11 +435,11 @@ export function EditCommunity() {
 
   /*
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้กรอกข้อมูลใน TextField หรือ TextArea
-   * Input : e
+   * Input : event
    * Output : -
    */
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
+  const handleFormChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = event.target;
     const updated = { ...formData, [id]: value };
     setFormData(updated);
     validateField(id as keyof typeof formData, value);
@@ -447,7 +473,23 @@ export function EditCommunity() {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ถูกต้อง");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนทำการบันทึก");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (galleryFiles.length === 0) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณาอัปโหลดรูปภาพเพิ่มเติมอย่างน้อย 1 รูป");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (videoFiles.length === 0) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณาอัปโหลดวิดีโออย่างน้อย 1 วิดีโอ");
+      setIsAlertOpen(true);
       return;
     }
 
@@ -469,13 +511,15 @@ export function EditCommunity() {
       setAlertType("success");
       setAlertTitle("แก้ไขวิสาหกิจชุมชนสำเร็จ");
       setAlertMessage("ข้อมูลวิสาหกิจถูกแก้ไขเรียบร้อยแล้ว");
-      setAlertOpen(true);
+      setIsAlertOpen(true);
       navigate("/super/communities/all");
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
-      setAlertOpen(true);
+      setAlertMessage(errorMessage);
+      setIsAlertOpen(true);
     }
   };
 
@@ -502,13 +546,13 @@ export function EditCommunity() {
         </Link>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <p>สถานะชุมชน</p>
-          <Switch checked={checked} onChange={handleCheck} />
+          <Switch checked={isCommunityOpen} onChange={handleCheck} />
         </Stack>
       </div>
 
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
-        expanded={expanded === "panel2"}
+        className="rounded-lg! bg-transparent! shadow-none! border-0!  mt-3"
+        expanded={expandedPanel === "panel2"}
         onChange={handleChange("panel2")}
         sx={{ "&:before": { display: "none" } }}
       >
@@ -516,7 +560,7 @@ export function EditCommunity() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
-          className="!bg-white !rounded-lg !shadow-sm"
+          className="bg-white! rounded-lg! shadow-sm!"
           sx={{
             "&.Mui-expanded": {
               minHeight: "48px",
@@ -528,7 +572,7 @@ export function EditCommunity() {
         >
           <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
         </AccordionSummary>
-        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+        <AccordionDetails className="bg-white! rounded-lg! shadow-sm! mt-[14px] p-6!">
           <div className="flex justify-between items-center w-full mb-[24px]">
             <h2 className="text-lg font-bold">ข้อมูลวิสาหกิจชุมชน</h2>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
@@ -770,8 +814,8 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
-        expanded={expanded === "panel3"}
+        className="rounded-lg! bg-transparent! shadow-none! border-0!  mt-3"
+        expanded={expandedPanel === "panel3"}
         onChange={handleChange("panel3")}
         sx={{ "&:before": { display: "none" } }}
       >
@@ -779,7 +823,7 @@ export function EditCommunity() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
-          className="!bg-white !rounded-lg !shadow-sm"
+          className="bg-white! rounded-lg! shadow-sm!"
           sx={{
             "&.Mui-expanded": {
               minHeight: "48px",
@@ -791,7 +835,7 @@ export function EditCommunity() {
         >
           <h2 className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</h2>
         </AccordionSummary>
-        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+        <AccordionDetails className="bg-white! rounded-lg! shadow-sm! mt-[14px] p-6!">
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -877,8 +921,8 @@ export function EditCommunity() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0 mt-3"
-        expanded={expanded === "panel4"}
+        className="rounded-lg! bg-transparent! shadow-none! border-0! mt-3"
+        expanded={expandedPanel === "panel4"}
         onChange={handleChange("panel4")}
         sx={{ "&:before": { display: "none" } }}
       >
@@ -886,7 +930,7 @@ export function EditCommunity() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
-          className="!bg-white !rounded-lg !shadow-sm"
+          className="bg-white! rounded-lg! shadow-sm!"
           sx={{
             "&.Mui-expanded": {
               minHeight: "48px",
@@ -898,7 +942,7 @@ export function EditCommunity() {
         >
           <h2 className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</h2>
         </AccordionSummary>
-        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+        <AccordionDetails className="bg-white! rounded-lg! shadow-sm! mt-[14px] p-6!">
           <h1 className="text-lg font-bold mb-[24px]">ข้อมูลติดต่อวิสาหกิจชุมชน</h1>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
@@ -1058,43 +1102,45 @@ export function EditCommunity() {
       </Accordion>
       <div className="flex justify-end mt-5 mb-10 mr-5">
         <div className="w-32 mr-2.5">
-          <Button type="cancel" onClick={() => setOpenCancelConfirm(true)}>
+          <Button type="cancel" onClick={() => setIsCancelConfirmModalOpen(true)}>
             ยกเลิก
           </Button>
         </div>
         <div className="w-32">
-          <Button type="confirm-admin" onClick={() => setOpenConfirm(true)}>
+          <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
             บันทึก
           </Button>
         </div>
       </div>
       <Modal
-        open={openConfirm}
+        isOpen={isConfirmModalOpen}
         title="ยืนยันการแก้ไขข้อมูล"
         text="คุณต้องการยืนยันการแก้ไขข้อมูลหรือไม่"
         onConfirm={async () => {
-          setOpenConfirm(false);
+          setIsConfirmModalOpen(false);
           await handleSubmit();
         }}
-        onCancel={() => setOpenConfirm(false)}
+        onCancel={() => setIsConfirmModalOpen(false)}
       />
       <Modal
-        open={openCancelConfirm}
+        isOpen={isCancelConfirmModalOpen}
         title="ยืนยันการยกเลิก"
         text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
         onConfirm={() => {
-          setOpenCancelConfirm(false);
+          setIsCancelConfirmModalOpen(false);
           navigate(-1);
         }}
-        onCancel={() => setOpenCancelConfirm(false)}
+        onCancel={() => setIsCancelConfirmModalOpen(false)}
       />
       <ModalAlert
-        open={alertOpen}
+        isOpen={isAlertOpen}
         type={alertType}
         title={alertTitle}
         message={alertMessage}
-        onClose={() => setAlertOpen(false)}
+        onClose={() => setIsAlertOpen(false)}
       />
     </div>
   );
 }
+
+export default EditCommunityPage;

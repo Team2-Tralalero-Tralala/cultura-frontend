@@ -1,5 +1,5 @@
 /**
- * Component: PackageRequestsAdminPage
+ * Component: ManagePackageRequestPage
  * คำอธิบาย:
  *  - ใช้สำหรับ Admin เพื่อตรวจสอบและจัดการคำขออนุมัติแพ็กเกจจากชุมชน
  *  - รองรับการค้นหา, pagination, และแสดงข้อมูลผู้ดูแล/ชุมชน
@@ -8,20 +8,22 @@
  */
 import React, { useEffect } from "react";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
+import { useNavigate } from "react-router-dom";
 import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import RejectModal from "@/Components/Modal/ModalReject";
+import ModalReject from "@/Components/Modal/ModalReject";
 import { Link } from "react-router-dom";
 import {
   approvePackageRequestForAdmin,
   fetchPackageRequests,
   rejectPackageRequestForAdmin,
-} from "@/Services/package-request-service";
+} from "@/Libs/PackageService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { Icon } from "@iconify/react";
 
-export type PackageRequestRow = {
+type PackageRequestRow = {
   id: number;
   name: string;
   statusApprove: "PENDING_SUPER" | string | null;
@@ -29,14 +31,19 @@ export type PackageRequestRow = {
   overseer: { id: number; username: string };
 };
 
-export type Pagination = {
+type Pagination = {
   currentPage: number;
   totalPages: number;
   totalCount: number;
   limit: number;
 };
 
-const thaiApproveStatus = (status?: string | null) => {
+/**
+ * คำอธิบาย: แปลงสถานะคำขออนุมัติเป็นข้อความภาษาไทย
+ * Input: status (string | null)
+ * Output: ข้อความสถานะภาษาไทย หรือ "-"
+ */
+const getThaiApprovalStatus = (status?: string | null) => {
   switch ((status || "").toUpperCase()) {
     case "PENDING_SUPER":
       return "รออนุมัติ";
@@ -46,80 +53,86 @@ const thaiApproveStatus = (status?: string | null) => {
 };
 
 /**
- * ฟังก์ชัน buildPackageRequestColumns
  * คำอธิบาย:
  *  - สร้างชุด Columns สำหรับตารางคำขอแพ็กเกจ
  *  - รองรับปุ่มอนุมัติ / ปฏิเสธ
  *  - รับ callback จาก parent เพื่อส่ง event การคลิกในแต่ละแถว
+ * Input:
+ * - onApprove: callback เมื่อกดปุ่มอนุมัติ
+ * - onReject: callback เมื่อกดปุ่มปฏิเสธ
+ * Output: Column definition
  */
-const buildPackageRequestColumns = (
+const createPackageRequestColumns = (
   onApprove: (row: PackageRequestRow) => void,
-  onReject: (row: PackageRequestRow) => void
+  onReject: (row: PackageRequestRow) => void,
 ): Column<PackageRequestRow>[] => [
-    {
-      key: "name",
-      header: "ชื่อแพ็กเกจ",
-      className: "min-w-[220px]",
-      render: (r) => (
-        <Link
-          to={`/admin/package-requests/${r.id}`}
-          className="font-medium text-dark-green hover:underline focus:underline"
-        >
-          {r.name}
-        </Link>
-      ),
+  {
+    key: "name",
+    header: "ชื่อแพ็กเกจ",
+    className: "min-w-[220px]",
+    render: (request) => (
+      <Link
+        to={`/admin/package-requests/${request.id}`}
+        className="font-medium text-dark-green hover:underline focus:underline"
+      >
+        {request.name}
+      </Link>
+    ),
+  },
+  {
+    key: "community",
+    header: "ชื่อชุมชน",
+    className: "min-w-[220px]",
+    render: (request) => <div>{request.community.name}</div>,
+  },
+  {
+    key: "overseer",
+    header: "ผู้ดูแล",
+    className: "min-w-[160px]",
+    render: (request) => <div>{request.overseer.username}</div>,
+  },
+  {
+    key: "statusApprove",
+    header: "สถานะคำขอ",
+    render: (request) => <div>{getThaiApprovalStatus(request.statusApprove)}</div>,
+  },
+  {
+    key: "actions",
+    header: "จัดการ",
+    className: "w-[160px] text-left pr-3",
+    render: (request) => {
+      const approved = String(request.statusApprove).toUpperCase() === "APPROVE";
+      return (
+        <div className="flex items-center justify-end gap-2 pr-2">
+          {!approved && (
+            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="cancel" onClick={() => onReject(request)}>
+                ปฏิเสธ
+              </Button>
+            </div>
+          )}
+          {!approved && (
+            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="confirm-admin" onClick={() => onApprove(request)}>
+                อนุมัติ
+              </Button>
+            </div>
+          )}
+          {approved && (
+            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+              <Button type="confirm-admin">อนุมัติ</Button>
+            </div>
+          )}
+        </div>
+      );
     },
-    {
-      key: "community",
-      header: "ชื่อชุมชน",
-      className: "min-w-[220px]",
-      render: (r) => <div>{r.community.name}</div>,
-    },
-    {
-      key: "overseer",
-      header: "ผู้ดูแล",
-      className: "min-w-[160px]",
-      render: (r) => <div>{r.overseer.username}</div>,
-    },
-    {
-      key: "statusApprove",
-      header: "สถานะคำขอ",
-      render: (r) => <div>{thaiApproveStatus(r.statusApprove)}</div>,
-    },
-    {
-      key: "actions",
-      header: "จัดการ",
-      className: "w-[160px] text-left pr-3",
-      render: (r) => {
-        const approved = String(r.statusApprove).toUpperCase() === "APPROVE";
-        return (
-          <div className="flex items-center justify-end gap-2 pr-2">
-            {!approved && (
-              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="cancel" onClick={() => onReject(r)}>
-                  ปฏิเสธ
-                </Button>
-              </div>
-            )}
-            {!approved && (
-              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="confirm-admin" onClick={() => onApprove(r)}>
-                  อนุมัติ
-                </Button>
-              </div>
-            )}
-            {approved && (
-              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-                <Button type="confirm-admin">อนุมัติ</Button>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-  ];
+  },
+];
 
-export default function PackageRequestsAdminPage() {
+/**
+ * คำอธิบาย: Page Component สำหรับรายการคำขออนุมัติแพ็กเกจ (Admin)
+ */
+export default function ManagePackageRequestPage() {
   const [rows, setRows] = React.useState<PackageRequestRow[]>([]);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState<number>(10);
@@ -137,9 +150,15 @@ export default function PackageRequestsAdminPage() {
   const [isRejectOpen, setRejectOpen] = React.useState(false);
   const [selectedRow, setSelectedRow] =
     React.useState<PackageRequestRow | null>(null);
+  const navigate = useNavigate();
 
+  /*
+    * คำอธิบาย : ฟังก์ชันสำหรับนำทางไปยังหน้าสร้างแพ็กเกจของผู้ดูแลระบบ
+    * Input : -
+    * Output : (void) เรียกใช้ navigate เพื่อนำผู้ใช้ไปยังหน้า "/admin/package/create"
+    */
+  const goToCreatePackage = () => navigate("/admin/package/create");
   /**
-   * ฟังก์ชัน reload
    * คำอธิบาย:
    *  - โหลดข้อมูลคำขอแพ็กเกจจาก API
    *  - อัปเดตตาราง + pagination
@@ -149,12 +168,7 @@ export default function PackageRequestsAdminPage() {
     try {
       setIsLoading(true);
       setErrorMessage(null);
-      const { data } = await fetchPackageRequests(
-        currentPage,
-        pageSize,
-        searchQuery,
-        "PENDING"
-      );
+      const { data } = await fetchPackageRequests(currentPage, pageSize, searchQuery, "PENDING");
       setRows(data?.data?.data ?? []);
       setPagination(
         data?.data?.pagination ?? {
@@ -162,56 +176,54 @@ export default function PackageRequestsAdminPage() {
           totalPages: 1,
           totalCount: 0,
           limit: pageSize,
-        }
+        },
       );
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
   }, [currentPage, pageSize, searchQuery]);
 
   /**
-   * useEffect:
-   * คำอธิบาย:
-   *  - เรียก reload() ทุกครั้งที่ currentPage, pageSize หรือ searchQuery เปลี่ยน
+   * useEffect: เรียก reload() ทุกครั้งที่ currentPage, pageSize หรือ searchQuery เปลี่ยน
    */
   React.useEffect(() => {
     reload();
   }, [reload, currentPage, pageSize, searchQuery]);
 
   /**
-   * useEffect:
-   * คำอธิบาย:
-   *  - เมื่อ searchQuery เปลี่ยน ให้กลับไปหน้าแรกของตาราง
+   * useEffect: เมื่อ searchQuery เปลี่ยน ให้กลับไปหน้าแรกของตาราง
    */
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
   /**
-   * ฟังก์ชัน handleApprove
    * คำอธิบาย:
    *  - ส่งคำขออนุมัติไปยัง backend
    *  - เมื่อสำเร็จ จะ reload ข้อมูลตารางใหม่
    *  - ถ้าเกิด error จะเก็บข้อความ error ลง state
+   * Input: row (PackageRequestRow)
+   * Output: void
    */
   const handleApprove = async (row: PackageRequestRow) => {
     try {
       setIsLoading(true);
       await approvePackageRequestForAdmin(row.id);
       await reload();
-    } catch (e: any) {
-      setErrorMessage(e?.message ?? "ไม่สามารถอนุมัติได้");
+    } catch (error: any) {
+      setErrorMessage(error?.message ?? "ไม่สามารถอนุมัติได้");
       setIsLoading(false);
     }
   };
 
   /**
-   * ฟังก์ชัน openRejectModal
    * คำอธิบาย:
    *  - เปิด Modal ปฏิเสธคำขอ (RejectModal)
    *  - เซ็ต row ที่ถูกเลือกลงใน selectedRow
+   * Input: row (PackageRequestRow)
+   * Output: void
    */
   const openRejectModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
@@ -219,10 +231,11 @@ export default function PackageRequestsAdminPage() {
   };
 
   /**
-   * ฟังก์ชัน openApproveModal
    * คำอธิบาย:
    *  - เปิด Modal ยืนยันการอนุมัติแพ็กเกจ
    *  - เซ็ต row ที่ผู้ใช้เลือกลง selectedRow
+   * Input: row (PackageRequestRow)
+   * Output: void
    */
   const openApproveModal = (row: PackageRequestRow) => {
     setSelectedRow(row);
@@ -230,19 +243,8 @@ export default function PackageRequestsAdminPage() {
   };
 
   /**
-   * handleReject:
-   * คำอธิบาย:
-   *  - alias ของฟังก์ชัน openRejectModal
-   *  - ใช้ส่งเข้าไปใน column renderer เพื่อเรียกปฏิเสธคำขอ
-   */
-  const handleReject = openRejectModal;
-
-  /**
-   * useEffect:
-   * คำอธิบาย:
-   *  - เมื่อ Modal อนุมัติถูกปิด (isConfirmOpen = false)
-   *  - รีเซ็ต selectedRow ให้กลับเป็น null
-   *  - ใช้ setTimeout เพื่อหลีกเลี่ยง state update ระหว่าง render
+   * useEffect: เมื่อ Modal อนุมัติถูกปิด (isConfirmModalOpen = false)
+   * รีเซ็ต selectedRow ให้กลับเป็น null (ใช้ setTimeout เพื่อหลีกเลี่ยง state update ระหว่าง render)
    */
   useEffect(() => {
     if (!isConfirmOpen) {
@@ -263,16 +265,29 @@ export default function PackageRequestsAdminPage() {
           }}
         />
       </div>
-      {/* ส่วนหัว + ค้นหา */}
+{/* ส่วนหัว + ค้นหา */}
       <div className="flex flex-col gap-2 w-full">
         <h1 className="font-bold text-xl">คำขออนุมัติ</h1>
 
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center justify-between w-full">
+          {/* ฝั่งซ้าย: ช่องค้นหา */}
           <div className="w-[260px]">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(error) => setSearchQuery(error.target.value)} />
+          </div>
+
+          {/* ฝั่งขวา: ปุ่มเพิ่มแพ็กเกจ (ย้ายมาตรงนี้) */}
+          <div>
+            <Button type="confirm-admin" onClick={goToCreatePackage}>
+              <div className="flex items-center justify-center gap-2 px-1">
+                <Icon
+                  icon="material-symbols:add-rounded"
+                  className="text-2xl"
+                />
+                <span className="whitespace-nowrap text-base">
+                  เพิ่มแพ็กเกจ
+                </span>
+              </div>
+            </Button>
           </div>
         </div>
       </div>
@@ -280,8 +295,8 @@ export default function PackageRequestsAdminPage() {
       {/* ตาราง */}
       <DataTable<PackageRequestRow>
         data={rows}
-        columns={buildPackageRequestColumns(openApproveModal, handleReject)}
-        getKey={(r: PackageRequestRow) => String(r.id)}
+        columns={createPackageRequestColumns(openApproveModal, openRejectModal)}
+        getKey={(request: PackageRequestRow) => String(request.id)}
         selectable={false}
         theme="brand"
         isLoading={isLoading}
@@ -292,9 +307,9 @@ export default function PackageRequestsAdminPage() {
           totalCount: pagination.totalCount,
           limit: pagination.limit,
         }}
-        onPageChange={(p) => setCurrentPage(p)}
-        onPageSizeChange={(s) => {
-          setPageSize(s);
+        onPageChange={(page) => setCurrentPage(page)}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
           setCurrentPage(1);
         }}
       />
@@ -302,7 +317,7 @@ export default function PackageRequestsAdminPage() {
       {/* Modal: ยืนยันการอนุมัติแพ็กเกจ */}
       {isConfirmOpen && (
         <Modal
-          open={isConfirmOpen}
+          isOpen={isConfirmOpen}
           title="ยืนยันการอนุมัติ"
           text={
             selectedRow
@@ -328,8 +343,8 @@ export default function PackageRequestsAdminPage() {
 
       {/* Modal: ปฏิเสธคำขอ */}
       {isRejectOpen && (
-        <RejectModal
-          open={isRejectOpen}
+        <ModalReject
+          isOpen={isRejectOpen}
           title="ปฏิเสธคำขออนุมัติ"
           text="กรุณากรอกเหตุผลการปฏิเสธ เพื่อส่งให้ผู้ส่งคำขอรับทราบ"
           confirmText="ส่ง"
@@ -340,8 +355,8 @@ export default function PackageRequestsAdminPage() {
               setIsLoading(true);
               await rejectPackageRequestForAdmin(selectedRow.id, reason);
               await reload();
-            } catch (e: any) {
-              setErrorMessage(e?.message ?? "ไม่สามารถปฏิเสธได้");
+            } catch (error: any) {
+              setErrorMessage(error?.message ?? "ไม่สามารถปฏิเสธได้");
             } finally {
               setIsLoading(false);
               setRejectOpen(false);

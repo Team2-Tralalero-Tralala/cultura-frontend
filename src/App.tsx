@@ -10,26 +10,27 @@ import MemberRoutes from "@/Layouts/Member/MemberRoutes";
 
 import ProtectedRoute from "@/Libs/ProtectedRoute";
 import Home from "@/Pages/Home";
-import LoginAdmin from "@/Pages/LoginAdmin";
-import LoginTourist from "@/Pages/LoginTourist";
-import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayTourist";
+import LoginAdmin from "@/Pages/LoginAdminPage";
+import LoginTourist from "@/Pages/LoginTouristPage";
+import HomestayDetailTourist from "@/Pages/Tourist/DetailHomestayPage";
 import DetailPackagePage from "@/Pages/Tourist/DetailPackagePage";
-import EditProfileTourist from "@/Pages/Tourist/EditProfileTourist";
+import EditProfileTourist from "@/Pages/Tourist/EditProfilePage";
 import PackagesPage from "@/Pages/Tourist/PackagesPage";
 import SearchPage from "@/Pages/Tourist/SearchPage";
-import StoreDetailPage from "@/Pages/Tourist/StoreDetailPage";
-import ChangePassword from "./Pages/Tourist/ChangePassword";
+import StoreDetailPage from "@/Pages/Tourist/DetailStorePage";
+import ChangePassword from "./Pages/Tourist/ChangePasswordPage";
 
 import BookingConfirmedPage from "./Pages/Tourist/BookingConfirmedPage";
 import { DetailBookingHistory } from "./Pages/Tourist/DetailBookingHistory";
 import { DashboardPage } from "./Pages/Tourist/DashboardPage";
-import BookingHistoryTourist from "./Pages/Tourist/BookingHistoryTourist";
+import BookingHistoryPage from "./Pages/Tourist/BookingHistoryPage";
 import BookingPaymentPage from "./Pages/Tourist/BookingPaymentPage";
 import BookingSummaryPage from "./Pages/Tourist/BookingSummaryPage";
-import CommunityDetailUser from "./Pages/Tourist/CommunityDetailUser";
+import CommunityDetailUser from "./Pages/Tourist/DetailCommunityPage";
 import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 import ForgetPasswordPage from "./Pages/Tourist/ForgetPasswordPage";
+import CancelBookingPage from "./Pages/Tourist/CancelBookingPage";
 
 function App() {
   return (
@@ -54,10 +55,18 @@ function App() {
         <Route path="/tourist/community/:communityId/detail" element={<CommunityDetailUser />} />
         <Route path="/tourist/booking-history/detail" element={<DetailBookingHistory />} />
         <Route path="/tourist/dashboard" element={<DashboardPage />} />
-        <Route path="/tourist/booking-histories" element={<BookingHistoryTourist />} />
+        <Route path="/tourist/booking-histories" element={<BookingHistoryPage />} />
         <Route
           path="/tourist/booking-history/:bookingId/feedback"
           element={<CreateFeedbackPage />}
+        />
+        <Route
+          path="/tourist/cancel/booking/:bookingId"
+          element={
+            <ProtectedRoute allow={["tourist"]} redirectTo="/guest/login">
+              <CancelBookingPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/tourist/booking/package/:packageId/summary"

@@ -10,7 +10,7 @@ import Checkbox from "@mui/material/Checkbox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Popper from "@mui/material/Popper";
-import { getUnassignedMembers } from "@/Services/community-service";
+import { getUnassignedMembers } from "@/Libs/CommunityService";
 import SearchIcon from "@mui/icons-material/Search";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;

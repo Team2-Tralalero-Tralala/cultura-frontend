@@ -1,5 +1,5 @@
-/*
- * คำอธิบาย : Page Component สำหรับหน้าค้นหาแพ็กเกจและชุมชน
+/**
+ * คำอธิบาย: Page Component สำหรับหน้าค้นหาแพ็กเกจและชุมชน
  * รองรับการค้นหาจาก query parameter:
  * - ?tag=tagName - ค้นหาแพ็กเกจตามแท็ก
  * - ?q=value - ค้นหาแพ็กเกจและชุมชนตามคำค้นหา
@@ -7,25 +7,21 @@
  */
 
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { DailyDateInput } from "@/Components/calendar/input_calendar/DailyDateInput";
+import { DailyDateInput } from "@/Components/calendar/InputCalendar/DailyDateInput";
 import CardPackage from "@/Components/CardPackage";
 import Footer from "@/Components/Footer";
-import NavbarTourist from "@/Components/NavbarTourist";
+import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import { type PackageData } from "@/Components/PackageSection";
 import PriceRangeSlider from "@/Components/PriceRangeSlider";
-import { fetchHomeData, fetchSearchOverview, type PackageApiData } from "@/Services/tourist-service";
+import { fetchHomeData, fetchSearchOverview, type PackageApiData } from "@/Libs/TouristService";
 import { Icon } from "@iconify/react";
 import Autocomplete from "@mui/material/Autocomplete";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-/*
- * ชนิดข้อมูล : CommunityData
- * คำอธิบาย : ข้อมูลชุมชนสำหรับแสดงผลในการค้นหา
- */
-/*
- * ชนิดข้อมูล : CommunityData
- * คำอธิบาย : ข้อมูลชุมชนสำหรับแสดงผลในการค้นหา
+/**
+ * ชนิดข้อมูล: CommunityData
+ * คำอธิบาย: ข้อมูลชุมชนสำหรับแสดงผลในการค้นหา
  */
 type CommunityData = {
   id: number;
@@ -35,9 +31,9 @@ type CommunityData = {
   location: { province: string; district: string; subDistrict: string } | null;
 };
 
-/*
- * ชนิดข้อมูล : SearchFilters
- * คำอธิบาย : ข้อมูลตัวกรองสำหรับการค้นหา
+/**
+ * ชนิดข้อมูล: SearchFilters
+ * คำอธิบาย: ข้อมูลตัวกรองสำหรับการค้นหา
  */
 type SearchFilters = {
   activityType: "one-day" | "multi-day" | null;
@@ -48,11 +44,10 @@ type SearchFilters = {
   tags: string[];
 };
 
-/*
- * ฟังก์ชัน : SearchPage
- * คำอธิบาย : แสดงหน้าค้นหาแพ็กเกจและชุมชน พร้อมตัวกรองและผลการค้นหา
- * Input : ไม่มี
- * Output : React Component ที่ render หน้าค้นหา
+/**
+ * คำอธิบาย: แสดงหน้าค้นหาแพ็กเกจและชุมชน พร้อมตัวกรองและผลการค้นหา
+ * Input: -
+ * Output: React Component ที่ render หน้าค้นหา
  */
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -116,30 +111,29 @@ export default function SearchPage() {
   // State สำหรับข้อความ error
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  /*
-   * ฟังก์ชัน : formatLocation
-   * คำอธิบาย : จัดรูปแบบข้อมูล location จาก API เป็น string
-   * Input : location (LocationData | null) - ข้อมูล location จาก API
-   * Output : string - ข้อมูล location ที่จัดรูปแบบแล้ว
+  /**
+   * คำอธิบาย: จัดรูปแบบข้อมูล location จาก API เป็น string
+   * Input: location ({ province: string; district: string; subDistrict: string } | null) - ข้อมูล location จาก API
+   * Output: string - ข้อมูล location ที่จัดรูปแบบแล้ว
    */
   const formatLocation = (
-    location: { province: string; district: string; subDistrict: string } | null
+    location: { province: string; district: string; subDistrict: string } | null,
   ): string => {
     if (!location) return "ไม่ระบุสถานที่";
     const parts = [location.subDistrict, location.district, location.province].filter(Boolean);
     return parts.join(" ");
   };
 
-  /*
-   * ฟังก์ชัน : transformPackageData
-   * คำอธิบาย : แปลงข้อมูล Package จาก API เป็นรูปแบบ PackageData
-   * Input : packageData (PackageApiData) - ข้อมูล Package จาก API
-   * Output : PackageData - ข้อมูล Package ที่แปลงแล้ว
+  /**
+   * คำอธิบาย: แปลงข้อมูล Package จาก API เป็นรูปแบบ PackageData
+   * Input: packageData (PackageApiData) - ข้อมูล Package จาก API
+   * Output: PackageData - ข้อมูล Package ที่แปลงแล้ว
    */
   const transformPackageData = (packageData: PackageApiData): PackageData => {
     // ตรวจสอบว่า coverImage เป็น full URL อยู่แล้วหรือไม่
-    const isFullUrl = packageData.coverImage?.startsWith("http://") ||
-                      packageData.coverImage?.startsWith("https://");
+    const isFullUrl =
+      packageData.coverImage?.startsWith("http://") ||
+      packageData.coverImage?.startsWith("https://");
 
     let imageUrl: string;
     if (!packageData.coverImage) {
@@ -178,11 +172,10 @@ export default function SearchPage() {
     };
   };
 
-  /*
-   * ฟังก์ชัน : generateMockPackages (DEPRECATED - kept for reference)
-   * คำอธิบาย : สร้างข้อมูลแพ็กเกจจำลองตามคำค้นหาหรือแท็ก
-   * Input : searchQuery (string | null) - คำค้นหา, tag (string | null) - แท็ก
-   * Output : PackageData[] - รายการแพ็กเกจจำลอง
+  /**
+   * คำอธิบาย: สร้างข้อมูลแพ็กเกจจำลองตามคำค้นหาหรือแท็ก (DEPRECATED - kept for reference)
+   * Input: searchQuery (string | null), tag (string | null)
+   * Output: PackageData[] (รายการแพ็กเกจจำลอง)
    */
   const generateMockPackages = (searchQuery: string | null, tag: string | null): PackageData[] => {
     const mockPackages: PackageData[] = [
@@ -317,18 +310,17 @@ export default function SearchPage() {
         (pkg) =>
           pkg.title.toLowerCase().includes(query) ||
           pkg.location.toLowerCase().includes(query) ||
-          (pkg.tags || []).some((t) => t.toLowerCase().includes(query))
+          (pkg.tags || []).some((t) => t.toLowerCase().includes(query)),
       );
     }
 
     return mockPackages;
   };
 
-  /*
-   * ฟังก์ชัน : loadSearchResults
-   * คำอธิบาย : โหลดผลการค้นหาจาก API
-   * Input : ไม่มี
-   * Output : void
+  /**
+   * คำอธิบาย: โหลดผลการค้นหาจาก API
+   * Input: -
+   * Output: void (Update state)
    */
   const loadSearchResults = async () => {
     try {
@@ -348,7 +340,7 @@ export default function SearchPage() {
           endDate: filters.endDate,
           tags: filters.tags.length > 0 ? filters.tags : undefined,
           sort: sortBy,
-        }
+        },
       );
 
       // แปลงข้อมูลแพ็กเกจ (packages is already an array from service)
@@ -471,11 +463,10 @@ export default function SearchPage() {
     sortBy,
   ]);
 
-  /*
-   * ฟังก์ชัน : handleActivityTypeChange
-   * คำอธิบาย : จัดการเมื่อเปลี่ยนประเภทกิจกรรม
-   * Input : type ("one-day" | "multi-day" | null) - ประเภทกิจกรรม
-   * Output : void
+  /**
+   * คำอธิบาย: จัดการเมื่อเปลี่ยนประเภทกิจกรรม
+   * Input: type ("one-day" | "multi-day" | null) - ประเภทกิจกรรม
+   * Output: void
    */
   const handleActivityTypeChange = (type: "one-day" | "multi-day" | null) => {
     setFilters((prev) => ({
@@ -484,19 +475,10 @@ export default function SearchPage() {
     }));
   };
 
-  /*
-   * ฟังก์ชัน : handleTagAdd
-   * คำอธิบาย : เพิ่มแท็กใหม่
-   * Input : ไม่มี
-   * Output : void
-   */
-  // NOTE: Tag input ถูกเปลี่ยนเป็น Autocomplete จากแท็กที่มีอยู่แล้ว
-
-  /*
-   * ฟังก์ชัน : handleTagRemove
-   * คำอธิบาย : ลบแท็ก
-   * Input : tag (string) - แท็กที่ต้องการลบ
-   * Output : void
+  /**
+   * คำอธิบาย: ลบแท็ก
+   * Input: tag (string) - แท็กที่ต้องการลบ
+   * Output: void
    */
   const handleTagRemove = (tag: string) => {
     setFilters((prev) => ({
@@ -505,21 +487,19 @@ export default function SearchPage() {
     }));
   };
 
-  /*
-   * ฟังก์ชัน : handlePackageClick
-   * คำอธิบาย : จัดการเมื่อคลิกการ์ดแพ็กเกจ
-   * Input : packageId (number) - ID ของแพ็กเกจที่ถูกคลิก
-   * Output : void
+  /**
+   * คำอธิบาย: จัดการเมื่อคลิกการ์ดแพ็กเกจ
+   * Input: packageId (number) - ID ของแพ็กเกจที่ถูกคลิก
+   * Output: void (Navigate to package)
    */
   const handlePackageClick = (packageId: number) => {
     navigate(`/tourist/package/${packageId}`);
   };
 
-  /*
-   * ฟังก์ชัน : handleCommunityClick
-   * คำอธิบาย : จัดการเมื่อคลิกการ์ดชุมชน
-   * Input : communityId (number) - ID ของชุมชนที่ถูกคลิก
-   * Output : void
+  /**
+   * คำอธิบาย: จัดการเมื่อคลิกการ์ดชุมชน
+   * Input: communityId (number) - ID ของชุมชนที่ถูกคลิก
+   * Output: void (Navigate to community)
    */
   const handleCommunityClick = (communityId: number) => {
     navigate(`/tourist/community/${communityId}/detail`);
@@ -529,8 +509,8 @@ export default function SearchPage() {
   const searchTitle = tagParam
     ? `ผลลัพธ์ที่ตรงกับการค้นหา "${tagParam}"`
     : queryParam
-    ? `ผลลัพธ์ที่ตรงกับการค้นหา "${queryParam}"`
-    : "ผลการค้นหา";
+      ? `ผลลัพธ์ที่ตรงกับการค้นหา "${queryParam}"`
+      : "ผลการค้นหา";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -685,7 +665,9 @@ export default function SearchPage() {
                             />
                           </div>
                           {/* ปิด endAdornment ของ MUI (กัน UI ซ้อน) */}
-                          {InputProps.endAdornment && <div className="hidden">{InputProps.endAdornment}</div>}
+                          {InputProps.endAdornment && (
+                            <div className="hidden">{InputProps.endAdornment}</div>
+                          )}
                         </div>
                       </div>
                     );

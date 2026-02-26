@@ -1,21 +1,21 @@
 /**
- * คำอธิบาย: page สำหรับหน้า Dashboard ของ Member
- * แสดงข้อมูลสรุปต่างๆประกอบด้วย
- * 1. ข้อมูลสรุป (summary) - แพ็กเกจทั้งหมด รายได้ทั้งหมด การจองสำเร็จ ยกเลิกการจอง
- * 2. ข้อมูลกราฟ (graph) - แสดงกราฟการจองและรายได้ตามวันที่
- * 3. ข้อมูลแพ็กเกจ 5 อันดับที่ยอดจองเยอะที่สุดในชุมชน
- * ใช้ร่วมกับ Service สำหรับดึงข้อมูล Dashboard
+ * คำอธิบาย: Component สำหรับหน้า Dashboard ของ Member
+ * - แสดงข้อมูลสรุป (summary)
+ * - แสดงกราฟการจองและรายได้ (graph)
+ * - แสดงข้อมูลแพ็กเกจยอดนิยม 5 อันดับ
+ * Input: -
+ * Output: หน้า Dashboard ที่แสดงข้อมูลสรุปและกราฟ
  */
-import { LineGraph } from "@/Components/LineGraph";
 import React from "react";
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, addDays, format } from "date-fns";
+import { BarChart } from "@/Components/Graph/BarChart";
+import LineGraph from "@/Components/Graph/LineGraph";
+import { CalendarTrigger } from "@/Components/calendar/InputCalendar/SetTypeCalendar/CalendarTrigger";
 import {
   fetchMemberDashboardData,
   type MemberDashboardFilters,
   type MemberDashboardResponse,
-} from "@/Services/dashboard-service";
-import { BarChart } from "@/Components/Graph/BarChart";
-import { CalendarTrigger } from "@/Components/calendar/input_calendar/set_type_calendar/CalendarTrigger";
+} from "@/Libs/DashboardService";
 
 /**
  * คำอธิบาย: หน้า Dashboard ของ Member
@@ -35,7 +35,7 @@ export function DashboardPage() {
     const now = new Date();
     let startDate: Date;
     let endDate: Date;
-    let dateList: Date[] = [];
+    let dates: Date[] = [];
 
     switch (periodType) {
       case "weekly": {
@@ -48,25 +48,25 @@ export function DashboardPage() {
         endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 6); // End of week (Saturday)
         endDate.setHours(23, 59, 59, 999);
-        dateList = [startDate, endDate];
+        dates = [startDate, endDate];
         break;
       }
       case "monthly": {
         startDate = startOfMonth(now);
         endDate = endOfMonth(now);
         // Only select the current month
-        dateList = [startDate];
+        dates = [startDate];
         break;
       }
       case "yearly": {
         startDate = startOfYear(now);
         endDate = endOfYear(now);
         // Only select the current year
-        dateList = [startDate];
+        dates = [startDate];
         break;
       }
     }
-    return { start: startDate, end: endDate, dates: dateList, periodType: periodType };
+    return { start: startDate, end: endDate, dates: dates, periodType: periodType };
   };
 
   const initialDateRange = calculateInitialDateRange("weekly");
@@ -107,7 +107,7 @@ export function DashboardPage() {
        * Output: Array<string> - รายการวันที่ที่ถูก format และเรียงลำดับ
        */
       const getFormattedDates = (dates: Date[]) => {
-        const uniqueDates = Array.from(new Set(dates.map((d) => format(d, "yyyy-MM-dd"))));
+        const uniqueDates = Array.from(new Set(dates.map((date) => format(date, "yyyy-MM-dd"))));
         return uniqueDates.sort();
       };
 
@@ -121,9 +121,9 @@ export function DashboardPage() {
       };
       const response = await fetchMemberDashboardData(filters);
       setDashboardData(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setErrorMessage(error instanceof Error ? error.message : "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -270,8 +270,8 @@ export function DashboardPage() {
                       bookingDateRange.periodType === "weekly"
                         ? "วัน"
                         : bookingDateRange.periodType === "monthly"
-                        ? "เดือน"
-                        : "ปี"
+                          ? "เดือน"
+                          : "ปี"
                     }
                   />
                 </div>
@@ -297,8 +297,8 @@ export function DashboardPage() {
                   revenueDateRange.periodType === "weekly"
                     ? "วัน"
                     : revenueDateRange.periodType === "monthly"
-                    ? "เดือน"
-                    : "ปี"
+                      ? "เดือน"
+                      : "ปี"
                 }
               />
             </div>
@@ -324,14 +324,14 @@ export function DashboardPage() {
                 <tbody>
                   {dashboardData.package?.topPackages &&
                   dashboardData.package.topPackages.length > 0 ? (
-                    dashboardData.package.topPackages.map((packages, index) => (
+                    dashboardData.package.topPackages.map((packageItem, index) => (
                       <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                        <td className="py-2 px-4 pl-8">{packages.rank}</td>
+                        <td className="py-2 px-4 pl-8">{packageItem.rank}</td>
                         <td className="py-2 px-4 text-gray-800 font-medium">
-                          {packages.name || "-"}
+                          {packageItem.name || "-"}
                         </td>
                         <td className="py-2 px-4 text-gray-700 text-center">
-                          {packages.bookingCount?.toLocaleString() ?? 0} ครั้ง
+                          {packageItem.bookingCount?.toLocaleString() ?? 0} ครั้ง
                         </td>
                       </tr>
                     ))

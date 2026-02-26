@@ -1,18 +1,14 @@
-// Tag.tsx
 /*
- * File: Tag.tsx
- * Component: Tag (Client)
- * คำอธิบาย: ป้าย (tag) สำหรับแสดงข้อความ/เนื้อหาแบบบล็อกกลางกรอบ
+ * คำอธิบาย : ป้าย (tag) สำหรับแสดงข้อความ/เนื้อหาแบบบล็อกกลางกรอบ
  *            ปรับขนาดได้ด้วย sizeClass (Tailwind) หรือ width/height (px/CSS length)
  *            โดย "sizeClass จะ override width/height" ตามสเปก
- * Input (Props): ดู TagProps
+ * Input : TagProps
  * Output: <div> ที่จัดกึ่งกลางแนวแกน x/y พร้อมคลาส/ขนาดตามที่กำหนด
  */
-
 import React from "react";
 
 /** ---------- Types ---------- */
-/*
+/**
  * ชนิด: TagProps
  * - label: เนื้อหาภายในแท็ก (ReactNode)
  * - className: คลาสเพิ่มเติมสำหรับตัวกรอบ
@@ -36,25 +32,32 @@ export type TagProps = {
   title?: string;
 };
 
-/** ---------- Utils (Pure) ---------- */
-/*
- * ฟังก์ชัน: isTwW / isTwH
- * คำอธิบาย : ตรวจว่าเป็นคลาส Tailwind ที่ขึ้นต้นด้วย w- / h-
+/**
+ * คำอธิบาย : ฟังก์ชันตรวจสอบว่าค่าที่ส่งมาเป็น string และเริ่มต้นด้วย "w-"
+ * Input : tailwind (string)
+ * Output : boolean
  */
-const isTwW = (v?: string) => typeof v === "string" && v.startsWith("w-");
-const isTwH = (v?: string) => typeof v === "string" && v.startsWith("h-");
+const isTailwindW = (tailwind?: string) =>
+  typeof tailwind === "string" && tailwind.startsWith("w-");
+
+/**
+ * คำอธิบาย : ฟังก์ชันตรวจสอบว่าค่าที่ส่งมาเป็น string และเริ่มต้นด้วย "h-"
+ * Input : tailwind (string)
+ * Output : boolean
+ */
+const isTailwindH = (tailwind?: string) =>
+  typeof tailwind === "string" && tailwind.startsWith("h-");
+
+/**
+ * คำอธิบาย : ฟังก์ชันแปลงค่า width/height ให้เป็น CSS length
+ * Input : value (number | string)
+ * Output : string
+ */
+const convertToLength = (value?: number | string) =>
+  typeof value === "number" ? `${value}px` : value;
 
 /*
- * ฟังก์ชัน: toLen
- * คำอธิบาย : number → 'Npx', string → string เดิม, undefined → undefined
- */
-const toLen = (v?: number | string) => (typeof v === "number" ? `${v}px` : v);
-
-/** ---------- Component ---------- */
-/*
- * ฟังก์ชัน: Tag
  * คำอธิบาย : สร้างกรอบแท็กพร้อมจัดกลางข้อความ ปรับขนาด/สไตล์ได้
- * กติกา   : ถ้ามี sizeClass ⇒ ไม่ใช้ width/height (ทั้งคลาส w-/h- และ style)
  * Input  : TagProps
  * Output : <div> ป้ายพร้อมขนาดตามที่กำหนด
  */
@@ -77,15 +80,15 @@ export const Tag = React.forwardRef<HTMLDivElement, TagProps>(
     }
 
     // ไม่ได้ส่ง sizeClass ⇒ ตรวจว่า width/height เป็นคลาส w-/h- หรือเป็น length
-    const wClass = isTwW(width as string) ? (width as string) : undefined;
-    const hClass = isTwH(height as string) ? (height as string) : undefined;
+    const wClass = isTailwindW(width as string) ? (width as string) : undefined;
+    const hClass = isTailwindH(height as string) ? (height as string) : undefined;
 
     const sizeClasses = `${wClass ?? "w-fit px-3"} ${hClass ?? "h-9"}`;
 
     // ถ้า width/height เป็นตัวเลขหรือ CSS length → ใส่เป็น style
     const style: React.CSSProperties = {
-      width: !wClass ? toLen(width) : undefined,
-      height: !hClass ? toLen(height) : undefined,
+      width: !wClass ? convertToLength(width) : undefined,
+      height: !hClass ? convertToLength(height) : undefined,
     };
 
     return (
@@ -101,7 +104,9 @@ export const Tag = React.forwardRef<HTMLDivElement, TagProps>(
         {label}
       </div>
     );
-  }
+  },
 );
 
 Tag.displayName = "Tag";
+
+export default Tag;

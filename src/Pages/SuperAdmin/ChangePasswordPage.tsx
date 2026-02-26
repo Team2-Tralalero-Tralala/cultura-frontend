@@ -1,23 +1,21 @@
-/*
- * Component: ChangePasswordPage
- * หน้าที่: หน้าจอเปลี่ยนรหัสผ่านสำหรับผู้ดูแลระบบ/พนักงาน
+/**
+ * คำอธิบาย: Component สำหรับหน้าจอเปลี่ยนรหัสผ่านสำหรับผู้ดูแลระบบ/พนักงาน หน้าที่รับค่ารหัสผ่านเดิมและใหม่ ตรวจสอบความถูกต้อง และบันทึกการเปลี่ยนแปลง
  */
-
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
-import Button from "@/Components/Button"; 
-import TextField from "@/Components/TextField"; 
+import Button from "@/Components/Button";
+import TextField from "@/Components/Input/TextField";
 import { Modal as ConfirmModal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import api from "@/Libs/api"; 
+import api from "@/Libs/Api";
 
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
-/*
- * คำอธิบาย : ฟังก์ชัน Component หลักสำหรับหน้าจอเปลี่ยนรหัสผ่าน
- * Input : -
- * Output : JSX Element หน้าจอเปลี่ยนรหัสผ่าน
+/**
+ * คำอธิบาย: หน้าจอหลักสำหรับเปลี่ยนรหัสผ่าน
+ * Input: -
+ * Output: React Component สำหรับแสดงผลหน้า Change Password
  */
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -33,10 +31,10 @@ export default function ChangePasswordPage() {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  /*
-   * คำอธิบาย : คำนวณความพร้อมของข้อมูล (Validation)
-   * Input : currentPassword, newPassword, confirmNewPassword
-   * Output : boolean
+  /**
+   * คำอธิบาย: คำนวณความพร้อมของข้อมูล (Validation) ตรวจสอบว่ารอกข้อมูลครบและถูกต้องตามเงื่อนไขหรือไม่
+   * Input: - (ใช้ state currentPassword, newPassword, confirmNewPassword)
+   * Output: boolean (true ถ้าพร้อมส่งข้อมูล)
    */
   const canSubmit = useMemo(() => {
     if (!currentPassword || !newPassword || !confirmNewPassword) return false;
@@ -45,10 +43,10 @@ export default function ChangePasswordPage() {
     return true;
   }, [currentPassword, newPassword, confirmNewPassword]);
 
-  /*
-   * คำอธิบาย : คำนวณข้อความแนะนำความปลอดภัยของรหัสผ่าน
-   * Input : newPassword
-   * Output : JSX Element หรือ String
+  /**
+   * คำอธิบาย: คำนวณข้อความแนะนำความปลอดภัยของรหัสผ่าน
+   * Input: - (ใช้ state newPassword)
+   * Output: JSX Element แสดงคำแนะนำ หรือ String
    */
   const strengthHint = useMemo(() => {
     if (!newPassword) return null;
@@ -73,10 +71,10 @@ export default function ChangePasswordPage() {
     );
   }, [newPassword]);
 
-  /*
-   * คำอธิบาย : ฟังก์ชันสำหรับล้างค่าใน Input ทั้งหมด
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับล้างค่าใน Input ทั้งหมด
+   * Input: -
+   * Output: - (Reset state ของฟอร์ม)
    */
   const resetForm = () => {
     setCurrentPassword("");
@@ -84,10 +82,10 @@ export default function ChangePasswordPage() {
     setConfirmNewPassword("");
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันตรวจสอบก่อนส่ง Form และเปิด Modal ยืนยัน
-   * Input : event
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันตรวจสอบก่อนส่ง Form และเปิด Modal ยืนยัน
+   * Input: event (React.FormEvent) - เหตุการณ์การ submit form
+   * Output: - (ป้องกัน default submit และเปิด Modal)
    */
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -95,10 +93,10 @@ export default function ChangePasswordPage() {
     setIsConfirmOpen(true);
   };
 
-  /*
-   * คำอธิบาย : ฟังก์ชันเรียก API เปลี่ยนรหัสผ่าน
-   * Input : -
-   * Output : -
+  /**
+   * คำอธิบาย: ฟังก์ชันเรียก API เปลี่ยนรหัสผ่านเมื่อยืนยัน
+   * Input: - (ใช้ state ภายในเพื่อส่งข้อมูล)
+   * Output: Promise<void> - (ส่ง request ไปยัง API และจัดการผลลัพธ์)
    */
   const proceedChangePassword = async () => {
     setIsConfirmOpen(false);
@@ -118,7 +116,7 @@ export default function ChangePasswordPage() {
       await api.post(`/shared/account/change-password/me`, {
         currentPassword,
         newPassword,
-        confirmNewPassword
+        confirmNewPassword,
       });
 
       const successMessage = "เปลี่ยนรหัสผ่านสำเร็จ";
@@ -162,10 +160,11 @@ export default function ChangePasswordPage() {
         <div className="pl-0">
           {message && (
             <div
-              className={`mb-6 rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${message.type === "success"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-                }`}
+              className={`mb-6 rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${
+                message.type === "success"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}
             >
               <Icon
                 icon={message.type === "success" ? "mdi:check-circle" : "mdi:alert-circle"}
@@ -212,7 +211,11 @@ export default function ChangePasswordPage() {
                 value={confirmNewPassword}
                 onChange={(event) => setConfirmNewPassword(event.target.value)}
                 error={!!confirmNewPassword && newPassword !== confirmNewPassword}
-                helperText={!!confirmNewPassword && newPassword !== confirmNewPassword ? "รหัสผ่านใหม่และการยืนยันไม่ตรงกัน" : ""}
+                helperText={
+                  !!confirmNewPassword && newPassword !== confirmNewPassword
+                    ? "รหัสผ่านใหม่และการยืนยันไม่ตรงกัน"
+                    : ""
+                }
               />
             </div>
 
@@ -231,10 +234,7 @@ export default function ChangePasswordPage() {
                 </Button>
               </div>
               <div className="w-32">
-                <Button
-                  type="confirm-admin"
-                  htmlType="submit"
-                >
+                <Button type="confirm-admin" htmlType="submit">
                   {isSubmitting ? "กำลังบันทึก..." : "ยืนยัน"}
                 </Button>
               </div>
@@ -243,7 +243,7 @@ export default function ChangePasswordPage() {
         </div>
 
         <ConfirmModal
-          open={isConfirmOpen}
+          isOpen={isConfirmOpen}
           onConfirm={() => void proceedChangePassword()}
           onCancel={() => setIsConfirmOpen(false)}
           title="ยืนยันการเปลี่ยนรหัสผ่าน"
@@ -253,7 +253,7 @@ export default function ChangePasswordPage() {
         />
 
         <ModalAlert
-          open={isAlertOpen}
+          isOpen={isAlertOpen}
           type={alertType}
           title={alertTitle}
           message={alertMessage}

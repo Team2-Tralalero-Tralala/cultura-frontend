@@ -199,6 +199,22 @@ export function UploadBannerPage() {
   const [resultTitle, setResultTitle] = useState("");
   const [resultMessage, setResultMessage] = useState("");
 
+  const isPdfFile = (file: File) =>
+    file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+
+  const isImageFile = (file: File) => {
+    const typeOk = file.type.startsWith("image/");
+    const extOk = /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name);
+    return (typeOk || extOk) && !isPdfFile(file);
+  };
+
+  const showInvalidFileAlert = (message: string) => {
+    setResultType("error"); // หรือ "warning"
+    setResultTitle("ไฟล์ไม่ถูกต้อง");
+    setResultMessage(message);
+    setIsResultOpen(true);
+  };
+
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
   // Crop States
@@ -316,7 +332,20 @@ export function UploadBannerPage() {
    */
   const handleAddFiles = (files: File[]) => {
     if (!files.length) return;
-    startCrop(files[0], "add");
+
+    const file = files[0];
+
+    if (isPdfFile(file)) {
+      showInvalidFileAlert("ไม่รองรับไฟล์ PDF กรุณาอัปโหลดเป็นไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      showInvalidFileAlert("กรุณาเลือกไฟล์รูปภาพเท่านั้น (png/jpg/webp ฯลฯ)");
+      return;
+    }
+
+    startCrop(file, "add");
   };
 
   /*
@@ -360,7 +389,21 @@ export function UploadBannerPage() {
     const pickedFiles = Array.from(event.target.files ?? []);
     if (!pickedFiles.length) return;
 
-    startCrop(pickedFiles[0], "edit");
+    const file = pickedFiles[0];
+
+    if (isPdfFile(file)) {
+      showInvalidFileAlert("ไม่รองรับไฟล์ PDF กรุณาอัปโหลดเป็นไฟล์รูปภาพเท่านั้น");
+      event.target.value = "";
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      showInvalidFileAlert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      event.target.value = "";
+      return;
+    }
+
+    startCrop(file, "edit");
     event.target.value = "";
   };
 

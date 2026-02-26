@@ -258,7 +258,8 @@ export default function DetailPackagePage() {
    */
   const handleIncreaseQuantity = () => {
     if (!packageDetail) return;
-    if (packageDetail.capacity && bookingQuantity >= packageDetail.capacity) {
+    const remainingCapacity = (packageDetail.capacity || 0) - (packageDetail.bookedCount || 0);
+    if (packageDetail.capacity && bookingQuantity >= remainingCapacity) {
       return;
     }
     setBookingQuantity((previousQuantity) => previousQuantity + 1);
@@ -391,61 +392,53 @@ export default function DetailPackagePage() {
             </div>
 
             {/* Location */}
-            <div>
-              {lat && lng ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:map-marker" className="text-black text-xl" />
+                <span className="text-black text-sm md:text-base">
+                  อำเภอ{packageDetail.location.district || packageDetail.location.subDistrict} จังหวัด
+                  {packageDetail.location.province}
+                </span>
+              </div>
+
+              {lat && lng && (
                 <button
                   onClick={() => {
-                    if (
-                      packageDetail?.location?.latitude &&
-                      packageDetail?.location?.longitude
-                    ) {
-                      const destLat = packageDetail.location.latitude;
-                      const destLng = packageDetail.location.longitude;
-                      if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                          (position) => {
-                            const originLat = position.coords.latitude;
-                            const originLng = position.coords.longitude;
-                            window.open(
-                              `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                              "_blank"
-                            );
-                          },
-                          (error) => {
-                            console.error("Error getting location:", error);
-                            window.open(
-                              `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                              "_blank"
-                            );
-                          }
-                        );
-                      } else {
-                        window.open(
-                          `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                          "_blank"
-                        );
-                      }
+                    const destLat = packageDetail.location.latitude;
+                    const destLng = packageDetail.location.longitude;
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                          const originLat = position.coords.latitude;
+                          const originLng = position.coords.longitude;
+                          window.open(
+                            `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
+                            "_blank"
+                          );
+                        },
+                        (error) => {
+                          console.error("Error getting location:", error);
+                          window.open(
+                            `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                            "_blank"
+                          );
+                        }
+                      );
+                    } else {
+                      window.open(
+                        `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                        "_blank"
+                      );
                     }
                   }}
-                  className="flex items-center gap-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left"
+                  className="flex items-center gap-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left w-fit"
                 >
                   <Icon
-                    icon="mdi:map-marker-radius-outline"
-                    className="text-black text-lg"
+                    icon="mdi:location-radius-outline"
+                    className="text-black text-xl"
                   />
-                  <span className="text-inherit">
-                    อำเภอ{packageDetail.location.district} จังหวัด
-                    {packageDetail.location.province}
-                  </span>
+                  <span className="text-black text-sm md:text-base">ระบบนำทาง</span>
                 </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Icon icon="mdi:location" className="text-black text-lg" />
-                  <span className="text-black">
-                    อำเภอ{packageDetail.location.subDistrict} จังหวัด
-                    {packageDetail.location.province}
-                  </span>
-                </div>
               )}
             </div>
 

@@ -327,22 +327,39 @@ export default function ManageBookingAdmin() {
   * Input : row (BookingRow), reason (string)
   * Output : เรียก API อัปเดตสถานะและโหลดข้อมูลใหม่
   */
-  const handleReject = async (row: BookingRow, reason?: string) => {
-    try {
-      setIsLoading(true);
-      const currentStatus = row.status?.toUpperCase();
-      const newStatus: "REJECTED" | "REFUND_REJECTED" =
-        currentStatus === "PENDING" ? "REJECTED" : "REFUND_REJECTED";
+const handleReject = async (row: BookingRow, reason?: string) => {
+  try {
+    setIsLoading(true);
 
-      await updateBookingStatus(row.id, newStatus, reason);
-      await reload();
-    } catch (error) {
-      if (error instanceof Error) setErrorMessage(error.message);
-      else setErrorMessage("ไม่สามารถปฏิเสธได้");
-    } finally {
-      setIsLoading(false);
+    const currentStatus = row.status?.toUpperCase();
+
+    const newStatus: "REJECTED" | "REFUND_REJECTED" =
+      currentStatus === "PENDING"
+        ? "REJECTED"
+        : "REFUND_REJECTED";
+
+    await updateBookingStatus(row.id, newStatus, reason);
+    await reload();
+
+    setAlertType("success");
+
+    if (currentStatus === "REFUND_PENDING") {
+      setAlertTitle("ปฏิเสธการคืนเงินสำเร็จ");
+      setAlertMessage("\u00A0");
+    } else {
+      setAlertTitle("ปฏิเสธการจองสำเร็จ");
+      setAlertMessage("\u00A0");
     }
-  };
+
+    setAlertOpen(true);
+
+  } catch (error) {
+    if (error instanceof Error) setErrorMessage(error.message);
+    else setErrorMessage("ไม่สามารถปฏิเสธได้");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const openRejectModal = (row: BookingRow) => {
     setSelectedRow(row);

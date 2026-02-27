@@ -19,6 +19,7 @@ import { getHomestaysAll, deleteHomestayBySuperAdmin } from "@/Libs/HomestayServ
 import { getCommunityById } from "@/Libs/CommunityService";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
 import { Icon } from "@iconify/react";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /*
  * คำอธิบาย : Custom Hook สำหรับชะลอการอัปเดตค่า (Debounce) ช่วยลดการเรียก API ถี่เกินไปในขณะที่ค่า value เปลี่ยนแปลงต่อเนื่อง (เช่น การพิมพ์ค้นหา)
@@ -84,6 +85,11 @@ export default function ManageHomestaySuperAdmin() {
   const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const [isOpenBulkConfirm, setIsOpenBulkConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   /*
    * คำอธิบาย: ดึงข้อมูลชื่อชุมชนจาก communityId
@@ -171,22 +177,28 @@ export default function ManageHomestaySuperAdmin() {
   }, [debouncedSearch]);
 
 
- /*
-   * คำอธิบาย: ลบที่พัก 1 รายการตาม deleteId
-   * Input:
-   *  - deleteId: number | null
-   * Output:
-   *  - เรียก API ลบข้อมูล
-   *  - โหลดข้อมูลใหม่
-   *  - รีเซ็ตสถานะการลบ
-   */
+  /*
+    * คำอธิบาย: ลบที่พัก 1 รายการตาม deleteId
+    * Input:
+    *  - deleteId: number | null
+    * Output:
+    *  - เรียก API ลบข้อมูล
+    *  - โหลดข้อมูลใหม่
+    *  - รีเซ็ตสถานะการลบ
+    */
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return;
     setIsDeleting(true);
     setIsOpenConfirm(false);
     try {
       await deleteHomestayBySuperAdmin(deleteId);
-      await fetchData(); // โหลดใหม่
+
+      setAlertType("success");
+      setAlertTitle("ลบที่พักสำเร็จ");
+      setAlertMessage("\u00A0");
+      setAlertOpen(true);
+
+      await fetchData();
     } catch (error) {
       console.error("Delete error:", error);
       alert("เกิดข้อผิดพลาด ไม่สามารถลบที่พักได้");
@@ -195,14 +207,14 @@ export default function ManageHomestaySuperAdmin() {
       setDeleteId(null);
     }
   };
- /*
-   * คำอธิบาย: ลบที่พักหลายรายการพร้อมกัน
-   * Input:
-   *  - selectedRows: HomestayRow[]
-   * Output:
-   *  - ลบข้อมูลตาม id ที่เลือก
-   *  - อัปเดต homestayRows และ totalCount
-   */
+  /*
+    * คำอธิบาย: ลบที่พักหลายรายการพร้อมกัน
+    * Input:
+    *  - selectedRows: HomestayRow[]
+    * Output:
+    *  - ลบข้อมูลตาม id ที่เลือก
+    *  - อัปเดต homestayRows และ totalCount
+    */
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0 || isDeleting) return;
     setIsDeleting(true);
@@ -211,7 +223,12 @@ export default function ManageHomestaySuperAdmin() {
 
     try {
       await Promise.all(homestayIds.map((id) => deleteHomestayBySuperAdmin(id)));
-      // โหลดข้อมูลใหม่จาก Server เพื่อความชัวร์เรื่อง Pagination
+
+      setAlertType("success");
+      setAlertTitle("ลบที่พักสำเร็จ");
+      setAlertMessage(`ลบ ${homestayIds.length} รายการ`);
+      setAlertOpen(true);
+
       await fetchData();
       setSelectedRows([]);
     } catch (error) {
@@ -222,14 +239,14 @@ export default function ManageHomestaySuperAdmin() {
     }
   };
 
-/*
-   * คำอธิบาย: ยกเลิกการลบรายการเดียว
-   * Input: -
-   * Output:
-   *  - ปิด Confirm Modal
-   *  - รีเซ็ต deleteId
-   */
-   const handleCancelDelete = () => {
+  /*
+     * คำอธิบาย: ยกเลิกการลบรายการเดียว
+     * Input: -
+     * Output:
+     *  - ปิด Confirm Modal
+     *  - รีเซ็ต deleteId
+     */
+  const handleCancelDelete = () => {
     setIsOpenConfirm(false);
     setDeleteId(null);
   };
@@ -326,11 +343,11 @@ export default function ManageHomestaySuperAdmin() {
 
       <div className="flex flex-col gap-2 -mt-4">
         <Link
-            to={`/super/community/${communityId}`}
-            className="inline-flex items-center gap-2 text-gray-800 hover:text-[#055035]"
-          >
-            <Icon icon="lucide:arrow-left" className="w-5 h-5" />
-            <h1 className="font-bold text-xl text-black">จัดการที่พัก</h1>
+          to={`/super/community/${communityId}`}
+          className="inline-flex items-center gap-2 text-gray-800 hover:text-[#055035]"
+        >
+          <Icon icon="lucide:arrow-left" className="w-5 h-5" />
+          <h1 className="font-bold text-xl text-black">จัดการที่พัก</h1>
         </Link>
 
         <div className="flex items-center justify-between gap-3 w-full">
@@ -390,6 +407,14 @@ export default function ManageHomestaySuperAdmin() {
         text={`คุณต้องการลบที่พักจำนวน ${selectedRows.length} รายการหรือไม่`}
         onConfirm={handleBulkDelete}
         onCancel={handleCancelBulkDelete}
+      />
+
+      <ModalAlert
+        isOpen={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

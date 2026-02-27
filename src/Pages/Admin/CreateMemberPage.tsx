@@ -14,7 +14,7 @@ import Button from "../../Components/Button";
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
+/**
  * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
  */
 const memberSchema = zod
@@ -24,22 +24,19 @@ const memberSchema = zod
     username: zod
       .string()
       .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
-      .regex(
-        /^[a-zA-Z0-9]+$/, 
-        "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"
-      ),
+      .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
     email: zod.string().email("กรุณากรอกอีเมล"),
     phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
-    
+
     password: zod
       .string()
       .min(8, "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
       .regex(/[a-z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z)")
       .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z)")
       .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9)"),
-      
-    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"), 
-    
+
+    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"),
+
     communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -47,13 +44,15 @@ const memberSchema = zod
     path: ["confirmPassword"],
   });
 
-/*
+/**
  * คำอธิบาย : Component สำหรับสร้างบัญชีสมาชิกโดย Admin
+ * Input: -
+ * Output: หน้าจอ (UI) ฟอร์มสำหรับสร้างบัญชีสมาชิกในชุมชน
  */
 const CreateMemberPage: React.FC = () => {
   const navigate = useNavigate();
 
-  /*
+  /**
    * คำอธิบาย : State สำหรับเก็บค่าข้อมูลจากฟอร์ม
    */
   const [formData, setFormData] = useState({
@@ -76,11 +75,11 @@ const CreateMemberPage: React.FC = () => {
   /*
    * คำอธิบาย : State สำหรับควบคุมการแสดง Modal
    */
-   const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowConfirm, setIsShowConfirm] = useState(false);
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
    * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
    * Output : boolean (ส่งคืน true หากถูกต้อง, false หากผิดพลาด)
@@ -113,7 +112,7 @@ const CreateMemberPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
    * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
    * Output : -
@@ -130,7 +129,7 @@ const CreateMemberPage: React.FC = () => {
     });
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
    * Input: file (ไฟล์รูปภาพที่เลือก)
    * Output : -
@@ -140,7 +139,7 @@ const CreateMemberPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องก่อนเปิด Modal Confirm
    * Input: -
    * Output : -
@@ -163,7 +162,7 @@ const CreateMemberPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
    * Input: event (เหตุการณ์จากฟอร์ม)
    * Output : -
@@ -206,10 +205,11 @@ const CreateMemberPage: React.FC = () => {
       }
 
       setIsShowSuccessModal(true);
-   } catch (error: any) {
+    } catch (error: any) {
       console.error("❌ Error creating member:", error);
-      
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
+
+      const errorMsg =
+        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
       const newErrors: Record<string, string> = {};
 
       if (errorMsg.includes("ชื่อผู้ใช้")) {

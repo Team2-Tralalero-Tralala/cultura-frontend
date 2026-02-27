@@ -15,7 +15,7 @@ import Button from "../../Components/Button";
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/*
+/**
  *  Schema สำหรับตรวจสอบความถูกต้องของข้อมูล (ไม่รวมรหัสผ่าน)
  */
 const editMemberSchema = zod.object({
@@ -40,6 +40,11 @@ interface EditMemberBody {
   communityRole: string;
 }
 
+/**
+ * คำอธิบาย : Component ฟังก์ชันสำหรับหน้าแก้ไขข้อมูลสมาชิกในชุมชน
+ * Input: -
+ * Output: หน้าจอ (UI) ฟอร์มสำหรับแก้ไขข้อมูลและรูปโปรไฟล์ของสมาชิก
+ */
 const EditMemberPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,7 +68,7 @@ const EditMemberPage: React.FC = () => {
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม (Validation)
    * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
    * Output: boolean (ส่งคืน true หากข้อมูลถูกต้อง, false หากข้อมูลผิดพลาด)
@@ -96,7 +101,7 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
    * Input: -
    * Output: -
@@ -125,13 +130,18 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
+  /**
+   * คำอธิบาย : Hook สำหรับเรียกใช้ฟังก์ชันดึงข้อมูลสมาชิกเมื่อ component ถูกโหลดหรือ userId เปลี่ยนแปลง
+   * Input: -
+   * Output: -
+   */
   useEffect(() => {
     if (userId) {
       fetchMemberData();
     }
   }, [userId]);
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input ภายในฟอร์ม
    * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
    * Output: -
@@ -148,7 +158,7 @@ const EditMemberPage: React.FC = () => {
     });
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
    * Input: -
    * Output: -
@@ -162,7 +172,7 @@ const EditMemberPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มและรูปภาพเพื่ออัปเดตข้อมูลสมาชิกในระบบ
    * Input: event (เหตุการณ์จากฟอร์ม)
    * Output: -

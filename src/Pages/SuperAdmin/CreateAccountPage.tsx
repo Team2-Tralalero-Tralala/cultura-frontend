@@ -109,7 +109,7 @@ interface CreateAccountBody {
   postalCode?: string;
 }
 
-/*
+/**
  * คำอธิบาย : Popper Component สำหรับปรับแต่งหน้าต่าง AutoComplete ของ MUI
  * Input: props (any) - properties ที่ส่งมาจาก MUI Autocomplete
  * Output: JSX Element Popper
@@ -133,11 +133,16 @@ function CustomPopper(props: any) {
   );
 }
 
+/**
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับหน้าสร้างบัญชีผู้ใช้ใหม่
+ * Input: props (CreateAccountPageProps) - รับ defaultRole สำหรับกำหนดค่าเริ่มต้นของ Role
+ * Output: หน้าจอ (UI) ฟอร์มสำหรับกรอกข้อมูลเพื่อสร้างบัญชี
+ */
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับหาค่า Role จาก URL Path ปัจจุบัน หรือจาก Props
    * Input: -
    * Output: RoleType (Admin, Member, หรือ Tourist)
@@ -182,7 +187,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
-  /*
+  /**
    * คำอธิบาย : Hook สำหรับตั้งค่า Role ใหม่เมื่อ Pathname ของ URL มีการเปลี่ยนแปลง
    * Input: -
    * Output: -
@@ -191,14 +196,15 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     setRole(getRoleFromPath());
   }, [location.pathname]);
 
-  /*
+  /**
    * คำอธิบาย : Hook สำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนเพื่อนำมาแสดงใน Dropdown เมื่อสร้างบัญชี Member
    * Input: -
    * Output: -
    */
   useEffect(() => {
     if (role === "Member") {
-      /*
+
+      /**
        * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนเพื่อนำมาแสดงเป็นตัวเลือก
        * Input: -
        * Output: -
@@ -256,7 +262,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   }, [role]);
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลใน Form ด้วย Schema (Zod)
    * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ - Optional), fieldValue (ค่าของฟิลด์ - Optional)
    * Output: boolean (ส่งคืน true หากข้อมูลถูกต้อง, false หากผิดพลาด)
@@ -289,7 +295,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนแปลงค่าในช่อง Input ของฟอร์ม
    * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
    * Output: -
@@ -301,7 +307,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     validateField(id, value);
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเลือกอัปโหลดรูปภาพโปรไฟล์
    * Input: file (ไฟล์รูปภาพที่เลือก หรือ null)
    * Output: -
@@ -311,7 +317,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้งานกดเปลี่ยนปุ่ม Role ในฟอร์ม
    * Input: newRole (บทบาทใหม่ที่ถูกเลือก)
    * Output: -
@@ -325,7 +331,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันเช็คความถูกต้องของข้อมูล (Validation & Role Check) ก่อนเปิด Modal ยืนยันการสร้างบัญชี
    * Input: -
    * Output: -
@@ -350,7 +356,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลแบบฟอร์มเพื่อสร้างบัญชีผู้ใช้ใหม่ในระบบ
    * Input: event (React.FormEvent)
    * Output: -
@@ -665,14 +671,14 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                               focus:outline-none focus:ring-1 transition-shadow pr-10
                               ${
                                 hasError
-                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500" 
-                                  : "border-gray-400 focus:ring-gray-400 focus:border-gray-500" 
+                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                  : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"
                               }`}
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
-                          
+
                           {hasError && (
                             <p className="mt-1.5 ml-1 text-xs text-red-500">
                               {formErrors.communityId}

@@ -45,8 +45,7 @@ interface CommunityOption {
   name: string;
 }
 
-/*
- * คำอธิบาย : Custom Popper Component สำหรับปรับแต่งการแสดงผลของ Autocomplete
+/** * คำอธิบาย : Custom Popper Component สำหรับปรับแต่งการแสดงผลของ Autocomplete
  * Input: props (any) - properties ที่รับมาจาก MUI Autocomplete
  * Output: JSX Element Popper ที่ผ่านการปรับแต่งแล้ว
  */
@@ -69,13 +68,18 @@ function CustomPopper(props: any) {
   );
 }
 
+/**
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับหน้าแก้ไขบัญชีผู้ใช้งาน
+ * Input: -
+ * Output: หน้าจอ (UI) สำหรับการแก้ไขบัญชีผู้ใช้งาน
+ */
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { adminId, memberId, touristId } = useParams();
   const userId = adminId || memberId || touristId;
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับดึงค่า Role ของผู้ใช้งานจาก URL path
    * Input: -
    * Output: RoleType ("Admin" | "Member" | "Tourist")
@@ -121,7 +125,7 @@ const EditAccountPage: React.FC = () => {
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อบทบาท (Role) เป็นรหัส ID ตัวเลขที่ตรงกับฐานข้อมูล
    * Input: role (RoleType) - ชื่อบทบาท เช่น "Admin", "Member", "Tourist"
    * Output: number - รหัส ID ของบทบาทนั้นๆ (1, 2, หรือ 3)
@@ -139,7 +143,7 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลผู้ใช้งานจาก API ตาม Role และ ID เพื่อนำมาแสดงบนฟอร์ม
    * Input: role (RoleType) - บทบาทของผู้ใช้ที่ต้องการดึงข้อมูล
    * Output: -
@@ -202,7 +206,8 @@ const EditAccountPage: React.FC = () => {
 
   useEffect(() => {
     if (formData.role === "Member") {
-      /*
+
+      /**
        * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนทั้งหมดจาก API เพื่อนำมาแสดงเป็นตัวเลือก
        * Input: -
        * Output: -
@@ -259,7 +264,7 @@ const EditAccountPage: React.FC = () => {
     }
   }, [formData.role]);
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนแปลงค่าข้อมูลในช่อง Input
    * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
    * Output: -
@@ -272,7 +277,7 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้งานกดเปลี่ยนปุ่มเลือก Role
    * Input: newRole (RoleType) - บทบาทใหม่ที่ผู้ใช้งานเลือก
    * Output: -
@@ -287,7 +292,7 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
- /*
+  /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องและครบถ้วนของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
    * Input: -
    * Output: -
@@ -341,7 +346,7 @@ const EditAccountPage: React.FC = () => {
     }
   };
 
-  /*
+  /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลการแก้ไขบัญชีผู้ใช้ รวมถึงการอัปเดตรูปภาพไปยังระบบ
    * Input: event (React.FormEvent)
    * Output: -
@@ -411,7 +416,7 @@ const EditAccountPage: React.FC = () => {
         fetchUser(formData.role);
         setProfileImage(null);
       }
-  } catch (error: any) {
+    } catch (error: any) {
       console.error("❌ Error updating account:", error);
 
       const errorMsg =
@@ -422,7 +427,11 @@ const EditAccountPage: React.FC = () => {
         newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
       } else if (errorMsg.includes("อีเมล") || errorMsg.includes("duplicate_email")) {
         newErrors.email = "อีเมลนี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์") || errorMsg.includes("duplicate_phone")) {
+      } else if (
+        errorMsg.includes("โทรศัพท์") ||
+        errorMsg.includes("เบอร์") ||
+        errorMsg.includes("duplicate_phone")
+      ) {
         newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
       } else {
         toast.error(errorMsg);

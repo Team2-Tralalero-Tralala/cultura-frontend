@@ -38,6 +38,8 @@ import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 import { CreateStorePage } from "@/Pages/Admin/CreateStorePage";
 import { EditStorePage } from "@/Pages/Admin/EditStorePage";
 import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage";
+import { ResetPasswordPage } from "@/Pages/Admin/ResetPasswordPage";
+
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
@@ -82,6 +84,7 @@ export default function AdminRoutes() {
       <Route path="/members" element={<ManageMembers />} />
       <Route path="/member/create" element={<CreateMemberPage />} />
       <Route path="/member/:userId/edit" element={<EditMemberPage />} />
+      <Route path="/member/reset-password/:userId" element={<ResetPasswordPage />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}

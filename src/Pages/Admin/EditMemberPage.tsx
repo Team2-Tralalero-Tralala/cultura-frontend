@@ -14,7 +14,7 @@ import Button from "../../Components/Button";
 
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-
+import { Icon } from "@iconify/react";
 /**
  *  Schema สำหรับตรวจสอบความถูกต้องของข้อมูล (ไม่รวมรหัสผ่าน)
  */
@@ -351,6 +351,18 @@ const EditMemberPage: React.FC = () => {
               error={!!formErrors.phone}
               helperText={formErrors.phone}
             />
+            <div className="relative w-full">
+              <div className="absolute right-0 top-0 z-10">
+                <button
+                  type="button"
+                  
+                  onClick={() => navigate(`/admin/member/reset-password/${userId}`)}
+                  className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
+                >
+                  <Icon icon="mdi:lock-reset" className="w-4 h-4" />
+                  เปลี่ยนรหัสผ่าน
+                </button>
+              </div>
 
             <TextField
               id="communityRole"
@@ -362,6 +374,7 @@ const EditMemberPage: React.FC = () => {
               error={!!formErrors.communityRole}
               helperText={formErrors.communityRole}
             />
+            </div>
           </div>
         </div>
 

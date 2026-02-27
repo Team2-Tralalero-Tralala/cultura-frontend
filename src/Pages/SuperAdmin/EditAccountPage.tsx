@@ -1,6 +1,5 @@
 /**
- * คำอธิบาย: หน้าสำหรับแก้ไขบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * แก้ไขข้อมูลส่วนตัว, เปลี่ยนบทบาท, และจัดการข้อมูลที่เกี่ยวข้องกับบทบาทนั้น ๆ
+ * คำอธิบาย : Component หลักสำหรับหน้าแก้ไขบัญชีผู้ใช้ (Super Admin)
  */
 
 import React, { useEffect, useState } from "react";
@@ -9,7 +8,7 @@ import { toast } from "react-toastify";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/Input/TextField";
+import TextField from "@/Components/Input/TextField";
 import Button from "../../Components/Button";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -46,10 +45,9 @@ interface CommunityOption {
   name: string;
 }
 
-/**
- * คำอธิบาย: Custom Popper Component สำหรับ Autocomplete
- * Input: props (any)
- * Output: JSX Element Popper ที่ปรับแต่งแล้ว
+/** * คำอธิบาย : Custom Popper Component สำหรับปรับแต่งการแสดงผลของ Autocomplete
+ * Input: props (any) - properties ที่รับมาจาก MUI Autocomplete
+ * Output: JSX Element Popper ที่ผ่านการปรับแต่งแล้ว
  */
 function CustomPopper(props: any) {
   const { anchorEl } = props;
@@ -71,9 +69,9 @@ function CustomPopper(props: any) {
 }
 
 /**
- * คำอธิบาย: Component หลักสำหรับหน้าแก้ไขบัญชีผู้ใช้ (Super Admin)
- * Input: - (ใช้ Params จาก URL)
- * Output: JSX Element หน้า EditAccountPage
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับหน้าแก้ไขบัญชีผู้ใช้งาน
+ * Input: -
+ * Output: หน้าจอ (UI) สำหรับการแก้ไขบัญชีผู้ใช้งาน
  */
 const EditAccountPage: React.FC = () => {
   const navigate = useNavigate();
@@ -82,7 +80,7 @@ const EditAccountPage: React.FC = () => {
   const userId = adminId || memberId || touristId;
 
   /**
-   * คำอธิบาย: ดึง Role จาก URL path
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงค่า Role ของผู้ใช้งานจาก URL path
    * Input: -
    * Output: RoleType ("Admin" | "Member" | "Tourist")
    */
@@ -100,6 +98,9 @@ const EditAccountPage: React.FC = () => {
     phone: "",
     role: getRoleFromPath() as RoleType,
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
+
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -117,33 +118,34 @@ const EditAccountPage: React.FC = () => {
     postalCode: "",
   });
 
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
   /**
-   * คำอธิบาย: แปลง Role string เป็น ID (Admin=2, Member=3, Tourist=4)
-   * Input: role (RoleType)
-   * Output: number
+   * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อบทบาท (Role) เป็นรหัส ID ตัวเลขที่ตรงกับฐานข้อมูล
+   * Input: role (RoleType) - ชื่อบทบาท เช่น "Admin", "Member", "Tourist"
+   * Output: number - รหัส ID ของบทบาทนั้นๆ (1, 2, หรือ 3)
    */
   const mapRoleToId = (role: RoleType): number => {
     switch (role) {
       case "Admin":
-        return 2;
-      case "Member":
         return 3;
+      case "Member":
+        return 1;
       case "Tourist":
-        return 4;
-      default:
         return 2;
+      default:
+        return 3;
     }
   };
 
   /**
-   * คำอธิบาย: ดึงข้อมูลผู้ใช้จาก API ตาม Role และ ID
-   * Input: role (RoleType)
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลผู้ใช้งานจาก API ตาม Role และ ID เพื่อนำมาแสดงบนฟอร์ม
+   * Input: role (RoleType) - บทบาทของผู้ใช้ที่ต้องการดึงข้อมูล
    * Output: -
    */
   const fetchUser = async (role: RoleType) => {
@@ -204,6 +206,12 @@ const EditAccountPage: React.FC = () => {
 
   useEffect(() => {
     if (formData.role === "Member") {
+
+      /**
+       * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนทั้งหมดจาก API เพื่อนำมาแสดงเป็นตัวเลือก
+       * Input: -
+       * Output: -
+       */
       const fetchCommunities = async () => {
         setIsCommunityLoading(true);
         try {
@@ -255,18 +263,23 @@ const EditAccountPage: React.FC = () => {
       fetchCommunities();
     }
   }, [formData.role]);
-/**
- * คำอธิบาย: จัดการการเปลี่ยนแปลงข้อมูล
- * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
- * Output: -
- */
+
+  /**
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนแปลงค่าข้อมูลในช่อง Input
+   * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
+   * Output: -
+   */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
+    if (formErrors[id]) {
+      setFormErrors((prev) => ({ ...prev, [id]: undefined }));
+    }
   };
+
   /**
-   * คำอธิบาย: จัดการการเลือก Role
-   * Input: newRole (RoleType)
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้งานกดเปลี่ยนปุ่มเลือก Role
+   * Input: newRole (RoleType) - บทบาทใหม่ที่ผู้ใช้งานเลือก
    * Output: -
    */
   const handleRoleSelect = (newRole: RoleType) => {
@@ -280,7 +293,61 @@ const EditAccountPage: React.FC = () => {
   };
 
   /**
-   * คำอธิบาย: บันทึกข้อมูลการแก้ไขบัญชี
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องและครบถ้วนของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
+   * Input: -
+   * Output: -
+   */
+  const handlePreCheck = () => {
+    let isValid = true;
+    const newErrors: Record<string, string> = {};
+
+    if (formData.fname.trim() === "") {
+      newErrors.fname = "กรุณากรอกชื่อ";
+      isValid = false;
+    }
+    if (formData.lname.trim() === "") {
+      newErrors.lname = "กรุณากรอกนามสกุล";
+      isValid = false;
+    }
+    if (formData.username.trim() === "") {
+      newErrors.username = "กรุณากรอกชื่อผู้ใช้";
+      isValid = false;
+    } else if (formData.username.trim().length < 4) {
+      newErrors.username = "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร";
+      isValid = false;
+    }
+    if (formData.email.trim() === "") {
+      newErrors.email = "กรุณากรอกอีเมล";
+      isValid = false;
+    }
+    if (formData.phone.trim() === "") {
+      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
+      isValid = false;
+    }
+
+    if (formData.role === "Member") {
+      if (!roleSpecificData.communityId) {
+        newErrors.communityId = "กรุณาเลือกวิสาหกิจชุมชน";
+        isValid = false;
+      }
+    } else if (formData.role === "Tourist") {
+      if (!roleSpecificData.birthDate) {
+        newErrors.birthDate = "กรุณาระบุวันเกิด";
+        isValid = false;
+      }
+    }
+
+    setFormErrors(newErrors);
+
+    if (isValid) {
+      setIsShowConfirm(true);
+    } else {
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+    }
+  };
+
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลการแก้ไขบัญชีผู้ใช้ รวมถึงการอัปเดตรูปภาพไปยังระบบ
    * Input: event (React.FormEvent)
    * Output: -
    */
@@ -289,11 +356,8 @@ const EditAccountPage: React.FC = () => {
 
     if (formData.role === "Member") {
       if (!roleSpecificData.communityId) {
+        setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
         toast.error("กรุณาเลือกชุมชน");
-        return;
-      }
-      if (!roleSpecificData.activityRole) {
-        toast.error("กรุณากรอกบทบาทในชุมชน");
         return;
       }
     }
@@ -345,8 +409,8 @@ const EditAccountPage: React.FC = () => {
 
       await api.put(endpoint, requestBody);
 
-      setShowConfirm(false);
-      setShowSuccessModal(true);
+      setIsShowConfirm(false);
+      setIsShowSuccessModal(true);
 
       if (imageWasUpdated) {
         fetchUser(formData.role);
@@ -354,7 +418,28 @@ const EditAccountPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error("❌ Error updating account:", error);
-      toast.error(error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้");
+
+      const errorMsg =
+        error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const newErrors: Record<string, string> = {};
+
+      if (errorMsg.includes("ชื่อผู้ใช้") || errorMsg.includes("duplicate_username")) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("อีเมล") || errorMsg.includes("duplicate_email")) {
+        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
+      } else if (
+        errorMsg.includes("โทรศัพท์") ||
+        errorMsg.includes("เบอร์") ||
+        errorMsg.includes("duplicate_phone")
+      ) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      } else {
+        toast.error(errorMsg);
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+      }
     }
   };
 
@@ -369,35 +454,40 @@ const EditAccountPage: React.FC = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 mb-6 pl-6">
-        <button
-          onClick={() => navigate(-1)}
-          type="button"
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
-          title="ย้อนกลับ"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">แก้ไขบัญชี</h1>
-      </div>
-
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
       >
+        <div className="flex items-center gap-3 pb-6">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+            title="ย้อนกลับ"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <h1
+            onClick={() => navigate(-1)}
+            className="text-xl font-bold text-black tracking-tight cursor-pointer"
+          >
+            แก้ไขบัญชี
+          </h1>
+        </div>
         <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">แก้ไขบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
@@ -419,6 +509,8 @@ const EditAccountPage: React.FC = () => {
                 required
                 value={formData.fname}
                 onChange={handleChange}
+                error={!!formErrors.fname}
+                helperText={formErrors.fname}
               />
               <TextField
                 id="lname"
@@ -426,6 +518,8 @@ const EditAccountPage: React.FC = () => {
                 required
                 value={formData.lname}
                 onChange={handleChange}
+                error={!!formErrors.lname}
+                helperText={formErrors.lname}
               />
             </div>
 
@@ -435,13 +529,21 @@ const EditAccountPage: React.FC = () => {
               required
               value={formData.username}
               onChange={handleChange}
+              error={!!formErrors.username}
+              helperText={formErrors.username}
             />
+            <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
+              <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
+              <li>ควรประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข</li>
+            </ul>
             <TextField
               id="email"
               label="อีเมล"
               required
               value={formData.email}
               onChange={handleChange}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
             />
             <TextField
               id="phone"
@@ -449,6 +551,8 @@ const EditAccountPage: React.FC = () => {
               required
               value={formData.phone}
               onChange={handleChange}
+              error={!!formErrors.phone}
+              helperText={formErrors.phone}
             />
 
             <div>
@@ -490,7 +594,7 @@ const EditAccountPage: React.FC = () => {
                 <div className="space-y-1.5 w-full">
                   <div className="flex items-center justify-between">
                     <label className="block text-base font-semibold text-black">
-                      ชุมชนวิสาหกิจ <span className="text-red-600"> *</span>
+                      ชุมชนวิสาหกิจ
                     </label>
                   </div>
                   <Autocomplete
@@ -507,6 +611,9 @@ const EditAccountPage: React.FC = () => {
                         ...prev,
                         communityId: newValue ? String(newValue.id) : "",
                       }));
+                      if (newValue) {
+                        setFormErrors((prev) => ({ ...prev, communityId: undefined }));
+                      }
                     }}
                     loading={isCommunityLoading}
                     noOptionsText={isCommunityLoading ? "กำลังโหลด..." : "ไม่พบข้อมูลชุมชน"}
@@ -515,40 +622,37 @@ const EditAccountPage: React.FC = () => {
                     PopperComponent={CustomPopper}
                     renderInput={(params) => {
                       const { InputProps, inputProps } = params;
+                      const hasError = !!formErrors.communityId;
+
                       return (
                         <div ref={InputProps.ref} className="relative w-full">
                           <input
                             {...inputProps}
                             type="text"
                             placeholder={isCommunityLoading ? "กำลังโหลด..." : "ค้นหาชุมชน"}
-                            className="block w-full rounded-form border-1
-                              border-gray-400 focus:ring-gray-400 focus:border-gray-500
+                            className={`block w-full rounded-form border-1
                               bg-white px-5 py-2 text-black text-base
                               placeholder:text-[#606060] placeholder:font-normal leading-relaxed
-                              focus:outline-none focus:ring-1 transition-shadow pr-10"
+                              focus:outline-none focus:ring-1 transition-shadow pr-10
+                              ${
+                                hasError
+                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                  : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"
+                              }`}
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
+                          {hasError && (
+                            <p className="mt-1.5 ml-1 text-xs text-red-500">
+                              {formErrors.communityId}
+                            </p>
+                          )}
                         </div>
                       );
                     }}
                   />
                 </div>
-
-                <TextField
-                  id="activityRole"
-                  label="บทบาทในชุมชน"
-                  placeholder="กรอกบทบาทในชุมชน"
-                  required
-                  value={roleSpecificData.activityRole}
-                  onChange={(e) =>
-                    setRoleSpecificData((prev) => ({
-                      ...prev,
-                      activityRole: e.target.value,
-                    }))
-                  }
-                />
               </div>
             )}
 
@@ -606,7 +710,7 @@ const EditAccountPage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setShowConfirm(true)}>
+            <Button type="confirm-admin" onClick={handlePreCheck}>
               บันทึก
             </Button>
           </div>
@@ -614,27 +718,35 @@ const EditAccountPage: React.FC = () => {
       </form>
 
       <Modal
-        isOpen={showConfirm}
+        isOpen={isShowConfirm}
         title="ยืนยันการบันทึกข้อมูล"
         text="คุณต้องการบันทึกการแก้ไขบัญชีนี้หรือไม่"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsShowConfirm(false);
           handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={showSuccessModal}
+        isOpen={isShowSuccessModal}
         type="success"
         title="แก้ไขบัญชีสำเร็จ"
         message="ข้อมูลบัญชีผู้ใช้ถูกแก้ไขเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
+          setIsShowSuccessModal(false);
           navigate("/super/accounts/all");
         }}
+      />
+
+      <ModalAlert
+        isOpen={isShowErrorModal}
+        type="error"
+        title="กรอกข้อมูลไม่ครบถ้วน"
+        message="กรุณาตรวจสอบข้อมูลให้ครบก่อนทำการบันทึก"
+        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

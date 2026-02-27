@@ -1,15 +1,15 @@
 /**
- * คำอธิบาย: Component สำหรับหน้าสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
- * รับข้อมูลผู้ใช้ ตรวจสอบความถูกต้อง และบันทึกลงฐานข้อมูล รองรับการสร้างบัญชีหลายบทบาท
+ * คำอธิบาย : Component สำหรับหน้าสร้างบัญชีผู้ใช้ใหม่ (Admin / Member / Tourist)
  */
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import * as z from "zod";
+import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/Input/TextField";
+import TextField from "@/Components/Input/TextField";
 import Button from "../../Components/Button";
 import ThailandLocationSelector, {
   type ThailandLocation,
@@ -28,41 +28,56 @@ interface CommunityOption {
   name: string;
 }
 
-const accountSchema = z.object({
-  fname: z.string().min(1, "กรุณากรอกชื่อ"),
-  lname: z.string().min(1, "กรุณากรอกนามสกุล"),
-  username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง ตัวอย่างที่ถูกต้อง: example@example.com"),
-  phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
-  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
-  confirmPassword: z.string(),
+const accountSchema = zod
+  .object({
+    fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+    lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+    username: zod
+      .string()
+      .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+      .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
+    email: zod.string().email("กรุณากรอกอีเมล"),
+    phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
 
-  birthDate: z
-    .string()
-    .min(1, "กรุณากรอกวัน/เดือน/ปีเกิด")
-    .refine(
-      (dateString) => {
-        const dateObject = new Date(dateString);
-        const currentDate = new Date();
-        return !isNaN(dateObject.getTime()) && dateObject <= currentDate;
-      },
-      { message: "วันเกิดต้องเป็นวันที่ถูกต้อง และไม่เกินวันที่ปัจจุบัน" },
-    )
-    .optional(),
+    password: zod
+      .string()
+      .min(8, "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
+      .regex(/[a-z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z) อย่างน้อย 1 ตัว")
+      .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว")
+      .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9) อย่างน้อย 1 ตัว"),
 
-  gender: z
-    .string()
-    .min(1, "กรุณาเลือกเพศ")
-    .refine((genderValue) => ["ชาย", "หญิง", "ไม่ระบุ"].includes(genderValue), {
-      message: "เพศไม่ถูกต้อง",
-    })
-    .optional(),
+    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"),
 
-  province: z.string().min(1, "กรุณาเลือกจังหวัด").optional(),
-  district: z.string().min(1, "กรุณาเลือกอำเภอ").optional(),
-  subDistrict: z.string().min(1, "กรุณาเลือกตำบล").optional(),
-  postalCode: z.string().min(1, "กรุณาใส่รหัสไปรษณีย์").optional(),
-});
+    birthDate: zod
+      .string()
+      .min(1, "กรุณากรอกวัน/เดือน/ปีเกิด")
+      .refine(
+        (dateString) => {
+          const dateObject = new Date(dateString);
+          const currentDate = new Date();
+          return !isNaN(dateObject.getTime()) && dateObject <= currentDate;
+        },
+        { message: "วันเกิดต้องเป็นวันที่ถูกต้อง และไม่เกินวันที่ปัจจุบัน" },
+      )
+      .optional(),
+
+    gender: zod
+      .string()
+      .min(1, "กรุณาเลือกเพศ")
+      .refine((genderValue) => ["ชาย", "หญิง", "ไม่ระบุ"].includes(genderValue), {
+        message: "เพศไม่ถูกต้อง",
+      })
+      .optional(),
+
+    province: zod.string().min(1, "กรุณาเลือกจังหวัด").optional(),
+    district: zod.string().min(1, "กรุณาเลือกอำเภอ").optional(),
+    subDistrict: zod.string().min(1, "กรุณาเลือกตำบล").optional(),
+    postalCode: zod.string().min(1, "กรุณาใส่รหัสไปรษณีย์").optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "รหัสผ่านไม่ตรงกัน",
+    path: ["confirmPassword"],
+  });
 
 interface CreateAccountPageProps {
   defaultRole?: RoleType;
@@ -95,8 +110,8 @@ interface CreateAccountBody {
 }
 
 /**
- * คำอธิบาย: Popper Component สำหรับ AutoComplete ของ MUI
- * Input: props (any) - props จาก MUI Autocomplete
+ * คำอธิบาย : Popper Component สำหรับปรับแต่งหน้าต่าง AutoComplete ของ MUI
+ * Input: props (any) - properties ที่ส่งมาจาก MUI Autocomplete
  * Output: JSX Element Popper
  */
 function CustomPopper(props: any) {
@@ -119,18 +134,18 @@ function CustomPopper(props: any) {
 }
 
 /**
- * คำอธิบาย: หน้าสร้างบัญชีผู้ใช้ใหม่
- * Input: Props (CreateAccountPageProps) - defaultRole (Optional)
- * Output: JSX Element หน้า Form สร้างบัญชี
+ * คำอธิบาย : ฟังก์ชัน Component สำหรับหน้าสร้างบัญชีผู้ใช้ใหม่
+ * Input: props (CreateAccountPageProps) - รับ defaultRole สำหรับกำหนดค่าเริ่มต้นของ Role
+ * Output: หน้าจอ (UI) ฟอร์มสำหรับกรอกข้อมูลเพื่อสร้างบัญชี
  */
 const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
   /**
-   * คำอธิบาย: หา Role จาก URL path หรือ props
+   * คำอธิบาย : ฟังก์ชันสำหรับหาค่า Role จาก URL Path ปัจจุบัน หรือจาก Props
    * Input: -
-   * Output: RoleType (Admin | Member | Tourist)
+   * Output: RoleType (Admin, Member, หรือ Tourist)
    */
   const getRoleFromPath = (): RoleType => {
     if (defaultRole) return defaultRole;
@@ -165,28 +180,35 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     subdistrict: "",
     postalCode: "",
   });
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
 
   /**
-   * คำอธิบาย: ตั้งค่า Role ตาม Pathname
-   * Input: location.pathname
-   * Output: RoleType (Admin | Member | Tourist)
+   * คำอธิบาย : Hook สำหรับตั้งค่า Role ใหม่เมื่อ Pathname ของ URL มีการเปลี่ยนแปลง
+   * Input: -
+   * Output: -
    */
   useEffect(() => {
     setRole(getRoleFromPath());
   }, [location.pathname]);
 
   /**
-   * คำอธิบาย: ตั้งค่า Role ตาม Pathname
-   * Input: location.pathname
-   * Output: RoleType (Admin | Member | Tourist)
+   * คำอธิบาย : Hook สำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนเพื่อนำมาแสดงใน Dropdown เมื่อสร้างบัญชี Member
+   * Input: -
+   * Output: -
    */
   useEffect(() => {
     if (role === "Member") {
+
+      /**
+       * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลรายชื่อวิสาหกิจชุมชนเพื่อนำมาแสดงเป็นตัวเลือก
+       * Input: -
+       * Output: -
+       */
       const fetchCommunities = async () => {
         setIsCommunityLoading(true);
         try {
@@ -229,7 +251,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             if (adminCommunity) {
               setCommunityOptions([{ id: adminCommunity.id, name: adminCommunity.name }]);
             }
-          } catch (error) {
+          } catch (adminFetchError) {
             setCommunityOptions([]);
           }
         } finally {
@@ -241,9 +263,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   }, [role]);
 
   /**
-   * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลใน Form
-   * Input: fieldName (optional string), fieldValue (optional unknown) - ถ้าส่งมาจะตรวจเฉพาะ field นั้น
-   * Output: boolean (true ถ้าถูกต้อง)
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลใน Form ด้วย Schema (Zod)
+   * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ - Optional), fieldValue (ค่าของฟิลด์ - Optional)
+   * Output: boolean (ส่งคืน true หากข้อมูลถูกต้อง, false หากผิดพลาด)
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -274,9 +296,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   };
 
   /**
-   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าใน Form
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนแปลงค่าในช่อง Input ของฟอร์ม
    * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
-   * Output: void
+   * Output: -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
@@ -286,18 +308,19 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   };
 
   /**
-   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าใน Form
-   * Input: file (File | null)
-   * Output: void
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเลือกอัปโหลดรูปภาพโปรไฟล์
+   * Input: file (ไฟล์รูปภาพที่เลือก หรือ null)
+   * Output: -
    */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
     setFormData((prev) => ({ ...prev, profileImage: file }));
   };
+
   /**
-   * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าใน Form
-   * Input: newRole (RoleType)
-   * Output: void
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อผู้ใช้งานกดเปลี่ยนปุ่ม Role ในฟอร์ม
+   * Input: newRole (บทบาทใหม่ที่ถูกเลือก)
+   * Output: -
    */
   const handleRoleSelect = (newRole: RoleType) => {
     if (role !== newRole) {
@@ -309,9 +332,34 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   };
 
   /**
-   * คำอธิบาย: ส่งข้อมูลเพื่อสร้างบัญชีใหม่
+   * คำอธิบาย : ฟังก์ชันเช็คความถูกต้องของข้อมูล (Validation & Role Check) ก่อนเปิด Modal ยืนยันการสร้างบัญชี
+   * Input: -
+   * Output: -
+   */
+  const handlePreCheck = () => {
+    const isFormValid = validateField();
+
+    let isRoleValid = true;
+    if (role === "Member") {
+      if (!roleSpecificData.communityId) {
+        isRoleValid = false;
+        setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
+      } else {
+        setFormErrors((prev) => ({ ...prev, communityId: undefined }));
+      }
+    }
+
+    if (!isFormValid || !isRoleValid || formData.password !== formData.confirmPassword) {
+      setIsShowErrorModal(true);
+    } else {
+      setIsShowConfirm(true);
+    }
+  };
+
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลแบบฟอร์มเพื่อสร้างบัญชีผู้ใช้ใหม่ในระบบ
    * Input: event (React.FormEvent)
-   * Output: Promise<void>
+   * Output: -
    */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -328,19 +376,16 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
     if (role === "Member") {
       if (!roleSpecificData.communityId) {
+        setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
         toast.error("กรุณาเลือกชุมชน ❌");
-        return;
-      }
-      if (!roleSpecificData.activityRole) {
-        toast.error("กรุณากรอกบทบาทในชุมชน ❌");
         return;
       }
     }
 
     try {
-      let roleId = 2;
-      if (role === "Member") roleId = 3;
-      if (role === "Tourist") roleId = 4;
+      let roleId = 3;
+      if (role === "Member") roleId = 1;
+      if (role === "Tourist") roleId = 2;
 
       const accountBody: CreateAccountBody = {
         roleId,
@@ -374,8 +419,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-        setShowConfirm(false);
-        setShowSuccessModal(true);
+        setIsShowConfirm(false);
+        setIsShowSuccessModal(true);
         return;
       }
 
@@ -388,11 +433,27 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         });
       }
 
-      setShowConfirm(false);
-      setShowSuccessModal(true);
+      setIsShowConfirm(false);
+      setIsShowSuccessModal(true);
     } catch (error: any) {
       console.error("❌ Error creating account:", error);
-      toast.error(error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้");
+
+      const errorMsg = error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้";
+      const newErrors: Record<string, string> = {};
+
+      if (errorMsg.includes("ชื่อผู้ใช้")) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("อีเมล")) {
+        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
+      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์")) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      } else {
+        toast.error(errorMsg);
+      }
+
+      if (Object.keys(newErrors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+      }
     }
   };
 
@@ -407,35 +468,39 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
         />
       </div>
 
-      <div className="flex items-center gap-3 mb-6 pl-6">
-        <button
-          onClick={() => navigate(-1)}
-          type="button"
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
-          title="ย้อนกลับ"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">สร้างบัญชี</h1>
-      </div>
-
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200"
       >
+        <div className="flex items-center gap-3 pb-6">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+            title="ย้อนกลับ"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1
+            onClick={() => navigate(-1)}
+            className="text-xl font-bold text-black tracking-tight cursor-pointer"
+          >
+            สร้างบัญชี
+          </h1>
+        </div>
         <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">สร้างบัญชี</h2>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
@@ -477,6 +542,10 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               error={!!formErrors.username}
               helperText={formErrors.username}
             />
+            <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
+              <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
+              <li>ควรประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข</li>
+            </ul>
             <TextField
               id="email"
               label="อีเมล"
@@ -498,18 +567,26 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
               helperText={formErrors.phone}
             />
 
-            <div className="grid grid-cols-2 gap-6">
-              <TextField
-                id="password"
-                label="รหัสผ่าน"
-                placeholder="กรอกรหัสผ่าน"
-                required
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={!!formErrors.password}
-                helperText={formErrors.password}
-              />
+            <div className="grid grid-cols-2 gap-6 items-start">
+              <div>
+                <TextField
+                  id="password"
+                  label="รหัสผ่าน"
+                  placeholder="กรอกรหัสผ่าน"
+                  required
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!formErrors.password}
+                  helperText={formErrors.password}
+                />
+                <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
+                  <li>ความยาวอย่างน้อย 8 ตัวอักษร</li>
+                  <li>ประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z) พิมพ์ใหญ่ (A-Z)</li>
+                  <li>ประกอบด้วยตัวเลข (0-9)</li>
+                </ul>
+              </div>
+
               <TextField
                 id="confirmPassword"
                 label="กรอกยืนยันรหัสผ่าน"
@@ -518,6 +595,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                error={!!formErrors.confirmPassword}
+                helperText={formErrors.confirmPassword}
               />
             </div>
 
@@ -548,7 +627,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                 <div className="space-y-1.5 w-full">
                   <div className="flex items-center justify-between">
                     <label className="block text-base font-semibold text-black">
-                      ชุมชนวิสาหกิจ <span className="text-red-600"> *</span>
+                      ชื่อวิสาหกิจชุมชน
                     </label>
                   </div>
                   <Autocomplete
@@ -565,6 +644,9 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                         ...prev,
                         communityId: newValue ? String(newValue.id) : "",
                       }));
+                      if (newValue) {
+                        setFormErrors((prev) => ({ ...prev, communityId: undefined }));
+                      }
                     }}
                     loading={isCommunityLoading}
                     noOptionsText="ไม่พบข้อมูลชุมชน"
@@ -573,40 +655,40 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
                     PopperComponent={CustomPopper}
                     renderInput={(params) => {
                       const { InputProps, inputProps } = params;
+                      const hasError = !!formErrors.communityId;
+
                       return (
                         <div ref={InputProps.ref} className="relative w-full">
                           <input
                             {...inputProps}
                             type="text"
-                            placeholder={isCommunityLoading ? "กำลังโหลด..." : "ค้นหาชุมชน"}
-                            className="block w-full rounded-form border-1
-                              border-gray-400 focus:ring-gray-400 focus:border-gray-500
+                            placeholder={
+                              isCommunityLoading ? "กำลังโหลด..." : "กรอกชื่อวิสาหกิจชุมชน"
+                            }
+                            className={`block w-full rounded-form border-1
                               bg-white px-5 py-2 text-black text-base
                               placeholder:text-[#606060] placeholder:font-normal leading-relaxed
-                              focus:outline-none focus:ring-1 transition-shadow pr-10"
+                              focus:outline-none focus:ring-1 transition-shadow pr-10
+                              ${
+                                hasError
+                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                                  : "border-gray-400 focus:ring-gray-400 focus:border-gray-500"
+                              }`}
                           />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none flex items-center">
                             <Icon icon="mdi:magnify" style={{ fontSize: "24px" }} />
                           </div>
+
+                          {hasError && (
+                            <p className="mt-1.5 ml-1 text-xs text-red-500">
+                              {formErrors.communityId}
+                            </p>
+                          )}
                         </div>
                       );
                     }}
                   />
                 </div>
-
-                <TextField
-                  id="activityRole"
-                  label="บทบาทในชุมชน"
-                  placeholder="กรอกบทบาทในชุมชน"
-                  required
-                  value={roleSpecificData.activityRole}
-                  onChange={(e) =>
-                    setRoleSpecificData((prev) => ({
-                      ...prev,
-                      activityRole: e.target.value,
-                    }))
-                  }
-                />
               </div>
             )}
 
@@ -669,7 +751,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setShowConfirm(true)}>
+            <Button type="confirm-admin" onClick={handlePreCheck}>
               สร้างบัญชี
             </Button>
           </div>
@@ -677,25 +759,33 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       </form>
 
       <Modal
-        isOpen={showConfirm}
+        isOpen={isShowConfirm}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีนี้หรือไม่"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setShowConfirm(false);
+          setIsShowConfirm(false);
           handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
-        onCancel={() => setShowConfirm(false)}
+        onCancel={() => setIsShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={showSuccessModal}
+        isOpen={isShowErrorModal}
+        type="error"
+        title="เกิดข้อผิดพลาด"
+        message="กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง"
+        onClose={() => setIsShowErrorModal(false)}
+      />
+
+      <ModalAlert
+        isOpen={isShowSuccessModal}
         type="success"
         title="สร้างบัญชีสำเร็จ"
         message="บัญชีผู้ใช้ถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
-          setShowSuccessModal(false);
+          setIsShowSuccessModal(false);
           navigate("/super/accounts/all");
         }}
       />

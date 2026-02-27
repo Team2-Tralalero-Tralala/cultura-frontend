@@ -46,7 +46,7 @@ const columns: Column<StoreRow>[] = [
   {
     key: "name",
     header: "ชื่อร้านค้า",
-    className: "min-w-[200px]",
+    className: "min-w-[150px]",
     render: (row) => (
       <Link
         to={`/admin/community/store/${row.id}`}

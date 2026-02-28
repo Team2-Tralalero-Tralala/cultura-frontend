@@ -5,17 +5,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Modal } from "@/Components/Modal/Modal";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
-import { TrashIcon } from "@/Components/Tables/Icon";
 import type {
   Column,
   Pagination,
   DataTableActionsConfig,
-  BulkAction,
 } from "@/Components/Tables/Types";
-import { getHistoriesPackageMember, deletePackageAdmin } from "@/Libs/PackageService";
+import { getHistoriesPackageMember } from "@/Libs/PackageService";
 
 type PackageHistoryRow = {
   id: number;
@@ -25,14 +22,6 @@ type PackageHistoryRow = {
   status: string;
   dueDate: string;
 };
-
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบข้อความให้เป็นตัวพิมพ์เล็ก และลบช่องว่างเกินออก
- * Input: str (string)
- * Output: string ที่ผ่านการ normalize แล้ว
- */
-const normalizeText = (str: string) =>
-  (str ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับแปลงเวลา ISO จาก backend ให้อยู่ในรูปแบบวันที่/เวลาภาษาไทย
@@ -89,7 +78,7 @@ const columns: Column<PackageHistoryRow>[] = [
   {
     key: "dueDate",
     header: "วัน-เวลาสิ้นสุด",
-    render: (row) => formatThaiDateTime(row.dueDate),
+    render: (row) => formatThaiDateTime(row.dueDate), className: "min-w-[180px]"
   },
 ];
 
@@ -103,8 +92,6 @@ export function ManagePackageHistoryPage() {
 
   const [rows, setRows] = useState<PackageHistoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
-  const [packageIdToDelete, setPackageIdToDelete] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
@@ -160,7 +147,7 @@ export function ManagePackageHistoryPage() {
         community: packageItem.community?.name ?? "-",
         overseer:
           `${packageItem.overseerPackage?.fname ?? ""} ${packageItem.overseerPackage?.lname ?? ""}`.trim(),
-        status: packageItem.statusPackage === "PUBLISH" ? "จบแล้ว" : (packageItem.status === "CLOSED" ? "สิ้นสุดกิจกรรม" : packageItem.statusPackage ?? packageItem.status),
+        status: packageItem.statusPackage === "PUBLISH" || "UNPUBLISH" ? "จบแล้ว" : (packageItem.status === "CLOSED" ? "สิ้นสุดกิจกรรม" : packageItem.statusPackage ?? packageItem.status),
         dueDate: packageItem.dueDate,
         bookedCount: packageItem.booked_count ?? 0,
         capacity: packageItem.capacity ?? 0,
@@ -205,64 +192,14 @@ export function ManagePackageHistoryPage() {
   const rowActions: DataTableActionsConfig<PackageHistoryRow> = {
     header: "จัดการ",
     align: "left",
-    width: "150px",
+    width: "130px",
     variant: "icons",
-    items: () => ["copy", "delete"],
+    items: () => ["copy"],
     callbacks: {
       copy: (row) => navigate(``),
-      delete: (row) => {
-        setPackageIdToDelete(row.id);
-        setIsOpenConfirm(true);
-      },
     },
   };
 
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
-   * Input: id (number)
-   * Output: - (ลบแพ็กเกจและโหลดข้อมูลใหม่)
-   */
-  const handleDelete = async (id: number) => {
-    try {
-      await deletePackageAdmin(id);
-      setIsOpenConfirm(false);
-      setPackageIdToDelete(null);
-      await fetchData();
-    } catch (error: unknown) {
-      console.error("Failed to delete package:", error);
-      const err = error as {
-        response?: { data?: { message?: string; error?: string } };
-        message?: string;
-      };
-      const detail =
-        err?.response?.data?.message ??
-        err?.response?.data?.error ??
-        err?.message ??
-        "unknown error";
-      alert(`ลบไม่สำเร็จ: ${detail}`);
-      setErrorMessage(error instanceof Error ? error.message : "ไม่สามารถลบแพ็กเกจได้");
-    }
-  };
-
-  /**
-   * คำอธิบาย: ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
-   * Input: rows (รายการแพ็กเกจที่เลือก)
-   * Output: - (Alert ข้อมูลลบแพ็กเกจ)
-   */
-  const bulkActions: BulkAction<PackageHistoryRow>[] = [
-    {
-      id: "bulk-delete",
-      label: "ลบทั้งหมด",
-      icon: TrashIcon,
-      intent: "neutral",
-      confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-      onClick: async (rows) => {
-        const packageIds = rows.map((row) => row.id);
-        alert("Bulk delete: " + packageIds);
-        await fetchData();
-      },
-    },
-  ];
 
   return (
     <div className="space-y-4">
@@ -301,8 +238,6 @@ export function ManagePackageHistoryPage() {
           getKey={(row) => row.id.toString()}
           columns={columns}
           actions={rowActions}
-          bulkActions={bulkActions}
-          selectable
           isLoading={isLoading}
           pagination={pagination}
           onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
@@ -313,23 +248,6 @@ export function ManagePackageHistoryPage() {
           theme="brand"
         />
       </div>
-
-      <Modal
-        isOpen={isOpenConfirm}
-        title="ยืนยันการลบแพ็กเกจ"
-        text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
-        onConfirm={async () => {
-          if (!packageIdToDelete) return;
-          await handleDelete(packageIdToDelete);
-          setIsOpenConfirm(false);
-          setPackageIdToDelete(null);
-          await fetchData();
-        }}
-        onCancel={() => {
-          setIsOpenConfirm(false);
-          setPackageIdToDelete(null);
-        }}
-      />
     </div>
   );
 }

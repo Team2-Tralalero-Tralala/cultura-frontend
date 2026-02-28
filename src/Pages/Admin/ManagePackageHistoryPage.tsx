@@ -6,15 +6,12 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import DataTable from "@/Components/Tables/DataTable";
-import { Modal } from "@/Components/Modal/Modal";
-import { TrashIcon } from "@/Components/Tables/Icon";
 import type {
   Column,
   Pagination,
   DataTableActionsConfig,
-  BulkAction,
 } from "@/Components/Tables/Types";
-import { getHistoriesPackageAdmin, deletePackageAdmin } from "@/Libs/PackageService";
+import { getHistoriesPackageAdmin } from "@/Libs/PackageService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { getCommunityDetailByAdmin } from "@/Libs/CommunityService";
 
@@ -85,7 +82,7 @@ const columns: Column<PackageHistoryRow>[] = [
   {
     key: "dueDate",
     header: "วัน-เวลาสิ้นสุด",
-    render: (row) => formatThaiDateTime(row.dueDate),
+    render: (row) => formatThaiDateTime(row.dueDate),className: "min-w-[180px]"
   },
 ];
 
@@ -97,8 +94,6 @@ export default function ManagePackageHistoryPage() {
 
   const [rows, setRows] = useState<PackageHistoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
@@ -154,7 +149,7 @@ export default function ManagePackageHistoryPage() {
         name: pkg.name ?? "-",
         community: pkg.community?.name ?? "-",
         overseer: `${pkg.overseerPackage?.fname ?? ""} ${pkg.overseerPackage?.lname ?? ""}`.trim(),
-        status: pkg.statusPackage === "PUBLISH" ? "จบแล้ว" : pkg.statusPackage,
+        status: pkg.statusPackage === "PUBLISH" || "UNPUBLISH" ? "จบแล้ว" : pkg.statusPackage,
         dueDate: pkg.dueDate,
       }));
 
@@ -213,62 +208,14 @@ export default function ManagePackageHistoryPage() {
   const rowActions: DataTableActionsConfig<PackageHistoryRow> = {
     header: "จัดการ",
     align: "left",
-    width: "150px",
+    width: "130px",
     variant: "icons",
-    items: () => ["copy", "delete"],
+    items: () => ["copy"],
 
     callbacks: {
       copy: (row) => navigate(``), // TODO: Implement copy functionality if needed
-      delete: (row) => {
-        setDeleteId(row.id);
-        setIsConfirmModalOpen(true);
-      },
     },
   };
-
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับลบแพ็กเกจเดี่ยว (ใช้รหัสแพ็กเกจ)
-   * Input: id (number)
-   * Output: void
-   */
-  const handleDelete = async (id: number) => {
-    try {
-      await deletePackageAdmin(id);
-      setIsConfirmModalOpen(false);
-      setDeleteId(null);
-      await fetchHistories();
-    } catch (error: any) {
-      console.error("Failed to delete package:", error);
-      alert(
-        `ลบไม่สำเร็จ: ${error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "unknown error"
-        }`,
-      );
-      setErrorMessage(error?.message ?? "ไม่สามารถลบแพ็กเกจได้");
-    }
-  };
-
-  /**
-   * คำอธิบาย: ฟังก์ชันการลบแพ็กเกจหลายอันพร้อมกัน (Bulk Delete)
-   * Input: rows (รายการแพ็กเกจที่เลือก)
-   * Output: void
-   */
-  const bulkActions: BulkAction<PackageHistoryRow>[] = [
-    {
-      id: "bulk-delete",
-      label: "ลบทั้งหมด",
-      icon: TrashIcon,
-      intent: "neutral",
-      confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-      onClick: async (rows) => {
-        const packageIds = rows.map((row) => row.id);
-        alert("Bulk delete: " + packageIds);
-        await fetchHistories();
-      },
-    },
-  ];
 
   return (
     <div className="space-y-4">
@@ -305,8 +252,6 @@ export default function ManagePackageHistoryPage() {
           getKey={(row) => row.id.toString()}
           columns={columns}
           actions={rowActions}
-          bulkActions={bulkActions}
-          selectable
           isLoading={isLoading}
           pagination={pagination}
           onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
@@ -317,23 +262,6 @@ export default function ManagePackageHistoryPage() {
           theme="brand"
         />
       </div>
-
-      <Modal
-        isOpen={isConfirmModalOpen}
-        title="ยืนยันการลบแพ็กเกจ"
-        text="คุณต้องการลบแพ็กเกจนี้หรือไม่?"
-        onConfirm={async () => {
-          if (!deleteId) return;
-          await handleDelete(deleteId);
-          setIsConfirmModalOpen(false);
-          setDeleteId(null);
-          await fetchHistories();
-        }}
-        onCancel={() => {
-          setIsConfirmModalOpen(false);
-          setDeleteId(null);
-        }}
-      />
     </div>
   );
 }

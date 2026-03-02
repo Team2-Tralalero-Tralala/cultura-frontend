@@ -83,7 +83,15 @@ export function ResetPasswordPage() {
     }
     setIsConfirmModalOpen(true);
   }
-
+  /**
+   * คำอธิบาย : ใช้สำหรับจัดการเหตุการณ์เมื่อผู้ใช้กดปุ่ม "ยืนยัน" เพื่อรีเซ็ตรหัสผ่านใหม่
+   * Input :
+   *   - userId (string | undefined) : รหัสผู้ใช้ที่ได้จากพารามิเตอร์ใน URL (useParams)
+   *   - password (string) : รหัสผ่านใหม่ที่ผู้ใช้กรอกจาก TextField
+   * Output :
+   *   - หากรีเซ็ตรหัสผ่านสำเร็จ : แสดง alert("รีเซ็ตรหัสผ่านสำเร็จ")
+   *   - หากเกิดข้อผิดพลาด : แสดง alert("เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน")
+   */
   async function handleConfirmResetPassword() {
     setIsConfirmModalOpen(false);
     try {
@@ -119,7 +127,7 @@ export function ResetPasswordPage() {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
               error={!!passwordError}
               helperText={passwordError}
             />

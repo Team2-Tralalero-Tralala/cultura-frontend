@@ -68,11 +68,21 @@ export function ToggleSystemPage() {
     setIsServerOnline(result.data.serverOnline);
   };
 
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับเปิด modal ยืนยันการเปิด/ปิดระบบ
+   * Input : action ("enable" | "disable") - ประเภทการดำเนินการ
+   * Output : เปิด modal และกำหนด pendingAction
+   */
   const openConfirmModal = (action: "enable" | "disable") => {
     setPendingAction(action);
     setIsConfirmModalOpen(true);
   };
 
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับยืนยันการเปิด/ปิดระบบจาก modal
+   * Input : ไม่มี
+   * Output : เรียกเปิด/ปิดระบบ และปิด modal
+   */
   const handleConfirmAction = async () => {
     if (pendingAction === "enable") {
       await handleTurnOnSystem();
@@ -84,6 +94,11 @@ export function ToggleSystemPage() {
     setPendingAction(null);
   };
 
+  /**
+   * คำอธิบาย: ฟังก์ชันสำหรับยกเลิกการเปิด/ปิดระบบจาก modal
+   * Input : ไม่มี
+   * Output : ปิด modal และล้าง pendingAction
+   */
   const handleCancelAction = () => {
     setIsConfirmModalOpen(false);
     setPendingAction(null);

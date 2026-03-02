@@ -293,6 +293,7 @@ chore(prisma): delete community table
 1) ให้เขียนคอมเมนต์ไว้บรรทัดก่อนประกาศฟังก์ชัน
 2) เขียนคำอธิบายเกี่ยวกับการทำงานของฟังก์ชัน รวมถึงข้อมูลที่รับเข้ามา (Input) และข้อมูลที่ส่งออก (Output)
 3) เขียนคอมเมนต์ฟังก์ชันด้วยภาษาอังกฤษหรือภาษาไทยเท่านั้น
+4) ฟังก์ชันย่อย/handler ที่เพิ่มใหม่ทุกตัวต้องมีคอมเมนต์ตามรูปแบบนี้เสมอ
 
 **ตัวอย่างการคอมเมนต์**
 
@@ -496,13 +497,13 @@ api/{ACTOR}/{MODULE}/{SUBMODULE}/{SUB-SUBMODULE}?{QUERY}
 
 **ตัวอย่างการใช้งาน**
 
-1) การดึงรายการชุมชน (Community) สำหรับ Super Admin  
+1) การดึงรายการชุมชน (Community) สำหรับ Super Admin
    `GET api/super/community?page=1&limit=10&search=name`
-2) ดึงข้อมูลแพ็กเกจทั้งหมดสำหรับ Admin  
+2) ดึงข้อมูลแพ็กเกจทั้งหมดสำหรับ Admin
    `GET api/admin/packages`
-3) ดึงข้อมูลการจองที่สถานะรอตรวจสอบ Pending ในภายในชุมชนของตนเอง สำหรับ Admin  
+3) ดึงข้อมูลการจองที่สถานะรอตรวจสอบ Pending ในภายในชุมชนของตนเอง สำหรับ Admin
    `GET api/admin/booking-histories/booked?status=pending`
-4) การอนุมัติการจองรายการที่ 1  
+4) การอนุมัติการจองรายการที่ 1
    `POST api/admin/booking-histories/booked/1/approve`
 
 #### 1.3 หลักการตั้งชื่อ Path

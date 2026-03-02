@@ -22,7 +22,7 @@ type PackageRowData = {
   community: string;
   owner: string;
   isPublished: boolean;
-  isApproved: boolean;
+  statusApprove: string | null;
   bookedCount: number;
   capacity: number;
 };
@@ -61,6 +61,11 @@ export function ManagePackagePage() {
       key: "isPublished",
       header: "สถานะแพ็กเกจ",
       render: (packageData) => (packageData.isPublished ? "เผยแพร่" : "ไม่เผยแพร่"),
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะการอนุมัติ",
+      render: (row) => toApprovedText(row),
     },
     {
       key: "bookingStats",
@@ -147,10 +152,7 @@ export function ManagePackagePage() {
             packageItem?.statusPackage === "PUBLISH" ||
             packageItem?.published === true ||
             packageItem?.isPublished === true,
-          isApproved:
-            packageItem?.statusApprove === "APPROVE" ||
-            packageItem?.approved === true ||
-            packageItem?.isApproved === true,
+          statusApprove: packageItem?.statusApprove ?? null,
           bookedCount: packageItem?.bookingHistories?.length ?? 0,
           capacity: packageItem?.capacity ?? 0,
         }),
@@ -274,8 +276,19 @@ export function ManagePackagePage() {
    * Input: packageData (object ข้อมูล)
    * Output: สตริง "อนุมัติ" หรือ "รออนุมัติ"
    */
-  const toApprovedText = (packageData: PackageRowData) =>
-    packageData.isApproved ? "อนุมัติ" : "รออนุมัติ";
+  const toApprovedText = (packageData: PackageRowData) => {
+    switch (packageData.statusApprove) {
+      case "APPROVE":
+        return "อนุมัติ";
+      case "REJECTED":
+        return "ถูกปฏิเสธ";
+      case "PENDING":
+      case "PENDING_SUPER":
+        return "รออนุมัติ";
+      default:
+        return "-";
+    }
+  };
 
   /**
    * คำอธิบาย: ค้นหาข้อมูลแพ็กเกจตามคีย์เวิร์ด

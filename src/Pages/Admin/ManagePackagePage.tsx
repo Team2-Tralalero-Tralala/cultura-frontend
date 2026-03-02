@@ -25,7 +25,7 @@ type PackageRow = {
   community: string;
   owner: string;
   published: boolean;
-  approved: boolean;
+  statusApprove: string | null;
   bookedCount: number;
   capacity: number;
 };
@@ -64,12 +64,17 @@ export default function ManagePackagePage() {
         </button>
       ),
     },
-    { key: "community", header: "ชื่อชุมชน" },
+    // { key: "community", header: "ชื่อชุมชน" },
     { key: "owner", header: "ผู้ดูแล" },
     {
       key: "published",
       header: "สถานะแพ็กเกจ",
       render: (row) => (row.published ? "เผยแพร่" : "ไม่เผยแพร่"),
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะการอนุมัติ",
+      render: (row) => toApprovedText(row),
     },
     {
       key: "bookedCount",
@@ -93,7 +98,7 @@ export default function ManagePackagePage() {
         params: {
           page: currentPage, limit: pageSize,
           status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
-          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
+          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
         },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -130,10 +135,7 @@ export default function ManagePackagePage() {
             packageItem?.statusPackage === "PUBLISH" ||
             packageItem?.published === true ||
             packageItem?.isPublished === true,
-          approved:
-            packageItem?.statusApprove === "APPROVE" ||
-            packageItem?.approved === true ||
-            packageItem?.isApproved === true,
+          statusApprove: packageItem?.statusApprove ?? null,
           bookedCount: packageItem?.bookingHistories?.length ?? 0,
           capacity: packageItem?.capacity ?? 0,
         }),
@@ -272,7 +274,19 @@ export default function ManagePackagePage() {
    * Input: row - object ข้อมูล
    * Output: สตริง "อนุมัติ" หรือ "รออนุมัติ"
    */
-  const toApprovedText = (row: PackageRow) => (row.approved ? "อนุมัติ" : "รออนุมัติ");
+  const toApprovedText = (row: PackageRow) => {
+    switch (row.statusApprove) {
+      case "APPROVE":
+        return "อนุมัติ";
+      case "REJECTED":
+        return "ถูกปฏิเสธ";
+      case "PENDING":
+      case "PENDING_SUPER":
+        return "รออนุมัติ";
+      default:
+        return "-";
+    }
+  };
 
   const filteredRows = React.useMemo(() => {
     const query = normalizeText(searchQuery);
@@ -280,7 +294,7 @@ export default function ManagePackagePage() {
     return packageRows.filter((row) => {
       const haystacks = [
         row.title,
-        row.community,
+        // row.community,
         row.owner,
         toPublishedText(row),
         toApprovedText(row),

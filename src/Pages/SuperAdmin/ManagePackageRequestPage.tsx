@@ -22,7 +22,7 @@ export type PackageRequestRow = {
   name: string;
   statusApprove: "PENDING_SUPER" | string | null;
   community: { id: number; name: string };
-  overseer: { id: number; username: string };
+  overseer: { id: number; username: string } | null;
 };
 
 export type Pagination = {
@@ -78,7 +78,7 @@ const buildPackageRequestColumns = (
     key: "overseer",
     header: "ผู้ดูแล",
     className: "min-w-[160px]",
-    render: (packageRequestRow) => <div>{packageRequestRow.overseer.username}</div>,
+    render: (packageRequestRow) => <div>{packageRequestRow.overseer?.username ?? "-"}</div>,
   },
   {
     key: "statusApprove",

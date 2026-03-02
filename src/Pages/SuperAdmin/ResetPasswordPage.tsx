@@ -6,6 +6,7 @@
 
 import Button from "@/Components/Button";
 import TextField from "@/Components/Input/TextField";
+import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import { resetPassword } from "@/Libs/UserService";
 import { useState, useMemo } from "react";
@@ -37,6 +38,7 @@ export function ResetPasswordPage() {
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   /**
    * คำอธิบาย : ใช้สำหรับตรวจสอบความถูกต้องของรหัสผ่าน
@@ -71,7 +73,7 @@ export function ResetPasswordPage() {
    *   - หากรีเซ็ตรหัสผ่านสำเร็จ : แสดง alert("รีเซ็ตรหัสผ่านสำเร็จ")
    *   - หากเกิดข้อผิดพลาด : แสดง alert("เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน")
    */
-  async function handleResetPassword() {
+  function handleResetPasswordClick() {
     if (!canSubmit) {
       setAlertType("error");
       setAlertTitle("ตรวจสอบข้อมูล");
@@ -79,7 +81,11 @@ export function ResetPasswordPage() {
       setIsAlertOpen(true);
       return;
     }
+    setIsConfirmModalOpen(true);
+  }
 
+  async function handleConfirmResetPassword() {
+    setIsConfirmModalOpen(false);
     try {
       if (!userId) throw new Error("ไม่พบรหัสผู้ใช้");
       await resetPassword(Number(userId), password);
@@ -130,13 +136,22 @@ export function ResetPasswordPage() {
               </Button>
             </div>
             <div className="w-lg">
-              <Button type="confirm-admin" onClick={handleResetPassword}>
+              <Button type="confirm-admin" onClick={handleResetPasswordClick}>
                 ยืนยัน
               </Button>
             </div>
           </div>
         </div>
       </div>
+      <Modal
+        isOpen={isConfirmModalOpen}
+        onConfirm={handleConfirmResetPassword}
+        onCancel={() => setIsConfirmModalOpen(false)}
+        title="ยืนยันการตั้งรหัสผ่านใหม่"
+        text="คุณต้องการตั้งรหัสผ่านใหม่ใช่หรือไม่?"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+      />
       <ModalAlert
         isOpen={isAlertOpen}
         type={alertType}

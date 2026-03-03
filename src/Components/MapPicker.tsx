@@ -312,10 +312,10 @@ function MapPicker({
               <li>ค้นหาสถานที่ใกล้เคียงวิสาหกิจชุมชน</li>
               <li>เลื่อนแผนที่ไปยังบริเวณวิสาหกิจชุมชนของคุณ</li>
               <li>คลิกตำแหน่งวิสาหกิจชุมชนบนแผนที่เพื่อปักหมุด</li>
-              <li>กดปุ่มปักหมุด</li>
+              {/* <li>กดปุ่มปักหมุด</li> */}
             </ol>
           </div>
-          <div
+          {/* <div
             className="bg-[#055035] rounded py-2 px-8 text-white"
             onClick={() => {
               const map = mapRef.current;
@@ -326,7 +326,7 @@ function MapPicker({
             }}
           >
             ปักหมุด
-          </div>
+          </div> */}
         </div>
       )}
     </div>

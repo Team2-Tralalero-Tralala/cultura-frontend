@@ -20,6 +20,7 @@ import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import { PublishStatusModal } from "@/Components/Modal/PublishStatusModal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import {
   PackageStatusDropdown,
@@ -169,6 +170,7 @@ export const CreatePackagePage = () => {
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
   const [homestayCheckInDateObject, setHomestayCheckInDateObject] = useState<Date | null>(null);
   const [homestayCheckOutDateObject, setHomestayCheckOutDateObject] = useState<Date | null>(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState<boolean>(false);
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
@@ -425,14 +427,15 @@ export const CreatePackagePage = () => {
     [setFormField],
   );
 
-/*
-   * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูล ตรวจสอบความถูกต้อง และส่งข้อมูลไปยัง Server
-   * Input: -
-   * Output: -
-   */
-  const handleConfirmSave = async () => {
+  /*
+     * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูล ตรวจสอบความถูกต้อง และส่งข้อมูลไปยัง Server
+     * Input: -
+     * Output: -
+     */
+  const handleConfirmSave = async (statusApproveFromModal?: "APPROVE" | "PENDING_SUPER") => {
     // ปิด Modal ยืนยันก่อนเริ่มกระบวนการ
     setIsConfirmModalOpen(false);
+    setIsStatusModalOpen(false);
 
     if (isSaving) return;
 
@@ -511,6 +514,9 @@ export const CreatePackagePage = () => {
           latitude: Number(formState.latitude) || 0,
           longitude: Number(formState.longitude) || 0,
         },
+        statusApprove: formState.statusPackage === "DRAFT"
+          ? "PENDING"
+          : (statusApproveFromModal ?? "PENDING"),
       };
 
       const formData = new FormData();
@@ -542,15 +548,19 @@ export const CreatePackagePage = () => {
     }
   };
 
-/*
-   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม เพื่อเปิด Modal ยืนยัน
-   * Input: event (เหตุการณ์จากฟอร์ม)
-   * Output: -
-   */
+  /*
+  * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม เพื่อเปิด Modal ยืนยัน
+  * Input: event (เหตุการณ์จากฟอร์ม)
+  * Output: -
+  */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSaving) return;
-    setIsConfirmModalOpen(true);
+    if (formState.statusPackage === "DRAFT") {
+      setIsConfirmModalOpen(true);
+    } else {
+      setIsStatusModalOpen(true)
+    }
   }
 
   return (
@@ -1120,6 +1130,13 @@ export const CreatePackagePage = () => {
             navigate("/admin/packages/all");
           }
         }}
+      />
+
+      <PublishStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        onConfirm={(status) => handleConfirmSave(status)}
+        isSaving={isSaving}
       />
 
     </div>

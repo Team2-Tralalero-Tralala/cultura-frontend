@@ -103,7 +103,7 @@ export function ManagePackagePage() {
         params: {
           page: pagination.currentPage, limit: pagination.limit,
           status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
-          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
+          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
         },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Filter } from "lucide-react";
 
 type StatusOption = "ทั้งหมด" | "เผยแพร่" | "ไม่เผยแพร่";
-type ApprovalOption = "ทั้งหมด" | "อนุมัติ" | "ถูกปฏิเสธ";
+type ApprovalOption = "ทั้งหมด" | "อนุมัติ" | "รออนุมัติ" | "ถูกปฏิเสธ";
 /**
  * คำอธิบาย: Component สำหรับจัดการการแสดงผล UI ของตัวกรองสถานะแพ็กเกจ (Status & Approval)
  * input: currentFilters (any), onFilterChange (function)
@@ -71,7 +71,7 @@ export default function FiltersStatusForCM({
           <div>
             <p className="text-gray-500 mb-2">สถานะการอนุมัติ</p>
             <div className="space-y-2 text-gray-500">
-              {(["ทั้งหมด", "อนุมัติ", "ถูกปฏิเสธ"] as ApprovalOption[]).map(
+              {(["ทั้งหมด", "อนุมัติ", "รออนุมัติ", "ถูกปฏิเสธ"] as ApprovalOption[]).map(
                 (item) => (
                   <label key={item} className="flex items-center gap-2 cursor-pointer">
                     <input

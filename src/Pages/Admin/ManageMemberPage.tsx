@@ -209,7 +209,7 @@ export default function ManageMemberPage() {
           bulkActions={bulkActions}
           theme="brand"
           pageSize={pageSize}
-          pageSizeOptions={[10, 20, 50]}
+          pageSizeOptions={[10, 30, 50]}
           onPageChange={setCurrentPage}
           onPageSizeChange={(size) => {
             setPageSize(size);

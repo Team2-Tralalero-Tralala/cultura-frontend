@@ -5,7 +5,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import MemberDetailPage from "@/Pages/Admin/DetailMemberPage";
-import Feedbackall from "@/Pages/Admin/Feedback";
+import Feedbackall from "@/Pages/Admin/FeedbackPage";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStorePage";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayPage";
 import CreateHomestaysPage from "@/Pages/Admin/CreateHomestaysPage";

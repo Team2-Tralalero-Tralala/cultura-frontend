@@ -116,21 +116,22 @@ export default function DetailPackagePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [bookingQuantity, setBookingQuantity] = useState<number>(1);
+  const [bookingQuantity, setBookingQuantity] = useState<number>(0);
   const [visibleCount, setVisibleCount] = useState<number>(4);
   const navigate = useNavigate();
   const location = useLocation();
   const lat = packageDetail?.location?.latitude;
   const lng = packageDetail?.location?.longitude;
-  const delta = 0.01;
+  /*
+   * คำอธิบาย : ตรวจสอบว่ากิจกรรมเริ่มต้นขึ้นแล้วหรือไม่
+   */
+  const isActivityStarted =
+    !!packageDetail?.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
 
-  const minLat = lat !== undefined ? lat - delta : undefined;
-  const maxLat = lat !== undefined ? lat + delta : undefined;
-  const minLng = lng !== undefined ? lng - delta : undefined;
-  const maxLng = lng !== undefined ? lng + delta : undefined;
-
-  const latLng = lat !== undefined && lng !== undefined ? `${lat} ${lng}` : "";
-
+  /*
+   * คำอธิบาย : ตรวจสอบว่าจำนวนผู้เข้าร่วมเต็มความจุที่กำหนดไว้หรือไม่
+   */
+  const isFull = (packageDetail?.bookedCount ?? 0) >= (packageDetail?.capacity ?? 0);
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการแปลง path รูปภาพให้เป็น URL ที่สมบูรณ์
    * Input: path (string)
@@ -271,7 +272,7 @@ export default function DetailPackagePage() {
    * Output : bookingQuantity ลดลง 1
    */
   const handleDecreaseQuantity = () => {
-    setBookingQuantity((previousQuantity) => Math.max(1, previousQuantity - 1));
+    setBookingQuantity((previousQuantity) => Math.max(0, previousQuantity - 1));
   };
 
   useEffect(() => {
@@ -339,8 +340,6 @@ export default function DetailPackagePage() {
     );
   }
 
-  const isActivityStarted =
-    !!packageDetail.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
 
   const isHasHomestay =
     packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
@@ -726,12 +725,18 @@ export default function DetailPackagePage() {
               <Button
                 type="confirm-tourist"
                 onClick={() => handleConfirmClick(packageDetail.id)}
+                isDisabled={isActivityStarted || isFull || bookingQuantity === 0}
               >
-                {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : "จองเลย"}
+                {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : isFull ? "เต็มแล้ว" : "จองเลย"}
               </Button>
               {isActivityStarted && (
                 <p className="mt-2 text-xs text-red-600 text-center sm:text-right">
                   ไม่สามารถจองได้ เนื่องจากเวลาเริ่มกิจกรรมผ่านไปแล้ว
+                </p>
+              )}
+              {!isActivityStarted && isFull && (
+                <p className="mt-2 text-xs text-red-600 text-center sm:text-right">
+                  ไม่สามารถจองได้ เนื่องจากจำนวนผู้เข้าร่วมเต็มแล้ว
                 </p>
               )}
             </div>

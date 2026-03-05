@@ -1,14 +1,14 @@
 /**
- * คำอธิบาย: Component สำหรับแสดง "ข้อเสนอแนะทั้งหมด" ของแพ็กเกจภายในชุมชน โดยมีการจัดกลุ่มเป็นรายแพ็กเกจ
+ * คำอธิบาย : Component สำหรับแสดง "ข้อเสนอแนะทั้งหมด" ของแพ็กเกจภายในชุมชน โดยมีการจัดกลุ่มเป็นรายแพ็กเกจ
  */
 
 import React from "react";
-import axios from "axios";
+import api from "@/Libs/Api";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 type ApiFeedbackImage = {
@@ -30,8 +30,10 @@ type ApiFeedback = {
 };
 
 type Tourist = {
-  firstName: string;
-  lastName: string;
+  fname?: string;
+  lname?: string;
+  firstName?: string;
+  lastName?: string;
 };
 
 type ApiBookingHistory = {
@@ -63,7 +65,7 @@ type ApiResponse = {
   data: ApiCommunity;
 };
 
-type FeedbackCardProps = {
+type FeedbackCard = {
   id: number;
   userName: string;
   rating: number;
@@ -77,38 +79,41 @@ type PackageGroup = {
   id: number | string;
   title: string;
   totalInGroup: number;
-  feedbacks: FeedbackCardProps[];
+  feedbacks: FeedbackCard[];
 };
 
 type SortOrder = "newest" | "oldest";
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับสร้าง URL รูปภาพที่สมบูรณ์จากชื่อไฟล์
- * Input: fileName (ชื่อไฟล์รูปภาพ)
- * Output: URL เต็มของรูปภาพ หรือ undefined หากไม่มีชื่อไฟล์
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้าง URL รูปภาพที่สมบูรณ์จากชื่อไฟล์
+ * Input : fileName (ชื่อไฟล์รูปภาพ)
+ * Output : URL เต็มของรูปภาพ หรือ undefined หากไม่มีชื่อไฟล์
  */
-function getImageUrl(fileName?: string): string | undefined {
-  if (!fileName) {
-    return undefined;
-  }
+const getImageUrl = (fileName?: string) => {
+  if (!fileName) return "";
+  if (fileName.startsWith("http")) return fileName;
   const cleanedPath = fileName.replace(/^\/?uploads\//, "");
   return `${backendUrl}/uploads/${cleanedPath}`;
-}
+};
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับแปลงชื่อผู้ใช้เป็นรูปแบบที่ปกปิดบางส่วนเพื่อความเป็นส่วนตัว
- * Input: tourist (ข้อมูลนักท่องเที่ยวที่มีชื่อและนามสกุล)
- * Output: ชื่อและนามสกุลที่ถูก mask ด้วยเครื่องหมาย *
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อผู้ใช้เป็นรูปแบบที่ปกปิดบางส่วนเพื่อความเป็นส่วนตัว
+ * Input : tourist (ข้อมูลนักท่องเที่ยวที่มีชื่อและนามสกุล)
+ * Output : ชื่อและนามสกุลที่ถูก mask ด้วยเครื่องหมาย *
  */
-function formatFullName(tourist: Tourist): string {
-  const mask = (text: string) => (text ? text[0] + "*".repeat(Math.max(1, text.length - 1)) : "");
-  return `${mask(tourist.firstName)} ${mask(tourist.lastName)}`.trim();
+function formatFullName(tourist?: Tourist): string {
+  if (!tourist) return "ผู้ใช้นิรนาม";
+  const firstName = tourist.firstName || tourist.fname || "";
+  const lastName = tourist.lastName || tourist.lname || "";
+
+  const mask = (text: string) => (text ? text[0] + "*".repeat(Math.max(1, 3)) : "");
+  return `${mask(firstName)} ${mask(lastName)}`.trim() || "ผู้ใช้นิรนาม";
 }
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับแปลงวันที่จาก ISO String เป็นรูปแบบภาษาไทย
- * Input: isoDateString (วันที่ในรูปแบบ String)
- * Output: วันที่ในรูปแบบภาษาไทย (เช่น 25 ธ.ค. 2025)
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงวันที่จาก ISO String เป็นรูปแบบภาษาไทย
+ * Input : isoDateString (วันที่ในรูปแบบ String)
+ * Output : วันที่ในรูปแบบภาษาไทย (เช่น 25 ธ.ค. 2025)
  */
 const formatDateThai = (isoDateString: string) => {
   const date = new Date(isoDateString);
@@ -119,10 +124,10 @@ const formatDateThai = (isoDateString: string) => {
   });
 };
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับสร้างสตริงดาวตามคะแนน Rating
- * Input: rating (คะแนนเต็ม 5)
- * Output: สตริงรูปดาว (เช่น ★★★☆☆)
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับสร้างสตริงดาวตามคะแนน Rating
+ * Input : rating (คะแนนเต็ม 5)
+ * Output : สตริงรูปดาว (เช่น ★★★☆☆)
  */
 function renderStars(rating: number): string {
   return Array.from({ length: 5 })
@@ -130,12 +135,12 @@ function renderStars(rating: number): string {
     .join("");
 }
 
-/**
- * คำอธิบาย: Component ส่วนควบคุมด้านบน แสดงสรุปจำนวน ช่องค้นหา และปุ่มตัวกรอง
- * Input: Props (totalItems, totalPackages, searchQuery, sortOrder, handlers)
- * Output: JSX Element UI ส่วนควบคุม
+/*
+ * คำอธิบาย : Component ส่วนควบคุมด้านบน แสดงสรุปจำนวน ช่องค้นหา และปุ่มตัวกรอง
+ * Input : Props (totalItems, totalPackages, searchQuery, sortOrder, handlers)
+ * Output : JSX Element UI ส่วนควบคุม
  */
-const FeedbackControls: React.FC<{
+const TopControls: React.FC<{
   totalItems: number;
   totalPackages: number;
   searchQuery: string;
@@ -187,12 +192,12 @@ const FeedbackControls: React.FC<{
   );
 };
 
-/**
- * คำอธิบาย: Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ
- * Input: feedback (ข้อมูลข้อเสนอแนะ)
- * Output: JSX Element การ์ดข้อเสนอแนะ
+/*
+ * คำอธิบาย : Component การ์ดแสดงรายละเอียดของข้อเสนอแนะแต่ละรายการ
+ * Input : feedback (ข้อมูลข้อเสนอแนะ)
+ * Output : JSX Element การ์ดข้อเสนอแนะ
  */
-const FeedbackCard: React.FC<{ feedback: FeedbackCardProps }> = ({ feedback }) => {
+const FeedbackCardView: React.FC<{ feedback: FeedbackCard }> = ({ feedback }) => {
   const displayImages = feedback.images.slice(0, 3);
   const extraCount = feedback.images.length - 3;
 
@@ -243,12 +248,12 @@ const FeedbackCard: React.FC<{ feedback: FeedbackCardProps }> = ({ feedback }) =
   );
 };
 
-/**
- * คำอธิบาย: Component แสดงกลุ่มแพ็กเกจและรายการข้อเสนอแนะภายใน
- * Input: group (ข้อมูลกลุ่มแพ็กเกจ), onViewAllClick (ฟังก์ชันเมื่อกดดูทั้งหมด)
- * Output: JSX Element Section ของแพ็กเกจ
+/*
+ * คำอธิบาย : Component แสดงกลุ่มแพ็กเกจและรายการข้อเสนอแนะภายใน
+ * Input : group (ข้อมูลกลุ่มแพ็กเกจ), onViewAllClick (ฟังก์ชันเมื่อกดดูทั้งหมด)
+ * Output : JSX Element Section ของแพ็กเกจ
  */
-const FeedbackGroupSection: React.FC<{
+const PackageGroupSection: React.FC<{
   group: PackageGroup;
   onViewAllClick?: (group: PackageGroup) => void;
 }> = ({ group, onViewAllClick }) => {
@@ -266,8 +271,8 @@ const FeedbackGroupSection: React.FC<{
       <div className={`px-5 pt-5 bg-[#E7E7E7] ${!hasFeedbacks ? "pb-5" : ""}`}>
         {hasFeedbacks ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-            {group.feedbacks.map((feedback) => (
-              <FeedbackCard key={feedback.id} feedback={feedback} />
+            {group.feedbacks.slice(0, 2).map((feedback) => (
+              <FeedbackCardView key={feedback.id} feedback={feedback} />
             ))}
           </div>
         ) : (
@@ -292,12 +297,12 @@ const FeedbackGroupSection: React.FC<{
   );
 };
 
-/**
- * คำอธิบาย: หน้าหลักสำหรับแสดงรายการข้อเสนอแนะทั้งหมด (Admin)
- * Input: -
- * Output: JSX Element หน้าจอจัดการข้อเสนอแนะ
+/*
+ * คำอธิบาย : หน้าหลักสำหรับแสดงรายการข้อเสนอแนะทั้งหมด (Admin)
+ * Input : -
+ * Output : JSX Element หน้าจอจัดการข้อเสนอแนะ
  */
-export default function FeedbackPage() {
+export default function FeedbackAll() {
   const [packageGroups, setPackageGroups] = React.useState<PackageGroup[]>([]);
   const [totalItems, setTotalItems] = React.useState<number>(0);
   const [totalPackages, setTotalPackages] = React.useState<number>(0);
@@ -311,25 +316,23 @@ export default function FeedbackPage() {
   const [sortOrder, setSortOrder] = React.useState<SortOrder>("newest");
   const [isFilterModalOpen, setIsFilterModalOpen] = React.useState(false);
 
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะจาก API และแปลงโครงสร้างข้อมูล
-   * Input: -
-   * Output: void (อัปเดต State ภายใน)
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลข้อเสนอแนะจาก API และแปลงโครงสร้างข้อมูล
+   * Input : -
+   * Output : void (อัปเดต State ภายใน)
    */
   const fetchAllFeedbacks = React.useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await axios.get<ApiResponse>(`${apiUrl}/admin/package/feedbacks/all`, {
-        withCredentials: true,
-      });
+      const response = await api.get<ApiResponse>(`/admin/package/feedbacks/all`);
 
       const communityData = response.data?.data;
       const packageList: ApiPackage[] = communityData?.packages ?? [];
 
       const nextGroups: PackageGroup[] = packageList.map((apiPackage) => {
-        const groupFeedbacks: FeedbackCardProps[] = [];
+        const groupFeedbacks: FeedbackCard[] = [];
 
         (apiPackage.bookingHistories ?? []).forEach((bookingHistory) => {
           (bookingHistory.feedbacks ?? []).forEach((feedback) => {
@@ -349,7 +352,7 @@ export default function FeedbackPage() {
 
         return {
           id: apiPackage.id,
-          title: apiPackage.name,
+          title: apiPackage.name.split(" โดย ")[0],
           totalInGroup: groupFeedbacks.length,
           feedbacks: groupFeedbacks,
         };
@@ -372,13 +375,13 @@ export default function FeedbackPage() {
   const filteredGroups = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    const groups = packageGroups
+    let groups = packageGroups
       .map((packageGroup) => {
         const filteredFeedbacks = packageGroup.feedbacks.filter(
           (feedback) =>
             feedback.userName.toLowerCase().includes(query) ||
             feedback.message.toLowerCase().includes(query) ||
-            packageGroup.title.toLowerCase().includes(query),
+            packageGroup.title.toLowerCase().includes(query)
         );
 
         const sortedFeedbacks = [...filteredFeedbacks].sort((feedbackA, feedbackB) => {
@@ -393,11 +396,9 @@ export default function FeedbackPage() {
           totalInGroup: sortedFeedbacks.length,
         };
       })
-      .filter(
-        (packageGroup) =>
-          packageGroup.feedbacks.length > 0 || packageGroup.title.toLowerCase().includes(query),
-      );
+      .filter((packageGroup) => packageGroup.feedbacks.length > 0);
 
+    // แก้ไข a, b เป็น groupA, groupB
     const sortedPackageGroups = groups.sort((groupA, groupB) => {
       const getTimestamp = (group: PackageGroup) =>
         group.feedbacks.length > 0 ? new Date(group.feedbacks[0].createdAt).getTime() : 0;
@@ -416,30 +417,28 @@ export default function FeedbackPage() {
     setIsFilterModalOpen(false);
   };
 
-  /**
-   * คำอธิบาย: Component Modal ตัวเลือกสำหรับเรียงลำดับข้อมูล
-   * Input: -
-   * Output: JSX Element Modal
+  /*
+   * คำอธิบาย : Component Modal ตัวเลือกสำหรับเรียงลำดับข้อมูล
+   * Input : -
+   * Output : JSX Element Modal
    */
   const SortFilterModal = () => (
     <div className="absolute top-[60px] right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 shadow-lg p-1">
       <button
-        className={`w-full text-left p-2 rounded-md ${
-          sortOrder === "newest"
-            ? "bg-emerald-100 font-medium text-emerald-700"
-            : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
-        }`}
+        className={`w-full text-left p-2 rounded-md ${sortOrder === "newest"
+          ? "bg-emerald-100 font-medium text-emerald-700"
+          : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+          }`}
         onClick={() => handleSortChange("newest")}
       >
         <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2" />
         ล่าสุด
       </button>
       <button
-        className={`w-full text-left p-2 rounded-md ${
-          sortOrder === "oldest"
-            ? "bg-emerald-100 font-medium text-emerald-700"
-            : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
-        }`}
+        className={`w-full text-left p-2 rounded-md ${sortOrder === "oldest"
+          ? "bg-emerald-100 font-medium text-emerald-700"
+          : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+          }`}
         onClick={() => handleSortChange("oldest")}
       >
         <Icon
@@ -464,7 +463,7 @@ export default function FeedbackPage() {
       <main className="min-h-screen bg-white py-6 px-6 space-y-6 shadow-md border rounded-xl">
         <div className="mx-auto bg-white rounded-xl">
           <div className="relative">
-            <FeedbackControls
+            <TopControls
               totalItems={totalItems}
               totalPackages={totalPackages}
               searchQuery={searchQuery}
@@ -481,11 +480,11 @@ export default function FeedbackPage() {
           {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
           {filteredGroups.map((packageGroup) => (
-            <FeedbackGroupSection
+            <PackageGroupSection
               key={packageGroup.id}
               group={packageGroup}
               onViewAllClick={(packageGroup) =>
-                navigate(`/member/package/feedbacks/${packageGroup.id}`)
+                navigate(`/admin/package/feedbacks/${packageGroup.id}`)
               }
             />
           ))}

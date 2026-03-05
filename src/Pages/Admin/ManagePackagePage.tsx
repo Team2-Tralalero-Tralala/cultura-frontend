@@ -136,7 +136,7 @@ export default function ManagePackagePage() {
             packageItem?.published === true ||
             packageItem?.isPublished === true,
           statusApprove: packageItem?.statusApprove ?? null,
-          bookedCount: packageItem?.bookingHistories?.length ?? 0,
+          bookedCount: packageItem?.bookedCount ?? 0,
           capacity: packageItem?.capacity ?? 0,
         }),
       );

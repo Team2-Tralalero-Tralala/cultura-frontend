@@ -360,7 +360,7 @@ export default function FeedbackAll() {
 
       setPackageGroups(nextGroups);
       setTotalItems(nextGroups.reduce((sum, packageGroup) => sum + packageGroup.totalInGroup, 0));
-      setTotalPackages(nextGroups.length);
+      setTotalPackages(packageList.length);
     } catch (error: any) {
       setErrorMessage(error?.response?.data?.message || error?.message || "โหลดข้อมูลไม่สำเร็จ");
     } finally {
@@ -488,6 +488,15 @@ export default function FeedbackAll() {
               }
             />
           ))}
+
+          {!isLoading && !errorMessage && filteredGroups.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <Icon icon="lucide:message-square-dashed" className="w-16 h-16 text-slate-300 mb-4" />
+              <p className="text-lg font-medium">
+                {searchQuery ? "ไม่พบข้อเสนอแนะที่ค้นหา" : "ยังไม่ได้รับข้อเสนอแนะจากแพ็กเกจใด"}
+              </p>
+            </div>
+          )}
 
           {isLoading && <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>}
         </div>

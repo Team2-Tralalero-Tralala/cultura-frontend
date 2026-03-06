@@ -20,6 +20,7 @@ import { Tag } from "../../Components/Tag";
  * คำอธิบาย: URL ของ Backend สำหรับติดต่อ API
  */
 const apiBaseUrl = import.meta.env.VITE_API_URL;
+const BACKEND_BASE_URL = apiBaseUrl.replace(/\/api$/, "");
 
 interface DateTimeField {
   date: string | null;
@@ -96,6 +97,23 @@ interface PackageData {
   files: PackageFile[];
   homestayHistories: HomestayHistory[];
 }
+
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้อง
+ * Input: imagePath (string | undefined) - path ของรูปภาพจาก backend
+ * Output: string - URL ของรูปภาพที่พร้อมใช้งาน
+ */
+const buildImageUrl = (imagePath?: string): string => {
+  if (!imagePath) return "";
+
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  const cleanPath = imagePath.replace(/^\/+/, "");
+
+  return `${BACKEND_BASE_URL}/${cleanPath}`;
+};
 
 /**
  * คำอธิบาย: แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
@@ -196,7 +214,7 @@ export function DetailPackagePage() {
           files: packageRawData.packageFile
             ? packageRawData.packageFile.map((fileItem: any) => ({
                 id: fileItem.id,
-                path: fileItem.filePath,
+                path: buildImageUrl(fileItem.filePath),
                 type: fileItem.type,
               }))
             : [],

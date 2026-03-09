@@ -314,7 +314,7 @@ export function EditStorePage() {
 
       await editStore(Number(storeId), formDataToSend);
       setAlertType("success");
-      setAlertTitle("สร้างแก้ไขร้านค้าสำเร็จ");
+      setAlertTitle("แก้ไขร้านค้าสำเร็จ");
       setAlertMessage("ข้อมูลร้านค้าถูกแก้ไข");
       setIsAlertOpen(true);
       navigate(-1);

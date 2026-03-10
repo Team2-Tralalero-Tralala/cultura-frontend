@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
 import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
@@ -35,8 +34,13 @@ const accountSchema = zod
     username: zod
       .string()
       .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
-      .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
-    email: zod.string().email("กรุณากรอกอีเมล"),
+      .regex(/^[a-zA-Z0-9]+$/, "กรุณากรอกชื่อผู้ใช้"),
+    
+    email: zod
+      .string()
+      .min(1, "กรุณากรอกอีเมล")
+      .email("รูปแบบอีเมลไม่ถูกต้อง"),
+      
     phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
 
     password: zod
@@ -46,7 +50,7 @@ const accountSchema = zod
       .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z) อย่างน้อย 1 ตัว")
       .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9) อย่างน้อย 1 ตัว"),
 
-    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"),
+    confirmPassword: zod.string().min(1, "กรุณายืนยันรหัสผ่าน"),
 
     birthDate: zod
       .string()
@@ -182,6 +186,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   });
   const [isShowConfirm, setIsShowConfirm] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
@@ -350,6 +355,7 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
 
     if (!isFormValid || !isRoleValid || formData.password !== formData.confirmPassword) {
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
       setIsShowErrorModal(true);
     } else {
       setIsShowConfirm(true);
@@ -366,18 +372,21 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
     const isValid = validateField();
     if (!isValid) {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วน");
+      setIsShowErrorModal(true);
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน ❌");
+      setErrorMessage("รหัสผ่านไม่ตรงกัน");
+      setIsShowErrorModal(true);
       return;
     }
 
     if (role === "Member") {
       if (!roleSpecificData.communityId) {
         setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
-        toast.error("กรุณาเลือกชุมชน ❌");
+        setErrorMessage("กรุณาเลือกชุมชน");
+        setIsShowErrorModal(true);
         return;
       }
     }
@@ -435,25 +444,44 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
 
       setIsShowConfirm(false);
       setIsShowSuccessModal(true);
-    } catch (error: any) {
-      console.error("❌ Error creating account:", error);
+   } catch (error: any) {
+      console.error("❌ Error updating account:", error);
 
-      const errorMsg = error.response?.data?.message || "ไม่สามารถสร้างบัญชีได้";
+      const errorResponse = error.response?.data;
+      const errorMsg = errorResponse?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const errorData = errorResponse?.errors || {}; 
+
       const newErrors: Record<string, string> = {};
+      const errorMsgLower = errorMsg.toLowerCase();
 
-      if (errorMsg.includes("ชื่อผู้ใช้")) {
+      if (errorMsgLower.includes("ชื่อผู้ใช้") || errorMsgLower.includes("username") || errorMsgLower.includes("duplicate_username") || errorData.username) {
         newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("อีเมล")) {
-        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์")) {
+      } 
+      if (errorMsgLower.includes("อีเมล") || errorMsgLower.includes("email") || errorMsgLower.includes("duplicate_email") || errorData.email) {
+        newErrors.email = "อีเมลนี้ถูกใช้งานแล้ว";
+      } 
+      if (
+        errorMsgLower.includes("โทรศัพท์") || errorMsgLower.includes("เบอร์") || errorMsgLower.includes("phone") || errorMsgLower.includes("duplicate_phone") || errorData.phone
+      ) {
         newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
-      } else {
-        toast.error(errorMsg);
       }
 
-      if (Object.keys(newErrors).length > 0) {
+      const errorKeys = Object.keys(newErrors);
+
+      if (errorKeys.length > 0) {
         setFormErrors((prev) => ({ ...prev, ...newErrors }));
+
+        if (errorKeys.length === 1) {
+          setErrorMessage(newErrors[errorKeys[0]]);
+        } else {
+          setErrorMessage("ข้อมูลบางอย่างซ้ำในระบบ กรุณาตรวจสอบการแจ้งเตือนที่แบบฟอร์ม");
+        }
+      } else {
+        setErrorMessage(errorMsg);
       }
+
+      setIsShowConfirm(false);
+      setIsShowErrorModal(true);
     }
   };
 
@@ -774,8 +802,8 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
       <ModalAlert
         isOpen={isShowErrorModal}
         type="error"
-        title="เกิดข้อผิดพลาด"
-        message="กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง"
+        title="ไม่สามารถสร้างบัญชีได้"
+        message={errorMessage}
         onClose={() => setIsShowErrorModal(false)}
       />
 
@@ -793,4 +821,4 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
   );
 };
 
-export default CreateAccountPage;
+export default CreateAccountPage; 

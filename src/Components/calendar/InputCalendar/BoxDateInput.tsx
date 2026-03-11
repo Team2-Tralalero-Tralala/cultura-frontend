@@ -35,9 +35,8 @@ const pad2 = (n: number) => n.toString().padStart(2, "0");
  */
 const formatDateToBEString = (dateAD: Date | null, buddhistYearOffset = 543) =>
   dateAD
-    ? `${pad2(dateAD.getDate())}/${pad2(dateAD.getMonth() + 1)}/${
-        dateAD.getFullYear() + buddhistYearOffset
-      }`
+    ? `${pad2(dateAD.getDate())}/${pad2(dateAD.getMonth() + 1)}/${dateAD.getFullYear() + buddhistYearOffset
+    }`
     : "";
 
 /**
@@ -332,7 +331,7 @@ export const BoxDateInput: React.FC<BoxDateInputProps> = ({
               "block w-full",
               "rounded-form",
               "border-1",
-              isValid
+              isValid && !errorText
                 ? "border-gray-400 focus-within:ring-gray-400 focus-within:border-gray-500"
                 : "border-red-500 focus-within:ring-red-500 focus-within:border-red-500",
               "bg-white px-5 py-2",
@@ -430,9 +429,8 @@ export const BoxDateInput: React.FC<BoxDateInputProps> = ({
               return !open;
             });
           }}
-          className={`absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 ${
-            calendarButtonClassName ?? ""
-          }`}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 ${calendarButtonClassName ?? ""
+            }`}
           aria-label="เปิดปฏิทิน"
           aria-haspopup="dialog"
           aria-expanded={isCalendarOpen}

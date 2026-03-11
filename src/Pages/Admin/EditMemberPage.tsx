@@ -4,19 +4,18 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
 import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
 import TextField from "@/Components/Input/TextField";
 import Button from "../../Components/Button";
-
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Icon } from "@iconify/react";
+
 /**
- *  Schema สำหรับตรวจสอบความถูกต้องของข้อมูล (ไม่รวมรหัสผ่าน)
+ * Schema สำหรับตรวจสอบความถูกต้องของข้อมูล (ไม่รวมรหัสผ่าน)
  */
 const editMemberSchema = zod.object({
   fname: zod.string().min(1, "กรุณากรอกชื่อ"),
@@ -25,9 +24,20 @@ const editMemberSchema = zod.object({
     .string()
     .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
     .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
-  email: zod.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  phone: zod.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
-  communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
+  email: zod
+    .string()
+    .min(1, "กรุณากรอกอีเมล")
+    .refine(
+      (val) => val === "" || zod.string().email().safeParse(val).success,
+      "รูปแบบอีเมลไม่ถูกต้อง"
+    ),
+  phone: zod
+    .string()
+    .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
+    .refine(
+      (val) => val === "" || /^0[0-9]{9}$/.test(val),
+      "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"
+    ),
 });
 
 interface EditMemberBody {
@@ -67,11 +77,10 @@ const EditMemberPage: React.FC = () => {
   const [isShowConfirm, setIsShowConfirm] = useState(false);
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); 
 
   /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม (Validation)
-   * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
-   * Output: boolean (ส่งคืน true หากข้อมูลถูกต้อง, false หากข้อมูลผิดพลาด)
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -93,18 +102,15 @@ const EditMemberPage: React.FC = () => {
         result.error.issues.forEach((issue) => {
           validationErrors[issue.path[0] as string] = issue.message;
         });
-        setFormErrors(validationErrors);
+        setFormErrors((prev) => ({ ...prev, ...validationErrors }));
         return false;
       }
-      setFormErrors({});
       return true;
     }
   };
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับดึงข้อมูลสมาชิกจากระบบเพื่อนำมาแสดงในฟอร์ม
-   * Input: -
-   * Output: -
    */
   const fetchMemberData = async () => {
     try {
@@ -125,16 +131,12 @@ const EditMemberPage: React.FC = () => {
       setAvatarUrl(member.profileImageUrl || null);
     } catch (error: any) {
       console.error("❌ Error fetching member:", error);
-      toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
-      navigate("/admin/members");
+      setErrorMessage("ไม่สามารถโหลดข้อมูลสมาชิกได้");
+      setIsShowErrorModal(true);
+      setTimeout(() => navigate("/admin/members"), 2000);
     }
   };
 
-  /**
-   * คำอธิบาย : Hook สำหรับเรียกใช้ฟังก์ชันดึงข้อมูลสมาชิกเมื่อ component ถูกโหลดหรือ userId เปลี่ยนแปลง
-   * Input: -
-   * Output: -
-   */
   useEffect(() => {
     if (userId) {
       fetchMemberData();
@@ -143,30 +145,22 @@ const EditMemberPage: React.FC = () => {
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input ภายในฟอร์ม
-   * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
-   * Output: -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
-    setFormData((prev) => {
-      const newData = { ...prev, [id]: value };
-      //  ลบ Error ทันทีเมื่อมีการพิมพ์แก้ไข
-      if (formErrors[id]) {
-        setFormErrors((prevErr) => ({ ...prevErr, [id]: undefined }));
-      }
-      return newData;
-    });
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    
+    validateField(id, value);
   };
 
   /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลก่อนเปิด Modal ยืนยันการบันทึก
-   * Input: -
-   * Output: -
    */
   const handlePreCheck = () => {
-    const isValid = validateField();
-    if (!isValid) {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+    const isFormValid = validateField();
+    if (!isFormValid) {
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setIsShowErrorModal(true);
     } else {
       setIsShowConfirm(true);
     }
@@ -174,13 +168,16 @@ const EditMemberPage: React.FC = () => {
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มและรูปภาพเพื่ออัปเดตข้อมูลสมาชิกในระบบ
-   * Input: event (เหตุการณ์จากฟอร์ม)
-   * Output: -
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 
-    if (!validateField()) return;
+    const isFormValid = validateField();
+    if (!isFormValid) {
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setIsShowErrorModal(true);
+      return;
+    }
 
     try {
       let imageWasUpdated = false;
@@ -201,7 +198,7 @@ const EditMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        roleId: 1,
+        roleId: 1, 
         communityRole: formData.communityRole.trim(),
       };
 
@@ -216,26 +213,35 @@ const EditMemberPage: React.FC = () => {
     } catch (error: any) {
       console.error("❌ Error updating account:", error);
 
-      const errorMsg =
-        error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const errorResponse = error.response?.data;
+      const errorMsg = errorResponse?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const errorData = errorResponse?.errors || {}; 
+
       const newErrors: Record<string, string> = {};
-      if (errorMsg.includes("ชื่อผู้ใช้") || errorMsg.includes("duplicate_username")) {
+      const errorMsgLower = errorMsg.toLowerCase();
+
+      if (errorMsgLower.includes("ชื่อผู้ใช้") || errorMsgLower.includes("username") || errorMsgLower.includes("duplicate_username") || errorData.username) {
         newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("อีเมล") || errorMsg.includes("duplicate_email")) {
-        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
-      } else if (
-        errorMsg.includes("โทรศัพท์") ||
-        errorMsg.includes("เบอร์") ||
-        errorMsg.includes("duplicate_phone")
-      ) {
+      } 
+      if (errorMsgLower.includes("อีเมล") || errorMsgLower.includes("email") || errorMsgLower.includes("duplicate_email") || errorData.email) {
+        newErrors.email = "อีเมลนี้ถูกใช้งานแล้ว";
+      } 
+      if (errorMsgLower.includes("โทรศัพท์") || errorMsgLower.includes("เบอร์") || errorMsgLower.includes("phone") || errorMsgLower.includes("duplicate_phone") || errorData.phone) {
         newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
-      } else {
-        toast.error(errorMsg);
       }
 
-      if (Object.keys(newErrors).length > 0) {
+      const errorKeys = Object.keys(newErrors);
+
+      if (errorKeys.length > 0) {
         setFormErrors((prev) => ({ ...prev, ...newErrors }));
+        const combinedErrorMessage = errorKeys.map(key => newErrors[key]).join(" และ ");
+        setErrorMessage(combinedErrorMessage);
+      } else {
+        setErrorMessage(errorMsg);
       }
+
+      setIsShowConfirm(false);
+      setIsShowErrorModal(true);
     }
   };
 
@@ -250,7 +256,10 @@ const EditMemberPage: React.FC = () => {
         />
       </div>
 
-      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200 mt-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200 mt-6"
+      >
         <div className="flex items-center gap-3 pb-6">
           <button
             onClick={() => navigate(-1)}
@@ -325,11 +334,7 @@ const EditMemberPage: React.FC = () => {
               error={!!formErrors.username}
               helperText={formErrors.username}
             />
-            <ul className="mt-1.5 ml-1 text-xs text-gray-500 list-disc pl-4 space-y-0.5">
-              <li>ความยาวอย่างน้อย 4 ตัวอักษร</li>
-              <li>ควรประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลข</li>
-            </ul>
-
+            
             <TextField
               id="email"
               label="อีเมล"
@@ -351,11 +356,11 @@ const EditMemberPage: React.FC = () => {
               error={!!formErrors.phone}
               helperText={formErrors.phone}
             />
+
             <div className="relative w-full">
               <div className="absolute right-0 top-0 z-10">
                 <button
                   type="button"
-                  
                   onClick={() => navigate(`/admin/member/reset-password/${userId}`)}
                   className="text-sm font-medium text-[#0A4B32] hover:text-green-700 hover:underline flex items-center gap-1 transition-colors"
                 >
@@ -364,16 +369,15 @@ const EditMemberPage: React.FC = () => {
                 </button>
               </div>
 
-            <TextField
-              id="communityRole"
-              label="บทบาทในชุมชน"
-              placeholder="กรอกบทบาทในชุมชน"
-              required
-              value={formData.communityRole}
-              onChange={handleChange}
-              error={!!formErrors.communityRole}
-              helperText={formErrors.communityRole}
-            />
+              <TextField
+                id="communityRole"
+                label="บทบาทในชุมชน"
+                placeholder="กรอกบทบาทในชุมชน"
+                value={formData.communityRole}
+                onChange={handleChange}
+                error={!!formErrors.communityRole}
+                helperText={formErrors.communityRole}
+              />
             </div>
           </div>
         </div>
@@ -400,7 +404,7 @@ const EditMemberPage: React.FC = () => {
         cancelText="ยกเลิก"
         onConfirm={() => {
           setIsShowConfirm(false);
-          handleSubmit();
+          handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
         }}
         onCancel={() => setIsShowConfirm(false)}
       />
@@ -414,6 +418,14 @@ const EditMemberPage: React.FC = () => {
           setIsShowSuccessModal(false);
           navigate("/admin/members");
         }}
+      />
+
+      <ModalAlert
+        isOpen={isShowErrorModal}
+        type="error"
+        title="ไม่สามารถบันทึกข้อมูลได้"
+        message={errorMessage} 
+        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

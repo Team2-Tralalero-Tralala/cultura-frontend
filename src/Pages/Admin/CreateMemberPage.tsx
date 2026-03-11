@@ -4,7 +4,6 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import * as zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
@@ -24,9 +23,23 @@ const memberSchema = zod
     username: zod
       .string()
       .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
-      .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
-    email: zod.string().email("กรุณากรอกอีเมล"),
-    phone: zod.string().regex(/^0[0-9]{9}$/, "กรุณากรอกหมายเลขโทรศัพท์"),
+      .regex(/^[a-zA-Z0-9]+$/, "กรุณากรอกชื่อผู้ใช้"),
+    
+    email: zod
+      .string()
+      .min(1, "กรุณากรอกอีเมล")
+      .refine(
+        (val) => val === "" || zod.string().email().safeParse(val).success,
+        "รูปแบบอีเมลไม่ถูกต้อง"
+      ),
+      
+    phone: zod
+      .string()
+      .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
+      .refine(
+        (val) => val === "" || /^0[0-9]{9}$/.test(val),
+        "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"
+      ),
 
     password: zod
       .string()
@@ -35,9 +48,7 @@ const memberSchema = zod
       .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z)")
       .regex(/[0-9]/, "ต้องประกอบด้วยตัวเลข (0-9)"),
 
-    confirmPassword: zod.string().min(8, "กรุณายืนยันรหัสผ่าน"),
-
-    communityRole: zod.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
+    confirmPassword: zod.string().min(1, "กรุณายืนยันรหัสผ่าน"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "รหัสผ่านไม่ตรงกัน",
@@ -78,6 +89,7 @@ const CreateMemberPage: React.FC = () => {
   const [isShowConfirm, setIsShowConfirm] = useState(false);
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); 
 
   /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
@@ -119,14 +131,15 @@ const CreateMemberPage: React.FC = () => {
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
-    setFormData((prev) => {
-      const newData = { ...prev, [id]: value };
-      // ลบ error ทันทีที่พิมพ์
-      if (formErrors[id]) {
-        setFormErrors((prevErr) => ({ ...prevErr, [id]: undefined }));
-      }
-      return newData;
-    });
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    
+  
+    validateField(id, value);
+    if (id === "password" || id === "confirmPassword") {
+      setTimeout(() => {
+        validateField("confirmPassword", id === "confirmPassword" ? value : formData.confirmPassword);
+      }, 0);
+    }
   };
 
   /**
@@ -145,19 +158,13 @@ const CreateMemberPage: React.FC = () => {
    * Output : -
    */
   const handlePreCheck = () => {
-    const isFormValid = validateField(); // ตรวจสอบ Schema (Zod)
+    const isFormValid = validateField(); 
     const isPasswordMatch = formData.password === formData.confirmPassword;
 
     if (!isFormValid || !isPasswordMatch) {
-      // ถ้าไม่ผ่าน ให้แสดง Error Modal
+      setErrorMessage(!isPasswordMatch ? "รหัสผ่านไม่ตรงกัน" : "กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
       setIsShowErrorModal(true);
-
-      // กรณีรหัสผ่านไม่ตรงกัน อาจจะ Toast บอกเพิ่มเพื่อให้ชัดเจน (Optional)
-      if (!isPasswordMatch) {
-        toast.error("รหัสผ่านไม่ตรงกัน");
-      }
     } else {
-      // ถ้าผ่าน ให้แสดง Confirm Modal
       setIsShowConfirm(true);
     }
   };
@@ -169,8 +176,6 @@ const CreateMemberPage: React.FC = () => {
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
-
-    // ตรวจสอบซ้ำอีกครั้ง (Defense in depth)
     const isValid = validateField();
     if (!isValid || formData.password !== formData.confirmPassword) {
       return;
@@ -204,27 +209,41 @@ const CreateMemberPage: React.FC = () => {
         });
       }
 
+      setIsShowConfirm(false);
       setIsShowSuccessModal(true);
     } catch (error: any) {
       console.error("❌ Error creating member:", error);
 
-      const errorMsg =
-        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
+      const errorResponse = error.response?.data;
+      const errorMsg = errorResponse?.message || errorResponse?.error || "ไม่สามารถสร้างบัญชีได้";
+      const errorData = errorResponse?.errors || {};
+
       const newErrors: Record<string, string> = {};
+      const errorMsgLower = errorMsg.toLowerCase();
 
-      if (errorMsg.includes("ชื่อผู้ใช้")) {
+      if (errorMsgLower.includes("ชื่อผู้ใช้") || errorMsgLower.includes("username") || errorMsgLower.includes("duplicate_username") || errorData.username) {
         newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("อีเมล")) {
-        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("โทรศัพท์") || errorMsg.includes("เบอร์")) {
+      }
+      if (errorMsgLower.includes("อีเมล") || errorMsgLower.includes("email") || errorMsgLower.includes("duplicate_email") || errorData.email) {
+        newErrors.email = "อีเมลนี้ถูกใช้งานแล้ว"; 
+      }
+      if (errorMsgLower.includes("โทรศัพท์") || errorMsgLower.includes("เบอร์") || errorMsgLower.includes("phone") || errorMsgLower.includes("duplicate_phone") || errorData.phone) {
         newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
-      } else {
-        toast.error(`เกิดข้อผิดพลาด: ${errorMsg}`);
       }
 
-      if (Object.keys(newErrors).length > 0) {
+      const errorKeys = Object.keys(newErrors);
+
+      if (errorKeys.length > 0) {
         setFormErrors((prev) => ({ ...prev, ...newErrors }));
+
+        const combinedErrorMessage = errorKeys.map(key => newErrors[key]).join(" และ ");
+        setErrorMessage(combinedErrorMessage);
+      } else {
+        setErrorMessage(errorMsg);
       }
+
+      setIsShowConfirm(false);
+      setIsShowErrorModal(true);
     }
   };
 
@@ -333,18 +352,21 @@ const CreateMemberPage: React.FC = () => {
               helperText={formErrors.phone}
             />
 
-            <div className="grid grid-cols-2 gap-6">
-              <TextField
-                id="password"
-                label="รหัสผ่าน"
-                placeholder="กรอกรหัสผ่าน"
-                required
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={!!formErrors.password}
-                helperText={formErrors.password}
-              />
+            <div className="grid grid-cols-2 gap-6 items-start">
+              <div>
+                <TextField
+                  id="password"
+                  label="รหัสผ่าน"
+                  placeholder="กรอกรหัสผ่าน"
+                  required
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!formErrors.password}
+                  helperText={formErrors.password}
+                />
+              </div>
+
               <TextField
                 id="confirmPassword"
                 label="ยืนยันรหัสผ่าน"
@@ -362,7 +384,6 @@ const CreateMemberPage: React.FC = () => {
               id="communityRole"
               label="บทบาทวิสาหกิจ"
               placeholder="กรอกบทบาทวิสาหกิจ"
-              required
               value={formData.communityRole}
               onChange={handleChange}
               error={!!formErrors.communityRole}
@@ -412,8 +433,8 @@ const CreateMemberPage: React.FC = () => {
       <ModalAlert
         isOpen={isShowErrorModal}
         type="error"
-        title="กรอกข้อมูลไม่ครบถ้วน"
-        message="กรุณาตรวจสอบข้อมูลให้ครบถ้วน"
+        title="ไม่สามารถสร้างบัญชีได้"
+        message={errorMessage} 
         onClose={() => setIsShowErrorModal(false)}
       />
     </div>

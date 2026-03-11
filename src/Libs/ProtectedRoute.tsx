@@ -33,13 +33,9 @@ export default function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // ⚠️ login แล้วแต่ role ไม่ตรง → redirect ตาม role
+  // ⚠️ login แล้วแต่ role ไม่ตรง → redirect ไปหน้า Access Denied
   if (!allow.includes(user.role)) {
-    const roleRedirect =
-      user.role === "admin" || user.role === "superadmin" || user.role === "member"
-        ? "/guest/partner/login"
-        : "/login";
-    return <Navigate to={roleRedirect} replace />;
+    return <Navigate to="/access-denied" replace />;
   }
 
   // ✅ ผ่านเงื่อนไข → render children หรือ Outlet (กรณี nested routes)

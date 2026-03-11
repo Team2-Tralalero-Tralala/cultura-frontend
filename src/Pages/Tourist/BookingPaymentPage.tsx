@@ -121,6 +121,13 @@ export default function BookingPaymentPage() {
   const handleFileChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     const file = changeEvent.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+        changeEvent.target.value = "";
+        setPaymentProof(null);
+        return;
+      }
+      setErrorMessage(null);
       setPaymentProof(file);
     }
   };

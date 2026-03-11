@@ -350,6 +350,11 @@ export function UploadBannerPage() {
 
     const file = files[0];
 
+    if (file.size > 5 * 1024 * 1024) {
+      showInvalidFileAlert("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      return;
+    }
+
     if (isPdfFile(file)) {
       showInvalidFileAlert("ไม่รองรับไฟล์ PDF กรุณาอัปโหลดเป็นไฟล์รูปภาพเท่านั้น");
       return;
@@ -405,6 +410,12 @@ export function UploadBannerPage() {
     if (!pickedFiles.length) return;
 
     const file = pickedFiles[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+      showInvalidFileAlert("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      event.target.value = "";
+      return;
+    }
 
     if (isPdfFile(file)) {
       showInvalidFileAlert("ไม่รองรับไฟล์ PDF กรุณาอัปโหลดเป็นไฟล์รูปภาพเท่านั้น");

@@ -15,6 +15,7 @@ import React, { useRef, useState, useEffect, useId, useMemo } from "react";
 import type { CSSProperties, ChangeEventHandler } from "react";
 import { IconifySvg, IMAGE_ICON, VIDEO_ICON } from "./UploadIcons";
 import { saveLogoVariantToPublic, saveToPublic } from "@/Libs/PublicFolder";
+import { toast } from "react-toastify";
 
 export type UploadCardProps = {
   // จำกัดจำนวนสูงสุด
@@ -171,8 +172,19 @@ export const UploadCard: React.FC<UploadCardProps> = ({
     const picked = Array.from(e.target.files ?? []);
     if (!picked.length) return;
 
+    // กรองไฟล์ที่ขนาดเกิน 5MB ออก
+    const validFiles = picked.filter(f => f.size <= 5 * 1024 * 1024);
+    if (validFiles.length < picked.length) {
+      toast.error("ขนาดไฟล์บางไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+    }
+
+    if (!validFiles.length) {
+      e.currentTarget.value = "";
+      return;
+    }
+
     // ถ้ามี variant ให้ใช้ไฟล์แรกเท่านั้น (เขียนทับ)
-    const slice = (variant ? picked.slice(0, 1) : picked).slice(0, Math.max(0, max - files.length));
+    const slice = (variant ? validFiles.slice(0, 1) : validFiles).slice(0, Math.max(0, max - files.length));
     if (!slice.length) return;
 
     emitChange([...files, ...slice]);
@@ -335,9 +347,8 @@ export const UploadCard: React.FC<UploadCardProps> = ({
           aria-describedby={counterId}
           onClick={openPicker}
           disabled={disabled}
-          className={`${addCardBase} ${
-            disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50"
-          } flex flex-col items-center justify-center ${itemClass}`}
+          className={`${addCardBase} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50"
+            } flex flex-col items-center justify-center ${itemClass}`}
           style={sizeStyle}
         >
           {/* input file แบบซ่อนสายตา (เชื่อมกับปุ่มผ่าน ref) */}

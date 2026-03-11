@@ -9,6 +9,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import Cropper from "react-easy-crop";
+import { toast } from "react-toastify";
 
 /**
  * ฟังก์ชัน: cropImageToFile
@@ -307,6 +308,12 @@ export default function UploadProfile({
    */
   const onCoverPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const pickedFile = e.target.files?.[0] ?? null;
+    if (pickedFile && pickedFile.size > 5 * 1024 * 1024) {
+      toast.error("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      e.currentTarget.value = "";
+      return;
+    }
+
     setCoverFile(pickedFile);
     setCoverCroppedFile(null);
     e.currentTarget.value = "";
@@ -327,6 +334,12 @@ export default function UploadProfile({
    */
   const onAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const pickedFile = e.target.files?.[0] ?? null;
+    if (pickedFile && pickedFile.size > 5 * 1024 * 1024) {
+      toast.error("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      e.currentTarget.value = "";
+      return;
+    }
+
     setAvatarFile(pickedFile);
     setAvatarCroppedFile(null);
     e.currentTarget.value = "";

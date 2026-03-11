@@ -5,6 +5,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import Cropper from "react-easy-crop";
+import { toast } from "react-toastify";
 
 /**
  * คำอธิบาย: ครอปภาพตามขนาดที่กำหนดและแปลงกลับเป็นไฟล์ใหม่
@@ -121,6 +122,11 @@ export default function AvatarUploader({
    */
   const handleAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const selectedFile = event.target.files?.[0] ?? null;
+    if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
+      toast.error("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      event.currentTarget.value = "";
+      return;
+    }
     setAvatarFile(selectedFile);
     event.currentTarget.value = "";
     if (isAutoCropOnPick && selectedFile && selectedFile.type.startsWith("image/")) {

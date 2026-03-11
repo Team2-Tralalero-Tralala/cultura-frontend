@@ -6,7 +6,7 @@
  * รองรับการค้นหา เพิ่ม แก้ไข และลบข้อมูลที่พัก
  */
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import DataTable from "@/Components/Tables/Index";
@@ -16,28 +16,15 @@ import { Modal } from "@/Components/Modal/Modal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { TrashIcon } from "@/Components/Tables/Icon";
 import { getHomestaysAllAdmin, HomestayAdminDelete } from "@/Libs/HomestayService";
-import type { HomestayRow, HomestayDtoFromApi } from "@/Types/Homestay";
+import type { HomestayRow } from "@/Types/Homestay";
 import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Tables/Types";
-
-/**
- * คำอธิบาย:
- *  - แปลงข้อความให้อยู่ในรูปแบบมาตรฐานสำหรับการค้นหา
- *  - แปลงเป็นตัวพิมพ์เล็ก และลบช่องว่างส่วนเกิน
- *
- * Input:
- *  - text: string
- *
- * Output:
- *  - string ข้อความที่ถูก normalize แล้ว
- */
-const normalizeText = (text: string) =>
-  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
 
 /**
  * Component: ManageHomestayPage
  * คำอธิบาย:
  *  - Component หลักสำหรับหน้าแสดงและจัดการข้อมูลที่พัก (Admin)
  */
+
 export default function ManageHomestayPage() {
   const navigate = useNavigate();
 
@@ -46,7 +33,6 @@ export default function ManageHomestayPage() {
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -64,14 +50,13 @@ export default function ManageHomestayPage() {
   const reload = useCallback(async () => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
 
-      const res = await getHomestaysAllAdmin();
-      const homestayList: HomestayDtoFromApi[] = Array.isArray(res.data) ? res.data : [];
+      const res = await getHomestaysAllAdmin(currentPage, pageSize);
+      
+      const homestayList = res.data?.data || [];
+      const pagination = res.data?.pagination || {};
 
-      const pagination = res.pagination ?? {};
-
-      const mappedRows: HomestayRow[] = homestayList.map((homestay) => ({
+      const mappedRows: HomestayRow[] = homestayList.map((homestay: any) => ({
         id: homestay.id,
         name: homestay.name ?? "-",
         facility: homestay.facility ?? "-",
@@ -79,15 +64,13 @@ export default function ManageHomestayPage() {
       }));
 
       setRows(mappedRows);
-      setTotalItems(pagination?.totalCount ?? mappedRows.length);
-    } catch (error: unknown) {
-      console.error(error);
-      if (error instanceof Error) setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
-      else setErrorMessage("โหลดข้อมูลไม่สำเร็จ");
+      setTotalItems(pagination.totalCount ?? 0);
+    } catch (error) {
+      console.error("Error loading homestays:", error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     reload();
@@ -139,26 +122,6 @@ export default function ManageHomestayPage() {
 
   /**
    * คำอธิบาย:
-   *  - กรองข้อมูลที่พักจาก rows ตามคำค้นหา
-   *  - ใช้สำหรับแสดงผลในตาราง
-   */
-  const paginatedRows = useMemo(() => {
-    const normalizedQuery = normalizeText(searchQuery);
-    
-    const filtered = rows.filter((row) =>
-      [row.name, row.facility, row.type].some((value) =>
-        normalizeText(value).includes(normalizedQuery)
-      )
-    );
-
-    return {
-      displayRows: filtered,
-      totalCount: filtered.length
-    };
-  }, [rows, searchQuery]);
-
-  /**
-   * คำอธิบาย:
    *  - กำหนด action สำหรับการจัดการหลายแถวพร้อมกัน
    *  - ใช้สำหรับลบข้อมูลที่พักแบบหลายรายการ
    */
@@ -170,7 +133,7 @@ export default function ManageHomestayPage() {
       intent: "danger",
       confirm: (rows) => `ยืนยันลบที่พักจำนวน ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        const ids: number[] = rows.map((r) => r.id);
+        const ids = rows.map((r) => r.id);
         setBulkDeleteIds(ids);
         setIsBulkConfirmModalOpen(true);
       },
@@ -186,11 +149,9 @@ export default function ManageHomestayPage() {
    */
   const handleDelete = async () => {
     if (!deleteId) return;
-
     await HomestayAdminDelete(deleteId);
     setIsConfirmModalOpen(false);
     setDeleteId(null);
-
     await reload();
   };
 
@@ -203,15 +164,11 @@ export default function ManageHomestayPage() {
    *  - ปิด modal ยืนยันการลบ
    *  - รีโหลดข้อมูลตารางใหม่
    */
-
   const handleBulkDelete = async () => {
     if (bulkDeleteIds.length === 0) return;
-
     await Promise.all(bulkDeleteIds.map((id) => HomestayAdminDelete(id)));
-
     setBulkDeleteIds([]);
     setIsBulkConfirmModalOpen(false);
-
     await reload();
   };
 
@@ -225,12 +182,8 @@ export default function ManageHomestayPage() {
     <div className="space-y-4">
       {/* Section: Breadcrumb */}
       <Breadcrumb
-        current={{
-          label: "จัดการที่พัก",
-          to: "/admin/community/homestays",
-        }}
+        current={{ label: "จัดการที่พัก", to: "/admin/community/homestays" }}
       />
-
       {/* Section: Header */}
       <div className="flex flex-col mt-[-18px]">
         <h1 className="text-[20px] font-bold text-black">จัดการที่พัก</h1>
@@ -239,13 +192,12 @@ export default function ManageHomestayPage() {
         <div className="flex items-center gap-3 mt-2">
           <div className="max-w-md">
             <SearchBarTable 
-            value={searchQuery} 
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }} />
+              value={searchQuery} 
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+              }} 
+            />
           </div>
-
           <div className="ml-auto">
             <Button type="confirm-admin" onClick={() => navigate(`/admin/community/homestay`)}>
               <span>+ เพิ่มที่พัก</span>
@@ -257,7 +209,8 @@ export default function ManageHomestayPage() {
       {/* Section: Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <DataTable<HomestayRow>
-          data={paginatedRows.displayRows}
+          key={`table-page-${currentPage}`}
+          data={rows}
           columns={columns}
           getKey={(row) => String(row.id)}
           actions={rowActions}
@@ -268,8 +221,8 @@ export default function ManageHomestayPage() {
           pageSizeOptions={[10, 30, 50]}
           pagination={{
             currentPage,
-            totalPages: Math.ceil(paginatedRows.totalCount / pageSize),
-            totalCount: paginatedRows.totalCount,
+            totalPages: Math.ceil(totalItems / pageSize),
+            totalCount: totalItems,
             limit: pageSize,
           }}
           onPageChange={(newPage) => setCurrentPage(newPage)}

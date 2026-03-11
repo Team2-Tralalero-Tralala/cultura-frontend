@@ -374,8 +374,9 @@ export default function EditHomestayPage() {
     // 1. ตรวจสอบข้อมูล (Validation)
     const isFormValid = validateAll();
     const isFilesValid = coverFiles.length > 0 && galleryFiles.length > 0;
+    const isTagsValid = tagIds.length > 0;
 
-    if (!isFormValid || !isFilesValid) {
+    if (!isFormValid || !isFilesValid || !isTagsValid) {
       setAlertType("error");
       setAlertTitle("ข้อมูลไม่ครบถ้วน");
       setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
@@ -637,7 +638,7 @@ export default function EditHomestayPage() {
 
             {/* เลือกแท็ก */}
             <div className="md:col-span-2">
-              <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} />
+              <TagSelector value={tagIds} onChange={(ids) => setTagIds(ids)} error={tagIds.length === 0} helperText="กรุณาเลือกอย่างน้อย 1 แท็ก" />
             </div>
 
             {/* อัปโหลดรูปภาพ */}

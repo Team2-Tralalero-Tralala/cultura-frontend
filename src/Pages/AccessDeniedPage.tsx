@@ -41,7 +41,6 @@ export default function AccessDeniedPage() {
 
         <p className="text-gray-600 mb-8 leading-relaxed">
           ขออภัย คุณไม่มีสิทธิ์ในการเข้าถึงหน้านี้
-          หรือเนื้อหาที่คุณพยายามเข้าถึงต้องการสิทธิ์ที่สูงกว่า
         </p>
 
         <div className="flex flex-col gap-3 w-full">

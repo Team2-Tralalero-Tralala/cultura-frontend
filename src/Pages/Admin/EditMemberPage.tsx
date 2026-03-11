@@ -125,7 +125,7 @@ const EditMemberPage: React.FC = () => {
         username: member.username || "",
         email: member.email || "",
         phone: member.phone || "",
-        communityRole: member.communityRole || "",
+        communityRole: member.activityRole || "",
       });
 
       setAvatarUrl(member.profileImageUrl || null);

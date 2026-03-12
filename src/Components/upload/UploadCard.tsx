@@ -15,7 +15,7 @@ import React, { useRef, useState, useEffect, useId, useMemo } from "react";
 import type { CSSProperties, ChangeEventHandler } from "react";
 import { IconifySvg, IMAGE_ICON, VIDEO_ICON } from "./UploadIcons";
 import { saveLogoVariantToPublic, saveToPublic } from "@/Libs/PublicFolder";
-import { toast } from "react-toastify";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 export type UploadCardProps = {
   // จำกัดจำนวนสูงสุด
@@ -119,6 +119,8 @@ export const UploadCard: React.FC<UploadCardProps> = ({
   const inputId = `upload-input-${autoId}`;
   const counterId = `upload-counter-${autoId}`;
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
   // ---------- State: controlled/uncontrolled ----------
   const [filesUnctrl, setFilesUnctrl] = useState<File[]>(defaultValue ?? []);
   const files = value ?? filesUnctrl;
@@ -175,7 +177,7 @@ export const UploadCard: React.FC<UploadCardProps> = ({
     // กรองไฟล์ที่ขนาดเกิน 5MB ออก
     const validFiles = picked.filter(f => f.size <= 5 * 1024 * 1024);
     if (validFiles.length < picked.length) {
-      toast.error("ขนาดไฟล์บางไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      setIsAlertOpen(true);
     }
 
     if (!validFiles.length) {
@@ -369,6 +371,14 @@ export const UploadCard: React.FC<UploadCardProps> = ({
           </span>
         </button>
       )}
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type="error"
+        title="ขนาดไฟล์เกินกำหนด"
+        message="ขนาดไฟล์บางไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </div>
   );
 };

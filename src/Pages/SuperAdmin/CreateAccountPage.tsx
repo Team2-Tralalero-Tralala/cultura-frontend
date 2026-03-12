@@ -95,7 +95,7 @@ interface RoleSpecificData {
 }
 
 interface CreateAccountBody {
-  roleId: number;
+  roleName: string;
   fname: string;
   lname: string;
   username: string;
@@ -112,6 +112,8 @@ interface CreateAccountBody {
   subDistrict?: string;
   postalCode?: string;
 }
+
+
 
 /**
  * คำอธิบาย : Popper Component สำหรับปรับแต่งหน้าต่าง AutoComplete ของ MUI
@@ -392,12 +394,13 @@ const CreateAccountPage: React.FC<CreateAccountPageProps> = ({ defaultRole }) =>
     }
 
     try {
-      let roleId = 3;
-      if (role === "Member") roleId = 1;
-      if (role === "Tourist") roleId = 2;
+      let roleName = "member";
+      if (role === "Member") roleName = "member";
+      if (role === "Tourist") roleName = "tourist";
+      if (role === "Admin") roleName = "admin";
 
       const accountBody: CreateAccountBody = {
-        roleId,
+        roleName,
         fname: formData.fname.trim(),
         lname: formData.lname.trim(),
         username: formData.username.trim(),

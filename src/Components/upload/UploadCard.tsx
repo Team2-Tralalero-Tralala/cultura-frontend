@@ -174,8 +174,13 @@ export const UploadCard: React.FC<UploadCardProps> = ({
     const picked = Array.from(e.target.files ?? []);
     if (!picked.length) return;
 
-    // กรองไฟล์ที่ขนาดเกิน 5MB ออก
-    const validFiles = picked.filter(f => f.size <= 5 * 1024 * 1024);
+    // กรองไฟล์: วิดีโอห้ามเกิน 200MB, อื่นๆ ห้ามเกิน 5MB
+    const validFiles = picked.filter((f) => {
+      const isVideo = f.type.startsWith("video/");
+      const maxSize = isVideo ? 200 * 1024 * 1024 : 5 * 1024 * 1024;
+      return f.size <= maxSize;
+    });
+
     if (validFiles.length < picked.length) {
       setIsAlertOpen(true);
     }
@@ -376,7 +381,7 @@ export const UploadCard: React.FC<UploadCardProps> = ({
         isOpen={isAlertOpen}
         type="error"
         title="ขนาดไฟล์เกินกำหนด"
-        message="ขนาดไฟล์บางไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB"
+        message="ขนาดไฟล์บางไฟล์เกินกำหนด (รูปภาพไม่เกิน 5MB, วิดีโอไม่เกิน 200MB)"
         onClose={() => setIsAlertOpen(false)}
       />
     </div>

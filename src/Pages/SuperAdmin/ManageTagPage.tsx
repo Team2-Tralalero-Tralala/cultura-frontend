@@ -22,7 +22,7 @@ import type {
 } from "@/Components/Tables/Types";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
-export type TagRow = { id: number; name: string };
+export type TagRow = { id: number; name: string; isUsed?: boolean };
 
 /*
  * คำอธิบาย : ฟังก์ชันหลักของหน้าจัดการประเภท
@@ -32,7 +32,6 @@ export type TagRow = { id: number; name: string };
 export function ManageTagPage() {
   const [rows, setRows] = useState<TagRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
@@ -41,6 +40,10 @@ export function ManageTagPage() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<TagRow[]>([]);
+
+  // error modal state for delete
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   // modal state
   const [selectedTag, setSelectedTag] = useState<TagRow | null>(null);
@@ -61,7 +64,6 @@ export function ManageTagPage() {
   const fetchData = async (page: number, limit: number, search: string) => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
 
       const res = await TagService.fetchTags(page, limit, search);
 
@@ -74,13 +76,14 @@ export function ManageTagPage() {
       };
 
       const mappedRows: TagRow[] = Array.isArray(resultData)
-        ? resultData.map((tag: any) => ({ id: tag.id, name: tag.name }))
+        ? resultData.map((tag: any) => ({ id: tag.id, name: tag.name, isUsed: tag.isUsed }))
         : [];
 
       setRows(mappedRows);
       setPagination(resultPagination);
     } catch (error: any) {
-      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setErrorModalMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setIsErrorModalOpen(true);
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +134,11 @@ export function ManageTagPage() {
    * Output : เปิด modal ยืนยัน
    */
   const handleDelete = (tag: TagRow) => {
+    if (tag.isUsed) {
+      setErrorModalMessage(`ไม่สามารถลบประเภทนี้ได้เนื่องจากมีการเรียกใช้งานแท็กอยู่ในระบบ`);
+      setIsErrorModalOpen(true);
+      return;
+    }
     setSelectedTag(tag);
     setModalType("delete");
     setIsConfirmModalOpen(true);
@@ -209,10 +217,18 @@ export function ManageTagPage() {
     align: "left",
     width: "120px",
     variant: "icons",
-    items: () => ["edit", "delete"],
+    items: (row) => [
+      "edit",
+      {
+        id: "delete",
+        label: "ลบ",
+        icon: TrashIcon,
+        intent: "danger",
+        onClick: (r) => handleDelete(r),
+      },
+    ],
     callbacks: {
       edit: (row) => openInputModal("edit", row),
-      delete: (row) => handleDelete(row),
     },
   };
 
@@ -228,7 +244,23 @@ export function ManageTagPage() {
       icon: TrashIcon,
       intent: "neutral",
       onClick: async (rows) => {
-        setRowsToDelete(rows);
+        const usedTags = rows.filter((r) => r.isUsed);
+        const unusedTags = rows.filter((r) => !r.isUsed);
+
+        if (usedTags.length > 0) {
+          if (unusedTags.length === 0) {
+            setErrorModalMessage(`ไม่สามารถลบแท็กที่มีการใช้งานอยู่ได้: ${usedTags.map((t) => t.name).join(", ")}`);
+            setIsErrorModalOpen(true);
+            return;
+          } else {
+            setErrorModalMessage(`ข้ามการลบแท็กที่มีการใช้งานอยู่: ${usedTags.map((t) => t.name).join(", ")}`);
+            setIsErrorModalOpen(true);
+          }
+        } else {
+          setErrorModalMessage("");
+        }
+
+        setRowsToDelete(unusedTags);
         setModalType("bulk-delete");
         setIsConfirmModalOpen(true);
       },
@@ -270,7 +302,6 @@ export function ManageTagPage() {
       </div>
 
       <div className="pb-10">
-        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<TagRow>
           data={rows}
@@ -338,6 +369,14 @@ export function ManageTagPage() {
         type="success"
         title={successMessage}
         message={successDescription}
+      />
+
+      <ModalAlert
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        type="error"
+        title="เกิดข้อผิดพลาด"
+        message={errorModalMessage}
       />
     </div>
   );

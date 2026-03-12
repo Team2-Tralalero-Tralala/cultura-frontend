@@ -73,6 +73,7 @@ export interface PackageApiData {
   location: LocationData | null;
   coverImage: string | null;
   tags: TagData[];
+  booked: number;
 }
 
 /*

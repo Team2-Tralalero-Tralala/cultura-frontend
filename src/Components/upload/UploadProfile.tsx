@@ -101,6 +101,7 @@ export type UploadProfileProps = {
   actionBarMode?: "hover" | "always";
   changeLabel?: string; // ป้าย “เปลี่ยนรูป”
   editLabel?: string; // ป้าย “แก้ไข/ครอป”
+  deleteLabel?: string; // ป้าย “ลบรูป”
 
   // เปิดครอปอัตโนมัติเมื่อเลือกไฟล์
   autoCropOnPick?: boolean;
@@ -154,6 +155,7 @@ export default function UploadProfile({
   // action UI
   changeLabel = "เปลี่ยนรูป",
   editLabel = "แก้ไข/ครอป",
+  deleteLabel = "ลบรูป",
 
   // ครอปอัตโนมัติหลังเลือกไฟล์
   autoCropOnPick = true,
@@ -347,6 +349,30 @@ export default function UploadProfile({
     [avatarSize]
   );
 
+  /**
+   * Handler: onDeleteCover
+   * ลบไฟล์ Cover ปัจจุบันและอัปเดตสถานะกลับเป็นค่าเริ่มต้น
+   */
+  const onDeleteCover = () => {
+    setShowActions(null);
+    setCoverFile(null);
+    setCoverCroppedFile(null);
+    onCoverChange?.(null);
+    if (coverInputRef.current) coverInputRef.current.value = "";
+  };
+
+  /**
+   * Handler: onDeleteAvatar
+   * ลบไฟล์ Avatar ปัจจุบันและอัปเดตสถานะกลับเป็นค่าเริ่มต้น
+   */
+  const onDeleteAvatar = () => {
+    setShowActions(null);
+    setAvatarFile(null);
+    setAvatarCroppedFile(null);
+    onAvatarChange?.(null);
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  };
+
   /** ---------- Render ---------- */
   return (
     <>
@@ -357,7 +383,6 @@ export default function UploadProfile({
         aria-label="Upload cover & profile"
         onClick={() => setShowActions(null)}
       >
-        {/* โซน Cover: ปุ่มเลือกไฟล์ + พรีวิว/ข้อความแนะนำ */}
         <button
           type="button"
           id={`cover-${uid}`}
@@ -378,7 +403,6 @@ export default function UploadProfile({
           style={coverStyle}
           aria-describedby={`cover-hint-${uid}`}
         >
-          {/* input ซ่อนสำหรับเลือกไฟล์ cover */}
           <input
             ref={coverInputRef}
             type="file"
@@ -389,7 +413,6 @@ export default function UploadProfile({
             disabled={disabled}
           />
 
-          {/* พรีวิวภาพหรือคำแนะนำ */}
           {coverPreview ? (
             <div className="absolute inset-0">
               <img
@@ -403,7 +426,6 @@ export default function UploadProfile({
                 }}
               />
 
-              {/* แถบปุ่มของ cover */}
               {showActions === "cover" && (
                 <div
                   className="absolute inset-x-0 bottom-0 p-3 flex gap-2 justify-end bg-gradient-to-t from-black/50 to-transparent"
@@ -415,7 +437,7 @@ export default function UploadProfile({
                       setShowActions(null);
                       coverInputRef.current?.click();
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-sm font-medium"
+                    className="px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-800 text-sm font-medium shadow-sm"
                   >
                     {changeLabel}
                   </button>
@@ -425,9 +447,16 @@ export default function UploadProfile({
                       setShowActions(null);
                       setCropTarget("cover");
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-600 text-white text-sm font-medium"
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-600 text-white text-sm font-medium shadow-sm"
                   >
                     {editLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onDeleteCover}
+                    className="px-3 py-1.5 rounded-lg bg-red-600/90 hover:bg-red-600 text-white text-sm font-medium shadow-sm"
+                  >
+                    {deleteLabel}
                   </button>
                 </div>
               )}
@@ -439,7 +468,6 @@ export default function UploadProfile({
           )}
         </button>
 
-        {/* โซน Avatar: ปุ่ม overlay + พรีวิว/ไอคอน + ปุ่ม action ใต้ภาพ */}
         <div className="absolute left-10 -bottom-80 sm:left-14 sm:-bottom-14 z-10">
           <button
             type="button"
@@ -463,7 +491,6 @@ export default function UploadProfile({
             style={avatarStyle}
             aria-describedby={`avatar-hint-${uid}`}
           >
-            {/* input ซ่อนสำหรับเลือกไฟล์ avatar */}
             <input
               ref={avatarInputRef}
               type="file"
@@ -473,7 +500,6 @@ export default function UploadProfile({
               aria-hidden="true"
               disabled={disabled}
             />
-            {/* พรีวิวรูปโปรไฟล์ หรือไอคอน/ข้อความแนะนำ */}
             {avatarPreview ? (
               <img
                 src={avatarPreview}
@@ -497,7 +523,6 @@ export default function UploadProfile({
             )}
           </button>
 
-          {/* ปุ่ม action สำหรับ avatar */}
           {showActions === "avatar" && (
             <div className="mt-2 flex justify-center gap-2" onClick={(e) => e.stopPropagation()}>
               <button
@@ -506,7 +531,7 @@ export default function UploadProfile({
                   setShowActions(null);
                   avatarInputRef.current?.click();
                 }}
-                className="px-2.5 py-1.5 rounded-md bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-medium"
+                className="px-2.5 py-1.5 rounded-md bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-medium shadow-sm"
               >
                 {changeLabel}
               </button>
@@ -516,20 +541,25 @@ export default function UploadProfile({
                   setShowActions(null);
                   setCropTarget("avatar");
                 }}
-                className="px-2.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium"
+                className="px-2.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium shadow-sm"
               >
                 {editLabel}
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteAvatar}
+                className="px-2.5 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-xs font-medium shadow-sm"
+              >
+                {deleteLabel}
               </button>
             </div>
           )}
         </div>
       </section>
 
-      {/* Modal ครอปภาพ: แสดงเมื่อมี cropTarget */}
       {cropTarget && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70" role="dialog" aria-modal="true">
           <div className="bg-white rounded-2xl p-4 w-[90vw] max-w-[640px] h-[80vh] max-h-[720px] flex flex-col gap-3">
-            {/* พื้นที่ครอปภาพ */}
             <div className="relative flex-1 rounded-xl overflow-hidden bg-black">
               <Cropper
                 image={cropTarget === "cover" ? coverCropPreview! : avatarCropPreview!}
@@ -545,7 +575,6 @@ export default function UploadProfile({
               />
             </div>
 
-            {/* แถบซูม */}
             <input
               type="range"
               min={1}
@@ -555,7 +584,6 @@ export default function UploadProfile({
               onChange={(e) => setCropZoom(Number(e.target.value))}
             />
 
-            {/* ปุ่มควบคุม modal ครอป */}
             <div className="flex justify-end gap-2">
               <button className="px-4 py-2 rounded-lg border" onClick={() => setCropTarget(null)}>
                 ยกเลิก

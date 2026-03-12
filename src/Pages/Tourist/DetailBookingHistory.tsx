@@ -24,8 +24,21 @@ export function DetailBookingHistory() {
   const [bookingHistories, setBookingHistories] = useState<TouristBookingHistory[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<TouristBookingHistory | null>(null);
   const [sort, setSort] = useState<"desc" | "asc">("desc");
-  const API_URL = import.meta.env.VITE_API_URL;
-  const API_UPLOAD = API_URL.replace("/api", "/");
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const API_UPLOAD = API_URL.replace(/\/api\/?$/, "/");
+
+  /**
+   * คำอธิบาย: สร้าง URL ของรูปภาพเต็มรูปแบบจาก path อย่างปลอดภัย และจัดการ path ที่ซ้ำซ้อน
+   * Input: fileName (ชื่อไฟล์หรือ path ของรูปภาพ)
+   * Output: URL เต็มของรูปภาพที่พร้อมใช้งานสำหรับ <img>
+   */
+  const getImageUrl = (fileName?: string) => {
+    if (!fileName) return "";
+    if (fileName.startsWith("http")) return fileName;
+    const baseUrl = API_URL.replace(/\/api\/?$/, "");
+    const cleanedPath = fileName.replace(/^\/?uploads\//, "");
+    return `${baseUrl}/uploads/${cleanedPath}`;
+  };
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -306,9 +319,8 @@ export function DetailBookingHistory() {
                   onClick={() =>
                     setSearchParams({ bookingId: item.id.toString() }, { replace: true })
                   }
-                  className={`border-2 p-5 rounded-2xl cursor-pointer ${
-                    selectedBooking?.id === item.id ? "border-[#1DC9A0]" : "border-[#E5E7EB]"
-                  }`}
+                  className={`border-2 p-5 rounded-2xl cursor-pointer ${selectedBooking?.id === item.id ? "border-[#1DC9A0]" : "border-[#E5E7EB]"
+                    }`}
                 >
                   <div className="flex justify-between mb-2">
                     <h3 className="text-[20px] font-bold">{item.package.name}</h3>
@@ -333,7 +345,7 @@ export function DetailBookingHistory() {
                   <div className="border-2 border-[#E5E7EB] p-5 mt-5 rounded-2xl">
                     {selectedBooking.package.packageFile.length > 0 ? (
                       <img
-                        src={`${API_UPLOAD}${selectedBooking.package.packageFile[0].filePath}`}
+                        src={getImageUrl(selectedBooking.package.packageFile[0].filePath)}
                         alt=""
                         className="w-full h-auto object-cover rounded-md mb-4"
                         onError={(event) => {
@@ -361,7 +373,7 @@ export function DetailBookingHistory() {
                       <p>สถานะ</p>
                       <p className="text-end">{getStatusText(selectedBooking.status)}</p>
                       {selectedBooking.status === "REFUND_REJECTED" ||
-                      selectedBooking.status === "REJECTED" ? (
+                        selectedBooking.status === "REJECTED" ? (
                         <>
                           <p>เหตุผลที่ปฏิเสธ</p>
                           <p className="text-end">{selectedBooking.rejectReason ?? "-"}</p>
@@ -386,7 +398,7 @@ export function DetailBookingHistory() {
                   </div>
                   <div className=" justify-self-end">
                     {selectedBooking.isParticipate &&
-                    new Date() > new Date(selectedBooking.package.dueDate) ? (
+                      new Date() > new Date(selectedBooking.package.dueDate) ? (
                       (!selectedBooking.feedbacks || selectedBooking.feedbacks.length === 0) && (
                         <Button
                           type="cancel"
@@ -402,8 +414,8 @@ export function DetailBookingHistory() {
                         {(selectedBooking.status === "BOOKED" ||
                           selectedBooking.status === "PENDING") &&
                           new Date(selectedBooking.package.startDate).getTime() -
-                            new Date().getTime() >
-                            7 * 24 * 60 * 60 * 1000 && (
+                          new Date().getTime() >
+                          7 * 24 * 60 * 60 * 1000 && (
                             <Button type="cancel" onClick={() => setIsCancelModalOpen(true)}>
                               ยกเลิกการจอง
                             </Button>
@@ -411,15 +423,15 @@ export function DetailBookingHistory() {
                         {(selectedBooking.status === "REFUND_PENDING" ||
                           selectedBooking.status === "REFUNDED" ||
                           selectedBooking.status === "REFUND_REJECTED") && (
-                          <Button
-                            type="cancel"
-                            onClick={() =>
-                              navigate(`/tourist/cancel/booking/${selectedBooking.id}`)
-                            }
-                          >
-                            รายละเอียดคำขอคืนเงิน
-                          </Button>
-                        )}
+                            <Button
+                              type="cancel"
+                              onClick={() =>
+                                navigate(`/tourist/cancel/booking/${selectedBooking.id}`)
+                              }
+                            >
+                              รายละเอียดคำขอคืนเงิน
+                            </Button>
+                          )}
                       </div>
                     )}
                   </div>
@@ -487,7 +499,7 @@ export function DetailBookingHistory() {
                                 {feedback.feedbackImages.map((img) => (
                                   <img
                                     key={img.id}
-                                    src={`${API_UPLOAD}${img.image}`}
+                                    src={getImageUrl(img.image)}
                                     alt="feedback"
                                     className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                                   />
@@ -500,7 +512,7 @@ export function DetailBookingHistory() {
                               <div className="bg-gray-100 p-4 rounded-xl mt-2 flex gap-3">
                                 {feedback.responder?.profileImage ? (
                                   <img
-                                    src={`${API_UPLOAD}${feedback.responder.profileImage}`}
+                                    src={getImageUrl(feedback.responder.profileImage)}
                                     alt="Responder"
                                     className="w-10 h-10 rounded-full object-cover shrink-0"
                                   />

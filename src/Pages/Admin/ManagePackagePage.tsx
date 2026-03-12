@@ -98,7 +98,7 @@ export default function ManagePackagePage() {
         params: {
           page: currentPage, limit: pageSize,
           status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
-          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
+          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
         },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ export default function ManagePackagePage() {
             packageItem?.published === true ||
             packageItem?.isPublished === true,
           statusApprove: packageItem?.statusApprove ?? null,
-          bookedCount: packageItem?.bookingHistories?.length ?? 0,
+          bookedCount: packageItem?.bookedCount ?? 0,
           capacity: packageItem?.capacity ?? 0,
         }),
       );

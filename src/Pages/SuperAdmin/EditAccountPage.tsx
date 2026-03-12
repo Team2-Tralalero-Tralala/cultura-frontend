@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
+import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
@@ -44,6 +44,29 @@ interface CommunityOption {
   id: number;
   name: string;
 }
+
+const editAccountSchema = zod.object({
+  fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+  lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+  username: zod
+    .string()
+    .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+    .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
+  email: zod
+    .string()
+    .min(1, "กรุณากรอกอีเมล")
+    .refine(
+      (val) => val === "" || zod.string().email().safeParse(val).success,
+      "รูปแบบอีเมลไม่ถูกต้อง"
+    ),
+  phone: zod
+    .string()
+    .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
+    .refine(
+      (val) => val === "" || /^0[0-9]{9}$/.test(val),
+      "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"
+    ),
+});
 
 /** * คำอธิบาย : Custom Popper Component สำหรับปรับแต่งการแสดงผลของ Autocomplete
  * Input: props (any) - properties ที่รับมาจาก MUI Autocomplete
@@ -121,6 +144,7 @@ const EditAccountPage: React.FC = () => {
   const [isShowConfirm, setIsShowConfirm] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); 
 
   const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
   const [isCommunityLoading, setIsCommunityLoading] = useState(false);
@@ -196,7 +220,9 @@ const EditAccountPage: React.FC = () => {
       });
     } catch (error: any) {
       console.error("❌ Error fetching user:", error);
-      toast.error("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+      setErrorMessage("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+      setIsShowErrorModal(true);
+      setTimeout(() => navigate("/super/accounts/all"), 2000);
     }
   };
 
@@ -265,6 +291,38 @@ const EditAccountPage: React.FC = () => {
   }, [formData.role]);
 
   /**
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลใน Form ด้วย Schema (Zod)
+   * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ - Optional), fieldValue (ค่าของฟิลด์ - Optional)
+   * Output: boolean
+   */
+  const validateField = (fieldName?: string, fieldValue?: unknown) => {
+    if (fieldName) {
+      const result = editAccountSchema.safeParse({
+        ...formData,
+        [fieldName]: fieldValue,
+      });
+      setFormErrors((prevErrors) => ({
+        ...prevErrors,
+        [fieldName]: result.success
+          ? undefined
+          : result.error.issues.find((issue) => issue.path[0] === fieldName)?.message,
+      }));
+      return result.success;
+    } else {
+      const result = editAccountSchema.safeParse(formData);
+      if (!result.success) {
+        const validationErrors: Record<string, string> = {};
+        result.error.issues.forEach((issue) => {
+          validationErrors[issue.path[0] as string] = issue.message;
+        });
+        setFormErrors((prev) => ({ ...prev, ...validationErrors }));
+        return false;
+      }
+      return true;
+    }
+  };
+
+  /**
    * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการเปลี่ยนแปลงค่าข้อมูลในช่อง Input
    * Input: event (React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
    * Output: -
@@ -272,9 +330,8 @@ const EditAccountPage: React.FC = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((previousState) => ({ ...previousState, [id]: value }));
-    if (formErrors[id]) {
-      setFormErrors((prev) => ({ ...prev, [id]: undefined }));
-    }
+    
+    validateField(id, value);
   };
 
   /**
@@ -298,66 +355,50 @@ const EditAccountPage: React.FC = () => {
    * Output: -
    */
   const handlePreCheck = () => {
-    let isValid = true;
-    const newErrors: Record<string, string> = {};
-
-    if (formData.fname.trim() === "") {
-      newErrors.fname = "กรุณากรอกชื่อ";
-      isValid = false;
-    }
-    if (formData.lname.trim() === "") {
-      newErrors.lname = "กรุณากรอกนามสกุล";
-      isValid = false;
-    }
-    if (formData.username.trim() === "") {
-      newErrors.username = "กรุณากรอกชื่อผู้ใช้";
-      isValid = false;
-    } else if (formData.username.trim().length < 4) {
-      newErrors.username = "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร";
-      isValid = false;
-    }
-    if (formData.email.trim() === "") {
-      newErrors.email = "กรุณากรอกอีเมล";
-      isValid = false;
-    }
-    if (formData.phone.trim() === "") {
-      newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
-      isValid = false;
-    }
+    const isFormValid = validateField();
+    
+    let isRoleValid = true;
+    const newRoleErrors: Record<string, string> = {};
 
     if (formData.role === "Member") {
       if (!roleSpecificData.communityId) {
-        newErrors.communityId = "กรุณาเลือกวิสาหกิจชุมชน";
-        isValid = false;
+        newRoleErrors.communityId = "กรุณาเลือกวิสาหกิจชุมชน";
+        isRoleValid = false;
       }
     } else if (formData.role === "Tourist") {
       if (!roleSpecificData.birthDate) {
-        newErrors.birthDate = "กรุณาระบุวันเกิด";
-        isValid = false;
+        newRoleErrors.birthDate = "กรุณาระบุวันเกิด";
+        isRoleValid = false;
       }
     }
 
-    setFormErrors(newErrors);
-
-    if (isValid) {
-      setIsShowConfirm(true);
+    if (!isFormValid || !isRoleValid) {
+      setFormErrors((prev) => ({ ...prev, ...newRoleErrors }));
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setIsShowErrorModal(true);
     } else {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setIsShowConfirm(true);
     }
   };
 
   /**
    * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลการแก้ไขบัญชีผู้ใช้ รวมถึงการอัปเดตรูปภาพไปยังระบบ
-   * Input: event (React.FormEvent)
-   * Output: -
    */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    const isFormValid = validateField();
+    if (!isFormValid) {
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setIsShowErrorModal(true);
+      return;
+    }
+
     if (formData.role === "Member") {
       if (!roleSpecificData.communityId) {
         setFormErrors((prev) => ({ ...prev, communityId: "กรุณาเลือกวิสาหกิจชุมชน" }));
-        toast.error("กรุณาเลือกชุมชน");
+        setErrorMessage("กรุณาเลือกชุมชน");
+        setIsShowErrorModal(true);
         return;
       }
     }
@@ -419,27 +460,36 @@ const EditAccountPage: React.FC = () => {
     } catch (error: any) {
       console.error("❌ Error updating account:", error);
 
-      const errorMsg =
-        error.response?.data?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const errorResponse = error.response?.data;
+      const errorMsg = errorResponse?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
+      const errorData = errorResponse?.errors || {}; 
+
       const newErrors: Record<string, string> = {};
+      const errorMsgLower = errorMsg.toLowerCase();
 
-      if (errorMsg.includes("ชื่อผู้ใช้") || errorMsg.includes("duplicate_username")) {
+      if (errorMsgLower.includes("ชื่อผู้ใช้") || errorMsgLower.includes("username") || errorMsgLower.includes("duplicate_username") || errorData.username) {
         newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
-      } else if (errorMsg.includes("อีเมล") || errorMsg.includes("duplicate_email")) {
-        newErrors.email = "อีเมลนี้มีในระบบแล้ว";
-      } else if (
-        errorMsg.includes("โทรศัพท์") ||
-        errorMsg.includes("เบอร์") ||
-        errorMsg.includes("duplicate_phone")
-      ) {
+      } 
+      if (errorMsgLower.includes("อีเมล") || errorMsgLower.includes("email") || errorMsgLower.includes("duplicate_email") || errorData.email) {
+        newErrors.email = "อีเมลนี้ถูกใช้งานแล้ว";
+      } 
+      if (errorMsgLower.includes("โทรศัพท์") || errorMsgLower.includes("เบอร์") || errorMsgLower.includes("phone") || errorMsgLower.includes("duplicate_phone") || errorData.phone) {
         newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
-      } else {
-        toast.error(errorMsg);
       }
 
-      if (Object.keys(newErrors).length > 0) {
+      const errorKeys = Object.keys(newErrors);
+
+      if (errorKeys.length > 0) {
         setFormErrors((prev) => ({ ...prev, ...newErrors }));
+
+        const combinedErrorMessage = errorKeys.map(key => newErrors[key]).join(" และ ");
+
+        setErrorMessage(combinedErrorMessage);
+      } else {
+        setErrorMessage(errorMsg);
       }
+      setIsShowConfirm(false);
+      setIsShowErrorModal(true);
     }
   };
 
@@ -744,8 +794,8 @@ const EditAccountPage: React.FC = () => {
       <ModalAlert
         isOpen={isShowErrorModal}
         type="error"
-        title="กรอกข้อมูลไม่ครบถ้วน"
-        message="กรุณาตรวจสอบข้อมูลให้ครบก่อนทำการบันทึก"
+        title="ไม่สามารถบันทึกข้อมูลได้"
+        message={errorMessage} 
         onClose={() => setIsShowErrorModal(false)}
       />
     </div>

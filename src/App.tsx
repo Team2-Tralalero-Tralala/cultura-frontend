@@ -31,6 +31,7 @@ import { CreateFeedbackPage } from "./Pages/Tourist/CreateFeedbackPage";
 import { RegisterPage } from "./Pages/Tourist/RegisterPage";
 import ForgetPasswordPage from "./Pages/Tourist/ForgetPasswordPage";
 import CancelBookingPage from "./Pages/Tourist/CancelBookingPage";
+import AccessDeniedPage from "@/Pages/AccessDeniedPage";
 
 function App() {
   return (
@@ -159,6 +160,7 @@ function App() {
         </Route>
 
         {/* fallback */}
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
       </Routes>
     </>
   );

@@ -164,7 +164,8 @@ export function DetailFeedbackPage() {
       .map((item) => item.feedbackItem);
   }, [feedbackLists, sortOrder]);
 
-  const packageName = feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
+  const fetchedPackageName = feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
+  const packageName = fetchedPackageName.split(" โดย ")[0].trim();
 
   const filterOptions: { label: string; value: SortOrder }[] = [
     { label: "ใหม่สุด", value: "newest" },
@@ -227,9 +228,9 @@ export function DetailFeedbackPage() {
       previousFeedbacks.map((feedbackItem) =>
         feedbackItem.id === feedbackId
           ? {
-              ...feedbackItem,
-              replyMessage,
-            }
+            ...feedbackItem,
+            replyMessage,
+          }
           : feedbackItem,
       ),
     );
@@ -245,7 +246,7 @@ export function DetailFeedbackPage() {
       <Breadcrumb
         current={{
           label: packageName,
-          to: `package/feedback/${packageId}`,
+          to: `/member/package/feedbacks/${packageId}`,
         }}
       />
 

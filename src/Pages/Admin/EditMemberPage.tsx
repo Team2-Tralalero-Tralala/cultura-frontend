@@ -29,15 +29,12 @@ const editMemberSchema = zod.object({
     .min(1, "กรุณากรอกอีเมล")
     .refine(
       (val) => val === "" || zod.string().email().safeParse(val).success,
-      "รูปแบบอีเมลไม่ถูกต้อง"
+      "รูปแบบอีเมลไม่ถูกต้อง",
     ),
   phone: zod
     .string()
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
-    .refine(
-      (val) => val === "" || /^0[0-9]{9}$/.test(val),
-      "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"
-    ),
+    .refine((val) => val === "" || /^0[0-9]{9}$/.test(val), "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"),
 });
 
 interface EditMemberBody {
@@ -46,7 +43,7 @@ interface EditMemberBody {
   username: string;
   email: string;
   phone: string;
-  roleId: number;
+  roleId?: number;
   communityRole: string;
 }
 
@@ -77,7 +74,7 @@ const EditMemberPage: React.FC = () => {
   const [isShowConfirm, setIsShowConfirm] = useState(false);
   const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
   const [isShowErrorModal, setIsShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState("");
 
   /**
    * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม (Validation)
@@ -149,7 +146,7 @@ const EditMemberPage: React.FC = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
-    
+
     validateField(id, value);
   };
 
@@ -198,7 +195,6 @@ const EditMemberPage: React.FC = () => {
         username: formData.username.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
-        roleId: 1, 
         communityRole: formData.communityRole.trim(),
       };
 
@@ -215,18 +211,34 @@ const EditMemberPage: React.FC = () => {
 
       const errorResponse = error.response?.data;
       const errorMsg = errorResponse?.message || error.message || "ไม่สามารถบันทึกการแก้ไขได้";
-      const errorData = errorResponse?.errors || {}; 
+      const errorData = errorResponse?.errors || {};
 
       const newErrors: Record<string, string> = {};
       const errorMsgLower = errorMsg.toLowerCase();
 
-      if (errorMsgLower.includes("ชื่อผู้ใช้") || errorMsgLower.includes("username") || errorMsgLower.includes("duplicate_username") || errorData.username) {
+      if (
+        errorMsgLower.includes("ชื่อผู้ใช้") ||
+        errorMsgLower.includes("username") ||
+        errorMsgLower.includes("duplicate_username") ||
+        errorData.username
+      ) {
         newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
-      } 
-      if (errorMsgLower.includes("อีเมล") || errorMsgLower.includes("email") || errorMsgLower.includes("duplicate_email") || errorData.email) {
+      }
+      if (
+        errorMsgLower.includes("อีเมล") ||
+        errorMsgLower.includes("email") ||
+        errorMsgLower.includes("duplicate_email") ||
+        errorData.email
+      ) {
         newErrors.email = "อีเมลนี้ถูกใช้งานแล้ว";
-      } 
-      if (errorMsgLower.includes("โทรศัพท์") || errorMsgLower.includes("เบอร์") || errorMsgLower.includes("phone") || errorMsgLower.includes("duplicate_phone") || errorData.phone) {
+      }
+      if (
+        errorMsgLower.includes("โทรศัพท์") ||
+        errorMsgLower.includes("เบอร์") ||
+        errorMsgLower.includes("phone") ||
+        errorMsgLower.includes("duplicate_phone") ||
+        errorData.phone
+      ) {
         newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
       }
 
@@ -234,7 +246,7 @@ const EditMemberPage: React.FC = () => {
 
       if (errorKeys.length > 0) {
         setFormErrors((prev) => ({ ...prev, ...newErrors }));
-        const combinedErrorMessage = errorKeys.map(key => newErrors[key]).join(" และ ");
+        const combinedErrorMessage = errorKeys.map((key) => newErrors[key]).join(" และ ");
         setErrorMessage(combinedErrorMessage);
       } else {
         setErrorMessage(errorMsg);
@@ -334,7 +346,7 @@ const EditMemberPage: React.FC = () => {
               error={!!formErrors.username}
               helperText={formErrors.username}
             />
-            
+
             <TextField
               id="email"
               label="อีเมล"
@@ -424,7 +436,7 @@ const EditMemberPage: React.FC = () => {
         isOpen={isShowErrorModal}
         type="error"
         title="ไม่สามารถบันทึกข้อมูลได้"
-        message={errorMessage} 
+        message={errorMessage}
         onClose={() => setIsShowErrorModal(false)}
       />
     </div>

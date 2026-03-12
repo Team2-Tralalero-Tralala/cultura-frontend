@@ -34,6 +34,10 @@ interface BookingInfo {
   totalPrice: number;
 }
 
+const maxSlipFileSizeBytes = 10 * 1024 * 1024;
+const allowedSlipMimeTypes = ["image/jpeg", "image/png", "application/pdf"];
+const allowedSlipExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
+
 /*
  * คำอธิบาย : Component สำหรับหน้าชำระเงิน
  * Input : ไม่มี
@@ -120,9 +124,30 @@ export default function BookingPaymentPage() {
    */
   const handleFileChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     const file = changeEvent.target.files?.[0];
-    if (file) {
-      setPaymentProof(file);
+    if (!file) return;
+
+    const fileNameLower = file.name.toLowerCase();
+    const isAllowedByExtension = allowedSlipExtensions.some((extension) =>
+      fileNameLower.endsWith(extension),
+    );
+    const isAllowedByMimeType = allowedSlipMimeTypes.includes(file.type);
+
+    if (!isAllowedByExtension || !isAllowedByMimeType) {
+      setPaymentProof(null);
+      setErrorMessage("รองรับเฉพาะไฟล์ .jpg, .png และ .pdf เท่านั้น");
+      changeEvent.target.value = "";
+      return;
     }
+
+    if (file.size > maxSlipFileSizeBytes) {
+      setPaymentProof(null);
+      setErrorMessage("ขนาดไฟล์ต้องไม่เกิน 10 MB");
+      changeEvent.target.value = "";
+      return;
+    }
+
+    setErrorMessage(null);
+    setPaymentProof(file);
   };
 
   /*
@@ -309,7 +334,7 @@ export default function BookingPaymentPage() {
                 <label className="block">
                   <input
                     type="file"
-                    accept="image/*,.pdf"
+                    accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
                     onChange={handleFileChange}
                     className="hidden"
                     id="payment-proof"

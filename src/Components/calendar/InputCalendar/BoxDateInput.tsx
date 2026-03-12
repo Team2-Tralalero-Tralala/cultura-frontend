@@ -148,7 +148,7 @@ export const BoxDateInput: React.FC<BoxDateInputProps> = ({
   onOpenChange,
   clearable = true,
   onClear,
-  errorText = "รูปแบบวันที่ไม่ถูกต้อง",
+  errorText,
   segmented = true,
 }) => {
   /* ---------- Default range (AD) ---------- */
@@ -311,15 +311,25 @@ export const BoxDateInput: React.FC<BoxDateInputProps> = ({
 
   /* ================================= Render ================================= */
   return (
-    <div ref={wrapperRef} className={`relative w-full ${className ?? ""}`}>
-      {/* NOTE[a11y]: label htmlFor → group div (ไม่ได้โฟกัสอินพุตจริง) แนะนำ <fieldset><legend> ในอนาคต */}
-      {label && (
-        <label htmlFor={inputId} className="text-base font-semibold pl-0.5">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
+    <div ref={wrapperRef} className={`relative w-full h-full flex flex-col ${className ?? ""}`}>
+      {/* Label and Error Wrapper (Flex to put Error on the right) */}
+      <div className="flex items-center justify-between mb-1.5">
+        {label && (
+          <label htmlFor={inputId} className="text-base font-semibold text-gray-800">
+            {label}
+            {required && <span className="text-red-600 ml-0.5">*</span>}
+          </label>
+        )}
 
-      <div className="relative mt-1">
+        {/* ส่วนแสดงข้อความ Error */}
+        {(!isValid || Boolean(errorText)) && (
+          <span id={errorId} className="text-xs text-red-600 ml-2 whitespace-nowrap" role="alert">
+            {errorText || "รูปแบบวันที่ไม่ถูกต้อง"}
+          </span>
+        )}
+      </div>
+
+      <div className="relative mt-auto">
         {/* กล่องแบ่งวัน/เดือน/ปี (BE) */}
         <div
           id={inputId}
@@ -330,13 +340,13 @@ export const BoxDateInput: React.FC<BoxDateInputProps> = ({
             [
               "block w-full",
               "rounded-form",
-              "border-1",
-              isValid && !errorText
-                ? "border-gray-400 focus-within:ring-gray-400 focus-within:border-gray-500"
-                : "border-red-500 focus-within:ring-red-500 focus-within:border-red-500",
+              "border",
+              (!isValid || Boolean(errorText))
+                ? "border-red-600 focus-within:ring-1 focus-within:ring-red-600 focus-within:border-red-600"
+                : "border-gray-400 hover:border-gray-500 focus-within:border-gray-500 focus-within:ring-1 focus-within:ring-gray-400",
               "bg-white px-5 py-2",
               "text-base text-gray-900 placeholder:text-gray-500 leading-relaxed",
-              "focus:outline-none focus-within:ring-1 transition-shadow",
+              "focus:outline-none transition-shadow",
               "flex items-center gap-2 pr-14",
               fontClassName,
             ].join(" ") + (boxClassName ? ` ${boxClassName}` : "")
@@ -440,12 +450,7 @@ export const BoxDateInput: React.FC<BoxDateInputProps> = ({
         </button>
       </div>
 
-      {/* Error text (เชื่อมด้วย aria-describedby) */}
-      {!isValid && (
-        <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
-          {errorText}
-        </p>
-      )}
+
 
       {/* Calendar popover */}
       {isCalendarOpen && !disabled && (

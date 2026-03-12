@@ -4,11 +4,11 @@
 * เลือกแถว + bulk actions + row actions (icons/buttons), ธีมสี, และลายแถวสลับสี
 */
 
-import { useState, useEffect, useRef } from "react";
-import type { DataTableProps } from "./Types";
-import { resolveActions, getActionButtonClass } from "./TablePresets";
-import { themeHead, borderTone, softBg, containerBorderCls, containerRingCls } from "./Theme";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "./Icon";
+import { getActionButtonClass, resolveActions } from "./TablePresets";
+import { borderTone, containerBorderCls, containerRingCls, softBg, themeHead } from "./Theme";
+import type { DataTableProps } from "./Types";
 
 /*
    PageSizeDropdown (Custom)
@@ -48,7 +48,7 @@ function PageSizeDropdown({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="h-9 min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 text-sm inline-flex items-center justify-between gap-2 cursor-pointer"
+        className="h-9 min-w-[72px] rounded-lg border border-slate-300 bg-white px-2 text-lg font-medium text-black inline-flex items-center justify-between gap-2 cursor-pointer"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -74,7 +74,7 @@ function PageSizeDropdown({
                   onChange(opt);
                   setOpen(false);
                 }}
-                className={`w-full px-3 py-2 text-left text-sm ${
+                className={`w-full px-3 py-2 text-left text-lg font-medium text-black ${
                   active ? "bg-[#9EFFA2]/70" : "hover:bg-[#9EFFA2]"
                 } cursor-pointer`}
                 role="option"
@@ -162,7 +162,7 @@ export function DataTable<T extends Record<string, unknown>>({
               {columns.map((c) => (
                 <th
                   key={String(c.key)}
-                  className={`px-4 py-3 text-left text-lg font-light ${c.className ?? ""}`}
+                  className={`px-4 py-3 text-left text-lg font-medium ${c.className ?? ""}`}
                   style={c.width ? { width: c.width } : undefined}
                 >
                   {c.header}
@@ -171,7 +171,7 @@ export function DataTable<T extends Record<string, unknown>>({
               {/* คอลัมน์ "จัดการ" (actions) */}
               {actions && actions?.visible !== false && (
                 <th
-                  className={`px-4 py-3 text-lg font-light ${
+                  className={`px-4 py-3 text-lg font-medium ${
                     actions.align === "left" ? "text-left" : "text-right"
                   } ${actions.className ?? ""}`}
                   style={actions.width ? { width: actions.width } : undefined}
@@ -186,7 +186,7 @@ export function DataTable<T extends Record<string, unknown>>({
           <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={columns.length + (selectable ? 1 : 0) + (actions?.visible === false || !actions ? 0 : 1)} className="px-4 text-center text-sm font-light text-slate-500 h-12 align-middle">
+                  <td colSpan={columns.length + (selectable ? 1 : 0) + (actions?.visible === false || !actions ? 0 : 1)} className="px-4 text-center text-base font-normal text-black h-12 align-middle">
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand"></div>
                     </div>
@@ -223,7 +223,13 @@ export function DataTable<T extends Record<string, unknown>>({
                       className={`px-4 text-base text-black font-normal ${column.className ?? ""} ${rowCellBase}`}
                       style={column.width ? { width: column.width } : undefined}
                     >
-                      {column.render ? column.render(rowData) : String((rowData as any)[column.key] ?? "")}
+                      {column.render ? (
+                        column.render(rowData)
+                      ) : (
+                        <span className="block max-w-[240px] truncate" title={String((rowData as any)[column.key] ?? "")}>
+                          {String((rowData as any)[column.key] ?? "")}
+                        </span>
+                      )}
                     </td>
                   ))}
 
@@ -293,7 +299,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   colSpan={
                     columns.length + (selectable ? 1 : 0) + (actions?.visible === false || !actions ? 0 : 1)
                   }
-                  className={`px-4 text-center text-sm font-light text-slate-500 ${rowCellBase}`}
+                  className={`px-4 text-center text-base font-normal text-black ${rowCellBase}`}
                 >
                   ไม่มีข้อมูล
                 </td>
@@ -311,7 +317,7 @@ export function DataTable<T extends Record<string, unknown>>({
         <div className="flex items-center justify-between gap-3 mb-2">
           {selected.length > 0 ? (
             <>
-              <span className="text-sm font-light text-slate-700">
+              <span className="text-lg font-medium text-black">
                 เลือก <b>{selected.length}</b> แถว จากทั้งหมด <b>{pagination.limit}</b> แถว
               </span>
               <div className="flex items-center gap-2">
@@ -330,7 +336,7 @@ export function DataTable<T extends Record<string, unknown>>({
             </>
           ) : (
             <>
-              <span className="text-sm font-light text-slate-700">
+              <span className="text-lg font-medium text-black">
                 ทั้งหมด <b>{data.length.toLocaleString()}</b> แถว
               </span>
               <span />
@@ -339,9 +345,9 @@ export function DataTable<T extends Record<string, unknown>>({
         </div>
 
         {/* แถวล่าง: Page size (ซ้าย) + paginate (ขวา) */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm">
-            <label className="text-slate-700">จำนวนแถวต่อหน้า :</label>
+        <div className="flex items-center justify-between gap-3 text-lg font-medium text-black">
+          <div className="flex items-center gap-2">
+            <label className="text-black">จำนวนแถวต่อหน้า :</label>
             <PageSizeDropdown
               value={pagination.limit}
               options={pageSizeOptions}
@@ -351,7 +357,7 @@ export function DataTable<T extends Record<string, unknown>>({
             />
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-slate-700">
+          <div className="flex items-center gap-2 text-lg font-medium text-black">
             <span>
               {Math.max((pagination.currentPage-1) * pagination.limit +1, 1)}-{Math.min((pagination.currentPage) * pagination.limit, pagination.totalCount)} จาก {pagination.totalCount.toLocaleString()}
             </span>

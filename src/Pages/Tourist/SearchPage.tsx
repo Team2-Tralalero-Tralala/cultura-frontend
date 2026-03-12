@@ -340,6 +340,12 @@ export default function SearchPage() {
           endDate: filters.endDate,
           tags: filters.tags.length > 0 ? filters.tags : undefined,
           sort: sortBy,
+          searchRange:
+            filters.activityType === "one-day"
+              ? "singleDay"
+              : filters.activityType === "multi-day"
+                ? "MultipleDay"
+                : "MultipleDay",
         },
       );
 
@@ -390,6 +396,7 @@ export default function SearchPage() {
     tagParam,
     filters.minPrice,
     filters.maxPrice,
+    filters.activityType,
     filters.startDate,
     filters.endDate,
     filters.tags,
@@ -457,6 +464,7 @@ export default function SearchPage() {
     pagination.currentPage,
     filters.minPrice,
     filters.maxPrice,
+    filters.activityType,
     filters.startDate,
     filters.endDate,
     filters.tags,

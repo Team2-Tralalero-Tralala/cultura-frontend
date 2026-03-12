@@ -211,7 +211,7 @@ export interface SearchOverviewResponse {
  *   - query (string | null) - คำค้นหา
  *   - page (number) - หน้าปัจจุบัน
  *   - limit (number) - จำนวนรายการต่อหน้า
- *   - filters (object) - ตัวกรองเพิ่มเติม (priceMin, priceMax, startDate, endDate, tags, sort)
+ *   - filters (object) - ตัวกรองเพิ่มเติม (priceMin, priceMax, startDate, endDate, tags, sort, searchRange)
  * Output : Promise<TransformedSearchOverviewData> - ข้อมูลการค้นหาประกอบด้วย packages, communities และ pagination
  */
 export async function fetchSearchOverview(
@@ -226,6 +226,7 @@ export async function fetchSearchOverview(
     endDate?: string | null;
     tags?: string[];
     sort?: string;
+    searchRange?: "singleDay" | "MultipleDay";
   },
 ): Promise<TransformedSearchOverviewData> {
   const params: Record<string, string | number> = {
@@ -272,6 +273,11 @@ export async function fetchSearchOverview(
   // เพิ่มตัวกรองการเรียงลำดับ
   if (filters?.sort) {
     params.sort = filters.sort;
+  }
+
+  // เพิ่มตัวกรองช่วงประเภทกิจกรรม
+  if (filters?.searchRange) {
+    params.searchRange = filters.searchRange;
   }
 
   const response = await api.get<SearchOverviewResponse>("/tourist/search/overview", {

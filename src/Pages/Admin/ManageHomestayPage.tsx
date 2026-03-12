@@ -50,8 +50,7 @@ export default function ManageHomestayPage() {
   const reload = useCallback(async () => {
     try {
       setIsLoading(true);
-
-      const res = await getHomestaysAllAdmin(currentPage, pageSize);
+      const res = await getHomestaysAllAdmin(currentPage, pageSize, searchQuery);
       
       const homestayList = res.data?.data || [];
       const pagination = res.data?.pagination || {};
@@ -70,10 +69,14 @@ export default function ManageHomestayPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchQuery]);
 
   useEffect(() => {
-    reload();
+    const handler = setTimeout(() => {
+      reload();
+    }, 500);
+
+    return () => clearTimeout(handler);
   }, [reload]);
 
   /**
@@ -195,6 +198,7 @@ export default function ManageHomestayPage() {
               value={searchQuery} 
               onChange={(e) => {
                 setSearchQuery(e.target.value);
+                setCurrentPage(1);
               }} 
             />
           </div>
@@ -209,7 +213,6 @@ export default function ManageHomestayPage() {
       {/* Section: Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <DataTable<HomestayRow>
-          key={`table-page-${currentPage}`}
           data={rows}
           columns={columns}
           getKey={(row) => String(row.id)}

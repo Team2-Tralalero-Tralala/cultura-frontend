@@ -4,7 +4,6 @@
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
 import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
@@ -27,15 +26,12 @@ const editProfileSchema = zod.object({
     .min(1, "กรุณากรอกอีเมล")
     .refine(
       (val) => val === "" || zod.string().email().safeParse(val).success,
-      "รูปแบบอีเมลไม่ถูกต้อง"
+      "รูปแบบอีเมลไม่ถูกต้อง",
     ),
   phone: zod
     .string()
     .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
-    .refine(
-      (val) => val === "" || /^0[0-9]{9}$/.test(val),
-      "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"
-    ),
+    .refine((val) => val === "" || /^0[0-9]{9}$/.test(val), "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"),
 });
 
 /**
@@ -111,7 +107,6 @@ export const EditProfilePage: React.FC = () => {
       }
       setAvatarUrl(imageUrl);
     } catch (error: any) {
-      toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
       navigate(-1);
     }
   };

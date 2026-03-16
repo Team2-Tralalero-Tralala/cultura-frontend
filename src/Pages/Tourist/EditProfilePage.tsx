@@ -3,7 +3,6 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 
 import api from "@/Libs/Api";
 import NavbarTourist from "@/Components/Navbar/NavbarTourist";
@@ -102,7 +101,6 @@ const EditProfilePage: React.FC = () => {
       }
     } catch (error) {
       console.error(error);
-      toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
       navigate(-1);
     }
   }, [navigate]);

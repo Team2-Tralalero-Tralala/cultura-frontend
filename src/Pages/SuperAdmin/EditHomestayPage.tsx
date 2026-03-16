@@ -187,7 +187,7 @@ export default function EditHomestayPage() {
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [tagIds, setTagIds] = React.useState<number[]>([]);
-
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = React.useState(false);
   /**
    * คำอธิบาย : โหลดข้อมูลที่พักจาก API และแปลง URL รูปภาพเป็น File Object
    * Input : -
@@ -262,17 +262,17 @@ export default function EditHomestayPage() {
         setGalleryFiles(galleryFilesFetched);
         const currentTagIds: number[] = Array.isArray(homestayData?.tagHomestays)
           ? homestayData.tagHomestays
-              .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
-              .filter((tagId: any) => typeof tagId === "number")
+            .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
+            .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(currentTagIds);
       } catch (error: any) {
         console.error("Load homestay error:", error?.response?.data || error);
         setErrorMessage(
           error?.response?.data?.message ||
-            error?.response?.data?.error ||
-            error?.message ||
-            "โหลดข้อมูลไม่สำเร็จ",
+          error?.response?.data?.error ||
+          error?.message ||
+          "โหลดข้อมูลไม่สำเร็จ",
         );
       } finally {
         setIsLoading(false);
@@ -362,7 +362,31 @@ export default function EditHomestayPage() {
     // เปิด Modal ยืนยันทันที
     setConfirmOpen(true);
   };
+  /**
+   * คำอธิบาย: ตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input: -
+   * Output: boolean (true หากมีการแก้ไขข้อมูลอย่างใดอย่างหนึ่ง)
+   */
+  const checkIsDirty = () => {
+    const isFormDirty = JSON.stringify(form) !== JSON.stringify(form);
+    const isFilesDirty = coverFiles.length > 0 || galleryFiles.length > 0;
+    const isTagsDirty = tagIds.length > 0;
 
+    return isFormDirty || isFilesDirty || isTagsDirty;
+  };
+
+  /**
+   * คำอธิบาย: จัดการเมื่อกดปุ่มยกเลิก หากมีการแก้ไขจะแสดง Modal ยืนยัน
+   * Input: -
+   * Output: - (Navigate หรือเปิด Modal Confirm)
+   */
+  const handleCancel = () => {
+    if (checkIsDirty()) {
+      setIsCancelConfirmOpen(true);
+    } else {
+      navigate(-1);
+    }
+  };
   /**
    * คำอธิบาย : ตรวจสอบข้อมูล สร้าง FormData และส่ง Request แบบ PUT ไปยัง API
    * Input : -
@@ -690,10 +714,7 @@ export default function EditHomestayPage() {
             <div className="w-36">
               <Button
                 type="cancel"
-                onClick={() =>
-                  communityId
-                    ? navigate(`/super/community/${communityId}/homestay/all`)
-                    : navigate(-1)
+                onClick={handleCancel
                 }
               >
                 ยกเลิก
@@ -732,6 +753,20 @@ export default function EditHomestayPage() {
             else navigate(-1);
           }
         }}
+      />
+
+      {/* Modal ยืนยันการยกเลิก */}
+      <Modal
+        isOpen={isCancelConfirmOpen}
+        title="ยืนยันการยกเลิก"
+        text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setIsCancelConfirmOpen(false);
+          navigate(-1);
+        }}
+        onCancel={() => setIsCancelConfirmOpen(false)}
       />
     </div>
   );

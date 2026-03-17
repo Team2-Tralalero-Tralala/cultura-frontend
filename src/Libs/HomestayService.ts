@@ -34,9 +34,12 @@ export async function fetchHomestayDetail(homestayId: number) {
  * Input: ไม่มี
  * Output: รายการข้อมูลที่พักทั้งหมด
  */
-export async function getHomestaysAllAdmin() {
-  const res = await api.get(`/admin/community/homestays/all`);
-  return res.data?.data;
+export async function getHomestaysAllAdmin(page: number, limit: number, search?: string) {
+  const res = await api.get(`/admin/community/homestays/all`, {
+    params: { page, limit, search },
+    withCredentials: true,
+  });
+  return res.data;
 }
 
 /**

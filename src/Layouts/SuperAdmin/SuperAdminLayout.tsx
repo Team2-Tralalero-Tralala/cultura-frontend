@@ -5,8 +5,6 @@
 import { Outlet } from "react-router-dom";
 import SidebarSuperAdmin from "../../Components/Sidebar/SidebarSuperAdmin";
 import NavbarSuperAdmin from "../../Components/Navbar/NavbarSam";
-import { ToastContainer } from "react-toastify"; 
-import "react-toastify/dist/ReactToastify.css"; 
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Layout ของผู้ใช้กลุ่ม Super Admin
@@ -28,18 +26,6 @@ export default function SuperAdminLayout() {
         <main className="flex-1 overflow-auto bg-[#F0F0F0] pl-6 pr-6 py-6">
           <Outlet />
         </main>
-
-        {/* ToastContainer สำหรับ popup แจ้งเตือน */}
-        <ToastContainer
-          position="top-right"
-          autoClose={2500}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          pauseOnHover
-          draggable
-          theme="light"
-        />
       </div>
     </div>
   );

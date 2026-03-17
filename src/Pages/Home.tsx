@@ -89,7 +89,7 @@ export default function Home() {
       bookingStart: packageData.startDate || null,
       bookingEnd: packageData.dueDate || null,
       bookingStatus: "OPEN" as const,
-      booked: 0,
+      booked: packageData.booked || 0,
       capacity: packageData.capacity || undefined,
       tags: packageData.tags.map((tag) => tag.name),
       priceTHB: packageData.price || undefined,

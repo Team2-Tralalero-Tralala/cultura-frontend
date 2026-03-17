@@ -120,7 +120,7 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
   };
 
   return (
-    <div className={`relative w-full ${className ?? ""}`}>
+    <div className={`relative w-full h-full flex flex-col ${className ?? ""}`}>
       {/* ปรับ Label Wrapper เป็น flex เพื่อใส่ Error ด้านขวา */}
       <div className="flex items-center justify-between mb-1.5">
         {label && (
@@ -138,7 +138,7 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
         )}
       </div>
 
-      <div className="relative mt-1" ref={pickerRef}>
+      <div className="relative mt-auto" ref={pickerRef}>
         {/* กล่องหลัก */}
         <div
           id={inputId}
@@ -147,7 +147,9 @@ export const BoxTimeInput: React.FC<BoxTimeInputProps> = ({
             "flex items-center justify-between w-full rounded-form border px-4 py-2 cursor-pointer",
             "bg-white font-sarabun text-base transition-all",
             disabled ? "opacity-60 cursor-not-allowed" : "hover:border-gray-500",
-            hasError ? "border-red-500 ring-1 ring-red-500" : "border-gray-400",
+            hasError
+              ? `border-red-600 ${showPicker ? "ring-1 ring-red-600" : ""}`
+              : `border-gray-400 ${showPicker ? "ring-1 ring-gray-400 border-gray-500" : ""}`,
           ].join(" ")}
           style={{ height: resolvedHeight }}
         >

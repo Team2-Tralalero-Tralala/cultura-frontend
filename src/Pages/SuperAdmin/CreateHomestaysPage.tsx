@@ -124,7 +124,7 @@ if (typeof window !== "undefined" && !window.__tagsInterceptorAdded) {
             (response as any).data.data = Array.isArray(tagList) ? tagList : [];
           }
         }
-      } catch {}
+      } catch { }
       return response;
     },
     (error) => Promise.reject(error),
@@ -151,6 +151,7 @@ export default function CreateHomestaysPage() {
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = React.useState(false);
   /**
    * คำอธิบาย: อัปเดตฟิลด์ในฟอร์ม และ validate ฟิลด์นั้นทันที
    * Input: key (keyof HomestayForm), value (any) - ข้อมูลที่ต้องการอัปเดต
@@ -209,6 +210,31 @@ export default function CreateHomestaysPage() {
   }
 
   /**
+   * คำอธิบาย: ตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input: -
+   * Output: boolean (true หากมีการแก้ไขข้อมูลอย่างใดอย่างหนึ่ง)
+   */
+  const checkIsDirty = () => {
+    const isFormDirty = JSON.stringify(form) !== JSON.stringify(initialHomestay);
+    const isFilesDirty = coverFiles.length > 0 || galleryFiles.length > 0;
+    const isTagsDirty = tagIds.length > 0;
+
+    return isFormDirty || isFilesDirty || isTagsDirty;
+  };
+
+  /**
+   * คำอธิบาย: จัดการเมื่อกดปุ่มยกเลิก หากมีการแก้ไขจะแสดง Modal ยืนยัน
+   * Input: -
+   * Output: - (Navigate หรือเปิด Modal Confirm)
+   */
+  const handleCancel = () => {
+    if (checkIsDirty()) {
+      setIsCancelConfirmOpen(true);
+    } else {
+      navigate(-1);
+    }
+  };
+  /**
    * คำอธิบาย: handler สำหรับ MapPicker อัปเดต latitude/longitude ในฟอร์ม
    * Input: position ([number, number]) - พิกัดละติจูดและลองจิจูด
    * Output: - (Update form state)
@@ -222,12 +248,12 @@ export default function CreateHomestaysPage() {
     }));
   }, []);
 
-/**
-   * ฟังก์ชันยืนยันการบันทึก (ทำงานเมื่อกดปุ่ม "ยืนยัน" ใน Modal)
-   * - ตรวจสอบข้อมูล (Validate)
-   * - หากข้อมูลผิดพลาด: ปิด Modal ยืนยัน -> แสดง ModalAlert แจ้งเตือน
-   * - หากข้อมูลถูกต้อง: สร้าง Payload -> ส่ง API
-   */
+  /**
+     * ฟังก์ชันยืนยันการบันทึก (ทำงานเมื่อกดปุ่ม "ยืนยัน" ใน Modal)
+     * - ตรวจสอบข้อมูล (Validate)
+     * - หากข้อมูลผิดพลาด: ปิด Modal ยืนยัน -> แสดง ModalAlert แจ้งเตือน
+     * - หากข้อมูลถูกต้อง: สร้าง Payload -> ส่ง API
+     */
   const onConfirmSave = async () => {
     setIsConfirmOpen(false);
     const isFormValid = validateAll()
@@ -543,7 +569,7 @@ export default function CreateHomestaysPage() {
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-2 mt-6">
             <div className="w-36">
-              <Button type="cancel" onClick={() => history.back()}>
+              <Button type="cancel" onClick={handleCancel}>
                 ยกเลิก
               </Button>
             </div>
@@ -577,6 +603,20 @@ export default function CreateHomestaysPage() {
         title={alertTitle}
         message={alertMessage}
         onClose={() => setIsAlertOpen(false)}
+      />
+
+      {/* Modal ยืนยันการยกเลิก */}
+      <Modal
+        isOpen={isCancelConfirmOpen}
+        title="ยืนยันการยกเลิก"
+        text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setIsCancelConfirmOpen(false);
+          navigate(-1);
+        }}
+        onCancel={() => setIsCancelConfirmOpen(false)}
       />
     </div>
   );

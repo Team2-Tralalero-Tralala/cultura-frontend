@@ -105,7 +105,7 @@ export function ResetPasswordPage() {
 
       setTimeout(() => {
         setIsAlertOpen(false);
-        navigate("/super/accounts/all");
+        navigate(-1);
       }, 2000);
     } catch (error) {
       setAlertType("error");

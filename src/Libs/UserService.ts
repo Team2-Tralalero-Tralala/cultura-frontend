@@ -16,9 +16,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
  */
 export async function resetPassword(userId: number, newPassword: string) {
   return await axios.patch(
-    `${apiUrl}/super/account/${userId}/reset-password`,
+    `${apiUrl}/shared/account/${userId}/reset-password`,
     { newPassword },
-    { withCredentials: true }
+    { withCredentials: true },
   );
 }
 
@@ -35,10 +35,7 @@ export async function resetPassword(userId: number, newPassword: string) {
  *   - ส่งคำขอ GET ไปยัง API `/admin/community/member/all`
  *   - คืนค่า Promise ของ axios response (รายการสมาชิก + pagination)
  */
-export async function getCommunityMembersByAdmin(
-  page: number = 1,
-  limit: number = 10
-) {
+export async function getCommunityMembersByAdmin(page: number = 1, limit: number = 10) {
   return await axios.get(`${apiUrl}/admin/member/all`, {
     params: { page, limit },
     withCredentials: true,
@@ -59,9 +56,5 @@ export async function getCommunityMembersByAdmin(
  *   - คืนค่า Promise ของ axios response
  */
 export async function softDeleteCommunityMemberByAdmin(memberId: number) {
-  return await axios.patch(
-    `${apiUrl}/admin/member/${memberId}`,
-    {},
-    { withCredentials: true }
-  );
+  return await axios.patch(`${apiUrl}/admin/member/${memberId}`, {}, { withCredentials: true });
 }

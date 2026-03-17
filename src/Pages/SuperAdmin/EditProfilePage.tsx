@@ -1,11 +1,10 @@
 /**
  * คำอธิบาย: หน้าสำหรับแก้ไขข้อมูลส่วนตัวของผู้ใช้งานที่ล็อกอินอยู่
  * ดึงข้อมูลโปรไฟล์ แก้ไขข้อมูล และบันทึกการเปลี่ยนแปลง
-
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { toast } from "react-toastify";
+import zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
@@ -14,6 +13,26 @@ import Button from "../../Components/Button";
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { editProfile } from "@/Libs/AccountService";
+
+const editProfileSchema = zod.object({
+  fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+  lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+  username: zod
+    .string()
+    .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+    .regex(/^[a-zA-Z0-9]+$/, "ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น"),
+  email: zod
+    .string()
+    .min(1, "กรุณากรอกอีเมล")
+    .refine(
+      (val) => val === "" || zod.string().email().safeParse(val).success,
+      "รูปแบบอีเมลไม่ถูกต้อง",
+    ),
+  phone: zod
+    .string()
+    .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
+    .refine((val) => val === "" || /^0[0-9]{9}$/.test(val), "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง"),
+});
 
 /**
  * คำอธิบาย: Interface สำหรับโครงสร้างข้อมูลโปรไฟล์
@@ -44,6 +63,8 @@ export const EditProfilePage: React.FC = () => {
     lname: "",
     phone: "",
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -86,7 +107,6 @@ export const EditProfilePage: React.FC = () => {
       }
       setAvatarUrl(imageUrl);
     } catch (error: any) {
-      toast.error("ไม่สามารถโหลดข้อมูลสมาชิกได้");
       navigate(-1);
     }
   };
@@ -94,6 +114,20 @@ export const EditProfilePage: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const validateForm = () => {
+    const result = editProfileSchema.safeParse(formData);
+    if (!result.success) {
+      const validationErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        validationErrors[issue.path[0] as string] = issue.message;
+      });
+      setFormErrors(validationErrors);
+      return false;
+    }
+    setFormErrors({});
+    return true;
+  };
 
   /**
    * คำอธิบาย: จัดการการเปลี่ยนแปลงค่าของ input ในฟอร์ม
@@ -103,6 +137,21 @@ export const EditProfilePage: React.FC = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+
+    if (formErrors[id]) {
+      setFormErrors((prev) => ({ ...prev, [id]: undefined }));
+    }
+  };
+
+  const handlePreCheck = () => {
+    const isFormValid = validateForm();
+
+    if (!isFormValid) {
+      setErrorMessage("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
+      setIsErrorModalOpen(true);
+    } else {
+      setIsConfirmModalOpen(true);
+    }
   };
 
   /**
@@ -194,6 +243,8 @@ export const EditProfilePage: React.FC = () => {
                 required
                 value={formData.fname}
                 onChange={handleChange}
+                error={!!formErrors.fname}
+                helperText={formErrors.fname}
               />
               <TextField
                 id="lname"
@@ -202,6 +253,8 @@ export const EditProfilePage: React.FC = () => {
                 required
                 value={formData.lname}
                 onChange={handleChange}
+                error={!!formErrors.lname}
+                helperText={formErrors.lname}
               />
             </div>
 
@@ -212,6 +265,8 @@ export const EditProfilePage: React.FC = () => {
               required
               value={formData.username}
               onChange={handleChange}
+              error={!!formErrors.username}
+              helperText={formErrors.username}
             />
 
             <TextField
@@ -221,6 +276,8 @@ export const EditProfilePage: React.FC = () => {
               required
               value={formData.email}
               onChange={handleChange}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
             />
 
             <TextField
@@ -230,6 +287,8 @@ export const EditProfilePage: React.FC = () => {
               required
               value={formData.phone}
               onChange={handleChange}
+              error={!!formErrors.phone}
+              helperText={formErrors.phone}
             />
           </div>
         </div>
@@ -241,7 +300,7 @@ export const EditProfilePage: React.FC = () => {
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
+            <Button type="confirm-admin" onClick={handlePreCheck}>
               บันทึก
             </Button>
           </div>

@@ -151,11 +151,10 @@ export function TagSelector({
                   type="text"
                   placeholder="ค้นหาแท็ก เช่น เดินป่า ทะเล ภูเขา"
                   className={`block w-full rounded-form border pl-10 pr-5 py-2 text-base text-gray-900 placeholder:text-gray-500 leading-relaxed transition-shadow outline-none
-                  ${
-                    error
-                      ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-400"
+                  ${error
+                      ? "border-red-600 focus:border-red-600 focus:ring-1 focus:ring-red-600"
                       : "border-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-400"
-                  }`}
+                    }`}
                 />
                 {InputProps.endAdornment && <div className="hidden">{InputProps.endAdornment}</div>}
               </div>

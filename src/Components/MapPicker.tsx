@@ -4,13 +4,13 @@
  * รองรับการค้นหาพิกัดด้วย OpenStreetMapProvider
  */
 
+import { Icon } from "@iconify/react";
+import type { Map as LeafletMap } from "leaflet";
+import { OpenStreetMapProvider } from "leaflet-geosearch";
 import React from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import { OpenStreetMapProvider } from "leaflet-geosearch";
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./ui/popover";
-import type { Map as LeafletMap } from "leaflet";
-import { Icon } from "@iconify/react";
 import TextField from "./Input/TextField";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 /*
  * คำอธิบาย : Component ย่อยสำหรับเปลี่ยนมุมมองแผนที่ไปยัง center ใหม่
@@ -70,8 +70,8 @@ function MapPicker({
 
   // State หลักเก็บพิกัด, lat, lng, และข้อความค้นหา
   const [position, setPosition] = React.useState<[number, number]>(startingPosition);
-  const [lat, setLat] = React.useState<number>(startingPosition[0]);
-  const [lng, setLng] = React.useState<number>(startingPosition[1]);
+  const [latInput, setLatInput] = React.useState<string>(String(startingPosition[0]));
+  const [lngInput, setLngInput] = React.useState<string>(String(startingPosition[1]));
   const [search, setSearch] = React.useState<string>("");
 
   // แจ้ง parent เมื่อ position เปลี่ยน
@@ -96,21 +96,26 @@ function MapPicker({
 
   // sync lat/lng กับตำแหน่ง marker
   React.useEffect(() => {
-    setLat(position[0]);
-    setLng(position[1]);
+    setLatInput(String(position[0]));
+    setLngInput(String(position[1]));
   }, [position]);
 
   // อัปเดตตำแหน่งเมื่อแก้ไขค่า lat/lng ใน input
   const handleLatChange = (v: string) => {
+    setLatInput(v);
+    if (!v.trim()) return;
     const n = Number(v);
-    setLat(n);
     if (!Number.isNaN(n)) setPosition([n, position[1]]);
   };
   const handleLngChange = (v: string) => {
+    setLngInput(v);
+    if (!v.trim()) return;
     const n = Number(v);
-    setLng(n);
     if (!Number.isNaN(n)) setPosition([position[0], n]);
   };
+
+  const isLatitudeInvalid = !latInput.trim() || Number(latInput) === 0;
+  const isLongitudeInvalid = !lngInput.trim() || Number(lngInput) === 0;
 
   const [results, setResults] = React.useState<any[]>([]); // เก็บผลลัพธ์ค้นหา
 
@@ -167,10 +172,12 @@ function MapPicker({
                 type="number"
                 required
                 label="ละติจูด"
-                value={lat}
+                value={latInput}
                 onChange={(e) => handleLatChange(e.target.value)}
                 name="latitude"
                 placeholder="ป้อนละติจูดของที่ตั้งวิสาหกิจชุมชน"
+                error={isLatitudeInvalid}
+                helperText={isLatitudeInvalid ? "กรุณากรอกลองละติจูด" : ""}
               />
             </div>
             <div className="flex flex-1 flex-col">
@@ -179,10 +186,12 @@ function MapPicker({
                 type="number"
                 required
                 label="ลองจิจูด"
-                value={lng}
+                value={lngInput}
                 onChange={(e) => handleLngChange(e.target.value)}
                 name="longitude"
                 placeholder="ป้อนลองจิจูดของที่ตั้งวิสาหกิจชุมชน"
+                error={isLongitudeInvalid}
+                helperText={isLongitudeInvalid ? "กรุณากรอกลองจิจูด" : ""}
               />
             </div>
           </div>

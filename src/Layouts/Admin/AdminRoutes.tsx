@@ -38,8 +38,7 @@ import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
 import { CreateStorePage } from "@/Pages/Admin/CreateStorePage";
 import { EditStorePage } from "@/Pages/Admin/EditStorePage";
 import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage";
-import { ResetPasswordPage } from "@/Pages/Admin/ResetPasswordPage";
-
+import { ResetPasswordPage } from "@/Pages/SuperAdmin/ResetPasswordPage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin

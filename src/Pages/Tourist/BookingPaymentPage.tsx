@@ -13,6 +13,7 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /*
  * Interface สำหรับข้อมูลแพ็กเกจ
@@ -59,6 +60,7 @@ export default function BookingPaymentPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   /*
    * คำอธิบาย : ดึงข้อมูลแพ็กเกจหรือใช้ข้อมูลจาก state
@@ -430,6 +432,14 @@ export default function BookingPaymentPage() {
           </div>
         </div>
       </div>
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type="error"
+        title="ขนาดไฟล์เกินกำหนด"
+        message="ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB"
+        onClose={() => setIsAlertOpen(false)}
+      />
 
       <Footer />
     </div>

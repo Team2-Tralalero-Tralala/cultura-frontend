@@ -5,6 +5,8 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import Cropper from "react-easy-crop";
+import { toast } from "react-toastify";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /**
  * คำอธิบาย: ครอปภาพตามขนาดที่กำหนดและแปลงกลับเป็นไฟล์ใหม่
@@ -89,6 +91,8 @@ export default function AvatarUploader({
   const uid = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const avatarPreviewUrl = useObjectUrl(avatarFile, avatarUrl);
 
@@ -121,6 +125,11 @@ export default function AvatarUploader({
    */
   const handleAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const selectedFile = event.target.files?.[0] ?? null;
+    if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
+      setIsAlertOpen(true);
+      event.currentTarget.value = "";
+      return;
+    }
     setAvatarFile(selectedFile);
     event.currentTarget.value = "";
     if (isAutoCropOnPick && selectedFile && selectedFile.type.startsWith("image/")) {
@@ -275,6 +284,14 @@ export default function AvatarUploader({
           </div>
         </div>
       )}
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type="error"
+        title="ขนาดไฟล์เกินกำหนด"
+        message="ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </>
   );
 }

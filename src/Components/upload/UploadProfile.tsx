@@ -9,6 +9,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import Cropper from "react-easy-crop";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /**
  * ฟังก์ชัน: cropImageToFile
@@ -168,6 +169,8 @@ export default function UploadProfile({
   const rootRef = useRef<HTMLElement | null>(null);
   const coverButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
   /** ---------- State: ไฟล์ต้นฉบับ/ไฟล์ที่ครอปแล้ว ---------- */
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -307,6 +310,12 @@ export default function UploadProfile({
    */
   const onCoverPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const pickedFile = e.target.files?.[0] ?? null;
+    if (pickedFile && pickedFile.size > 5 * 1024 * 1024) {
+      setIsAlertOpen(true);
+      e.currentTarget.value = "";
+      return;
+    }
+
     setCoverFile(pickedFile);
     setCoverCroppedFile(null);
     e.currentTarget.value = "";
@@ -327,6 +336,12 @@ export default function UploadProfile({
    */
   const onAvatarPicked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const pickedFile = e.target.files?.[0] ?? null;
+    if (pickedFile && pickedFile.size > 5 * 1024 * 1024) {
+      setIsAlertOpen(true);
+      e.currentTarget.value = "";
+      return;
+    }
+
     setAvatarFile(pickedFile);
     setAvatarCroppedFile(null);
     e.currentTarget.value = "";
@@ -598,6 +613,14 @@ export default function UploadProfile({
           </div>
         </div>
       )}
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type="error"
+        title="ขนาดไฟล์เกินกำหนด"
+        message="ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </>
   );
 }

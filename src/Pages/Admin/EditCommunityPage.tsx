@@ -42,7 +42,9 @@ const communitySchema = zod.object({
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
   bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
   accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: zod.coerce
+    .number("กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข")
+    .min(1, "กรุณากรอกหมายเลขบัญชี"),
   description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
   mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
   mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
@@ -53,6 +55,7 @@ const communitySchema = zod.object({
   postalCode: zod.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
   latitude: zod.string().min(1, "กรุณากรอกละติจูด"),
   longitude: zod.string().min(1, "กรุณากรอกลองจิจูด"),
+  detail: zod.string("กรุณากรอกคำอธิบายที่อยู่").min(1, "กรุณากรอกคำอธิบายที่อยู่"),
   phone: zod.string().min(1, "กรุณากรอกหมายเลขโทรศัพท์ของวิสาหกิจชุมชน"),
   email: zod.string().min(1, "กรุณากรอกอีเมลของวิสาหกิจชุมชน"),
   mainAdmin: zod.string().min(1, "กรุณากรอกชื่อผู้ดูแลหลัก"),
@@ -317,7 +320,7 @@ export default function EditCommunityPage() {
         setIsVisibleRating(data.isRatingVisible);
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "/uploads/") || "http://localhost:3000";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
         const { logo, cover, gallery, video } = await fetchCommunityFiles(
           data.communityImage,

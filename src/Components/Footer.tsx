@@ -4,6 +4,8 @@
 * โครงสร้างแบ่งเป็น 2 ส่วนหลัก: คอลัมน์ลิงก์ และแถบลิขสิทธิ์ด้านล่าง
 */
 
+import { Link } from "react-router-dom";
+
 export default function Footer() {
   return (
     <footer className="border-t">
@@ -15,14 +17,14 @@ export default function Footer() {
             <h3 className="text-xl font-semibold">พาร์ทเนอร์</h3>
             <ul className="mt-2 space-y-2 text-gray-600">
               <li>
-                <a href="#" className="hover:text-black">
+                <Link to="/guest/partner/login" className="hover:text-black">
                   เข้าสู่ระบบวิสาหกิจชุมชน
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-black">
+                <Link to="/guest/partner/register" className="hover:text-black">
                   ลงทะเบียนวิสาหกิจชุมชน
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

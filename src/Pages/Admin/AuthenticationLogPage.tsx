@@ -32,7 +32,7 @@ const thaiRoleName = (role: string) => {
     case "member":
       return "สมาชิก";
     case "tourist":
-      return "นักท่องเที่ยว";
+      return "ผู่ใช้ทั่วไป";
     default:
       return role;
   }
@@ -105,7 +105,7 @@ export default function AuthenticationLogPage() {
     { label: "ผู้ดูแลระบบ", value: "superadmin" },
     { label: "ผู้ดูแลชุมชน", value: "admin" },
     { label: "สมาชิก", value: "member" },
-    { label: "นักท่องเที่ยว", value: "tourist" },
+    { label: "ผู่ใช้ทั่วไป", value: "tourist" },
   ];
   const [filterRole, setFilterRole] = useState(optionsCM[0].value);
 

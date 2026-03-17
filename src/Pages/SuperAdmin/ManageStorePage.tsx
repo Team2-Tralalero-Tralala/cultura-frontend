@@ -45,13 +45,15 @@ type StoreFromApi = {
 
 
 /**
- * คำอธิบาย: กำหนดคอลัมน์ของตารางร้านค้า
+ * คำอธิบาย: 
+ * Input: -
+ * Output: -
  */
 const columns: Column<StoreRow>[] = [
   {
     key: "name",
     header: "ชื่อร้านค้า",
-    className: "min-w-[200px]",
+    className: "min-w-[150px]",
     render: (row) => (
       <Link to={`/super/store/${row.id}`} className="hover:text-dark-green hover:underline">
         {row.name}
@@ -109,6 +111,7 @@ export function ManageStorePage() {
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับโหลดข้อมูลร้านค้า
    * Input: - (ใช้ communityId, pagination จาก state)
+   * Output: อัปเดต state rows, pagination
    */
   const loadStores = async () => {
     if (!communityId) return;
@@ -180,7 +183,11 @@ export function ManageStorePage() {
   };
 
 
-
+/*
+ * คำอธิบาย : ฟังก์ชันสำหรับลบร้านค้า
+ * Input : storeId (ID ของร้านค้าที่ต้องการลบ)
+ * Output : void
+ */
   const handleDelete = async (storeId: number) => {
     try {
       await axios.delete(`${API_BASE_URL}/shared/store/${storeId}/delete`, {

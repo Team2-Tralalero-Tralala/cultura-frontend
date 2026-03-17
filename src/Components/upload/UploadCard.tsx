@@ -15,6 +15,7 @@ import React, { useRef, useState, useEffect, useId, useMemo } from "react";
 import type { CSSProperties, ChangeEventHandler } from "react";
 import { IconifySvg, IMAGE_ICON, VIDEO_ICON } from "./UploadIcons";
 import { saveLogoVariantToPublic, saveToPublic } from "@/Libs/PublicFolder";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 export type UploadCardProps = {
   // จำกัดจำนวนสูงสุด
@@ -118,6 +119,8 @@ export const UploadCard: React.FC<UploadCardProps> = ({
   const inputId = `upload-input-${autoId}`;
   const counterId = `upload-counter-${autoId}`;
 
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
   // ---------- State: controlled/uncontrolled ----------
   const [filesUnctrl, setFilesUnctrl] = useState<File[]>(defaultValue ?? []);
   const files = value ?? filesUnctrl;
@@ -171,8 +174,24 @@ export const UploadCard: React.FC<UploadCardProps> = ({
     const picked = Array.from(e.target.files ?? []);
     if (!picked.length) return;
 
+    // กรองไฟล์: วิดีโอห้ามเกิน 200MB, อื่นๆ ห้ามเกิน 5MB
+    const validFiles = picked.filter((f) => {
+      const isVideo = f.type.startsWith("video/");
+      const maxSize = isVideo ? 200 * 1024 * 1024 : 5 * 1024 * 1024;
+      return f.size <= maxSize;
+    });
+
+    if (validFiles.length < picked.length) {
+      setIsAlertOpen(true);
+    }
+
+    if (!validFiles.length) {
+      e.currentTarget.value = "";
+      return;
+    }
+
     // ถ้ามี variant ให้ใช้ไฟล์แรกเท่านั้น (เขียนทับ)
-    const slice = (variant ? picked.slice(0, 1) : picked).slice(0, Math.max(0, max - files.length));
+    const slice = (variant ? validFiles.slice(0, 1) : validFiles).slice(0, Math.max(0, max - files.length));
     if (!slice.length) return;
 
     emitChange([...files, ...slice]);
@@ -335,9 +354,8 @@ export const UploadCard: React.FC<UploadCardProps> = ({
           aria-describedby={counterId}
           onClick={openPicker}
           disabled={disabled}
-          className={`${addCardBase} ${
-            disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50"
-          } flex flex-col items-center justify-center ${itemClass}`}
+          className={`${addCardBase} ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50"
+            } flex flex-col items-center justify-center ${itemClass}`}
           style={sizeStyle}
         >
           {/* input file แบบซ่อนสายตา (เชื่อมกับปุ่มผ่าน ref) */}
@@ -358,6 +376,14 @@ export const UploadCard: React.FC<UploadCardProps> = ({
           </span>
         </button>
       )}
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type="error"
+        title="ขนาดไฟล์เกินกำหนด"
+        message="ขนาดไฟล์บางไฟล์เกินกำหนด (รูปภาพไม่เกิน 5MB, วิดีโอไม่เกิน 200MB)"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </div>
   );
 };

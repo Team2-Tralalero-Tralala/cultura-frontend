@@ -60,6 +60,11 @@ async function cropImageToFile(
     canvasElement.height,
   );
 
+  /*
+   * คำอธิบาย: แปลง canvas ให้เป็น Blob object
+   * Input: canvasElement (canvas element), mime, quality
+   * Output: Blob (ที่ถูกแปลงแล้ว)
+   */
   const blobData: Blob = await new Promise((resolve) =>
     canvasElement.toBlob((blob) => resolve(blob!), mime, quality),
   );
@@ -194,9 +199,40 @@ export function UploadBannerPage() {
   const [resultTitle, setResultTitle] = useState("");
   const [resultMessage, setResultMessage] = useState("");
 
+  /**
+     * คำอธิบาย: ตรวจสอบว่าไฟล์เป็น PDF หรือไม่ (กันกรณี type ไม่ตรง แต่ชื่อไฟล์ลงท้าย .pdf)
+     * Input: file (ไฟล์ที่ผู้ใช้เลือก)
+     * Output: boolean (true = เป็น PDF, false = ไม่ใช่ PDF)
+     */
+  const isPdfFile = (file: File) =>
+    file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+
+  /**
+ * คำอธิบาย: ตรวจสอบว่าไฟล์เป็นรูปภาพที่รองรับหรือไม่ (เช็คทั้ง mime type และนามสกุลไฟล์)
+ * เงื่อนไข: ต้องเป็น image/* หรือมีนามสกุลรูปที่กำหนด และต้องไม่เป็น PDF
+ * Input: file (ไฟล์ที่ผู้ใช้เลือก)
+ * Output: boolean (true = เป็นรูปภาพที่รองรับ, false = ไม่รองรับ)
+ */
+  const isImageFile = (file: File) => {
+    const typeOk = file.type.startsWith("image/");
+    const extOk = /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name);
+    return (typeOk || extOk) && !isPdfFile(file);
+  };
+
+  /**
+ * คำอธิบาย: แสดง Modal แจ้งเตือนไฟล์ไม่ถูกต้องให้ผู้ใช้ (ใช้ ModalAlert)
+ * Input: message (ข้อความแจ้งเตือนที่จะแสดง)
+ * Output: -
+ */
+  const showInvalidFileAlert = (message: string) => {
+    setResultType("error"); // หรือ "warning"
+    setResultTitle("ไฟล์ไม่ถูกต้อง");
+    setResultMessage(message);
+    setIsResultOpen(true);
+  };
+
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Crop States
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [fileToCrop, setFileToCrop] = useState<File | null>(null);
   const [cropImageSource, setCropImageSource] = useState<string | null>(null);
@@ -311,7 +347,25 @@ export function UploadBannerPage() {
    */
   const handleAddFiles = (files: File[]) => {
     if (!files.length) return;
-    startCrop(files[0], "add");
+
+    const file = files[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+      showInvalidFileAlert("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      return;
+    }
+
+    if (isPdfFile(file)) {
+      showInvalidFileAlert("ไม่รองรับไฟล์ PDF กรุณาอัปโหลดเป็นไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      showInvalidFileAlert("กรุณาเลือกไฟล์รูปภาพเท่านั้น (png/jpg/webp ฯลฯ)");
+      return;
+    }
+
+    startCrop(file, "add");
   };
 
   /*
@@ -355,7 +409,27 @@ export function UploadBannerPage() {
     const pickedFiles = Array.from(event.target.files ?? []);
     if (!pickedFiles.length) return;
 
-    startCrop(pickedFiles[0], "edit");
+    const file = pickedFiles[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+      showInvalidFileAlert("ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB");
+      event.target.value = "";
+      return;
+    }
+
+    if (isPdfFile(file)) {
+      showInvalidFileAlert("ไม่รองรับไฟล์ PDF กรุณาอัปโหลดเป็นไฟล์รูปภาพเท่านั้น");
+      event.target.value = "";
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      showInvalidFileAlert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      event.target.value = "";
+      return;
+    }
+
+    startCrop(file, "edit");
     event.target.value = "";
   };
 

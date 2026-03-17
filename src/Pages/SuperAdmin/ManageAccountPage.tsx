@@ -55,6 +55,8 @@ function thaiRoleName(role: string): string {
 
 /**
  * คำอธิบาย: กำหนดคอลัมน์ในตารางบัญชีผู้ใช้
+ * Input: -
+ * Output: -
  */
 const columns: Column<AccountRow>[] = [
   {
@@ -281,6 +283,8 @@ export function ManageAccountPage() {
 
   /**
    * คำอธิบาย: กำหนด Bulk Actions สำหรับหลายแถว (Block All, Delete All)
+   * Input: -
+   * Output: -
    */
   const bulkActions: BulkAction<AccountRow>[] = [
     {

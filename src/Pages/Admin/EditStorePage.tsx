@@ -147,7 +147,7 @@ export function EditStorePage() {
         );
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "/uploads") || "http://localhost:3000/uploads";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000/uploads";
         const coverFilesFetched: File[] = await Promise.all(
           (data.storeImage || [])
             .filter((img: any) => img.type === "COVER")
@@ -314,14 +314,16 @@ export function EditStorePage() {
 
       await editStore(Number(storeId), formDataToSend);
       setAlertType("success");
-      setAlertTitle("สร้างแก้ไขร้านค้าสำเร็จ");
+      setAlertTitle("แก้ไขร้านค้าสำเร็จ");
       setAlertMessage("ข้อมูลร้านค้าถูกแก้ไข");
       setIsAlertOpen(true);
       navigate(-1);
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
+      setAlertMessage(errorMessage);
       setIsAlertOpen(true);
     }
   };

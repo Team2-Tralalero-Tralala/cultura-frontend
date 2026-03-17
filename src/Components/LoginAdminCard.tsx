@@ -103,7 +103,7 @@ export default function LoginAdminCard() {
       const loggedInUser = await login(username, password); // ให้ login return user
 
       if (loggedInUser.user.role === "tourist") {
-        setError("ไม่พบบัญชี");
+        setError("ไม่พบบัญชีผู้ใช้งาน");
       } else {
         loggedInUser.navigateToFirstPage();
       }
@@ -114,7 +114,7 @@ export default function LoginAdminCard() {
       // กรณี User is blocked
       if (isBlocked) {
         if (blockedMsg && blockedMsg.includes("tourist")) {
-          setError("ไม่พบบัญชี");
+          setError("ไม่พบบัญชีผู้ใช้งาน");
         } else {
           setError("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ");
           setShowBlocked(true);
@@ -141,7 +141,7 @@ export default function LoginAdminCard() {
           label="อีเมล"
           required
           placeholder="ป้อนชื่ออีเมล"
-          type="text"
+          type="email"
           value={username}
           onChange={handleUsernameChange}
           error={!!formErrors.username}
@@ -163,9 +163,6 @@ export default function LoginAdminCard() {
         <div className="flex items-center justify-between mb-3 mt-3 min-h-[24px]">
           {/* Error message: always reserve space, align right */}
           <p className="text-sm text-red-600 min-h-[24px]">{error ? error : "\u00A0"}</p>
-          <Link to="/forgot-password" className="text-right whitespace-nowrap">
-            ลืมรหัสผ่าน
-          </Link>
         </div>
         <Button type="confirm-admin" htmlType="submit">
           {isLoading ? <CircularProgress color="inherit" size="28px" /> : "เข้าสู่ระบบ"}

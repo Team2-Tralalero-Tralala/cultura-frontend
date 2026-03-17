@@ -340,6 +340,12 @@ export default function SearchPage() {
           endDate: filters.endDate,
           tags: filters.tags.length > 0 ? filters.tags : undefined,
           sort: sortBy,
+          searchRange:
+            filters.activityType === "one-day"
+              ? "singleDay"
+              : filters.activityType === "multi-day"
+                ? "MultipleDay"
+                : "MultipleDay",
         },
       );
 
@@ -390,6 +396,7 @@ export default function SearchPage() {
     tagParam,
     filters.minPrice,
     filters.maxPrice,
+    filters.activityType,
     filters.startDate,
     filters.endDate,
     filters.tags,
@@ -457,6 +464,7 @@ export default function SearchPage() {
     pagination.currentPage,
     filters.minPrice,
     filters.maxPrice,
+    filters.activityType,
     filters.startDate,
     filters.endDate,
     filters.tags,
@@ -469,10 +477,14 @@ export default function SearchPage() {
    * Output: void
    */
   const handleActivityTypeChange = (type: "one-day" | "multi-day" | null) => {
-    setFilters((prev) => ({
-      ...prev,
-      activityType: prev.activityType === type ? null : type,
-    }));
+    setFilters((prev) => {
+      const nextType = prev.activityType === type ? null : type;
+      return {
+        ...prev,
+        activityType: nextType,
+        endDate: nextType === "one-day" ? null : prev.endDate,
+      };
+    });
   };
 
   /**
@@ -590,20 +602,22 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    วันที่สิ้นสุดกิจกรรม
-                  </label>
-                  <div className="date-input-wrapper">
-                    <DailyDateInput
-                      value={filters.endDate}
-                      onChange={(dateStr) => setFilters((prev) => ({ ...prev, endDate: dateStr }))}
-                      height={41}
-                      className="m-0"
-                      clearable={false}
-                    />
+                {filters.activityType !== "one-day" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      วันที่สิ้นสุดกิจกรรม
+                    </label>
+                    <div className="date-input-wrapper">
+                      <DailyDateInput
+                        value={filters.endDate}
+                        onChange={(dateStr) => setFilters((prev) => ({ ...prev, endDate: dateStr }))}
+                        height={41}
+                        className="m-0"
+                        clearable={false}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="rounded-lg border-2 border-gray-300 p-4 space-y-4">

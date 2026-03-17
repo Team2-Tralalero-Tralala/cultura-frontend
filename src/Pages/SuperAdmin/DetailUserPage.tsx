@@ -24,6 +24,8 @@ export function DetailUserPage() {
 
   /**
    * คำอธิบาย: โหลดข้อมูลผู้ใช้จาก API
+   * Input: - 
+   * Output: - 
    */
   useEffect(() => {
     if (!id) return;
@@ -31,9 +33,9 @@ export function DetailUserPage() {
       try {
         const data = await fetchUserDetail(Number(id));
         setUser(data);
-      } catch (err: unknown) {
-        const e = err as Error;
-        setErrorMessage(e.message || "ไม่สามารถโหลดข้อมูลได้");
+      } catch (error: unknown) {
+        const errors = error as Error;
+        setErrorMessage(errors.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         setIsLoading(false);
       }
@@ -88,12 +90,14 @@ export function DetailUserPage() {
           />
         </div>
 
-        <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-          <ArrowLeft
-            className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
-            onClick={() => navigate(-1)}
-          />
-          รายละเอียดบัญชี
+        <h1 className="flex items-center gap-2 text-[20px] font-bold text-black -mt-4">
+            <div 
+              className="flex items-center gap-2 cursor-pointer transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>รายละเอียดบัญชี</span>
+            </div>
         </h1>
 
         {/* Card */}

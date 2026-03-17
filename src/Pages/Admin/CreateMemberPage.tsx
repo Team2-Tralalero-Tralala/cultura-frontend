@@ -1,44 +1,70 @@
 /**
- * คำอธิบาย: Component สำหรับหน้าสร้างสมาชิกในชุมชน (Admin)
+ * คำอธิบาย : Component สำหรับหน้าสร้างสมาชิกในชุมชน (Admin)
  */
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import * as z from "zod";
+import * as zod from "zod";
 import { Modal } from "@/Components/Modal/Modal";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import api from "@/Libs/Api";
-import TextField from "../../Components/Input/TextField";
+import TextField from "@/Components/Input/TextField";
 import Button from "../../Components/Button";
 import AvatarUploader from "@/Components/upload/AvatarUploader";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
 /**
- * คำอธิบาย: Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
+ * คำอธิบาย : Schema สำหรับตรวจสอบความถูกต้องของข้อมูลสมาชิกก่อนสร้างบัญชี
  */
-const memberSchema = z.object({
-  fname: z.string().min(1, "กรุณากรอกชื่อ"),
-  lname: z.string().min(1, "กรุณากรอกนามสกุล"),
-  username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  phone: z.string().regex(/^0[0-9]{9}$/, "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 10 หลัก"),
-  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
-  confirmPassword: z.string(),
-  communityRole: z.string().min(1, "กรุณากรอกตำแหน่งในชุมชน"),
-});
+const memberSchema = zod
+  .object({
+    fname: zod.string().min(1, "กรุณากรอกชื่อ"),
+    lname: zod.string().min(1, "กรุณากรอกนามสกุล"),
+    username: zod
+      .string()
+      .min(4, "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 4 ตัวอักษร")
+      .regex(/^[a-zA-Z0-9]+$/, "กรุณากรอกชื่อผู้ใช้"),
+    
+    email: zod
+      .string()
+      .min(1, "กรุณากรอกอีเมล")
+      .refine(
+        (val) => val === "" || zod.string().email().safeParse(val).success,
+        "รูปแบบอีเมลไม่ถูกต้อง"
+      ),
+      
+    phone: zod
+      .string()
+      .min(1, "กรุณากรอกหมายเลขโทรศัพท์")
+      .refine(
+        (val) => val === "" || /^0[0-9]{9}$/.test(val),
+        "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง"
+      ),
+
+    password: zod
+      .string()
+      .min(8, "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร")
+      .regex(/[a-z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์เล็ก (a-z)")
+      .regex(/[A-Z]/, "ต้องประกอบด้วยตัวอักษรภาษาอังกฤษพิมพ์ใหญ่ (A-Z)")
+      .regex(/[0-9]/, "กรุณากรอกรหัสผ่าน"),
+
+    confirmPassword: zod.string().min(1, "กรุณากรอกยืนยันรหัสผ่าน"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "รหัสผ่านไม่ตรงกัน",
+    path: ["confirmPassword"],
+  });
 
 /**
- * คำอธิบาย: Component สำหรับสร้างบัญชีสมาชิกโดย Admin
- * หน้าที่:
- * - แสดงฟอร์มกรอกข้อมูลสมาชิก
- * - ตรวจสอบความถูกต้องของข้อมูล
- * - บันทึกข้อมูลสมาชิกใหม่และอัปโหลดรูปโปรไฟล์
+ * คำอธิบาย : Component สำหรับสร้างบัญชีสมาชิกโดย Admin
+ * Input: -
+ * Output: หน้าจอ (UI) ฟอร์มสำหรับสร้างบัญชีสมาชิกในชุมชน
  */
 const CreateMemberPage: React.FC = () => {
   const navigate = useNavigate();
 
   /**
-   * คำอธิบาย: State สำหรับเก็บค่าข้อมูลจากฟอร์ม
+   * คำอธิบาย : State สำหรับเก็บค่าข้อมูลจากฟอร์ม
    */
   const [formData, setFormData] = useState({
     fname: "",
@@ -52,25 +78,23 @@ const CreateMemberPage: React.FC = () => {
     profileImage: null as File | null,
   });
 
-  /**
-   * คำอธิบาย: State สำหรับเก็บข้อความ Error ของแต่ละฟิลด์
+  /*
+   * คำอธิบาย : State สำหรับเก็บข้อความ Error ของแต่ละฟิลด์
    */
   const [formErrors, setFormErrors] = useState<Record<string, string | undefined>>({});
 
-  /**
-   * คำอธิบาย: State สำหรับควบคุมการแสดง Modal ยืนยันการสร้างบัญชี
+  /*
+   * คำอธิบาย : State สำหรับควบคุมการแสดง Modal
    */
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isShowConfirm, setIsShowConfirm] = useState(false);
+  const [isShowSuccessModal, setIsShowSuccessModal] = useState(false);
+  const [isShowErrorModal, setIsShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); 
 
   /**
-   * คำอธิบาย: State สำหรับควบคุมการแสดง Modal เมื่อสร้างบัญชีสำเร็จ
-   */
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-
-  /**
-   * คำอธิบาย: ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลในฟอร์ม
    * Input: fieldName (ชื่อฟิลด์ที่ต้องการตรวจสอบ), fieldValue (ค่าของฟิลด์นั้น)
-   * Output: boolean (ส่งคืน true หากถูกต้อง, false หากผิดพลาด)
+   * Output : boolean (ส่งคืน true หากถูกต้อง, false หากผิดพลาด)
    */
   const validateField = (fieldName?: string, fieldValue?: unknown) => {
     if (fieldName) {
@@ -101,23 +125,27 @@ const CreateMemberPage: React.FC = () => {
   };
 
   /**
-   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงค่าของ Input
    * Input: event (เหตุการณ์การเปลี่ยนแปลง input)
-   * Output: -
+   * Output : -
    */
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = event.target;
-    setFormData((prev) => {
-      const newData = { ...prev, [id]: value };
-      validateField(id, value);
-      return newData;
-    });
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    
+  
+    validateField(id, value);
+    if (id === "password" || id === "confirmPassword") {
+      setTimeout(() => {
+        validateField("confirmPassword", id === "confirmPassword" ? value : formData.confirmPassword);
+      }, 0);
+    }
   };
 
   /**
-   * คำอธิบาย: ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
+   * คำอธิบาย : ฟังก์ชันสำหรับจัดการการอัปโหลดรูปโปรไฟล์
    * Input: file (ไฟล์รูปภาพที่เลือก)
-   * Output: -
+   * Output : -
    */
   const handleAvatarChange = (file: File | null) => {
     if (!file) return;
@@ -125,20 +153,31 @@ const CreateMemberPage: React.FC = () => {
   };
 
   /**
-   * คำอธิบาย: ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
+   * คำอธิบาย : ฟังก์ชันตรวจสอบความถูกต้องก่อนเปิด Modal Confirm
+   * Input: -
+   * Output : -
+   */
+  const handlePreCheck = () => {
+    const isFormValid = validateField(); 
+    const isPasswordMatch = formData.password === formData.confirmPassword;
+
+    if (!isFormValid || !isPasswordMatch) {
+      setErrorMessage(!isPasswordMatch ? "รหัสผ่านไม่ตรงกัน" : "กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
+      setIsShowErrorModal(true);
+    } else {
+      setIsShowConfirm(true);
+    }
+  };
+
+  /**
+   * คำอธิบาย : ฟังก์ชันสำหรับส่งข้อมูลฟอร์มเพื่อสร้างบัญชีสมาชิก
    * Input: event (เหตุการณ์จากฟอร์ม)
-   * Output: -
+   * Output : -
    */
   const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
-
     const isValid = validateField();
-    if (!isValid) {
-      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน ❌");
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("รหัสผ่านไม่ตรงกัน ❌");
+    if (!isValid || formData.password !== formData.confirmPassword) {
       return;
     }
 
@@ -157,7 +196,7 @@ const CreateMemberPage: React.FC = () => {
       const newUserId = response.data?.data?.id;
 
       if (!newUserId) {
-        setIsSuccessModalOpen(true);
+        setIsShowSuccessModal(true);
         return;
       }
 
@@ -170,12 +209,41 @@ const CreateMemberPage: React.FC = () => {
         });
       }
 
-      setIsSuccessModalOpen(true);
+      setIsShowConfirm(false);
+      setIsShowSuccessModal(true);
     } catch (error: any) {
       console.error("❌ Error creating member:", error);
-      const msg =
-        error.response?.data?.message || error.response?.data?.error || "ไม่สามารถสร้างบัญชีได้";
-      toast.error(`เกิดข้อผิดพลาด: ${msg}`);
+
+      const errorResponse = error.response?.data;
+      const errorMsg = errorResponse?.message || errorResponse?.error || "ไม่สามารถสร้างบัญชีได้";
+      const errorData = errorResponse?.errors || {};
+
+      const newErrors: Record<string, string> = {};
+      const errorMsgLower = errorMsg.toLowerCase();
+
+      if (errorMsgLower.includes("ชื่อผู้ใช้") || errorMsgLower.includes("username") || errorMsgLower.includes("duplicate_username") || errorData.username) {
+        newErrors.username = "ชื่อผู้ใช้นี้มีในระบบแล้ว";
+      }
+      if (errorMsgLower.includes("อีเมล") || errorMsgLower.includes("email") || errorMsgLower.includes("duplicate_email") || errorData.email) {
+        newErrors.email = "อีเมลนี้ถูกใช้งานแล้ว"; 
+      }
+      if (errorMsgLower.includes("โทรศัพท์") || errorMsgLower.includes("เบอร์") || errorMsgLower.includes("phone") || errorMsgLower.includes("duplicate_phone") || errorData.phone) {
+        newErrors.phone = "เบอร์โทรศัพท์นี้มีในระบบแล้ว";
+      }
+
+      const errorKeys = Object.keys(newErrors);
+
+      if (errorKeys.length > 0) {
+        setFormErrors((prev) => ({ ...prev, ...newErrors }));
+
+        const combinedErrorMessage = errorKeys.map(key => newErrors[key]).join(" และ ");
+        setErrorMessage(combinedErrorMessage);
+      } else {
+        setErrorMessage(errorMsg);
+      }
+
+      setIsShowConfirm(false);
+      setIsShowErrorModal(true);
     }
   };
 
@@ -190,35 +258,37 @@ const CreateMemberPage: React.FC = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 mb-6 pl-6">
-        <button
-          onClick={() => navigate(-1)}
-          type="button"
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
-          title="ย้อนกลับ"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200 mt-6">
+        <div className="flex items-center gap-3  pb-6">
+          <button
+            onClick={() => navigate(-1)}
+            type="button"
+            className="p-1 -ml-1 rounded-full hover:bg-gray-100 text-black transition-colors"
+            title="ย้อนกลับ"
           >
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-bold text-black tracking-tight">สร้างบัญชีสมาชิก</h1>
-      </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+          </button>
 
-      <form className="bg-white p-10 rounded-xl shadow w-full ml-0 text-[15px] space-y-10 border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 text-center tracking-tight">
-          สร้างบัญชีสมาชิก
-        </h2>
+          <h1
+            onClick={() => navigate(-1)}
+            className="text-xl font-bold text-black tracking-tight cursor-pointer"
+          >
+            สร้างบัญชีสมาชิก
+          </h1>
+        </div>
 
         <div className="grid grid-cols-[320px_1fr] gap-14 items-start">
           <div className="flex flex-col items-center">
@@ -282,18 +352,21 @@ const CreateMemberPage: React.FC = () => {
               helperText={formErrors.phone}
             />
 
-            <div className="grid grid-cols-2 gap-6">
-              <TextField
-                id="password"
-                label="รหัสผ่าน"
-                placeholder="กรอกรหัสผ่าน"
-                required
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={!!formErrors.password}
-                helperText={formErrors.password}
-              />
+            <div className="grid grid-cols-2 gap-6 items-start">
+              <div>
+                <TextField
+                  id="password"
+                  label="รหัสผ่าน"
+                  placeholder="กรอกรหัสผ่าน"
+                  required
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!formErrors.password}
+                  helperText={formErrors.password}
+                />
+              </div>
+
               <TextField
                 id="confirmPassword"
                 label="ยืนยันรหัสผ่าน"
@@ -302,14 +375,15 @@ const CreateMemberPage: React.FC = () => {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                error={!!formErrors.confirmPassword}
+                helperText={formErrors.confirmPassword}
               />
             </div>
 
             <TextField
               id="communityRole"
               label="บทบาทวิสาหกิจ"
-              placeholder="เช่น แม่บ้าน, ฝ่ายบัญชี"
-              required
+              placeholder="กรอกบทบาทวิสาหกิจ"
               value={formData.communityRole}
               onChange={handleChange}
               error={!!formErrors.communityRole}
@@ -318,14 +392,14 @@ const CreateMemberPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 pt-4 mt-8">
           <div className="w-32">
             <Button type="cancel" onClick={() => navigate(-1)}>
               ยกเลิก
             </Button>
           </div>
           <div className="w-32">
-            <Button type="confirm-admin" onClick={() => setIsConfirmModalOpen(true)}>
+            <Button type="confirm-admin" onClick={handlePreCheck}>
               สร้างบัญชี
             </Button>
           </div>
@@ -333,27 +407,35 @@ const CreateMemberPage: React.FC = () => {
       </form>
 
       <Modal
-        isOpen={isConfirmModalOpen}
+        isOpen={isShowConfirm}
         title="ยืนยันการสร้างบัญชี"
         text="คุณต้องการยืนยันการสร้างบัญชีสมาชิกนี้หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={() => {
-          setIsConfirmModalOpen(false);
+          setIsShowConfirm(false);
           handleSubmit();
         }}
-        onCancel={() => setIsConfirmModalOpen(false)}
+        onCancel={() => setIsShowConfirm(false)}
       />
 
       <ModalAlert
-        isOpen={isSuccessModalOpen}
+        isOpen={isShowSuccessModal}
         type="success"
         title="สร้างบัญชีสมาชิกสำเร็จ"
         message="ข้อมูลสมาชิกถูกสร้างเรียบร้อยแล้ว"
         onClose={() => {
-          setIsSuccessModalOpen(false);
+          setIsShowSuccessModal(false);
           navigate("/admin/members");
         }}
+      />
+
+      <ModalAlert
+        isOpen={isShowErrorModal}
+        type="error"
+        title="ไม่สามารถสร้างบัญชีได้"
+        message={errorMessage} 
+        onClose={() => setIsShowErrorModal(false)}
       />
     </div>
   );

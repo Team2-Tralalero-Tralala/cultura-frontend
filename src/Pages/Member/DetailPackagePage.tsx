@@ -1,26 +1,26 @@
 /**
- * คำอธิบาย: หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member (Detail Package Member)
+ * คำอธิบาย : Component หน้าแสดงรายละเอียดแพ็กเกจสำหรับ Member
  * - ดึงข้อมูลแพ็กเกจจาก backend เฉพาะที่ Member มีสิทธิ์เข้าถึง
- * - แสดงข้อมูลเชิงรายละเอียดเหมือนกับหน้าของ SuperAdmin
- * - รวมถึงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
+ * - แสดงรูปภาพ แท็ก ผู้ดูแล ช่วงวัน-เวลา ตลอดจนตำแหน่งแผนที่และที่อยู่
  * - สามารถกดปุ่มเพื่อแก้ไขรายละเอียดแพ็กเกจได้
  */
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import type { JSX } from "react/jsx-runtime";
 import axios from "axios";
+import { Icon } from "@iconify/react";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import DetailPackageGallery from "@/Components/DetailPackageGallery";
 import Button from "../../Components/Button";
 import { EditIcon } from "../../Components/Icon/MaterialSymbolsLight";
 import { Tag } from "../../Components/Tag";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
-import type { JSX } from "react/jsx-runtime";
-import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
 /**
  * คำอธิบาย: URL ของ Backend สำหรับติดต่อ API
  */
 const apiBaseUrl = import.meta.env.VITE_API_URL;
+const BACKEND_BASE_URL = apiBaseUrl.replace(/\/api$/, "");
 
 interface DateTimeField {
   date: string | null;
@@ -99,6 +99,23 @@ interface PackageData {
 }
 
 /**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้อง
+ * Input: imagePath (string | undefined) - path ของรูปภาพจาก backend
+ * Output: string - URL ของรูปภาพที่พร้อมใช้งาน
+ */
+const buildImageUrl = (imagePath?: string): string => {
+  if (!imagePath) return "";
+
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  const cleanPath = imagePath.replace(/^\/+/, "");
+
+  return `${BACKEND_BASE_URL}/${cleanPath}`;
+};
+
+/**
  * คำอธิบาย: แปลงวันที่รูปแบบ ISO (string) ให้เป็นรูปแบบไทย dd/mm/yyyy
  * Input: dateStr (วันที่ในรูปแบบ ISO หรือ null)
  * Output: วันที่ในรูปแบบ dd/mm/yyyy หรือ "-" ถ้าไม่มีข้อมูล
@@ -130,7 +147,7 @@ function extractDateTime(isoString?: string | null): DateTimeField {
  * Input: -
  * Output: JSX.Element (UI หน้าแสดงรายละเอียดแพ็กเกจ)
  */
-export default function DetailPackagePage() {
+export function DetailPackagePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [packageDetail, setPackageDetail] = useState<PackageData | null>(null);
@@ -197,7 +214,7 @@ export default function DetailPackagePage() {
           files: packageRawData.packageFile
             ? packageRawData.packageFile.map((fileItem: any) => ({
                 id: fileItem.id,
-                path: fileItem.filePath,
+                path: buildImageUrl(fileItem.filePath),
                 type: fileItem.type,
               }))
             : [],

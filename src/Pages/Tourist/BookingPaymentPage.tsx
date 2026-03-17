@@ -13,6 +13,7 @@ import { Icon } from "@iconify/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /*
  * Interface สำหรับข้อมูลแพ็กเกจ
@@ -33,6 +34,10 @@ interface BookingInfo {
   numberOfPeople: number;
   totalPrice: number;
 }
+
+const maxSlipFileSizeBytes = 10 * 1024 * 1024;
+const allowedSlipMimeTypes = ["image/jpeg", "image/png", "application/pdf"];
+const allowedSlipExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
 
 /*
  * คำอธิบาย : Component สำหรับหน้าชำระเงิน
@@ -55,6 +60,7 @@ export default function BookingPaymentPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   /*
    * คำอธิบาย : ดึงข้อมูลแพ็กเกจหรือใช้ข้อมูลจาก state
@@ -120,9 +126,30 @@ export default function BookingPaymentPage() {
    */
   const handleFileChange = (changeEvent: React.ChangeEvent<HTMLInputElement>) => {
     const file = changeEvent.target.files?.[0];
-    if (file) {
-      setPaymentProof(file);
+    if (!file) return;
+
+    const fileNameLower = file.name.toLowerCase();
+    const isAllowedByExtension = allowedSlipExtensions.some((extension) =>
+      fileNameLower.endsWith(extension),
+    );
+    const isAllowedByMimeType = allowedSlipMimeTypes.includes(file.type);
+
+    if (!isAllowedByExtension || !isAllowedByMimeType) {
+      setPaymentProof(null);
+      setErrorMessage("รองรับเฉพาะไฟล์ .jpg, .png และ .pdf เท่านั้น");
+      changeEvent.target.value = "";
+      return;
     }
+
+    if (file.size > maxSlipFileSizeBytes) {
+      setPaymentProof(null);
+      setErrorMessage("ขนาดไฟล์ต้องไม่เกิน 10 MB");
+      changeEvent.target.value = "";
+      return;
+    }
+
+    setErrorMessage(null);
+    setPaymentProof(file);
   };
 
   /*
@@ -309,7 +336,7 @@ export default function BookingPaymentPage() {
                 <label className="block">
                   <input
                     type="file"
-                    accept="image/*,.pdf"
+                    accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
                     onChange={handleFileChange}
                     className="hidden"
                     id="payment-proof"
@@ -405,6 +432,14 @@ export default function BookingPaymentPage() {
           </div>
         </div>
       </div>
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type="error"
+        title="ขนาดไฟล์เกินกำหนด"
+        message="ขนาดไฟล์เกิน 5MB กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB"
+        onClose={() => setIsAlertOpen(false)}
+      />
 
       <Footer />
     </div>

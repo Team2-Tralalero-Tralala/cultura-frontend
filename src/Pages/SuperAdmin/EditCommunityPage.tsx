@@ -8,7 +8,7 @@
  * และส่งคำขออัปเดตข้อมูลไปยังเซิร์ฟเวอร์ผ่าน updateCommunity()
  */
 import * as React from "react";
-import { Link, redirect, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -53,7 +53,10 @@ const communitySchema = zod.object({
     .transform((value) => (typeof value === "string" ? value : value.toISOString().split("T")[0])),
   bankName: zod.string().min(1, "กรุณาเลือกธนาคาร").max(45, "ชื่อบัญชีต้องไม่เกิน 45 ตัวอักษร"),
   accountName: zod.string().min(1, "กรุณากรอกชื่อบัญชีธนาคาร"),
-  accountNumber: zod.string().min(1, "กรุณากรอกหมายเลขบัญชี"),
+  accountNumber: zod.coerce
+    .string()
+    .regex(/^\d+$/, "กรุณากรอกหมายเลขบัญชีธนาคารเป็นตัวเลข")
+    .min(1, "กรุณากรอกหมายเลขบัญชี"),
   description: zod.string().min(1, "กรุณากรอกประวัติวิสาหกิจชุมชน"),
   mainActivityName: zod.string().min(1, "กรุณากรอกชื่อกิจกรรมหลัก"),
   mainActivityDescription: zod.string().min(1, "กรุณากรอกรายละเอียดกิจกรรมหลัก"),
@@ -74,11 +77,28 @@ const communitySchema = zod.object({
  * Input : url, filename, defaultMimeType
  * Output : File object
  */
-async function urlToFile(url: string, filename: string, defaultMimeType?: string): Promise<File> {
+async function urlToFile(
+  url: string,
+  filename: string,
+  defaultMimeType?: string,
+): Promise<File | null> {
   const response = await fetch(url, {
     credentials: "include",
   });
+
+  // Check if response is successful
+  if (!response.ok) {
+    console.warn(`Failed to fetch file from ${url}: Status ${response.status}`);
+    return null;
+  }
+
   const blob = await response.blob();
+
+  // Check if content type is HTML (error page)
+  if (blob.type.includes("text/html")) {
+    console.warn(`Fetched file from ${url} returned HTML content, ignoring.`);
+    return null;
+  }
 
   let type = blob.type;
   if (!type || (defaultMimeType && !type.startsWith(defaultMimeType.split("/")[0]))) {
@@ -113,15 +133,21 @@ const getFilePreview = (file: File | null): string | null => {
  * - backendUrl (string) : URL ของ Backend
  * Output : object ที่ประกอบด้วย logo, cover, gallery, video (File[])
  */
-const fetchCommunityFiles = async (communityImages: any[], backendUrl: string) => {
-  const getFiles = (type: string, defaultMimeType?: string) =>
-    Promise.all(
+const fetchCommunityFiles = async (
+  communityImages: any[],
+  backendUrl: string,
+): Promise<{ logo: File[]; cover: File[]; gallery: File[]; video: File[] }> => {
+  const getFiles = async (type: string, defaultMimeType?: string) => {
+    const files = await Promise.all(
       (communityImages || [])
         .filter((image: any) => image.type === type)
         .map((image: any) =>
           urlToFile(`${backendUrl}/${image.image}`, image.image, defaultMimeType),
         ),
     );
+    // Filter out null values (failed fetches)
+    return files.filter((file): file is File => file !== null);
+  };
 
   const [logo, cover, gallery, video] = await Promise.all([
     getFiles("LOGO"),
@@ -314,7 +340,7 @@ export function EditCommunityPage() {
         setIsVisibleRating(data.isRatingVisible);
 
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-        const backendUrl = apiUrl.replace("/api", "/uploads/") || "http://localhost:3000";
+        const backendUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
         const { logo, cover, gallery, video } = await fetchCommunityFiles(
           data.communityImage,
@@ -451,6 +477,22 @@ export function EditCommunityPage() {
       return;
     }
 
+    if (galleryFiles.length === 0) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณาอัปโหลดรูปภาพเพิ่มเติมอย่างน้อย 1 รูป");
+      setIsAlertOpen(true);
+      return;
+    }
+
+    if (videoFiles.length === 0) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ถูกต้อง");
+      setAlertMessage("กรุณาอัปโหลดวิดีโออย่างน้อย 1 วิดีโอ");
+      setIsAlertOpen(true);
+      return;
+    }
+
     try {
       const formDataToSend = prepareSubmitData({
         formData,
@@ -472,9 +514,11 @@ export function EditCommunityPage() {
       setIsAlertOpen(true);
       navigate("/super/communities/all");
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
+      setAlertMessage(errorMessage);
       setIsAlertOpen(true);
     }
   };
@@ -507,7 +551,7 @@ export function EditCommunityPage() {
       </div>
 
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        className="rounded-lg! bg-transparent! shadow-none! border-0!  mt-3"
         expanded={expandedPanel === "panel2"}
         onChange={handleChange("panel2")}
         sx={{ "&:before": { display: "none" } }}
@@ -516,7 +560,7 @@ export function EditCommunityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2bh-content"
           id="panel2bh-header"
-          className="!bg-white !rounded-lg !shadow-sm"
+          className="bg-white! rounded-lg! shadow-sm!"
           sx={{
             "&.Mui-expanded": {
               minHeight: "48px",
@@ -528,7 +572,7 @@ export function EditCommunityPage() {
         >
           <h1 className="text-xl font-bold inline-flex items-center gap-2">ข้อมูลชุมชน</h1>
         </AccordionSummary>
-        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+        <AccordionDetails className="bg-white! rounded-lg! shadow-sm! mt-[14px] p-6!">
           <div className="flex justify-between items-center w-full mb-[24px]">
             <h2 className="text-lg font-bold">ข้อมูลวิสาหกิจชุมชน</h2>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
@@ -770,7 +814,7 @@ export function EditCommunityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0  mt-3"
+        className="rounded-lg! bg-transparent! shadow-none! border-0!  mt-3"
         expanded={expandedPanel === "panel3"}
         onChange={handleChange("panel3")}
         sx={{ "&:before": { display: "none" } }}
@@ -779,7 +823,7 @@ export function EditCommunityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel3bh-content"
           id="panel3bh-header"
-          className="!bg-white !rounded-lg !shadow-sm"
+          className="bg-white! rounded-lg! shadow-sm!"
           sx={{
             "&.Mui-expanded": {
               minHeight: "48px",
@@ -791,7 +835,7 @@ export function EditCommunityPage() {
         >
           <h2 className="text-xl font-bold">ที่อยู่วิสาหกิจชุมชน</h2>
         </AccordionSummary>
-        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+        <AccordionDetails className="bg-white! rounded-lg! shadow-sm! mt-[14px] p-6!">
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>
               <TextField
@@ -877,7 +921,7 @@ export function EditCommunityPage() {
         </AccordionDetails>
       </Accordion>
       <Accordion
-        className="!rounded-lg !bg-transparent !shadow-none !border-0 mt-3"
+        className="rounded-lg! bg-transparent! shadow-none! border-0! mt-3"
         expanded={expandedPanel === "panel4"}
         onChange={handleChange("panel4")}
         sx={{ "&:before": { display: "none" } }}
@@ -886,7 +930,7 @@ export function EditCommunityPage() {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel4bh-content"
           id="panel4bh-header"
-          className="!bg-white !rounded-lg !shadow-sm"
+          className="bg-white! rounded-lg! shadow-sm!"
           sx={{
             "&.Mui-expanded": {
               minHeight: "48px",
@@ -898,7 +942,7 @@ export function EditCommunityPage() {
         >
           <h2 className="text-xl font-bold">ข้อมูลติดต่อและผู้ดูแล</h2>
         </AccordionSummary>
-        <AccordionDetails className="!bg-white !rounded-lg !shadow-sm mt-[14px] !p-6">
+        <AccordionDetails className="bg-white! rounded-lg! shadow-sm! mt-[14px] p-6!">
           <h1 className="text-lg font-bold mb-[24px]">ข้อมูลติดต่อวิสาหกิจชุมชน</h1>
           <div className="grid grid-cols-2 gap-y-[24px] gap-x-[30px]">
             <div>

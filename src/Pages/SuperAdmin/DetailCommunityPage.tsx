@@ -1,6 +1,8 @@
 /**
- * คำอธิบาย: Component สำหรับแสดงรายละเอียดของชุมชน (Super Admin)
- * ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
+ * คำอธิบาย : Component สำหรับแสดงรายละเอียดของชุมชน (Super Admin)
+ * หน้าที่ : ใช้สำหรับดึงและแสดงข้อมูลรายละเอียดของวิสาหกิจชุมชนจากฐานข้อมูล
+ * สิทธิ์การเข้าถึง : Super Admin เท่านั้น
+ * เส้นทาง (Route) : /super/communities/:id
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -9,18 +11,18 @@ import { Icon } from "@iconify/react";
 import { getCommunityDetailById } from "@/Libs/CommunityService";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 
-/**
- * คำอธิบาย: ฟังก์ชันแสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล
- * Input: textValue (string | null)
- * Output: string
+/*
+ * คำอธิบาย : ฟังก์ชันแสดงค่า string หรือคืนค่า "-" หากไม่มีข้อมูล
+ * Input : textValue (string | null)
+ * Output : string
  */
 const displayText = (textValue?: string | null) =>
   textValue && String(textValue).trim() ? textValue : "-";
 
-/**
- * คำอธิบาย: ฟังก์ชันแปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
- * Input: isoDateString (string | null)
- * Output: string (วันที่รูปแบบไทย)
+/*
+ * คำอธิบาย : ฟังก์ชันแปลงวันที่จากรูปแบบ ISO เป็นวันที่แบบไทย (dd/mm/yyyy)
+ * Input : isoDateString (string | null)
+ * Output : string (วันที่รูปแบบไทย)
  */
 const toThaiDate = (isoDateString?: string | null) => {
   if (!isoDateString) return "-";
@@ -35,10 +37,10 @@ const toThaiDate = (isoDateString?: string | null) => {
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const backendBaseUrl = apiUrl.replace("/api", "") || "http://localhost:3000";
 
-/**
- * คำอธิบาย: ฟังก์ชันจัดการ URL สำหรับไฟล์ที่อัปโหลดจาก Backend
- * Input: fileName (string | null) - ชื่อไฟล์หรือพาธไฟล์จาก backend
- * Output: string | undefined - URL เต็ม หรือ undefined ถ้าไม่มีค่า
+/*
+ * คำอธิบาย : ฟังก์ชันจัดการ URL สำหรับไฟล์ที่อัปโหลดจาก Backend
+ * Input : fileName (string | null) - ชื่อไฟล์หรือพาธไฟล์จาก backend
+ * Output : string | undefined - URL เต็ม หรือ undefined ถ้าไม่มีค่า
  */
 function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   if (!fileName) return undefined;
@@ -48,10 +50,10 @@ function resolveBackendUploadUrl(fileName?: string | null): string | undefined {
   return `${backendBaseUrl}/uploads/${cleanedPath}`;
 }
 
-/**
- * คำอธิบาย: ฟังก์ชันดึง path รูปภาพจาก object โดยตรวจสอบ field ที่อาจมีชื่อแตกต่างกัน
- * Input: imageObject (any)
- * Output: string | null
+/*
+ * คำอธิบาย : ฟังก์ชันดึง path รูปภาพจาก object โดยตรวจสอบ field ที่อาจมีชื่อแตกต่างกัน
+ * Input : imageObject (any)
+ * Output : string | null
  */
 function pickImagePath(imageObject: any): string | null {
   return (
@@ -59,10 +61,10 @@ function pickImagePath(imageObject: any): string | null {
   );
 }
 
-/**
- * คำอธิบาย: ฟังก์ชันค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
- * Input: communityData (any), imageType (string)
- * Output: string | null
+/*
+ * คำอธิบาย : ฟังก์ชันค้นหารูปภาพของชุมชนตามประเภท (เช่น LOGO, COVER)
+ * Input : communityData (any), imageType (string)
+ * Output : string | null
  */
 function findImage(communityData: any, imageType: string): string | null {
   const imageItem = communityData?.communityImage?.find(
@@ -71,10 +73,10 @@ function findImage(communityData: any, imageType: string): string | null {
   return pickImagePath(imageItem);
 }
 
-/**
- * คำอธิบาย: ฟังก์ชันคืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
- * Input: communityData (any), imageType (string)
- * Output: string[]
+/*
+ * คำอธิบาย : ฟังก์ชันคืนค่า Array ของ path รูปภาพที่มี type ตรงตามที่ระบุ
+ * Input : communityData (any), imageType (string)
+ * Output : string[]
  */
 function listImagesByType(communityData: any, imageType: string): string[] {
   const filteredImageLists = (communityData?.communityImage || []).filter(
@@ -85,25 +87,25 @@ function listImagesByType(communityData: any, imageType: string): string[] {
 
 /* Components ย่อยที่ใช้ภายในหน้า */
 
-/**
- * คำอธิบาย: Component แสดงแถวข้อมูลแบบ Label : Value
- * Input: label (string), children (ReactNode)
- * Output: JSX Element
+/*
+ * คำอธิบาย : Component แสดงแถวข้อมูลแบบ Label : Value
+ * Input : label (string), children (ReactNode)
+ * Output : React element
  */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[180px_16px_minmax(0,1fr)] md:grid-cols-[220px_16px_minmax(0,1fr)] gap-x-2 items-start">
       <div className="font-bold text-black text-base">{label}</div>
-      <div className="text-black font-regular text-base">:</div>
-      <div className="text-black font-regular break-words text-base">{children ?? "-"}</div>
+      <div className="text-black font-normal text-base">:</div>
+      <div className="text-black font-normal break-words text-base">{children ?? "-"}</div>
     </div>
   );
 }
 
-/**
- * คำอธิบาย: Component แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
- * Input: src (string), name (string), size (number)
- * Output: JSX Element
+/*
+ * คำอธิบาย : Component แสดงรูปโปรไฟล์ของผู้ใช้ (หรืออักษรย่อหากไม่มีรูป)
+ * Input : src, name, size
+ * Output : React element
  */
 function AvatarCircle({ src, name, size = 64 }: any) {
   const baseClassName =
@@ -133,10 +135,10 @@ function AvatarCircle({ src, name, size = 64 }: any) {
   );
 }
 
-/**
- * คำอธิบาย: Component แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
- * Input: src (string), name (string), size (number)
- * Output: JSX Element
+/*
+ * คำอธิบาย : Component แสดงโลโก้ของชุมชนแบบวงกลมใหญ่
+ * Input : src, name, size
+ * Output : React element
  */
 function LogoCircle({ src, name, size = 120 }: any) {
   const baseClassName =
@@ -166,10 +168,10 @@ function LogoCircle({ src, name, size = 120 }: any) {
   );
 }
 
-/**
- * คำอธิบาย: Component แสดงภาพปก (แนวนอนสี่เหลี่ยม)
- * Input: src (string), height (number)
- * Output: JSX Element
+/*
+ * คำอธิบาย : Component แสดงภาพปก (แนวนอนสี่เหลี่ยม)
+ * Input : src, height
+ * Output : React element
  */
 function CoverRect({ src, height = 320 }: any) {
   if (src) return <img src={src} alt="Cover" style={{ height }} className="w-full object-cover" />;
@@ -182,10 +184,10 @@ function CoverRect({ src, height = 320 }: any) {
   );
 }
 
-/**
- * คำอธิบาย: Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
- * Input: title, count, children, defaultOpen, onManage
- * Output: JSX Element
+/*
+ * คำอธิบาย : Accordion สำหรับส่วนต่าง ๆ เช่น แพ็กเกจ / ร้านค้า / ที่พัก / สมาชิก
+ * Input : title, count, children, defaultOpen, onManage
+ * Output : React element
  */
 function Section({
   title,
@@ -207,8 +209,8 @@ function Section({
         onClick={() => setIsSectionOpen((isPreviousState) => !isPreviousState)}
         className="w-full flex items-center justify-between rounded-lg border px-4 py-3 text-left hover:bg-slate-50 text-base font-semibold"
       >
-        <span className="font-semibold">{title}</span>
-        <div className="flex items-center gap-3 text-sm text-slate-600">
+        <span className="font-bold text-base">{title}</span>
+        <div className="flex items-center gap-3 font-normal text-base text-slate-600">
           {typeof count === "number" && (
             <span>
               จำนวน {count} {title}
@@ -225,7 +227,7 @@ function Section({
             <div className="flex justify-end mb-3">
               <button
                 onClick={onManage}
-                className="bg-dark-green text-white px-4 py-1.5 rounded-lg hover:bg-green-700"
+                className="bg-[#055035] hover:bg-green-900 text-white px-4 py-1.5 rounded-lg"
               >
                 จัดการ
               </button>
@@ -238,10 +240,10 @@ function Section({
   );
 }
 
-/**
- * คำอธิบาย: การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / แพ็กเกจ / ที่พัก)
- * Input: image, title, children
- * Output: JSX Element
+/*
+ * คำอธิบาย : การ์ดสำหรับแสดงรายการภายใน Section (เช่น ร้านค้า / แพ็กเกจ / ที่พัก)
+ * Input : image, title, children
+ * Output : React element
  */
 function ItemCard({ image, title, children }: any) {
   return (
@@ -263,12 +265,9 @@ function ItemCard({ image, title, children }: any) {
   );
 }
 
-/**
- * คำอธิบาย: Component หลักสำหรับหน้าแสดงรายละเอียดชุมชน
- * Input: - (ใช้ Params id จาก URL)
- * Output: JSX Element หน้า DetailCommunityPage
- */
-export default function DetailCommunityPage() {
+/* ฟังก์ชันหลัก : CommunityDetailSuperAdmin */
+
+export default function CommunityDetailSuperAdmin() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [community, setCommunity] = useState<any>(null);
@@ -348,11 +347,11 @@ export default function DetailCommunityPage() {
 
           <Link
             to={`/super/community/${community.id}/edit`}
-            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green"
+            className="inline-flex items-center gap-2 text-gray-800 hover:text-dark-green mr-2"
           >
             <button
               type="button"
-              className="bg-dark-green text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700"
+              className="bg-[#055035] hover:bg-green-900 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               <Icon icon="weui:pencil-filled" className="w-5 h-5" />
               <span>แก้ไข</span>
@@ -401,7 +400,7 @@ export default function DetailCommunityPage() {
                             icon="material-symbols:star-rounded"
                             className="text-[22px] text-black"
                           />
-                          <span className="text-[16px] font-regular">
+                          <span className="text-[16px] font-normal">
                             {Number(community.rating).toFixed(1)} คะแนน
                           </span>
                         </div>
@@ -509,7 +508,7 @@ export default function DetailCommunityPage() {
 
         {/* ช่องทางการติดต่ออื่น ๆ */}
         <div className="px-6 sm:px-8 mt-8">
-          <h2 className="text-xl font-semibold">ช่องทางการติดต่ออื่นๆ</h2>
+          <h2 className="text-xl font-bold">ช่องทางการติดต่ออื่นๆ</h2>
           <div className="mt-3 space-y-1 text-sm">
             <Row label="Facebook">
               {community.urlFacebook ? (
@@ -559,13 +558,13 @@ export default function DetailCommunityPage() {
 
         {/* ประวัติชุมชน */}
         <div className="px-6 sm:px-8 mt-10">
-          <h2 className="text-xl font-semibold">ประวัติชุมชน</h2>
+          <h2 className="text-xl font-bold">ประวัติชุมชน</h2>
           <p className="mt-2 leading-relaxed">{displayText(community.description)}</p>
         </div>
 
         {/* แกลเลอรีรูปภาพเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
-          <h2 className="text-xl font-semibold">รูปภาพเพิ่มเติม</h2>
+          <h2 className="text-xl font-bold">รูปภาพเพิ่มเติม</h2>
           {galleryImageLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {galleryImageLists.map((url, i) => (
@@ -584,7 +583,7 @@ export default function DetailCommunityPage() {
 
         {/* วิดีโอเพิ่มเติม */}
         <div className="px-6 sm:px-8 mt-10">
-          <h2 className="text-xl font-semibold">วิดีโอเพิ่มเติม</h2>
+          <h2 className="text-xl font-bold">วิดีโอเพิ่มเติม</h2>
           {videoLists?.length ? (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {videoLists.map((url, i) => (
@@ -656,28 +655,28 @@ export default function DetailCommunityPage() {
                 >
                   {packageLists.length ? (
                     <div className="space-y-4">
-                      {packageLists.map((pkg: any) => (
+                      {packageLists.map((packageItem: any) => (
                         <div
-                          key={pkg.id}
-                          onClick={() => navigate(`/super/package/${pkg.id}`)}
+                          key={packageItem.id}
+                          onClick={() => navigate(`/super/package/${packageItem.id}`)}
                           className="cursor-pointer"
                         >
                           <ItemCard
                             image={resolveBackendUploadUrl(
-                              pkg?.packageFile?.find(
+                              packageItem?.packageFile?.find(
                                 (fileImage: any) =>
                                   String(fileImage.type).toUpperCase() === "COVER",
                               )?.filePath,
                             )}
-                            title={pkg.name}
+                            title={packageItem.name}
                           >
                             <div className="space-y-1">
                               <div>
-                                - ความจุ {pkg.capacity} คน • ราคา{" "}
-                                {pkg.price?.toLocaleString?.() ?? pkg.price} บาท
+                                - ความจุ {packageItem.capacity} คน • ราคา{" "}
+                                {packageItem.price?.toLocaleString?.() ?? packageItem.price} บาท
                               </div>
-                              {pkg.description && (
-                                <div className="line-clamp-3">{pkg.description}</div>
+                              {packageItem.description && (
+                                <div className="line-clamp-3">{packageItem.description}</div>
                               )}
                             </div>
                           </ItemCard>

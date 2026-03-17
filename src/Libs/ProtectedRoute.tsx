@@ -23,7 +23,7 @@ type Props = {
  */
 export default function ProtectedRoute({
   allow,
-  redirectTo = "/guest/home",
+  redirectTo = "/guest/login",
   children,
 }: React.PropsWithChildren<Props>) {
   const { user } = useAuth();
@@ -33,9 +33,9 @@ export default function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // ⚠️ login แล้วแต่ role ไม่ตรง → ไปหน้า redirectTo
+  // ⚠️ login แล้วแต่ role ไม่ตรง → redirect ไปหน้า Access Denied
   if (!allow.includes(user.role)) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to="/access-denied" replace />;
   }
 
   // ✅ ผ่านเงื่อนไข → render children หรือ Outlet (กรณี nested routes)

@@ -8,10 +8,10 @@
  */
 import React from "react";
 import { useParams } from "react-router-dom";
-import * as PackageFeedbackService from "@/Libs/FeedbackService";
-import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
 import { Modal } from "@/Components/Modal/Modal";
+import * as PackageFeedbackService from "@/Libs/FeedbackService";
 
 const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -109,7 +109,7 @@ function renderStars(rating: number): string {
  * Input: -
  * Output: JSX.Element สำหรับแสดงหน้า Feedback ของแพ็กเกจ
  */
-export default function DetailFeedbackPage() {
+export function DetailFeedbackPage() {
   const { packageId } = useParams<{ packageId: string }>();
 
   const [feedbackLists, setFeedbackLists] = React.useState<Feedback[]>([]);
@@ -164,7 +164,8 @@ export default function DetailFeedbackPage() {
       .map((item) => item.feedbackItem);
   }, [feedbackLists, sortOrder]);
 
-  const packageName = feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
+  const fetchedPackageName = feedbackLists[0]?.bookingHistory?.package?.name ?? "ชื่อแพ็กเกจ";
+  const packageName = fetchedPackageName.split(" โดย ")[0].trim();
 
   const filterOptions: { label: string; value: SortOrder }[] = [
     { label: "ใหม่สุด", value: "newest" },
@@ -227,9 +228,9 @@ export default function DetailFeedbackPage() {
       previousFeedbacks.map((feedbackItem) =>
         feedbackItem.id === feedbackId
           ? {
-              ...feedbackItem,
-              replyMessage,
-            }
+            ...feedbackItem,
+            replyMessage,
+          }
           : feedbackItem,
       ),
     );
@@ -245,7 +246,7 @@ export default function DetailFeedbackPage() {
       <Breadcrumb
         current={{
           label: packageName,
-          to: `package/feedback/${packageId}`,
+          to: `/member/package/feedbacks/${packageId}`,
         }}
       />
 

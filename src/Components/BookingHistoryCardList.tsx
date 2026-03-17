@@ -54,11 +54,12 @@ function BookingHistoryCardList({ isLoading, bookings }: BookingHistoryCardListP
               <p className="text-sm text-gray-500">{booking.location}</p>
               <p className="text-xs text-gray-400">จองเมื่อ: {booking.bookingDate}</p>
               <p className="mt-1 font-bold text-gray-900">
-                ราคา THB{" "}
+                ราคา {" "}
                 {booking.price.toLocaleString("th-TH", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
+                {" "} บาท
               </p>
             </div>
 

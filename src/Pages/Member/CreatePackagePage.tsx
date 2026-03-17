@@ -1,37 +1,31 @@
 /**
- * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin)
+ * คำอธิบาย : Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Member)
  * - ฟอร์มกรอกข้อมูลแพ็กเกจใหม่ (หน้าตาเหมือนหน้าแก้ไข)
  * - รองรับการอัปโหลดรูปภาพ (Cover/Gallery/Video)
  * - ส่งข้อมูลแบบ multipart/form-data
- * Input: -
- * Output: หน้าฟอร์มสำหรับสร้างแพ็กเกจ
  */
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as z from "zod";
-import TextField from "../../Components/Input/TextField";
-import MapPicker from "../../Components/MapPicker";
 import { Icon } from "@iconify/react";
-import ThailandLocationSelector, {
-  type ThailandLocation,
-} from "@/Components/Selector/ThailandLocationSelector";
-import TextArea from "@/Components/Input/TextArea";
+import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
+import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import Button from "@/Components/Button";
 import CommunityMemberSelector, {
   type Member as CommunityMember,
 } from "@/Components/Selector/CommunityMemberSelector";
+import TextArea from "@/Components/Input/TextArea";
+import TextField from "@/Components/Input/TextField";
+import ThailandLocationSelector, { type ThailandLocation } from "@/Components/Selector/ThailandLocationSelector";
+import MapPicker from "@/Components/MapPicker";
 import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
-import Breadcrumb from "@/Components/BreadcrumbNavigation";
-import {
-  PackageStatusDropdown,
-  type PackageStatus,
-} from "@/Components/Selector/PackageStatusDropdown";
-import BoxDateInput from "@/Components/calendar/InputCalendar/BoxDateInput";
-import BoxTimeInput from "@/Components/calendar/InputCalendar/BoxTimeInput";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import { PackageStatusDropdown, type PackageStatus } from "@/Components/Selector/PackageStatusDropdown";
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
 
@@ -50,7 +44,7 @@ function normalizeOrDefault(inputValue: string, fallback = "-") {
  * Input: value (ค่าที่ต้องการแปลง)
  * Output: ตัวเลข หรือ null ถ้าแปลงไม่ได้
  */
-function toIntOrNull(value: any): number | null {
+function toIntOrNull(value: unknown): number | null {
   const trimmed = String(value ?? "").trim();
   if (trimmed === "") return null;
   const numberValue = Number(trimmed);
@@ -142,7 +136,12 @@ const packageSchema = z.object({
 
 type PackageErrors = Partial<Record<keyof PackageForm, string>>;
 
-export const CreatePackagePage = () => {
+/**
+ * คำอธิบาย : Component หลักสำหรับหน้าสร้างแพ็กเกจใหม่ (Member)
+ * Input : ไม่มี
+ * Output : หน้าฟอร์มสร้างแพ็กเกจและควบคุม state / การส่งข้อมูล
+ */
+export function CreatePackagePage() {
   const navigate = useNavigate();
   const [formState, setFormState] = useState<PackageForm>(initialFormState);
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
@@ -150,6 +149,10 @@ export const CreatePackagePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
   const [formErrors, setFormErrors] = useState<PackageErrors>({});
   const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
   const [tagIdLists, setTagIdLists] = useState<number[]>([]);
@@ -431,14 +434,40 @@ export const CreatePackagePage = () => {
     [setFormField],
   );
 
-  /**
-   * คำอธิบาย: ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
+/*
+   * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูล ตรวจสอบความถูกต้อง และส่งข้อมูลไปยัง Server
    * Input: -
    * Output: -
    */
   const handleConfirmSave = async () => {
+    // ปิด Modal ยืนยันก่อนเริ่มกระบวนการ
     setIsConfirmModalOpen(false);
+
     if (isSaving) return;
+
+    // 1. ส่วนการตรวจสอบข้อมูล (Validation)
+    const isFormValid = validateAll();
+    let isFilesValid = true;
+    let errorMessage = "กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก";
+
+    // หากสถานะไม่ใช่ DRAFT ต้องตรวจสอบว่าอัปโหลดไฟล์ครบถ้วนหรือไม่
+    if (formState.statusPackage !== "DRAFT") {
+      if (coverFileLists.length === 0 || galleryFileLists.length === 0 || videoFileLists.length === 0) {
+        isFilesValid = false;
+      }
+    }
+
+    // หากข้อมูลไม่ถูกต้อง ให้แสดง Alert Error
+    if (!isFormValid || !isFilesValid) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ครบถ้วน");
+      setAlertMessage(errorMessage);
+      setAlertOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 2. ส่วนการบันทึกข้อมูล (API Call)
     setIsSaving(true);
     try {
       const payload = {
@@ -491,35 +520,33 @@ export const CreatePackagePage = () => {
         withCredentials: true,
       });
 
-      navigate("/member/packages/all");
+      // บันทึกสำเร็จ แสดง Alert Success
+      setAlertType("success");
+      setAlertTitle("สร้างแพ็กเกจสำเร็จ");
+      setAlertMessage("ข้อมูลแพ็กเกจถูกบันทึก");
+      setAlertOpen(true);
+
     } catch (error: any) {
       console.error(error);
+      // บันทึกไม่สำเร็จ แสดง Alert Error
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
     }
   };
 
-  /**
-   * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
+/*
+   * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม เพื่อเปิด Modal ยืนยัน
    * Input: event (เหตุการณ์จากฟอร์ม)
-   * Output: - (เปิด Modal ยืนยัน หรือแสดง Error)
+   * Output: -
    */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSaving) return;
-    if (!validateAll()) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
     setIsConfirmModalOpen(true);
   }
 
@@ -546,7 +573,7 @@ export const CreatePackagePage = () => {
           aria-label="ย้อนกลับ"
         >
           <Icon icon="lucide:arrow-left" width={22} />
-          <span className="text-xl font-semibold ">สร้างแพ็กเกจใหม่</span>
+          <span className="text-xl font-semibold ">สร้างแพ็กเกจ</span>
         </button>
 
         {/* ชื่อ/คำอธิบาย */}
@@ -1035,7 +1062,7 @@ export const CreatePackagePage = () => {
           <div className="w-36">
             <fieldset disabled={isSaving}>
               <Button type="confirm-admin" htmlType="submit">
-                {isSaving ? "กำลังบันทึก..." : "สร้างแพ็กเกจ"}
+                {isSaving ? "กำลังบันทึก..." : "สร้าง"}
               </Button>
             </fieldset>
           </div>
@@ -1048,13 +1075,27 @@ export const CreatePackagePage = () => {
         text="คุณต้องการสร้างแพ็กเกจนี้ใช่หรือไม่?"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
-        onConfirm={handleConfirmSave}
+        onConfirm={handleConfirmSave} // เรียกใช้ฟังก์ชันที่เราแก้ใหม่
         onCancel={() => {
           setIsConfirmModalOpen(false);
         }}
       />
+
+      {/* เพิ่ม ModalAlert ต่อจาก Modal เดิม */}
+      <ModalAlert
+        isOpen={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertOpen(false);
+          // ถ้าเป็น success ให้ redirect หน้า
+          if (alertType === "success") {
+            navigate("/member/packages/all");
+          }
+        }}
+      />
+
     </div>
   );
-};
-
-export default CreatePackagePage;
+}

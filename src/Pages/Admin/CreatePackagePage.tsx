@@ -1,5 +1,5 @@
 /**
- * คำอธิบาย: Component หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) รองรับการกรอกข้อมูลแพ็กเกจ อัปโหลดรูปภาพ/วิดีโอ และเลือกที่พัก
+ * คำอธิบาย: หน้าสำหรับสร้างแพ็กเกจใหม่ (สำหรับ Admin) รองรับการกรอกข้อมูลแพ็กเกจ อัปโหลดรูปภาพ/วิดีโอ และเลือกที่พัก
  */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,8 @@ import CommunityMemberSelector, {
 import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
+import { PublishStatusModal } from "@/Components/Modal/PublishStatusModal";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import {
   PackageStatusDropdown,
@@ -150,8 +152,12 @@ export const CreatePackagePage = () => {
   const [communityId, setCommunityId] = useState<number | undefined>(undefined);
   const [currentOverseer, setCurrentOverseer] = useState<CommunityMember | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
   const [formErrors, setFormErrors] = useState<PackageErrors>({});
   const [position, setPosition] = useState<[number, number]>([13.7563, 100.5018]);
   const [tagIds, setTagIds] = useState<number[]>([]);
@@ -164,6 +170,7 @@ export const CreatePackagePage = () => {
   const [closeDateObj, setCloseDateObj] = useState<Date | null>(null);
   const [homestayCheckInDateObject, setHomestayCheckInDateObject] = useState<Date | null>(null);
   const [homestayCheckOutDateObject, setHomestayCheckOutDateObject] = useState<Date | null>(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState<boolean>(false);
 
   /**
    * คำอธิบาย: ฟังก์ชันสำหรับตรวจสอบความถูกต้องของข้อมูลราย Field
@@ -173,8 +180,8 @@ export const CreatePackagePage = () => {
   const validateField = React.useCallback(
     (field: keyof PackageForm, value: any, newState: PackageForm) => {
       const result = packageSchema.safeParse(newState);
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         [field]: result.success
           ? undefined
           : result.error.issues.find((issue) => issue.path[0] === field)?.message,
@@ -202,44 +209,44 @@ export const CreatePackagePage = () => {
       setFormErrors({});
     }
     if (formState.openDate && formState.closeDate && formState.openDate > formState.closeDate) {
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         closeDate: "วันที่ปิดจองต้องไม่น้อยกว่าวันที่เปิดจอง",
       }));
       isValid = false;
     }
     if (formState.closeDate && formState.endDate && formState.closeDate > formState.endDate) {
-      setFormErrors((prev) => ({
-        ...prev,
+      setFormErrors((previousState) => ({
+        ...previousState,
         closeDate: "วันที่ปิดจองต้องไม่ช้ากว่าวันสิ้นสุดกิจกรรม",
       }));
       isValid = false;
     }
     if (selectedHomestay) {
       if (!homestayCheckInDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckInDate: "กรุณาเลือกวันที่เช็กอิน",
         }));
         isValid = false;
       }
       if (!homestayCheckInTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckInTime: "กรุณาเลือกเวลาเช็กอิน",
         }));
         isValid = false;
       }
       if (!homestayCheckOutDate) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckOutDate: "กรุณาเลือกวันที่เช็กเอาท์",
         }));
         isValid = false;
       }
       if (!homestayCheckOutTime) {
-        (setFormErrors as any)((prev: any) => ({
-          ...prev,
+        (setFormErrors as any)((previousState: any) => ({
+          ...previousState,
           homestayCheckOutTime: "กรุณาเลือกเวลาเช็กเอาท์",
         }));
         isValid = false;
@@ -375,8 +382,8 @@ export const CreatePackagePage = () => {
    */
   const setFormField = React.useCallback(
     <KeyValue extends keyof PackageForm>(key: KeyValue, value: PackageForm[KeyValue]) => {
-      setFormState((prev) => {
-        const newState = { ...prev, [key]: value };
+      setFormState((previousState) => {
+        const newState = { ...previousState, [key]: value };
         validateField(key, value, newState);
         return newState;
       });
@@ -420,61 +427,82 @@ export const CreatePackagePage = () => {
     [setFormField],
   );
 
-  /**
-   * คำอธิบาย: ฟังก์ชันยืนยันการบันทึกข้อมูลและส่งข้อมูลไปยัง Server
-   * Input: -
-   * Output: -
-   */
-  const handleConfirmSave = async () => {
+  /*
+     * คำอธิบาย : ฟังก์ชันยืนยันการบันทึกข้อมูล ตรวจสอบความถูกต้อง และส่งข้อมูลไปยัง Server
+     * Input: -
+     * Output: -
+     */
+  const handleConfirmSave = async (statusApproveFromModal?: "APPROVE" | "PENDING_SUPER") => {
+    // ปิด Modal ยืนยันก่อนเริ่มกระบวนการ
     setIsConfirmModalOpen(false);
-    if (isSaving) return;
-    setIsSaving(true);
+    setIsStatusModalOpen(false);
 
+    if (isSaving) return;
+
+    // 1. ส่วนการตรวจสอบข้อมูล (Validation)
+    let isValid = true;
+    let errorMessage = "กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก";
+
+    // ตรวจสอบตามสถานะแพ็กเกจ
+    if (formState.statusPackage === "DRAFT") {
+      if (!formState.name.trim()) {
+        setFormErrors((previousState) => ({ ...previousState, name: "กรุณากรอกชื่อแพ็กเกจ" }));
+        isValid = false;
+      }
+    } else {
+      // สำหรับสถานะ PUBLISH/UNPUBLISH ต้องตรวจสอบทั้งหมด
+      isValid = validateAll();
+
+      // ตรวจสอบไฟล์ (Cover, Gallery, Video) ว่ามีการอัปโหลดหรือไม่
+      // หมายเหตุ: อิงตาม UI ที่ใส่ดอกจัน (*) ว่าจำเป็นต้องใส่
+      const isFilesValid = coverFiles.length > 0 && galleryFiles.length > 0 && videoFiles.length > 0;
+
+      if (!isFilesValid) {
+        isValid = false;
+        errorMessage = "กรุณาอัปโหลดรูปภาพหน้าปก รูปภาพเพิ่มเติม และวิดีโอให้ครบถ้วน";
+      }
+    }
+
+    // หากข้อมูลไม่ถูกต้อง ให้แสดง Alert Error
+    if (!isValid) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ครบถ้วน");
+      setAlertMessage(errorMessage);
+      setIsAlertOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 2. ส่วนการบันทึกข้อมูล (API Call)
+    setIsSaving(true);
     try {
       const overseerIdVal = Number(formState.overseerMemberId);
       const safeOverseerId = overseerIdVal > 0 ? overseerIdVal : null;
 
       const payload = {
         overseerMemberId: safeOverseerId,
-
         name: normalizeOrDefault(formState.name),
-        description: formState.description || "", // Draft อนุญาตให้ว่าง
+        description: formState.description || "",
         statusPackage: formState.statusPackage,
-
         capacity: Math.max(1, Number(formState.capacity || 0)),
         price: Math.max(0, Number(formState.price || 0)),
         warning: formState.facility || "",
-
-        // วันที่ต้องส่งเป็น null ถ้าไม่มีค่า (ห้ามส่ง "-")
         startDate: formState.startDate || null,
         dueDate: formState.endDate || null,
         bookingOpenDate: formState.openDate || null,
         bookingCloseDate: formState.closeDate || null,
-
-        // ... (เวลา คงเดิม) ...
         ...(formState.startTime.trim() && { startTime: formState.startTime.trim() }),
         ...(formState.endTime.trim() && { endTime: formState.endTime.trim() }),
         ...(formState.openTime.trim() && { openTime: formState.openTime.trim() }),
         ...(formState.closeTime.trim() && { closeTime: formState.closeTime.trim() }),
-
-        // Homestay
-        ...(selectedHomestay &&
-          homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
-        ...(selectedHomestay &&
-          homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
-        ...(selectedHomestay &&
-          homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
-        ...(selectedHomestay &&
-          homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
+        ...(selectedHomestay && homestayCheckInDate && { homestayCheckInDate: homestayCheckInDate }),
+        ...(selectedHomestay && homestayCheckInTime && { homestayCheckInTime: homestayCheckInTime }),
+        ...(selectedHomestay && homestayCheckOutDate && { homestayCheckOutDate: homestayCheckOutDate }),
+        ...(selectedHomestay && homestayCheckOutTime && { homestayCheckOutTime: homestayCheckOutTime }),
         ...(selectedHomestay && homestayBookedRoom && { bookedRoom: Number(homestayBookedRoom) }),
-
         facility: formState.facility || "",
-
-        // [จุดสำคัญ] ต้องแปลง tagIds เป็น number array ไม่งั้นจะ Error 400
-        tagIds: tagIds.map((tagIdValue) => Number(tagIdValue)),
-
+        tagIds: tagIds.map(tagIdValue => Number(tagIdValue)),
         ...(selectedHomestay ? { homestayId: selectedHomestay.id } : {}),
-
         location: {
           houseNumber: formState.houseNumber || "",
           villageNumber: toIntOrNull(formState.villageNumber),
@@ -486,46 +514,53 @@ export const CreatePackagePage = () => {
           latitude: Number(formState.latitude) || 0,
           longitude: Number(formState.longitude) || 0,
         },
+        statusApprove: formState.statusPackage === "DRAFT"
+          ? "PENDING"
+          : (statusApproveFromModal ?? "PENDING"),
       };
+
       const formData = new FormData();
       formData.append("data", JSON.stringify(payload));
       coverFiles.forEach((file: any) => formData.append("cover", file));
       galleryFiles.forEach((file: any) => formData.append("gallery", file));
       videoFiles.forEach((file: any) => formData.append("video", file));
+
       await axios.post(`${apiUrl}/admin/package`, formData, {
         withCredentials: true,
       });
-      navigate("/admin/packages/all");
+
+      // บันทึกสำเร็จ
+      setAlertType("success");
+      setAlertTitle("สร้างแพ็กเกจสำเร็จ");
+      setAlertMessage("ข้อมูลแพ็กเกจถูกบันทึกเรียบร้อยแล้ว");
+      setIsAlertOpen(true);
+
     } catch (error: any) {
+      console.error("Save package error:", error);
+      // บันทึกไม่สำเร็จ
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
     }
   };
 
-  /**
-   * คำอธิบาย: ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม
-   * Input: event (เหตุการณ์จากฟอร์ม)
-   * Output: - (เปิด Modal ยืนยัน หรือแสดง Error)
-   */
+  /*
+  * คำอธิบาย : ฟังก์ชันจัดการเมื่อมีการกดปุ่ม Submit ฟอร์ม เพื่อเปิด Modal ยืนยัน
+  * Input: event (เหตุการณ์จากฟอร์ม)
+  * Output: -
+  */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSaving) return;
     if (formState.statusPackage === "DRAFT") {
-      if (!formState.name.trim()) {
-        setFormErrors((prev) => ({ ...prev, name: "กรุณากรอกชื่อแพ็กเกจ" }));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-      setFormErrors({});
+      setIsConfirmModalOpen(true);
     } else {
-      if (!validateAll()) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
+      setIsStatusModalOpen(true)
     }
-
-    setIsConfirmModalOpen(true);
   }
 
   return (
@@ -551,7 +586,7 @@ export const CreatePackagePage = () => {
           aria-label="ย้อนกลับ"
         >
           <Icon icon="lucide:arrow-left" width={22} />
-          <span className="text-xl font-semibold ">สร้างแพ็กเกจใหม่</span>
+          <span className="text-xl font-semibold ">สร้างแพ็กเกจ</span>
         </button>
 
         {/* ชื่อ/คำอธิบาย */}
@@ -634,9 +669,9 @@ export const CreatePackagePage = () => {
                   subdistrict: formErrors.subDistrict,
                 }}
                 onChange={(location: ThailandLocation) => {
-                  setFormState((prev) => {
+                  setFormState((previousState) => {
                     const newState = {
-                      ...prev,
+                      ...previousState,
                       province: location.province ?? "",
                       district: location.district ?? "",
                       subDistrict: location.subdistrict ?? "",
@@ -1031,7 +1066,7 @@ export const CreatePackagePage = () => {
                   </div>
 
                   <div className="col-span-12 sm:col-span-8">
-                    <div className="font-semibold text-lg mb-2">{selectedHomestay.name}</div>
+                    <div className="font-semibold text-base mb-2">{selectedHomestay.name}</div>
                     {selectedHomestay.facility && (
                       <div>
                         <div className="font-semibold mb-1">สิ่งอำนวยความสะดวกที่พัก</div>
@@ -1042,7 +1077,7 @@ export const CreatePackagePage = () => {
                             .filter(Boolean)
                             .slice(0, 12)
                             .map((facilityItem, index) => (
-                              <li key={index} className="text-sm">
+                              <li key={index} className="text-base">
                                 {facilityItem}
                               </li>
                             ))}
@@ -1065,7 +1100,7 @@ export const CreatePackagePage = () => {
           <div className="w-36">
             <fieldset disabled={isSaving}>
               <Button type="confirm-admin" htmlType="submit">
-                {isSaving ? "กำลังบันทึก..." : "สร้างแพ็กเกจ"}
+                {isSaving ? "กำลังบันทึก..." : "สร้าง"}
               </Button>
             </fieldset>
           </div>
@@ -1083,6 +1118,27 @@ export const CreatePackagePage = () => {
           setIsConfirmModalOpen(false);
         }}
       />
+
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setIsAlertOpen(false);
+          if (alertType === "success") {
+            navigate("/admin/packages/all");
+          }
+        }}
+      />
+
+      <PublishStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        onConfirm={(status) => handleConfirmSave(status)}
+        isSaving={isSaving}
+      />
+
     </div>
   );
 };

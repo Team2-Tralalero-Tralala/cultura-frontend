@@ -22,7 +22,7 @@ type PackageRowData = {
   community: string;
   owner: string;
   isPublished: boolean;
-  isApproved: boolean;
+  statusApprove: string | null;
   bookedCount: number;
   capacity: number;
 };
@@ -61,6 +61,11 @@ export function ManagePackagePage() {
       key: "isPublished",
       header: "สถานะแพ็กเกจ",
       render: (packageData) => (packageData.isPublished ? "เผยแพร่" : "ไม่เผยแพร่"),
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะการอนุมัติ",
+      render: (row) => toApprovedText(row),
     },
     {
       key: "bookingStats",
@@ -147,11 +152,8 @@ export function ManagePackagePage() {
             packageItem?.statusPackage === "PUBLISH" ||
             packageItem?.published === true ||
             packageItem?.isPublished === true,
-          isApproved:
-            packageItem?.statusApprove === "APPROVE" ||
-            packageItem?.approved === true ||
-            packageItem?.isApproved === true,
-          bookedCount: packageItem?.bookingHistories?.length ?? 0,
+          statusApprove: packageItem?.statusApprove ?? null,
+          bookedCount: packageItem.bookedCount ?? 0,
           capacity: packageItem?.capacity ?? 0,
         }),
       );
@@ -215,7 +217,7 @@ export function ManagePackagePage() {
         id: "bulk-delete",
         label: "ลบทั้งหมด",
         icon: TrashIcon,
-        intent: "danger",
+        intent: "neutral",
         onClick: (selectedPackageRows) => {
           setPackagesToBulkDelete(selectedPackageRows);
           setIsDeleteModalOpen(true);
@@ -224,7 +226,11 @@ export function ManagePackagePage() {
     ],
     [],
   );
-
+/**
+ * คำอธิบาย: กำหนด Action สำหรับแต่ละแถวในตาราง (Edit, Delete)
+ * Input: -
+ * Output: -
+ */
   const rowActions: DataTableActionsConfig<PackageRowData> = React.useMemo(
     () => ({
       header: "จัดการ",
@@ -270,9 +276,25 @@ export function ManagePackagePage() {
    * Input: packageData (object ข้อมูล)
    * Output: สตริง "อนุมัติ" หรือ "รออนุมัติ"
    */
-  const toApprovedText = (packageData: PackageRowData) =>
-    packageData.isApproved ? "อนุมัติ" : "รออนุมัติ";
+  const toApprovedText = (packageData: PackageRowData) => {
+    switch (packageData.statusApprove) {
+      case "APPROVE":
+        return "อนุมัติ";
+      case "REJECTED":
+        return "ถูกปฏิเสธ";
+      case "PENDING":
+      case "PENDING_SUPER":
+        return "รออนุมัติ";
+      default:
+        return "-";
+    }
+  };
 
+  /**
+   * คำอธิบาย: ค้นหาข้อมูลแพ็กเกจตามคีย์เวิร์ด
+   * Input: packageRows (ข้อมูลแพ็กเกจ), searchQuery (คีย์เวิร์ดค้นหา)
+   * Output: ข้อมูลแพ็กเกจที่ตรงกับคีย์เวิร์ด
+   */
   const filteredPackageRows = React.useMemo(() => {
     const query = normalizeText(searchQuery);
     if (!query) return packageRows;
@@ -364,7 +386,7 @@ export function ManagePackagePage() {
         bulkActions={bulkActions}
         selectable
         pagination={pagination}
-        pageSizeOptions={[10, 20, 50]}
+        pageSizeOptions={[10, 30, 50]}
         onPageChange={(page) => setCurrentPage(page)}
         onPageSizeChange={(size) => {
           setPageSize(size);
@@ -377,8 +399,8 @@ export function ManagePackagePage() {
       {/* Modal สำหรับยืนยันการลบ */}
       <Modal
         isOpen={isDeleteModalOpen}
-        title="ยืนยันการลบ"
-        text={`คุณต้องการลบแพ็กเกจ "${packageToDelete?.title ?? ""}" ใช่หรือไม่?`}
+        title="ยืนยันการลบแพ็กเกจ"
+        text={`คุณต้องการยืนยันการลบแพ็กเกจหรือไม่`}
         confirmText="ยืนยันลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}

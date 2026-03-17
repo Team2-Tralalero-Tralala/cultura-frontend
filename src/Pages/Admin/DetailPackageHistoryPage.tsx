@@ -15,8 +15,11 @@ import { Icon } from "@iconify/react";
 import type { JSX } from "react/jsx-runtime";
 import DetailPackageGallery from "@/Components/DetailPackageGallery";
 
+/**
+ * คำอธิบาย: URL ของ Backend สำหรับติดต่อ API
+ */
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
+const BACKEND_BASE_URL = apiUrl.replace(/\/api$/, "");
 interface DateTimeField {
   date: string | null;
   time: string | null;
@@ -92,6 +95,23 @@ interface PackageData {
   files: PackageFile[];
   homestayHistories: HomestayHistory[];
 }
+
+/**
+ * คำอธิบาย: ฟังก์ชันสำหรับจัดรูปแบบ path ของรูปภาพจาก backend ให้เป็น URL ที่ถูกต้อง
+ * Input: imagePath (string | undefined) - path ของรูปภาพจาก backend
+ * Output: string - URL ของรูปภาพที่พร้อมใช้งาน
+ */
+const buildImageUrl = (imagePath?: string): string => {
+  if (!imagePath) return "";
+
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  const cleanPath = imagePath.replace(/^\/+/, "");
+
+  return `${BACKEND_BASE_URL}/${cleanPath}`;
+};
 
 /**
  * คำอธิบาย: แปลงวันที่รูปแบบ ISO เป็นรูปแบบไทย (dd/mm/yyyy)
@@ -189,13 +209,11 @@ export default function DetailPackageHistoryPage() {
               }
             : null,
           files: packageRawData.packageFile
-            ? packageRawData.packageFile.map(
-                (fileItem: any): PackageFile => ({
-                  id: fileItem.id,
-                  path: fileItem.filePath,
-                  type: fileItem.type,
-                }),
-              )
+            ? packageRawData.packageFile.map((fileItem: any) => ({
+                id: fileItem.id,
+                path: buildImageUrl(fileItem.filePath),
+                type: fileItem.type,
+              }))
             : [],
           homestayHistories: packageRawData.homestayHistories
             ? packageRawData.homestayHistories.map(

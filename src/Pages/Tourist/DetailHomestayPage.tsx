@@ -136,8 +136,17 @@ export default function DetailHomestayPage() {
     return <div className="p-10 text-center min-h-screen content-center">ไม่พบข้อมูลที่พัก</div>;
 
   const images = homestay.homestayImage || [];
+  /**
+   * คำอธิบาย : เรียงลำดับรูปภาพ โดยให้รูปภาพที่มี type เป็น "COVER" อยู่หน้าสุด
+   * Input : images (รูปภาพของที่พัก)
+   * Output : sortedImages (รูปภาพที่เรียงลำดับแล้ว)
+   */
   const sortedImages = [...images].sort((imageA) => (imageA.type === "COVER" ? -1 : 1));
-
+  /**
+   * คำอธิบาย : แปลงรูปภาพเป็น MediaItem
+   * Input : sortedImages (รูปภาพที่เรียงลำดับแล้ว)
+   * Output : galleryItems (MediaItem)
+   */
   const galleryItems: MediaItem[] = sortedImages.map((img) => ({
     type: "image",
     src: resolveBackendUploadUrl(img.image) ?? "https://placehold.co/600x400?text=No+Image",

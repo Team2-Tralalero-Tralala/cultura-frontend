@@ -1,6 +1,7 @@
 /**
- * คำอธิบาย : Component หน้าสำหรับแสดงรายละเอียดของที่พัก (Homestay) สำหรับแอดมิน
- * โดยรองรับการแสดงรายละเอียดข้อมูลที่พัก, แสดงรูปภาพและแผนที่ที่พัก, ลิงก์ไปยังหน้าแก้ไขข้อมูลที่พัก
+ * หน้า : ดูรายละเอียดที่พัก (Admin)
+ * Page : DetailHomestayAdmin
+ * Description : แสดงรายละเอียดของที่พัก (Homestay) สำหรับแอดมินของชุมชนนั้น ๆ
  */
 
 import { useEffect, useState } from "react";
@@ -8,47 +9,54 @@ import { useParams, useNavigate } from "react-router-dom";
 import { SquarePen, ArrowLeft } from "lucide-react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { Link } from "react-router-dom";
-import Tag from "@/Components/Tag";
+import { Tag } from "@/Components/Tag";
 import type { HomestayDetail } from "@/Types/Homestay";
 import { fetchHomestayDetailByAdmin } from "@/Libs/HomestayService";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL || "";
+const backendBaseUrl = apiUrl.replace(/\/api$/, "");
 
-/**
- * คำอธิบาย: แปลงชื่อไฟล์หรือพาธจาก backend ให้เป็น URL เต็มสำหรับใช้งาน
- * Input: fileName (ชื่อไฟล์หรือพาธ)
- * Output: URL เต็มของไฟล์ หรือ undefined หากไม่มีข้อมูล
+/*
+ * คำอธิบาย : แปลงชื่อไฟล์หรือพาธจาก backend ให้เป็น URL เต็มสำหรับใช้งานบน frontend
+ * Input : fileName (string | undefined)
+ * Output : string | undefined (URL เต็ม)
  */
 function resolveBackendUploadUrl(fileName?: string): string | undefined {
   if (!fileName) return undefined;
-  const cleanedPath = fileName.replace(/^\/+/, "").replace(/\/+$/, "");
+
+  const cleanedPath = fileName.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+
+  if (cleanedPath.startsWith("http")) return cleanedPath;
+
   if (!cleanedPath.startsWith("uploads/")) {
-    return `${apiUrl}/uploads/${cleanedPath}`;
+    return `${backendBaseUrl}/uploads/${cleanedPath}`;
   }
-  return `${apiUrl}/${cleanedPath}`;
+
+  return `${backendBaseUrl}/${cleanedPath}`;
 }
 
-/**
- * คำอธิบาย: แสดงค่าที่ส่งเข้ามา หากไม่มีค่าจะแสดงเป็น "-"
- * Input: textValue (ค่าข้อความที่ต้องการตรวจสอบ)
- * Output: ค่าข้อความเดิม หรือ "-"
+/*
+ * คำอธิบาย : ใช้แสดงค่าที่ส่งเข้ามา หากไม่มีค่าหรือเป็น falsy จะแสดงเป็น "-"
+ * Input : textValue (any)
+ * Output : any (คืนค่าต้นฉบับถ้ามีค่า หรือ "-" หากไม่มีค่า)
  */
 const displayText = (textValue: any) => (textValue ? textValue : "-");
 
-/**
- * คำอธิบาย: Component หน้าแสดงรายละเอียดที่พักสำหรับ Admin
+/*
+ * คำอธิบาย : หน้าสำหรับแสดงรายละเอียดของที่พัก (Homestay) สำหรับผู้ดูแลระบบ (Admin)
  */
-export default function DetailHomestayPage() {
+export default function DetailHomestayAdmin() {
   const navigate = useNavigate();
   const { homestayId } = useParams<{ homestayId: string }>();
 
+  /* State เก็บข้อมูลรายละเอียดที่พัก */
   const [homestayDetail, setHomestayDetail] = useState<HomestayDetail | null>(null);
+
+  /* State เก็บ URL รูปภาพสำหรับแสดงใน Modal (Preview) */
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
-  /**
-   * คำอธิบาย: ดึงข้อมูลรายละเอียดที่พักจาก Backend
-   * Input: - (ใช้ homestayId จาก URL params)
-   * Output: - (อัปเดต state homestayDetail)
+  /*
+   * คำอธิบาย : โหลดข้อมูลรายละเอียดที่พักจาก backend เมื่อ homestayId เปลี่ยนแปลง
    */
   useEffect(() => {
     if (!homestayId) return;
@@ -57,16 +65,17 @@ export default function DetailHomestayPage() {
       .catch((error) => console.error(error));
   }, [homestayId]);
 
-  if (!homestayDetail) return <div className="p-8 text-gray-500">กำลังโหลดข้อมูลที่พัก...</div>;
+  if (!homestayDetail)
+    return <div className="p-8 text-gray-500">กำลังโหลดข้อมูลที่พัก...</div>;
 
   const googleMapLink = `https://maps.google.com/?q=${homestayDetail.location?.latitude},${homestayDetail.location?.longitude}`;
 
   const coverImage = homestayDetail.homestayImage?.find(
-    (imageItem: any) => imageItem.type === "COVER",
+    (imageItem: any) => imageItem.type === "COVER"
   );
 
   const galleryImageLists = homestayDetail.homestayImage?.filter(
-    (imageItem: any) => imageItem.type === "GALLERY",
+    (imageItem: any) => imageItem.type === "GALLERY"
   );
 
   return (
@@ -95,7 +104,7 @@ export default function DetailHomestayPage() {
           {/* ปุ่มแก้ไข */}
           <Link
             to={`/admin/community/homestay/${homestayDetail.id}/edit`}
-            className="flex items-center gap-2 bg-[#055035] hover:bg-[#155849] text-white px-6 py-2.5 rounded-lg transition text-sm font-medium shadow-sm"
+              className="bg-[#055035] hover:bg-green-900 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
             <SquarePen size={18} />
             <span>แก้ไข</span>
@@ -126,7 +135,9 @@ export default function DetailHomestayPage() {
 
           {/* ข้อมูลที่พัก */}
           <div className="text-[16px] leading-relaxed pl-2">
-            <h3 className="text-[20px] font-bold text-black mb-4">ข้อมูลที่พัก</h3>
+            <h3 className="text-[20px] font-bold text-black mb-4">
+              ข้อมูลที่พัก
+            </h3>
 
             <div className="space-y-4">
               {/* ชื่อที่พัก */}
@@ -142,12 +153,16 @@ export default function DetailHomestayPage() {
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
                 <span className="font-bold text-black">ประเภทที่พัก</span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">{displayText(homestayDetail.type)}</span>
+                <span className="text-black">
+                  {displayText(homestayDetail.type)}
+                </span>
               </div>
 
               {/* สิ่งอำนวยความสะดวก */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">สิ่งอำนวยความสะดวก</span>
+                <span className="font-bold text-black">
+                  สิ่งอำนวยความสะดวก
+                </span>
                 <span className="font-bold text-black">:</span>
                 {homestayDetail.facility ? (
                   <ul className="list-disc list-inside space-y-1 text-black">
@@ -164,14 +179,20 @@ export default function DetailHomestayPage() {
 
               {/* จำนวนห้องพักทั้งหมด */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">จำนวนห้องพักทั้งหมด</span>
+                <span className="font-bold text-black">
+                  จำนวนห้องพักทั้งหมด
+                </span>
                 <span className="font-bold text-black">:</span>
-                <span className="text-black">{displayText(homestayDetail.totalRoom)} ห้อง</span>
+                <span className="text-black">
+                  {displayText(homestayDetail.totalRoom)} ห้อง
+                </span>
               </div>
 
               {/* จำนวนผู้เข้าพักต่อห้อง */}
               <div className="grid grid-cols-[160px_16px_1fr] items-start">
-                <span className="font-bold text-black">จำนวนผู้เข้าพักต่อห้อง</span>
+                <span className="font-bold text-black">
+                  จำนวนผู้เข้าพักต่อห้อง
+                </span>
                 <span className="font-bold text-black">:</span>
                 <span className="text-black">
                   {displayText(homestayDetail.guestPerRoom)} คน ต่อ ห้อง
@@ -185,15 +206,17 @@ export default function DetailHomestayPage() {
 
                 <div className="flex flex-wrap gap-2 text-black">
                   {homestayDetail.tagHomestays && homestayDetail.tagHomestays.length > 0 ? (
-                    homestayDetail.tagHomestays.map((tagItem: any, index: number) => (
-                      <Tag
-                        key={index}
-                        label={tagItem.tag.name}
-                        sizeClass="px-3 h-8"
-                        className="border-gray-300 text-black"
-                        title={tagItem.tag.name}
-                      />
-                    ))
+                    homestayDetail.tagHomestays.map(
+                      (tagItem: any, index: number) => (
+                        <Tag
+                          key={index}
+                          label={tagItem.tag.name}
+                          sizeClass="px-3 h-8"
+                          className="border-gray-300 text-black"
+                          title={tagItem.tag.name}
+                        />
+                      )
+                    )
                   ) : (
                     <span>-</span>
                   )}
@@ -205,7 +228,9 @@ export default function DetailHomestayPage() {
 
         {/* รูปภาพเพิ่มเติม */}
         <div className="mt-10">
-          <h3 className="text-[20px] font-bold text-black mb-3">รูปภาพเพิ่มเติม</h3>
+          <h3 className="text-[20px] font-bold text-black mb-3">
+            รูปภาพเพิ่มเติม
+          </h3>
 
           {galleryImageLists && galleryImageLists.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -255,11 +280,9 @@ export default function DetailHomestayPage() {
                 const zoomDelta = 0.0025;
 
                 // สร้าง URL สำหรับฝัง OpenStreetMap
-                const openStreetMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
-                  longitude - zoomDelta
-                }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${
-                  latitude + zoomDelta
-                }&layer=mapnik&marker=${latitude}%2C${longitude}`;
+                const openStreetMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - zoomDelta
+                  }%2C${latitude - zoomDelta}%2C${longitude + zoomDelta}%2C${latitude + zoomDelta
+                  }&layer=mapnik&marker=${latitude}%2C${longitude}`;
 
                 return (
                   <iframe
@@ -286,9 +309,12 @@ export default function DetailHomestayPage() {
                   <span className="font-bold text-black">ที่อยู่</span>
                   <span className="font-bold text-black">:</span>
                   <span className="text-black">
-                    {homestayDetail.location.houseNumber} {homestayDetail.location.villageNumber}{" "}
-                    {homestayDetail.location.subDistrict} {homestayDetail.location.district}{" "}
-                    {homestayDetail.location.province} {homestayDetail.location.postalCode}
+                    {homestayDetail.location.houseNumber}{" "}
+                    {homestayDetail.location.villageNumber}{" "}
+                    {homestayDetail.location.subDistrict}{" "}
+                    {homestayDetail.location.district}{" "}
+                    {homestayDetail.location.province}{" "}
+                    {homestayDetail.location.postalCode}
                   </span>
                 </div>
 
@@ -328,6 +354,7 @@ export default function DetailHomestayPage() {
                 </div>
               </div>
             </div>
+
           </div>
         )}
 

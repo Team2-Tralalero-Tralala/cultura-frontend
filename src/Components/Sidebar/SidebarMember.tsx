@@ -83,7 +83,7 @@ const SidebarMember: React.FC = () => {
       setActiveMenuKey("booking-done");
       setOpenDropdown("booking");
     } else if (
-      subPath.startsWith("/bookings/panding") ||
+      subPath.startsWith("/bookings/all") ||
       subPath.startsWith("/booking/") ||
       subPath.startsWith("/bookings")
     ) {
@@ -193,7 +193,7 @@ const SidebarMember: React.FC = () => {
           {/* จัดการการจอง */}
           <div>
             <Link
-              to={`${basePath}/bookings/panding`}
+              to={`${basePath}/bookings/all`}
               onClick={() => handleClick("booking")}
               className={`flex items-center justify-between w-full p-2 rounded hover:bg-[#0D845A] transition ${isActive("booking") ? "bg-[#0D845A]" : ""
                 }`}

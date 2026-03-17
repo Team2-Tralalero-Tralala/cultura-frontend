@@ -22,7 +22,7 @@ import type {
 } from "@/Components/Tables/Types";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
 
-export type TagRow = { id: number; name: string };
+export type TagRow = { id: number; name: string; isUsed?: boolean };
 
 /*
  * คำอธิบาย : ฟังก์ชันหลักของหน้าจัดการประเภท
@@ -32,7 +32,6 @@ export type TagRow = { id: number; name: string };
 export function ManageTagPage() {
   const [rows, setRows] = useState<TagRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
@@ -42,9 +41,14 @@ export function ManageTagPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRows, setSelectedRows] = useState<TagRow[]>([]);
 
+  // error modal state for delete
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
+
   // modal state
   const [selectedTag, setSelectedTag] = useState<TagRow | null>(null);
-  const [modalType, setModalType] = useState<"create" | "edit" | "delete" | null>(null);
+  const [modalType, setModalType] = useState<"create" | "edit" | "delete" | "bulk-delete" | null>(null);
+  const [rowsToDelete, setRowsToDelete] = useState<TagRow[]>([]);
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [pendingTagName, setPendingTagName] = useState("");
@@ -60,7 +64,6 @@ export function ManageTagPage() {
   const fetchData = async (page: number, limit: number, search: string) => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
 
       const res = await TagService.fetchTags(page, limit, search);
 
@@ -73,13 +76,14 @@ export function ManageTagPage() {
       };
 
       const mappedRows: TagRow[] = Array.isArray(resultData)
-        ? resultData.map((tag: any) => ({ id: tag.id, name: tag.name }))
+        ? resultData.map((tag: any) => ({ id: tag.id, name: tag.name, isUsed: tag.isUsed }))
         : [];
 
       setRows(mappedRows);
       setPagination(resultPagination);
     } catch (error: any) {
-      setErrorMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setErrorModalMessage(error?.message ?? "โหลดข้อมูลไม่สำเร็จ");
+      setIsErrorModalOpen(true);
     } finally {
       setIsLoading(false);
     }
@@ -130,6 +134,11 @@ export function ManageTagPage() {
    * Output : เปิด modal ยืนยัน
    */
   const handleDelete = (tag: TagRow) => {
+    if (tag.isUsed) {
+      setErrorModalMessage(`ไม่สามารถลบประเภทนี้ได้เนื่องจากมีการเรียกใช้งานแท็กอยู่ในระบบ`);
+      setIsErrorModalOpen(true);
+      return;
+    }
     setSelectedTag(tag);
     setModalType("delete");
     setIsConfirmModalOpen(true);
@@ -150,23 +159,28 @@ export function ManageTagPage() {
         await TagService.createTag(pendingTagName);
         setSuccessMessage("สร้างประเภทสำเร็จ");
         setSuccessDescription("บันทึกข้อมูลประเภทสำเร็จ");
-      }
-      else if (modalType === "edit" && selectedTag) {
+      } else if (modalType === "edit" && selectedTag) {
         await TagService.updateTag(selectedTag.id, pendingTagName);
         setSuccessMessage("แก้ไขประเภทสำเร็จ");
         setSuccessDescription("บันทึกข้อมูลประเภทสำเร็จ");
-      }
-      else if (modalType === "delete" && selectedTag) {
+      } else if (modalType === "delete" && selectedTag) {
         await TagService.deleteTag(selectedTag.id);
         setSuccessMessage("ลบประเภทสำเร็จ");
         setSuccessDescription("");
+      } else if (modalType === "bulk-delete" && rowsToDelete.length > 0) {
+        await Promise.all(rowsToDelete.map((row) => TagService.deleteTag(row.id)));
+        setSuccessMessage(`ลบ ${rowsToDelete.length} รายการสำเร็จ`);
+        setSuccessDescription("");
+        setRowsToDelete([]);
+        setSelectedRows([]);
       }
 
       closeInputModal();
       setIsConfirmModalOpen(false);
-      if (modalType !== "delete") {
+      if (modalType !== "delete" && modalType !== "bulk-delete") {
         setIsSuccessModalOpen(true);
       }
+
       await fetchData(pagination.currentPage, pagination.limit, searchQuery);
     } catch (error) {
       console.error(error);
@@ -203,10 +217,18 @@ export function ManageTagPage() {
     align: "left",
     width: "120px",
     variant: "icons",
-    items: () => ["edit", "delete"],
+    items: (row) => [
+      "edit",
+      {
+        id: "delete",
+        label: "ลบ",
+        icon: TrashIcon,
+        intent: "danger",
+        onClick: (r) => handleDelete(r),
+      },
+    ],
     callbacks: {
       edit: (row) => openInputModal("edit", row),
-      delete: (row) => handleDelete(row),
     },
   };
 
@@ -221,10 +243,26 @@ export function ManageTagPage() {
       label: "ลบทั้งหมด",
       icon: TrashIcon,
       intent: "neutral",
-      confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
       onClick: async (rows) => {
-        await Promise.all(rows.map((row) => TagService.deleteTag(row.id)));
-        await fetchData(pagination.currentPage, pagination.limit, searchQuery);
+        const usedTags = rows.filter((r) => r.isUsed);
+        const unusedTags = rows.filter((r) => !r.isUsed);
+
+        if (usedTags.length > 0) {
+          if (unusedTags.length === 0) {
+            setErrorModalMessage(`ไม่สามารถลบแท็กที่มีการใช้งานอยู่ได้: ${usedTags.map((t) => t.name).join(", ")}`);
+            setIsErrorModalOpen(true);
+            return;
+          } else {
+            setErrorModalMessage(`ข้ามการลบแท็กที่มีการใช้งานอยู่: ${usedTags.map((t) => t.name).join(", ")}`);
+            setIsErrorModalOpen(true);
+          }
+        } else {
+          setErrorModalMessage("");
+        }
+
+        setRowsToDelete(unusedTags);
+        setModalType("bulk-delete");
+        setIsConfirmModalOpen(true);
       },
     },
   ];
@@ -264,7 +302,6 @@ export function ManageTagPage() {
       </div>
 
       <div className="pb-10">
-        {errorMessage && <div className="text-sm text-red-600 mb-2">{errorMessage}</div>}
 
         <DataTable<TagRow>
           data={rows}
@@ -295,16 +332,20 @@ export function ManageTagPage() {
         title={
           modalType === "delete"
             ? "ยืนยันการลบประเภท"
-            : modalType === "edit"
-              ? "ยืนยันการแก้ไขประเภท"
-              : "ยืนยันการเพิ่มประเภท"
+            : modalType === "bulk-delete"
+              ? "ยืนยันการลบทั้งหมดหรือไม่"
+              : modalType === "edit"
+                ? "ยืนยันการแก้ไขประเภท"
+                : "ยืนยันการเพิ่มประเภท"
         }
         text={
           modalType === "delete"
-            ? "คุณต้องการลบประเภทนี้หรือไม่?"
-            : modalType === "edit"
-              ? "คุณต้องการแก้ไขประเภทนี้หรือไม่?"
-              : "คุณต้องการเพิ่มประเภทนี้หรือไม่?"
+            ? "คุณต้องการยืนยันการลบประเภทหรือไม่?"
+            : modalType === "bulk-delete"
+              ? `คุณต้องการยืนยันการลบทั้งหมดหรือไม่?`
+              : modalType === "edit"
+                ? "คุณต้องการแก้ไขประเภทนี้หรือไม่?"
+                : "คุณต้องการเพิ่มประเภทนี้หรือไม่?"
         }
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
@@ -328,6 +369,14 @@ export function ManageTagPage() {
         type="success"
         title={successMessage}
         message={successDescription}
+      />
+
+      <ModalAlert
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        type="error"
+        title="เกิดข้อผิดพลาด"
+        message={errorModalMessage}
       />
     </div>
   );

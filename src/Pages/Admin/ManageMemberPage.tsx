@@ -209,7 +209,7 @@ export default function ManageMemberPage() {
           bulkActions={bulkActions}
           theme="brand"
           pageSize={pageSize}
-          pageSizeOptions={[10, 20, 50]}
+          pageSizeOptions={[10, 30, 50]}
           onPageChange={setCurrentPage}
           onPageSizeChange={(size) => {
             setPageSize(size);
@@ -223,8 +223,8 @@ export default function ManageMemberPage() {
       <Modal
         isOpen={isDeleteModalOpen}
         title="ยืนยันการลบสมาชิก"
-        text={`คุณต้องการลบสมาชิก “${selectedMember?.displayName ?? "-"}” ออกจากชุมชนใช่หรือไม่?`}
-        confirmText="ลบ"
+        text={`คุณต้องการยืนยันการลบบัญชีสมาชิกหรือไม่`}
+        confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onCancel={() => {
           setIsDeleteModalOpen(false);

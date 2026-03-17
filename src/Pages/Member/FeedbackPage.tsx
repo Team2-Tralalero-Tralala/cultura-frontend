@@ -7,7 +7,6 @@ import { Icon } from "@iconify/react";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import api from "@/Libs/Api";
 
-// --- Types (อิงตาม Structure ของ Admin แต่ปรับให้รองรับ Response ของ Member) ---
 
 type ApiFeedbackImage = {
   id: number;
@@ -27,8 +26,16 @@ type ApiFeedback = {
   feedbackImages: ApiFeedbackImage[];
 };
 
+type Tourist = {
+  fname?: string;
+  lname?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
 type ApiBookingHistory = {
   id: number;
+  tourist: Tourist;
   touristId: number;
   packageId: number;
   status: string;
@@ -72,12 +79,32 @@ type PackageGroup = {
 
 type SortOrder = "newest" | "oldest";
 
+const backendBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
 /**
- * คำอธิบาย: ฟังก์ชันสำหรับแปลง userId เป็นชื่อที่แสดงเพื่อป้องกันการแสดงข้อมูลส่วนตัว
- * Input: userId
- * Output: String (ชื่อที่ถูก Mask แล้ว)
+ * คำอธิบาย: สร้าง URL ของรูปภาพเต็มรูปแบบจาก path หรือชื่อไฟล์ที่ได้จาก Backend API
+ * Input: fileName (ชื่อไฟล์หรือ path ของรูปภาพ)
+ * Output: URL เต็มของรูปภาพพร้อมแนบอ้างอิงของ backendBaseUrl
  */
-const maskUserIdAsDisplayName = (userId: number) => `ผู้ใช้ #${String(userId).slice(0, 1)}***`;
+const getImageUrl = (fileName?: string) => {
+  if (!fileName) return "";
+  const cleanedPath = fileName.replace(/^\/?uploads\//, "");
+  return `${backendBaseUrl}/uploads/${cleanedPath}`;
+};
+
+/**
+ * คำอธิบาย : ฟังก์ชันสำหรับแปลงชื่อผู้ใช้เป็นรูปแบบที่ปกปิดบางส่วนเพื่อความเป็นส่วนตัว
+ * Input : tourist (ข้อมูลนักท่องเที่ยวที่มีชื่อและนามสกุล)
+ * Output : ชื่อและนามสกุลที่ถูก mask ด้วยเครื่องหมาย * (เช่น J*** D***)
+ */
+function formatFullName(tourist?: Tourist): string {
+  if (!tourist) return "ผู้ใช้นิรนาม";
+  const firstName = tourist.firstName || tourist.fname || "";
+  const lastName = tourist.lastName || tourist.lname || "";
+
+  const mask = (text: string) => (text ? text[0] + "*".repeat(Math.max(1, 3)) : "");
+  return `${mask(firstName)} ${mask(lastName)}`.trim() || "ผู้ใช้นิรนาม";
+}
 
 /**
  * คำอธิบาย: ฟังก์ชันสำหรับแปลงรูปแบบวันที่จาก ISO String เป็นรูปแบบวันที่ภาษาไทย
@@ -265,7 +292,7 @@ const PackageGroupSection: React.FC<{
  * Input: -
  * Output: JSX Element
  */
-export default function FeedbackPage() {
+export function FeedbackPage() {
   const [packageGroupLists, setPackageGroupLists] = useState<PackageGroup[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [totalPackages, setTotalPackages] = useState<number>(0);
@@ -301,11 +328,11 @@ export default function FeedbackPage() {
           (bookingHistory.feedbacks ?? []).forEach((feedback) => {
             groupFeedbacks.push({
               id: feedback.id,
-              userName: maskUserIdAsDisplayName(bookingHistory.touristId),
+              userName: formatFullName(bookingHistory.tourist),
               rating: feedback.rating ?? 0,
               createdAt: feedback.createdAt,
               message: feedback.message ?? "",
-              images: (feedback.feedbackImages ?? []).map((imageItem) => imageItem.image),
+              images: (feedback.feedbackImages ?? []).map((imageItem) => getImageUrl(imageItem.image)),
               replied: feedback.replyMessage
                 ? { at: feedback.replyAt ?? "", message: feedback.replyMessage }
                 : null,
@@ -315,11 +342,11 @@ export default function FeedbackPage() {
 
         return {
           id: apiPackage.id,
-          title: apiPackage.name,
+          title: apiPackage.name ? apiPackage.name.split(" โดย ")[0].trim() : "ไม่ทราบชื่อแพ็กเกจ",
           totalInGroup: groupFeedbacks.length,
           feedbacks: groupFeedbacks,
         };
-      });
+      }).filter((group) => group.totalInGroup > 0);
 
       setPackageGroupLists(nextGroups);
       const allFeedbacksCount = nextGroups.reduce(
@@ -327,9 +354,10 @@ export default function FeedbackPage() {
         0,
       );
       setTotalItems(allFeedbacksCount);
-      setTotalPackages(nextGroups.length);
-    } catch (error: any) {
-      setErrorMessage(error?.response?.data?.message || error?.message || "โหลดข้อมูลไม่สำเร็จ");
+      setTotalPackages(packageList.length);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      setErrorMessage(err?.response?.data?.message ?? err?.message ?? "โหลดข้อมูลไม่สำเร็จ");
     } finally {
       setIsLoading(false);
     }
@@ -393,11 +421,10 @@ export default function FeedbackPage() {
     <div className="absolute top-15 right-0 w-[150px] z-10 bg-white border rounded-lg space-y-2 ">
       <button
         className={`w-full text-left p-2 rounded-md 
-                ${
-                  sortOrder === "newest"
-                    ? "bg-emerald-100 font-medium text-emerald-700"
-                    : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
-                }`}
+                ${sortOrder === "newest"
+            ? "bg-emerald-100 font-medium text-emerald-700"
+            : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+          }`}
         onClick={() => handleSortChange("newest")}
       >
         <Icon icon="ic:round-sort" width={18} height={18} className="inline mr-2" />
@@ -405,11 +432,10 @@ export default function FeedbackPage() {
       </button>
       <button
         className={`w-full text-left p-2 rounded-md 
-                ${
-                  sortOrder === "oldest"
-                    ? "bg-emerald-100 font-medium text-emerald-700"
-                    : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
-                }`}
+                ${sortOrder === "oldest"
+            ? "bg-emerald-100 font-medium text-emerald-700"
+            : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+          }`}
         onClick={() => handleSortChange("oldest")}
       >
         <Icon
@@ -427,8 +453,9 @@ export default function FeedbackPage() {
     <>
       <Breadcrumb
         current={{
-          label: "ข้อเสนอแนะ",
-          to: `/member/feedbacks`, // [Member] Path
+          label: "ข้อเสนอแนะทั้งหมด",
+          to: `/member/feedbacks`,
+          isFromSidebar: true,
         }}
       />
       <main className="min-h-screen bg-white py-6 px-6 space-y-6 shadow-md border rounded-xl">
@@ -454,9 +481,18 @@ export default function FeedbackPage() {
             <PackageGroupSection
               key={group.id}
               group={group}
-              onViewAllClick={(g) => navigate(`/member/feedbacks/${g.id}`)} // [Member] Navigate Path
+              onViewAllClick={(g) => navigate(`/member/package/feedbacks/${g.id}`)} // [Member] Navigate Path
             />
           ))}
+
+          {!isLoading && !errorMessage && filteredGroups.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <Icon icon="lucide:message-square-dashed" className="w-16 h-16 text-slate-300 mb-4" />
+              <p className="text-lg font-medium">
+                {searchQuery ? "ไม่พบข้อเสนอแนะที่ค้นหา" : "ยังไม่ได้รับข้อเสนอแนะจากแพ็กเกจใด"}
+              </p>
+            </div>
+          )}
 
           {isLoading && <div className="text-center text-slate-600 py-4">กำลังโหลด...</div>}
         </div>

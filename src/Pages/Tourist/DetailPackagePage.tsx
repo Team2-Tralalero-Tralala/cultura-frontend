@@ -90,6 +90,7 @@ interface PackageDetail {
   dueDate: string | null;
   facility: string | null;
   warning: string | null;
+  bookedCount: number;
   location: LocationData;
   packageFiles: PackageFile[];
   tagPackages: { tag: Tag }[];
@@ -115,21 +116,22 @@ export default function DetailPackagePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [bookingQuantity, setBookingQuantity] = useState<number>(1);
+  const [bookingQuantity, setBookingQuantity] = useState<number>(0);
   const [visibleCount, setVisibleCount] = useState<number>(4);
   const navigate = useNavigate();
   const location = useLocation();
   const lat = packageDetail?.location?.latitude;
   const lng = packageDetail?.location?.longitude;
-  const delta = 0.01;
+  /*
+   * คำอธิบาย : ตรวจสอบว่ากิจกรรมเริ่มต้นขึ้นแล้วหรือไม่
+   */
+  const isActivityStarted =
+    !!packageDetail?.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
 
-  const minLat = lat !== undefined ? lat - delta : undefined;
-  const maxLat = lat !== undefined ? lat + delta : undefined;
-  const minLng = lng !== undefined ? lng - delta : undefined;
-  const maxLng = lng !== undefined ? lng + delta : undefined;
-
-  const latLng = lat !== undefined && lng !== undefined ? `${lat} ${lng}` : "";
-
+  /*
+   * คำอธิบาย : ตรวจสอบว่าจำนวนผู้เข้าร่วมเต็มความจุที่กำหนดไว้หรือไม่
+   */
+  const isFull = (packageDetail?.bookedCount ?? 0) >= (packageDetail?.capacity ?? 0);
   /*
    * คำอธิบาย : ฟังก์ชันสำหรับการแปลง path รูปภาพให้เป็น URL ที่สมบูรณ์
    * Input: path (string)
@@ -156,11 +158,11 @@ export default function DetailPackagePage() {
    */
   const galleryItems: any[] = packageDetail?.packageFiles
     ? packageDetail.packageFiles.map((file) => ({
-        // แก้ไข: เช็คถ้า type เป็น VIDEO ให้ส่งค่า "video" ถ้าไม่ใช่ให้เป็น "image"
-        type: file.type === "VIDEO" ? "video" : "image",
-        src: generateImageUrl(file.filePath),
-        alt: packageDetail.name,
-      }))
+      // แก้ไข: เช็คถ้า type เป็น VIDEO ให้ส่งค่า "video" ถ้าไม่ใช่ให้เป็น "image"
+      type: file.type === "VIDEO" ? "video" : "image",
+      src: generateImageUrl(file.filePath),
+      alt: packageDetail.name,
+    }))
     : [];
 
   /*
@@ -257,7 +259,8 @@ export default function DetailPackagePage() {
    */
   const handleIncreaseQuantity = () => {
     if (!packageDetail) return;
-    if (packageDetail.capacity && bookingQuantity >= packageDetail.capacity) {
+    const remainingCapacity = (packageDetail.capacity || 0) - (packageDetail.bookedCount || 0);
+    if (packageDetail.capacity && bookingQuantity >= remainingCapacity) {
       return;
     }
     setBookingQuantity((previousQuantity) => previousQuantity + 1);
@@ -269,7 +272,7 @@ export default function DetailPackagePage() {
    * Output : bookingQuantity ลดลง 1
    */
   const handleDecreaseQuantity = () => {
-    setBookingQuantity((previousQuantity) => Math.max(1, previousQuantity - 1));
+    setBookingQuantity((previousQuantity) => Math.max(0, previousQuantity - 1));
   };
 
   useEffect(() => {
@@ -337,8 +340,6 @@ export default function DetailPackagePage() {
     );
   }
 
-  const isActivityStarted =
-    !!packageDetail.startDate && new Date(packageDetail.startDate).getTime() <= Date.now();
 
   const isHasHomestay =
     packageDetail.homestayHistories && packageDetail.homestayHistories.length > 0;
@@ -360,7 +361,7 @@ export default function DetailPackagePage() {
 
       <div className="container mx-auto px-4">
         {/* Title */}
-        <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 -mt-5">
+        <h1 className="text-3xl md:text-3xl font-bold text-black mb-4 -mt-5">
           {packageDetail.name}
         </h1>
 
@@ -378,80 +379,96 @@ export default function DetailPackagePage() {
           </div>
         )}
 
-        {/* Description */}
-        <div className="mb-4 mt-2">
-          <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            {packageDetail.description || "-"}
-          </p>
-        </div>
+        {/* Detail Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4 mt-2">
+          {/* Left Column: Description, Location, Activity Date */}
+          <div className="space-y-4">
+            {/* Description */}
+            <div>
+              <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+                {packageDetail.description || "-"}
+              </p>
+            </div>
 
-        <div className="mb-4 mt-2">
-          <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)} -{" "}
-            {formatDateWithTime(packageDetail.bookingCloseDate)}
-          </p>
-        </div>
+            {/* Location */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:map-marker" className="text-black text-xl" />
+                <span className="text-black text-sm md:text-base">
+                  อำเภอ{packageDetail.location.district || packageDetail.location.subDistrict} จังหวัด
+                  {packageDetail.location.province}
+                </span>
+              </div>
 
-        {/* Location & Date Info Bar */}
-        {lat && lng ? (
-          <button
-            onClick={() => {
-              if (packageDetail?.location?.latitude && packageDetail?.location?.longitude) {
-                const destLat = packageDetail.location.latitude;
-                const destLng = packageDetail.location.longitude;
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                      const originLat = position.coords.latitude;
-                      const originLng = position.coords.longitude;
-                      window.open(
-                        `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
-                        "_blank",
+              {lat && lng && (
+                <button
+                  onClick={() => {
+                    const destLat = packageDetail.location.latitude;
+                    const destLng = packageDetail.location.longitude;
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                          const originLat = position.coords.latitude;
+                          const originLng = position.coords.longitude;
+                          window.open(
+                            `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}`,
+                            "_blank"
+                          );
+                        },
+                        (error) => {
+                          console.error("Error getting location:", error);
+                          window.open(
+                            `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
+                            "_blank"
+                          );
+                        }
                       );
-                    },
-                    (error) => {
-                      console.error("Error getting location:", error);
+                    } else {
                       window.open(
                         `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                        "_blank",
+                        "_blank"
                       );
-                    },
-                  );
-                } else {
-                  window.open(
-                    `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`,
-                    "_blank",
-                  );
-                }
-              }
-            }}
-            className="flex items-center gap-2 mb-4 mt-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left"
-          >
-            <Icon icon="mdi:map-marker-radius-outline" className="text-black text-lg" />
-            <span className="text-inherit">ระบบนำทาง</span>
-          </button>
-        ) : (
-          /* กรณีไม่มีพิกัด แสดงเป็น div เหมือนเดิม */
-          <div className="flex items-center gap-2 mb-4 mt-2">
-            <Icon icon="mdi:location" className="text-black text-lg" />
-            <span className="text-black">
-              อำเภอ{packageDetail.location.subDistrict} จังหวัด{packageDetail.location.province}
-            </span>
+                    }
+                  }}
+                  className="flex items-center gap-2 cursor-pointer hover:text-green-600 transition-colors bg-transparent border-none p-0 text-left w-fit"
+                >
+                  <Icon
+                    icon="mdi:location-radius-outline"
+                    className="text-black text-xl"
+                  />
+                  <span className="text-black text-sm md:text-base">ระบบนำทาง</span>
+                </button>
+              )}
+            </div>
+
+            {/* Start - End Date */}
+            <div className="flex items-center gap-2">
+              <span className="text-black text-sm md:text-base">
+                วันที่เริ่ม - วันที่สิ้นสุด :{" "}
+                {formatDateWithTime(packageDetail.startDate)} -{" "}
+                {formatDateWithTime(packageDetail.dueDate)}
+              </span>
+            </div>
           </div>
-        )}
 
-        <div className="mb-4 mt-2">
-          <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
-            จำนวนการจอง {packageDetail.capacity || "-"} คน
-          </p>
-        </div>
+          {/* Right Column: Booking Info */}
+          <div className="space-y-4 md:pl-8">
+            {/* Booking Open Date */}
+            <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+              เปิดจองแล้ว วันที่ {formatDateWithTime(packageDetail.bookingOpenDate)}{" "}
+              - {formatDateWithTime(packageDetail.bookingCloseDate)}
+            </p>
 
-        <div className="flex items-center gap-2 mb-4 mt-2">
-          <span className="font-medium text-black">วันที่เริ่ม - วันที่สิ้นสุด : </span>
-          <span className="text-black">
-            {formatDateWithTime(packageDetail.startDate)} -{" "}
-            {formatDateWithTime(packageDetail.dueDate)}
-          </span>
+            {/* Booked Count */}
+            <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+              จำนวนการจอง {packageDetail.bookedCount || 0} คน
+            </p>
+
+            {/* Total Capacity */}
+            <p className="text-black-600 leading-relaxed text-sm md:text-base whitespace-pre-wrap">
+              เปิดจองจำนวน {packageDetail.capacity || "-"} คน
+            </p>
+          </div>
         </div>
 
         {/* Image Gallery */}
@@ -604,104 +621,124 @@ export default function DetailPackagePage() {
           </div>
         )}
 
-        {/* Package Facilities */}
-        <div className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <Icon icon="healthicons:travel" className="text-black text-2xl" />
-            <h2 className="text-xl font-bold text-black0">สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)</h2>
+        {/* Grid Layout: Facilities & Guidelines (แบ่ง 2 คอลัมน์) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+          {/* Column 1: Package Facilities (สิ่งอำนวยความสะดวก) */}
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-4">
+              <Icon icon="healthicons:travel" className="text-black text-2xl" />
+              <h2 className="text-xl font-bold text-black0">
+                สิ่งอำนวยความสะดวก (สำหรับแพ็กเกจ)
+              </h2>
+            </div>
+
+            <div className="border border-gray-200 rounded-xl p-6 bg-white flex-1">
+              {packageDetail.facility ? (
+                <ul className="space-y-2 text-sm text-black">
+                  {/* ใช้ split("\n") ตามต้นฉบับ */}
+                  {packageDetail.facility.split("\n").map(
+                    (line, index) =>
+                      line.trim() && (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                          <span className="leading-relaxed">{line.trim()}</span>
+                        </li>
+                      )
+                  )}
+                </ul>
+              ) : (
+                <span className="text-black text-sm">ไม่มีข้อมูลระบุ</span>
+              )}
+            </div>
           </div>
 
-          <div className="border border-gray-200 rounded-xl p-6 bg-white">
-            {packageDetail.facility ? (
-              <ul className="space-y-2 text-sm text-black">
-                {packageDetail.facility.split(",").map((item, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                    {item.trim()}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <span className="text-black text-sm">ไม่มีข้อมูลระบุ</span>
-            )}
+          {/* Column 2: Guidelines (คำแนะนำ) */}
+          <div className="flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-4">
+              <Icon
+                icon="typcn:warning-outline"
+                className="text-black text-2xl"
+              />
+              <h2 className="text-xl font-bold text-black">
+                คำแนะนำสำหรับผู้เข้าร่วมกิจกรรม (สิ่งที่ควรทราบ & สิ่งที่ควรเตรียม)
+              </h2>
+            </div>
+
+            <div className="border border-gray-200 rounded-xl p-6 bg-white flex-1">
+              {packageDetail.warning ? (
+                <ul className="space-y-2 text-sm text-black">
+                  {/* ใช้ split("\n") ตามต้นฉบับ */}
+                  {packageDetail.warning.split("\n").map(
+                    (line, index) =>
+                      line.trim() && (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                          <span className="leading-relaxed">{line.trim()}</span>
+                        </li>
+                      )
+                  )}
+                </ul>
+              ) : (
+                <span className="text-black text-sm">ไม่มีคำแนะนำเพิ่มเติม</span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Guidelines / Warnings */}
-        <div className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <Icon icon="typcn:warning-outline" className="text-black text-2xl" />
-            <h2 className="text-xl font-bold text-black">
-              คำแนะนำสำหรับผู้เข้าร่วมกิจกรรม (สิ่งที่ควรทราบ & สิ่งที่ควรเตรียม)
-            </h2>
+        {/* Booking Section (ราคา และ ปุ่มจอง) */}
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-black">
+              ราคา THB {formatPrice(packageDetail.price)}
+            </span>
           </div>
 
-          <div className="border border-gray-200 rounded-xl p-6 bg-white">
-            {packageDetail.warning ? (
-              <ul className="space-y-2 text-sm text-black">
-                {packageDetail.warning.split("\n").map(
-                  (line, index) =>
-                    line.trim() && (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
-                        <span className="leading-relaxed">{line.trim()}</span>
-                      </li>
-                    ),
-                )}
-              </ul>
-            ) : (
-              <span className="text-black text-sm">ไม่มีคำแนะนำเพิ่มเติม</span>
-            )}
-          </div>
-          <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-black">
-                ราคา THB {formatPrice(packageDetail.price)}
-              </span>
+              <span className="text-sm text-black mr-2">จำนวน</span>
+              <div className="flex items-center border border-gray-300 rounded-md">
+                <button
+                  onClick={handleDecreaseQuantity}
+                  className="px-3 py-1 text-black hover:bg-gray-100"
+                >
+                  -
+                </button>
+                <input
+                  type="text"
+                  value={bookingQuantity}
+                  readOnly
+                  className="w-10 text-center text-sm focus:outline-none text-green-600 font-bold"
+                />
+                <button
+                  onClick={handleIncreaseQuantity}
+                  className="px-3 py-1 text-black hover:bg-gray-100"
+                >
+                  +
+                </button>
+              </div>
+              <span className="text-sm text-black ml-1">คน</span>
             </div>
 
-            <div className="flex items-center gap-4 w-full sm:w-auto mb-6 mt-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-black mr-2">จำนวน</span>
-                <div className="flex items-center border border-gray-300 rounded-md">
-                  <button
-                    onClick={handleDecreaseQuantity}
-                    className="px-3 py-1 text-black hover:bg-gray-100"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="text"
-                    value={bookingQuantity}
-                    readOnly
-                    className="w-10 text-center text-sm focus:outline-none text-green-600 font-bold"
-                  />
-                  <button
-                    onClick={handleIncreaseQuantity}
-                    className="px-3 py-1 text-black hover:bg-gray-100"
-                  >
-                    +
-                  </button>
-                </div>
-                <span className="text-sm text-black ml-1">คน</span>
-              </div>
-
-              {/* เปลี่ยนไปใช้ Button Component Type confirm-tourist */}
-              {/* หุ้ม div เพื่อคุม Layout (flex-1 บนมือถือ / flex-none บนจอใหญ่) เนื่องจาก Button มี w-full */}
-              <div className="flex-1 sm:flex-none min-w-[120px]">
-                <Button
-                  type="confirm-tourist"
-                  onClick={() => handleConfirmClick(packageDetail.id)}
-                  isDisabled={isActivityStarted}
-                >
-                  {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : "จองเลย"}
-                </Button>
-                {isActivityStarted && (
-                  <p className="mt-2 text-xs text-red-600">
-                    ไม่สามารถจองได้ เนื่องจากเวลาเริ่มกิจกรรมผ่านไปแล้ว
-                  </p>
-                )}
-              </div>
+            {/* ปุ่มจอง */}
+            <div className="flex-1 sm:flex-none min-w-[120px]">
+              <Button
+                type="confirm-tourist"
+                onClick={() => handleConfirmClick(packageDetail.id)}
+                isDisabled={isActivityStarted || isFull || bookingQuantity === 0}
+              >
+                {isActivityStarted ? "กิจกรรมเริ่มแล้ว" : isFull ? "เต็มแล้ว" : "จองเลย"}
+              </Button>
+              {isActivityStarted && (
+                <p className="mt-2 text-xs text-red-600 text-center sm:text-right">
+                  ไม่สามารถจองได้ เนื่องจากเวลาเริ่มกิจกรรมผ่านไปแล้ว
+                </p>
+              )}
+              {!isActivityStarted && isFull && (
+                <p className="mt-2 text-xs text-red-600 text-center sm:text-right">
+                  ไม่สามารถจองได้ เนื่องจากจำนวนผู้เข้าร่วมเต็มแล้ว
+                </p>
+              )}
             </div>
           </div>
         </div>

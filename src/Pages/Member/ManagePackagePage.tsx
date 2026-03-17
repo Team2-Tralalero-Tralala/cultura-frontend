@@ -6,18 +6,18 @@
  */
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import DataTable from "@/Components/Tables/Index";
-import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
-import { TrashIcon } from "../../Components/Tables/Icon";
-import SearchBarTable from "@/Components/Search/SearchBarTable";
 import axios from "axios";
+import { Icon } from "@iconify/react";
+import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
 import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
-import { Icon } from "@iconify/react";
-import PackageFilter from "@/Components/Filters/Communities/FiltersStatusForCM";
+import SearchBarTable from "@/Components/Search/SearchBarTable";
+import DataTable from "@/Components/Tables/Index";
+import type { Column, DataTableActionsConfig, BulkAction } from "../../Components/Tables/Types";
+import { TrashIcon } from "../../Components/Tables/Icon";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL;
 
 type Row = {
   id: number;
@@ -25,31 +25,17 @@ type Row = {
   community: string;
   owner: string;
   published: boolean;
-  approved: boolean;
+  statusApprove: string | null;
   bookedCount: number;
   capacity: number;
 };
 
-const bulkActions: BulkAction<Row>[] = [
-  {
-    id: "bulk-delete",
-    label: "ลบทั้งหมด",
-    icon: TrashIcon,
-    intent: "danger",
-    confirm: (rows) => `ยืนยันลบ ${rows.length} รายการหรือไม่?`,
-    onClick: async (rows) => {
-      const packageIdList = rows.map((row) => row.id);
-      console.log("bulk delete:", packageIdList);
-    },
-  },
-];
-
-/**
- * คำอธิบาย: ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
+/*
+ * คำอธิบาย : ฟังก์ชันหลักสำหรับหน้าจัดการแพ็กเกจของผู้ดูแลระบบ (Super Admin)
  * Input: -
- * Output: JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
+ * Output : JSX.Element (หน้าจอแสดงตารางรายการแพ็กเกจและการจัดการ)
  */
-export default function ManagePackagePage() {
+export function ManagePackagePage() {
   const navigate = useNavigate();
 
   /*
@@ -72,12 +58,16 @@ export default function ManagePackagePage() {
         </button>
       ),
     },
-    { key: "community", header: "ชื่อชุมชน" },
     { key: "owner", header: "ผู้ดูแล" },
     {
       key: "published",
       header: "สถานะแพ็กเกจ",
       render: (row) => (row.published ? "เผยแพร่" : "ไม่เผยแพร่"),
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะการอนุมัติ",
+      render: (row) => toApprovedText(row),
     },
     {
       key: "bookingStats",
@@ -95,36 +85,25 @@ export default function ManagePackagePage() {
     totalPages: 1,
   });
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [packageToDelete, setPackageToDelete] = useState<Row | null>(null);
-  const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState<Row | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [rowsToBulkDelete, setRowsToBulkDelete] = useState<Row[]>([]);
   const [filters, setFilters] = useState({ packageStatus: "ทั้งหมด", approvalStatus: "ทั้งหมด" });
 
-  /**
-   * คำอธิบาย: (Callback) โหลดข้อมูลแพ็กเกจจาก API ตาม page และ limit ปัจจุบัน
-   * Input: - (ใช้ pagination.currentPage, pagination.limit จาก state)
-   * Output: - (อัปเดต packageRows, pagination, และ isLoading state)
+
+  /*
+   * คำอธิบาย : (Callback) โหลดข้อมูลแพ็กเกจจาก API ตาม page และ limit ปัจจุบัน
+   * Input: - (ใช้ currentPage, pageSize จาก state)
+   * Output : (void) - อัปเดต tableRows, totalItems, และ isLoading state
    */
   const fetchPackages = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${apiBaseUrl}/member/packages`, {
+      const response = await axios.get(`${apiUrl}/member/packages`, {
         params: {
-          page: pagination.currentPage,
-          limit: pagination.limit,
-          status:
-            filters.packageStatus === "เผยแพร่"
-              ? "PUBLISH"
-              : filters.packageStatus === "ไม่เผยแพร่"
-                ? "UNPUBLISH"
-                : undefined,
-          approve:
-            filters.approvalStatus === "อนุมัติ"
-              ? "APPROVE"
-              : filters.approvalStatus === "รออนุมัติ"
-                ? "PENDING"
-                : filters.approvalStatus === "ถูกปฏิเสธ"
-                  ? "REJECTED"
-                  : undefined,
+          page: pagination.currentPage, limit: pagination.limit,
+          status: filters.packageStatus === "เผยแพร่" ? "PUBLISH" : filters.packageStatus === "ไม่เผยแพร่" ? "UNPUBLISH" : undefined,
+          approve: filters.approvalStatus === "อนุมัติ" ? "APPROVE" : filters.approvalStatus === "รออนุมัติ" ? "PENDING" : filters.approvalStatus === "ถูกปฏิเสธ" ? "REJECTED" : undefined
         },
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -161,11 +140,8 @@ export default function ManagePackagePage() {
             packageItem?.statusPackage === "PUBLISH" ||
             packageItem?.published === true ||
             packageItem?.isPublished === true,
-          approved:
-            packageItem?.statusApprove === "APPROVE" ||
-            packageItem?.approved === true ||
-            packageItem?.isApproved === true,
-          bookedCount: packageItem?.bookingHistories?.length ?? 0,
+          statusApprove: packageItem?.statusApprove ?? null,
+          bookedCount: packageItem.bookedCount ?? 0,
           capacity: packageItem?.capacity ?? 0,
         }),
       );
@@ -182,42 +158,93 @@ export default function ManagePackagePage() {
           ),
         ),
       }));
-    } catch (error: any) {
-      console.error("reloadPackages error:", error?.response?.data ?? error);
+    } catch (error: unknown) {
+      console.error("reloadPackages error:", error);
     } finally {
       setIsLoading(false);
     }
   }, [pagination.currentPage, pagination.limit, filters]);
 
-  /**
-   * คำอธิบาย: (Callback) Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันการลบจาก Modal
-   * Input: - (ใช้ packageToDelete จาก state)
-   * Output: - (เรียก API ลบ, แสดง alert, และโหลดข้อมูลใหม่)
-   */
+  /*
+     * คำอธิบาย : (Callback) Handler ที่ถูกเรียกเมื่อผู้ใช้กดยืนยันการลบจาก Modal
+     * รองรับการลบแบบรายการเดียวและแบบกลุ่ม
+     * Input : - (ใช้ rowToDelete หรือ rowsToBulkDelete จาก state)
+     * Output : (void) - (async) เรียก API ลบ, แสดง alert, และโหลดข้อมูลใหม่
+     */
   const handleConfirmDelete = useCallback(async () => {
-    if (!packageToDelete) return;
-    const rowId = packageToDelete.id;
-    const rowTitle = packageToDelete.title;
-    setIsOpenDeleteModal(false);
+    setIsDeleteModalOpen(false);
 
-    try {
-      await axios.patch(`${apiBaseUrl}/member/package/${rowId}`, null, { withCredentials: true });
+    // กรณีลบแบบกลุ่ม (Bulk Delete)
+    if (rowsToBulkDelete.length > 0) {
+      try {
+        setIsLoading(true);
+        const packageIdList = rowsToBulkDelete.map((row) => row.id);
 
-      await fetchPackages();
-    } catch (error: any) {
-      console.error("delete failed:", error?.response?.data ?? error);
-      alert(
-        `ลบไม่สำเร็จ (${rowTitle}): ${
-          error?.response?.data?.message ||
+        // ยิง API ลบทีละรายการ (ใช้ Promise.all เพื่อรอให้เสร็จทั้งหมด)
+        await Promise.all(
+          packageIdList.map((packageId) =>
+            axios.patch(
+              `${apiUrl}/member/package/${packageId}`,
+              null,
+              { withCredentials: true }
+            )
+          )
+        );
+
+        await fetchPackages();
+        setRowsToBulkDelete([]); // เคลียร์รายการที่เลือก
+      } catch (error: any) {
+        console.error("Bulk delete failed:", error);
+        alert(`เกิดข้อผิดพลาดในการลบกลุ่ม: ${error?.message || "unknown error"}`);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // กรณีลบรายการเดียว (Single Delete) - Logic เดิม
+    if (rowToDelete) {
+      const rowId = rowToDelete.id;
+      const rowTitle = rowToDelete.title;
+
+      try {
+        await axios.patch(
+          `${apiUrl}/member/package/${rowId}`,
+          null,
+          { withCredentials: true }
+        );
+
+        await fetchPackages();
+      } catch (error: any) {
+        console.error("delete failed:", error?.response?.data ?? error);
+        alert(
+          `ลบไม่สำเร็จ (${rowTitle}): ${error?.response?.data?.message ||
           error?.response?.data?.error ||
           error?.message ||
           "unknown error"
-        }`,
-      );
-    } finally {
-      setPackageToDelete(null);
+          }`
+        );
+      } finally {
+        setRowToDelete(null);
+      }
     }
-  }, [packageToDelete, fetchPackages]);
+  }, [rowToDelete, rowsToBulkDelete, fetchPackages]);
+
+  const bulkActions: BulkAction<Row>[] = React.useMemo(
+    () => [
+      {
+        id: "bulk-delete",
+        label: "ลบทั้งหมด",
+        icon: TrashIcon,
+        intent: "neutral",
+        onClick: (selectedRows) => {
+          setRowsToBulkDelete(selectedRows);
+          setIsDeleteModalOpen(true);
+        },
+      },
+    ],
+    []
+  );
 
   const rowActions: DataTableActionsConfig<Row> = React.useMemo(
     () => ({
@@ -229,8 +256,8 @@ export default function ManagePackagePage() {
       callbacks: {
         edit: (row) => navigate(`/member/package/${row.id}/edit`),
         delete: (row) => {
-          setPackageToDelete(row);
-          setIsOpenDeleteModal(true);
+          setRowToDelete(row);
+          setIsDeleteModalOpen(true);
         },
       },
     }),
@@ -262,7 +289,19 @@ export default function ManagePackagePage() {
    * Input: row - object ข้อมูล
    * Output: สตริง "อนุมัติ" หรือ "รออนุมัติ"
    */
-  const toApprovedText = (row: Row) => (row.approved ? "อนุมัติ" : "รออนุมัติ");
+  const toApprovedText = (row: Row) => {
+    switch (row.statusApprove) {
+      case "APPROVE":
+        return "อนุมัติ";
+      case "REJECTED":
+        return "ถูกปฏิเสธ";
+      case "PENDING":
+      case "PENDING_SUPER":
+        return "รออนุมัติ";
+      default:
+        return "-";
+    }
+  };
 
   const filteredRows = React.useMemo(() => {
     const query = normalizeText(searchQuery);
@@ -270,7 +309,7 @@ export default function ManagePackagePage() {
     return packageRows.filter((row) => {
       const haystacks = [
         row.title,
-        row.community,
+        // row.community,
         row.owner,
         toPublishedText(row),
         toApprovedText(row),
@@ -337,7 +376,9 @@ export default function ManagePackagePage() {
                   icon="material-symbols:add-rounded"
                   className="text-2xl" // ปรับขนาดไอคอนประมาณ 24px
                 />
-                <span className="whitespace-nowrap font-medium text-lg pb-0.5">เพิ่มแพ็กเกจ</span>
+                <span className="whitespace-nowrap font-medium text-base pb-0.5">
+                  เพิ่มแพ็กเกจ
+                </span>
               </div>
             </Button>
           </div>
@@ -353,25 +394,23 @@ export default function ManagePackagePage() {
         bulkActions={bulkActions}
         selectable
         pagination={pagination}
-        pageSizeOptions={[10, 20, 50]}
+        pageSizeOptions={[10, 30, 50]}
         onPageChange={(page) => setPagination((prev) => ({ ...prev, currentPage: page }))}
-        onPageSizeChange={(size) =>
-          setPagination((prev) => ({ ...prev, limit: size, currentPage: 1 }))
-        }
+        onPageSizeChange={(size) => { setPagination((prev) => ({ ...prev, limit: size, currentPage: 1 })); }}
         isLoading={isLoading}
         theme="brand"
       />
 
       <Modal
-        isOpen={isOpenDeleteModal}
-        title="ยืนยันการลบ"
-        text={`คุณต้องการลบแพ็กเกจ "${packageToDelete?.title ?? ""}" ใช่หรือไม่?`}
+        isOpen={isDeleteModalOpen}
+        title="ยืนยันการลบแพ็กเกจ"
+        text={`คุณต้องการยืนยันการลบแพ็กเกจหรือไม่`}
         confirmText="ยืนยันลบ"
         cancelText="ยกเลิก"
         onConfirm={handleConfirmDelete}
         onCancel={() => {
-          setIsOpenDeleteModal(false);
-          setPackageToDelete(null);
+          setIsDeleteModalOpen(false);
+          setRowToDelete(null);
         }}
       />
     </div>

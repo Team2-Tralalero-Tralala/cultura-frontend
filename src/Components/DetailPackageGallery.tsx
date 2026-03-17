@@ -4,8 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL;
-const baseUrl = new URL(apiBaseUrl).origin;
+const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 type MediaType = "COVER" | "GALLERY" | "VIDEO";
 

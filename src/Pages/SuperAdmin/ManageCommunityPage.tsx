@@ -1,5 +1,6 @@
 /**
- * คำอธิบาย: Component สำหรับแสดงหน้าจัดการชุมชน (Super Admin)
+ * คำอธิบาย : Component สำหรับแสดงหน้าจัดการชุมชน (Super Admin)
+ * หน้าที่ : ดึงข้อมูลชุมชน แสดงในตาราง พร้อมตัวกรอง ค้นหา และปุ่มเพิ่ม/แก้ไข/ลบ
  */
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,27 +10,28 @@ import type { Column, DataTableActionsConfig, BulkAction } from "@/Components/Ta
 import { TrashIcon } from "@/Components/Tables/Icon";
 import SearchBarTable from "@/Components/Search/SearchBarTable";
 import FilterDropdown from "@/Components/Filters/Communities/FiltersForCM";
-import type { CommunityRow } from "@/Types/Community";
+import type { CommunityRow, CommunityDtoFromApi } from "@/Types/Community";
 import { getCommunities, deleteCommunity } from "@/Libs/CommunityService";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
-import BreadcrumbNavigation from "@/Components/BreadcrumbNavigation";
+import Breadcrumb from "@/Components/BreadcrumbNavigation";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
-/**
- * คำอธิบาย: ฟังก์ชันสำหรับปรับข้อความให้เป็นมาตรฐานเพื่อใช้ในการค้นหา
- * Input: text (string)
- * Output: string ที่ถูกตัดช่องว่างและเป็นตัวพิมพ์เล็ก
+/*
+ * คำอธิบาย : Custom Hook สำหรับชะลอการอัปเดตค่า (Debounce) ช่วยลดการเรียก API ถี่เกินไปในขณะที่ค่า value เปลี่ยนแปลงต่อเนื่อง (เช่น การพิมพ์ค้นหา)
+ * Input :
+ * - value (T) : ค่าที่ต้องการหน่วงเวลา
+ * - delay (number) : ระยะเวลาที่ต้องการหน่วง (หน่วย milliseconds)
+ * Output : ค่าล่าสุดที่ผ่านการหน่วงเวลาแล้ว (Debounced Value)
  */
-const normalizeText = (text: string) =>
-  (text ?? "").toString().toLowerCase().normalize("NFC").replace(/\s+/g, " ").trim();
-
-type ApiCommunity = {
-  id: number;
-  name?: string | null;
-  status?: "OPEN" | "CLOSED" | string | null;
-  location?: { province?: string | null } | null;
-  admin?: { fname?: string | null; lname?: string | null } | null;
-};
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 type StatusFilter = "all" | "open" | "closed";
 
@@ -57,12 +59,7 @@ const columns: Column<CommunityRow>[] = [
   { key: "admin", header: "ผู้ดูแล" },
 ];
 
-/**
- * คำอธิบาย: Component สำหรับจัดการชุมชน
- * Input: -
- * Output: JSX Element หน้า ManageCommunityPage
- */
-export function ManageCommunityPage() {
+export default function ManageCommunitySuperAdmin() {
   const navigate = useNavigate();
 
   const [communityRows, setCommunityRows] = useState<CommunityRow[]>([]);
@@ -79,6 +76,14 @@ export function ManageCommunityPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
+  // สร้างตัวแปร search ที่ผ่านการหน่วงเวลาแล้ว (500ms)
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
   const statusOptions = useMemo(
     () =>
       [
@@ -86,25 +91,32 @@ export function ManageCommunityPage() {
         { label: "เปิด", value: "open" },
         { label: "ปิด", value: "closed" },
       ] as const,
-    [],
+    []
   );
 
-  /**
-   * คำอธิบาย: ฟังก์ชันโหลดข้อมูลจาก API
-   * Input: currentPage, pageSize
-   * Output: -
+  /*
+   * คำอธิบาย : ฟังก์ชันโหลดข้อมูลจาก API
+   * Input : currentPage, pageSize
+   * Output : เซตข้อมูลชุมชนลง state communityRows
    */
   const reload = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const response = await getCommunities(currentPage, pageSize);
+      const response = await getCommunities(
+        currentPage,
+        pageSize,
+        debouncedSearch,
+        statusFilter
+      );
+
       const communityPayload = response.data?.data;
 
-      const communityLists: ApiCommunity[] = Array.isArray(communityPayload?.data)
+      const communityLists: CommunityDtoFromApi[] = Array.isArray(communityPayload?.data)
         ? communityPayload.data
         : [];
+
       const paginationData = communityPayload?.pagination ?? {};
 
       const mappedCommunities: CommunityRow[] = communityLists.map((community) => ({
@@ -118,7 +130,7 @@ export function ManageCommunityPage() {
       }));
 
       setCommunityRows(mappedCommunities);
-      setTotalItems(paginationData?.totalCount ?? mappedCommunities.length);
+      setTotalItems(paginationData?.totalCount ?? 0);
     } catch (error: unknown) {
       console.error(error);
       if (error instanceof Error) setErrorMessage(error.message ?? "โหลดข้อมูลไม่สำเร็จ");
@@ -126,55 +138,30 @@ export function ManageCommunityPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
+  // เมื่อ Search หรือ Filter เปลี่ยน ให้รีเซ็ตกลับไปหน้า 1
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [debouncedSearch, statusFilter]);
 
-  /**
-   * คำอธิบาย: ฟังก์ชันกรองข้อมูลก่อนแสดงในตาราง
-   * Input: communityRows, searchQuery, statusFilter
-   * Output: ข้อมูลที่ผ่านการกรองแล้ว
-   */
-  const filteredRows = useMemo(() => {
-    const normalizedSearchQuery = normalizeText(searchQuery);
-
-    return communityRows.filter((row) => {
-      const haystacks = [row.name, row.province, row.admin, row.status].map((fieldValue) =>
-        normalizeText(String(fieldValue ?? "")),
-      );
-      const passSearch =
-        !normalizedSearchQuery ||
-        haystacks.some((haystack) => haystack.includes(normalizedSearchQuery));
-
-      const statusUpper = (row.status ?? "").toString().toUpperCase();
-      const passStatus =
-        statusFilter === "all" ||
-        (statusFilter === "open" && statusUpper === "OPEN") ||
-        (statusFilter === "closed" && statusUpper === "CLOSED");
-
-      return passSearch && passStatus;
-    });
-  }, [communityRows, searchQuery, statusFilter]);
-
-  /**
-   * คำอธิบาย: ฟังก์ชันสำหรับลบข้อมูลชุมชนตาม ID
-   * Input: communityId (number)
-   * Output: -
+  /*
+   * คำอธิบาย : ฟังก์ชันสำหรับลบข้อมูลชุมชนตาม ID
+   * Input : communityId (number)
+   * Output : ไม่มี (เรียก API ลบข้อมูล)
    */
   const handleDelete = useCallback(async (communityId: number) => {
     await deleteCommunity(Number(communityId));
   }, []);
 
-  /**
-   * คำอธิบาย: ฟังก์ชันยืนยันการลบข้อมูล (ทั้งแบบเดี่ยวและแบบกลุ่ม)
-   * Input: deleteId, bulkDeleteIds
-   * Output: -
+  /*
+   * คำอธิบาย : ฟังก์ชันยืนยันการลบข้อมูล (ทั้งแบบเดี่ยวและแบบกลุ่ม)
+   * Input : deleteId, bulkDeleteIds
+   * Output : รีโหลดข้อมูลใหม่และปิด Modal
    */
   const handleConfirmDelete = useCallback(async () => {
     try {
@@ -184,9 +171,17 @@ export function ManageCommunityPage() {
         await Promise.all(bulkDeleteIds.map((id) => handleDelete(id)));
       }
       await reload();
+
+      setAlertType("success");
+      setAlertTitle("ลบชุมชนสำเร็จ");
+      setAlertMessage("\u00A0"); // หรือข้อความที่ต้องการ
+      setAlertOpen(true);
     } catch (error) {
       console.error(error);
-      alert("ลบไม่สำเร็จ");
+      setAlertType("error");
+      setAlertTitle("ลบไม่สำเร็จ");
+      setAlertMessage("กรุณาลองใหม่");
+      setAlertOpen(true);
     } finally {
       setIsOpenConfirm(false);
       setDeleteId(null);
@@ -194,10 +189,10 @@ export function ManageCommunityPage() {
     }
   }, [deleteId, bulkDeleteIds, handleDelete, reload]);
 
-  /**
-   * คำอธิบาย: ฟังก์ชันยกเลิกการลบและล้างค่าสถานะการลบ
-   * Input: -
-   * Output: -
+  /*
+   * คำอธิบาย : ฟังก์ชันยกเลิกการลบและล้างค่าสถานะการลบ
+   * Input : ไม่มี
+   * Output : ปิด Modal และล้างค่า deleteId, bulkDeleteIds
    */
   const handleCancelDelete = useCallback(() => {
     setIsOpenConfirm(false);
@@ -215,12 +210,12 @@ export function ManageCommunityPage() {
         onClick: (selectedRows) => {
           const ids = selectedRows.map((row) => row.id);
           setBulkDeleteIds(ids);
-          setConfirmMessage(`ยืนยันลบ ${ids.length} รายการหรือไม่?`);
+          setConfirmMessage(`คุณต้องการลบชุมชนจำนวน ${ids.length} รายการหรือไม่`);
           setIsOpenConfirm(true);
         },
       },
     ],
-    [],
+    []
   );
 
   const rowActions: DataTableActionsConfig<CommunityRow> = {
@@ -243,7 +238,7 @@ export function ManageCommunityPage() {
   return (
     <div className="space-y-4 cursor-default">
       <div>
-        <BreadcrumbNavigation
+        <Breadcrumb
           current={{
             label: "จัดการชุมชน",
             to: "/super/communities",
@@ -256,10 +251,7 @@ export function ManageCommunityPage() {
         <h1 className="text-xl font-bold">จัดการชุมชน</h1>
         <div className="flex items-center gap-3">
           <div className="max-w-md">
-            <SearchBarTable
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
+            <SearchBarTable value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} />
           </div>
           <FilterDropdown
             options={statusOptions as unknown as { label: string; value: string }[]}
@@ -277,7 +269,7 @@ export function ManageCommunityPage() {
       {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
 
       <DataTable<CommunityRow>
-        data={filteredRows}
+        data={communityRows}
         columns={columns}
         getKey={(row) => String(row.id)}
         actions={rowActions}
@@ -286,7 +278,7 @@ export function ManageCommunityPage() {
         pageSizeOptions={[10, 30, 50]}
         pagination={{
           currentPage,
-          totalPages: Math.ceil(totalItems / pageSize),
+          totalPages: Math.ceil(totalItems / pageSize), // คำนวณจาก Total Count จริง
           totalCount: totalItems,
           limit: pageSize,
         }}
@@ -302,6 +294,14 @@ export function ManageCommunityPage() {
         text={confirmMessage}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
+      />
+
+      <ModalAlert
+        isOpen={alertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertOpen(false)}
       />
     </div>
   );

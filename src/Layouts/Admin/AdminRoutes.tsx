@@ -5,7 +5,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import MemberDetailPage from "@/Pages/Admin/DetailMemberPage";
-import Feedbackall from "@/Pages/Admin/Feedback";
+import Feedbackall from "@/Pages/Admin/FeedbackPage";
 import ManageStoreAdmin from "@/Pages/Admin/ManageStorePage";
 import DetailHomestayAdmin from "@/Pages/Admin/DetailHomestayPage";
 import CreateHomestaysPage from "@/Pages/Admin/CreateHomestaysPage";
@@ -35,9 +35,10 @@ import EditMemberPage from "@/Pages/Admin/EditMemberPage";
 import AuthentionLogAdmin from "@/Pages/Admin/AuthenticationLogPage";
 import { EditProfilePage } from "@/Pages/SuperAdmin/EditProfilePage";
 import ManageParticipantPage from "@/Pages/Admin/ManageParticipantPage";
-import { CreateStorePage } from "@/Pages/SuperAdmin/CreateStorePage";
-import { EditStorePage } from "@/Pages/SuperAdmin/EditStorePage";
-import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHIstoryPage";
+import { CreateStorePage } from "@/Pages/Admin/CreateStorePage";
+import { EditStorePage } from "@/Pages/Admin/EditStorePage";
+import ManagePackageHistoryPage from "@/Pages/Admin/ManagePackageHistoryPage";
+import { ResetPasswordPage } from "@/Pages/SuperAdmin/ResetPasswordPage";
 
 /*
  * คำอธิบาย : ฟังก์ชันสำหรับแสดง Route ของผู้ใช้กลุ่ม Admin
@@ -82,6 +83,7 @@ export default function AdminRoutes() {
       <Route path="/members" element={<ManageMembers />} />
       <Route path="/member/create" element={<CreateMemberPage />} />
       <Route path="/member/:userId/edit" element={<EditMemberPage />} />
+      <Route path="/member/reset-password/:userId" element={<ResetPasswordPage />} />
       {/* ข้อเสนอแแนะทั้งหมดในแพ็กเกจ */}
       <Route path="package/feedbacks/:packageId" element={<PackageFeedbacksPage />} />
       {/* หน้าตารางการจองทั้งหมดในชุมชนของ Admin */}

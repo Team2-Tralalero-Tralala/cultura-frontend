@@ -1,5 +1,6 @@
 /**
- * คำอธิบาย: Component หน้าแก้ไขข้อมูลที่พักของ Admin
+ * EditHomestayAdminPage
+ * คำอธิบาย: หน้าแก้ไขข้อมูลที่พักของ Admin
  * ข้อกำหนด:
  *  - ใช้วิธีจัดการรูป (cover/gallery) เหมือนหน้า Store ทุกประการ
  *  - โหลดรูปจาก backend → แปลงเป็น File เพื่อใช้กับ UploadCard
@@ -19,6 +20,7 @@ import ThailandLocationSelector, {
   type ThailandLocation,
 } from "@/Components/Selector/ThailandLocationSelector";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import UploadCard from "@/Components/upload/UploadCard";
 import { TagSelector } from "@/Components/Selector/TagSelector";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
@@ -96,11 +98,11 @@ const schema = z.object({
  * Output: File object (กำหนด MIME type และเติม flag isFromServer)
  */
 async function urlToFile(url: string, filename: string): Promise<File> {
-  const res = await fetch(url, {
+  const fetchResponse = await fetch(url, {
     credentials: "include",
   });
-  if (!res.ok) throw new Error(`fetch ${url} -> ${res.status}`);
-  const blob = await res.blob();
+  if (!fetchResponse.ok) throw new Error(`fetch ${url} -> ${fetchResponse.status}`);
+  const blob = await fetchResponse.blob();
   const fileExtension = filename.split(".").pop() || "jpg";
   const type = blob.type || `image/${fileExtension}`;
   const file = new File([blob], filename, { type });
@@ -171,14 +173,18 @@ export default function EditHomestayPage() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState(false);
+  const [isConfirmOpen, setConfirmOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+  const [alertType, setAlertType] = React.useState<"success" | "error">("success");
+  const [alertTitle, setAlertTitle] = React.useState("");
+  const [alertMessage, setAlertMessage] = React.useState("");
   const [communityId, setCommunityId] = React.useState<number | null>(null);
   const [position, setPosition] = React.useState<[number, number]>([0, 0]);
   const startingZoom = 12;
   const [coverFiles, setCoverFiles] = React.useState<File[]>([]);
   const [galleryFiles, setGalleryFiles] = React.useState<File[]>([]);
   const [tagIds, setTagIds] = React.useState<number[]>([]);
-
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = React.useState(false);
   /**
    * คำอธิบาย: โหลดข้อมูลที่พัก
    * Input: - (ใช้ homestayId จาก URL)
@@ -201,9 +207,9 @@ export default function EditHomestayPage() {
 
         setCommunityId(homestayData.community?.id ?? null);
 
-        const lat = Number(homestayData.location?.latitude ?? 13.7563);
-        const lng = Number(homestayData.location?.longitude ?? 100.5018);
-        setPosition([lat, lng]);
+        const latitude = Number(homestayData.location?.latitude ?? 13.7563);
+        const longitude = Number(homestayData.location?.longitude ?? 100.5018);
+        setPosition([latitude, longitude]);
 
         setForm({
           name: homestayData.name ?? "",
@@ -218,8 +224,8 @@ export default function EditHomestayPage() {
           subDistrict: homestayData.location?.subDistrict ?? "",
           postalCode: homestayData.location?.postalCode ?? "",
           addressDetail: homestayData.location?.detail ?? "",
-          latitude: String(lat),
-          longitude: String(lng),
+          latitude: String(latitude),
+          longitude: String(longitude),
           placeQuery: "",
         });
 
@@ -229,17 +235,17 @@ export default function EditHomestayPage() {
 
         const coverFilesFetched: File[] = await Promise.all(
           imgs
-            .filter((img) => img.type === "COVER")
-            .map((img) =>
-              bestEffortUrlToFile(String(img.image || ""), String(img.image || "cover.jpg")),
+            .filter((imageItem) => imageItem.type === "COVER")
+            .map((imageItem) =>
+              bestEffortUrlToFile(String(imageItem.image || ""), String(imageItem.image || "cover.jpg")),
             ),
         );
 
         const galleryFilesFetched: File[] = await Promise.all(
           imgs
-            .filter((img) => img.type === "GALLERY")
-            .map((img) =>
-              bestEffortUrlToFile(String(img.image || ""), String(img.image || "gallery.jpg")),
+            .filter((imageItem) => imageItem.type === "GALLERY")
+            .map((imageItem) =>
+              bestEffortUrlToFile(String(imageItem.image || ""), String(imageItem.image || "gallery.jpg")),
             ),
         );
 
@@ -247,17 +253,17 @@ export default function EditHomestayPage() {
         setGalleryFiles(galleryFilesFetched);
         const currentTagIds: number[] = Array.isArray(homestayData?.tagHomestays)
           ? homestayData.tagHomestays
-              .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
-              .filter((tagId: any) => typeof tagId === "number")
+            .map((tagItem: any) => tagItem?.tag?.id ?? tagItem?.id)
+            .filter((tagId: any) => typeof tagId === "number")
           : [];
         setTagIds(currentTagIds);
-      } catch (err: any) {
-        console.error("Load homestay error:", err?.response?.data || err);
+      } catch (error: any) {
+        console.error("Load homestay error:", error?.response?.data || error);
         setErrorMessage(
-          err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            err?.message ||
-            "โหลดข้อมูลไม่สำเร็จ",
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "โหลดข้อมูลไม่สำเร็จ",
         );
       } finally {
         setIsLoading(false);
@@ -271,8 +277,8 @@ export default function EditHomestayPage() {
   const validateField = (key: keyof HomestayForm, value: any) => {
     const formWithNewValue = { ...form, [key]: value };
     const validationResult = schema.safeParse(formWithNewValue);
-    setFormErrors((prev) => ({
-      ...prev,
+    setFormErrors((previousFormState) => ({
+      ...previousFormState,
       [key]: validationResult.success
         ? undefined
         : validationResult.error.issues.find((issue) => issue.path[0] === key)?.message,
@@ -303,7 +309,7 @@ export default function EditHomestayPage() {
     key: FieldKey,
     value: HomestayForm[FieldKey],
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((previousFormState) => ({ ...previousFormState, [key]: value }));
     validateField(key, value);
   };
 
@@ -324,28 +330,65 @@ export default function EditHomestayPage() {
   }, []);
 
   /**
-   * คำอธิบาย: จัดการการส่งฟอร์ม
+   * ฟังก์ชัน: handleSubmit
+   * คำอธิบาย: เปิด Modal เพื่อยืนยันการบันทึก
    */
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (isSaving) return;
-
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    if (!validateAll()) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    setIsConfirmModalOpen(true);
+    // เปิด Modal ยืนยันทันที
+    setConfirmOpen(true);
   };
 
   /**
-   * คำอธิบาย: ยืนยันการบันทึกข้อมูล
+   * คำอธิบาย: ตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input: -
+   * Output: boolean (true หากมีการแก้ไขข้อมูลอย่างใดอย่างหนึ่ง)
+   */
+  const checkIsDirty = () => {
+    const isFormDirty = JSON.stringify(form) !== JSON.stringify(form);
+    const isFilesDirty = coverFiles.length > 0 || galleryFiles.length > 0;
+    const isTagsDirty = tagIds.length > 0;
+
+    return isFormDirty || isFilesDirty || isTagsDirty;
+  };
+
+  /**
+   * คำอธิบาย: จัดการเมื่อกดปุ่มยกเลิก หากมีการแก้ไขจะแสดง Modal ยืนยัน
+   * Input: -
+   * Output: - (Navigate หรือเปิด Modal Confirm)
+   */
+  const handleCancel = () => {
+    if (checkIsDirty()) {
+      setIsCancelConfirmOpen(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  /*
+   * คำอธิบาย : onConfirmSave
+   * - ตรวจสอบความถูกต้อง (Validation)
+   * - หากไม่ผ่าน: แสดง Alert Error
+   * - หากผ่าน: สร้าง FormData และส่งข้อมูล (axios.put) -> แสดง Alert Success
+   * Input: -
+   * Output : (void)
    */
   const onConfirmSave = async () => {
-    setIsConfirmModalOpen(false);
+    setConfirmOpen(false);
+    const isFormValid = validateAll();
+    const isFilesValid = coverFiles.length > 0 && galleryFiles.length > 0;
 
+    if (!isFormValid || !isFilesValid) {
+      setAlertType("error");
+      setAlertTitle("ข้อมูลไม่ครบถ้วน");
+      setAlertMessage("กรุณากรอกข้อมูลให้ครบถ้วนก่อนการทำการบันทึก");
+      setIsAlertOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // 2. ส่งข้อมูล (API Call)
     try {
       setIsSaving(true);
       setErrorMessage(null);
@@ -383,17 +426,19 @@ export default function EditHomestayPage() {
         withCredentials: true,
       });
 
-      setSuccessMessage("อัปเดตที่พักสำเร็จ");
-      if (communityId) navigate(`/admin/community/homestays`);
-      else navigate(-1);
+      // บันทึกสำเร็จ
+      setAlertType("success");
+      setAlertTitle("แก้ไขที่พักสำเร็จ");
+      setAlertMessage("ข้อมูลที่พักถูกแก้ไขเรียบร้อยแล้ว");
+      setIsAlertOpen(true);
+
     } catch (error: any) {
       console.error("Update homestay error:", error?.response?.data || error);
-      setErrorMessage(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          error?.message ||
-          "อัปเดตที่พักไม่สำเร็จ",
-      );
+      // บันทึกไม่สำเร็จ
+      setAlertType("error");
+      setAlertTitle("เกิดข้อผิดพลาด");
+      setAlertMessage("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setIsAlertOpen(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSaving(false);
@@ -432,7 +477,7 @@ export default function EditHomestayPage() {
                 id="name"
                 label="ชื่อที่พัก"
                 required
-                placeholder="พิมพ์ชื่อที่พัก"
+                placeholder="กรอกชื่อที่พัก"
                 value={form.name}
                 onChange={(event) => setField("name", event.target.value)}
                 error={!!formErrors.name}
@@ -442,7 +487,7 @@ export default function EditHomestayPage() {
                 id="type"
                 label="ประเภทที่พัก"
                 required
-                placeholder="พิมพ์ประเภทของที่พัก"
+                placeholder="กรอกประเภทของที่พัก"
                 value={form.type}
                 onChange={(event) => setField("type", event.target.value)}
                 error={!!formErrors.type}
@@ -453,7 +498,7 @@ export default function EditHomestayPage() {
                   id="facility"
                   label="สิ่งอำนวยความสะดวก"
                   required
-                  placeholder="ใส่รายละเอียดความสะดวกสบายของที่พัก"
+                  placeholder="กรอกสิ่งอำนวยความสะดวก"
                   value={form.facility}
                   onChange={(event) => setField("facility", event.target.value)}
                   error={!!formErrors.facility}
@@ -494,7 +539,7 @@ export default function EditHomestayPage() {
                 id="houseNumber"
                 label="บ้านเลขที่"
                 required
-                placeholder="บ้านเลขที่"
+                placeholder="กรอกบ้านเลขที่ของที่พัก"
                 value={form.houseNumber}
                 onChange={(event) => setField("houseNumber", event.target.value)}
                 error={!!formErrors.houseNumber}
@@ -503,7 +548,7 @@ export default function EditHomestayPage() {
               <TextField
                 id="villageNumber"
                 label="หมู่ที่"
-                placeholder="หมู่ที่"
+                placeholder="กรอกหมู่ที่ของที่พัก"
                 value={form.villageNumber}
                 onChange={(event) => setField("villageNumber", event.target.value)}
                 error={!!formErrors.villageNumber}
@@ -518,18 +563,18 @@ export default function EditHomestayPage() {
                     subdistrict: form.subDistrict,
                     postalCode: form.postalCode,
                   }}
-                  onChange={(loc: ThailandLocation) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      province: loc.province ?? "",
-                      district: loc.district ?? "",
-                      subDistrict: loc.subdistrict ?? "",
-                      postalCode: loc.postalCode ?? "",
+                  onChange={(locationData: ThailandLocation) => {
+                    setForm((previousFormState) => ({
+                      ...previousFormState,
+                      province: locationData.province ?? "",
+                      district: locationData.district ?? "",
+                      subDistrict: locationData.subdistrict ?? "",
+                      postalCode: locationData.postalCode ?? "",
                     }));
-                    validateField("province", loc.province ?? "");
-                    validateField("district", loc.district ?? "");
-                    validateField("subDistrict", loc.subdistrict ?? "");
-                    validateField("postalCode", loc.postalCode ?? "");
+                    validateField("province", locationData.province ?? "");
+                    validateField("district", locationData.district ?? "");
+                    validateField("subDistrict", locationData.subdistrict ?? "");
+                    validateField("postalCode", locationData.postalCode ?? "");
                   }}
                   error={{
                     province: !!formErrors.province,
@@ -597,7 +642,7 @@ export default function EditHomestayPage() {
 
             {/* อัปโหลดรูปภาพ */}
             <section className="mt-4">
-              <h3 className="font-semibold text-base mb-2">
+              <h3 className="font-bold text-base mb-2">
                 ภาพหน้าปก (COVER) <span className="text-red-600">*</span>
               </h3>
               <UploadCard
@@ -617,7 +662,7 @@ export default function EditHomestayPage() {
                 iconSizeCls="w-10 h-10"
               />
 
-              <h3 className="font-semibold text-base mt-6 mb-2">
+              <h3 className="font-bold text-base mt-6 mb-2">
                 รูปเพิ่มเติม (GALLERY) <span className="text-red-600">*</span>
               </h3>
               <UploadCard
@@ -644,12 +689,7 @@ export default function EditHomestayPage() {
             <div className="w-36">
               <Button
                 type="cancel"
-                onClick={() =>
-                  communityId
-                    ? navigate(`/admin/community/homestays`)
-                    : // ? navigate(`/admin/community/${communityId}/homestay/all`)
-                      navigate(-1)
-                }
+                onClick={handleCancel}
               >
                 ยกเลิก
               </Button>
@@ -665,14 +705,44 @@ export default function EditHomestayPage() {
 
       {/* Modal ยืนยัน */}
       <Modal
-        isOpen={isConfirmModalOpen}
-        title="ยืนยันการบันทึกข้อมูลที่พัก"
-        text="คุณต้องการอัปเดตข้อมูลที่พักนี้หรือไม่"
+        isOpen={isConfirmOpen}
+        title="ยืนยันการแก้ไขที่พัก"
+        text="คุณต้องการยืนยันการแก้ไขที่พักหรือไม่"
         confirmText="ยืนยัน"
         cancelText="ยกเลิก"
         onConfirm={onConfirmSave}
-        onCancel={() => setIsConfirmModalOpen(false)}
+        onCancel={() => setConfirmOpen(false)}
+      />
+
+      {/* Modal Alert */}
+      <ModalAlert
+        isOpen={isAlertOpen}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setIsAlertOpen(false);
+          if (alertType === "success") {
+            if (communityId) navigate(`/admin/community/homestays`);
+            else navigate(-1);
+          }
+        }}
+      />
+      {/* Modal Alert */}
+      <Modal
+        isOpen={isCancelConfirmOpen}
+        title="ยืนยันการยกเลิก"
+        text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setIsCancelConfirmOpen(false);
+          navigate(-1);
+        }}
+        onCancel={() => setIsCancelConfirmOpen(false)}
       />
     </div>
+
+
   );
 }

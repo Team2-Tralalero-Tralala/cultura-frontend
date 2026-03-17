@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/Components/BreadcrumbNavigation";
 import { getBookingsByTourist } from "@/Libs/BookingHistoryService";
 import Pagination from "@/Components/Pagination/PaginationRoundedForCardPackage";
@@ -14,9 +15,12 @@ import NavbarTourist from "@/Components/Navbar/NavbarTourist";
 import Footer from "@/Components/Footer";
 import BookingHistoryCardList, { type BookingItem } from "@/Components/BookingHistoryCardList";
 import Button from "@/Components/Button";
+import { useAuth } from "@/Libs/UseAuth";
 
 /*
  * คำอธิบาย : ตัวแปรสำหรับ map ค่า status จาก API เป็นข้อความภาษาไทย
+ * Input : -
+ * Output : -
  */
 const statusMap: Record<string, string> = {
   PENDING: "รอยืนยัน",
@@ -31,9 +35,23 @@ const statusMap: Record<string, string> = {
  * คำอธิบาย : Component สำหรับหน้า "ประวัติการจองของนักท่องเที่ยว"
  * แสดงประวัติการจองของนักท่องเที่ยว
  * พร้อมตัวกรอง การค้นหา การจัดเรียง และการแบ่งหน้า
+ * Input : -
+ * Output : -
  */
 export default function BookingHistoryPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeSort, setActiveSort] = useState<"newest" | "oldest">("newest");
+
+  /*
+   * คำอธิบาย : Redirect ไปหน้าแรกหากผู้ใช้ไม่ได้ล็อกอิน (Guest)
+   */
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [filterState, setFilterState] = useState({
     status: "ALL",
@@ -147,6 +165,8 @@ export default function BookingHistoryPage() {
 
     /*
      * คำอธิบาย : ฟังก์ชัน useEffect สำหรับประมวลผลข้อมูลการจองเมื่อ rawBookings, searchQuery, activeSort หรือ pagination.currentPage เปลี่ยนแปลง
+     * Input: - (ใช้ rawBookings, searchQuery, activeSort, pagination.currentPage)
+     * Output: - (อัปเดต state bookings)
      */
     if (searchQuery) {
       const lowerSearch = searchQuery.toLowerCase();
@@ -159,6 +179,8 @@ export default function BookingHistoryPage() {
 
     /*
      * คำอธิบาย : การจัดเรียงข้อมูลตามวันที่จอง
+     * Input: processed (ข้อมูลการจองที่ถูกกรองแล้ว), activeSort (วิธีการจัดเรียง)
+     * Output: - (อัปเดต state bookings)
      */
     if (activeSort === "oldest") {
       processed.sort(
@@ -174,6 +196,8 @@ export default function BookingHistoryPage() {
 
     /*
      * คำอธิบาย : การตั้งค่าการแบ่งหน้า (Pagination)
+     * Input: processed (ข้อมูลการจองที่ถูกกรองแล้ว), pagination (ข้อมูลการแบ่งหน้า)
+     * Output: - (อัปเดต state pagination)
      */
     const totalCount = processed.length;
     const totalPages = Math.ceil(totalCount / pagination.limit) || 1;
@@ -190,6 +214,8 @@ export default function BookingHistoryPage() {
 
     /*
      * คำอธิบาย : การตัดข้อมูลตามหน้าปัจจุบันและขนาดหน้าที่กำหนด
+     * Input: validCurrentPage (หน้าปัจจุบัน), pagination (ข้อมูลการแบ่งหน้า)
+     * Output: - (อัปเดต state bookings)
      */
     const startIndex = (validCurrentPage - 1) * pagination.limit;
     const sliced = processed.slice(startIndex, startIndex + pagination.limit);
@@ -275,6 +301,7 @@ export default function BookingHistoryPage() {
                       { label: "ทั้งหมด", value: "ALL" },
                       { label: "รอยืนยัน", value: "PENDING" },
                       { label: "จองสำเร็จ", value: "BOOKED" },
+                      { label: "ถูกปฏิเสธ", value: "REJECTED" },
                       { label: "ยกเลิกการจอง", value: "CANCELLED" },
                     ],
                   },

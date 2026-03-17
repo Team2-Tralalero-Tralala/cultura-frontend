@@ -46,7 +46,11 @@ export default function DetailHomestayPage() {
    */
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // โหลดข้อมูลด้วย Service ของ Super Admin
+  /**
+   * คำอธิบาย: Hook สำหรับโหลดข้อมูลที่พักเมื่อ Component ถูก Mount
+   * Input: - (ใช้ Params from URL)
+   * Output: - (อัปเดต state homestay)
+   */
   useEffect(() => {
     if (!homestayId) return;
     fetchHomestayDetail(Number(homestayId))
@@ -80,11 +84,17 @@ export default function DetailHomestayPage() {
         <div className="flex justify-between items-center mb-5">
           {/* หัวข้อ + ปุ่มย้อนกลับ */}
           <h1 className="flex items-center gap-2 text-[20px] font-bold text-black">
-            <ArrowLeft
-              className="w-5 h-5 cursor-pointer hover:text-gray-600 transition-colors"
-              onClick={() => navigate(`/super/community/${homestay.community.id}/homestay/all`)}
-            />
-            รายละเอียดที่พัก
+            <div 
+              className="flex items-center gap-2 cursor-pointer transition-colors"
+              onClick={() =>
+                navigate(
+                  `/super/community/${homestay.community.id}/homestay/all`
+                )
+              }
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>รายละเอียดที่พัก</span>
+            </div>
           </h1>
 
           {/* ปุ่มแก้ไข */}
@@ -144,8 +154,8 @@ export default function DetailHomestayPage() {
                 <span className="font-bold text-black">:</span>
                 {homestay.facility ? (
                   <ul className="list-disc list-inside space-y-1 text-black">
-                    {homestay.facility.split(",").map((item: string, i: number) => (
-                      <li key={i}>{item.trim()}</li>
+                    {homestay.facility.split(",").map((facilityItem: string, index: number) => (
+                      <li key={index}>{facilityItem.trim()}</li>
                     ))}
                   </ul>
                 ) : (

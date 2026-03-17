@@ -257,9 +257,11 @@ export function CreateStorePage() {
       setIsAlertOpen(true);
       navigate("/admin/community/stores");
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง";
       setAlertType("error");
       setAlertTitle("เกิดข้อผิดพลาด");
-      setAlertMessage("เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง");
+      setAlertMessage(errorMessage);
       setIsAlertOpen(true);
     }
   };

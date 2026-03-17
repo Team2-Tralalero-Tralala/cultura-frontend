@@ -27,7 +27,7 @@ export default function RoleRedirect() {
     case "admin":
       return <Navigate to="/admin/community/own" replace />;
     case "member":
-      return <Navigate to="/member/home" replace />;
+      return <Navigate to="/member/community/own" replace />;
     case "tourist":
       return <Navigate to="/tourist/home" replace />;
     default:

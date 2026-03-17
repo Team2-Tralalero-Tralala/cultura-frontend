@@ -109,7 +109,7 @@ export default function ChangePasswordPage() {
       const validationErrorMessage = "ข้อมูลไม่ครบหรือรูปแบบรหัสผ่านไม่ถูกต้อง";
       setMessage({ type: "error", text: validationErrorMessage });
 
-      setAlertType("warning");
+      setAlertType("error");
       setAlertTitle("ตรวจสอบข้อมูล");
       setAlertMessage(validationErrorMessage);
       setIsAlertOpen(true);
@@ -123,7 +123,11 @@ export default function ChangePasswordPage() {
         newPassword,
         confirmNewPassword,
       });
-
+      /**
+       * คำอธิบาย : เปลี่ยนรหัสผ่านสำเร็จ
+       * Input : - (ใช้ข้อมูลจาก State: currentPassword, newPassword)
+       * Output : - (Update State ผลลัพธ์การทำงาน)
+       */
       const successMessage = "เปลี่ยนรหัสผ่านสำเร็จ";
       setMessage({ type: "success", text: successMessage });
 
@@ -167,22 +171,6 @@ export default function ChangePasswordPage() {
           </div>
 
           <div className="pl-0">
-            {message && (
-              <div
-                className={`mb-6 rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${
-                  message.type === "success"
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "bg-red-50 text-red-700 border border-red-200"
-                }`}
-              >
-                <Icon
-                  icon={message.type === "success" ? "mdi:check-circle" : "mdi:alert-circle"}
-                  className="w-5 h-5"
-                />
-                {message.text}
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
               <div className="w-[246px]">
                 <TextField

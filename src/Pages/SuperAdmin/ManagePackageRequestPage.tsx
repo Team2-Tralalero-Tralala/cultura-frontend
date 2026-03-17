@@ -9,6 +9,7 @@ import DataTable from "@/Components/Tables/DataTable";
 import type { Column } from "@/Components/Tables/Types";
 import Button from "@/Components/Button";
 import { Modal } from "@/Components/Modal/Modal";
+import { ModalAlert } from "@/Components/Modal/ModalAlert";
 import ModalReject from "@/Components/Modal/ModalReject";
 import {
   approvePackageRequest,
@@ -55,68 +56,68 @@ const buildPackageRequestColumns = (
   onApprove: (row: PackageRequestRow) => void,
   onReject: (row: PackageRequestRow) => void,
 ): Column<PackageRequestRow>[] => [
-  {
-    key: "name",
-    header: "ชื่อแพ็กเกจ",
-    className: "min-w-[220px]",
-    render: (packageRequestRow) => (
-      <Link
-        to={`/super/package-requests/${packageRequestRow.id}`}
-        className="font-medium text-dark-green hover:underline focus:underline"
-      >
-        {packageRequestRow.name}
-      </Link>
-    ),
-  },
-  {
-    key: "community",
-    header: "ชื่อชุมชน",
-    className: "min-w-[220px]",
-    render: (packageRequestRow) => <div>{packageRequestRow.community.name}</div>,
-  },
-  {
-    key: "overseer",
-    header: "ผู้ดูแล",
-    className: "min-w-[160px]",
-    render: (packageRequestRow) => <div>{packageRequestRow.overseer?.username ?? "-"}</div>,
-  },
-  {
-    key: "statusApprove",
-    header: "สถานะคำขอ",
-    render: (packageRequestRow) => <div>{thaiApproveStatus(packageRequestRow.statusApprove)}</div>,
-  },
-  {
-    key: "actions",
-    header: "จัดการ",
-    className: "w-[160px] text-left pr-3",
-    render: (packageRequestRow) => {
-      const approved = String(packageRequestRow.statusApprove).toUpperCase() === "APPROVE";
-      return (
-        <div className="flex items-center justify-end gap-2 pr-2">
-          {!approved && (
-            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="cancel" onClick={() => onReject(packageRequestRow)}>
-                ปฏิเสธ
-              </Button>
-            </div>
-          )}
-          {!approved && (
-            <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin" onClick={() => onApprove(packageRequestRow)}>
-                อนุมัติ
-              </Button>
-            </div>
-          )}
-          {approved && (
-            <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
-              <Button type="confirm-admin">อนุมัติ</Button>
-            </div>
-          )}
-        </div>
-      );
+    {
+      key: "name",
+      header: "ชื่อแพ็กเกจ",
+      className: "min-w-[220px]",
+      render: (packageRequestRow) => (
+        <Link
+          to={`/super/package-requests/${packageRequestRow.id}`}
+          className="font-medium text-dark-green hover:underline focus:underline"
+        >
+          {packageRequestRow.name}
+        </Link>
+      ),
     },
-  },
-];
+    {
+      key: "community",
+      header: "ชื่อชุมชน",
+      className: "min-w-[220px]",
+      render: (packageRequestRow) => <div>{packageRequestRow.community.name}</div>,
+    },
+    {
+      key: "overseer",
+      header: "ผู้ดูแล",
+      className: "min-w-[160px]",
+      render: (packageRequestRow) => <div>{packageRequestRow.overseer?.username ?? "-"}</div>,
+    },
+    {
+      key: "statusApprove",
+      header: "สถานะคำขอ",
+      render: (packageRequestRow) => <div>{thaiApproveStatus(packageRequestRow.statusApprove)}</div>,
+    },
+    {
+      key: "actions",
+      header: "จัดการ",
+      className: "w-[160px] text-left pr-3",
+      render: (packageRequestRow) => {
+        const approved = String(packageRequestRow.statusApprove).toUpperCase() === "APPROVE";
+        return (
+          <div className="flex items-center justify-end gap-2 pr-2">
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="cancel" onClick={() => onReject(packageRequestRow)}>
+                  ปฏิเสธ
+                </Button>
+              </div>
+            )}
+            {!approved && (
+              <div className="w-[76px] ml-1 [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin" onClick={() => onApprove(packageRequestRow)}>
+                  อนุมัติ
+                </Button>
+              </div>
+            )}
+            {approved && (
+              <div className="w-[76px] ml-1 opacity-70 pointer-events-none [&>button]:w-full [&>button]:px-2 [&>button]:py-1 [&>button]:text-sm">
+                <Button type="confirm-admin">อนุมัติ</Button>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
 /*
  * คำอธิบาย : Component สำหรับจัดการคำขออนุมัติแพ็กเกจ
@@ -140,6 +141,9 @@ export function ManagePackageRequestPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = React.useState<boolean>(false);
   const [selectedRow, setSelectedRow] = React.useState<PackageRequestRow | null>(null);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = React.useState(false);
+  const [successTitle, setSuccessTitle] = React.useState("");
+  const [successMessage, setSuccessMessage] = React.useState("");
 
   /**
    * คำอธิบาย : โหลดข้อมูลคำขอแพ็กเกจจาก API และอัปเดตข้อมูลในตาราง
@@ -184,9 +188,15 @@ export function ManagePackageRequestPage() {
     try {
       setIsLoading(true);
       await approvePackageRequest(row.id);
+
+      setSuccessTitle("อนุมัติแพ็กเกจสำเร็จ");
+      setSuccessMessage("ดำเนินการอนุมัติแพ็กเกจเรียบร้อยแล้ว");
+      setIsSuccessModalOpen(true);
+
       await reload();
     } catch (error: any) {
       setErrorMessage(error?.message ?? "ไม่สามารถอนุมัติได้");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -321,6 +331,11 @@ export function ManagePackageRequestPage() {
             try {
               setIsLoading(true);
               await rejectPackageRequest(selectedRow.id, reason);
+
+              setSuccessTitle("ปฏิเสธคำขอสำเร็จ");
+              setSuccessMessage("ดำเนินการปฏิเสธคำขอเรียบร้อยแล้ว");
+              setIsSuccessModalOpen(true);
+
               await reload();
             } catch (error: any) {
               setErrorMessage(error?.message ?? "ไม่สามารถปฏิเสธได้");
@@ -336,6 +351,13 @@ export function ManagePackageRequestPage() {
           }}
         />
       )}
+      <ModalAlert
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        type="success"
+        title={successTitle}
+        message={successMessage}
+      />
     </div>
   );
 }

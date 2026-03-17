@@ -155,6 +155,7 @@ export default function CreateHomestaysPage() {
   const [alertType, setAlertType] = React.useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = React.useState("");
   const [alertMessage, setAlertMessage] = React.useState("");
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = React.useState(false);
   /**
    * คำอธิบาย: อัปเดตฟิลด์ในฟอร์ม และ validate ฟิลด์นั้นทันที
    * Input: key ของฟอร์ม, value ใหม่
@@ -183,6 +184,31 @@ export default function CreateHomestaysPage() {
     });
   }
 
+  /**
+   * คำอธิบาย: ตรวจสอบว่ามีการแก้ไขข้อมูลในฟอร์มหรือไม่ (Dirty Check)
+   * Input: -
+   * Output: boolean (true หากมีการแก้ไขข้อมูลอย่างใดอย่างหนึ่ง)
+   */
+  const checkIsDirty = () => {
+    const isFormDirty = JSON.stringify(homestayFormState) !== JSON.stringify(initialHomestay);
+    const isFilesDirty = coverFiles.length > 0 || galleryFiles.length > 0;
+    const isTagsDirty = tagIds.length > 0;
+
+    return isFormDirty || isFilesDirty || isTagsDirty;
+  };
+
+  /**
+   * คำอธิบาย: จัดการเมื่อกดปุ่มยกเลิก หากมีการแก้ไขจะแสดง Modal ยืนยัน
+   * Input: -
+   * Output: - (Navigate หรือเปิด Modal Confirm)
+   */
+  const handleCancel = () => {
+    if (checkIsDirty()) {
+      setIsCancelConfirmOpen(true);
+    } else {
+      navigate(`/admin/community/homestays`);
+    }
+  };
   /*
    * คำอธิบาย: ตรวจสอบความถูกต้องของข้อมูลทั้งหมดในฟอร์มก่อนการบันทึก
    * Input: -
@@ -560,9 +586,7 @@ export default function CreateHomestaysPage() {
             <div className="w-36">
               <Button
                 type="cancel"
-                onClick={() =>
-                  navigate(`/admin/community/homestays`)
-                }
+                onClick={handleCancel}
               >
                 ยกเลิก
               </Button>
@@ -605,6 +629,20 @@ export default function CreateHomestaysPage() {
             navigate("/admin/community/homestays");
           }
         }}
+      />
+
+      {/* Modal ยืนยันการยกเลิก */}
+      <Modal
+        isOpen={isCancelConfirmOpen}
+        title="ยืนยันการยกเลิก"
+        text="เมื่อกดยืนยัน ข้อมูลที่คุณกรอกจะหายไปทั้งหมด"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onConfirm={() => {
+          setIsCancelConfirmOpen(false);
+          navigate(-1);
+        }}
+        onCancel={() => setIsCancelConfirmOpen(false)}
       />
     </div>
   );

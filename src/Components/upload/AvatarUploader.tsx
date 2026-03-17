@@ -5,7 +5,6 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import Cropper from "react-easy-crop";
-import { toast } from "react-toastify";
 import { ModalAlert } from "@/Components/Modal/ModalAlert";
 
 /**

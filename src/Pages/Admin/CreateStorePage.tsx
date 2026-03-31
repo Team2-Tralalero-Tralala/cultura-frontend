@@ -252,8 +252,8 @@ export function CreateStorePage() {
 
       await createStoreByAdmin(formDataToSend);
       setAlertType("success");
-      setAlertTitle("สร้างวิสาหกิจชุมชนสำเร็จ");
-      setAlertMessage("ข้อมูลวิสหากิจชุมชนถูกบันทึก");
+      setAlertTitle("สร้างร้านค้าสำเร็จ");
+      setAlertMessage("ข้อมูลร้านค้าถูกบันทึก");
       setIsAlertOpen(true);
       navigate("/admin/community/stores");
     } catch (error: any) {

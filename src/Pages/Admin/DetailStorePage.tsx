@@ -65,7 +65,7 @@ export default function DetailStorePage() {
     }
 
     try {
-      const res = await fetch(`${apiUrl}/admin/store/${id}`, { credentials: "include" });
+      const res = await fetch(`${apiUrl}/shared/store/${id}`, { credentials: "include" });
       const result = await res.json();
 
       if (result?.data) {
